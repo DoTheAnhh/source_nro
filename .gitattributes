@@ -1,0 +1,25 @@
+# =====================================================================
+#  Đẩy nguyên trạng từng byte, và đưa file quá khổ qua Git LFS.
+# =====================================================================
+
+#  Tắt mọi chuyện đổi ký tự xuống dòng.
+#
+#  Repo này đặt core.autocrlf = true, nghĩa là git đổi LF thành CRLF mỗi
+#  lần lấy file ra. Hai lẽ để tắt:
+#
+#  1. Cây này có hơn hai vạn file nhị phân (ảnh icon, asset, htdocs).
+#     Git đoán nhị phân bằng cách tìm byte NUL trong tám nghìn byte đầu —
+#     là phép đoán, không phải phép chắc. File nào đoán trượt thì bị chèn
+#     thêm byte CR và hỏng.
+#
+#  2. Máy chủ chạy trên VPS Linux. Giữ LF thì mã nguồn và mấy file .sh,
+#     .properties sang đó dùng được ngay, không phải dos2unix.
+#
+#  Đánh đổi: mở mấy file .txt bằng Notepad cũ trên Windows sẽ thấy dồn
+#  một dòng. Notepad từ Windows 10 trở đi đọc LF bình thường.
+* -text
+
+#  Ba file .rar, tổng 245 MB — riêng data/item_bg_temp.rar đã 244.6 MB.
+#  GitHub từ chối cứng mọi file thường vượt 100 MB, nên đây là đường duy
+#  nhất để đẩy trọn bộ. LFS miễn phí cho 1 GB lưu trữ; 245 MB nằm trong.
+*.rar filter=lfs diff=lfs merge=lfs -text

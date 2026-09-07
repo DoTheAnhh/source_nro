@@ -1,0 +1,23 @@
+{
+    "java.project.sourcePaths": [
+        "src"
+    ],
+    "java.project.outputPath": "build/classes",
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar"
+    ],
+    "java.import.exclusions": [
+        "**/run/**",
+        "**/backupsrc/**",
+        "**/src_original/**",
+        "**/build/**",
+        "**/out/**"
+    ],
+    "files.watcherExclude": {
+        "**/run/**": true,
+        "**/backupsrc/**": true,
+        "**/src_original/**": true,
+        "**/build/**": true,
+        "**/out/**": true
+    }
+}

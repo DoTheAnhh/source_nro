@@ -1,35 +1,20 @@
-# --- Kết quả biên dịch ---
-out/
-build/
-dist/
-*.class
-
-# --- Artifact đóng gói (build lại được từ src) ---
-AWN_Version.jar
-sources.txt
-
-# --- Bản sao lưu tự sinh ---
-backupsrc/
-backupsql/
-archive/
-
-# --- Dữ liệu asset nặng & web (quản lý riêng, không đưa vào git) ---
-data/
-htdocs/
-*.rar
-
-# --- Dump CSDL ---
-*.sql
-
-# --- Log / runtime ---
-*.log
-nohup.out
-
-# --- IDE ---
-.idea/
-.vscode/
-nbproject/private/
-*.iml
-
-# --- Thu muc tam cua jar (build.bat tu tao) ---
-_tmp/
+# =====================================================================
+#  KHÔNG BỎ QUA GÌ CẢ — đẩy 100% thư mục Server lên git.
+#
+#  Bản trước chặn: out/ build/ dist/ *.class *.log *.sql *.rar
+#  data/ htdocs/ backupsrc/ backupsql/ archive/ .idea/ .vscode/ ...
+#  Toàn bộ đã được bỏ theo yêu cầu.
+#
+#  MỘT LỖI ĐÃ TỪNG XẢY RA Ở ĐÂY, ghi lại cho khỏi lặp:
+#  luật cũ viết "data/" — không có gạch chéo đầu. Git hiểu mẫu như vậy
+#  là "thư mục tên data ở BẤT KỲ độ sâu", nên nó bỏ qua luôn package
+#  src/nro/data. Hai lớp DataGame và ItemData chưa bao giờ được đẩy lên,
+#  và bản tải về ở VPS trượt biên dịch với
+#      package nro.data does not exist
+#  Nếu sau này cần chặn lại thư mục asset ở gốc, phải viết "/data/" —
+#  có gạch chéo đầu thì mẫu mới neo vào gốc repo.
+#
+#  Ba file .rar (245 MB, trong đó item_bg_temp.rar một mình 244.6 MB) đi
+#  qua Git LFS — xem .gitattributes. GitHub từ chối cứng mọi file thường
+#  vượt 100 MB, LFS là đường duy nhất để đẩy trọn bộ.
+# =====================================================================

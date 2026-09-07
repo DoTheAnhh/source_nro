@@ -1,0 +1,106 @@
+==== 2026-01-09 13:52:32 ====
+POST:
+Array
+(
+)
+GET:
+Array
+(
+)
+==== 2026-01-09 13:52:49 ====
+POST:
+Array
+(
+)
+GET:
+Array
+(
+    [status] => 1
+    [message] => CARD_CORRECT
+    [request_id] => 166935192
+    [declared_value] => 10000
+    [value] => 10000
+    [card_value] => 10000
+    [amount] => 8900
+    [code] => 320332435747772
+    [serial] => 20000297606271
+    [telco] => VIETTEL
+    [trans_id] => 4996074
+    [callback_sign] => b2424b3a29164ce3352bc4944508b7a0
+)
+SIGN_FAIL expect=2ae26082c7c91aecc612f47c11251f7f got=b2424b3a29164ce3352bc4944508b7a0
+==== 2026-01-09 13:53:19 ====
+POST:
+Array
+(
+)
+GET:
+Array
+(
+    [status] => 1
+    [message] => CARD_CORRECT
+    [request_id] => 166935192
+    [declared_value] => 10000
+    [value] => 10000
+    [card_value] => 10000
+    [amount] => 8900
+    [code] => 320332435747772
+    [serial] => 20000297606271
+    [telco] => VIETTEL
+    [trans_id] => 4996074
+    [callback_sign] => b2424b3a29164ce3352bc4944508b7a0
+)
+SIGN_FAIL expect=2ae26082c7c91aecc612f47c11251f7f got=b2424b3a29164ce3352bc4944508b7a0
+==== 2026-01-09 14:07:57 ====
+POST:
+Array
+(
+)
+GET:
+Array
+(
+)
+==== 2026-01-09 14:08:15 ====
+POST:
+Array
+(
+)
+GET:
+Array
+(
+    [status] => 1
+    [message] => CARD_CORRECT
+    [request_id] => 369275197
+    [declared_value] => 10000
+    [value] => 10000
+    [card_value] => 10000
+    [amount] => 8900
+    [code] => 428384423180894
+    [serial] => 20000297920976
+    [telco] => VIETTEL
+    [trans_id] => 4996159
+    [callback_sign] => 6dd994edafec36cf79c3481c202d3470
+)
+SIGN_FAIL expect=d13e60ef3be5e8c411f116f9fb1e37bb got=6dd994edafec36cf79c3481c202d3470
+==== 2026-01-09 14:08:20 ====
+POST:
+Array
+(
+)
+GET:
+Array
+(
+    [status] => 1
+    [message] => CARD_CORRECT
+    [request_id] => 369275197
+    [declared_value] => 10000
+    [value] => 10000
+    [card_value] => 10000
+    [amount] => 8900
+    [code] => 428384423180894
+    [serial] => 20000297920976
+    [telco] => VIETTEL
+    [trans_id] => 4996159
+    [callback_sign] => 6dd994edafec36cf79c3481c202d3470
+)
+SIGN_FAIL expect=d13e60ef3be5e8c411f116f9fb1e37bb got=6dd994edafec36cf79c3481c202d3470

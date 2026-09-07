@@ -1,0 +1,8 @@
+# Không bỏ qua gì — đẩy cả cấu hình IDE lên theo yêu cầu.
+#
+# File này do JetBrains tự sinh. Nó vốn chặn /shelf/ /workspace.xml
+# /dataSources.local.xml /httpRequests/ /out/ /../out/ và một đường dẫn
+# tuyệt đối trỏ về máy khác (Desktop\CBRO). Đã bỏ hết.
+#
+# Lưu ý: mở IDE lên, JetBrains có thể ghi lại file này về mặc định. Nếu
+# thấy mấy file trên biến mất khỏi git thì kiểm tra lại file này trước.

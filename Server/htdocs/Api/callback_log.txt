@@ -1,0 +1,224 @@
+[2025-10-13 01:59:49]
+{"gateway":"VPBank","transactionDate":"2025-10-13 01:54:00","accountNumber":"0783872425","subAccount":null,"code":null,"content":"NHAN TU 00000163409 TRACE 924154 ND nrodark391","transferType":"in","description":"BankAPINotify NHAN TU 00000163409 TRACE 924154 ND nrodark391","transferAmount":10000,"referenceCode":"FT25286905270080","accumulated":0,"id":26118708}
+
+[2025-10-13 02:00:57]
+{"gateway":"VPBank","transactionDate":"2025-10-13 01:54:00","accountNumber":"0783872425","subAccount":null,"code":null,"content":"NHAN TU 00000163409 TRACE 924154 ND nrodark391","transferType":"in","description":"BankAPINotify NHAN TU 00000163409 TRACE 924154 ND nrodark391","transferAmount":10000,"referenceCode":"FT25286905270080","accumulated":0,"id":26118708}
+
+[2025-10-13 02:02:15]
+{"gateway":"VPBank","transactionDate":"2025-10-13 01:54:00","accountNumber":"0783872425","subAccount":null,"code":null,"content":"NHAN TU 00000163409 TRACE 924154 ND nrodark391","transferType":"in","description":"BankAPINotify NHAN TU 00000163409 TRACE 924154 ND nrodark391","transferAmount":10000,"referenceCode":"FT25286905270080","accumulated":0,"id":26118708}
+
+==== Callback at 2025-10-12 21:29:49 (server s1) ====
+Headers: Array
+(
+    [Host] => ngocrongluaga.com
+    [accept-encoding] => gzip
+    [Cookie] => euConsent=true; BCPermissionLevel=PERSONAL; BC_GDPR=11111; fhCookieConsent=true; gdpr-source=GB; gdpr_consent=YES; beget=begetok; SOCS=CAISNQgEEitib3FfaWRlbnRpdHlmcm9udGVuZHVpc2VydmVyXzIwMjMwNzIzLjA5X3AwGgJlbiACGgYIgMSBpgY
+    [Accept] => text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+    [Accept-Language] => en-US,en;q=0.5
+    [cf-ray] => 98d902a36be66d17-AMS
+    [User-Agent] => TelegramBot (like TwitterBot)
+    [cdn-loop] => cloudflare; loops=1
+    [cf-connecting-ip] => 149.154.161.244
+    [cf-ipcountry] => NL
+    [cf-visitor] => {"scheme":"http"}
+    [X-Forwarded-Proto] => http
+    [x-forwarded-for] => 149.154.161.244
+    [connection] => Keep-Alive
+)
+
+Body: 
+
+ERROR: Invalid JSON input
+
+[2026-01-02 22:16:06]
+{"gateway":"TPBank","transactionDate":"2026-01-02 22:16:05","accountNumber":"00006293745","subAccount":null,"code":null,"content":"cauberong1","transferType":"in","description":"BankAPINotify cauberong1","transferAmount":10000,"referenceCode":"662ITC126003BMB3","accumulated":5593898,"id":37533885}
+
+[2026-01-02 22:22:10]
+{"gateway":"TPBank","transactionDate":"2026-01-02 22:22:09","accountNumber":"00006293745","subAccount":null,"code":null,"content":"ngocrongluaga1","transferType":"in","description":"BankAPINotify ngocrongluaga1","transferAmount":10000,"referenceCode":"662ITC126003BMGT","accumulated":5603898,"id":37534333}
+
+[2026-01-02 22:36:01]
+{"gateway":"TPBank","transactionDate":"2026-01-02 22:36:00","accountNumber":"00006293745","subAccount":null,"code":null,"content":"ngocrongluaga1","transferType":"in","description":"BankAPINotify ngocrongluaga1","transferAmount":10000,"referenceCode":"662ITC126003BMTN","accumulated":5613898,"id":37535320}
+
+[2026-01-02 22:50:31]
+{"gateway":"TPBank","transactionDate":"2026-01-02 22:50:31","accountNumber":"00006293745","subAccount":null,"code":null,"content":"ngocrongluaga1","transferType":"in","description":"BankAPINotify ngocrongluaga1","transferAmount":10000,"referenceCode":"662ITC126003BN64","accumulated":5623898,"id":37536748}
+
+[2026-01-02 23:04:50]
+{"gateway":"TPBank","transactionDate":"2026-01-02 23:04:49","accountNumber":"00006293745","subAccount":null,"code":null,"content":"ngocrongluaga1","transferType":"in","description":"BankAPINotify ngocrongluaga1","transferAmount":10000,"referenceCode":"662ITC126003BNHY","accumulated":5633898,"id":37537505}
+
+[2026-01-02 23:10:31]
+{"gateway":"TPBank","transactionDate":"2026-01-02 23:10:31","accountNumber":"00006293745","subAccount":null,"code":null,"content":"ngocrongluaga1","transferType":"in","description":"BankAPINotify ngocrongluaga1","transferAmount":10000,"referenceCode":"662ITC126003BNLL","accumulated":5643898,"id":37537830}
+
+[2026-01-07 12:33:31]
+{"gateway":"TPBank","transactionDate":"2026-01-07 12:33:30","accountNumber":"00006293745","subAccount":null,"code":null,"content":"DANG TUAN NGUYEN chuyen tien","transferType":"in","description":"BankAPINotify DANG TUAN NGUYEN chuyen tien","transferAmount":30000,"referenceCode":"662ITC126007A7HA","accumulated":5379898,"id":37994525}
+
+[2026-01-08 12:29:25]
+{"gateway":"TPBank","transactionDate":"2026-01-08 12:29:24","accountNumber":"00006293745","subAccount":null,"code":null,"content":"DANG TUAN NGUYEN chuyen tien","transferType":"in","description":"BankAPINotify DANG TUAN NGUYEN chuyen tien","transferAmount":20000,"referenceCode":"662ITC126008A60J","accumulated":5126898,"id":38103985}
+
+==== Callback at 2026-01-09 05:58:03 (server s1) ====
+Headers: Array
+(
+    [Host] => ngocrongluaga.com
+    [Accept] => */*
+)
+
+Body: 
+
+ERROR: Invalid JSON input
+
+==== Callback at 2026-01-09 05:58:04 (server s1) ====
+Headers: Array
+(
+    [Host] => ngocrongluaga.com
+    [User-Agent] => TelegramBot (like TwitterBot)
+    [Accept-Encoding] => deflate, gzip, br
+    [Cookie] => euConsent=true; BCPermissionLevel=PERSONAL; BC_GDPR=11111; fhCookieConsent=true; gdpr-source=GB; gdpr_consent=YES; beget=begetok; SOCS=CAISNQgEEitib3FfaWRlbnRpdHlmcm9udGVuZHVpc2VydmVyXzIwMjMwNzIzLjA5X3AwGgJlbiACGgYIgMSBpgY
+    [Accept-Language] => en-US,en;q=0.5
+    [Accept] => text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+)
+
+Body: 
+
+ERROR: Invalid JSON input
+
+==== Callback at 2026-01-09 05:58:19 (server s1) ====
+Headers: Array
+(
+    [Host] => ngocrongluaga.com
+    [User-Agent] => GuzzleHttp/6.5.5 curl/7.70.0 PHP/7.2.33
+)
+
+Body: 
+
+ERROR: Invalid JSON input
+
+==== Callback at 2026-01-09 05:59:19 (server s1) ====
+Headers: Array
+(
+    [Host] => ngocrongluaga.com
+    [User-Agent] => GuzzleHttp/6.5.5 curl/7.70.0 PHP/7.2.33
+)
+
+Body: 
+
+ERROR: Invalid JSON input
+
+==== Callback at 2026-01-09 07:45:41 (server s1) ====
+Headers: Array
+(
+    [Host] => ngocrongluaga.com
+    [Accept] => */*
+)
+
+Body: 
+
+ERROR: Invalid JSON input
+
+==== Callback at 2026-01-09 07:45:57 (server s1) ====
+Headers: Array
+(
+    [Host] => ngocrongluaga.com
+    [User-Agent] => GuzzleHttp/6.5.5 curl/7.70.0 PHP/7.2.33
+)
+
+Body: 
+
+ERROR: Invalid JSON input
+
+==== Callback at 2026-01-09 07:46:17 (server s1) ====
+Headers: Array
+(
+    [Host] => ngocrongluaga.com
+    [User-Agent] => GuzzleHttp/6.5.5 curl/7.70.0 PHP/7.2.33
+)
+
+Body: 
+
+ERROR: Invalid JSON input
+
+==== 2026-01-09 14:20:08 ====
+GET:
+Array
+(
+)
+==== 2026-01-09 14:20:24 ====
+GET:
+Array
+(
+    [status] => 1
+    [message] => CARD_CORRECT
+    [request_id] => 208581523
+    [declared_value] => 10000
+    [value] => 10000
+    [card_value] => 10000
+    [amount] => 8900
+    [code] => 928635801043912
+    [serial] => 20000297921876
+    [telco] => VIETTEL
+    [trans_id] => 4996238
+    [callback_sign] => 7474a803310ae7be586f629916fa15fe
+)
+SIGN_FAIL expect=9da04d97e862f0320965de3c3cbddc39 got=7474a803310ae7be586f629916fa15fe
+==== 2026-01-09 14:21:12 ====
+GET:
+Array
+(
+    [status] => 1
+    [message] => CARD_CORRECT
+    [request_id] => 208581523
+    [declared_value] => 10000
+    [value] => 10000
+    [card_value] => 10000
+    [amount] => 8900
+    [code] => 928635801043912
+    [serial] => 20000297921876
+    [telco] => VIETTEL
+    [trans_id] => 4996238
+    [callback_sign] => 7474a803310ae7be586f629916fa15fe
+)
+SIGN_FAIL expect=9da04d97e862f0320965de3c3cbddc39 got=7474a803310ae7be586f629916fa15fe
+==== 2026-01-09 14:26:28 (server s1) ====
+GET:
+Array
+(
+)
+==== 2026-01-09 14:26:28 (server s1) ====
+GET:
+Array
+(
+    [status] => 1
+    [message] => CARD_CORRECT
+    [request_id] => 240588584
+    [declared_value] => 10000
+    [value] => 10000
+    [card_value] => 10000
+    [amount] => 8900
+    [code] => 527413523494597
+    [serial] => 20000297537771
+    [telco] => VIETTEL
+    [trans_id] => 4996280
+    [callback_sign] => 9a71d3f632805cf7ac304d4903c3e33e
+)
+SIGN_FAIL expect=d50eb6fc8dea785a159c9fa3e81eeedb got=9a71d3f632805cf7ac304d4903c3e33e
+==== 2026-01-09 14:29:38 (server s1) ====
+GET:
+Array
+(
+)
+==== 2026-01-09 14:29:38 (server s1) ====
+GET:
+Array
+(
+    [status] => 1
+    [message] => CARD_CORRECT
+    [request_id] => 183098963
+    [declared_value] => 10000
+    [value] => 10000
+    [card_value] => 10000
+    [amount] => 8900
+    [code] => 025029751954807
+    [serial] => 20000297537803
+    [telco] => VIETTEL
+    [trans_id] => 4996300
+    [callback_sign] => b5ecee5cb72a7967ffc39646084bf6bf
+)
+SIGN_FAIL expect=4dc59b161025e51a4cba427ad663f919 got=b5ecee5cb72a7967ffc39646084bf6bf

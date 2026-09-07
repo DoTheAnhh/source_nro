@@ -1,0 +1,157 @@
+[0;32m────────────────────────────────────────────────────────────[0m
+[0;32m[1m▶ SERVER START[0m
+[0;32m────────────────────────────────────────────────────────────[0m
+[0;32m[00:13:58] [SERVER]       Khởi động ServerManagerUI[0m
+[0;32m[00:13:59] [LOG]          Chạy thành công tệp properties!
+[0m[main] WARN com.zaxxer.hikari.pool.ProxyConnection - User Management - Connection com.mysql.jdbc.JDBC4Connection@479ceda0 marked as broken because of SQLSTATE(08S01), ErrorCode(0)
+com.mysql.jdbc.exceptions.jdbc4.CommunicationsException: Communications link failure
+
+The last packet successfully received from the server was 3,635 milliseconds ago.  The last packet sent successfully to the server was 3,558 milliseconds ago.
+	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62)
+	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502)
+	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486)
+	at com.mysql.jdbc.Util.handleNewInstance(Util.java:411)
+	at com.mysql.jdbc.SQLError.createCommunicationsException(SQLError.java:1117)
+	at com.mysql.jdbc.MysqlIO.reuseAndReadPacket(MysqlIO.java:3603)
+	at com.mysql.jdbc.MysqlIO.reuseAndReadPacket(MysqlIO.java:3492)
+	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:4043)
+	at com.mysql.jdbc.MysqlIO.sendCommand(MysqlIO.java:2503)
+	at com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:2664)
+	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2918)
+	at com.mysql.jdbc.PreparedStatement.executeInternal(PreparedStatement.java:2160)
+	at com.mysql.jdbc.PreparedStatement.executeUpdate(PreparedStatement.java:2463)
+	at com.mysql.jdbc.PreparedStatement.executeUpdate(PreparedStatement.java:2380)
+	at com.mysql.jdbc.PreparedStatement.executeUpdate(PreparedStatement.java:2364)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)
+	at nro.repository.ConnectDB.executeUpdate(ConnectDB.java:227)
+	at nro.repository.dao.GiftCodeDAO.vaCot(GiftCodeDAO.java:74)
+	at nro.repository.dao.GiftCodeDAO.list(GiftCodeDAO.java:87)
+	at nro.ui.GiftCodePanel.loadGift(GiftCodePanel.java:124)
+	at nro.ui.GiftCodePanel.buildGiftTab(GiftCodePanel.java:118)
+	at nro.ui.GiftCodePanel.<init>(GiftCodePanel.java:61)
+	at nro.ui.ServerManagerUI.initUI(ServerManagerUI.java:841)
+	at nro.ui.ServerManagerUI.<init>(ServerManagerUI.java:696)
+	at nro.server.ServerManager.main(ServerManager.java:254)
+Caused by: java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:318)
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346)
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796)
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099)
+	at com.mysql.jdbc.util.ReadAheadInputStream.fill(ReadAheadInputStream.java:114)
+	at com.mysql.jdbc.util.ReadAheadInputStream.readFromUnderlyingStreamIfNecessary(ReadAheadInputStream.java:161)
+	at com.mysql.jdbc.util.ReadAheadInputStream.read(ReadAheadInputStream.java:189)
+	at com.mysql.jdbc.MysqlIO.readFully(MysqlIO.java:3049)
+	at com.mysql.jdbc.MysqlIO.reuseAndReadPacket(MysqlIO.java:3503)
+	... 20 more
+[0;32m[00:14:03] [LOG]          Có lỗi xảy ra khi thực thi câu lệnh: ALTER TABLE giftcode ADD COLUMN IF NOT EXISTS limit_per_player INT NOT NULL DEFAULT 1
+[0m[0;33m[1m[00:14:03] [EXCEPTION]    Không thêm được cột limit_per_player — mỗi người vẫn chỉ nhập được 1 lần[0m
+[0;31m[1m[00:14:03] [EXCEPTION]    Class: nro.repository.dao.GiftCodeDAO[0m
+[0;31m[1m[00:14:03] [EXCEPTION]    Method: vaCot[0m
+[0;31m[1m[00:14:03] [EXCEPTION]    Message: Communications link failure
+
+The last packet successfully received from the server was 3,635 milliseconds ago.  The last packet sent successfully to the server was 3,558 milliseconds ago.[0m
+[0;31m[1m[00:14:03] [STACK]        com.mysql.jdbc.exceptions.jdbc4.CommunicationsException: Communications link failure[0m
+[0;31m[1m[00:14:03] [STACK]        [0m
+[0;31m[1m[00:14:03] [STACK]        The last packet successfully received from the server was 3,635 milliseconds ago.  The last packet sent successfully to the server was 3,558 milliseconds ago.[0m
+[0;31m[1m[00:14:03] [STACK]        	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62)[0m
+[0;31m[1m[00:14:03] [STACK]        	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502)[0m
+[0;31m[1m[00:14:03] [STACK]        	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.Util.handleNewInstance(Util.java:411)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.SQLError.createCommunicationsException(SQLError.java:1117)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.MysqlIO.reuseAndReadPacket(MysqlIO.java:3603)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.MysqlIO.reuseAndReadPacket(MysqlIO.java:3492)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:4043)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.MysqlIO.sendCommand(MysqlIO.java:2503)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:2664)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.ConnectionImpl.execSQL(ConnectionImpl.java:2918)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.PreparedStatement.executeInternal(PreparedStatement.java:2160)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.PreparedStatement.executeUpdate(PreparedStatement.java:2463)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.PreparedStatement.executeUpdate(PreparedStatement.java:2380)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.PreparedStatement.executeUpdate(PreparedStatement.java:2364)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeUpdate(ProxyPreparedStatement.java:61)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeUpdate(HikariProxyPreparedStatement.java)[0m
+[0;31m[1m[00:14:03] [STACK]        	at nro.repository.ConnectDB.executeUpdate(ConnectDB.java:227)[0m
+[0;31m[1m[00:14:03] [STACK]        	at nro.repository.dao.GiftCodeDAO.vaCot(GiftCodeDAO.java:74)[0m
+[0;31m[1m[00:14:03] [STACK]        	at nro.repository.dao.GiftCodeDAO.list(GiftCodeDAO.java:87)[0m
+[0;31m[1m[00:14:03] [STACK]        	at nro.ui.GiftCodePanel.loadGift(GiftCodePanel.java:124)[0m
+[0;31m[1m[00:14:03] [STACK]        	at nro.ui.GiftCodePanel.buildGiftTab(GiftCodePanel.java:118)[0m
+[0;31m[1m[00:14:03] [STACK]        	at nro.ui.GiftCodePanel.<init>(GiftCodePanel.java:61)[0m
+[0;31m[1m[00:14:03] [STACK]        	at nro.ui.ServerManagerUI.initUI(ServerManagerUI.java:841)[0m
+[0;31m[1m[00:14:03] [STACK]        	at nro.ui.ServerManagerUI.<init>(ServerManagerUI.java:696)[0m
+[0;31m[1m[00:14:03] [STACK]        	at nro.server.ServerManager.main(ServerManager.java:254)[0m
+[0;31m[1m[00:14:03] [STACK]        Caused by: java.net.SocketException: Connection reset[0m
+[0;31m[1m[00:14:03] [STACK]        	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:318)[0m
+[0;31m[1m[00:14:03] [STACK]        	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346)[0m
+[0;31m[1m[00:14:03] [STACK]        	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796)[0m
+[0;31m[1m[00:14:03] [STACK]        	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.util.ReadAheadInputStream.fill(ReadAheadInputStream.java:114)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.util.ReadAheadInputStream.readFromUnderlyingStreamIfNecessary(ReadAheadInputStream.java:161)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.util.ReadAheadInputStream.read(ReadAheadInputStream.java:189)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.MysqlIO.readFully(MysqlIO.java:3049)[0m
+[0;31m[1m[00:14:03] [STACK]        	at com.mysql.jdbc.MysqlIO.reuseAndReadPacket(MysqlIO.java:3503)[0m
+[0;31m[1m[00:14:03] [STACK]        	... 20 more[0m
+[0;32m────────────────────────────────────────────────────────────[0m
+[0;32m[00:14:33] [LOG]          Có lỗi xảy ra khi thực thi câu lệnh: SELECT id, code, item, `option`, datecreate, expired, count_left, listIdPlayers, limit_per_player FROM giftcode ORDER BY id DESC
+[0m[0;33m[1m[00:14:33] [EXCEPTION]    Lỗi đọc bảng giftcode[0m
+[0;31m[1m[00:14:33] [EXCEPTION]    Class: nro.repository.dao.GiftCodeDAO[0m
+[0;31m[1m[00:14:33] [EXCEPTION]    Method: list[0m
+[0;31m[1m[00:14:33] [EXCEPTION]    Message: User Management - Connection is not available, request timed out after 30000ms (total=0, active=0, idle=0, waiting=1)[0m
+[0;31m[1m[00:14:33] [STACK]        java.sql.SQLTransientConnectionException: User Management - Connection is not available, request timed out after 30000ms (total=0, active=0, idle=0, waiting=1)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.zaxxer.hikari.pool.HikariPool.createTimeoutException(HikariPool.java:452)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:129)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:98)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:51)[0m
+[0;31m[1m[00:14:33] [STACK]        	at nro.repository.ConnectDB.getConnection(ConnectDB.java:84)[0m
+[0;31m[1m[00:14:33] [STACK]        	at nro.repository.ConnectDB.executeQuery(ConnectDB.java:167)[0m
+[0;31m[1m[00:14:33] [STACK]        	at nro.repository.dao.GiftCodeDAO.list(GiftCodeDAO.java:88)[0m
+[0;31m[1m[00:14:33] [STACK]        	at nro.ui.GiftCodePanel.loadGift(GiftCodePanel.java:124)[0m
+[0;31m[1m[00:14:33] [STACK]        	at nro.ui.GiftCodePanel.buildGiftTab(GiftCodePanel.java:118)[0m
+[0;31m[1m[00:14:33] [STACK]        	at nro.ui.GiftCodePanel.<init>(GiftCodePanel.java:61)[0m
+[0;31m[1m[00:14:33] [STACK]        	at nro.ui.ServerManagerUI.initUI(ServerManagerUI.java:841)[0m
+[0;31m[1m[00:14:33] [STACK]        	at nro.ui.ServerManagerUI.<init>(ServerManagerUI.java:696)[0m
+[0;31m[1m[00:14:33] [STACK]        	at nro.server.ServerManager.main(ServerManager.java:254)[0m
+[0;31m[1m[00:14:33] [STACK]        Caused by: com.mysql.jdbc.exceptions.jdbc4.CommunicationsException: Communications link failure[0m
+[0;31m[1m[00:14:33] [STACK]        [0m
+[0;31m[1m[00:14:33] [STACK]        The last packet sent successfully to the server was 0 milliseconds ago. The driver has not received any packets from the server.[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.mysql.jdbc.Util.handleNewInstance(Util.java:411)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.mysql.jdbc.SQLError.createCommunicationsException(SQLError.java:1117)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.mysql.jdbc.MysqlIO.<init>(MysqlIO.java:355)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.mysql.jdbc.ConnectionImpl.coreConnect(ConnectionImpl.java:2588)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.mysql.jdbc.ConnectionImpl.connectOneTryOnly(ConnectionImpl.java:2622)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.mysql.jdbc.ConnectionImpl.createNewIO(ConnectionImpl.java:2407)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.mysql.jdbc.ConnectionImpl.<init>(ConnectionImpl.java:829)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.mysql.jdbc.JDBC4Connection.<init>(JDBC4Connection.java:47)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/jdk.internal.reflect.DirectConstructorHandleAccessor.newInstance(DirectConstructorHandleAccessor.java:62)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:502)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.mysql.jdbc.Util.handleNewInstance(Util.java:411)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.mysql.jdbc.ConnectionImpl.getInstance(ConnectionImpl.java:411)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.mysql.jdbc.NonRegisteringDriver.connect(NonRegisteringDriver.java:319)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:137)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:360)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:202)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:311)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:581)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:558)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/java.lang.Thread.run(Thread.java:1583)[0m
+[0;31m[1m[00:14:33] [STACK]        Caused by: java.net.ConnectException: Connection refused: connect[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/sun.nio.ch.Net.connect0(Native Method)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/sun.nio.ch.Net.connect(Net.java:597)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/sun.nio.ch.Net.connect(Net.java:586)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:583)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/java.net.Socket.connect(Socket.java:751)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/java.net.Socket.connect(Socket.java:686)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/java.net.Socket.<init>(Socket.java:555)[0m
+[0;31m[1m[00:14:33] [STACK]        	at java.base/java.net.Socket.<init>(Socket.java:356)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.mysql.jdbc.StandardSocketFactory.connect(StandardSocketFactory.java:259)[0m
+[0;31m[1m[00:14:33] [STACK]        	at com.mysql.jdbc.MysqlIO.<init>(MysqlIO.java:305)[0m
+[0;31m[1m[00:14:33] [STACK]        	... 21 more[0m
+[0;32m────────────────────────────────────────────────────────────[0m
