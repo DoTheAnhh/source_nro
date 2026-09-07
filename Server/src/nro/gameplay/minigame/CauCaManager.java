@@ -93,8 +93,14 @@ public final class CauCaManager {
     /** Quãng nghỉ bắt buộc giữa hai lần quăng, tính bằng mili giây. */
     public static final long NGHI_MS = 3000;
 
-    /** Thanh tiến trình khởi từ mức này. */
-    public static final int TIEN_TRINH_DAU = 30;
+    /**
+     * Thanh tiến trình khởi từ mức này.
+     *
+     * <p>Hai mươi phần trăm — trước là ba mươi. Cho khoảng kéo dài ra một chút,
+     * và cũng cho cái mốc khởi đầu vẽ trên thanh nằm gần mép trái hơn nên dễ
+     * thấy mình đang hơn hay kém lúc đầu.</p>
+     */
+    public static final int TIEN_TRINH_DAU = 20;
 
     /** Quãng chờ cá cắn, ngắn nhất và dài nhất, tính bằng mili giây. */
     public static final int CHO_CAN_MIN_MS = 1600;
@@ -167,17 +173,32 @@ public final class CauCaManager {
      * hơn và vùng an toàn hẹp hơn — bốn cách làm khó cùng một lúc, nên độ khó
      * lên rõ chứ không chỉ nhích một chút.</p>
      *
+     * <p><b>Hai cột đầu đã chia đôi so với bản trước</b>: thanh tiến trình lên
+     * quá nhanh, một lượt kéo xong trong hơn một giây nên chưa kịp thành một
+     * cuộc vật lộn. Chia <i>cả hai</i> chứ không riêng cột tăng — giữ nguyên tỉ
+     * lệ giữa lên và xuống thì độ khó không đổi, chỉ dài ra. Hạ mỗi cột tăng thì
+     * trò thành ra khó hơn hẳn, mà đó không phải điều được yêu cầu.</p>
+     *
+     * <p><b>Cột tăng đã chia đôi thêm một lần nữa.</b> Cộng với mốc khởi đầu
+     * hạ từ ba mươi xuống hai mươi phần trăm, một lượt hoàn hảo giờ mất chừng
+     * <b>bốn giây</b> với cá ngựa và <b>mười giây</b> với cá vàng.</p>
+     *
+     * <p>Cột giảm giữ nguyên, và hệ số nhân bên client cũng đã hạ xuống một
+     * phần mười — nên tụt rất chậm. Nghĩa là con cá gần như không tuột được
+     * nữa, chỉ là kéo lâu hay nhanh. Đây là lựa chọn có ý thức: đổi cái căng
+     * thẳng "có thể mất" lấy cái chắc chắn "cứ giữ là được".</p>
+     *
      * <p>Con số nằm ở <b>máy chủ</b> chứ không ở client, dù client mới là bên
      * dùng: một bảng ở một chỗ thì sửa cân bằng không phải dựng lại client, và
      * không có chuyện hai bên lệch nhau.</p>
      */
     private static final int[][] DO_KHO = {
         // tăng, giảm, tốc vạch, rộng vùng
-        { 82, 12, 22, 26 },   // cá ngựa con — dễ nhất
-        { 60, 17, 32, 20 },   // cá thu
-        { 48, 24, 44, 16 },   // cá cờ
-        { 38, 32, 58, 12 },   // cá mập
-        { 30, 40, 76,  9 }    // cá vàng
+        { 20,  6, 22, 26 },   // cá ngựa con — dễ nhất
+        { 15,  9, 32, 20 },   // cá thu
+        { 12, 12, 44, 16 },   // cá cờ
+        { 10, 16, 58, 12 },   // cá mập
+        {  8, 20, 76,  9 }    // cá vàng
     };
 
     /**
