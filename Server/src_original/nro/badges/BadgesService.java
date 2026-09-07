@@ -1,0 +1,23 @@
+package nro.badges;
+
+import nro.player.Player;
+
+/*
+ * Author Dev By MaiTienDung
+ */
+
+public class BadgesService {
+
+    public static void turnOnBadges(Player player, int id) {
+        if (player.dataBadges != null) {
+            for (BadgesData data : player.dataBadges) {
+                if (data.idBadGes == id) {
+                    data.isUse = true;
+                } else {
+                    data.isUse = false;
+                }
+            }
+        }
+    }
+
+}

@@ -1,0 +1,35 @@
+# --- Kết quả biên dịch ---
+out/
+build/
+dist/
+*.class
+
+# --- Artifact đóng gói (build lại được từ src) ---
+AWN_Version.jar
+sources.txt
+
+# --- Bản sao lưu tự sinh ---
+backupsrc/
+backupsql/
+archive/
+
+# --- Dữ liệu asset nặng & web (quản lý riêng, không đưa vào git) ---
+data/
+htdocs/
+*.rar
+
+# --- Dump CSDL ---
+*.sql
+
+# --- Log / runtime ---
+*.log
+nohup.out
+
+# --- IDE ---
+.idea/
+.vscode/
+nbproject/private/
+*.iml
+
+# --- Thu muc tam cua jar (build.bat tu tao) ---
+_tmp/
