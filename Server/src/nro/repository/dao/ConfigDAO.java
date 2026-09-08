@@ -105,6 +105,15 @@ public class ConfigDAO {
     public static final String NV_MOI_HONG_NGOC = "nv_moi_hong_ngoc";
 
     /**
+     * Một Thỏi Vàng đổi ra bao nhiêu vàng — dùng cho CẢ hai đường: bấm
+     * "Sử dụng" trong hành trang, và bán ở cửa hàng.
+     *
+     * <p>Một con số cho hai chỗ, nên không thể lệch nhau kiểu dùng thì được
+     * giá này mà bán lại được giá khác.</p>
+     */
+    public static final String THOI_VANG_GIA_VANG = "thoi_vang_gia_vang";
+
+    /**
      * Giá <b>vàng</b> của gói "Full bùa vĩnh viễn" ở Bà Hạt Mít.
      *
      * <p>Mặc định {@code 500.000.000}. Đổi giá thì thêm dòng
@@ -295,6 +304,8 @@ public class ConfigDAO {
 
     static {
         DEFAULTS.put(BOSS_GIAY_HOI_SINH, 0L);
+        DEFAULTS.put(THOI_VANG_GIA_VANG, 200_000_000L);
+        DEFAULTS.put(BUA_VV_GIA_VANG, 500_000_000L);
         DEFAULTS.put(DOI_TV_MOI_1K, 5L);
         DEFAULTS.put(DOI_TV_MIN, 1000L);
         DEFAULTS.put(DOI_TV_BAT, 1L);
@@ -339,6 +350,8 @@ public class ConfigDAO {
 
     static {
         NOTES.put(BAO_TRI, "Chế độ bảo trì: bật thì CHỈ tài khoản quản trị vào được game, người chơi thường bị từ chối ở màn đăng nhập (1 = bật, 0 = tắt)");
+        NOTES.put(THOI_VANG_GIA_VANG, "Một Thỏi Vàng đổi ra bao nhiêu vàng — dùng cho CẢ hai đường: bấm Sử dụng trong hành trang, và bán ở cửa hàng");
+        NOTES.put(BUA_VV_GIA_VANG, "Giá vàng của gói Full bùa vĩnh viễn ở Bà Hạt Mít (0 = cho không)");
         NOTES.put(BOSS_GIAY_HOI_SINH, "Giây chờ hồi sinh dùng chung cho MỌI boss (3600 = 1 tiếng, 0 = tắt, mỗi boss giữ số gốc). Boss nào khai riêng seconds_rest ở tab Boss thì vẫn theo số riêng.");
         NOTES.put(DOI_TV_MOI_1K, "Số Thỏi Vàng nhận được cho mỗi 1.000 VND");
         NOTES.put(DOI_TV_MIN, "Số VND tối thiểu mỗi lần đổi");

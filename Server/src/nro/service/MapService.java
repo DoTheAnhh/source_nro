@@ -381,6 +381,26 @@ public class MapService {
             int mapId = d.theoHanhTinh ? d.mapId + pl.gender : d.mapId;
             addListMapCapsule(pl, list, getMapCanJoin(pl, mapId, 0));
         }
+
+        // Danh sách KHÔNG BAO GIỜ được rỗng.
+        //
+        // Mỗi điểm đến ở trên đều phải qua getMapCanJoin, mà hàm đó trả null
+        // trong khá nhiều trường hợp — khu đầy người, điều kiện bang hội, bản
+        // đồ đặc biệt. Rơi hết thì bảng chọn hiện ra không có dòng nào: người
+        // chơi mở capsule, thấy một khung trống, và kẹt luôn ở bản đồ đang
+        // đứng. Đó chính là "kẹt map thì không capsule bay được".
+        //
+        // Nhà của chính hành tinh mình luôn là chỗ đi được: nó không giới hạn
+        // người, không đòi bang hội, không đòi nhiệm vụ.
+        if (list.isEmpty()) {
+            Zone nha = getMapCanJoin(pl, 21 + pl.gender, 0);
+            if (nha == null) {
+                nha = getZone(21 + pl.gender);
+            }
+            if (nha != null) {
+                list.add(nha);
+            }
+        }
         return list;
     }
 

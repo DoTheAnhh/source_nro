@@ -1547,10 +1547,16 @@ public class Controller implements IMessageHandler {
             Service.gI().sendNangDong(player);
             Service.gI().sendHavePet(player);
             Service.gI().sendTopRank(player);
-            if (player.superRank != null && player.superRank.rank < 1) {
-                player.superRank.rank = SuperRankDAO.getHighestRank() + 1;
-                SuperRankDAO.updateRank(player);
-            }
+            // KHONG phat thu hang Sieu Hang o day nua.
+            //
+            // Dong cu: rank < 1 thi cap ngay getHighestRank() + 1. Tuc la chi
+            // can TAO TAI KHOAN roi dang nhap mot lan la co mat trong bang xep
+            // hang, va thu tu trong bang chinh la thu tu dang ky tai khoan —
+            // ai lap nick truoc thi dung tren. Khong lien quan gi den thi dau.
+            //
+            // Gio thu hang duoc cap dung luc nguoi choi vao tran dau tien
+            // (SuperRankService.competing). Ai chua danh tran nao thi rank van
+            // bang 0 va khong xuat hien trong bang.
             if (player.LastTimeDanhHieu_ThienTu > 0) {
                 new Thread(() -> {
                     try {

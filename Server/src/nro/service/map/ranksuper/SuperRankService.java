@@ -41,6 +41,19 @@ public class SuperRankService {
         if (pl == null) {
             return;
         }
+        // Vào trận đầu tiên thì mới được cấp thứ hạng.
+        //
+        // Trước đây thứ hạng phát ngay lúc đăng nhập lần đầu, nên bảng xếp hạng
+        // là danh sách người tạo tài khoản sớm chứ không phải người thi đấu.
+        // Cấp ở đây thì phải chọn được đối thủ và bấm thi đấu mới có tên.
+        //
+        // Cấp hạng CUỐI BẢNG (getHighestRank() + 1) nên người mới luôn ở dưới
+        // mọi người đang có hạng — các phép so bên dưới vì thế vẫn đúng: họ
+        // được phép thách đấu lên trên, không ai thách xuống họ được.
+        if (player.superRank.rank < 1) {
+            player.superRank.rank = SuperRankDAO.getHighestRank() + 1;
+            SuperRankDAO.updateRank(player);
+        }
         if (SuperRankManager.gI().currentlyCompeting(player)) {
             Service.gI().sendThongBao(player, ConstSuperRank.TEXT_DANG_THI_DAU);
             return;
@@ -94,12 +107,45 @@ public class SuperRankService {
             List<Long> list = type == 0
                     ? SuperRankDAO.getPlayerListInRank(player.superRank.rank, 100)
                     : player.superRank.rank <= 10 ? SuperRankDAO.getPlayerListInRank(player.superRank.rank, 11) : SuperRankDAO.getPlayerListInRankRange(player.superRank.rank, 11);
+            // Lọc TRƯỚC rồi mới gửi, vì số phần tử phải ghi ra trước vòng lặp.
+            //
+            // Bỏ hai loại: nạp không ra (nhân vật đã xoá mà cột rank còn sót —
+            // dòng cũ gọi thẳng pl.superRank là ném NullPointer và cả bảng xếp
+            // hạng chết không hiện gì), và người CHƯA ĐÁNH TRẬN NÀO.
+            //
+            // Vế thứ hai là để dọn dữ liệu cũ. Từ nay thứ hạng chỉ cấp lúc vào
+            // trận đầu tiên, nhưng những ai đã được phát hạng theo luật cũ —
+            // phát ngay lúc đăng nhập — thì cột rank của họ vẫn còn trong cơ sở
+            // dữ liệu. Lọc theo số trận thì họ biến khỏi bảng ngay, không phải
+            // đụng vào cơ sở dữ liệu.
+            List<Player> dsHopLe = new ArrayList<>();
+            List<Player> dsNapDuoc = new ArrayList<>();
+            for (int i = 0; i < list.size(); i++) {
+                Player pl = loadPlayer(list.get(i));
+                if (pl == null || pl.superRank == null) {
+                    continue;
+                }
+                dsNapDuoc.add(pl);
+                if (pl.superRank.win + pl.superRank.lose > 0) {
+                    dsHopLe.add(pl);
+                }
+            }
+
+            // Chưa ai đánh trận nào thì hiện bảng chưa lọc.
+            //
+            // Không có cửa này thì giải tự khoá chính nó: bảng rỗng nghĩa là
+            // không chọn được đối thủ, không chọn được đối thủ thì không ai
+            // đánh được trận nào, và không ai đánh trận nào thì bảng mãi mãi
+            // rỗng. Chỉ cần MỘT trận đấu xong là phép lọc ở trên tiếp quản.
+            if (dsHopLe.isEmpty()) {
+                dsHopLe = dsNapDuoc;
+            }
+
             msg = new Message(-96);
             msg.writer().writeByte(0);
             msg.writer().writeUTF("Top 100 Cao Thủ");
-            msg.writer().writeByte(list.size());
-            for (int i = 0; i < list.size(); i++) {
-                Player pl = loadPlayer(list.get(i));
+            msg.writer().writeByte(dsHopLe.size());
+            for (Player pl : dsHopLe) {
                 msg.writer().writeInt(pl.superRank.rank);
                 msg.writer().writeInt((int) pl.id);
                 msg.writer().writeShort(pl.getHead());

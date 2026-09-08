@@ -711,6 +711,36 @@ public class ShopService {
      * chơi không mất gì. Nếu trừ trước rồi mới kiểm thì mua hụt là mất trắng số
      * đã trừ.</p>
      */
+    /**
+     * Giá bán một món, <b>đã nhân số lượng</b>.
+     *
+     * <h2>Thỏi vàng đi đường riêng</h2>
+     *
+     * <p>Trước đây Thỏi Vàng bị chặn bán thẳng ("Bạn không thể bán vật phẩm
+     * này"), và bấm "Sử dụng" thì được 500.000.000 vàng gõ cứng trong
+     * {@code UseItem}. Nay cả hai đường đọc chung
+     * {@link nro.repository.dao.ConfigDAO#THOI_VANG_GIA_VANG} nên không thể
+     * lệch nhau, và sửa giá thì sửa một chỗ trên panel.</p>
+     *
+     * <h2>Vì sao trả {@code long}</h2>
+     *
+     * <p>Bản cũ tính bằng {@code int}. Với giá 200 triệu một thỏi thì bán 11
+     * thỏi đã vượt {@code Integer.MAX_VALUE} và số tiền <b>lật thành âm</b> —
+     * người chơi bán xong bị trừ vàng. Số lượng một ô có thể lên hàng nghìn.</p>
+     */
+    private long giaBan(Item item) {
+        if (item.template.id == ID_THOI_VANG) {
+            return nro.repository.dao.ConfigDAO.num(
+                    nro.repository.dao.ConfigDAO.THOI_VANG_GIA_VANG,
+                    200_000_000L) * item.quantity;
+        }
+        long don = item.template.goldSell / 4;
+        if (don <= 0) {
+            don = 1;
+        }
+        return don * item.quantity;
+    }
+
     public boolean truThoiVang(Player player, int soLuong) {
         if (soLuong <= 0) {
             return true;
@@ -1042,20 +1072,13 @@ public class ShopService {
     }
 
     if (item != null && item.isNotNullItem()) {
-        if (item.template.id == 570 || item.template.id == 457) {
+        if (item.template.id == 570) {
             Service.gI().sendThongBao(pl, "Bạn không thể bán vật phẩm này");
             return;
         }
 
         int quantity = item.quantity;
-        int cost = item.template.goldSell;
-
-        cost /= 4;
-
-        if (cost == 0) {
-            cost = 1;
-        }
-        cost *= quantity;
+        long cost = giaBan(item);
 
         String text = "Bạn có muốn bán\nx" + quantity
                 + " " + item.template.name + "\nvới giá là "
@@ -1097,7 +1120,7 @@ public class ShopService {
     }
 
     if (item != null && item.isNotNullItem()) {
-        if (item.template.id == 570 || item.template.id == 457) {
+        if (item.template.id == 570) {
             Service.gI().sendThongBao(pl, "Bạn không thể bán vật phẩm này");
             return;
         }
@@ -1108,14 +1131,7 @@ public class ShopService {
         }
 
         int quantity = item.quantity;
-        int cost = item.template.goldSell;
-
-        cost /= 4;
-
-        if (cost == 0) {
-            cost = 1;
-        }
-        cost *= quantity;
+        long cost = giaBan(item);
 
         if (pl.inventory.gold + cost > Inventory.LIMIT_GOLD) {
             Service.gI().sendThongBao(pl, "Vàng sau khi bán vượt quá giới hạn");

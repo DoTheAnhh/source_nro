@@ -1791,8 +1791,14 @@ public class UseItem {
         }
         if (tv != null) {
             if (player.inventory.gold <= LIMIT_GOLD) {
+                // Giá đọc từ quy ước, KHÔNG gõ cứng 500.000.000 như trước.
+                // Cùng một con số với đường bán ở cửa hàng, nên dùng hay bán
+                // đều được đúng bằng nhau.
+                long gia = nro.repository.dao.ConfigDAO.num(
+                        nro.repository.dao.ConfigDAO.THOI_VANG_GIA_VANG,
+                        200_000_000L);
                 InventoryService.gI().subQuantityItemsBag(player, tv, 1);
-                player.inventory.gold += 500000000;
+                player.inventory.gold += gia;
                 PlayerService.gI().sendInfoHpMpMoney(player);
                 InventoryService.gI().sendItemBag(player);
             } else {
@@ -1870,7 +1876,40 @@ public class UseItem {
         pl.changeMapVIP_MeoDen = true;
         pl.changeMapVIP_PiLong = true;
         pl.changeMapVIP_PeNa = true;
+
+        nro.entity.map.Zone khuTruoc = pl.zone;
         ChangeMapService.gI().changeMapBySpaceShip(pl, pl.mapCapsule.get(index).map.mapId, zoneId, -1);
+
+        // CAPSULE PHẢI ĐƯA ĐI ĐƯỢC, không có ngoại lệ.
+        //
+        // `changeMap` đi qua `checkMapCanJoin`, và hàm đó trả null ở rất nhiều
+        // chỗ — chưa đủ nhiệm vụ cho bản đồ đích, khu đầy người, điều kiện bang
+        // hội. Trả null thì `changeMap` lặng lẽ không làm gì: không đổi bản đồ,
+        // không báo lỗi, và hộp "Xin chờ" vẫn treo. Nhìn từ trong game là
+        // "capsule rơi xuống mà không đưa đi đâu cả" — và nếu đang kẹt ở viền
+        // dưới bản đồ thì đó là cửa thoát cuối cùng vừa đóng lại.
+        //
+        // Không thấy đổi khu thì về NHÀ. Nhà không giới hạn người, không đòi
+        // nhiệm vụ, không đòi bang hội — luôn vào được.
+        if (pl.zone == khuTruoc) {
+            Logger.logln(Logger.PURPLE, "[CAPSULE] " + pl.name
+                    + " khong roi duoc map " + (khuTruoc == null ? "?"
+                            : String.valueOf(khuTruoc.map.mapId))
+                    + " -> day ve nha");
+            ChangeMapService.gI().changeMapBySpaceShip(pl, pl.gender + 21, -1, -1);
+            if (pl.zone == khuTruoc) {
+                // Ngay cả nhà cũng không vào được thì còn một đường nữa: đẩy
+                // thẳng vào khu 0 của nhà, bỏ qua mọi phép chọn khu.
+                nro.entity.map.Zone nha = MapService.gI()
+                        .getZone(pl.gender + 21);
+                if (nha != null) {
+                    ChangeMapService.gI().changeMapBySpaceShip(pl, nha, -1);
+                }
+            }
+            Service.gI().sendThongBao(pl,
+                    "Không vào được nơi đã chọn, đã đưa ngươi về nhà.");
+        }
+        Service.gI().hideWaitDialog(pl);
     }
 
     public void eatPea(Player player) {
