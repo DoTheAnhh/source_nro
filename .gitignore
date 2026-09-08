@@ -52,3 +52,9 @@ Mod/My project/Temp/
 #  cung duoc. Ban phat hanh thi gui qua duong khac (Drive, trang tai ve).
 # =====================================================================
 Game/
+
+# Thiết lập RIÊNG của từng máy trong Unity Editor — bố cục cửa sổ, tab đang
+# mở, vị trí panel. Đổi mỗi lần kéo một tab, nên để trong git là nó bẩn mãi
+# và sớm muộn cũng gây kẹt `git pull` như mấy file log bên Server.
+Mod/UserSettings/
+Mod/My project/UserSettings/
