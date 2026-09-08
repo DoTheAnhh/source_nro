@@ -25,7 +25,9 @@ import nro.service.map.deathoralivearena.DeathOrAliveArenaManager;
 import nro.service.map.deathoralivearena.DeathOrAliveArenaService;
 import nro.entity.npc.Npc;
 import nro.service.player.dailygift.DailyGiftService;
+import nro.entity.player.Charms;
 import nro.entity.player.Player;
+import nro.repository.dao.ConfigDAO;
 import nro.service.shop.ShopService;
 
 public class BaHatMit extends Npc {
@@ -524,6 +526,8 @@ public class BaHatMit extends Npc {
                                         "Bùa\n1 giờ",
                                         "Bùa\n8 giờ",
                                         "Bùa\n1 tháng",
+                                        "Full bùa\nvĩnh viễn",
+                                        "Quản lý\nbùa",
                                         "Đóng");//"Bùa\nđệ tử",
                                 break;
                             case 3:
@@ -608,9 +612,40 @@ public class BaHatMit extends Npc {
                             case 2:
                                 ShopService.gI().opendShop(player, "BUA_1M", false);
                                 break;
+                            case 3:
+                                muaFullBuaVinhVien(player);
+                                break;
+                            case 4:
+                                moQuanLyBua(player);
+                                break;
+                            default:
+                                // "Đóng" — không làm gì.
+                                break;
 //                            case 3:
 //                                ShopService.gI().opendShop(player, "BUA_DETU", false);
 //                                break;
+                        }
+                    } else if (player.iDMark.getIndexMenu() == ConstNpc.MENU_QUAN_LY_BUA) {
+                        if (select == 0) {
+                            // Hỏi lại trước khi xoá.
+                            //
+                            // Xoá bùa la mot viec KHONG lay lai duoc, va o menu
+                            // truoc no nam ngay canh nut "Dong" — bam nham mot
+                            // o la mat sach, ke ca bua vinh vien vua mua bang
+                            // tien that. Mot lan hoi lai la du de khong ai mat
+                            // oan, ma nguoi thuc su muon xoa cung chi ton them
+                            // mot cai bam.
+                            createOtherMenu(player, ConstNpc.MENU_XAC_NHAN_XOA_BUA,
+                                    "Xoá là mất sạch, kể cả bùa vĩnh viễn, và ta"
+                                    + " KHÔNG hoàn lại tiền đâu. Ngươi chắc chưa?",
+                                    "Xoá\nthật",
+                                    "Thôi");
+                        }
+                    } else if (player.iDMark.getIndexMenu() == ConstNpc.MENU_XAC_NHAN_XOA_BUA) {
+                        if (select == 0) {
+                            player.charms.resetAllCharms();
+                            Service.gI().sendThongBao(player,
+                                    "Đã xoá sạch bùa trong người.");
                         }
                     } else if (player.iDMark.getIndexMenu() == ConstNpc.MENU_START_COMBINE) {
                         switch (player.combine.typeCombine) {
@@ -659,10 +694,83 @@ public class BaHatMit extends Npc {
             }
         }
     }
+
+    /**
+     * Bán gói "Full bùa vĩnh viễn": trả tiền một lần, bảy lá bùa cơ bản không
+     * bao giờ hết hạn nữa.
+     *
+     * <p>Giá lấy từ {@link ConfigDAO#BUA_VV_GIA_VANG} nên đổi được từ bảng
+     * {@code panel_config} mà không phải biên dịch lại.</p>
+     *
+     * <p><b>Chặn mua lần hai.</b> Đã đủ bảy lá vĩnh viễn thì từ chối. Không có
+     * cái này thì mỗi lần bấm là một lần trừ tiền mà chẳng thay đổi gì — bùa
+     * đang vĩnh viễn rồi, gán lại vẫn vĩnh viễn.</p>
+     */
+    private void muaFullBuaVinhVien(Player player) {
+        if (player.charms.daDuBuaVinhVien()) {
+            Service.gI().sendThongBao(player,
+                    "Ngươi đã có đủ bảy lá bùa vĩnh viễn rồi, mua thêm làm gì.");
+            return;
+        }
+        long gia = ConfigDAO.num(ConfigDAO.BUA_VV_GIA_VANG, 500_000_000L);
+        if (player.inventory.gold < gia) {
+            Service.gI().sendThongBao(player, "Bạn không đủ vàng, còn thiếu "
+                    + Util.formatNumber(gia - player.inventory.gold, FormatStyle.VIETNAMESE)
+                    + " vàng nữa");
+            return;
+        }
+        player.inventory.gold -= gia;
+        player.charms.datVinhVienBuaCoBan();
+        Service.gI().sendMoney(player);
+        Service.gI().sendThongBao(player,
+                "Xong! Bảy lá bùa của ngươi từ giờ vĩnh viễn không hết hạn.");
+    }
+
+    /**
+     * Mở bảng "Quản lý bùa": liệt kê bùa đang có kèm thời gian còn lại, và cho
+     * xoá sạch.
+     *
+     * <p>Chỉ đếm bảy lá bùa cơ bản ({@link Charms#BUA_CO_BAN}) — đúng bộ mà
+     * cửa hàng này bán. Nút xoá thì gọi {@code resetAllCharms()}, tức là xoá
+     * <b>tất cả</b> bùa kể cả bùa đệ tử và bùa trí tuệ nâng cao; câu hỏi lại ở
+     * bước sau nói rõ điều đó.</p>
+     *
+     * <p>Tên bùa đọc từ {@code ItemTemplate} chứ không viết cứng ở đây, để đổi
+     * tên trong bảng {@code item_template} là hiện đúng ngay.</p>
+     */
+    private void moQuanLyBua(Player player) {
+        long now = System.currentTimeMillis();
+        StringBuilder sb = new StringBuilder();
+        int dem = 0;
+        for (int id : Charms.BUA_CO_BAN) {
+            long han = player.charms.thoiHanBuaCoBan(id);
+            if (han <= now) {
+                continue;
+            }
+            dem++;
+            sb.append("\n").append(tenBua(id)).append(": ")
+                    .append(Charms.laVinhVien(han)
+                            ? "vĩnh viễn"
+                            : Util.formatCountdown(han, true, true, true));
+        }
+        String noiDung = dem == 0
+                ? "Ngươi chẳng có lá bùa nào trong người cả."
+                : "Bùa ngươi đang mang:" + sb;
+        createOtherMenu(player, ConstNpc.MENU_QUAN_LY_BUA, noiDung,
+                "Xoá hết\nbùa",
+                "Đóng");
+    }
+
+    /** Tên hiển thị của một lá bùa, lấy từ bảng vật phẩm. */
+    private String tenBua(int itemId) {
+        try {
+            return ItemService.gI().getTemplate(itemId).name;
+        } catch (Exception ex) {
+            // Bang item_template thieu dong -> van hien duoc danh sach, chi la
+            // mot dong ghi id thay vi ten. Khong dang de sap ca bang vi mot ten.
+            return "Bùa " + itemId;
+        }
+    }
 }
-
-
-
-
 
 

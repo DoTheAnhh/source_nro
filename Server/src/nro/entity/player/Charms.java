@@ -4,6 +4,35 @@ import org.json.simple.JSONArray;
 
 public class Charms {
 
+    /**
+     * Bảy lá bùa cơ bản Bà Hạt Mít bán, theo đúng id vật phẩm.
+     *
+     * <p>Trí tuệ, Mạnh mẽ, Da trâu, Oai hùng, Bất tử, Dẻo dai, Thu hút — đây là
+     * bộ "full bùa". Ba nhóm còn lại trong lớp này (bùa đệ tử, trí tuệ nâng cao,
+     * bùa bang) đi đường khác nên không nằm trong mảng.</p>
+     */
+    public static final int[] BUA_CO_BAN = {213, 214, 215, 216, 217, 218, 219};
+
+    /**
+     * Mốc thời gian coi là "vĩnh viễn": 00:00 ngày 01/01/2100 (giờ UTC).
+     *
+     * <h2>Vì sao là một con số cụ thể chứ không phải {@code Long.MAX_VALUE}</h2>
+     *
+     * <p>Mọi chỗ dùng bùa đều chỉ so {@code td > System.currentTimeMillis()},
+     * nên {@code Long.MAX_VALUE} chạy đúng — trừ MỘT chỗ:
+     * {@code ShopService.resolveShopBua} lấy hiệu {@code (td - bây giờ) / 60000}
+     * rồi <b>ép về {@code int}</b> để gửi cho client. Với
+     * {@code Long.MAX_VALUE} thì hiệu đó vào khoảng 1,5·10^14 phút, tràn
+     * {@code int} và cửa hàng hiện ra một con số âm vô nghĩa.</p>
+     *
+     * <p>Mốc 2100 cho ra khoảng 26.000 ngày — vẫn là vĩnh viễn với bất kỳ ai
+     * chơi game này, mà nằm gọn trong {@code int}.</p>
+     *
+     * <p>Đây cũng là dấu hiệu để nhận ra bùa vĩnh viễn: {@code td} bằng đúng
+     * mốc này. Bùa mua theo giờ không bao giờ chạm tới đó.</p>
+     */
+    public static final long MOC_VINH_VIEN = 4102444800000L;
+
     // Các buff bùa cơ bản
     public long tdTriTue;
     public long tdManhMe;
@@ -149,6 +178,60 @@ public class Charms {
         tdTriTue3 = tdTriTue4 = tdTriTue5 = tdTriTue7 = tdTriTue10 = tdTriTue20 = 0;
         lastTimeSubMinTriTueX4 = 0;
         tdDaTrauClan = tdManhMeClan = tdTriTueClan = 0;
+    }
+
+    // ============================ BÙA VĨNH VIỄN ============================
+
+    /**
+     * Hạn của một lá bùa cơ bản, theo id vật phẩm.
+     *
+     * <p>Có để nơi khác đọc được hạn bùa mà không phải chép lại bảng
+     * "id nào ứng với ô nào" — bảng đó đã có hai bản trong mã
+     * ({@link #addTimeCharms} và {@code ShopService.resolveShopBua}), thêm bản
+     * thứ ba nữa là chắc chắn có ngày ba bản lệch nhau.</p>
+     *
+     * @return mốc hết hạn tính bằng mili giây, {@code 0} nếu id không phải bùa
+     *         cơ bản
+     */
+    public long thoiHanBuaCoBan(int itemId) {
+        switch (itemId) {
+            case 213: return tdTriTue;
+            case 214: return tdManhMe;
+            case 215: return tdDaTrau;
+            case 216: return tdOaiHung;
+            case 217: return tdBatTu;
+            case 218: return tdDeoDai;
+            case 219: return tdThuHut;
+            default: return 0;
+        }
+    }
+
+    /**
+     * Đặt cả bảy lá bùa cơ bản thành vĩnh viễn.
+     *
+     * <p>Gán thẳng {@link #MOC_VINH_VIEN} chứ không cộng dồn: người đang còn hai
+     * ngày bùa Trí tuệ mà mua vĩnh viễn thì thành vĩnh viễn, không phải
+     * "vĩnh viễn cộng thêm hai ngày" — cộng vào một mốc đã ở năm 2100 thì cũng
+     * chẳng khác gì, nhưng lúc đó {@code td} không còn bằng đúng mốc nữa và
+     * {@link #laVinhVien} sẽ không nhận ra.</p>
+     */
+    public void datVinhVienBuaCoBan() {
+        tdTriTue = tdManhMe = tdDaTrau = tdOaiHung = tdBatTu = tdDeoDai = tdThuHut = MOC_VINH_VIEN;
+    }
+
+    /** Một mốc hạn có phải là bùa vĩnh viễn không. */
+    public static boolean laVinhVien(long thoiHan) {
+        return thoiHan >= MOC_VINH_VIEN;
+    }
+
+    /** Đã có đủ cả bảy lá bùa cơ bản ở mức vĩnh viễn chưa. */
+    public boolean daDuBuaVinhVien() {
+        for (int id : BUA_CO_BAN) {
+            if (!laVinhVien(thoiHanBuaCoBan(id))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // ============================ JSON SAVE ============================

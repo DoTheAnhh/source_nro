@@ -105,6 +105,19 @@ public class ConfigDAO {
     public static final String NV_MOI_HONG_NGOC = "nv_moi_hong_ngoc";
 
     /**
+     * Giá <b>vàng</b> của gói "Full bùa vĩnh viễn" ở Bà Hạt Mít.
+     *
+     * <p>Mặc định {@code 500.000.000}. Đổi giá thì thêm dòng
+     * {@code bua_vv_gia_vang} vào bảng {@code panel_config} — không phải biên
+     * dịch lại. Đặt {@code 0} là cho không.</p>
+     *
+     * <p>Mua một lần, bảy lá bùa cơ bản hết hạn vào năm 2100. Người đã có đủ
+     * bảy lá vĩnh viễn thì Bà Hạt Mít từ chối bán tiếp, nên không có chuyện
+     * trả tiền hai lần cho cùng một thứ.</p>
+     */
+    public static final String BUA_VV_GIA_VANG = "bua_vv_gia_vang";
+
+    /**
      * Hệ số tiềm năng (kinh nghiệm), thang <b>1–100 lần</b>.
      *
      * <p>{@code 1} là y như gốc, {@code 10} là gấp mười. Nhận số thập phân nên
