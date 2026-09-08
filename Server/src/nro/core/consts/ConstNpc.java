@@ -311,6 +311,16 @@ public class ConstNpc {
     public static final int MENU_START_COMBINE = 501;
     public static final int MENU_NANG_DOI_SKH_VIP = 502;
     public static final int MENU_SACH_TUYET_KY = 505;
+    /**
+     * Mã ô nhập chữ cho "Nhập số khác" ở bảng Nhập Ngọc Rồng.
+     *
+     * <p>Máy chủ gửi gói {@code 88} kèm mã này; client mở ô nhập rồi gửi lại
+     * gói {@code 88} với đúng mã đó cùng chuỗi người chơi gõ. Mã là thứ duy
+     * nhất cho biết chuỗi ấy trả lời câu hỏi nào, nên mỗi ô nhập phải một số
+     * riêng.</p>
+     */
+    public static final short O_NHAP_SO_LAN_NHAP_NGOC = 5210;
+
     // Hoi lai truoc khi xoa sach bua.
     // So menu chi co y nghia trong pham vi MOT npc (BaHatMit.confirmMenu so
     // getIndexMenu voi chinh may hang nay), nen 507 trung voi so cua npc khac

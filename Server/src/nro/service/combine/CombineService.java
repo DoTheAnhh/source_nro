@@ -251,8 +251,10 @@ public class CombineService {
                 PhaLeHoaTrangBi.phaLeHoa(player, num);
                 break;
             case NHAP_NGOC_RONG:
-                NhapNgocRong.nhapNgocRong(player, num == 1);
-                break;           
+                // Ở đây `num` là SỐ LẦN nhập, không phải cờ như mấy nhánh kia.
+                // Gọi không truyền gì thì hiểu là một lần.
+                NhapNgocRong.nhapNgocRong(player, num > 0 ? num : 1);
+                break;
             case NANG_CAP_VAT_PHAM:
                 NangCapVatPham.nangCapVatPham(player, num == 1);
                 break;
@@ -481,6 +483,64 @@ public class CombineService {
                 msg.cleanup();
             }
         }
+    }
+
+    /**
+     * Người chơi vừa gõ xong một ô nhập chữ do máy chủ mở.
+     *
+     * <p>Điểm đến của gói {@code 88} chiều về — xem
+     * {@code Service.moHopNhapChu}. Tra theo <b>mã ô</b> chứ không theo bảng
+     * người chơi đang mở: giữa lúc hỏi và lúc trả lời họ có thể đã đóng bảng,
+     * đổi bản đồ, hay mở một bảng khác.</p>
+     *
+     * <p>Vì vậy mọi điều kiện đều được kiểm lại từ đầu trong hàm nhận, ở đây
+     * chỉ lo đọc con số cho đúng.</p>
+     */
+    public void nhanChuTuONhap(Player player, short maO, String chu) {
+        if (player == null || chu == null) {
+            return;
+        }
+        switch (maO) {
+            case ConstNpc.O_NHAP_SO_LAN_NHAP_NGOC: {
+                int soLan = docSoNguyen(chu);
+                if (soLan <= 0) {
+                    nro.service.Service.gI().sendThongBao(player,
+                            "Phải là một con số lớn hơn 0.");
+                    return;
+                }
+                NhapNgocRong.nhapNgocRong(player, soLan);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    /**
+     * Đọc số người chơi gõ, bỏ mọi ký tự không phải chữ số.
+     *
+     * <p>Bỏ dấu chấm và dấu phẩy vì người Việt gõ "1.000" là một nghìn, mà
+     * {@code Integer.parseInt} gặp dấu chấm thì ném lỗi. Số quá dài thì kẹp về
+     * {@link Integer#MAX_VALUE} — chỗ nhận đằng nào cũng hạ xuống theo nguyên
+     * liệu thật.</p>
+     *
+     * @return số đọc được, hoặc {@code 0} nếu chuỗi không có chữ số nào
+     */
+    private static int docSoNguyen(String chu) {
+        long so = 0;
+        boolean coChuSo = false;
+        for (int i = 0; i < chu.length(); i++) {
+            char c = chu.charAt(i);
+            if (c < '0' || c > '9') {
+                continue;
+            }
+            coChuSo = true;
+            so = so * 10 + (c - '0');
+            if (so > Integer.MAX_VALUE) {
+                return Integer.MAX_VALUE;
+            }
+        }
+        return coChuSo ? (int) so : 0;
     }
 
     /**

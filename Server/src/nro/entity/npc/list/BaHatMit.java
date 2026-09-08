@@ -20,6 +20,7 @@ import nro.service.combine.CombineService;
 import nro.entity.combine.list.CheTaoCuonSachCu;
 import nro.entity.combine.list.DoiSachTuyetKy;
 import nro.entity.combine.list.NangCapVatPham;
+import nro.entity.combine.list.NhapNgocRong;
 import nro.entity.map.deathoralivearena.DeathOrAliveArena;
 import nro.service.map.deathoralivearena.DeathOrAliveArenaManager;
 import nro.service.map.deathoralivearena.DeathOrAliveArenaService;
@@ -673,17 +674,44 @@ public class BaHatMit extends Npc {
                             case CombineService.GIAM_DINH_SACH:
                             case CombineService.TAY_SACH:
                             case CombineService.NANG_CAP_SACH_TUYET_KY:
-                            case CombineService.HOI_PHUC_SACH:
-                                case CombineService.NHAP_NGOC_RONG: {
-        switch (select) {
-            case 0 -> player.nhapNgocRongTimes = 1;
-            case 1 -> player.nhapNgocRongTimes = 10;
-            case 2 -> player.nhapNgocRongTimes = 100;
-            default -> { return; }
-        }
-        CombineService.gI().startCombine(player);
-        break;
-    }
+                            case CombineService.HOI_PHUC_SACH: {
+                                // Nhóm này chỉ có một nút "Làm phép" ở ô đầu.
+                                if (select == 0) {
+                                    CombineService.gI().startCombine(player);
+                                }
+                                break;
+                            }
+                            case CombineService.NHAP_NGOC_RONG: {
+                                // Tách riêng khỏi nhóm trên: menu của nó có sáu ô
+                                // với ý nghĩa khác hẳn, để chung một khối thì
+                                // "Nhập x10" của bảng này lại là "Làm phép" của
+                                // bảng kia và ngược lại.
+                                int soLan;
+                                switch (select) {
+                                    case NhapNgocRong.CHON_X1:
+                                        soLan = 1;
+                                        break;
+                                    case NhapNgocRong.CHON_X10:
+                                        soLan = 10;
+                                        break;
+                                    case NhapNgocRong.CHON_X100:
+                                        soLan = 100;
+                                        break;
+                                    case NhapNgocRong.CHON_HET:
+                                        // Xin thật nhiều; hàm nhập tự hạ xuống
+                                        // đúng số lần nguyên liệu cho phép.
+                                        soLan = Integer.MAX_VALUE;
+                                        break;
+                                    case NhapNgocRong.CHON_SO_KHAC:
+                                        NhapNgocRong.hoiSoLan(player);
+                                        return;
+                                    default:
+                                        // "Từ chối"
+                                        return;
+                                }
+                                NhapNgocRong.nhapNgocRong(player, soLan);
+                                break;
+                            }
 
                             case CombineService.PHAN_RA_SACH: {
                                 if (select == 0) {

@@ -332,7 +332,6 @@ public class Player implements Runnable {
     public boolean isConTwo;
     public boolean isConThree;
     public boolean isPhanThan;
-    public int nhapNgocRongTimes = 1;
 
     //SỰ KIỆN HALLOWEEN
     public int NhanKeoHayBiGheoNpc_1 = 0;

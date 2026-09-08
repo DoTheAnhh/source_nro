@@ -2166,6 +2166,41 @@ public class Service {
         }
     }
 
+    /**
+     * Mở ô nhập chữ ở client và chờ người chơi gõ.
+     *
+     * <p>Gói {@code 88} đi <b>hai chiều</b> cùng một mã: máy chủ gửi
+     * {@code (câu hỏi, mã ô)}, client mở ô nhập rồi gửi lại
+     * {@code (mã ô, chuỗi đã gõ)}. Mã ô là thứ duy nhất cho biết chuỗi trả lời
+     * câu hỏi nào — {@code Controller} nhận gói về sẽ tra theo nó, nên mỗi chỗ
+     * hỏi phải có một mã riêng trong {@code ConstNpc}.</p>
+     *
+     * <p>Không có gì bảo đảm người chơi trả lời: họ bấm Đóng là hết chuyện, và
+     * máy chủ không giữ trạng thái chờ nào cả. Vì vậy chỗ nhận chuỗi phải tự
+     * kiểm tra lại toàn bộ điều kiện, đừng tin vào bối cảnh lúc hỏi.</p>
+     *
+     * @param maO một hằng số trong {@code ConstNpc}, ví dụ
+     *            {@code O_NHAP_SO_LAN_NHAP_NGOC}
+     */
+    public void moHopNhapChu(Player player, String cauHoi, short maO) {
+        if (player == null) {
+            return;
+        }
+        Message msg = null;
+        try {
+            msg = new Message(88);
+            msg.writer().writeUTF(cauHoi);
+            msg.writer().writeShort(maO);
+            player.sendMessage(msg);
+        } catch (Exception e) {
+            Logger.logException(Service.class, e);
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
+    }
+
     public void sendCaption(MySession session, byte gender) {
         Message msg;
         try {

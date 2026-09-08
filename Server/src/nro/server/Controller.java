@@ -1047,6 +1047,17 @@ public class Controller implements IMessageHandler {
                         }
                     }
                     break;
+                // [88] Người chơi gõ xong ô nhập chữ do máy chủ mở
+                //
+                // Cùng một mã đi hai chiều: máy chủ gửi (câu hỏi, mã ô) bằng
+                // Service.moHopNhapChu, client trả lại (mã ô, chuỗi đã gõ).
+                case 88:
+                    if (player != null) {
+                        short maO = _msg.reader().readShort();
+                        String chuDaGo = _msg.reader().readUTF();
+                        CombineService.gI().nhanChuTuONhap(player, maO, chuDaGo);
+                    }
+                    break;
                 // [-38] Client báo đã cập nhật xong dữ liệu
                 case -38: //finish update
                     if (player != null) {
