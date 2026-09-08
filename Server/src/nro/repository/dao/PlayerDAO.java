@@ -139,9 +139,26 @@ public class PlayerDAO {
             String inventory = dataArray.toJSONString();
             dataArray.clear();
 
-            dataArray.add(39 + gender); //map
-            dataArray.add(100); //x
-            dataArray.add(384); //y
+            // Vao game lan dau thi dung o NHA, khong phai ngoai vach nui.
+            //
+            // Ban truoc dat map 39 + gender — Vach nui Aru / Vach nui Moori /
+            // Vuc Plant. Do la ba ban do luyen tap ngoai troi, khong phai nha.
+            //
+            // Ba con so x,y duoi day KHONG phai tu chon. Chung la diem den cua
+            // waypoint dan tu lang vao nha, doc thang tu map_template:
+            //   Lang Aru (0)      -> Nha Gohan (21)  tai 489, 336
+            //   Lang Mori (7)     -> Nha Moori (22)  tai 207, 336
+            //   Lang Kakarot (14) -> Nha Broly (23)  tai 475, 336
+            // Tuc la dung cho ma chinh game tha nguoi choi xuong khi ho di bo
+            // vao nha. Lay lai diem do thi khong the roi vao vach tuong hay lot
+            // san — hai chuyen rat de xay ra neu tu doan toa do trong mot ban
+            // do nho.
+            //
+            // 21 + gender khop dung thu tu hanh tinh: 0 Trai Dat, 1 Namec,
+            // 2 Xayda — y nhu 39 + gender cu.
+            dataArray.add(21 + gender); //map: nha theo hanh tinh
+            dataArray.add(gender == 0 ? 489 : gender == 1 ? 207 : 475); //x
+            dataArray.add(336); //y: san nha, chung cho ca ba
             String location = dataArray.toJSONString();
             dataArray.clear();
 

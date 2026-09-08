@@ -583,13 +583,34 @@ public class SkillService {
             case Skill.GALICK:
             case Skill.LIEN_HOAN:
                 long startDam = System.currentTimeMillis();
-                //Siêu hạng 113
-                if (player.zone != null && player.zone.map.mapId != 113 && plTarget != null && Util.getDistance(player, plTarget) > Skill.RANGE_ATTACK_CHIEU_DAM) {
-                    miss = true;
-                }
-                if (mobTarget != null && Util.getDistance(player, mobTarget) > Skill.RANGE_ATTACK_CHIEU_DAM) {
-                    miss = true;
-                }
+                // KHONG con chan tam o day nua — dam an dam giong chuong.
+                //
+                // Ba doi truoc cua doan nay, ghi lai de khoi quay vong:
+                //
+                // 1. So khoang cach voi hang so 100 (RANGE_ATTACK_CHIEU_DAM),
+                //    dung chung cho ca bon chieu dam. Con so nay khong lien quan
+                //    gi toi tam that: dam khai bao dx = 32..44, chuong 160..220.
+                // 2. Xet theo dx/dy cua chinh chieu, cong 40 ngang va 60 doc.
+                //    Van con miss: quai chay nhanh, cong voi toa do nguoi choi o
+                //    may chu luon cham hon o may nguoi choi (chi nhay khi goi di
+                //    chuyen toi), la vuot khoi phan noi do.
+                // 3. Bo han. Ly do o duoi.
+                //
+                // Chieu chuong (KAMEJOKO, MASENKO, ANTOMIC) CHUA BAO GIO bi
+                // kiem tra tam — nhanh case cua chung nam sau nhanh cua dam
+                // trong cung mot switch, va dam roi xuong (fall-through) nen
+                // chuong khong bao gio dat mien nao. Do la tinh co cua cach xep
+                // nhanh, khong phai mot quyet dinh. Nhung no da chay nhu the tu
+                // lau va khong sinh van de gi.
+                //
+                // Nen bo phep kiem tra cua dam khong mo ra loai ke ho nao moi:
+                // no chi dua dam ve dung mot muc voi chuong. Cua chan tam that
+                // van con o CLIENT — no chi nham duoc muc tieu trong hop
+                // dx+10 x dy+20 cua chinh chieu, va chi gui len mot muc tieu da
+                // nham duoc.
+                //
+                // trongTamChieu() duoc giu lai (khong xoa) cho cho nao ve sau
+                // can do tam theo chieu — no dung, chi la khong dung o day.
                 long tnow = System.currentTimeMillis();
                 if (tnow - startDam >= 1000) {
                     System.out.println("TIME END SKILL : " + (tnow - startDam) + " ms");
@@ -1404,6 +1425,64 @@ public class SkillService {
                 msg.cleanup();
             }
         }
+    }
+
+    /**
+     * Nới thêm bao nhiêu ngoài tầm khai báo của chiêu, theo trục ngang.
+     *
+     * <p>Toạ độ người chơi ở máy chủ luôn <b>chậm hơn</b> ở máy người chơi: nó
+     * chỉ nhảy khi gói di chuyển tới. Đang chạy tới con quái rồi đấm thì lúc gói
+     * đấm được xử lý, máy chủ vẫn tưởng nhân vật ở chỗ cũ. Không nới thì cú đấm
+     * hợp lệ bị tính là ra ngoài tầm.</p>
+     *
+     * <p>Client cũng tự nới, bằng <c>dx + 10</c> ngang và <c>dy + 20</c> dọc khi
+     * chọn mục tiêu (xem <code>Char.updateFocus</code>). Ở đây nới rộng hơn hẳn,
+     * vì máy chủ là bên biết muộn hơn.</p>
+     */
+    private static final int BU_TAM_NGANG = 40;
+
+    /** Nới thêm theo trục dọc. Rộng hơn trục ngang vì nhân vật còn bay lên xuống. */
+    private static final int BU_TAM_DOC = 60;
+
+    /**
+     * Mục tiêu có nằm trong tầm của chiêu đang chọn.
+     *
+     * <h2>Vì sao không dùng {@code RANGE_ATTACK_CHIEU_DAM} nữa</h2>
+     *
+     * <p>Bản trước so khoảng cách với hằng số <b>100</b>, dùng chung cho cả bốn
+     * chiêu đấm, và <b>không</b> kiểm tra gì với chiêu chưởng. Hai chỗ sai:</p>
+     *
+     * <ul>
+     *   <li>Con số 100 không liên quan gì tới tầm thật của chiêu. Chiêu đấm khai
+     *       báo {@code dx = 32..44}; chiêu chưởng {@code dx = 160..220}. Một hằng
+     *       số không thể đúng cho cả hai.</li>
+     *   <li>Chưởng thoát hoàn toàn khỏi phép kiểm tra, chỉ vì nhánh
+     *       {@code case} của nó nằm <i>sau</i> nhánh của đấm trong cùng một
+     *       {@code switch} và đấm rơi xuống ({@code fall-through}). Đó là tình
+     *       cờ của cách xếp nhánh, không phải một quyết định.</li>
+     * </ul>
+     *
+     * <p>Nay xét theo {@code dx}/{@code dy} của chính chiêu đang chọn, cộng phần
+     * nới cho độ trễ toạ độ. Đấm được đo bằng tầm đấm, chưởng bằng tầm chưởng —
+     * cùng một luật, mỗi chiêu một con số của nó.</p>
+     *
+     * <p>Đo theo <b>từng trục</b> chứ không theo đường chéo, cho khớp cách client
+     * chọn mục tiêu: client dùng hộp chữ nhật, nên đo đường chéo là hai bên dùng
+     * hai hình khác nhau và sinh ra đúng loại "đánh mà không ăn" khó hiểu.</p>
+     *
+     * @return {@code true} nếu trong tầm; thiếu dữ liệu chiêu thì cũng
+     *         {@code true} — thà cho ăn còn hơn chặn oan
+     */
+    private boolean trongTamChieu(Player player, int xMuc, int yMuc) {
+        if (player == null || player.location == null || player.playerSkill == null) {
+            return true;
+        }
+        Skill sk = player.playerSkill.skillSelect;
+        if (sk == null || sk.dx <= 0) {
+            return true;
+        }
+        return Math.abs(player.location.x - xMuc) <= sk.dx + BU_TAM_NGANG
+                && Math.abs(player.location.y - yMuc) <= sk.dy + BU_TAM_DOC;
     }
 
     private void playerAttackMob(Player plAtt, Mob mob, boolean miss, boolean dieWhenHpFull) {

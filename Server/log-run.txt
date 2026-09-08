@@ -1,83 +1,80 @@
 [0;32m────────────────────────────────────────────────────────────[0m
 [0;32m[1m▶ SERVER START[0m
 [0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[23:29:24] [SERVER]       Khởi động ServerManagerUI[0m
-[0;32m[23:29:25] [LOG]          Chạy thành công tệp properties!
-[0m[0;32m[23:29:25] [DB]           Ket noi: jdbc:mysql://localhost:3306/awnv3?useUnicode=yes&characterEncoding=UTF-8 | user=root | pool=1..1[0m
-[0;32m[23:29:26] [LOG]          Có lỗi xảy ra khi thực thi câu lệnh: ALTER TABLE `task_badges_template` ADD COLUMN `loai` varchar(20) NOT NULL DEFAULT ''
-[0m[0;32m[23:29:26] [LOG]          Có lỗi xảy ra khi thực thi câu lệnh: ALTER TABLE `task_badges_template` ADD COLUMN `tham_so` int(11) NOT NULL DEFAULT -1
-[0m[0;32m[23:29:26] [LOG]          Có lỗi xảy ra khi thực thi câu lệnh: ALTER TABLE cong_thuc_doi ADD COLUMN npc VARCHAR(32) NOT NULL DEFAULT ''
-[0m[0;35m[1m[23:29:26] [CONNECT]      Starting Server Engine...[0m
-[0;32m[23:29:26] [SERVER_UI]    Đang gọi ServerManager.gI().run()[0m
-[0;32m[23:29:26] [IP]             ung vien: 192.168.198.158 (wireless_32768 Killer(R) Wi-Fi 6 AX1650i 160MHz Wireless Network Adapter (201NGW)) = 60[0m
-[0;32m[23:29:26] [OK]           Địa chỉ máy chủ giới thiệu cho client: 192.168.198.158  (tự dò)[0m[0;32m[23:29:26] [IP]           File client da dung dia chi nay: F:/NgocRong/Mod/Assets/Resources/server_ip.txt[0m
-[0;33m[1m[23:29:26] [IP]           Khong co thu muc F:\NgocRong\Game\PC -> bo qua viec ghi file cho client[0m
-[0;32m[23:29:26] [IP]           File client da dung dia chi nay: F:/NgocRong/Mod/server_ip.txt[0m
-[0;32m────────────────────────────────────────────────────────────[0m
+[0;32m[07:09:18] [SERVER]       Khởi động ServerManagerUI[0m
+[0;32m[07:09:19] [LOG]          Chạy thành công tệp properties!
+[0m[0;32m[07:09:19] [DB]           Ket noi: jdbc:mysql://localhost:3306/awnv3?useUnicode=yes&characterEncoding=UTF-8 | user=root | pool=1..1[0m
+[0;32m[07:09:21] [LOG]          Có lỗi xảy ra khi thực thi câu lệnh: ALTER TABLE `task_badges_template` ADD COLUMN `loai` varchar(20) NOT NULL DEFAULT ''
+[0m[0;32m[07:09:21] [LOG]          Có lỗi xảy ra khi thực thi câu lệnh: ALTER TABLE `task_badges_template` ADD COLUMN `tham_so` int(11) NOT NULL DEFAULT -1
+[0m[0;32m[07:09:22] [LOG]          Có lỗi xảy ra khi thực thi câu lệnh: ALTER TABLE cong_thuc_doi ADD COLUMN npc VARCHAR(32) NOT NULL DEFAULT ''
+[0m[0;35m[1m[07:09:22] [CONNECT]      Starting Server Engine...[0m
+[0;32m[07:09:22] [SERVER_UI]    Đang gọi ServerManager.gI().run()[0m
+[0;32m[07:09:22] [IP]             ung vien: 192.168.198.158 (wireless_32768 Killer(R) Wi-Fi 6 AX1650i 160MHz Wireless Network Adapter (201NGW)) = 60[0m
+[0;32m[07:09:22] [OK]           Địa chỉ máy chủ giới thiệu cho client: 192.168.198.158  (tự dò)[0m[0;32m────────────────────────────────────────────────────────────[0m
 [0;32m[1m▶ KHỞI TẠO SERVER[0m
 [0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[23:29:26] [LOG]          Có lỗi xảy ra khi thực thi câu lệnh: ALTER TABLE item_shop_option ADD COLUMN param_max INT NOT NULL DEFAULT -1
+[0;32m[07:09:22] [LOG]          Có lỗi xảy ra khi thực thi câu lệnh: ALTER TABLE item_shop_option ADD COLUMN param_max INT NOT NULL DEFAULT -1
 [0m[0;32m────────────────────────────────────────────────────────────[0m
 [0;32m[1m▶ BACKUP[0m
 [0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[23:29:27] [OK]           Successfully loaded part (1983)
-[0m[0;32m[23:29:27] [OK]           Loaded bg item template (470) successfully
-[0m[0;32m[23:29:27] [OK]           Successfully loaded map item template (2452)
-[0m[0;32m[23:29:27] [OK]           Successfully loaded map item option template (327)
-[0m[0;32m[23:29:27] [OK]           Loaded clan (34) successfully, clan next id : 1378675 successfully
-[0m[0;32m[23:29:27] [OK]           Loaded new skills (3) successfully
-[0m[0;32m[23:29:27] [OK]           Loaded head_avatar (533) successfully
-[0m[0;32m[23:29:27] [OK]           Loaded flag_bag (220) successfully
-[0m[0;32m[23:29:27] [OK]           Successfully loaded arr head 2 frames (57)
-[0m[0;32m[23:29:27] [OK]           Loaded intrinsic (27) successfully
-[0m[0;32m[23:29:27] [OK]           Loaded task_main_template (33) successfully
-[0m[0;32m[23:29:27] [OK]           Loaded archievement_template (20) successfully
-[0m[0;32m[23:29:27] [OK]           Loaded side_task_template (59) successfully
-[0m[0;32m[23:29:27] [OK]           Loaded side_task_clan (59) successfully
-[0m[0;35m[1m[23:29:27] [BACKUP]       Sao lưu source thành công | file=backupsrc/src_backup_20260907_232927.zip[0m
-[0;35m[1m[23:29:27] [BACKUP]       Đang sao lưu database | db=awnv3 | file=backupsql/awnv3_backup_20260907_232927.sql[0m
-[0;32m[23:29:27] [OK]           Loaded shop (58) successfully
-[0m[0;32m[23:29:28] [OK]           Successfully loaded images by name (343)
-[0m[0;32m[23:29:28] [OK]           Successfully loaded mount (74)
-[0m[0;32m[23:29:28] [OK]           Successfully loaded event task (59)
-[0m[0;32m[23:29:28] [OK]           Loaded task badges (21) successfully
-[0m[0;32m[23:29:28] [OK]           Loaded badges template (17) successfully
-[0m[0;32m[23:29:28] [OK]           Loaded mob template (127) successfully
-[0m[0;32m[23:29:28] [OK]           Loaded npc_template (118) successfully
-[0m[0;32m[23:29:28] [OK]           Successfully loaded map template (248)
-[0m[0;32m[23:29:28] [LOG]          Loaded shop_ky_gui (5) successfully
-[0m[0;32m[23:29:28] [OK]           Loaded notify (2) successfully
-[0m[0;32m[23:29:28] [OK]           Successfully loaded radar template (21)
-[0m[0;32m[23:29:28] [LOG]          Tổng thời gian load Database 1306(ms)
-[0m[0;32m[1m[23:29:28] [BACKUP_DB]    Sao lưu database thành công | file=backupsql/awnv3_backup_20260907_232927.sql[0m
-[0;32m[23:29:28] [SCHEDULE]     Đã đặt lịch reset clan hằng ngày lúc 00:00[0m
-[0;32m[1m[23:29:28] [CHONG_DDOS]   Da bat | ket noi moi: 12/10s moi IP | 60/s toan may chu | goi: 120/s moi phien[0m
-[0;32m[23:29:29] [OK]           [MINIGAME] Da bat nhip cho 3 tro choi theo phien.
-[0m[0;35m[1m[23:29:29] [CONNECT]      Finish connect Server | db=awnv3[0m
-[0;32m────────────────────────────────────────────────────────────[0m
+[0;32m[07:09:22] [OK]           Successfully loaded part (1983)
+[0m[0;32m[07:09:22] [OK]           Loaded bg item template (470) successfully
+[0m[0;32m[07:09:22] [OK]           Successfully loaded map item template (2452)
+[0m[0;32m[07:09:22] [OK]           Successfully loaded map item option template (327)
+[0m[0;32m[07:09:22] [OK]           Loaded clan (34) successfully, clan next id : 1378675 successfully
+[0m[0;32m[07:09:22] [OK]           Loaded new skills (3) successfully
+[0m[0;32m[07:09:22] [OK]           Loaded head_avatar (533) successfully
+[0m[0;32m[07:09:22] [OK]           Loaded flag_bag (220) successfully
+[0m[0;32m[07:09:22] [OK]           Successfully loaded arr head 2 frames (57)
+[0m[0;32m[07:09:22] [OK]           Loaded intrinsic (27) successfully
+[0m[0;32m[07:09:22] [OK]           Loaded task_main_template (33) successfully
+[0m[0;32m[07:09:22] [OK]           Loaded archievement_template (20) successfully
+[0m[0;32m[07:09:22] [OK]           Loaded side_task_template (59) successfully
+[0m[0;32m[07:09:22] [OK]           Loaded side_task_clan (59) successfully
+[0m[0;35m[1m[07:09:23] [BACKUP]       Sao lưu source thành công | file=backupsrc/src_backup_20260908_070922.zip[0m
+[0;35m[1m[07:09:23] [BACKUP]       Đang sao lưu database | db=awnv3 | file=backupsql/awnv3_backup_20260908_070923.sql[0m
+[0;32m[07:09:23] [OK]           Loaded shop (58) successfully
+[0m[0;32m[07:09:23] [OK]           Successfully loaded images by name (343)
+[0m[0;32m[07:09:23] [OK]           Successfully loaded mount (74)
+[0m[0;32m[07:09:23] [OK]           Successfully loaded event task (59)
+[0m[0;32m[07:09:23] [OK]           Loaded task badges (21) successfully
+[0m[0;32m[07:09:23] [OK]           Loaded badges template (17) successfully
+[0m[0;32m[07:09:23] [OK]           Loaded mob template (127) successfully
+[0m[0;32m[07:09:23] [OK]           Loaded npc_template (118) successfully
+[0m[0;32m[07:09:23] [OK]           Successfully loaded map template (248)
+[0m[0;32m[07:09:23] [LOG]          Loaded shop_ky_gui (5) successfully
+[0m[0;32m[07:09:23] [OK]           Loaded notify (2) successfully
+[0m[0;32m[07:09:23] [OK]           Successfully loaded radar template (21)
+[0m[0;32m[07:09:23] [LOG]          Tổng thời gian load Database 1656(ms)
+[0m[0;32m[1m[07:09:24] [BACKUP_DB]    Sao lưu database thành công | file=backupsql/awnv3_backup_20260908_070923.sql[0m
+[0;32m[07:09:24] [SCHEDULE]     Đã đặt lịch reset clan hằng ngày lúc 00:00[0m
+[0;32m[1m[07:09:24] [CHONG_DDOS]   Da bat | ket noi moi: 12/10s moi IP | 60/s toan may chu | goi: 120/s moi phien[0m
+[0;32m[07:09:24] [OK]           [MINIGAME] Da bat nhip cho 3 tro choi theo phien.
+[0m[0;35m[1m[07:09:24] [CONNECT]      Finish connect Server | db=awnv3[0m
+[0;32m[07:09:24] [LOG]          LOAD GIFTCODE (1) SUCCESS
+[0m[0;32m────────────────────────────────────────────────────────────[0m
 [0;32m[1m▶ SERVER ONLINE[0m
 [0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[23:29:29] [OK]           Server đang chạy tại port 14445
-[0m[0;32m[1m[23:29:29] [SERVER]       Server đang chạy tại port 14445[0m
-[0;32m[23:29:29] [GAME]         Đang khởi động game loop[0m
-[0;32m[23:29:29] [BXH]          Đang bật tự động cập nhật bảng xếp hạng[0m
-[0;32m[23:29:29] [AUTO_SAVE]    Đang bật tự động lưu database[0m
-[0;32m[23:29:29] [BOT]          Đang khởi động bot hệ thống[0m
-[0;32m[23:29:29] [BOT]          Đã bật shop bot thường[0m
-[0;32m[23:29:29] [BOT]          Đã bật NewBot_new[0m
+[0;32m[07:09:25] [OK]           Server đang chạy tại port 14445
+[0m[0;32m[1m[07:09:25] [SERVER]       Server đang chạy tại port 14445[0m
+[0;32m[07:09:25] [GAME]         Đang khởi động game loop[0m
+[0;32m[07:09:25] [BXH]          Đang bật tự động cập nhật bảng xếp hạng[0m
+[0;32m[07:09:25] [AUTO_SAVE]    Đang bật tự động lưu database[0m
+[0;32m[07:09:25] [BOT]          Đang khởi động bot hệ thống[0m
+[0;32m[07:09:25] [BOT]          Đã bật shop bot thường[0m
+[0;32m[07:09:25] [BOT]          Đã bật NewBot_new[0m
 [0;32m────────────────────────────────────────────────────────────[0m
 [0;32m[1m▶ INIT NGỌC RỒNG NAMEK[0m
 [0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[1m[23:29:29] [NAMEK]        1 sao    | map=Thị trấn Moori              (09) | khu=22  | x=350   | y=336  [0m
-[0;32m[1m[23:29:29] [NAMEK]        2 sao    | map=Thung lũng Maima            (11) | khu=2   | x=113   | y=384  [0m
-[0;32m[1m[23:29:29] [NAMEK]        3 sao    | map=Núi hoa vàng                (31) | khu=10  | x=1127  | y=384  [0m
-[0;32m[1m[23:29:29] [NAMEK]        4 sao    | map=Vách núi Moori              (43) | khu=11  | x=955   | y=432  [0m
-[0;32m[1m[23:29:29] [NAMEK]        5 sao    | map=Đảo Guru                    (13) | khu=5   | x=314   | y=432  [0m
-[0;32m[1m[23:29:29] [NAMEK]        6 sao    | map=Núi hoa tím                 (32) | khu=12  | x=1015  | y=312  [0m
-[0;32m[1m[23:29:29] [NAMEK]        7 sao    | map=Vực maima                   (12) | khu=5   | x=1048  | y=288  [0m
-[0;32m[23:29:29] [THREAD]       Đã bật thread hệ thống chính[0m
-[0;31m[1m[23:29:29] [ERROR]        boss_data có 4 dòng không khớp mẫu nào trong mã: CT_2434, CT_2435, SUPERBLACKGOKU, TRUNG_UY_XANH_LO_BDKB
-[0m[0;32m[23:29:29] [OK]           Đã áp 65 mẫu boss từ bảng boss_data
-[0m[0;32m[23:29:29] [OK]           Đã dựng 29 loại boss, tổng 37 bản, theo bảng boss_spawn
-[0m[0;32m[23:29:29] [BOSS]         Đã bật boss manager thường[0m
-[0;32m[23:30:13] [GOI_LON]      ma lenh -74 | size = 5 | 3 byte do dai = 5,0,0[0m
+[0;32m[1m[07:09:25] [NAMEK]        1 sao    | map=Núi hoa vàng                (31) | khu=15  | x=896   | y=360  [0m
+[0;32m[1m[07:09:25] [NAMEK]        2 sao    | map=Thung lũng Maima            (11) | khu=8   | x=522   | y=384  [0m
+[0;32m[1m[07:09:25] [NAMEK]        3 sao    | map=Vách núi Moori              (43) | khu=1   | x=608   | y=384  [0m
+[0;32m[1m[07:09:25] [NAMEK]        4 sao    | map=Nam Guru                    (33) | khu=0   | x=738   | y=360  [0m
+[0;32m[1m[07:09:25] [NAMEK]        5 sao    | map=Thung lũng Namếc            (10) | khu=7   | x=1114  | y=288  [0m
+[0;32m[1m[07:09:25] [NAMEK]        6 sao    | map=Trạm tàu vũ trụ             (25) | khu=11  | x=468   | y=336  [0m
+[0;32m[1m[07:09:25] [NAMEK]        7 sao    | map=Đảo Guru                    (13) | khu=8   | x=958   | y=384  [0m
+[0;32m[07:09:25] [THREAD]       Đã bật thread hệ thống chính[0m
+[0;31m[1m[07:09:25] [ERROR]        boss_data có 4 dòng không khớp mẫu nào trong mã: CT_2434, CT_2435, SUPERBLACKGOKU, TRUNG_UY_XANH_LO_BDKB
+[0m[0;32m[07:09:25] [OK]           Đã áp 65 mẫu boss từ bảng boss_data
+[0m[0;32m[07:09:25] [OK]           Đã dựng 29 loại boss, tổng 37 bản, theo bảng boss_spawn
+[0m[0;32m[07:09:25] [BOSS]         Đã bật boss manager thường[0m

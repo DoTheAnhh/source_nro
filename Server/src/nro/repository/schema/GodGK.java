@@ -362,22 +362,120 @@ public class GodGK {
      *
      * @return câu báo lỗi, hoặc {@code null} nếu hợp lệ
      */
-    private static String kiemTraTen(String ten, String mk) {
+    static String kiemTraTen(String ten, String mk) {
         if (ten.length() < 4 || ten.length() > 20) {
             return "Tên tài khoản phải từ 4 đến 20 ký tự.";
         }
-        for (int i = 0; i < ten.length(); i++) {
-            char c = ten.charAt(i);
-            if (!Character.isLetterOrDigit(c) || c > 127) {
-                if (c != '_') {
-                    return "Tên tài khoản chỉ được dùng chữ không dấu, số và dấu gạch dưới.";
-                }
-            }
+        String loiTen = chiChuThuongVaSo(ten);
+        if (loiTen != null) {
+            return "Tên tài khoản " + loiTen;
         }
         if (mk.length() < 3) {
             return "Mật khẩu phải từ 3 ký tự trở lên.";
         }
+        String loiMk = chiChuThuongVaSo(mk);
+        if (loiMk != null) {
+            return "Mật khẩu " + loiMk;
+        }
         return null;
+    }
+
+    /**
+     * Chỉ cho chữ thường a-z và số 0-9.
+     *
+     * <h2>Vì sao bó hẹp đến vậy</h2>
+     *
+     * <p>Bản trước cho cả chữ hoa và dấu gạch dưới, và <b>không</b> kiểm tra mật
+     * khẩu. Ba chỗ rắc rối:</p>
+     *
+     * <ul>
+     *   <li><b>Chữ hoa.</b> Cột {@code username} dùng bảng chữ
+     *       {@code utf8mb4_general_ci} — không phân biệt hoa thường. Nên
+     *       {@code Nam} và {@code nam} là <i>một</i> tài khoản khi tra bằng
+     *       {@code WHERE username = ?}, nhưng là <i>hai</i> chuỗi khác nhau ở
+     *       mọi chỗ so sánh trong mã Java. Chặn hẳn chữ hoa thì không còn khe
+     *       cho hai cách hiểu đó chệch nhau.</li>
+     *   <li><b>Dấu cách.</b> Tên có dấu cách nhìn giống tên không có, và
+     *       {@code trim()} chỉ cắt hai đầu chứ không cắt giữa.</li>
+     *   <li><b>Ký tự đặc biệt.</b> Tên đi vào nhật ký, vào tên hiển thị, vào
+     *       lệnh của panel quản trị. Bó vào chữ số là hết cả một lớp phiền.</li>
+     * </ul>
+     *
+     * <p>Kiểm tra theo từng ký tự chứ không dùng biểu thức chính quy, vì
+     * {@code \w} trong Java khớp cả chữ hoa lẫn gạch dưới — đúng hai thứ vừa bỏ.</p>
+     *
+     * @return đoạn giải thích lỗi (nối sau "Tên tài khoản"/"Mật khẩu"), hoặc
+     *         {@code null} nếu hợp lệ
+     */
+    private static String chiChuThuongVaSo(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == ' ') {
+                return "không được có dấu cách.";
+            }
+            if (c >= 'A' && c <= 'Z') {
+                return "chỉ được dùng chữ thường, không viết hoa.";
+            }
+            if (!((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))) {
+                return "chỉ được dùng chữ thường a-z và số 0-9,"
+                        + " không dùng ký tự đặc biệt.";
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Đăng ký tài khoản từ màn đăng ký của client.
+     *
+     * <h2>Vì sao cần hàm này</h2>
+     *
+     * <p>Client gửi gói đăng ký bằng {@code messageNotLogin(1)}, nhưng
+     * {@code Controller.messageNotLogin} chỉ có nhánh {@code 0} (đăng nhập) và
+     * {@code 2} (loại client) — số {@code 1} rơi vào {@code default: break;}.
+     * Server im lặng, không trả gói nào, nên hộp chờ "Đang đăng ký" ở client
+     * <b>xoay mãi không dừng</b>. Đó chính là lỗi vừa gặp.</p>
+     *
+     * <h2>Vì sao không dựa vào đăng ký tự động</h2>
+     *
+     * <p>{@link #taoTaiKhoanMoi} đã tạo tài khoản khi đăng nhập bằng tên chưa
+     * có, nhưng nó bị khoá {@code dang_ky_tu_dong} chặn. Nút đăng ký là một lời
+     * xin rõ ràng của người chơi, không phải chuyện đoán ý, nên nó đi đường
+     * riêng và không nhìn khoá đó.</p>
+     *
+     * <p>Tạo xong thì gọi luôn {@link MySession#login} — người chơi vừa gõ tên
+     * và mật khẩu ở màn đăng ký, bắt gõ lại lần nữa là vô ích.</p>
+     */
+    public static void dangKy(MySession session, String ten, String mk) {
+        try {
+            String t = ten == null ? "" : ten.trim();
+            String m = mk == null ? "" : mk.trim();
+
+            String loi = kiemTraTen(t, m);
+            if (loi != null) {
+                Service.gI().sendThongBaoOK(session, loi);
+                Service.gI().sendLoginFail(session, false);
+                return;
+            }
+            if (tonTaiTaiKhoan(t)) {
+                Service.gI().sendThongBaoOK(session,
+                        "Tên tài khoản này đã có người dùng, hãy chọn tên khác.");
+                Service.gI().sendLoginFail(session, false);
+                return;
+            }
+
+            // Bon cot ve la NOT NULL ma khong co gia tri mac dinh -> phai dat tay.
+            ConnectDB.executeUpdate(
+                    "INSERT INTO account (username, password, vetuan, vethang,"
+                    + " vetuan_expire, vethang_expire) VALUES (?, ?, 0, 0, 0, 0)", t, m);
+            Logger.log(Logger.GREEN, "Đăng ký tài khoản: " + t + "\n");
+
+            session.login(t, m);
+        } catch (Exception ex) {
+            Logger.logException(GodGK.class, ex, "Lỗi đăng ký " + ten);
+            Service.gI().sendThongBaoOK(session,
+                    "Không đăng ký được, hãy thử lại sau.");
+            Service.gI().sendLoginFail(session, false);
+        }
     }
 
     private static void setPlayerTask(Player player, int taskId, int subTaskIndex) {

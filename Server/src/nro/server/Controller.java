@@ -27,6 +27,7 @@ import nro.core.consts.ConstNpc;
 import nro.core.consts.ConstTask;
 import nro.data.ItemData;
 import nro.repository.dao.PlayerDAO;
+import nro.repository.schema.GodGK;
 import nro.service.clan.ClanService;
 import nro.service.npc.NpcManager;
 import nro.entity.player.Player;
@@ -1117,6 +1118,21 @@ public class Controller implements IMessageHandler {
                 switch (cmd) {
                     case 0:
                         session.login(msg.reader().readUTF(), msg.reader().readUTF());
+                        break;
+                    case 1:
+                        // Dang ky tu man dang ky cua client.
+                        //
+                        // Nhanh nay TRUOC DAY KHONG TON TAI. Client goi
+                        // Service.requestRegister -> messageNotLogin(1), so 1 roi
+                        // vao "default: break;" nen server im lang, khong tra gia
+                        // gi. Client thi da bat hop cho "Dang ky" truoc khi gui,
+                        // va hop do chi dong khi co goi tra ve — nen no XOAY MAI.
+                        //
+                        // Client con ghi them hai chuoi nua (tai khoan ao) sau ten
+                        // va mat khau. Khong doc toi, va khong sao: doc xong goi
+                        // tin bi huy ca cum, phan con lai khong troi sang goi sau.
+                        GodGK.dangKy(session,
+                                msg.reader().readUTF(), msg.reader().readUTF());
                         break;
                     case 2:
                         Service.gI().setClientType(session, msg);
