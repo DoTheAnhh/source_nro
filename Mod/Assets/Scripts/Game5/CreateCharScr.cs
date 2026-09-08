@@ -236,7 +236,26 @@ namespace Game5
     		indexHair = Res.random(0, 3);
     		doChangeMap();
     		Char.isLoadingMap = false;
-    		tAddName.setFocusWithKb(true);
+    		// Xoa ten cu moi lan vao man tao nhan vat.
+    		//
+    		// O nhap la mot truong TINH (`static TField tAddName`) nen chu cua
+    		// lan dang ky truoc con nguyen: dang ky tai khoan moi ma o ten van
+    		// hien ten cu.
+    		tAddName.setText(string.Empty);
+
+    		// setFocus, KHONG phai setFocusWithKb.
+    		//
+    		// setFocusWithKb tu goi ban phim cua may len va gan no vao `TField.kb`
+    		// - mot ban chu RIENG, khong lien quan gi toi hop `HopNhapChu` dang
+    		// hien tren man. Hai ban chu chay song song: go thi chu vao ban cua
+    		// TField, con hop thi ve `noiDung` cua no, khong bao gio doi. Nhin ra
+    		// man hinh la o ten dung im con thanh nhap cua ban phim thi chay chu
+    		// - va xoa kieu gi cung khong xoa duoc cai ten dang hien.
+    		//
+    		// Nay `HopNhapChu` tu goi ban phim cua may khi mo (xem
+    		// `moBanPhimMay`), nen o day chi can dat con tro, khong goi them ban
+    		// phim thu hai.
+    		tAddName.setFocus(true);
     		ServerListScreen.countDieConnect = 0;
     	}
     

@@ -54,11 +54,29 @@ public class OngGohan extends Npc {
         String nhanHopThe = (player.hienThiHopThe == 1)
                 ? "Ẩn\nhợp thể" : "Hiện\nhợp thể";
 
-        List<String> menu = hasDaily
-                ? List.of("Điểm Danh Hàng Ngày", "Chức Năng", "Hướng Dẫn Tân Thủ", "Nhận\nĐệ tử",
-                        nhanHopThe, "Mua\nvé tháng", "Mua\nvé tuần", "Đóng")
-                : List.of("Chức Năng", "Hướng Dẫn Tân Thủ", "Nhận\nĐệ tử",
-                        nhanHopThe, "Mua\nvé tháng", "Mua\nvé tuần", "Đóng");
+        // Ô "hào quang riêng" CHỈ hiện với người được trao.
+        //
+        // Ai không được trao mà thấy ô này thì bấm vào chẳng đổi gì — một ô
+        // chết nằm giữa menu. Hàm mucSauHopThe dồn số ô theo đúng điều kiện
+        // này, nên hai chỗ luôn khớp nhau.
+        //
+        // Nhãn mang theo trạng thái hiện tại, giống hệt ô hợp thể: nhìn menu là
+        // biết đang bật hay tắt, không phải bấm thử.
+        java.util.List<String> menu = new java.util.ArrayList<>();
+        if (hasDaily) {
+            menu.add("Điểm Danh Hàng Ngày");
+        }
+        menu.add("Chức Năng");
+        menu.add("Hướng Dẫn Tân Thủ");
+        menu.add("Nhận\nĐệ tử");
+        menu.add(nhanHopThe);
+        if (coAuraRieng(player)) {
+            menu.add((player.hienThiAuraRieng == 1)
+                    ? "Ẩn\nhào quang" : "Hiện\nhào quang");
+        }
+        menu.add("Mua\nvé tháng");
+        menu.add("Mua\nvé tuần");
+        menu.add("Đóng");
 
         if (!TaskService.gI().checkDoneTaskTalkNpc(player, this)) {
             if (player.baovetaikhoan) {
@@ -267,28 +285,13 @@ public class OngGohan extends Npc {
                     break;
 
                 case 4:
-                    player.hienThiHopThe = (player.hienThiHopThe == 0 ? 1 : 0);
-                    // Ghi xuong CSDL NGAY, khong doi luc luu nhan vat.
-                    //
-                    // Truoc day day chi la mot bien trong bo nho, mac dinh 1.
-                    // Nguoi choi tat di, may chu dung lai mot cai la hop the
-                    // hien lai — ma ho khong he bam gi.
-                    nro.repository.dao.CaiDatNguoiChoiDAO.ghiHienThiHopThe(
-                            player.account_id, player.hienThiHopThe);
-                    Service.getInstance().sendThongBao(player,
-                            player.hienThiHopThe == 1 ? "Đã bật hiển thị hợp thể" : "Đã tắt hiển thị hợp thể");
-                    Service.getInstance().Send_Caitrang(player);
-                    break;
-
-                case 5:
-                    showMenuVeThang(player);
-                    break;
-
-                case 6:
-                    showMenuVeTuan(player);
+                    doiHienThiHopThe(player);
                     break;
 
                 default:
+                    // Từ ô hợp thể trở xuống, số ô lệch theo hai điều kiện —
+                    // xử lý chung ở dưới thay vì chép hai bản.
+                    mucSauHopThe(player, select);
                     break;
             }
         } else {
@@ -308,31 +311,90 @@ public class OngGohan extends Npc {
                     break;
 
                 case 3:
-                    player.hienThiHopThe = (player.hienThiHopThe == 0 ? 1 : 0);
-                    // Ghi xuong CSDL NGAY, khong doi luc luu nhan vat.
-                    //
-                    // Truoc day day chi la mot bien trong bo nho, mac dinh 1.
-                    // Nguoi choi tat di, may chu dung lai mot cai la hop the
-                    // hien lai — ma ho khong he bam gi.
-                    nro.repository.dao.CaiDatNguoiChoiDAO.ghiHienThiHopThe(
-                            player.account_id, player.hienThiHopThe);
-                    Service.getInstance().sendThongBao(player,
-                            player.hienThiHopThe == 1 ? "Đã bật hiển thị hợp thể" : "Đã tắt hiển thị hợp thể");
-                    Service.getInstance().Send_Caitrang(player);
-                    break;
-
-                case 4:
-                    showMenuVeThang(player);
-                    break;
-
-                case 5:
-                    showMenuVeTuan(player);
+                    doiHienThiHopThe(player);
                     break;
 
                 default:
+                    mucSauHopThe(player, select + 1);
                     break;
             }
         }
+    }
+
+    /**
+     * Các ô nằm SAU ô hợp thể, tính theo thang chung.
+     *
+     * <h2>Vì sao phải quy về một thang</h2>
+     *
+     * <p>Danh sách ô của NPC này co giãn theo <b>hai</b> điều kiện: có điểm danh
+     * hay chưa, và người chơi có hào quang được trao riêng hay không. Bản cũ đã
+     * chép hai bản {@code switch} cho riêng điều kiện thứ nhất, mỗi bản một
+     * thang số — thêm điều kiện thứ hai nữa là thành bốn bản, và chỉ cần sót một
+     * chỗ là "Mua vé tháng" biến thành "Ẩn hào quang".</p>
+     *
+     * <p>Quy về một thang thì mỗi mục chỉ khai một lần.</p>
+     *
+     * @param muc số ô đã quy về thang CÓ điểm danh:
+     *            {@code 5} hào quang riêng, {@code 6} vé tháng, {@code 7} vé tuần
+     */
+    private void mucSauHopThe(Player player, int muc) {
+        // Không có hào quang riêng thì ô đó không được vẽ ra, nên mọi ô phía sau
+        // dồn lên một bậc — cộng lại đúng một bậc để về thang chuẩn.
+        if (!coAuraRieng(player) && muc >= 5) {
+            muc++;
+        }
+        switch (muc) {
+            case 5:
+                doiHienThiAuraRieng(player);
+                break;
+            case 6:
+                showMenuVeThang(player);
+                break;
+            case 7:
+                showMenuVeTuan(player);
+                break;
+            default:
+                break;
+        }
+    }
+
+    /** Người chơi có được trao hào quang riêng không. */
+    private static boolean coAuraRieng(Player player) {
+        return nro.repository.dao.AuraDAO.auraRiengCua(player.id) > 0;
+    }
+
+    private void doiHienThiHopThe(Player player) {
+        player.hienThiHopThe = (player.hienThiHopThe == 0 ? 1 : 0);
+        // Ghi xuong CSDL NGAY, khong doi luc luu nhan vat.
+        //
+        // Truoc day day chi la mot bien trong bo nho, mac dinh 1. Nguoi choi tat
+        // di, may chu dung lai mot cai la hop the hien lai — ma ho khong he bam
+        // gi.
+        nro.repository.dao.CaiDatNguoiChoiDAO.ghiHienThiHopThe(
+                player.account_id, player.hienThiHopThe);
+        Service.getInstance().sendThongBao(player,
+                player.hienThiHopThe == 1 ? "Đã bật hiển thị hợp thể" : "Đã tắt hiển thị hợp thể");
+        Service.getInstance().Send_Caitrang(player);
+    }
+
+    /**
+     * Bật/tắt hào quang được trao riêng.
+     *
+     * <p>Ghi xuống CSDL ngay, cùng lý do với ẩn/hiện hợp thể: để trong bộ nhớ
+     * thôi thì máy chủ dựng lại một cái là bật trở lại, mà người chơi không hề
+     * bấm gì.</p>
+     */
+    private void doiHienThiAuraRieng(Player player) {
+        player.hienThiAuraRieng = (player.hienThiAuraRieng == 0 ? 1 : 0);
+        nro.repository.dao.CaiDatNguoiChoiDAO.ghiHienThiAuraRieng(
+                player.account_id, player.hienThiAuraRieng);
+        Service.getInstance().sendThongBao(player,
+                player.hienThiAuraRieng == 1
+                        ? "Đã bật hào quang riêng" : "Đã tắt hào quang riêng");
+        // Đẩy lại hình dáng NGAY để người xung quanh thấy đổi liền, giống hệt
+        // đường của hợp thể.
+        Service.getInstance().Send_Caitrang(player);
+        nro.service.Service.gI().capNhatAura(player);
     }
 
     private void showMenuVeThang(Player player) {

@@ -100,6 +100,21 @@ public final class LuocDoPanel {
         + " PRIMARY KEY (`id`), KEY `idx_thu_tu` (`thu_tu`)"
         + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 
+        // Hào quang gán RIÊNG cho từng nhân vật.
+        //
+        // Ưu tiên CAO HƠN hào quang của cải trang: đây là thứ quản trị viên
+        // trao cho một người cụ thể, còn cải trang thì ai mặc cũng có. Trao
+        // xong mà mặc một bộ cải trang vào là mất thì món quà thành vô nghĩa.
+        //
+        // Một nhân vật một dòng (khoá chính là player_id) nên gán lại là thay,
+        // không đẻ ra hai dòng chọi nhau.
+        "CREATE TABLE IF NOT EXISTS `player_aura` ("
+        + " `player_id` bigint(20) NOT NULL,"
+        + " `aura_id` int(11) NOT NULL,"
+        + " `ghi_chu` varchar(255) DEFAULT NULL,"
+        + " PRIMARY KEY (`player_id`)"
+        + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
         // Điểm đến của menu "Bản đồ" trong game — dịch chuyển nhanh.
         //
         //  nhom            gom nhóm để menu chia hai tầng (Trái Đất, Namếc, ...)

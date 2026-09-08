@@ -39,6 +39,9 @@ public class CaiDatNguoiChoiDAO {
             ConnectDB.executeUpdate("ALTER TABLE account"
                     + " ADD COLUMN IF NOT EXISTS hien_thi_hop_the"
                     + " TINYINT(1) NOT NULL DEFAULT 1");
+            ConnectDB.executeUpdate("ALTER TABLE account"
+                    + " ADD COLUMN IF NOT EXISTS hien_thi_aura_rieng"
+                    + " TINYINT(1) NOT NULL DEFAULT 1");
             daTaoBang = true;
         } catch (Exception ex) {
             Logger.logException(CaiDatNguoiChoiDAO.class, ex,
@@ -79,6 +82,42 @@ public class CaiDatNguoiChoiDAO {
         } catch (Exception ex) {
             Logger.logException(CaiDatNguoiChoiDAO.class, ex,
                     "Lỗi ghi cài đặt hợp thể");
+        }
+    }
+
+    /**
+     * Nhân vật này có hiện hào quang được trao riêng không.
+     *
+     * <p>Chưa có cột hay chưa có dòng thì trả {@code 1} — mặc định <b>hiện</b>,
+     * đúng như giá trị khởi tạo của {@code Player.hienThiAuraRieng}. Người vừa
+     * được trao hào quang mà thấy ngay là đúng ý; muốn giấu thì tự tắt.</p>
+     */
+    public static int docHienThiAuraRieng(long accountId) {
+        damBaoBang();
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT hien_thi_aura_rieng"
+                    + " FROM account WHERE id = ?", accountId);
+            if (rs.next()) {
+                return rs.getInt("hien_thi_aura_rieng");
+            }
+        } catch (Exception ex) {
+            Logger.logException(CaiDatNguoiChoiDAO.class, ex,
+                    "Lỗi đọc cài đặt hào quang riêng");
+        } finally {
+            dong(rs);
+        }
+        return 1;
+    }
+
+    public static void ghiHienThiAuraRieng(long accountId, int giaTri) {
+        damBaoBang();
+        try {
+            ConnectDB.executeUpdate("UPDATE account SET hien_thi_aura_rieng = ?"
+                    + " WHERE id = ?", giaTri, accountId);
+        } catch (Exception ex) {
+            Logger.logException(CaiDatNguoiChoiDAO.class, ex,
+                    "Lỗi ghi cài đặt hào quang riêng");
         }
     }
 

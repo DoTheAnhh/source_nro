@@ -152,6 +152,15 @@ import nro.entity.satellite.Satellite;
  */
 public class Player implements Runnable {
     public int hienThiHopThe = 1;
+
+    /**
+     * Có hiện hào quang được trao riêng không. { 1} là hiện.
+     *
+     * <p>Bật/tắt ở NPC Ông Gohan, cạnh ô ẩn/hiện hợp thể, và lưu ngay xuống
+     * cột { account.hien_thi_aura_rieng} — cùng cơ chế với hợp thể, nên
+     * đăng xuất rồi vào lại vẫn giữ nguyên lựa chọn.</p>
+     */
+    public int hienThiAuraRieng = 1;
     public long lastTimeEatPea;
 
     @Setter
@@ -2321,8 +2330,28 @@ public class Player implements Runnable {
 public byte getAura() {
     byte aura = -1;
 
-    // 1. CẢI TRANG đang mặc — nguồn ưu tiên cao nhất, lấy từ tab "Hào quang"
-    //    trên panel (cột aura_id của item_template).
+    // 0. GÁN RIÊNG cho chính nhân vật này — cao hơn tất cả.
+    //
+    //    Đây là thứ quản trị viên trao cho một người cụ thể ở tab "Hào quang"
+    //    của panel, còn hào quang cải trang thì ai mặc bộ đó cũng có. Trao xong
+    //    mà mặc một bộ cải trang vào là mất thì món quà thành vô nghĩa — nên nó
+    //    phải đứng trên, không phải đứng dưới.
+    //
+    //    Chỉ hỏi cho NGƯỜI CHƠI thật: đệ tử, phân thân, bố mẹ dùng chung id với
+    //    chủ nên hỏi cũng ra hào quang của chủ, mà chúng không phải là người
+    //    được trao.
+    //    Người chơi tắt được ở NPC Ông Gohan (ô ngay cạnh ẩn/hiện hợp thể).
+    //    Tắt thì bỏ qua hẳn nhánh này và rơi xuống các nguồn dưới, chứ không
+    //    thành "không có hào quang nào" — cải trang vẫn phải hiện như thường.
+    if (isPl() && this.hienThiAuraRieng == 1) {
+        int rieng = nro.repository.dao.AuraDAO.auraRiengCua(this.id);
+        if (rieng > 0) {
+            return (byte) rieng;
+        }
+    }
+
+    // 1. CẢI TRANG đang mặc — lấy từ tab "Hào quang" trên panel (cột aura_id
+    //    của item_template).
     //
     //    Không đòi isPl(): đệ tử, phân thân, bố mẹ cũng mặc cải trang được, mà
     //    chặn ở đây thì chúng mặc vào không thấy hào quang đâu.

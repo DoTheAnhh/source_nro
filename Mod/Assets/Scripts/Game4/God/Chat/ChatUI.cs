@@ -96,7 +96,17 @@ namespace Game4.God
 
         private readonly List<Dong> nhatKy = new List<Dong>();
 
-        private int theChon = KENH_TAT_CA;
+        /// <summary>Thẻ kênh đang mở. Mặc định là <b>Khu</b>.</summary>
+        /// <remarks>
+        /// <para>Trước đây mặc định là "Tất cả" — mà "Tất cả" chỉ để ĐỌC, không
+        /// gửi được (xem <c>goDuoc()</c>: nó đòi thẻ phải là Bang, Thế giới, Map
+        /// hoặc Khu). Người chơi mở chat, gõ một câu, bấm gửi và không có gì
+        /// xảy ra; phải tự nhận ra là còn phải bấm chọn một thẻ nữa.</para>
+        ///
+        /// <para>Khu là kênh nói chuyện thường ngày — người đang đứng cùng chỗ
+        /// với mình. Mở ra là gõ được ngay.</para>
+        /// </remarks>
+        private int theChon = KENH_KHU;
         private int cuon;
         private bool thuGon;
 

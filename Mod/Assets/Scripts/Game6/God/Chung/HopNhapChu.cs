@@ -149,16 +149,112 @@ namespace Game6.God
             this.khiXong = khiXong;
             dangMo = true;
             GameCanvas.clearAllPointerEvent();
+            moBanPhimMay();
         }
 
         public void dong()
         {
             dangMo = false;
+            dongBanPhimMay();
             // Bo ham goi lai: giu lai thi lan mo sau ma cho goi quen truyen ham
             // moi se chay nham ham cua lan truoc.
             khiXong = null;
         }
 
+        // ------------------------------------------------------------------
+        //  Bàn phím của máy (Android / iOS)
+        // ------------------------------------------------------------------
+
+        /// <summary>Bàn phím của hệ điều hành, chỉ có trên điện thoại.</summary>
+        /// <remarks>
+        /// <para><b>Vì sao phải có.</b> Hộp này nhận chữ qua
+        /// <see cref="docPhim"/>, tức là qua <c>Event.current</c> của IMGUI —
+        /// đường của <b>bàn phím cứng</b>. Trên điện thoại không có bàn phím
+        /// cứng, và không chỗ nào gọi bàn phím mềm lên cả: hộp hiện ra, con trỏ
+        /// nháy, mà gõ bằng gì thì không có. Đó đúng là lỗi "ấn vào khung chat
+        /// không hiện phím của máy".</para>
+        ///
+        /// <para>Dùng <c>TouchScreenKeyboard.isSupported</c> chứ không xét tên
+        /// nền tảng: nó đúng cho cả Android, iOS lẫn máy bảng, và trong Unity
+        /// Editor thì bằng <c>false</c> — nên chạy thử ở Editor vẫn gõ bằng bàn
+        /// phím thật như cũ, không bị bàn phím ảo chen vào.</para>
+        /// </remarks>
+        private UnityEngine.TouchScreenKeyboard banPhimMay;
+
+        /// <summary>Gọi bàn phím của máy lên.</summary>
+        /// <remarks>
+        /// <para><c>hideInput = false</c> để Unity hiện ô nhập riêng của hệ điều
+        /// hành ngay trên bàn phím. Trông có vẻ thừa vì hộp này tự vẽ chữ rồi,
+        /// nhưng <b>bộ gõ tiếng Việt cần nó</b>: chữ đang ghép dấu nằm trong ô
+        /// đó cho tới khi chốt, ẩn đi thì người chơi gõ mù.</para>
+        ///
+        /// <para>Gọi lại khi bàn phím đã tắt thì nó lên lại — người chơi lỡ
+        /// vuốt tắt bàn phím, chạm vào ô chữ là gõ tiếp được.</para>
+        /// </remarks>
+        private void moBanPhimMay()
+        {
+            if (!UnityEngine.TouchScreenKeyboard.isSupported)
+            {
+                return;
+            }
+            if (banPhimMay != null && banPhimMay.active)
+            {
+                return;
+            }
+            UnityEngine.TouchScreenKeyboard.hideInput = false;
+            banPhimMay = UnityEngine.TouchScreenKeyboard.Open(
+                    noiDung ?? "",
+                    UnityEngine.TouchScreenKeyboardType.Default,
+                    false,      // tu sua chinh ta - tat, no hay doi ten nhan vat
+                    false,      // nhieu dong - hop nay mot dong
+                    false,      // che chu - khong phai o mat khau
+                    false,      // dang canh bao
+                    tieuDe);
+        }
+
+        private void dongBanPhimMay()
+        {
+            if (banPhimMay != null)
+            {
+                banPhimMay.active = false;
+                banPhimMay = null;
+            }
+        }
+
+        /// <summary>
+        /// Chép chữ từ bàn phím của máy vào hộp, và xử lý nút Xong / Huỷ của nó.
+        /// </summary>
+        /// <returns><c>true</c> nếu hộp vừa bị đóng — chỗ gọi thôi làm tiếp.</returns>
+        /// <remarks>
+        /// Bàn phím của máy giữ bản chữ của riêng nó; hộp chỉ chép lại để vẽ.
+        /// Cắt theo <c>toiDa</c> ở cả hai bên, không thì người chơi gõ quá số ký
+        /// tự cho phép mà trên bàn phím vẫn thấy đủ, gửi đi lại bị cụt.
+        /// </remarks>
+        private bool docBanPhimMay()
+        {
+            if (banPhimMay == null)
+            {
+                return false;
+            }
+            string s = banPhimMay.text ?? "";
+            if (s.Length > toiDa)
+            {
+                s = s.Substring(0, toiDa);
+                banPhimMay.text = s;
+            }
+            noiDung = s;
+            if (banPhimMay.status == UnityEngine.TouchScreenKeyboard.Status.Done)
+            {
+                xong();
+                return true;
+            }
+            if (banPhimMay.status == UnityEngine.TouchScreenKeyboard.Status.Canceled)
+            {
+                dong();
+                return true;
+            }
+            return false;
+        }
         // ------------------------------------------------------------------
         //  Bố cục
         // ------------------------------------------------------------------
@@ -181,8 +277,13 @@ namespace Game6.God
         private int[] oKhung()
         {
             int w = rong();
-            return new int[] {
-                (GameCanvas.w - w) / 2, (GameCanvas.h - CAO) / 2, w, CAO };
+            // Ban phim mem chiem gan nua duoi man hinh. Hop dat giua man hinh
+            // thi nam ngay duoi no: nguoi choi khong thay minh dang go gi, ma
+            // hai nut OK / Dong cung bi che not.
+            int y = UnityEngine.TouchScreenKeyboard.visible
+                    ? 20
+                    : (GameCanvas.h - CAO) / 2;
+            return new int[] { (GameCanvas.w - w) / 2, y, w, CAO };
         }
 
         private int[] oNut(bool ok)
@@ -225,6 +326,12 @@ namespace Game6.God
         public void docPhim()
         {
             if (!dangMo)
+            {
+                return;
+            }
+            // Ban phim cua may dang giu ban chu -> KHONG doc them su kien phim.
+            // Doc ca hai duong thi mot ky tu vao hai lan.
+            if (banPhimMay != null && banPhimMay.active)
             {
                 return;
             }
@@ -338,6 +445,10 @@ namespace Game6.God
             {
                 return false;
             }
+            if (docBanPhimMay())
+            {
+                return true;
+            }
             if (!GameCanvas.isPointerJustRelease)
             {
                 return true;
@@ -352,6 +463,15 @@ namespace Game6.God
             if (cham(d[0], d[1], d[2], d[3]))
             {
                 dong();
+                return true;
+            }
+            // Cham vao o chu -> goi lai ban phim cua may.
+            // Nguoi choi vuot tat ban phim roi muon go tiep thi khong con duong
+            // nao khac ngoai dong hop mo lai.
+            int[] oChu = oKhung();
+            if (cham(oChu[0] + 10, oChu[1] + 24, oChu[2] - 20, 24))
+            {
+                moBanPhimMay();
                 return true;
             }
             GameCanvas.clearAllPointerEvent();

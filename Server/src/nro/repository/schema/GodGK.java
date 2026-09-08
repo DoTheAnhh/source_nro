@@ -240,6 +240,11 @@ public class GodGK {
                     // nguoi choi khong vao duoc game.
                     player.hienThiHopThe = nro.repository.dao.CaiDatNguoiChoiDAO
                             .docHienThiHopThe(player.account_id);
+                    // Cùng một cơ chế với hợp thể: đọc một lần lúc đăng nhập,
+                    // ghi ngay lúc người chơi bấm đổi. Đăng xuất vào lại giữ
+                    // nguyên lựa chọn.
+                    player.hienThiAuraRieng = nro.repository.dao.CaiDatNguoiChoiDAO
+                            .docHienThiAuraRieng(player.account_id);
 
                     Client.gI().safePut(player);
 

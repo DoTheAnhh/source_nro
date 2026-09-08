@@ -3475,6 +3475,16 @@ public class SystemPanel extends JPanel {
     };
     private final JTable auraCtTable = new JTable(auraCtModel);
 
+    /** Hào quang gán riêng cho từng nhân vật — bảng thứ ba của tab Hào quang. */
+    private final DefaultTableModel auraNvModel = new DefaultTableModel(
+            new Object[]{"Id nhân vật", "Nhân vật", "Hào quang", "Ghi chú"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return false;
+        }
+    };
+    private final JTable auraNvTable = new JTable(auraNvModel);
+
     /**
      * Tab hào quang.
      *
@@ -4094,12 +4104,145 @@ public class SystemPanel extends JPanel {
         duoi.add(ServerGuiUtils.cuon(auraCtTable), BorderLayout.CENTER);
         duoi.add(nutCt, BorderLayout.SOUTH);
 
-        JSplitPane chia = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tren, duoi);
-        chia.setResizeWeight(0.5);
+        auraNvTable.setRowHeight(24);
+        auraNvTable.setAutoCreateRowSorter(true);
+        auraNvTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        int[] w3 = {90, 220, 240, 300};
+        for (int i = 0; i < auraNvTable.getColumnCount() && i < w3.length; i++) {
+            auraNvTable.getColumnModel().getColumn(i).setPreferredWidth(w3[i]);
+        }
+
+        JPanel nutNv = new JPanel(new GridLayout(0, 2, 6, 6));
+        nutNv.setOpaque(false);
+        nutNv.add(button("Gán hào quang cho người chơi", OK_GREEN,
+                e -> ganAuraNguoiChoiDialog()));
+        nutNv.add(button("Gỡ hào quang người chơi", WARN_RED,
+                e -> goAuraNguoiChoi()));
+
+        JPanel nv = new JPanel(new BorderLayout(0, 6));
+        nv.setOpaque(false);
+        nv.add(nhan("Hào quang gán riêng cho người chơi — ƯU TIÊN CAO HƠN hào "
+                + "quang của cải trang, mặc bộ nào cũng không mất"),
+                BorderLayout.NORTH);
+        nv.add(ServerGuiUtils.cuon(auraNvTable), BorderLayout.CENTER);
+        nv.add(nutNv, BorderLayout.SOUTH);
+
+        JSplitPane chiaDuoi = new JSplitPane(JSplitPane.VERTICAL_SPLIT, duoi, nv);
+        chiaDuoi.setResizeWeight(0.5);
+        chiaDuoi.setBorder(null);
+
+        JSplitPane chia = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tren, chiaDuoi);
+        chia.setResizeWeight(0.34);
         chia.setBorder(null);
         root.add(chia, BorderLayout.CENTER);
         napBangAura();
         return root;
+    }
+
+    /** Nạp lại bảng hào quang gán riêng cho người chơi. */
+    private void napBangAuraNguoiChoi() {
+        auraNvModel.setRowCount(0);
+        for (nro.repository.dao.AuraDAO.GanRieng g
+                : nro.repository.dao.AuraDAO.danhSachGanRieng()) {
+            auraNvModel.addRow(new Object[]{
+                g.playerId, g.tenNhanVat, g.tenAura,
+                g.ghiChu == null ? "" : g.ghiChu});
+        }
+    }
+
+    /**
+     * Hộp gán hào quang cho một nhân vật.
+     *
+     * <p>Danh sách hào quang lấy <b>toàn bộ</b>, kể cả loại đánh dấu "chỉ cho
+     * cải trang": cờ đó chỉ chặn người chơi <i>tự chọn</i>, còn quản trị viên
+     * trao tay thì không có lý do gì phải chặn.</p>
+     */
+    private void ganAuraNguoiChoiDialog() {
+        java.util.List<nro.repository.dao.AuraDAO.Aura> ds
+                = nro.repository.dao.AuraDAO.tatCa();
+        if (ds.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Bảng hào quang đang trống — thêm hào quang ở bảng trên đã.",
+                    "Chưa có hào quang", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        java.util.List<nro.repository.dao.PlayerDAO.AdminRow> dsNv
+                = nro.repository.dao.PlayerDAO.listAllForAdmin();
+        if (dsNv.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Không đọc được danh sách nhân vật.",
+                    "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JComboBox<String> cbNv = new JComboBox<>();
+        for (nro.repository.dao.PlayerDAO.AdminRow r : dsNv) {
+            cbNv.addItem(r.id + " — " + r.name);
+        }
+        cbNv.setEditable(false);
+
+        JComboBox<nro.repository.dao.AuraDAO.Aura> cbAura = new JComboBox<>();
+        for (nro.repository.dao.AuraDAO.Aura a : ds) {
+            cbAura.addItem(a);
+        }
+
+        JTextField tfGhiChu = new JTextField(20);
+
+        JPanel form = new JPanel(new GridLayout(0, 1, 4, 4));
+        form.add(new JLabel("Nhân vật:"));
+        form.add(cbNv);
+        form.add(new JLabel("Hào quang:"));
+        form.add(cbAura);
+        form.add(new JLabel("Ghi chú (không bắt buộc):"));
+        form.add(tfGhiChu);
+        form.add(new JLabel("<html><i>Gán lại cho cùng một nhân vật là "
+                + "<b>thay</b>, không đẻ thêm dòng.</i></html>"));
+
+        if (JOptionPane.showConfirmDialog(this, form,
+                "Gán hào quang cho người chơi",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE)
+                != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        int i = cbNv.getSelectedIndex();
+        nro.repository.dao.AuraDAO.Aura a
+                = (nro.repository.dao.AuraDAO.Aura) cbAura.getSelectedItem();
+        if (i < 0 || i >= dsNv.size() || a == null) {
+            return;
+        }
+        long idNv = dsNv.get(i).id;
+
+        String loi = nro.repository.dao.AuraDAO.datGanRieng(
+                idNv, a.id, tfGhiChu.getText().trim());
+        if (loi != null) {
+            JOptionPane.showMessageDialog(this, loi, "Không gán được",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        napBangAuraNguoiChoi();
+        note(OK_GREEN, "Đã gán hào quang " + a + " cho nhân vật " + idNv
+                + " — người chơi thấy sau khi đổi bản đồ hoặc đăng nhập lại.");
+    }
+
+    /** Gỡ dòng gán riêng đang chọn. */
+    private void goAuraNguoiChoi() {
+        int r = auraNvTable.getSelectedRow();
+        if (r < 0) {
+            JOptionPane.showMessageDialog(this, "Chọn một dòng trong bảng đã.",
+                    "Chưa chọn", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        long idNv = Long.parseLong(String.valueOf(auraNvModel.getValueAt(
+                auraNvTable.convertRowIndexToModel(r), 0)));
+        String loi = nro.repository.dao.AuraDAO.xoaGanRieng(idNv);
+        if (loi != null) {
+            JOptionPane.showMessageDialog(this, loi, "Không gỡ được",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        napBangAuraNguoiChoi();
+        note(OK_GREEN, "Đã gỡ hào quang riêng của nhân vật " + idNv + ".");
     }
 
     /**
@@ -7677,6 +7820,7 @@ public class SystemPanel extends JPanel {
             nro.core.log.Logger.logException(SystemPanel.class, ex,
                     "Lỗi nạp bảng cải trang gán hào quang");
         }
+        napBangAuraNguoiChoi();
     }
 
     private Integer auraDangChon() {

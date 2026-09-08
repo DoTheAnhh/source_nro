@@ -47,6 +47,7 @@ public final class AuraDAO {
         cache = null;
         auraCuaVatPham = null;
         theoId = null;
+        auraRieng = null;
     }
 
     public static List<Aura> tatCa() {
@@ -258,6 +259,118 @@ public final class AuraDAO {
             return 0;
         } finally {
             dispose(rs);
+        }
+    }
+
+    // ================= HÀO QUANG GÁN RIÊNG CHO NGƯỜI CHƠI =================
+
+    /** Một dòng gán riêng, để panel hiện ra. */
+    public static final class GanRieng {
+
+        public long playerId;
+        public String tenNhanVat;
+        public int auraId;
+        public String tenAura;
+        public String ghiChu;
+    }
+
+    private static volatile Map<Long, Integer> auraRieng;
+
+    /**
+     * Hào quang gán riêng cho một nhân vật, hoặc {@code -1}.
+     *
+     * <p>Gọi mỗi lần vẽ người chơi nên phải đọc từ bộ nhớ đệm, y như
+     * {@link #auraCuaCaiTrang}. Panel sửa xong thì gọi {@link #napLai()}.</p>
+     */
+    public static int auraRiengCua(long playerId) {
+        Map<Long, Integer> m = auraRieng;
+        if (m == null) {
+            m = new HashMap<>();
+            CrisResultSet rs = null;
+            try {
+                nro.repository.schema.LuocDoPanel.damBao();
+                rs = ConnectDB.executeQuery(
+                        "SELECT player_id, aura_id FROM player_aura");
+                while (rs.next()) {
+                    m.put(rs.getLong("player_id"), rs.getInt("aura_id"));
+                }
+            } catch (Exception ex) {
+                Logger.logException(AuraDAO.class, ex,
+                        "Lỗi đọc hào quang gán riêng");
+            } finally {
+                dispose(rs);
+            }
+            auraRieng = m;
+        }
+        Integer v = m.get(playerId);
+        return v == null ? -1 : v;
+    }
+
+    /** Toàn bộ dòng gán riêng, kèm tên nhân vật và tên hào quang, cho panel. */
+    public static List<GanRieng> danhSachGanRieng() {
+        List<GanRieng> ra = new ArrayList<>();
+        CrisResultSet rs = null;
+        try {
+            nro.repository.schema.LuocDoPanel.damBao();
+            // LEFT JOIN: nhân vật đã xoá mà dòng gán còn sót thì vẫn phải hiện
+            // ra để quản trị viên gỡ được, chứ không lặng lẽ biến mất.
+            rs = ConnectDB.executeQuery(
+                    "SELECT pa.player_id, pa.aura_id, pa.ghi_chu, p.name"
+                    + " FROM player_aura pa LEFT JOIN player p ON p.id = pa.player_id"
+                    + " ORDER BY p.name");
+            while (rs.next()) {
+                GanRieng g = new GanRieng();
+                g.playerId = rs.getLong("player_id");
+                g.auraId = rs.getInt("aura_id");
+                g.ghiChu = rs.getString("ghi_chu");
+                String ten = rs.getString("name");
+                g.tenNhanVat = (ten == null || ten.isEmpty())
+                        ? "(nhân vật đã xoá)" : ten;
+                Aura a = theoId(g.auraId);
+                g.tenAura = a == null ? String.valueOf(g.auraId) : a.toString();
+                ra.add(g);
+            }
+        } catch (Exception ex) {
+            Logger.logException(AuraDAO.class, ex,
+                    "Lỗi liệt kê hào quang gán riêng");
+        } finally {
+            dispose(rs);
+        }
+        return ra;
+    }
+
+    /**
+     * Gán hào quang cho một nhân vật. Đã có thì thay, không đẻ dòng thứ hai.
+     *
+     * @return {@code null} nếu xong, ngược lại là lý do
+     */
+    public static String datGanRieng(long playerId, int auraId, String ghiChu) {
+        try {
+            nro.repository.schema.LuocDoPanel.damBao();
+            ConnectDB.executeUpdate(
+                    "INSERT INTO player_aura (player_id, aura_id, ghi_chu)"
+                    + " VALUES (?, ?, ?)"
+                    + " ON DUPLICATE KEY UPDATE aura_id = VALUES(aura_id),"
+                    + " ghi_chu = VALUES(ghi_chu)",
+                    playerId, auraId, ghiChu);
+            napLai();
+            return null;
+        } catch (Exception ex) {
+            Logger.logException(AuraDAO.class, ex, "Lỗi gán hào quang riêng");
+            return ex.getMessage();
+        }
+    }
+
+    /** Gỡ hào quang gán riêng của một nhân vật. */
+    public static String xoaGanRieng(long playerId) {
+        try {
+            ConnectDB.executeUpdate(
+                    "DELETE FROM player_aura WHERE player_id = ?", playerId);
+            napLai();
+            return null;
+        } catch (Exception ex) {
+            Logger.logException(AuraDAO.class, ex, "Lỗi gỡ hào quang riêng");
+            return ex.getMessage();
         }
     }
 

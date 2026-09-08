@@ -591,7 +591,15 @@ namespace Game2
     		Res.updateOnScreenDebug();
     		try
     		{
-    			if (TouchScreenKeyboard.visible)
+    			// `addYWhenOpenKeyBoard` day HUD len 94 diem de ban phim khong che
+    			// mat o nhap cua TField — VA no cong luon vao toa do cham
+    			// (xem Main.pointerPressed). Chi dung cho o nhap cua TField.
+    			//
+    			// Hop `God.HopNhapChu` tu dat minh len sat dinh man hinh khi ban
+    			// phim hien, nen no khong can duoc day them. Ma neu van day thi
+    			// hong: hop ve o mot cho, con cham lai bi lech 94 diem, hai nut
+    			// OK / Dong bam khong trung.
+    			if (TouchScreenKeyboard.visible && !God.HopNhapChu.getInstance().dangMo)
     			{
     				timeOpenKeyBoard++;
     				if (timeOpenKeyBoard > ((!Main.isWindowsPhone) ? 10 : 5))

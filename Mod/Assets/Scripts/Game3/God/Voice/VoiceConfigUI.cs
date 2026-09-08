@@ -168,7 +168,7 @@ namespace Game3.God
             g.setColor(MAU_O);
             g.fillRect(x0 + 6, y, RONG - 12, 8);
             g.setColor(MAU_VIEN);
-            g.fillRect(x0 + 6, y, (int)((RONG - 12) * Mathf.Clamp01(giaTri / 2f)), 8);
+            g.fillRect(x0 + 6, y, (int)((RONG - 12) * Mathf.Clamp01(giaTri / 4f)), 8);
             g.setColor(MAU_NEN);
             g.drawRect(x0 + 6, y, RONG - 12, 8);
         }
@@ -320,8 +320,11 @@ namespace Game3.God
         /// </remarks>
         private float tinhMuc()
         {
+            // Trần 4 chứ không phải 2: ở bản cũ kéo hết cỡ vẫn thấy bé, tức là
+            // trần mới là chỗ vướng. Kéo quá tay cũng không rè nữa vì đã có nén
+            // mềm ở VoiceChat.nenMem.
             int tuong = GameCanvas.pxLast - (x0 + 6);
-            return Mathf.Clamp(tuong * 2f / (RONG - 12), 0f, 2f);
+            return Mathf.Clamp(tuong * 4f / (RONG - 12), 0f, 4f);
         }
 
         private void doiMic(string[] ds, int buoc)

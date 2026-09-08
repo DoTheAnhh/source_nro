@@ -34,3 +34,21 @@ Mod/My project/Library/
 Mod/Logs/
 Mod/My project/Logs/
 Mod/obj/
+
+# Unity khoa thu muc nay khi Editor dang mo — git khong doc duoc, va no
+# cung chi la file tam.
+Mod/Temp/
+Mod/My project/Temp/
+
+# =====================================================================
+#  Game/ — ban dung san de phat hanh (APK, xuat iOS, ban PC), 1,1 GB.
+#
+#  Trong do co Game/IOS/Libraries/libiPhone-lib.a nang 205 MB. GitHub TU
+#  CHOI CUNG moi file thuong vuot 100 MB, nen de nguyen la lan push nao
+#  cung hong giua chung. LFS cung khong cuu duoc: kho da dung 245 MB tren
+#  han 1 GB mien phi, them 205 MB nua la sat tran.
+#
+#  Va khong can day: day la KET QUA dung ra tu Mod/, dung lai luc nao
+#  cung duoc. Ban phat hanh thi gui qua duong khac (Drive, trang tai ve).
+# =====================================================================
+Game/

@@ -428,7 +428,17 @@ namespace Game4
     
         public static void closeKeyBoard()
         {
-            if (TouchScreenKeyboard.visible)
+            // Phai xet `TField.kb != null`, khong chi `visible`.
+            //
+            // `visible` la co CHUNG cua ca may: ban phim do AI mo cung bat len.
+            // Tu khi `God.HopNhapChu` tu goi ban phim cho o nhap cua no
+            // (chat, ten nhan vat, doi ten, mat khau bao ve...), ban phim dang
+            // hien co the KHONG phai cua TField - luc do `TField.kb` van la
+            // null va dong `TField.kb.active` nem NullReferenceException.
+            //
+            // Ham nay duoc `GameCanvas.startOKDlg` va `startWaitDlg` goi, tuc la
+            // chi can mot hop thong bao bat len giua luc dang go chat la sap.
+            if (TField.kb != null)
             {
                 TField.kb.active = false;
                 TField.kb = null;
@@ -676,7 +686,9 @@ namespace Game4
             {
                 isResume = true;
             }
-            if (TouchScreenKeyboard.visible)
+            // Xem chu thich o closeKeyBoard: ban phim dang hien co the la cua
+            // God.HopNhapChu, luc do TField.kb la null.
+            if (TField.kb != null)
             {
                 TField.kb.active = false;
                 TField.kb = null;

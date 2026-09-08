@@ -949,6 +949,11 @@ namespace Game3.God
                     return PlayerInfo.getInstance().canLogin;
                 case 12:
                     return Mobs.tsPlayer;
+                case 17:
+                    // Am thanh cua ca game. Doc thang co cua game chu khong giu
+                    // mot ban rieng: giu ban rieng thi tat/bat o cho khac (menu
+                    // cau hinh cu) la o danh dau nay hien sai.
+                    return GameCanvas.isPlaySound;
                 default:
                     return false;
             }
@@ -1026,6 +1031,17 @@ namespace Game3.God
                 case 9:
                     PlayerInfo.getInstance().canLogin =!PlayerInfo.getInstance().canLogin;
                     Utils.addInfo1("Auto Login", PlayerInfo.getInstance().canLogin);
+                    break;
+                case 17:
+                    // Goi thang ham co san cua game chu khong tu dao co.
+                    //
+                    // soundToolOption() lam ba viec, thieu cai nao cung hong:
+                    // dao co, NAP hoac DONG nhac nen theo map dang dung, va GHI
+                    // lua chon vao bo nho may (Rms "isPlaySound") de lan sau mo
+                    // game van tat. Chi lat GameCanvas.isPlaySound thi nhac dang
+                    // phat van phat tiep, va tat game la mat lua chon.
+                    SoundMn.gI().soundToolOption();
+                    Utils.addInfo1("Âm thanh", GameCanvas.isPlaySound);
                     break;
             }
         }

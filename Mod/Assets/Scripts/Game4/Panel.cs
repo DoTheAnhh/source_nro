@@ -9878,6 +9878,47 @@ namespace Game4
                 {
                     setNewSelected(Char.myCharz().arrItemBody.Length + Char.myCharz().arrItemBag.Length, true);
                 }
+                else if (isnewInventory && isTabInven())
+                {
+                    // LƯỚI Ô VUÔNG: lấy thẳng ô người chơi vừa chạm.
+                    //
+                    // Nhánh cũ ở dưới suy ra vị trí món từ `selected` bằng phép
+                    // tính của bản DANH SÁCH. Ở lưới ô vuông, `selected` không
+                    // còn là dòng nào cả: chỗ nhận chạm đặt nó bằng 1 chỉ để
+                    // menu chịu mở ra (xem `chonOTaiDiem`), còn ô thật nằm ở
+                    // `sellectInventory` / `itemInvenNew`.
+                    //
+                    // Nên `GetInventorySelect_bag(1, ...)` luôn trả về CÙNG MỘT
+                    // ô, bất kể chạm vào món nào. Đó đúng là lỗi "chọn đồ khác
+                    // mà vẫn cất Đá thạch anh tím vào rương": menu hiện tên món
+                    // vừa chạm, nhưng món bị cất là món của ô cố định kia.
+                    //
+                    // Hai bảng còn lại đã chữa theo cách này từ trước —
+                    // `doFireInventory` lấy `itemInvenNew`, các lệnh 2000/2001/
+                    // 2002 lấy `currItem.indexUI` — chỉ bảng rương là bị bỏ sót.
+                    currItem = itemInvenNew;
+                    if (currItem != null)
+                    {
+                        if (newSelected == 0)
+                        {
+                            // Tab Trang bị: cất món đang mặc vào rương.
+                            myVector.addElement(new Command(mResources.move_to_chest2, this, 1002, currItem));
+                        }
+                        else
+                        {
+                            myVector.addElement(new Command(mResources.move_to_chest, this, 1001, currItem));
+                            if (currItem.isTypeBody())
+                            {
+                                myVector.addElement(new Command(mResources.USE, this, 2000, currItem));
+                            }
+                            else
+                            {
+                                myVector.addElement(new Command(mResources.USE, this, 2001, currItem));
+                                themDungNhanh(myVector, currItem);
+                            }
+                        }
+                    }
+                }
                 else
                 {
                     Item[] arrItemBody = Char.myCharz().arrItemBody;
@@ -10095,6 +10136,14 @@ namespace Game4
             if (idAction == 1001)
             {
                 sbyte id = (sbyte)GetInventorySelect_bag(selected, newSelected, Char.myCharz().arrItemBody);
+                // Luoi o vuong: lay chi so o THAT tu chinh mon gan vao lenh.
+                // `selected` o luoi khong phai so dong nen phep tinh tren tra ve
+                // sai o - xem chu thich trong doFireBox.
+                Item monCat = p as Item;
+                if (isnewInventory && isTabInven() && monCat != null)
+                {
+                    id = (sbyte)monCat.indexUI;
+                }
                 Service.gI().getItem(BAG_BOX, id);
             }
             if (idAction == 1003)
@@ -10103,7 +10152,13 @@ namespace Game4
             }
             if (idAction == 1002)
             {
-                Service.gI().getItem(BODY_BOX, (sbyte)GetInventorySelect_body(selected, newSelected));
+                sbyte idMac = (sbyte)GetInventorySelect_body(selected, newSelected);
+                Item monMac = p as Item;
+                if (isnewInventory && isTabInven() && monMac != null)
+                {
+                    idMac = (sbyte)monMac.indexUI;
+                }
+                Service.gI().getItem(BODY_BOX, idMac);
             }
             if (idAction == 2011)
             {

@@ -5060,6 +5060,59 @@ namespace Game5
     		return !isUseSkillAfterCharge && myskill != null && (myskill.template.id == 10 || myskill.template.id == 11);
     	}
     
+    	/// <summary>
+    	/// Quái gần nhất trong tầm đấm <b>nới rộng</b>, hoặc <c>null</c>.
+    	/// </summary>
+    	/// <remarks>
+    	/// <para>Lưới ngắm thường (trong <c>updateFocus</c>) dùng hộp
+    	/// <c>dx + 10</c> ngang và <c>dy + 20</c> dọc, mà chiêu đấm khai
+    	/// <c>dx = 32..44</c>, <c>dy = 18</c> — hộp chỉ chừng ±54 x ±38 điểm. Quái
+    	/// nhích nửa bước là ra khỏi hộp, và lúc bắt đầu vung tay không có gì để
+    	/// chốt: cú đấm bay hơi hoàn toàn, không gói tin nào lên máy chủ.
+    	/// </para>
+    	///
+    	/// <para>Đây là lưới vét cuối: <b>chỉ chạy khi không chốt được gì</b>, và
+    	/// nới hộp thêm 40 điểm mỗi chiều. Không mở ra kẽ hở nào — máy chủ vốn
+    	/// không còn kiểm tra tầm cho chiêu đấm (xem <c>SkillService</c>), nên
+    	/// người sửa client đã có thể gửi bất kỳ mục tiêu nào từ trước tới nay.
+    	/// Cái này chỉ giúp người chơi bình thường không bị hụt.</para>
+    	/// </remarks>
+    	private Mob timQuaiGanNhat()
+    	{
+    		if (GameScr.vMob == null)
+    		{
+    			return null;
+    		}
+    		int noiRong = 40;
+    		int trai = cx - getdxSkill() - noiRong;
+    		int phai = cx + getdxSkill() + noiRong;
+    		int tren = cy - getdySkill() - noiRong - 20;
+    		int duoi = cy + getdySkill() + noiRong;
+    		Mob gan = null;
+    		int khoangGan = int.MaxValue;
+    		for (int i = 0; i < GameScr.vMob.size(); i++)
+    		{
+    			Mob m = (Mob)GameScr.vMob.elementAt(i);
+    			if (m == null || m.status == 0)
+    			{
+    				continue;   // status 0 = da chet, danh tiep cung khong an
+    			}
+    			if (m.x < trai || m.x > phai || m.y < tren || m.y > duoi)
+    			{
+    				continue;
+    			}
+    			int dx = Math.abs(cx - m.x);
+    			int dy = Math.abs(cy - m.y);
+    			int xa = (dx <= dy) ? dy : dx;
+    			if (xa < khoangGan)
+    			{
+    				khoangGan = xa;
+    				gan = m;
+    			}
+    		}
+    		return gan;
+    	}
+
     	public virtual void setSkillPaint(SkillPaint skillPaint, int sType)
     	{
     		hasSendAttack = false;
@@ -5068,6 +5121,17 @@ namespace Game5
     		// dam (be ti) co the da truot khoi quai, va cu do bay hoi hoan toan.
     		charFocusLucVung = charFocus;
     		mobFocusLucVung = mobFocus;
+    		// Khong chot duoc gi thi vet mot lan nua bang hop noi rong.
+    		//
+    		// Chot luc bat dau vung tay chi cuu duoc truong hop quai chay RA khoi
+    		// hop GIUA luc vung. Con canh nay thi khac: ngay luc bam danh, quai da
+    		// nam ngoai hop ti chut roi — dung sat suon, nhung thap hon mot bac,
+    		// hay lech vai diem. Nhin tren man hinh la dam trung, ma khong co muc
+    		// tieu nao de gui len. Do la nhung cu "dam khong an" con sot lai.
+    		if (me && charFocusLucVung == null && mobFocusLucVung == null)
+    		{
+    			mobFocusLucVung = timQuaiGanNhat();
+    		}
     		if (stone || (me && myskill.template.id == 9 && cHP <= cHPFull / 10))
     		{
     			return;

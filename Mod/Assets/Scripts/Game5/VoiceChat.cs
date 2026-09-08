@@ -96,15 +96,23 @@ namespace Game5
             return (kenh < KENH_KHU || kenh > KENH_BANG) ? KENH_KHU : kenh;
         }
 
-        /// <summary>Âm lượng phát tiếng người khác, 0..2 (1 = giữ nguyên).</summary>
-        public static float amLuongLoa = 1f;
-
-        /// <summary>Độ khuếch đại mic trước khi mã hoá, 0..2 (1 = giữ nguyên).</summary>
+        /// <summary>Âm lượng phát tiếng người khác, 0..4 (1 = giữ nguyên).</summary>
         /// <remarks>
-        /// Nhân vào mẫu rồi mới cắt biên: mic laptop thường thu rất nhỏ, không
-        /// khuếch đại thì người nghe phải vặn loa hết cỡ mới nghe ra.
+        /// Mặc định 2, không phải 1. Tiếng đi qua µ-law 8 bit rồi mới tới đây,
+        /// mà µ-law dồn phần lớn độ phân giải vào quãng nhỏ — phát lại nguyên
+        /// biên độ thì nghe rất khẽ so với mọi âm khác trong game.
         /// </remarks>
-        public static float amLuongMic = 1f;
+        public static float amLuongLoa = 2f;
+
+        /// <summary>Độ khuếch đại mic trước khi mã hoá, 0..4 (1 = giữ nguyên).</summary>
+        /// <remarks>
+        /// <para>Mặc định 2,5: mic tích hợp của laptop thu rất nhỏ, để 1 thì
+        /// người nghe phải vặn loa hết cỡ mới nghe ra.</para>
+        ///
+        /// <para>Trần đã nâng từ 2 lên 4. Ở bản cũ người dùng kéo hết cỡ (2,0)
+        /// vẫn thấy bé, tức là trần chứ không phải mic là chỗ vướng.</para>
+        /// </remarks>
+        public static float amLuongMic = 2.5f;
         public static string tenMic = "";
 
         private AudioClip clipMic;
@@ -281,15 +289,49 @@ namespace Game5
                 }
                 for (int i = 0; i < MAU_MOI_GOI; i++)
                 {
-                    // Khuech dai roi CAT BIEN: khong cat thi mau tran ra ngoai
-                    // [-1,1] va µ-law goi ve dau nguoc lai, nghe thanh tieng ret.
-                    float v = demDoc[i] * amLuongMic;
-                    if (v > 1f) { v = 1f; }
-                    if (v < -1f) { v = -1f; }
-                    demGui[i] = MaHoa.tuFloat(v);
+                    demGui[i] = MaHoa.tuFloat(nenMem(demDoc[i] * amLuongMic));
                 }
                 Service.gI().guiTieng((sbyte)kenhDangBat, demGui);
             }
+        }
+
+        /// <summary>Ngưỡng bắt đầu nén. Dưới mức này mẫu đi qua nguyên vẹn.</summary>
+        private const float NGUONG_NEN = 0.7f;
+
+        /// <summary>
+        /// Ép mẫu về trong khoảng [-1, 1] bằng cách <b>nén</b>, không phải cắt.
+        /// </summary>
+        /// <remarks>
+        /// <para><b>Đây là chỗ sinh ra tiếng rè.</b> Bản cũ khuếch đại rồi cắt
+        /// phẳng: <c>if (v > 1f) v = 1f;</c>. Cắt phẳng biến đỉnh sóng sin thành
+        /// một đoạn nằm ngang, và một sóng vuông thì mang theo cả một chuỗi hoạ
+        /// ba bậc cao — tai người nghe ra đúng là tiếng rè, tiếng xé. Càng kéo
+        /// to càng nhiều mẫu bị cắt nên càng rè, và người dùng lại tưởng phải
+        /// kéo to hơn nữa.</para>
+        ///
+        /// <para>Nén mềm thì phần dưới <see cref="NGUONG_NEN"/> đi qua y nguyên
+        /// — tiếng nói bình thường không bị đụng tới — còn phần trên bị bẻ cong
+        /// dần và tiệm cận 1 mà không bao giờ chạm tới. Đỉnh sóng vẫn là đỉnh
+        /// sóng, chỉ thấp hơn, nên không đẻ ra hoạ ba.</para>
+        ///
+        /// <para>Vẫn kẹp lần cuối: mẫu vào là NaN thì mọi phép tính trên đều ra
+        /// NaN, mà NaN lọt xuống µ-law là một tiếng nổ.</para>
+        /// </remarks>
+        private static float nenMem(float v)
+        {
+            float dau = v < 0f ? -1f : 1f;
+            float a = v * dau;
+            if (a > NGUONG_NEN)
+            {
+                a = NGUONG_NEN + (1f - NGUONG_NEN)
+                        * (1f - 1f / (1f + (a - NGUONG_NEN) * 3f));
+            }
+            v = a * dau;
+            if (!(v >= -1f && v <= 1f))
+            {
+                v = v > 0f ? 1f : (v < 0f ? -1f : 0f);
+            }
+            return v;
         }
 
         /// <summary>Khung này có ai nói không, hay chỉ là nền phòng.</summary>
@@ -333,7 +375,9 @@ namespace Game5
             float[] mau = new float[soByte];
             for (int i = 0; i < soByte; i++)
             {
-                mau[i] = MaHoa.raFloat(tieng[i]) * amLuongLoa;
+                // Nén mềm luôn ở đây: âm lượng loa cũng đẩy được quá 1, và
+                // AudioClip.SetData cắt phẳng y như mic nếu để tràn.
+                mau[i] = nenMem(MaHoa.raFloat(tieng[i]) * amLuongLoa);
             }
             n.clip.SetData(mau, n.viTriGhi);
             n.viTriGhi = (n.viTriGhi + soByte) % n.clip.samples;
