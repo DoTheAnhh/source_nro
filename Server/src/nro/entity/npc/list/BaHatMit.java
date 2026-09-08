@@ -32,6 +32,18 @@ import nro.service.shop.ShopService;
 
 public class BaHatMit extends Npc {
 
+    /**
+     * Số Thỏi vàng phải trả mỗi lần hoá giải (xoá) bùa.
+     *
+     * <p>Thỏi vàng ở đây là <b>vật phẩm trong hành trang</b> (id 457), không
+     * phải cột {@code thoi_vang} của tài khoản — xem
+     * {@code ShopService.truThoiVang}.</p>
+     *
+     * <p>Có giá là để việc xoá không thành thói quen bấm bừa: bùa vĩnh viễn mua
+     * bằng tiền thật, xoá nhầm là mất hẳn.</p>
+     */
+    private static final int GIA_HOA_GIAI_BUA = 1;
+
     public BaHatMit(int mapId, int status, int cx, int cy, int tempId, int avartar) {
         super(mapId, status, cx, cy, tempId, avartar);
     }
@@ -483,10 +495,22 @@ public class BaHatMit extends Npc {
                     }
                     break;
                 }
-                case 42:
-                case 43:
-                case 44:
-                case 84: {
+                // MỌI bản đồ còn lại, không phải bốn số đếm tay.
+                //
+                // Trước đây nhánh này viết là `case 42/43/44/84`, trong khi
+                // openBaseMenu lại dựng menu ở nhánh `default` — tức là ở BẤT KỲ
+                // bản đồ nào khác 5/112/174/181. Hai bên lệch nhau: bản đồ nào
+                // có Bà Hạt Mít mà không nằm trong bốn số kia thì menu vẫn hiện
+                // ra đủ mục, bấm vào thì KHÔNG có gì xảy ra — không báo lỗi,
+                // không đóng menu.
+                //
+                // Hiện Bà Hạt Mít đứng ở ba vách núi của ba hành tinh: bản đồ
+                // 42, 43, 44. Nhưng chỗ đặt NPC nằm trong cột `npcs` của bảng
+                // map_template chứ không nằm trong mã — thêm một bà nữa ở bản đồ
+                // khác là chuyện sửa cơ sở dữ liệu, không ai nhớ phải quay lại
+                // sửa cả file này. Để `default` thì hai hàm khớp nhau theo định
+                // nghĩa, đặt NPC ở đâu cũng chạy.
+                default: {
                     if (player.iDMark.isBaseMenu()) {
                         if (!DailyGiftService.checkDailyGift(player, ConstDailyGift.NHAN_BUA_MIEN_PHI)) {
                             select++;
@@ -522,13 +546,11 @@ public class BaHatMit extends Npc {
                                         "Phân rã\nSách");
                                 break;
                             case 2:
-                                createOtherMenu(player, ConstNpc.MENU_OPTION_SHOP_BUA, "Bùa của ta rất lợi hại, nhìn ngươi yếu đuối thế này, chắc muốn mua bùa để " + "mạnh mẽ à, mua không ta bán cho, xài rồi lại thích cho mà xem.",
-                                        "Bùa\n1 giờ",
-                                        "Bùa\n8 giờ",
-                                        "Bùa\n1 tháng",
-                                        "Full bùa\nvĩnh viễn",
-                                        "Quản lý\nbùa",
-                                        "Đóng");//"Bùa\nđệ tử",
+                                createOtherMenu(player, ConstNpc.MENU_OPTION_SHOP_BUA,
+                                        loiChaoCuaHangBua(player),
+                                        "Bùa\n(vĩnh viễn)",
+                                        "Xoá bùa\n" + GIA_HOA_GIAI_BUA + " thỏi vàng",
+                                        "Đóng");
                                 break;
                             case 3:
                                 CombineService.gI().openTabCombine(player, CombineService.NANG_CAP_VAT_PHAM);
@@ -604,48 +626,42 @@ public class BaHatMit extends Npc {
                     } else if (player.iDMark.getIndexMenu() == ConstNpc.MENU_OPTION_SHOP_BUA) {
                         switch (select) {
                             case 0:
-                                ShopService.gI().opendShop(player, "BUA_1H", false);
-                                break;
-                            case 1:
-                                ShopService.gI().opendShop(player, "BUA_8H", false);
-                                break;
-                            case 2:
-                                ShopService.gI().opendShop(player, "BUA_1M", false);
-                                break;
-                            case 3:
                                 muaFullBuaVinhVien(player);
                                 break;
-                            case 4:
-                                moQuanLyBua(player);
+                            case 1:
+                                // Hỏi lại trước khi xoá.
+                                //
+                                // Xoá bùa là việc KHÔNG lấy lại được, mà nút xoá
+                                // lại nằm ngay cạnh nút mua — bấm nhầm một ô là
+                                // mất sạch, kể cả bùa vĩnh viễn vừa mua bằng
+                                // tiền thật. Một lần hỏi lại là đủ để không ai
+                                // mất oan, mà người thực sự muốn xoá cũng chỉ
+                                // tốn thêm một cái bấm.
+                                createOtherMenu(player, ConstNpc.MENU_XAC_NHAN_XOA_BUA,
+                                        "Hoá giải hết " + GIA_HOA_GIAI_BUA
+                                        + " thỏi vàng. Mất sạch, kể cả bùa vĩnh"
+                                        + " viễn, và ta KHÔNG hoàn lại tiền mua"
+                                        + " bùa đâu. Ngươi chắc chưa?",
+                                        "Xoá\nthật",
+                                        "Thôi");
                                 break;
                             default:
                                 // "Đóng" — không làm gì.
                                 break;
-//                            case 3:
-//                                ShopService.gI().opendShop(player, "BUA_DETU", false);
-//                                break;
-                        }
-                    } else if (player.iDMark.getIndexMenu() == ConstNpc.MENU_QUAN_LY_BUA) {
-                        if (select == 0) {
-                            // Hỏi lại trước khi xoá.
-                            //
-                            // Xoá bùa la mot viec KHONG lay lai duoc, va o menu
-                            // truoc no nam ngay canh nut "Dong" — bam nham mot
-                            // o la mat sach, ke ca bua vinh vien vua mua bang
-                            // tien that. Mot lan hoi lai la du de khong ai mat
-                            // oan, ma nguoi thuc su muon xoa cung chi ton them
-                            // mot cai bam.
-                            createOtherMenu(player, ConstNpc.MENU_XAC_NHAN_XOA_BUA,
-                                    "Xoá là mất sạch, kể cả bùa vĩnh viễn, và ta"
-                                    + " KHÔNG hoàn lại tiền đâu. Ngươi chắc chưa?",
-                                    "Xoá\nthật",
-                                    "Thôi");
                         }
                     } else if (player.iDMark.getIndexMenu() == ConstNpc.MENU_XAC_NHAN_XOA_BUA) {
                         if (select == 0) {
-                            player.charms.resetAllCharms();
-                            Service.gI().sendThongBao(player,
-                                    "Đã xoá sạch bùa trong người.");
+                            // Tra tien TRUOC khi xoa.
+                            //
+                            // truThoiVang() kiem tra du hay khong roi moi tru, va
+                            // tra false neu thieu — nguoi choi khong mat gi. Dat
+                            // truoc resetAllCharms() thi khong co canh "bua da
+                            // bay ma tien khong tru duoc".
+                            if (ShopService.gI().truThoiVang(player, GIA_HOA_GIAI_BUA)) {
+                                player.charms.resetAllCharms();
+                                Service.gI().sendThongBao(player,
+                                        "Đã hoá giải sạch bùa trong người.");
+                            }
                         }
                     } else if (player.iDMark.getIndexMenu() == ConstNpc.MENU_START_COMBINE) {
                         switch (player.combine.typeCombine) {
@@ -687,10 +703,6 @@ public class BaHatMit extends Npc {
                     }
                     break;
                 }
-
-                default: {
-                    break;
-                }
             }
         }
     }
@@ -727,18 +739,23 @@ public class BaHatMit extends Npc {
     }
 
     /**
-     * Mở bảng "Quản lý bùa": liệt kê bùa đang có kèm thời gian còn lại, và cho
-     * xoá sạch.
+     * Lời của Bà Hạt Mít ở cửa hàng bùa: liệt kê luôn bùa đang mang.
      *
-     * <p>Chỉ đếm bảy lá bùa cơ bản ({@link Charms#BUA_CO_BAN}) — đúng bộ mà
-     * cửa hàng này bán. Nút xoá thì gọi {@code resetAllCharms()}, tức là xoá
-     * <b>tất cả</b> bùa kể cả bùa đệ tử và bùa trí tuệ nâng cao; câu hỏi lại ở
-     * bước sau nói rõ điều đó.</p>
+     * <h2>Vì sao nhét danh sách vào đây</h2>
      *
-     * <p>Tên bùa đọc từ {@code ItemTemplate} chứ không viết cứng ở đây, để đổi
-     * tên trong bảng {@code item_template} là hiện đúng ngay.</p>
+     * <p>Cửa hàng chỉ còn hai mục — mua và xoá — nên không còn chỗ nào cho một
+     * mục "xem bùa đang có". Mà người chơi <b>cần</b> thấy nó: nút "Xoá bùa"
+     * nằm ngay cạnh nút mua, và xoá thì không lấy lại được. Biết mình đang có
+     * gì trước khi bấm là chuyện tối thiểu.</p>
+     *
+     * <p>Khung lời thoại của NPC vốn để trống ba phần tư, nên danh sách nằm ở
+     * đó không tốn thêm một cái bấm nào.</p>
+     *
+     * <p>Chỉ đếm bảy lá bùa cơ bản ({@link Charms#BUA_CO_BAN}) — đúng bộ mà cửa
+     * hàng này bán. Tên bùa đọc từ {@code ItemTemplate} chứ không viết cứng, để
+     * đổi tên trong bảng {@code item_template} là hiện đúng ngay.</p>
      */
-    private void moQuanLyBua(Player player) {
+    private String loiChaoCuaHangBua(Player player) {
         long now = System.currentTimeMillis();
         StringBuilder sb = new StringBuilder();
         int dem = 0;
@@ -753,12 +770,12 @@ public class BaHatMit extends Npc {
                             ? "vĩnh viễn"
                             : Util.formatCountdown(han, true, true, true));
         }
-        String noiDung = dem == 0
-                ? "Ngươi chẳng có lá bùa nào trong người cả."
-                : "Bùa ngươi đang mang:" + sb;
-        createOtherMenu(player, ConstNpc.MENU_QUAN_LY_BUA, noiDung,
-                "Xoá hết\nbùa",
-                "Đóng");
+        if (dem == 0) {
+            return "Bùa của ta rất lợi hại, nhìn ngươi yếu đuối thế này, chắc"
+                    + " muốn mua bùa để mạnh mẽ à. Mua một lần là xài mãi,"
+                    + " không hết hạn bao giờ.";
+        }
+        return "Bùa ngươi đang mang:" + sb;
     }
 
     /** Tên hiển thị của một lá bùa, lấy từ bảng vật phẩm. */

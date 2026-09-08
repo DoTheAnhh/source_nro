@@ -311,11 +311,10 @@ public class ConstNpc {
     public static final int MENU_START_COMBINE = 501;
     public static final int MENU_NANG_DOI_SKH_VIP = 502;
     public static final int MENU_SACH_TUYET_KY = 505;
-    // Quan ly bua: xem bua dang co, xoa het bua.
+    // Hoi lai truoc khi xoa sach bua.
     // So menu chi co y nghia trong pham vi MOT npc (BaHatMit.confirmMenu so
-    // getIndexMenu voi chinh may hang nay), nen 506/507 trung voi so cua npc
-    // khac la binh thuong — 508 ben duoi da la cua Whis.
-    public static final int MENU_QUAN_LY_BUA = 506;
+    // getIndexMenu voi chinh may hang nay), nen 507 trung voi so cua npc khac
+    // la binh thuong — 508 ben duoi da la cua Whis.
     public static final int MENU_XAC_NHAN_XOA_BUA = 507;
 
     //index menu whis

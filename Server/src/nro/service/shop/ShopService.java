@@ -711,7 +711,7 @@ public class ShopService {
      * chơi không mất gì. Nếu trừ trước rồi mới kiểm thì mua hụt là mất trắng số
      * đã trừ.</p>
      */
-    private boolean truThoiVang(Player player, int soLuong) {
+    public boolean truThoiVang(Player player, int soLuong) {
         if (soLuong <= 0) {
             return true;
         }
