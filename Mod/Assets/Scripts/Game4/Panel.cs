@@ -11378,30 +11378,21 @@ namespace Game4
             cmx = (cmtoX = 0);
         }
     
+        /// <summary>
+        /// Các thẻ của bảng "Tài khoản".
+        /// </summary>
+        /// <remarks>
+        /// <para><b>iOS bày y hệt Android.</b> Trước đây có một nhánh riêng cho
+        /// <c>Main.IphoneVersionApp</c> bỏ thẻ "Nạp tiền" đi — đó là cách né
+        /// điều 3.1.1 trong luật duyệt App Store, vốn cấm dẫn người dùng ra
+        /// ngoài để trả tiền. Bản này phát hành ngoài App Store nên luật đó
+        /// không áp, và người chơi iOS đang mất một thẻ mà Android có.</para>
+        ///
+        /// <para>Nếu về sau đưa lên App Store thật thì phải dựng lại nhánh đó,
+        /// không thì Apple từ chối.</para>
+        /// </remarks>
         private void setTabAccount()
         {
-            if (Main.IphoneVersionApp)
-            {
-                strAccount = new string[4]
-                {
-                    mResources.inventory_Pass,
-                    mResources.friend,
-                    mResources.enemy,
-                    mResources.msg
-                };
-                if (GameScr.canAutoPlay)
-                {
-                    strAccount = new string[5]
-                    {
-                        mResources.inventory_Pass,
-                        mResources.friend,
-                        mResources.enemy,
-                        mResources.msg,
-                        mResources.autoFunction
-                    };
-                }
-            }
-            else
             {
                 strAccount = new string[5]
                 {
