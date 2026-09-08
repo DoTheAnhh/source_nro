@@ -195,9 +195,22 @@ public final class CauCaManager {
      * lệ giữa lên và xuống thì độ khó không đổi, chỉ dài ra. Hạ mỗi cột tăng thì
      * trò thành ra khó hơn hẳn, mà đó không phải điều được yêu cầu.</p>
      *
-     * <p><b>Cột tăng đã chia đôi thêm một lần nữa.</b> Cộng với mốc khởi đầu
-     * hạ từ ba mươi xuống hai mươi phần trăm, một lượt hoàn hảo giờ mất chừng
-     * <b>bốn giây</b> với cá ngựa và <b>mười giây</b> với cá vàng.</p>
+     * <p><b>Hai cột đầu vừa chia tiếp cho năm</b> theo yêu cầu "thanh đếm chạy
+     * chậm bằng một phần năm". Một lượt hoàn hảo giờ mất chừng <b>hai mươi
+     * giây</b> với cá ngựa và <b>bốn mươi giây</b> với cá vàng.</p>
+     *
+     * <p>Chia <i>cả hai</i> cột chứ không riêng cột tăng, đúng lý do đã ghi ở
+     * đoạn trên: tỉ lệ lên/xuống giữ nguyên thì trò chỉ dài ra, không khó thêm.
+     * Hạ mỗi cột tăng là con cá tuột nhanh gấp năm lần so với tốc độ kéo —
+     * "chậm lại" biến thành "khó gấp năm", mà đó không phải điều được yêu
+     * cầu.</p>
+     *
+     * <p><b>Chỗ mất mát:</b> hai cột này gửi xuống client dạng byte nguyên nên
+     * phải làm tròn. Cột tăng của cá cờ, cá mập, cá vàng đều rơi về {@code 2}
+     * (đúng ra là 2,4 / 2,0 / 1,6), nên ba con khó nhất giờ kéo lâu ngang nhau.
+     * Chênh lệch độ khó giữa chúng vẫn còn ở ba cột kia. Muốn lấy lại độ phân
+     * giải thì phải đổi đơn vị cột này sang <i>phần mười phần trăm mỗi giây</i>
+     * — và việc đó phải sửa cả client.</p>
      *
      * <p>Cột giảm giữ nguyên, và hệ số nhân bên client cũng đã hạ xuống một
      * phần mười — nên tụt rất chậm. Nghĩa là con cá gần như không tuột được
@@ -210,11 +223,11 @@ public final class CauCaManager {
      */
     private static final int[][] DO_KHO = {
         // tăng, giảm, tốc vạch, rộng vùng
-        { 20,  6, 22, 26 },   // cá ngựa con — dễ nhất
-        { 15,  9, 32, 20 },   // cá thu
-        { 12, 12, 44, 16 },   // cá cờ
-        { 10, 16, 58, 12 },   // cá mập
-        {  8, 20, 76,  9 }    // cá vàng
+        { 4, 1, 22, 26 },   // cá ngựa con — dễ nhất
+        { 3, 2, 32, 20 },   // cá thu
+        { 2, 2, 44, 16 },   // cá cờ
+        { 2, 3, 58, 12 },   // cá mập
+        { 2, 4, 76,  9 }    // cá vàng
     };
 
     /**

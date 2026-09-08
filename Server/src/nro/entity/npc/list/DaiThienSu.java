@@ -61,7 +61,15 @@ public class DaiThienSu extends Npc {
                             + "Nhận thưởng vào " + Manager.timeEndNhanGiai + "\n"
                             + "Giải thưởng khủng chưa từng có, xem chi tiết tại box zalo\n"
                             + "|7|Thời gian diễn ra: " + Manager.DemTimeEvent(), 
-                            "Top\nSức mạnh\nBản Thân", "Top\nSức Mạnh\nĐệ Tử", "Đóng");
+                            // Nhãn nút TỐI ĐA HAI DÒNG.
+                            //
+                            // Menu của bản mod chỉ vẽ hai dòng đầu
+                            // (Menu.DONG_TOI_DA = 2), dòng thứ ba bị bỏ lặng lẽ.
+                            // Nhãn cũ là "Top / Sức mạnh / Bản Thân" và
+                            // "Top / Sức Mạnh / Đệ Tử" — mất dòng ba thì hai nút
+                            // hiện ra y hệt nhau. Đó là chỗ trông như "menu bị
+                            // lặp option".
+                            "Top SM\nBản Thân", "Top SM\nĐệ Tử", "Đóng");
                             break;
                         case 1:
                             this.createOtherMenu(player, 1,
@@ -70,7 +78,10 @@ public class DaiThienSu extends Npc {
                             + "Nhận thưởng vào " + Manager.timeEndNhanGiai + "\n"
                             + "Giải thưởng khủng chưa từng có, xem chi tiết tại box zalo\n"
                             + "|7|Thời gian diễn ra: " + Manager.DemTimeEvent(), 
-                            "Top\nHP", "Top\nKI", "Top\nSD", "Top\nHP\nĐệ Tử", "Top\nKI\nĐệ Tử", "Top\nSD\nĐệ Tử", "Đóng");
+                            // Sáu nút cũ mất dòng ba nên hiện ra thành
+                            // "Top HP / Top KI / Top SD" lặp lại hai lần.
+                            "Top HP", "Top KI", "Top SD",
+                            "HP\nĐệ Tử", "KI\nĐệ Tử", "SD\nĐệ Tử", "Đóng");
                             break;
                         case 2:
                             this.createOtherMenu(player, 2,
@@ -79,7 +90,10 @@ public class DaiThienSu extends Npc {
                             + "Nhận thưởng vào " + Manager.timeEndNhanGiai + "\n"
                             + "Giải thưởng khủng chưa từng có, xem chi tiết tại box zalo\n"
                             + "|7|Thời gian diễn ra: " + Manager.DemTimeEvent(), 
-                            "Top\nVNĐ", "Top\nCoin", "Top\nThỏi Vàng", "Top\nHồng Ngọc", "Top\nSố Tiền\nĐã Nạp", "Đóng");
+                            // "Top / Số Tiền / Đã Nạp" mất dòng ba nên chỉ còn
+                            // "Top Số Tiền" — không biết là tiền gì.
+                            "Top VNĐ", "Top Coin", "Top\nThỏi Vàng",
+                            "Top\nHồng Ngọc", "Top\nĐã Nạp", "Đóng");
                             break;
                         case 3:
                             TopService.showListTopTask(player);
@@ -105,7 +119,15 @@ public class DaiThienSu extends Npc {
                             + "Nhận thưởng vào " + Manager.timeEndNhanGiai + "\n"
                             + "Giải thưởng khủng chưa từng có, xem chi tiết tại box zalo\n"
                             + "|7|Thời gian diễn ra: " + Manager.DemTimeEvent(), 
-                            "Top\nSức mạnh\nBản Thân", "Top\nSức Mạnh\nĐệ Tử", "Đóng");
+                            // Nhãn nút TỐI ĐA HAI DÒNG.
+                            //
+                            // Menu của bản mod chỉ vẽ hai dòng đầu
+                            // (Menu.DONG_TOI_DA = 2), dòng thứ ba bị bỏ lặng lẽ.
+                            // Nhãn cũ là "Top / Sức mạnh / Bản Thân" và
+                            // "Top / Sức Mạnh / Đệ Tử" — mất dòng ba thì hai nút
+                            // hiện ra y hệt nhau. Đó là chỗ trông như "menu bị
+                            // lặp option".
+                            "Top SM\nBản Thân", "Top SM\nĐệ Tử", "Đóng");
                             break;
                         case 1:
                             this.createOtherMenu(player, 1,
@@ -114,7 +136,10 @@ public class DaiThienSu extends Npc {
                             + "Nhận thưởng vào " + Manager.timeEndNhanGiai + "\n"
                             + "Giải thưởng khủng chưa từng có, xem chi tiết tại box zalo\n"
                             + "|7|Thời gian diễn ra: " + Manager.DemTimeEvent(), 
-                            "Top\nHP", "Top\nKI", "Top\nSD", "Top\nHP\nĐệ Tử", "Top\nKI\nĐệ Tử", "Top\nSD\nĐệ Tử", "Đóng");
+                            // Sáu nút cũ mất dòng ba nên hiện ra thành
+                            // "Top HP / Top KI / Top SD" lặp lại hai lần.
+                            "Top HP", "Top KI", "Top SD",
+                            "HP\nĐệ Tử", "KI\nĐệ Tử", "SD\nĐệ Tử", "Đóng");
                             break;
                         case 2:
                             this.createOtherMenu(player, 2,
@@ -123,7 +148,10 @@ public class DaiThienSu extends Npc {
                             + "Nhận thưởng vào " + Manager.timeEndNhanGiai + "\n"
                             + "Giải thưởng khủng chưa từng có, xem chi tiết tại box zalo\n"
                             + "|7|Thời gian diễn ra: " + Manager.DemTimeEvent(), 
-                            "Top\nVNĐ", "Top\nCoin", "Top\nThỏi Vàng", "Top\nHồng Ngọc", "Top\nSố Tiền\nĐã Nạp", "Đóng");
+                            // "Top / Số Tiền / Đã Nạp" mất dòng ba nên chỉ còn
+                            // "Top Số Tiền" — không biết là tiền gì.
+                            "Top VNĐ", "Top Coin", "Top\nThỏi Vàng",
+                            "Top\nHồng Ngọc", "Top\nĐã Nạp", "Đóng");
                             break;
                         case 3:
                             TopService.showListTopTask(player);
