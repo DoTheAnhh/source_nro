@@ -139,6 +139,39 @@ public final class LuocDoPanel {
         //  ten_goc  tên NPC gửi ra trong mã nguồn — máy chủ tự ghi lại lần đầu
         //           thấy, để panel có gì mà liệt kê
         //  ten_moi  tên admin đặt; để trống nghĩa là dùng tên gốc
+        // Tên mục menu NPC — bản MỚI, thay cho `npc_menu`.
+        //
+        // Bảng cũ khoá theo (npc_id, chi_so) — tức NPC nào, ô THỨ MẤY. Nhưng
+        // menu NPC không cố định:
+        //
+        //   1. Cùng một menu co giãn theo trạng thái. Bà Hạt Mít chèn thêm ô
+        //      "Bông tai Porata" vào giữa khi người chơi có bông tai, và chèn
+        //      "Thưởng Bùa 1h" lên đầu khi còn lượt. Ô số 0 lúc là "Sách Tuyệt
+        //      Kỹ", lúc là "Thưởng Bùa 1h".
+        //   2. MỌI menu con của cùng một NPC đều đánh số lại từ 0. Ô số 2 của
+        //      menu chính và ô số 2 của menu "Cửa hàng Bùa" dùng CHUNG một khoá.
+        //
+        // Nên đổi tên một mục là đổi nhầm mục khác, và mục vừa ghi nhận đè lên
+        // mục ghi trước. Đó là lý do "option NPC hiện trong game không đúng".
+        //
+        // Khoá mới là (npc_id, menu_id, ten_goc): mã số menu do NPC truyền vào
+        // createOtherMenu, cộng với CHÍNH TÊN GỐC. Tên gốc nằm trong mã nguồn
+        // nên nó cố định, còn vị trí thì không.
+        //
+        // ten_goc(150): khoá duy nhất trên cột varchar dài phải cắt bớt, giới
+        // hạn 3072 byte cho một khoá của InnoDB utf8mb4.
+        "CREATE TABLE IF NOT EXISTS `npc_menu_ten` ("
+        + " `id` int(11) NOT NULL AUTO_INCREMENT,"
+        + " `npc_id` int(11) NOT NULL,"
+        + " `menu_id` int(11) NOT NULL DEFAULT 0,"
+        + " `chi_so` int(11) NOT NULL DEFAULT 0,"
+        + " `ten_goc` varchar(255) NOT NULL DEFAULT '',"
+        + " `ten_moi` varchar(255) DEFAULT NULL,"
+        + " PRIMARY KEY (`id`),"
+        + " UNIQUE KEY `uq_muc` (`npc_id`, `menu_id`, `ten_goc`(150)),"
+        + " KEY `idx_npc` (`npc_id`)"
+        + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
         "CREATE TABLE IF NOT EXISTS `npc_menu` ("
         + " `npc_id` int(11) NOT NULL,"
         + " `chi_so` int(11) NOT NULL,"

@@ -41,6 +41,17 @@ public final class NpcMenuDAO {
     public static final class Muc {
 
         public int npcId;
+
+        /**
+         * Mã số menu chứa mục này — chính là {@code indexMenu} mà NPC truyền
+         * vào {@code createOtherMenu}.
+         *
+         * <p>Đây là thứ tách được menu chính với từng menu con: cả hai đều đánh
+         * số ô lại từ 0, nên thiếu nó thì ô số 2 của menu chính và ô số 2 của
+         * menu "Cửa hàng Bùa" là một.</p>
+         */
+        public int menuId;
+
         public int chiSo;
         public String tenGoc = "";
         public String tenMoi;
@@ -63,27 +74,37 @@ public final class NpcMenuDAO {
     /** Các mục đã thấy trong phiên này, để không ghi CSDL lặp lại. */
     private static final Map<String, String> DA_GHI = new ConcurrentHashMap<>();
 
-    private static String khoa(int npcId, int chiSo) {
-        return npcId + "|" + chiSo;
+    /**
+     * Khoá của một mục: NPC + menu + <b>tên gốc</b>.
+     *
+     * <p>Không dùng vị trí ô. Vị trí đổi theo trạng thái người chơi — Bà Hạt Mít
+     * chèn thêm ô vào giữa khi có bông tai, chèn lên đầu khi còn lượt thưởng —
+     * còn tên gốc thì nằm trong mã nguồn nên cố định.</p>
+     */
+    private static String khoa(int npcId, int menuId, String tenGoc) {
+        return npcId + "|" + menuId + "|" + (tenGoc == null ? "" : tenGoc);
     }
 
     public static void napLai() {
         LuocDoPanel.damBao();
+        chuyenBangCu();
         Map<String, Muc> moi = new LinkedHashMap<>();
         CrisResultSet rs = null;
         try {
             rs = ConnectDB.executeQuery(
-                    "SELECT npc_id, chi_so, ten_goc, ten_moi FROM npc_menu");
+                    "SELECT npc_id, menu_id, chi_so, ten_goc, ten_moi"
+                    + " FROM npc_menu_ten");
             while (rs.next()) {
                 Muc m = new Muc();
                 m.npcId = rs.getInt("npc_id");
+                m.menuId = rs.getInt("menu_id");
                 m.chiSo = rs.getInt("chi_so");
                 m.tenGoc = rs.getString("ten_goc");
                 m.tenMoi = rs.getString("ten_moi");
                 if (m.tenGoc == null) {
                     m.tenGoc = "";
                 }
-                moi.put(khoa(m.npcId, m.chiSo), m);
+                moi.put(khoa(m.npcId, m.menuId, m.tenGoc), m);
             }
         } catch (Exception ex) {
             Logger.logException(NpcMenuDAO.class, ex, "Lỗi đọc bảng tên mục NPC");
@@ -98,6 +119,37 @@ public final class NpcMenuDAO {
         CACHE.clear();
         CACHE.putAll(moi);
         daNap = true;
+    }
+
+    /** Đã thử chuyển bảng cũ trong phiên này chưa. */
+    private static volatile boolean daChuyen;
+
+    /**
+     * Chuyển tên đã đặt ở bảng cũ {@code npc_menu} sang bảng mới, một lần.
+     *
+     * <p>Bảng cũ khoá theo vị trí ô nên không biết mục đó thuộc menu nào — chép
+     * sang với {@code menu_id = -1}. Tên đó sẽ <b>không</b> khớp mục nào (mọi
+     * mục thật đều có menu_id thật), nên nó chỉ nằm đó cho admin nhìn lại mình
+     * từng đặt gì, chứ không âm thầm đổi tên nhầm mục như trước.</p>
+     *
+     * <p>Chỉ chép dòng CÓ tên mới. Dòng chỉ có tên gốc thì bỏ — máy chủ tự ghi
+     * lại đầy đủ vào bảng mới ngay lần đầu mở NPC.</p>
+     */
+    private static void chuyenBangCu() {
+        if (daChuyen) {
+            return;
+        }
+        daChuyen = true;
+        try {
+            ConnectDB.executeUpdate(
+                    "INSERT IGNORE INTO npc_menu_ten"
+                    + " (npc_id, menu_id, chi_so, ten_goc, ten_moi)"
+                    + " SELECT npc_id, -1, chi_so, ten_goc, ten_moi"
+                    + " FROM npc_menu"
+                    + " WHERE ten_moi IS NOT NULL AND ten_moi <> ''");
+        } catch (Exception ex) {
+            // Chua co bang cu, hoac da chuyen roi — khong sao ca.
+        }
     }
 
     private static void damBaoNap() {
@@ -118,14 +170,14 @@ public final class NpcMenuDAO {
      *
      * @param tenGoc tên gõ trong mã nguồn của NPC
      */
-    public static String doiTen(int npcId, int chiSo, String tenGoc) {
+    public static String doiTen(int npcId, int menuId, int chiSo, String tenGoc) {
         if (tenGoc == null) {
             return "";
         }
         try {
             damBaoNap();
-            ghiNhanTenGoc(npcId, chiSo, tenGoc);
-            Muc m = CACHE.get(khoa(npcId, chiSo));
+            ghiNhanTenGoc(npcId, menuId, chiSo, tenGoc);
+            Muc m = CACHE.get(khoa(npcId, menuId, tenGoc));
             // Panel (hoac import tay) tung ghi chuoi "null" - bon ky tu n-u-l-l -
             // vao cot ten_moi thay vi de NULL that. Chuoi do khong rong nen no
             // lot qua moi kiem tra cu, roi duoc gui thang xuong client va hien
@@ -150,41 +202,60 @@ public final class NpcMenuDAO {
      * <p>Chỉ ghi khi <b>chưa có dòng</b> hoặc <b>tên gốc đã đổi</b> (lập trình
      * viên sửa chuỗi trong mã). Không đụng vào {@code ten_moi} của admin.</p>
      */
-    private static void ghiNhanTenGoc(int npcId, int chiSo, String tenGoc) {
-        String k = khoa(npcId, chiSo);
-        if (tenGoc.equals(DA_GHI.get(k))) {
+    private static void ghiNhanTenGoc(int npcId, int menuId, int chiSo, String tenGoc) {
+        String k = khoa(npcId, menuId, tenGoc);
+        if (DA_GHI.containsKey(k)) {
             return;
         }
         DA_GHI.put(k, tenGoc);
         Muc m = CACHE.get(k);
-        if (m != null && tenGoc.equals(m.tenGoc)) {
+        if (m != null) {
+            // Da co dong roi. Vi tri o co the vua doi (menu co gian theo trang
+            // thai) — cap nhat cho panel hien dung thu tu, nhung KHONG dung toi
+            // ten_moi cua admin.
+            if (m.chiSo != chiSo) {
+                m.chiSo = chiSo;
+                try {
+                    ConnectDB.executeUpdate(
+                            "UPDATE npc_menu_ten SET chi_so = ?"
+                            + " WHERE npc_id = ? AND menu_id = ? AND ten_goc = ?",
+                            chiSo, npcId, menuId, tenGoc);
+                } catch (Exception boQua) {
+                }
+            }
             return;
         }
         try {
             ConnectDB.executeUpdate(
-                    "INSERT INTO npc_menu (npc_id, chi_so, ten_goc) VALUES (?, ?, ?)"
-                    + " ON DUPLICATE KEY UPDATE ten_goc = VALUES(ten_goc)",
-                    npcId, chiSo, tenGoc);
-            if (m == null) {
-                m = new Muc();
-                m.npcId = npcId;
-                m.chiSo = chiSo;
-                CACHE.put(k, m);
-            }
+                    "INSERT INTO npc_menu_ten (npc_id, menu_id, chi_so, ten_goc)"
+                    + " VALUES (?, ?, ?, ?)"
+                    + " ON DUPLICATE KEY UPDATE chi_so = VALUES(chi_so)",
+                    npcId, menuId, chiSo, tenGoc);
+            m = new Muc();
+            m.npcId = npcId;
+            m.menuId = menuId;
+            m.chiSo = chiSo;
             m.tenGoc = tenGoc;
+            CACHE.put(k, m);
         } catch (Exception ex) {
             Logger.logException(NpcMenuDAO.class, ex,
-                    "Lỗi ghi tên gốc mục menu NPC " + npcId + "/" + chiSo);
+                    "Lỗi ghi tên gốc mục menu NPC " + npcId + "/" + menuId);
         }
     }
 
-    /** Toàn bộ mục đã ghi nhận, sắp theo NPC rồi vị trí. */
+    /** Toàn bộ mục đã ghi nhận, sắp theo NPC rồi menu rồi vị trí. */
     public static List<Muc> danhSach() {
         damBaoNap();
         List<Muc> ds = new ArrayList<>(CACHE.values());
-        ds.sort((a, b) -> a.npcId != b.npcId
-                ? Integer.compare(a.npcId, b.npcId)
-                : Integer.compare(a.chiSo, b.chiSo));
+        ds.sort((a, b) -> {
+            if (a.npcId != b.npcId) {
+                return Integer.compare(a.npcId, b.npcId);
+            }
+            if (a.menuId != b.menuId) {
+                return Integer.compare(a.menuId, b.menuId);
+            }
+            return Integer.compare(a.chiSo, b.chiSo);
+        });
         return ds;
     }
 
@@ -193,7 +264,7 @@ public final class NpcMenuDAO {
      *
      * @return {@code null} nếu lưu xong, ngược lại là lý do
      */
-    public static String datTen(int npcId, int chiSo, String tenMoi) {
+    public static String datTen(int npcId, int menuId, String tenGoc, String tenMoi) {
         try {
             LuocDoPanel.damBao();
             // Coi ca chuoi "null" la "de trong". Neu khong, mot lan luu hong se
@@ -206,15 +277,15 @@ public final class NpcMenuDAO {
                 return "Tên dài quá 255 ký tự.";
             }
             ConnectDB.executeUpdate(
-                    "INSERT INTO npc_menu (npc_id, chi_so, ten_goc, ten_moi)"
-                    + " VALUES (?, ?, '', ?)"
+                    "INSERT INTO npc_menu_ten (npc_id, menu_id, ten_goc, ten_moi)"
+                    + " VALUES (?, ?, ?, ?)"
                     + " ON DUPLICATE KEY UPDATE ten_moi = VALUES(ten_moi)",
-                    npcId, chiSo, v);
+                    npcId, menuId, tenGoc == null ? "" : tenGoc, v);
             napLai();
             return null;
         } catch (Exception ex) {
             Logger.logException(NpcMenuDAO.class, ex,
-                    "Lỗi đặt tên mục menu NPC " + npcId + "/" + chiSo);
+                    "Lỗi đặt tên mục menu NPC " + npcId + "/" + menuId);
             return "Lỗi ghi CSDL — xem log máy chủ.";
         }
     }

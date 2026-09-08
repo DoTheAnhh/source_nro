@@ -91,7 +91,7 @@ public abstract class Npc implements IAtionNpc {
                 // mọi menu NPC đi qua, nên đổi ở đây là áp cho tất cả NPC —
                 // không phải sửa từng lớp NPC một.
                 msg.writer().writeUTF(nro.repository.dao.NpcMenuDAO.doiTen(
-                        tempId, i, menuSelect[i]));
+                        tempId, indexMenu, i, menuSelect[i]));
             }
             for (nro.repository.dao.NpcMenuThemDAO.Nut n : nutThem) {
                 msg.writer().writeUTF(n.ten.replace("\\n", "\n"));
@@ -117,7 +117,7 @@ public abstract class Npc implements IAtionNpc {
                 // mọi menu NPC đi qua, nên đổi ở đây là áp cho tất cả NPC —
                 // không phải sửa từng lớp NPC một.
                 msg.writer().writeUTF(nro.repository.dao.NpcMenuDAO.doiTen(
-                        tempId, i, menuSelect[i]));
+                        tempId, indexMenu, i, menuSelect[i]));
             }
             player.sendMessage(msg);
             msg.cleanup();

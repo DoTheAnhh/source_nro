@@ -1322,10 +1322,33 @@ public class MapShopPanel extends JPanel {
         form.add(huong, c);
         c.gridwidth = 1;
 
+        // Gom theo TỪNG MENU, không đổ một đống phẳng.
+        //
+        // Một NPC có nhiều tầng menu: menu chính, rồi mỗi mục lại mở một menu
+        // con, menu con lại mở tiếp. Mỗi tầng là một `menu_id` riêng do NPC
+        // truyền vào createOtherMenu. Trước đây bảng chỉ nhớ vị trí ô nên mọi
+        // tầng trộn lẫn vào nhau — nhìn không ra tầng nào của tầng nào, và sửa
+        // một mục là đổi nhầm mục ở tầng khác.
+        int menuTruoc = Integer.MIN_VALUE;
         for (nro.repository.dao.NpcMenuDAO.Muc m : ds) {
+            if (m.menuId != menuTruoc) {
+                menuTruoc = m.menuId;
+                c.gridx = 0;
+                c.gridy = y++;
+                c.gridwidth = 2;
+                JLabel td = new JLabel("<html><br><b>"
+                        + (m.menuId == -1
+                           ? "Tên đặt từ bản cũ — không còn khớp mục nào"
+                           : "Menu #" + m.menuId
+                             + (m.menuId == 31072002 ? " (menu chính)" : " (menu con)"))
+                        + "</b></html>");
+                td.setForeground(GREY);
+                form.add(td, c);
+                c.gridwidth = 1;
+            }
             c.gridx = 0;
             c.gridy = y++;
-            form.add(new JLabel("Mục " + m.chi_soHienThi() + " — gốc: \""
+            form.add(new JLabel("   Ô " + m.chi_soHienThi() + " — gốc: \""
                     + m.tenGoc.replace("\n", "\\n") + "\""), c);
             c.gridx = 1;
             JTextField f = new JTextField(
@@ -1376,7 +1399,8 @@ public class MapShopPanel extends JPanel {
         int loi = 0;
         for (int i = 0; i < ds.size(); i++) {
             String kq = nro.repository.dao.NpcMenuDAO.datTen(
-                    ds.get(i).npcId, ds.get(i).chiSo, o.get(i).getText());
+                    ds.get(i).npcId, ds.get(i).menuId, ds.get(i).tenGoc,
+                    o.get(i).getText());
             if (kq != null) {
                 loi++;
             }
