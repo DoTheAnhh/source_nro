@@ -268,3 +268,88 @@ Swing, `--headless` bỏ qua hẳn. Ba đường đi:
 
 Cách 2 sửa được dữ liệu nhưng **không** thấy được trạng thái đang chạy (boss
 đang sống, người online), vì những thứ đó nằm trong bộ nhớ tiến trình máy chủ.
+
+---
+
+## 13. Cập nhật về sau — chỉ `git pull`, không gì khác
+
+Đây là việc làm hằng ngày, khác hẳn mười hai bước ở trên (chỉ làm một lần).
+
+```bash
+cd <thư mục dự án>
+git pull
+```
+
+rồi khởi động lại máy chủ:
+
+| Máy chạy | Lệnh |
+|---|---|
+| Windows | đóng cửa sổ đang chạy, bấm **`chay.bat`** |
+| Linux (systemd) | `sudo systemctl restart nro` |
+
+Không cần `javac`. Thư mục `out/` nằm trong git và luôn được biên dịch lại ở máy
+nhà **trước** mỗi lần đẩy lên, nên `git pull` là đã có `.class` mới.
+
+### Cài một lần: Git LFS
+
+```bash
+git lfs install
+git lfs pull
+```
+
+**Bắt buộc.** Ba file `.rar` trong `data/` đi qua Git LFS, trong đó
+`item_bg_temp.rar` nặng 245 MB. Máy không cài git-lfs thì `git pull` vẫn báo
+thành công nhưng cái nó để lại là **file con trỏ 130 byte**, không phải kho lưu
+trữ thật — hỏng lặng lẽ, không một dòng báo lỗi. Cài rồi thì mọi lần kéo sau tự
+lấy đủ.
+
+Kiểm tra:
+
+```bash
+ls -l data/item_bg_temp.rar     # phải ~245 MB, không phải ~130 byte
+```
+
+### Dùng `chay.bat`, đừng dùng `run.bat`
+
+`run.bat` **xoá sạch `out/` rồi biên dịch lại**. Làm thế ở máy chạy là hỏng lần
+`git pull` kế tiếp: `out/*.class` bị sửa ở cả hai đầu và git từ chối kéo về
+
+```
+error: Your local changes to the following files would be overwritten by merge
+```
+
+`chay.bat` chỉ gọi `java` trên `out/` có sẵn, không đụng vào file nào git đang
+theo dõi.
+
+### Nếu vẫn kẹt
+
+Máy chạy không bao giờ soạn mã, nên cứ soi gương theo kho là xong:
+
+```bash
+git fetch origin
+git reset --hard origin/main
+```
+
+Lệnh này **xoá mọi thay đổi cục bộ** trên máy đó. Ở máy chạy thì không mất gì —
+nhưng đừng gõ nó ở máy làm việc.
+
+Cần dùng tới nó là dấu hiệu có file nào đó vẫn bị ghi ở cả hai đầu; báo lại để
+thêm vào `Server/.gitignore`, đừng biến `reset --hard` thành thói quen.
+
+### Vì sao bây giờ mới hết kẹt
+
+Ngày 08/09/2026, `git pull` ở máy chạy hỏng với đúng bảy file, kéo hai lần đều
+`Aborting`. Không file nào trong bảy file đó do người viết ra — máy chủ tự ghi
+chúng mỗi lần khởi động:
+
+| File | Ai ghi |
+|---|---|
+| `log-run.txt`, `server-console.log`, `srv.log`, `srv.err`, `_run.log` | log mỗi lần chạy |
+| `sources.txt` | `run.bat` sinh lại bằng `dir /s /b src\*.java` |
+| `out/**/*.class` | `run.bat` biên dịch lại |
+| `data/update_data/part` | `Manager.loadDatabase()` đọc bảng `part` rồi ghi đè, mỗi lần khởi động |
+| `hs_err_pid*.log`, `replay_pid*.log` | máy ảo Java đổ ra khi sập |
+
+Tất cả (trừ `out/`) đã được bỏ theo dõi và chặn trong `Server/.gitignore`.
+Riêng `out/` phải giữ lại — đó chính là thứ giúp máy chạy khỏi cần `javac` — nên
+nó được bảo vệ bằng cách khác: dùng `chay.bat`, thứ không biên dịch.

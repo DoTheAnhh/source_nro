@@ -1,124 +1,0 @@
-[0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[1m▶ SERVER START[0m
-[0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[19:02:41] [SERVER]       Khởi động ServerManagerUI[0m
-[0;32m[19:02:42] [LOG]          Chạy thành công tệp properties!
-[0m[0;32m[19:02:43] [LOG]          Có lỗi xảy ra khi thực thi câu lệnh: ALTER TABLE `task_badges_template` ADD COLUMN `loai` varchar(20) NOT NULL DEFAULT ''
-[0m[0;32m[19:02:43] [LOG]          Có lỗi xảy ra khi thực thi câu lệnh: ALTER TABLE `task_badges_template` ADD COLUMN `tham_so` int(11) NOT NULL DEFAULT -1
-[0m[0;35m[1m[19:02:43] [CONNECT]      Starting Server Engine...[0m
-[0;32m[19:02:43] [SERVER_UI]    Đang gọi ServerManager.gI().run()[0m
-[0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[1m▶ KHỞI TẠO SERVER[0m
-[0;32m────────────────────────────────────────────────────────────[0m
-[0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[1m▶ BACKUP[0m
-[0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[19:02:44] [OK]           Successfully loaded part (1983)
-[0m[0;32m[19:02:44] [OK]           Loaded bg item template (470) successfully
-[0m[0;32m[19:02:44] [OK]           Successfully loaded map item template (2447)
-[0m[0;32m[19:02:44] [OK]           Successfully loaded map item option template (322)
-[0m[0;32m[19:02:44] [OK]           Loaded clan (29) successfully, clan next id : 1346671 successfully
-[0m[0;32m[19:02:44] [OK]           Loaded new skills (3) successfully
-[0m[0;32m[19:02:44] [OK]           Loaded head_avatar (533) successfully
-[0m[0;32m[19:02:44] [OK]           Loaded flag_bag (220) successfully
-[0m[0;32m[19:02:44] [OK]           Successfully loaded arr head 2 frames (57)
-[0m[0;32m[19:02:44] [OK]           Loaded intrinsic (27) successfully
-[0m[0;32m[19:02:44] [OK]           Loaded task_main_template (33) successfully
-[0m[0;32m[19:02:44] [OK]           Loaded archievement_template (20) successfully
-[0m[0;32m[19:02:44] [OK]           Loaded side_task_template (59) successfully
-[0m[0;32m[19:02:44] [OK]           Loaded side_task_clan (59) successfully
-[0m[0;35m[1m[19:02:45] [BACKUP]       Sao lưu source thành công | file=backupsrc/src_backup_20260827_190244.zip[0m
-[0;35m[1m[19:02:45] [BACKUP]       Đang sao lưu database | db=nro | file=backupsql/nro_backup_20260827_190245.sql[0m
-[0;31m[1m[19:02:46] [BACKUP_DB]    mysqldump.exe: Got error: 1049: "Unknown database 'nro'" when selecting the database[0m
-[0;31m[1m[19:02:46] [BACKUP_DB]    Lệnh mysqldump không thành công | exitCode=2[0m
-[0;32m[19:02:46] [SCHEDULE]     Đã đặt lịch reset clan hằng ngày lúc 00:00[0m
-[0;34m[1m════════════════════════════════════════════════════════════[0m
-[0;34m[1m▶ ANTI_DDOS | KHỞI TẠO BẢO VỆ[0m
-[0;34m[1m════════════════════════════════════════════════════════════[0m
-[0;34m[1m[19:02:46] [ANTI_DDOS]    Anti-DDOS đã được khởi tạo thành công | max=30/s | block=120s[0m
-[0;32m[19:02:46] [OK]           Loaded shop (60) successfully
-[0m[0;32m[19:02:46] [OK]           Successfully loaded images by name (342)
-[0m[0;32m[19:02:46] [OK]           Successfully loaded mount (74)
-[0m[0;32m[19:02:46] [OK]           Successfully loaded event task (59)
-[0m[0;32m[19:02:46] [OK]           Loaded task badges (21) successfully
-[0m[0;32m[19:02:46] [OK]           Loaded badges template (17) successfully
-[0m[0;32m[19:02:46] [OK]           Loaded mob template (127) successfully
-[0m[0;32m[19:02:46] [OK]           Loaded npc_template (118) successfully
-[0m[0;32m[19:02:46] [OK]           Successfully loaded map template (248)
-[0m[0;32m[19:02:46] [LOG]          Loaded shop_ky_gui (5) successfully
-[0m[0;32m[19:02:46] [OK]           Loaded notify (2) successfully
-[0m[0;32m[19:02:46] [OK]           Successfully loaded radar template (21)
-[0m[0;32m[19:02:46] [LOG]          Tổng thời gian load Database 2286(ms)
-[0m[0;35m[1m[19:02:47] [CONNECT]      Finish connect Server | db=awnv3[0m
-[0;32m[19:02:47] [LOG]          LOAD GIFTCODE (0) SUCCESS
-[0m[0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[1m▶ SERVER ONLINE[0m
-[0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[19:02:47] [OK]           Server đang chạy tại port 14445
-[0m[0;32m[1m[19:02:47] [SERVER]       Server đang chạy tại port 14445[0m
-[0;32m[19:02:47] [GAME]         Đang khởi động game loop[0m
-[0;32m[19:02:47] [BXH]          Đang bật tự động cập nhật bảng xếp hạng[0m
-[0;32m[19:02:47] [AUTO_SAVE]    Đang bật tự động lưu database[0m
-[0;32m[19:02:47] [BOT]          Đang khởi động bot hệ thống[0m
-[0;32m[19:02:47] [BOT]          Đã bật shop bot thường[0m
-[0;32m[19:02:47] [BOT]          Đã bật NewBot_new[0m
-[0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[1m▶ INIT NGỌC RỒNG NAMEK[0m
-[0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[1m[19:02:47] [NAMEK]        1 sao    | map=Vực maima                   (12) | khu=3   | x=1319  | y=288  [0m
-[0;32m[1m[19:02:47] [NAMEK]        2 sao    | map=Nam Guru                    (33) | khu=1   | x=321   | y=240  [0m
-[0;32m[1m[19:02:47] [NAMEK]        3 sao    | map=Đông Nam Guru               (34) | khu=2   | x=591   | y=312  [0m
-[0;32m[1m[19:02:47] [NAMEK]        4 sao    | map=Làng Mori                   (07) | khu=5   | x=865   | y=432  [0m
-[0;32m[1m[19:02:47] [NAMEK]        5 sao    | map=Thị trấn Moori              (09) | khu=25  | x=510   | y=384  [0m
-[0;32m[1m[19:02:47] [NAMEK]        6 sao    | map=Đồi nấm tím                 (08) | khu=2   | x=1137  | y=408  [0m
-[0;32m[1m[19:02:47] [NAMEK]        7 sao    | map=Núi hoa tím                 (32) | khu=7   | x=108   | y=432  [0m
-[0;32m[19:02:47] [THREAD]       Đã bật thread hệ thống chính[0m
-[0;32m[19:02:48] [BOSS]         Đã bật boss manager thường[0m
-[0;32m[19:03:36] [LOG]          [NET] 127.0.0.1 ngat ket noi: EOFException
-[0m[0;32m[19:03:46] [LOG]          [NET] 192.168.198.158 ngat ket noi: EOFException
-[0m[0;32m[19:05:08] [LOG]          [NET] 127.0.0.1 ngat ket noi: EOFException
-[0m[0;32m[19:05:08] [LOG]          [NET] 192.168.198.158 ngat ket noi: EOFException
-[0m[0;32m[19:06:51] [LOG]          [NET] 192.168.198.158 ngat ket noi: EOFException
-[0m[0;33m[1m[19:08:39] [EXCEPTION]    Loi doc goi tin tu ? — phien bi ngat[0m
-[0;31m[1m[19:08:39] [EXCEPTION]    Class: nro.net.Collector[0m
-[0;31m[1m[19:08:39] [EXCEPTION]    Method: run[0m
-[0;31m[1m[19:08:39] [EXCEPTION]    Message: null[0m
-[0;31m[1m[19:08:39] [STACK]        java.nio.channels.AsynchronousCloseException[0m
-[0;31m[1m[19:08:39] [STACK]        	at java.base/java.nio.channels.spi.AbstractInterruptibleChannel.end(AbstractInterruptibleChannel.java:203)[0m
-[0;31m[1m[19:08:39] [STACK]        	at java.base/sun.nio.ch.SocketChannelImpl.endRead(SocketChannelImpl.java:396)[0m
-[0;31m[1m[19:08:39] [STACK]        	at java.base/sun.nio.ch.SocketChannelImpl.blockingRead(SocketChannelImpl.java:1361)[0m
-[0;31m[1m[19:08:39] [STACK]        	at java.base/sun.nio.ch.SocketInputStream.read(SocketInputStream.java:70)[0m
-[0;31m[1m[19:08:39] [STACK]        	at java.base/sun.nio.ch.SocketInputStream.read(SocketInputStream.java:59)[0m
-[0;31m[1m[19:08:39] [STACK]        	at java.base/java.io.DataInputStream.readUnsignedByte(DataInputStream.java:295)[0m
-[0;31m[1m[19:08:39] [STACK]        	at java.base/java.io.DataInputStream.readByte(DataInputStream.java:275)[0m
-[0;31m[1m[19:08:39] [STACK]        	at nro.net.io.MessageSendCollect.readMessage(MessageSendCollect.java:61)[0m
-[0;31m[1m[19:08:39] [STACK]        	at nro.net.Collector.run(Collector.java:86)[0m
-[0;31m[1m[19:08:39] [STACK]        	at java.base/java.lang.Thread.run(Thread.java:1583)[0m
-[0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[19:12:47] [LOG]          [NET] 192.168.198.158 ngat ket noi: EOFException
-[0m[0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[1m▶ REINIT NGỌC RỒNG NAMEK[0m
-[0;32m────────────────────────────────────────────────────────────[0m
-[0;32m[1m[19:12:48] [NAMEK]        1 sao    | map=Thung lũng Maima            (11) | khu=12  | x=1052  | y=336  [0m
-[0;32m[1m[19:12:48] [NAMEK]        2 sao    | map=Núi hoa tím                 (32) | khu=2   | x=424   | y=384  [0m
-[0;32m[1m[19:12:48] [NAMEK]        3 sao    | map=Vách núi Moori              (43) | khu=4   | x=1151  | y=432  [0m
-[0;32m[1m[19:12:48] [NAMEK]        4 sao    | map=Đồi nấm tím                 (08) | khu=2   | x=502   | y=336  [0m
-[0;32m[1m[19:12:48] [NAMEK]        5 sao    | map=Nam Guru                    (33) | khu=12  | x=919   | y=288  [0m
-[0;32m[1m[19:12:48] [NAMEK]        6 sao    | map=Làng Mori                   (07) | khu=14  | x=603   | y=432  [0m
-[0;32m[1m[19:12:48] [NAMEK]        7 sao    | map=Núi hoa vàng                (31) | khu=8   | x=814   | y=336  [0m
-[0;33m[1m[19:14:32] [EXCEPTION]    Loi doc goi tin tu ? — phien bi ngat[0m
-[0;31m[1m[19:14:32] [EXCEPTION]    Class: nro.net.Collector[0m
-[0;31m[1m[19:14:32] [EXCEPTION]    Method: run[0m
-[0;31m[1m[19:14:32] [EXCEPTION]    Message: null[0m
-[0;31m[1m[19:14:32] [STACK]        java.nio.channels.AsynchronousCloseException[0m
-[0;31m[1m[19:14:32] [STACK]        	at java.base/java.nio.channels.spi.AbstractInterruptibleChannel.end(AbstractInterruptibleChannel.java:203)[0m
-[0;31m[1m[19:14:32] [STACK]        	at java.base/sun.nio.ch.SocketChannelImpl.endRead(SocketChannelImpl.java:396)[0m
-[0;31m[1m[19:14:32] [STACK]        	at java.base/sun.nio.ch.SocketChannelImpl.blockingRead(SocketChannelImpl.java:1361)[0m
-[0;31m[1m[19:14:32] [STACK]        	at java.base/sun.nio.ch.SocketInputStream.read(SocketInputStream.java:70)[0m
-[0;31m[1m[19:14:32] [STACK]        	at java.base/sun.nio.ch.SocketInputStream.read(SocketInputStream.java:59)[0m
-[0;31m[1m[19:14:32] [STACK]        	at java.base/java.io.DataInputStream.readUnsignedByte(DataInputStream.java:295)[0m
-[0;31m[1m[19:14:32] [STACK]        	at java.base/java.io.DataInputStream.readByte(DataInputStream.java:275)[0m
-[0;31m[1m[19:14:32] [STACK]        	at nro.net.io.MessageSendCollect.readMessage(MessageSendCollect.java:61)[0m
-[0;31m[1m[19:14:32] [STACK]        	at nro.net.Collector.run(Collector.java:86)[0m
-[0;31m[1m[19:14:32] [STACK]        	at java.base/java.lang.Thread.run(Thread.java:1583)[0m
-[0;32m────────────────────────────────────────────────────────────[0m

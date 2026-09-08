@@ -18,3 +18,54 @@
 #  qua Git LFS — xem .gitattributes. GitHub từ chối cứng mọi file thường
 #  vượt 100 MB, LFS là đường duy nhất để đẩy trọn bộ.
 # =====================================================================
+
+
+# =====================================================================
+#  NGOẠI LỆ DUY NHẤT: những file do CHÍNH MÁY CHỦ ghi ra lúc chạy.
+#
+#  Mục tiêu: bên VPS chỉ cần gõ `git pull`, không bao giờ phải stash,
+#  reset hay xoá tay.
+#
+#  Vì sao phải có ngoại lệ này. Git từ chối kéo về khi một file bị sửa ở
+#  cả hai đầu:
+#      error: Your local changes to the following files would be
+#             overwritten by merge
+#  Mấy file dưới đây bị sửa ở CẢ HAI MÁY sau mỗi lần chạy máy chủ, nên
+#  chừng nào chúng còn được theo dõi thì lần `git pull` nào cũng kẹt —
+#  không phải thỉnh thoảng, mà là mọi lần. Ngày 08/09/2026 đã kẹt đúng
+#  như vậy: bảy file, kéo hai lần đều Aborting.
+#
+#  Chúng cũng KHÔNG có giá trị gì để đẩy đi: log của máy này không nói
+#  được gì về máy kia, và mọi file ở đây đều tự sinh lại.
+#
+#  data/update_data/part là cái khó thấy nhất: Manager.loadDatabase()
+#  đọc bảng `part` từ CSDL rồi GHI ĐÈ file này ở mỗi lần khởi động
+#  (Manager.java, câu `new FileOutputStream("data/update_data/part")`).
+#  Hai máy hai cơ sở dữ liệu thì hai nội dung khác nhau. Năm file còn
+#  lại trong update_data (dart, arrow, effect, image, skill) là tài
+#  nguyên tĩnh, KHÔNG ai ghi đè — vẫn đẩy lên git bình thường.
+#
+#  Ghi bằng đường dẫn neo gốc (`/ten`) chứ không phải `ten` trần, vì
+#  đúng cái bẫy đã ghi ở khối trên.
+# =====================================================================
+
+# Log và kết quả chạy
+/log-run.txt
+/server-console.log
+/srv.log
+/srv.err
+/_run.log
+/log/
+/logs/
+
+# Máy ảo Java đổ ra khi sập
+/hs_err_pid*.log
+/replay_pid*.log
+
+# Sinh ra lúc biên dịch / đóng gói
+/sources.txt
+/_tmp/
+/build/jarstage/
+
+# Máy chủ ghi đè mỗi lần khởi động
+/data/update_data/part
