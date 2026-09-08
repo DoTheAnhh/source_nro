@@ -271,7 +271,7 @@ Cách 2 sửa được dữ liệu nhưng **không** thấy được trạng th�
 
 ---
 
-## 13. Cập nhật về sau — chỉ `git pull`, không gì khác
+## 13. Cập nhật về sau — chỉ `git pull` rồi `run.bat`
 
 Đây là việc làm hằng ngày, khác hẳn mười hai bước ở trên (chỉ làm một lần).
 
@@ -284,11 +284,27 @@ rồi khởi động lại máy chủ:
 
 | Máy chạy | Lệnh |
 |---|---|
-| Windows | đóng cửa sổ đang chạy, bấm **`chay.bat`** |
-| Linux (systemd) | `sudo systemctl restart nro` |
+| Windows | đóng cửa sổ đang chạy, bấm **`run.bat`** |
+| Linux (systemd) | biên dịch lại theo mục 8, rồi `sudo systemctl restart nro` |
 
-Không cần `javac`. Thư mục `out/` nằm trong git và luôn được biên dịch lại ở máy
-nhà **trước** mỗi lần đẩy lên, nên `git pull` là đã có `.class` mới.
+`run.bat` **tự biên dịch** `src/` rồi chạy, nên nó luôn chạy đúng bản vừa kéo
+về. Không phải gõ `javac` tay, không phải nhớ thứ tự gì.
+
+### Không có bước SQL nào
+
+Bảng và cột mới **tự tạo trong mã** ngay lần chạy đầu:
+
+| Nơi tạo | Tạo gì |
+|---|---|
+| `LuocDoPanel.damBao()` | mọi bảng của panel — `CREATE TABLE IF NOT EXISTS` |
+| `CaiDatNguoiChoiDAO.damBaoBang()` | cột thêm vào `account` — `ADD COLUMN IF NOT EXISTS` |
+| `ConfigDAO` | quy ước mới lấy mặc định từ mã, thiếu dòng trong `panel_config` vẫn chạy đúng |
+
+Cả hai câu lệnh đều là dạng `IF NOT EXISTS` nên chạy lại bao nhiêu lần cũng
+không sao và **không đụng vào dữ liệu đang có**.
+
+Muốn chắc thì sau khi khởi động, soi log: có dòng `Không tạo được bảng của
+panel: …` mới là hỏng. Không thấy gì tức là xong.
 
 ### Cài một lần: Git LFS
 
@@ -309,17 +325,22 @@ Kiểm tra:
 ls -l data/item_bg_temp.rar     # phải ~245 MB, không phải ~130 byte
 ```
 
-### Dùng `chay.bat`, đừng dùng `run.bat`
+### Vì sao `git pull` không còn kẹt
 
-`run.bat` **xoá sạch `out/` rồi biên dịch lại**. Làm thế ở máy chạy là hỏng lần
-`git pull` kế tiếp: `out/*.class` bị sửa ở cả hai đầu và git từ chối kéo về
+Ngày 08/09/2026, `git pull` ở máy chạy hỏng với bảy file, kéo hai lần đều
+`Aborting`. Không file nào trong đó do người viết ra — máy chủ và `run.bat` tự
+ghi chúng mỗi lần chạy:
 
-```
-error: Your local changes to the following files would be overwritten by merge
-```
+| File | Ai ghi |
+|---|---|
+| `log-run.txt`, `server-console.log`, `srv.log`, `srv.err`, `_run.log` | log mỗi lần chạy |
+| `sources.txt` | `run.bat` sinh lại bằng `dir /s /b src\*.java` |
+| `out/**/*.class`, `AWN_Version.jar` | `run.bat` / `build.bat` biên dịch lại |
+| `data/update_data/part` | `Manager.loadDatabase()` đọc bảng `part` rồi ghi đè, mỗi lần khởi động |
+| `hs_err_pid*.log`, `replay_pid*.log` | máy ảo Java đổ ra khi sập |
 
-`chay.bat` chỉ gọi `java` trên `out/` có sẵn, không đụng vào file nào git đang
-theo dõi.
+Tất cả đã bỏ theo dõi và chặn trong `Server/.gitignore`. Kho chỉ còn giữ `src/`
+— thứ duy nhất máy chạy thật sự cần.
 
 ### Nếu vẫn kẹt
 
@@ -331,25 +352,5 @@ git reset --hard origin/main
 ```
 
 Lệnh này **xoá mọi thay đổi cục bộ** trên máy đó. Ở máy chạy thì không mất gì —
-nhưng đừng gõ nó ở máy làm việc.
-
-Cần dùng tới nó là dấu hiệu có file nào đó vẫn bị ghi ở cả hai đầu; báo lại để
-thêm vào `Server/.gitignore`, đừng biến `reset --hard` thành thói quen.
-
-### Vì sao bây giờ mới hết kẹt
-
-Ngày 08/09/2026, `git pull` ở máy chạy hỏng với đúng bảy file, kéo hai lần đều
-`Aborting`. Không file nào trong bảy file đó do người viết ra — máy chủ tự ghi
-chúng mỗi lần khởi động:
-
-| File | Ai ghi |
-|---|---|
-| `log-run.txt`, `server-console.log`, `srv.log`, `srv.err`, `_run.log` | log mỗi lần chạy |
-| `sources.txt` | `run.bat` sinh lại bằng `dir /s /b src\*.java` |
-| `out/**/*.class` | `run.bat` biên dịch lại |
-| `data/update_data/part` | `Manager.loadDatabase()` đọc bảng `part` rồi ghi đè, mỗi lần khởi động |
-| `hs_err_pid*.log`, `replay_pid*.log` | máy ảo Java đổ ra khi sập |
-
-Tất cả (trừ `out/`) đã được bỏ theo dõi và chặn trong `Server/.gitignore`.
-Riêng `out/` phải giữ lại — đó chính là thứ giúp máy chạy khỏi cần `javac` — nên
-nó được bảo vệ bằng cách khác: dùng `chay.bat`, thứ không biên dịch.
+nhưng đừng gõ nó ở máy làm việc. Nhớ **tắt máy chủ trước**, không thì nó đang
+giữ `log-run.txt` và lệnh chết giữa chừng với `Unlink of file … failed`.

@@ -69,3 +69,23 @@
 
 # Máy chủ ghi đè mỗi lần khởi động
 /data/update_data/part
+
+# =====================================================================
+#  KẾT QUẢ BIÊN DỊCH — bỏ theo dõi từ 08/09/2026.
+#
+#  Máy chạy giờ dùng `run.bat`, mà run.bat XOÁ sạch out/ rồi javac lại từ
+#  src/. Nghĩa là out/ bị ghi lại ở CẢ HAI máy sau mỗi lần chạy — đúng cái
+#  kiểu file làm `git pull` chết với
+#      error: Your local changes would be overwritten by merge
+#
+#  Giữ out/ trong git chỉ có nghĩa khi máy chạy KHÔNG biên dịch. Nay nó có
+#  biên dịch, nên out/ trong git vừa thừa vừa gây kẹt.
+#
+#  AWN_Version.jar cũng vậy: 13 MB, và vì là file nén nên mỗi lần đóng gói
+#  lại là TOÀN BỘ 13 MB thành lịch sử mới. run.bat không dùng tới nó; cần
+#  thì chạy build.bat dựng lại.
+#
+#  src/ vẫn đẩy đủ như cũ — đó mới là thứ máy chạy cần.
+# =====================================================================
+/out/
+/AWN_Version.jar
