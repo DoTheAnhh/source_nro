@@ -1074,7 +1074,7 @@ namespace Game4.Assets.src.f
 				{
 					InfoDlg.hide();
 					bool flag = false;
-					if (GameCanvas.w > 2 * Panel.WIDTH_PANEL)
+					if (GameCanvas.w >= 2 * Panel.WIDTH_PANEL)
 					{
 						flag = true;
 					}

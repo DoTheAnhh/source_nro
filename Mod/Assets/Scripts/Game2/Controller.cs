@@ -2417,7 +2417,7 @@ namespace Game2
                     case -44:
                         {
                             bool flag6 = false;
-                            if (GameCanvas.w > 2 * Panel.WIDTH_PANEL)
+                            if (GameCanvas.w >= 2 * Panel.WIDTH_PANEL)
                             {
                                 flag6 = true;
                             }

@@ -503,10 +503,26 @@ namespace Game3
     		Char.isPaintAura2 = Rms.loadRMSInt("isPaintAura2") != 0;
     		Res.init();
     		SmallImage.loadBigImage();
+    		// Bề rộng bảng: co lại cho vừa HAI bảng cạnh nhau.
+    		//
+    		// Cả game chọn bày một bảng hay hai bảng bằng đúng một phép so
+    		// `GameCanvas.w >= 2 * WIDTH_PANEL` (mười chỗ). Bề rộng cố định 182
+    		// nghĩa là màn hình phải rộng hơn 364 điểm ảo mới có hai bảng — điện
+    		// thoại thường không đạt, nên cửa hàng và hành trang bị dồn vào MỘT
+    		// bảng, chuyển qua lại bằng thẻ.
+    		//
+    		// Hệ quả người chơi thấy: mở cửa hàng, bấm sang thẻ "Trang bị" là mất
+    		// luôn ô thông tin món đồ và hai nút "Mua bằng…" / "Mua nhiều", vì
+    		// chúng thuộc về bảng cửa hàng vừa bị thẻ kia che đi.
+    		//
+    		// Co bảng lại thì hai bảng luôn vừa, và bản điện thoại bày y như bản
+    		// máy tính. Sàn 120 điểm để bảng không hẹp tới mức không đọc nổi tên
+    		// vật phẩm; dưới mức đó thì đành quay về một bảng.
     		Panel.WIDTH_PANEL = 182;
-    		if (Panel.WIDTH_PANEL > w)
+    		if (Panel.WIDTH_PANEL * 2 > w)
     		{
-    			Panel.WIDTH_PANEL = w;
+    			int nua = w / 2;
+    			Panel.WIDTH_PANEL = (nua >= 120) ? nua : w;
     		}
     		InfoMe.gI().loadCharId();
     		Command.btn0left = loadImage("/mainImage/btn0left.png");

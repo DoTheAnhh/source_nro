@@ -1519,7 +1519,7 @@ namespace Game1
         public void setTypeBox()
         {
             type = 2;
-            if (GameCanvas.w > 2 * WIDTH_PANEL)
+            if (GameCanvas.w >= 2 * WIDTH_PANEL)
             {
                 boxTabName = new string[1][] { mResources.chestt };
             }
@@ -1541,7 +1541,7 @@ namespace Game1
             {
                 setTabInventory(true);
             }
-            if (GameCanvas.w > 2 * WIDTH_PANEL)
+            if (GameCanvas.w >= 2 * WIDTH_PANEL)
             {
                 GameCanvas.panel2 = new Panel();
                 GameCanvas.panel2.tabName[7] = new string[1][] { new string[1] { string.Empty } };
@@ -1553,7 +1553,7 @@ namespace Game1
         public void setTypeCombine()
         {
             type = 12;
-            if (GameCanvas.w > 2 * WIDTH_PANEL)
+            if (GameCanvas.w >= 2 * WIDTH_PANEL)
             {
                 boxCombine = new string[1][] { mResources.combine };
             }
@@ -1575,7 +1575,7 @@ namespace Game1
             {
                 setTabInventory(true);
             }
-            if (GameCanvas.w > 2 * WIDTH_PANEL)
+            if (GameCanvas.w >= 2 * WIDTH_PANEL)
             {
                 GameCanvas.panel2 = new Panel();
                 GameCanvas.panel2.tabName[7] = new string[1][] { new string[1] { string.Empty } };
@@ -2464,7 +2464,7 @@ namespace Game1
             vFriendGD.removeAllElements();
             moneyGD = 0;
             friendMoneyGD = 0;
-            if (GameCanvas.w > 2 * WIDTH_PANEL)
+            if (GameCanvas.w >= 2 * WIDTH_PANEL)
             {
                 GameCanvas.panel2 = new Panel();
                 GameCanvas.panel2.type = 13;
@@ -8968,7 +8968,7 @@ namespace Game1
         {
             InfoDlg.showWait();
             Service.gI().petInfo();
-            if (GameCanvas.w > 2 * Panel.WIDTH_PANEL)
+            if (GameCanvas.w >= 2 * Panel.WIDTH_PANEL)
             {
                 GameCanvas.panel2 = new Panel();
                 GameCanvas.panel2.tabName[7] = new string[1][] { new string[1] { string.Empty } };
@@ -11049,7 +11049,7 @@ namespace Game1
                     }
                     else if (GameCanvas.gameTick % 20 == 0)
                     {
-                        if (GameCanvas.w > 2 * WIDTH_PANEL)
+                        if (GameCanvas.w >= 2 * WIDTH_PANEL)
                         {
                             GameCanvas.panel2 = new Panel();
                             GameCanvas.panel2.tabName[7] = new string[1][] { new string[1] { string.Empty } };
@@ -11094,7 +11094,7 @@ namespace Game1
                     if (countWait < -50)
                     {
                         countWait = -50;
-                        if (typeCombine < 3 && GameCanvas.w > 2 * WIDTH_PANEL)
+                        if (typeCombine < 3 && GameCanvas.w >= 2 * WIDTH_PANEL)
                         {
                             GameCanvas.panel2 = new Panel();
                             GameCanvas.panel2.tabName[7] = new string[1][] { new string[1] { string.Empty } };
