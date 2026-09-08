@@ -1126,10 +1126,28 @@ public class Service {
                 System.out.println("[SLOW] CALCULATOR POINT : " + (endCal - start) + " : " + (endCal - start2));
             }
             long start3 = System.currentTimeMillis();
-            if (master.nPoint.power < master.nPoint.getPowerLimit()) {
-                master.nPoint.powerUp(Util.CrisGH(param));
-            }
-            master.nPoint.tiemNangUp(Util.CrisGH(param));
+            // Sư phụ nhận MỘT lần, qua đúng lời gọi đệ quy ngay dưới.
+            //
+            // Trước đây ở đây còn ba dòng cộng thẳng cho sư phụ:
+            //
+            //     if (master.nPoint.power < master.nPoint.getPowerLimit()) {
+            //         master.nPoint.powerUp(param);
+            //     }
+            //     master.nPoint.tiemNangUp(param);
+            //
+            // rồi NGAY SAU đó gọi addSMTN(master, ...). Lời gọi ấy có player là
+            // sư phụ, sư phụ không phải đệ tử nên rơi xuống nhánh dưới, và nhánh
+            // đó làm lại đúng hai việc vừa làm. Kết quả: đệ giết một con quái
+            // đáng 1.000 thì sư phụ ăn 2.000.
+            //
+            // Bỏ ba dòng đó, giữ lời gọi đệ quy, vì nó lo được nhiều hơn hẳn:
+            // chặn trần sức mạnh cho CẢ hai chỉ số (ba dòng cũ chỉ chặn sức
+            // mạnh, còn tiềm năng vẫn chảy vào sau khi chạm trần), cộng đúng
+            // theo `type`, kiểm nhiệm vụ theo sức mạnh, và cộng TNSM cho bang
+            // hội qua cờ isOri.
+            //
+            // Muốn giữ mức cũ thì đặt quy ước tl_de_tu_cho_su_phu = 200 trên
+            // panel — xem NPoint.calSubTNSM.
             addSMTN(master, type, param, true);
             long endCal2 = System.currentTimeMillis();
             if (endCal2 - start3 > 50) {

@@ -142,6 +142,25 @@ public class ConfigDAO {
     public static final String TL_VANG = "tl_vang";
 
     /**
+     * Đệ tử đi săn thì sư phụ hưởng bao nhiêu <b>phần trăm</b> chỗ đó.
+     *
+     * <p>{@code 100} là hưởng trọn — đệ ăn 1.000 thì sư phụ cũng 1.000. Đây là
+     * mức đúng theo thiết kế và là mặc định.</p>
+     *
+     * <h3>Vì sao có khoá này</h3>
+     *
+     * <p>Trước 08/09/2026 {@code Service.addSMTN} cộng cho sư phụ <b>hai lần</b>
+     * mỗi cú đánh của đệ: một lần thẳng trong nhánh đệ tử, một lần nữa qua lời
+     * gọi đệ quy {@code addSMTN(master, ...)}. Tức mức thật đang chạy là
+     * <b>200%</b>. Sửa cho hết đúp thì mọi sư phụ đột ngột nhận một nửa so với
+     * hôm trước — nên để lại khoá này: muốn giữ y như cũ thì đặt {@code 200}.</p>
+     *
+     * <p>Áp <b>trước</b> trần 20 triệu mỗi lần trong {@code NPoint.calSubTNSM},
+     * nên đặt số lớn cũng không phá được trần đó.</p>
+     */
+    public static final String TL_DE_TU_CHO_SU_PHU = "tl_de_tu_cho_su_phu";
+
+    /**
      * Hệ số cơ hội rơi vật phẩm từ quái, thang 1–100 lần.
      *
      * <p>Nhân vào <b>cơ hội</b> rơi chứ không nhân số lượng: {@code 2} nghĩa là
@@ -305,6 +324,7 @@ public class ConfigDAO {
     static {
         DEFAULTS.put(BOSS_GIAY_HOI_SINH, 0L);
         DEFAULTS.put(THOI_VANG_GIA_VANG, 200_000_000L);
+        DEFAULTS.put(TL_DE_TU_CHO_SU_PHU, 100L);
         DEFAULTS.put(BUA_VV_GIA_VANG, 500_000_000L);
         DEFAULTS.put(DOI_TV_MOI_1K, 5L);
         DEFAULTS.put(DOI_TV_MIN, 1000L);
@@ -350,6 +370,7 @@ public class ConfigDAO {
 
     static {
         NOTES.put(BAO_TRI, "Chế độ bảo trì: bật thì CHỈ tài khoản quản trị vào được game, người chơi thường bị từ chối ở màn đăng nhập (1 = bật, 0 = tắt)");
+        NOTES.put(TL_DE_TU_CHO_SU_PHU, "Đệ tử đi săn thì sư phụ hưởng bao nhiêu PHẦN TRĂM chỗ đó (100 = hưởng trọn, đúng thiết kế; đặt 200 để giữ y như trước ngày 08/09/2026 khi máy chủ đang cộng đúp)");
         NOTES.put(THOI_VANG_GIA_VANG, "Một Thỏi Vàng đổi ra bao nhiêu vàng — dùng cho CẢ hai đường: bấm Sử dụng trong hành trang, và bán ở cửa hàng");
         NOTES.put(BUA_VV_GIA_VANG, "Giá vàng của gói Full bùa vĩnh viễn ở Bà Hạt Mít (0 = cho không)");
         NOTES.put(BOSS_GIAY_HOI_SINH, "Giây chờ hồi sinh dùng chung cho MỌI boss (3600 = 1 tiếng, 0 = tắt, mỗi boss giữ số gốc). Boss nào khai riêng seconds_rest ở tab Boss thì vẫn theo số riêng.");

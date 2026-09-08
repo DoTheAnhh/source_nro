@@ -2990,11 +2990,24 @@ private boolean hasFull5NhatAn() {
             tiemNang = calPercent(tiemNang, 50);  // giảm 50%
         }
 
-        // Giới hạn tối đa 20 triệu
+        // Tỉ lệ đệ tử chia cho sư phụ, chỉnh được trên panel.
+        //
+        // 100 là hưởng trọn — đúng thiết kế và là mặc định. Trước 08/09/2026
+        // mức THẬT đang chạy là 200% vì Service.addSMTN cộng cho sư phụ hai lần
+        // mỗi cú đánh của đệ; sửa cho hết đúp thì đặt 200 ở đây là giữ y như cũ.
+        long tyLe = nro.repository.dao.ConfigDAO.num(
+                nro.repository.dao.ConfigDAO.TL_DE_TU_CHO_SU_PHU, 100L);
+        if (tyLe != 100L && tyLe >= 0L) {
+            tiemNang = tiemNang / 100L * tyLe;
+        }
+
+        // Giới hạn tối đa 20 triệu.
+        //
+        // Đặt SAU tỉ lệ trên: trần là chốt an toàn cuối cùng, gõ tỉ lệ to đến
+        // mấy cũng không vượt qua được.
         if (tiemNang > 20_000_000L) {
             tiemNang = 20_000_000L;
         }
-        
 
         return tiemNang;
     }
