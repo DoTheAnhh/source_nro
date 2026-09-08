@@ -5,7 +5,10 @@ namespace Game2
     
     public class GameMidlet
     {
-    	public static string IP = "160.22.107.46";
+    	// Lay tu ServerListScreen.IP_MAC_DINH — mot cho khai duy nhat.
+    	// Gia tri nay chi la khoi dau; ServerListScreen ghi de bang dia chi
+    	// that ngay khi chon may chu.
+    	public static string IP = ServerListScreen.IP_MAC_DINH;
     
     	public static int PORT = 14445;
     

@@ -1347,10 +1347,9 @@ namespace Game5
     	/// <list type="number">
     	///   <item>File <c>server_ip.txt</c> canh ban chay — doc luc CHAY, nen
     	///         doi dia chi chi can sua file, khong phai build lai.</item>
-    	///   <item>Khong co file thi lay <b>160.22.107.46</b> — may chu tren
-    	///         VPS, cong 14445.</item>
-    	///   <item>Dien thoai khong co file thi doc <c>Resources/server_ip</c>
-    	///         nuong luc build; thieu ca do thi cung ve VPS.</item>
+    	///   <item>Roi toi <c>Resources/server_ip</c> nuong luc build — nguon
+    	///         chinh, va la CHUNG cho ca PC, APK lan iOS.</item>
+    	///   <item>Thieu ca hai thi ve <c>IP_MAC_DINH</c>.</item>
     	/// </list>
     	///
     	/// <para>So mac dinh truoc day la 127.0.0.1. Hop khi may chu chay ngay
@@ -1362,6 +1361,35 @@ namespace Game5
     	/// <c>server_ip.txt</c> chua dong <c>127.0.0.1</c> canh ban chay. Nguon
     	/// thu nhat thang nguon thu hai, nen khong phai sua ma.</para>
     	/// </remarks>
+    	/// <summary>
+    	/// Địa chỉ dự phòng cuối cùng, khi không đọc được nguồn nào.
+    	/// </summary>
+    	/// <remarks>
+    	/// Chỉ khai <b>một chỗ</b>. Trước đây con số này gõ lặp ở hai nhánh của
+    	/// <c>diaChiMayChu()</c> và một lần nữa ở <c>GameMidlet.IP</c> — sửa sót
+    	/// một chỗ là bản build đó trỏ đi nơi khác mà không ai biết.
+    	/// </remarks>
+    	public const string IP_MAC_DINH = "160.22.107.46";
+
+    	/// <summary>
+    	/// Địa chỉ máy chủ, dùng chung cho <b>cả ba bản build</b>: PC, APK, iOS.
+    	/// </summary>
+    	/// <remarks>
+    	/// <para>Thứ tự tìm, y hệt nhau trên mọi nền tảng:</para>
+    	/// <list type="number">
+    	///   <item><c>server_ip.txt</c> đặt cạnh bản chạy (hoặc trong thư mục dữ
+    	///         liệu của app) — đọc lúc CHẠY, để chạy thử với máy chủ khác mà
+    	///         không phải build lại. Không có thì bỏ qua.</item>
+    	///   <item><c>Assets/Resources/server_ip.txt</c> — nướng vào bản build.
+    	///         <b>Đây là nguồn chính.</b></item>
+    	///   <item>Không có cả hai thì lấy <see cref="IP_MAC_DINH"/>.</item>
+    	/// </list>
+    	///
+    	/// <para><b>Bản PC trước đây bỏ qua bước 2.</b> Nó nhảy thẳng từ bước 1
+    	/// xuống số gõ cứng, nên sửa <c>Resources/server_ip.txt</c> rồi build lại
+    	/// thì APK và iOS đổi địa chỉ còn PC vẫn trỏ chỗ cũ — ba bản build ba nơi
+    	/// khác nhau. Nay cả ba đi chung một đường.</para>
+    	/// </remarks>
     	private static string diaChiMayChu()
     	{
     		string s = docFileNgoai();
@@ -1369,11 +1397,7 @@ namespace Game5
     		{
     			return s;
     		}
-    		if (!laDienThoai())
-    		{
-    			return "160.22.107.46";
-    		}
-    		return docIpMayChu("160.22.107.46");
+    		return docIpMayChu(IP_MAC_DINH);
     	}
 
     	static ServerListScreen()

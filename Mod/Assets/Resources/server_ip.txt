@@ -1,12 +1,19 @@
-# Dia chi may chu cho client doc. Sua tay duoc.
+# ĐỊA CHỈ MÁY CHỦ — NGUỒN CHÍNH, DÙNG CHUNG CHO CẢ BA BẢN BUILD.
 #
-# Truoc day file nay do server tu ghi (Manager.ghiIpChoClient) moi lan
-# khoi dong, lay IP LAN no tu do duoc. Da tat viec do: ba khoa
-# server.ipfile, server.ipfile.chay, server.ipfile.editor trong
-# data/config/data_base.properties duoc bo trong, vi may chu gio chay
-# tren VPS chu khong o cung may voi client — de server ghi tiep thi moi
-# lan bat server local la dia chi VPS bi de mat.
+# File này được NƯỚNG VÀO bản build (nó nằm trong Assets/Resources), nên
+# bản PC, bản APK và bản iOS đều đọc đúng dòng dưới đây. Sửa một chỗ này
+# rồi build lại là cả ba bản đổi theo.
 #
-# Dong dau tien khong phai chu thich se duoc dung lam dia chi.
-# Cong co dinh 14445, go cung trong ServerListScreen.
+# Thứ tự tìm địa chỉ trong ServerListScreen.diaChiMayChu():
+#   1. server_ip.txt đặt cạnh bản chạy — chỉ để CHẠY THỬ, xem Mod/server_ip.txt
+#   2. FILE NÀY
+#   3. ServerListScreen.IP_MAC_DINH gõ trong mã
+#
+# Cổng cố định 14445.
+#
+# ĐỪNG gõ 127.0.0.1 vào đây. Nó sẽ theo bản build ra máy người chơi, và trên
+# máy họ thì loopback trỏ về chính máy họ — không bao giờ có máy chủ ở đó.
+# Muốn chạy thử với máy chủ trên máy mình thì sửa Mod/server_ip.txt.
+#
+# Dòng đầu tiên không phải chú thích sẽ được dùng làm địa chỉ.
 160.22.107.46

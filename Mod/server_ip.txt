@@ -1,12 +1,12 @@
-# Dia chi may chu cho ban chay trong Unity Editor.
+# CHỈ DÙNG KHI CHẠY THỬ TRONG UNITY EDITOR — không đi vào bản build nào.
 #
-# Trong Editor, Application.dataPath tro toi Mod/Assets nen client tim
-# file o Mod/server_ip.txt — chinh la file nay. Nguon nay UU TIEN CAO
-# NHAT, thang ca so mac dinh trong ma, nen de sai o day la sai het.
+# Trong Editor, Application.dataPath trỏ tới Mod/Assets nên client tìm file
+# ở Mod/server_ip.txt — chính là file này. Nguồn này ƯU TIÊN CAO NHẤT, thắng
+# cả file trong Assets/Resources.
 #
-# Truoc day server tu ghi file nay moi lan khoi dong. Da tat (xem
-# server.ipfile.editor trong data/config/data_base.properties), vi may
-# chu gio o VPS.
+# Muốn thử với máy chủ chạy ngay trên máy mình thì sửa dòng dưới thành
+# 127.0.0.1, và NHỚ ĐỔI LẠI khi xong.
 #
-# Muon chay thu voi server local thi sua dong duoi thanh 127.0.0.1.
+# Địa chỉ thật của máy chủ nằm ở Mod/Assets/Resources/server_ip.txt — đó mới
+# là file đi theo bản PC, APK và iOS.
 160.22.107.46
