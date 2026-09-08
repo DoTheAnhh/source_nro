@@ -7883,22 +7883,24 @@ namespace Game5
 
     	private static void veBangPet(mGraphics g, Char pet)
     	{
-    		// Ten lay theo thu tu: ten cua doi tuong dang chon, roi ten de tu cua
-    		// minh (chinh nguon ma man trang bi dung), cuoi cung moi la nhan chung.
+    		// TÊN CỦA CHÍNH ĐỐI TƯỢNG ĐANG CHỌN đứng trước.
     		//
-    		// Doi tuong pet tren ban do khong phai luc nao cung mang ten; man trang
-    		// bi doc tu Char.myPetz() nen o do luc nao cung co.
-    		// Ten lay tu VAT PHAM PET dang deo — dung nguon ma o chi tiet trong
-    		// man trang bi hien ("Pet Capybara deo ba lo").
+    		// Bản trước lấy tên VẬT PHẨM PET đang đeo (`tenVatPhamPet()`) làm
+    		// nguồn thứ nhất. Nhưng khung này dùng chung cho hai thứ khác hẳn
+    		// nhau: con thú cưng đeo ở ô Pet, và ĐỆ TỬ. Bấm vào đệ tử thì nó vẫn
+    		// đi lấy tên món đồ trong ô Pet — ra "Pet Capybara đeo ba lô", tức là
+    		// tên của một con khác đang đứng ngay cạnh.
     		//
-    		// cName cua doi tuong pet tren ban do gan nhu luon rong, nen bam vao
-    		// no thi luc nao cung roi xuong nhan chung "De tu" — sai ten.
-    		string ten = tenVatPhamPet();
-    		if (ten == null && pet.cName != null && pet.cName.Length > 0)
-    		{
-    			ten = pet.cName;
-    		}
-    		if (ten == null)
+    		// `cName` KHÔNG rỗng như ghi chú cũ nói: máy chủ gửi tên đệ tử kèm
+    		// dấu `$` ở đầu (xem DetuService — "$Đệ tử", "$Mabư", "$Ubu"...), và
+    		// `Char.paintName` cắt dấu đó ra rồi bật cờ `isPet`. Nên tới đây
+    		// `cName` đã là tên thật của con đang chọn.
+    		//
+    		// Vật phẩm pet chỉ còn là đường lùi, cho trường hợp gói tin chưa mang
+    		// tên tới.
+    		string ten = (pet.cName != null && pet.cName.Length > 0)
+    				? pet.cName : tenVatPhamPet();
+    		if (ten == null || ten.Length == 0)
     		{
     			ten = "Đệ tử";
     		}
