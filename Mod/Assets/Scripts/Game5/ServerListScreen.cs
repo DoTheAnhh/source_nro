@@ -728,7 +728,13 @@ namespace Game5
     		{
     			// Chi sua may chu cua ban thu nay. Cac muc khac trong danh sach la may
     			// chu ngoai, dia chi cua ho khong lien quan gi den file tren may nay.
-    			if (nameServer[i] == "DoTheAnh")
+    			//
+    			// Sua them moi muc mang dia chi LOOPBACK, bat ke ten la gi.
+    			// 127.0.0.1 tren may nguoi choi tro ve chinh dien thoai ho — khong
+    			// bao gio co may chu o do, nen do luon la rac con lai tu mot ban
+    			// cu (thoi may chu chay ngay tren may lap trinh). De nguyen thi
+    			// nguoi choi bam vao chi nhan duoc "May chu tat hoac mat song".
+    			if (nameServer[i] == "DoTheAnh" || laLoopback(address[i]))
     			{
     				address[i] = ip;
     				port[i] = 14445;
@@ -1237,6 +1243,22 @@ namespace Game5
     				== UnityEngine.RuntimePlatform.IPhonePlayer;
     	}
 
+    	/// <summary>Địa chỉ này có trỏ về chính máy đang chạy không.</summary>
+    	/// <remarks>
+    	/// Trên máy người chơi thì loopback không bao giờ có máy chủ — nó chỉ là
+    	/// rác còn lại từ một bản cũ, khi máy chủ chạy ngay trên máy lập trình.
+    	/// </remarks>
+    	private static bool laLoopback(string dc)
+    	{
+    		if (dc == null)
+    		{
+    			return false;
+    		}
+    		string d = dc.Trim().ToLower();
+    		return d == "127.0.0.1" || d == "localhost" || d == "::1"
+    				|| d.StartsWith("127.");
+    	}
+
     	/// <summary>Lay dong dia chi dau tien, bo dong trong va dong ghi chu.</summary>
     	private static string locDiaChi(string noiDung)
     	{
@@ -1372,7 +1394,17 @@ namespace Game5
     		// Doi ten khoa moi lan doi cach lay dia chi: danh sach may chu duoc
     		// luu vao RMS, ban cu se doc lai danh sach cu do va che mat dia chi
     		// moi. Doi ten khoa la vut ban cu di.
-    		RMS_NRlink = "NRlink6";
+    		// Doi "NRlink6" -> "NRlink7" de VUT danh sach cu tren may nguoi choi.
+    		//
+    		// May nao da chay mot ban truoc thi con giu nguyen danh sach may chu
+    		// trong bo nho may, ke ca dia chi 127.0.0.1 tu thoi may chu chay ngay
+    		// tren may lap trinh. Danh sach do duoc doc len TRUOC, va
+    		// epDiaChiTuFile() chi sua duoc muc ten dung bang "DoTheAnh" — muc
+    		// nao mang ten khac thi dia chi cu nam nguyen do.
+    		//
+    		// Doi ten khoa la lan chay ke tiep khong doc duoc gi, phai dung
+    		// linkDefault — tuc dia chi trong server_ip.txt.
+    		RMS_NRlink = "NRlink7";
     		lengthServer = new int[3];
     		isGetData = false;
     		testConnect = -1;
