@@ -273,6 +273,68 @@ public class SetBonusDAO {
         // nên không đệ quy, nhưng đặt trước cho chắc.
         loaded = true;
         napDinhNghia();
+        apDungNgayChoNguoiOnline();
+    }
+
+    /**
+     * Tính lại chỉ số cho <b>mọi người chơi đang online</b> ngay lập tức.
+     *
+     * <h2>Vì sao cần</h2>
+     *
+     * <p>{@link #reload()} chỉ làm mới bảng trong bộ nhớ. Chỉ số thật của người
+     * chơi thì nằm trong {@code NPoint} và chỉ đổi khi {@code calPoint()} chạy —
+     * mà nó chỉ chạy lúc mặc/cởi đồ, đăng nhập, hay đổi bản đồ. Nên sửa một dòng
+     * chỉ số set trên panel xong, người đang mặc set đó <b>vẫn giữ chỉ số cũ</b>
+     * cho tới khi họ tình cờ làm một trong ba việc kia. Nhìn từ ngoài là "sửa
+     * xong không thấy gì đổi".</p>
+     *
+     * <p>Gọi thẳng trong {@code reload()} nên mọi đường sửa trên panel — thêm
+     * dòng, sửa dòng, xoá dòng, bật/tắt set — đều được áp ngay, không phải nhớ
+     * gọi thêm ở từng nút.</p>
+     *
+     * <h2>Ghi chú</h2>
+     *
+     * <p>Chỉ tính lại, <b>không hồi máu</b>. Nhưng nếu máu tối đa vừa tụt xuống
+     * dưới máu hiện tại thì phải kéo về bằng trần, không thì thanh máu hiện
+     * "12/10" và mọi phép so sánh về sau đều lệch.</p>
+     *
+     * <p>Chạy từ luồng của panel chứ không phải luồng game. Chấp nhận được vì
+     * {@code calPoint()} chỉ đọc trang bị rồi ghi vào chính người chơi đó, và
+     * danh sách người chơi lấy bằng bản chụp nên không vỡ giữa chừng.</p>
+     */
+    public static void apDungNgayChoNguoiOnline() {
+        int soNguoi = 0;
+        try {
+            for (nro.entity.player.Player pl
+                    : nro.server.Client.gI().getPlayersSnapshot()) {
+                if (pl == null || pl.nPoint == null || !pl.isPl()) {
+                    continue;
+                }
+                try {
+                    pl.nPoint.calPoint();
+                    if (pl.nPoint.hp > pl.nPoint.hpMax) {
+                        pl.nPoint.setHp(pl.nPoint.hpMax);
+                    }
+                    if (pl.nPoint.mp > pl.nPoint.mpMax) {
+                        pl.nPoint.setMp(pl.nPoint.mpMax);
+                    }
+                    nro.service.Service.gI().point(pl);
+                    nro.service.PlayerService.gI().sendInfoHpMp(pl);
+                    soNguoi++;
+                } catch (Exception boQua) {
+                    // Một người hỏng thì không được kéo cả vòng lặp xuống theo.
+                }
+            }
+            if (soNguoi > 0) {
+                Logger.log(Logger.GREEN, "Đã áp lại chỉ số set cho "
+                        + soNguoi + " người đang online\n");
+            }
+        } catch (Exception ex) {
+            // Nạp bảng lúc khởi động chạy TRƯỚC khi có danh sách người chơi —
+            // lúc đó hàm này không có việc gì làm, và đó là chuyện bình thường.
+            Logger.logException(SetBonusDAO.class, ex,
+                    "Không áp lại được chỉ số set cho người đang online");
+        }
     }
 
     private static void ensureLoaded() {

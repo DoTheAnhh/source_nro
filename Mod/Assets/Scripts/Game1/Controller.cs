@@ -5910,25 +5910,80 @@ namespace Game1
                                 TileMap.maps[i] = (ushort)num;
                             }
                             TileMap.types = new int[TileMap.maps.Length];
-                            msg = messWait;
-                            loadInfoMap(msg);
-                            try
-                            {
-                                sbyte b2 = msg.reader().readByte();
-                                TileMap.isMapDouble = ((b2 != 0) ? true : false);
-                            }
-                            catch (Exception ex)
-                            {
-                                Res.err(" 1 LOI TAI CASE REQUEST_MAPTEMPLATE " + ex.ToString());
-                            }
                         }
                         catch (Exception ex2)
                         {
                             Res.err("2 LOI TAI CASE REQUEST_MAPTEMPLATE " + ex2.ToString());
                         }
-                        msg.cleanup();
-                        messWait.cleanup();
+
+                        // Áp gói -24 đang chờ, rồi DÙ THẾ NÀO cũng phải vào màn.
+                        //
+                        // Đây là chỗ sinh ra cảnh "sang map thì địa hình vỡ, máu
+                        // 0/0, nhân vật không hiện". Đường đi như sau:
+                        //
+                        //   Gói -24 tới, client GHI ĐÈ ngay TileMap.mapID,
+                        //   tileID, bgID, mapName... rồi mới gọi
+                        //   loadMapFromResource(). Hàm đó ném lỗi (chưa có mẫu
+                        //   bản đồ trong máy) thì client xin mẫu và CẤT gói -24
+                        //   lại ở messWait. Tới đây mẫu về, và nhánh này phải áp
+                        //   nốt gói đã cất.
+                        //
+                        // Bản cũ hỏng ở hai chỗ, cả hai đều nằm NGOÀI try:
+                        //
+                        //   msg = messWait;   -> messWait null (mẫu về mà không
+                        //   có gói nào đang chờ) thì loadInfoMap(null) ném lỗi,
+                        //   bị catch nuốt, rồi msg.cleanup() ném NullReference
+                        //   LẦN NỮA — lần này không ai bắt. Cả onMessage văng ra,
+                        //   nên switchToMe() KHÔNG BAO GIỜ chạy.
+                        //
+                        //   Kết quả: tên bản đồ, tileID, bgID đã là của bản đồ
+                        //   mới, còn địa hình, quái và chỉ số nhân vật thì vẫn
+                        //   chưa nạp. Đúng cái ảnh chụp: khung máu 0/0 và nền
+                        //   vẽ dở.
+                        //
+                        //   Ngoài ra msg được gán bằng messWait rồi dọn hai lần
+                        //   cùng một đối tượng, còn gói mẫu bản đồ vừa nhận thì
+                        //   không ai dọn.
+                        try
+                        {
+                            if (messWait != null)
+                            {
+                                loadInfoMap(messWait);
+                                try
+                                {
+                                    sbyte b2 = messWait.reader().readByte();
+                                    TileMap.isMapDouble = ((b2 != 0) ? true : false);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Res.err(" 1 LOI TAI CASE REQUEST_MAPTEMPLATE " + ex.ToString());
+                                }
+                            }
+                            else
+                            {
+                                Res.err("REQUEST_MAPTEMPLATE: mau ban do ve ma "
+                                        + "khong co goi -24 nao dang cho");
+                            }
+                        }
+                        catch (Exception ex3)
+                        {
+                            Res.err("3 LOI TAI CASE REQUEST_MAPTEMPLATE " + ex3.ToString());
+                        }
+
+                        // Dọn hai gói KHÁC NHAU, mỗi gói một lần, và chịu được null.
+                        if (msg != null)
+                        {
+                            msg.cleanup();
+                        }
+                        if (messWait != null)
+                        {
+                            messWait.cleanup();
+                        }
                         msg = (messWait = null);
+
+                        // switchToMe() nằm ngoài mọi try nên luôn chạy: kẹt ở
+                        // trạng thái nửa vời còn tệ hơn vào màn với dữ liệu
+                        // thiếu, vì người chơi ít nhất còn đi được ra chỗ khác.
                         GameScr.gI().switchToMe();
                         break;
                     case 12:
