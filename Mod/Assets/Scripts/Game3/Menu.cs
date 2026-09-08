@@ -374,11 +374,59 @@ namespace Game3
     		startAt(menuItems, 0);
     	}
     
+    	/// <summary>
+    	/// Menu sắp mở có <b>trùng nội dung</b> với menu đang mở không.
+    	/// </summary>
+    	/// <remarks>
+    	/// So theo số mục và nhãn từng mục. Đủ để phân biệt "gọi lại đúng menu
+    	/// đó mỗi khung hình" với "mở một menu khác".
+    	/// </remarks>
+    	private bool trungMenuDangMo(MyVector moi)
+    	{
+    		if (this.menuItems == null || moi == null
+    				|| this.menuItems.size() != moi.size())
+    		{
+    			return false;
+    		}
+    		for (int i = 0; i < moi.size(); i++)
+    		{
+    			Command a = (Command)this.menuItems.elementAt(i);
+    			Command b = (Command)moi.elementAt(i);
+    			if (a == null || b == null || a.caption == null
+    					|| !a.caption.Equals(b.caption))
+    			{
+    				return false;
+    			}
+    		}
+    		return true;
+    	}
+
     	public void startAt(MyVector menuItems, int pos)
     	{
+    		// Menu cũ đang mở thì THAY bằng menu mới, đừng bỏ qua menu mới.
+    		//
+    		// Dòng cũ là `if (showMenu) return;` — nó lặng lẽ vứt menu vừa dựng
+    		// đi, không báo lỗi, không log. Người chơi thấy: bấm một món trong
+    		// rương mà nút "Lấy ra" không hiện; đổi sang thẻ khác rồi bấm lại thì
+    		// hiện. Cùng một cửa đó dùng cho mọi màn có bảng: Bà Hạt Mít, Satan,
+    		// rương ở nhà, Uron, Bunma, Appule, Dende…
+    		//
+    		// Chỉ cần MỘT chỗ nào đó để sót `showMenu = true` — và có hơn mười
+    		// chỗ trong mã chạm vào cờ này, kể cả những chỗ chạy theo gói tin từ
+    		// máy chủ — là menu tiếp theo biến mất. Vá từng chỗ gọi là không bao
+    		// giờ hết; vá ở đây thì hết hẳn.
+    		//
+    		// Vẫn giữ đường thoát cho trường hợp gọi LẶP: nếu menu mới trùng y
+    		// nội dung menu đang mở thì để nguyên. Nhờ vậy chỗ nào lỡ gọi
+    		// startAt mỗi khung hình cũng không làm menu dựng lại liên tục —
+    		// đúng nỗi lo đã ghi trong chú thích cũ ở Panel.
     		if (showMenu)
     		{
-    			return;
+    			if (trungMenuDangMo(menuItems))
+    			{
+    				return;
+    			}
+    			showMenu = false;
     		}
     		isClose = false;
     		touch = false;

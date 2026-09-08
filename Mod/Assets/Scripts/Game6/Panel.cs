@@ -8103,19 +8103,47 @@ namespace Game6
                 if (waitToPerform == 0)
                 {
                     lastSelect[currentTabIndex] = selected;
-                    // Don menu cu truoc khi mo menu moi.
+                    // Dọn menu cũ trước khi mở menu mới — NHƯNG chỉ khi bảng
+                    // này thật sự có ô đang chọn.
                     //
-                    // Hau het cac ham doFireX duoi day ket thuc bang
-                    // `GameCanvas.menu.startAt(...)`, ma `startAt` mo dau bang
-                    // `if (showMenu) return;` — con menu cu dang mo thi no LANG
-                    // LE bo qua menu moi, khong bao loi, khong log. Nguoi choi
-                    // thay dung hien tuong "lan dau bam thi hien, tu lan hai tro
-                    // di khong hien nua" — o cua hang la mat luon nut Mua.
+                    // Hầu hết các hàm doFireX dưới đây kết thúc bằng
+                    // `GameCanvas.menu.startAt(...)`, mà `startAt` mở đầu bằng
+                    // `if (showMenu) return;` — còn menu cũ đang mở thì nó LẶNG
+                    // LẼ bỏ qua menu mới, không báo lỗi, không log. Người chơi
+                    // thấy đúng hiện tượng "lần đầu bấm thì hiện, từ lần hai trở
+                    // đi không hiện nữa" — ở cửa hàng là mất luôn nút Mua.
                     //
-                    // Dat lai o day chu khong sua `startAt`: cho nay chay theo
-                    // SU KIEN bam, con sua trong `startAt` thi bat ky cho nao goi
-                    // moi khung hinh se lam menu dung lai lien tuc.
-                    GameCanvas.menu.showMenu = false;
+                    // Đặt lại ở đây chứ không sửa `startAt`: chỗ này chạy theo
+                    // SỰ KIỆN bấm, còn sửa trong `startAt` thì bất kỳ chỗ nào gọi
+                    // mỗi khung hình sẽ làm menu dựng lại liên tục.
+                    //
+                    // ĐIỀU KIỆN `selected >= 0` MỚI THÊM, và nó chữa lỗi "không
+                    // hiện nút Lấy ra":
+                    //
+                    //   `GameCanvas.menu` là của CHUNG cả game, mà màn rương —
+                    //   và mọi màn hai bảng khác: Bà Hạt Mít, Satan, rương ở
+                    //   nhà, Uron, Bunma, Appule, Dende... — có HAI đối tượng
+                    //   Panel cùng chạy `update()` mỗi khung hình.
+                    //
+                    //   Bấm một món trong rương: bảng rương dọn menu rồi mở menu
+                    //   "Lấy ra". Ngay sau đó bảng bên kia cũng tới lượt
+                    //   `update()`, cũng dọn menu — nhưng nó KHÔNG có ô nào đang
+                    //   chọn nên `doFireX` của nó thoát ngay ở dòng
+                    //   `if (selected < 0) return;` và không mở menu nào thay
+                    //   thế. Menu "Lấy ra" vừa mở đã bị xoá.
+                    //
+                    //   Vì sao "thỉnh thoảng", và vì sao đúng ở thẻ Trang bị:
+                    //   thẻ Hành trang gần như ô nào cũng có đồ nên bảng kia mở
+                    //   được menu của nó (nhìn vẫn thấy nút), còn thẻ Trang bị
+                    //   phần lớn ô trống nên nó chẳng mở gì cả — và người chơi
+                    //   thấy nút biến mất.
+                    //
+                    //   Bảng không có ô đang chọn thì không có quyền dọn menu
+                    //   của bảng kia.
+                    if (selected >= 0)
+                    {
+                        GameCanvas.menu.showMenu = false;
+                    }
                     switch (type)
                     {
                         case 30:
