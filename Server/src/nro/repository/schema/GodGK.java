@@ -544,6 +544,22 @@ public class GodGK {
      * {@code DEMON}, Xayda {@code GALICK} — đúng ba id mà
      * {@code PlayerDAO.createNewPlayer} đặt ở ô đầu tiên của mảng chiêu.</p>
      */
+    /**
+     * Kêu to khi không dựng nổi chiêu đấm cấp 1.
+     *
+     * <p>Đây là chỗ duy nhất phép bảo đảm này có thể <b>im lặng không chạy</b>:
+     * {@code SkillUtil.createSkill} trả {@code null} khi bảng
+     * {@code skill_template} thiếu chiêu đó hoặc thiếu đúng cấp 1. Không kêu
+     * thì người chơi vào game đấm không ăn sát thương, mà log sạch trơn — đúng
+     * kiểu lỗi mất cả buổi mới lần ra.</p>
+     */
+    private static void keuThieuChieuDam(Player player, int idDam) {
+        Logger.logln(Logger.RED, "[SKILL] Khong dung duoc chieu dam id "
+                + idDam + " cap 1 cho " + player.name
+                + " (hanh tinh " + player.gender + "). Kiem tra bang"
+                + " skill_template: chieu nay phai co dong cap 1.\n");
+    }
+
     private static void baoDamChieuDamLv1(Player player) {
         try {
             int idDam = player.gender == 0 ? Skill.DRAGON
@@ -567,6 +583,8 @@ public class GodGK {
                     lv1.lastTimeUseThisSkill = s.lastTimeUseThisSkill;
                     lv1.currLevel = s.currLevel;
                     ds.set(i, lv1);
+                } else {
+                    keuThieuChieuDam(player, idDam);
                 }
                 return;
             }
@@ -574,6 +592,8 @@ public class GodGK {
             Skill lv1 = SkillUtil.createSkill(idDam, 1);
             if (lv1 != null) {
                 ds.add(lv1);
+            } else {
+                keuThieuChieuDam(player, idDam);
             }
         } catch (Exception ex) {
             Logger.logException(GodGK.class, ex,
@@ -2028,6 +2048,20 @@ public class GodGK {
                 if (point != 0) {
                     skill = SkillUtil.createSkill(tempId, point);
                 } else {
+                    skill = SkillUtil.createSkillLevel0(tempId);
+                }
+                // createSkill trả NULL khi bảng skill_template thiếu chiêu đó
+                // hoặc thiếu đúng cấp ấy. Dòng ngay dưới đọc thẳng
+                // skill.lastTimeUseThisSkill nên gặp null là ném
+                // NullPointerException GIỮA lúc nạp nhân vật — cả lần đăng nhập
+                // hỏng, và người chơi chỉ thấy hộp chờ xoay.
+                //
+                // Rơi về chiêu cấp 0 thì nhân vật vào được game với một ô chiêu
+                // trống, còn hơn không vào được.
+                if (skill == null) {
+                    Logger.logln(Logger.YELLOW, "[SKILL] " + player.name
+                            + ": khong dung duoc chieu " + tempId + " cap " + point
+                            + " — bang skill_template thieu. Tam de cap 0.\n");
                     skill = SkillUtil.createSkillLevel0(tempId);
                 }
                 skill.lastTimeUseThisSkill = Long.parseLong(String.valueOf(dataSkill.get(2)));
