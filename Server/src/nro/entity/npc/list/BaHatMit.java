@@ -732,7 +732,7 @@ public class BaHatMit extends Npc {
             return;
         }
         player.inventory.gold -= gia;
-        player.charms.datVinhVienBuaCoBan();
+        player.charms.datVinhVienGoiBua();
         Service.gI().sendMoney(player);
         Service.gI().sendThongBao(player,
                 "Xong! Bảy lá bùa của ngươi từ giờ vĩnh viễn không hết hạn.");
@@ -751,7 +751,7 @@ public class BaHatMit extends Npc {
      * <p>Khung lời thoại của NPC vốn để trống ba phần tư, nên danh sách nằm ở
      * đó không tốn thêm một cái bấm nào.</p>
      *
-     * <p>Chỉ đếm bảy lá bùa cơ bản ({@link Charms#BUA_CO_BAN}) — đúng bộ mà cửa
+     * <p>Đếm đúng trọn gói ({@link Charms#GOI_VINH_VIEN}) — đúng bộ mà cửa
      * hàng này bán. Tên bùa đọc từ {@code ItemTemplate} chứ không viết cứng, để
      * đổi tên trong bảng {@code item_template} là hiện đúng ngay.</p>
      */
@@ -759,8 +759,8 @@ public class BaHatMit extends Npc {
         long now = System.currentTimeMillis();
         StringBuilder sb = new StringBuilder();
         int dem = 0;
-        for (int id : Charms.BUA_CO_BAN) {
-            long han = player.charms.thoiHanBuaCoBan(id);
+        for (int id : Charms.GOI_VINH_VIEN) {
+            long han = player.charms.thoiHan(id);
             if (han <= now) {
                 continue;
             }

@@ -5,13 +5,36 @@ import org.json.simple.JSONArray;
 public class Charms {
 
     /**
-     * Bảy lá bùa cơ bản Bà Hạt Mít bán, theo đúng id vật phẩm.
+     * Bảy lá bùa cơ bản, theo đúng id vật phẩm.
      *
-     * <p>Trí tuệ, Mạnh mẽ, Da trâu, Oai hùng, Bất tử, Dẻo dai, Thu hút — đây là
-     * bộ "full bùa". Ba nhóm còn lại trong lớp này (bùa đệ tử, trí tuệ nâng cao,
-     * bùa bang) đi đường khác nên không nằm trong mảng.</p>
+     * <p>Trí tuệ, Mạnh mẽ, Da trâu, Oai hùng, Bất tử, Dẻo dai, Thu hút.</p>
      */
     public static final int[] BUA_CO_BAN = {213, 214, 215, 216, 217, 218, 219};
+
+    /**
+     * Ba lá bùa đệ tử nằm trong gói vĩnh viễn: Bùa Đệ Tử, x2, x3.
+     *
+     * <p><b>Chúng CỘNG DỒN, không phải lấy cái cao nhất.</b>
+     * {@code NPoint.calPoint} xét từng lá một và cộng thêm vào tiềm năng của đệ
+     * tử: lá gốc {@code +2}, x2 thêm {@code +3}, x3 thêm {@code +4}. Mang cả ba
+     * là <b>+9 lần</b> tiềm năng, không phải +4.</p>
+     *
+     * <p>Năm lá còn lại (x4, x5, x7, x10, x20 — id 1736..1740) <b>cố ý</b> không
+     * có ở đây. Cộng nốt là +35 lần, vĩnh viễn.</p>
+     */
+    public static final int[] BUA_DE_TU_VINH_VIEN = {522, 1734, 1735};
+
+    /**
+     * Trọn gói "Bùa (vĩnh viễn)" Bà Hạt Mít bán: bảy lá cơ bản + ba lá đệ tử.
+     *
+     * <p>Một mảng duy nhất cho cả ba việc — bán, kiểm tra đã có đủ chưa, và
+     * liệt kê ra màn hình. Ba chỗ đọc chung một danh sách thì không thể lệch
+     * nhau kiểu "bán bảy lá mà kiểm tra mười lá" rồi mua mãi không xong.</p>
+     */
+    public static final int[] GOI_VINH_VIEN = {
+        213, 214, 215, 216, 217, 218, 219, // bùa cơ bản
+        522, 1734, 1735                    // bùa đệ tử, x2, x3
+    };
 
     /**
      * Mốc thời gian coi là "vĩnh viễn": 00:00 ngày 01/01/2100 (giờ UTC).
@@ -183,17 +206,17 @@ public class Charms {
     // ============================ BÙA VĨNH VIỄN ============================
 
     /**
-     * Hạn của một lá bùa cơ bản, theo id vật phẩm.
+     * Hạn của một lá bùa trong gói vĩnh viễn, theo id vật phẩm.
      *
      * <p>Có để nơi khác đọc được hạn bùa mà không phải chép lại bảng
      * "id nào ứng với ô nào" — bảng đó đã có hai bản trong mã
      * ({@link #addTimeCharms} và {@code ShopService.resolveShopBua}), thêm bản
      * thứ ba nữa là chắc chắn có ngày ba bản lệch nhau.</p>
      *
-     * @return mốc hết hạn tính bằng mili giây, {@code 0} nếu id không phải bùa
-     *         cơ bản
+     * @return mốc hết hạn tính bằng mili giây, {@code 0} nếu id không nằm trong
+     *         {@link #GOI_VINH_VIEN}
      */
-    public long thoiHanBuaCoBan(int itemId) {
+    public long thoiHan(int itemId) {
         switch (itemId) {
             case 213: return tdTriTue;
             case 214: return tdManhMe;
@@ -202,12 +225,15 @@ public class Charms {
             case 217: return tdBatTu;
             case 218: return tdDeoDai;
             case 219: return tdThuHut;
+            case 522: return tdDeTu;
+            case 1734: return tdDeTu2;
+            case 1735: return tdDeTu3;
             default: return 0;
         }
     }
 
     /**
-     * Đặt cả bảy lá bùa cơ bản thành vĩnh viễn.
+     * Đặt trọn gói {@link #GOI_VINH_VIEN} thành vĩnh viễn.
      *
      * <p>Gán thẳng {@link #MOC_VINH_VIEN} chứ không cộng dồn: người đang còn hai
      * ngày bùa Trí tuệ mà mua vĩnh viễn thì thành vĩnh viễn, không phải
@@ -215,8 +241,9 @@ public class Charms {
      * chẳng khác gì, nhưng lúc đó {@code td} không còn bằng đúng mốc nữa và
      * {@link #laVinhVien} sẽ không nhận ra.</p>
      */
-    public void datVinhVienBuaCoBan() {
+    public void datVinhVienGoiBua() {
         tdTriTue = tdManhMe = tdDaTrau = tdOaiHung = tdBatTu = tdDeoDai = tdThuHut = MOC_VINH_VIEN;
+        tdDeTu = tdDeTu2 = tdDeTu3 = MOC_VINH_VIEN;
     }
 
     /** Một mốc hạn có phải là bùa vĩnh viễn không. */
@@ -224,10 +251,10 @@ public class Charms {
         return thoiHan >= MOC_VINH_VIEN;
     }
 
-    /** Đã có đủ cả bảy lá bùa cơ bản ở mức vĩnh viễn chưa. */
+    /** Đã có đủ trọn gói ở mức vĩnh viễn chưa. */
     public boolean daDuBuaVinhVien() {
-        for (int id : BUA_CO_BAN) {
-            if (!laVinhVien(thoiHanBuaCoBan(id))) {
+        for (int id : GOI_VINH_VIEN) {
+            if (!laVinhVien(thoiHan(id))) {
                 return false;
             }
         }

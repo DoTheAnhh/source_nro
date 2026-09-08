@@ -37,20 +37,26 @@ import nro.service.Service;
  *
  * <table border="1">
  *   <tr><th>Tầm quăng</th><th>Kỳ vọng</th></tr>
- *   <tr><td>Gần (&lt; 40)</td><td>27,4 / 50 thỏi — 55%</td></tr>
- *   <tr><td>Vừa (40–74)</td><td>33,5 / 50 — 67%</td></tr>
- *   <tr><td>Xa (≥ 75)</td><td>43,9 / 50 — 88%</td></tr>
+ *   <tr><td>Gần (&lt; 40)</td><td>27,4 / 20 thỏi — <b>137%</b></td></tr>
+ *   <tr><td>Vừa (40–74)</td><td>33,5 / 20 — <b>168%</b></td></tr>
+ *   <tr><td>Xa (≥ 75)</td><td>43,9 / 20 — <b>220%</b></td></tr>
  * </table>
  *
- * <p>Ngay tầm xa nhất, ngay khi bắt được <b>mọi</b> con, kỳ vọng vẫn dưới tiền
- * mồi. Con số này quan trọng: cả tầm quăng lẫn bước vật lộn đều đo ở client,
- * nên một client sửa có thể luôn gửi tầm 100 và luôn báo "bắt được". Kẻ làm vậy
- * cũng chỉ đạt 88% — vẫn lỗ. Không có đường nào rút tiền ra khỏi kho, chỉ có
- * đường lỗ ít hơn.</p>
+ * <p><b>CẢNH BÁO — trần thiệt hại đã mở.</b> Tiền mồi hạ từ 50 xuống 20 theo
+ * yêu cầu, còn bảng thưởng {@link #THUONG_CA} giữ nguyên. Kỳ vọng giờ <b>cao
+ * hơn</b> tiền mồi ở mọi tầm quăng, nên câu cá là một nguồn sinh vàng chứ không
+ * còn là chỗ tiêu vàng.</p>
  *
- * <p>Người chơi thường quăng tầm vừa và tuột chừng một phần tư số lượt nên thực
- * nhận quãng 50%. Khoảng cách giữa 50 và 88 là phần thưởng cho tay nghề — đủ để
- * đáng tập, mà không mở ra đường in tiền.</p>
+ * <p>Điều đó quan trọng vì <b>cả tầm quăng lẫn bước vật lộn đều đo ở
+ * client</b>. Bản 50 thỏi chịu được chuyện đó: một client sửa luôn gửi tầm 100
+ * và luôn báo "bắt được" cũng chỉ đạt 88% — vẫn lỗ, nên không ai buồn sửa. Ở
+ * mức 20 thỏi thì đúng kẻ đó thu <b>220%</b>, tức mỗi lượt lãi hơn gấp đôi, và
+ * quãng nghỉ {@link #NGHI_MS} ba giây là thứ duy nhất còn giới hạn tốc độ in
+ * tiền.</p>
+ *
+ * <p>Muốn giữ mức 20 mà không mở đường đó thì hạ {@link #THUONG_CA} theo cùng
+ * tỉ lệ (chia 2,5): {@code {4, 8, 20, 40, 80}} đưa kỳ vọng về đúng 55/67/88%
+ * như cũ.</p>
 
  *
  * <p><b>Cột "rộng vùng" là chỗ tay nghề lộ ra rõ nhất</b>: vùng xanh của cá
@@ -87,8 +93,18 @@ public final class CauCaManager {
 
     public static final int MA_TRO = MiniGameService.TRO_CAU_CA;
 
-    /** Tiền mồi cho một lần quăng. */
-    public static final long TIEN_MOI = 50;
+    /**
+     * Tiền mồi cho một lần quăng, tính bằng thỏi vàng.
+     *
+     * <p>Client <b>không</b> giữ bản sao của số này: nó đọc từ gói tin
+     * ({@code MiniGameService} ghi {@code TIEN_MOI} xuống, chữ "-20" trên nút
+     * Quăng cần là in lại số vừa nhận). Đổi ở đây là đổi cả hai bên.</p>
+     *
+     * <p><b>Trước đây là 50, và 50 là con số giữ cho trò không in ra tiền.</b>
+     * Xem bảng kỳ vọng ở đầu lớp. Hạ xuống 20 thì kỳ vọng vượt hẳn tiền mồi —
+     * đây là một quyết định về cân bằng, không phải một phép sửa lỗi.</p>
+     */
+    public static final long TIEN_MOI = 20;
 
     /** Quãng nghỉ bắt buộc giữa hai lần quăng, tính bằng mili giây. */
     public static final long NGHI_MS = 3000;
