@@ -1,0 +1,12 @@
+# Dia chi may chu cho client doc. Sua tay duoc.
+#
+# Truoc day file nay do server tu ghi (Manager.ghiIpChoClient) moi lan
+# khoi dong, lay IP LAN no tu do duoc. Da tat viec do: ba khoa
+# server.ipfile, server.ipfile.chay, server.ipfile.editor trong
+# data/config/data_base.properties duoc bo trong, vi may chu gio chay
+# tren VPS chu khong o cung may voi client — de server ghi tiep thi moi
+# lan bat server local la dia chi VPS bi de mat.
+#
+# Dong dau tien khong phai chu thich se duoc dung lam dia chi.
+# Cong co dinh 14445, go cung trong ServerListScreen.
+160.22.107.46

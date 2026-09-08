@@ -275,6 +275,19 @@ public class GodGK {
                 player = null;
             }
             Logger.logException(GodGK.class, e);
+            // Phai TRA LOI, du la tra ve mot cau bao loi.
+            //
+            // Client dang giu hop cho "Dang dang nhap" va chi dong no khi nhan
+            // duoc goi. Truoc day nhanh nay chi ghi log roi return null: nguoi
+            // choi ngoi nhin qua cau xoay mai, con dau vet thi nam trong file
+            // log ma ho khong bao gio doc. Mot dong bao loi tuy khong sua duoc
+            // loi nhung it nhat cho ho biet la hong va bam thu lai duoc.
+            try {
+                Service.gI().sendThongBaoOK(session,
+                        "Không tải được dữ liệu nhân vật. Vui lòng thử lại.");
+                Service.gI().sendLoginFail(session, false);
+            } catch (Exception ignored) {
+            }
         } finally {
             if (rs != null) {
                 rs.dispose();
@@ -469,12 +482,97 @@ public class GodGK {
                     + " vetuan_expire, vethang_expire) VALUES (?, ?, 0, 0, 0, 0)", t, m);
             Logger.log(Logger.GREEN, "Đăng ký tài khoản: " + t + "\n");
 
+            // Vao thang, khong phai cho.
+            //
+            // login() co mot khoang cho chong dang nhap lien tuc: neu
+            // (bay gio - last_time_login) < ConfigDAO.giayChoDangNhap() thi no
+            // tra ve goi 122 va bat nguoi choi dem nguoc. Voi tai khoan VUA
+            // duoc tao xong o dong tren, khoang cho do khong bao ve duoc gi —
+            // chua he co lan dang nhap nao de ma chong.
+            //
+            // Cot last_time_login khai bao DEFAULT '2002-07-30 17:00:00' nen
+            // binh thuong hieu so da rat lon va khong ai phai cho. Nhung do la
+            // mot gia tri mac dinh cua CSDL, khong phai dieu ma ma nguon nay
+            // bao dam: chi can mot ban cai dat khac dat DEFAULT
+            // current_timestamp() la moi lan dang ky lai dinh dung khoang cho
+            // do. Dat co san co de khong phu thuoc vao chuyen do.
+            //
+            // Chinh la co ma Controller dung sau khi tao nhan vat, cung mot ly
+            // do, va login() tu tat no ngay sau lan dau dung.
+            session.vuaTaoNhanVat = true;
+
             session.login(t, m);
         } catch (Exception ex) {
             Logger.logException(GodGK.class, ex, "Lỗi đăng ký " + ten);
             Service.gI().sendThongBaoOK(session,
                     "Không đăng ký được, hãy thử lại sau.");
             Service.gI().sendLoginFail(session, false);
+        }
+    }
+
+    /**
+     * Bảo đảm chiêu đấm của nhân vật ít nhất ở cấp 1, chạy mỗi lần đăng nhập.
+     *
+     * <h2>Vì sao cần</h2>
+     *
+     * <p>Chiêu đấm là chiêu <b>duy nhất</b> nhân vật có ngay từ đầu, và mọi thứ
+     * khác đều bắt đầu từ nó: không có nó thì không đánh được quái, không có
+     * kinh nghiệm, không lên được sức mạnh để học chiêu thứ hai. Nhân vật vào
+     * game với chiêu đấm cấp 0 là <b>bế tắc hoàn toàn</b>, mà nhìn từ màn hình
+     * thì chỉ thấy "đấm không ăn sát thương" — rất khó đoán ra nguyên nhân.</p>
+     *
+     * <p>Nhân vật mới đã được {@code PlayerDAO.createNewPlayer} ghi chiêu đấu
+     * tiên ở cấp 1. Nhưng cấp đó nằm trong cột {@code skills} dạng JSON, và có
+     * vài đường làm nó về 0 mà không ai chủ ý: sửa tay trong CSDL, panel quản
+     * trị ghi đè, dòng cũ từ phiên bản trước, hay {@link SkillUtil#createSkill}
+     * trả {@code null} vì bảng {@code skill_template} thiếu cấp. Chốt ở đây —
+     * ngay trước khi nhân vật vào game — thì mọi đường đó đều được vá cùng một
+     * chỗ.</p>
+     *
+     * <h2>Chỉ cộng lên, không hạ xuống</h2>
+     *
+     * <p>Đang cấp 1 trở lên thì <b>không đụng vào</b>. Người chơi nâng chiêu đấm
+     * lên cấp 7 bằng tiềm năng thật; hàm này chỉ kéo cấp 0 lên 1, không bao giờ
+     * đặt lại cấp của ai.</p>
+     *
+     * <p>Mỗi hành tinh một chiêu đấm riêng: Trái Đất {@code DRAGON}, Namếc
+     * {@code DEMON}, Xayda {@code GALICK} — đúng ba id mà
+     * {@code PlayerDAO.createNewPlayer} đặt ở ô đầu tiên của mảng chiêu.</p>
+     */
+    private static void baoDamChieuDamLv1(Player player) {
+        try {
+            int idDam = player.gender == 0 ? Skill.DRAGON
+                    : player.gender == 1 ? Skill.DEMON
+                            : Skill.GALICK;
+            List<Skill> ds = player.playerSkill.skills;
+            for (int i = 0; i < ds.size(); i++) {
+                Skill s = ds.get(i);
+                if (s == null || s.template == null || s.template.id != idDam) {
+                    continue;
+                }
+                if (s.point >= 1) {
+                    // Đã có cấp — giữ nguyên.
+                    return;
+                }
+                Skill lv1 = SkillUtil.createSkill(idDam, 1);
+                if (lv1 != null) {
+                    // Hai truong nay KHONG nam trong ham sao chep cua Skill,
+                    // nen phai chuyen tay — thieu thi mat moc hoi chieu va mat
+                    // cap nang bang vat pham.
+                    lv1.lastTimeUseThisSkill = s.lastTimeUseThisSkill;
+                    lv1.currLevel = s.currLevel;
+                    ds.set(i, lv1);
+                }
+                return;
+            }
+            // Không có ô nào cho chiêu đấm -> thêm mới.
+            Skill lv1 = SkillUtil.createSkill(idDam, 1);
+            if (lv1 != null) {
+                ds.add(lv1);
+            }
+        } catch (Exception ex) {
+            Logger.logException(GodGK.class, ex,
+                    "Lỗi đặt chiêu đấm cấp 1 cho " + player.name);
         }
     }
 
@@ -1947,6 +2045,7 @@ public class GodGK {
                     player.playerSkill.skills.add(skill);
                 }
             }
+            baoDamChieuDamLv1(player);
             dataArray.clear();
 
             //data skill shortcut

@@ -1,0 +1,2408 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Generated file, do not modify, your changes will be overwritten (use AssetPostprocessor.OnGeneratedCSProject) -->
+  <PropertyGroup>
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.20506</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <RootNamespace></RootNamespace>
+    <ProjectGuid>{F12192BB-82CB-7CDC-5A54-EA0DEDE6A7C3}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <AssemblyName>Assembly-CSharp</AssemblyName>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <BaseDirectory>.</BaseDirectory>
+  </PropertyGroup>
+  <PropertyGroup>
+    <NoWarn>0169;USG0001</NoWarn>
+    <DefineConstants>UNITY_2022_3_61;UNITY_2022_3;UNITY_2022;UNITY_5_3_OR_NEWER;UNITY_5_4_OR_NEWER;UNITY_5_5_OR_NEWER;UNITY_5_6_OR_NEWER;UNITY_2017_1_OR_NEWER;UNITY_2017_2_OR_NEWER;UNITY_2017_3_OR_NEWER;UNITY_2017_4_OR_NEWER;UNITY_2018_1_OR_NEWER;UNITY_2018_2_OR_NEWER;UNITY_2018_3_OR_NEWER;UNITY_2018_4_OR_NEWER;UNITY_2019_1_OR_NEWER;UNITY_2019_2_OR_NEWER;UNITY_2019_3_OR_NEWER;UNITY_2019_4_OR_NEWER;UNITY_2020_1_OR_NEWER;UNITY_2020_2_OR_NEWER;UNITY_2020_3_OR_NEWER;UNITY_2021_1_OR_NEWER;UNITY_2021_2_OR_NEWER;UNITY_2021_3_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_2022_2_OR_NEWER;UNITY_2022_3_OR_NEWER;PLATFORM_ARCH_64;UNITY_64;UNITY_INCLUDE_TESTS;ENABLE_AR;ENABLE_AUDIO;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_EVENT_QUEUE;ENABLE_MICROPHONE;ENABLE_MULTIPLE_DISPLAYS;ENABLE_PHYSICS;ENABLE_TEXTURE_STREAMING;ENABLE_VIRTUALTEXTURING;ENABLE_LZMA;ENABLE_UNITYEVENTS;ENABLE_VR;ENABLE_WEBCAM;ENABLE_UNITYWEBREQUEST;ENABLE_WWW;ENABLE_CLOUD_SERVICES;ENABLE_CLOUD_SERVICES_ADS;ENABLE_CLOUD_SERVICES_USE_WEBREQUEST;ENABLE_CLOUD_SERVICES_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_PURCHASING;ENABLE_CLOUD_SERVICES_ANALYTICS;ENABLE_CLOUD_SERVICES_BUILD;ENABLE_EDITOR_GAME_SERVICES;ENABLE_UNITY_GAME_SERVICES_ANALYTICS_SUPPORT;ENABLE_CLOUD_LICENSE;ENABLE_EDITOR_HUB_LICENSE;ENABLE_WEBSOCKET_CLIENT;ENABLE_GENERATE_NATIVE_PLUGINS_FOR_ASSEMBLIES_API;ENABLE_DIRECTOR_AUDIO;ENABLE_DIRECTOR_TEXTURE;ENABLE_MANAGED_JOBS;ENABLE_MANAGED_TRANSFORM_JOBS;ENABLE_MANAGED_ANIMATION_JOBS;ENABLE_MANAGED_AUDIO_JOBS;ENABLE_MANAGED_UNITYTLS;INCLUDE_DYNAMIC_GI;ENABLE_SCRIPTING_GC_WBARRIERS;PLATFORM_SUPPORTS_MONO;RENDER_SOFTWARE_CURSOR;ENABLE_VIDEO;ENABLE_ACCELERATOR_CLIENT_DEBUGGING;ENABLE_NAVIGATION_PACKAGE_DEBUG_VISUALIZATION;ENABLE_NAVIGATION_HEIGHTMESH_RUNTIME_SUPPORT;ENABLE_NAVIGATION_UI_REQUIRES_PACKAGE;PLATFORM_STANDALONE;TEXTCORE_1_0_OR_NEWER;PLATFORM_STANDALONE_WIN;UNITY_STANDALONE_WIN;UNITY_STANDALONE;ENABLE_RUNTIME_GI;ENABLE_MOVIES;ENABLE_NETWORK;ENABLE_NVIDIA;ENABLE_CRUNCH_TEXTURE_COMPRESSION;ENABLE_OUT_OF_PROCESS_CRASH_HANDLER;ENABLE_CLUSTER_SYNC;ENABLE_CLUSTERINPUT;PLATFORM_UPDATES_TIME_OUTSIDE_OF_PLAYER_LOOP;GFXDEVICE_WAITFOREVENT_MESSAGEPUMP;PLATFORM_INITIALIZES_MEMORY_MANAGER_EXPLICITLY;ENABLE_MONO;NET_4_6;NET_UNITY_4_8;ENABLE_PROFILER;DEBUG;TRACE;UNITY_ASSERTIONS;UNITY_EDITOR;UNITY_EDITOR_64;UNITY_EDITOR_WIN;ENABLE_UNITY_COLLECTIONS_CHECKS;ENABLE_BURST_AOT;UNITY_TEAM_LICENSE;ENABLE_CUSTOM_RENDER_TEXTURE;ENABLE_DIRECTOR;ENABLE_LOCALIZATION;ENABLE_SPRITES;ENABLE_TERRAIN;ENABLE_TILEMAP;ENABLE_TIMELINE;ENABLE_LEGACY_INPUT_MANAGER;TEXTCORE_FONT_ENGINE_1_5_OR_NEWER;CSHARP_7_OR_LATER;CSHARP_7_3_OR_NEWER</DefineConstants>
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>Temp\bin\Debug\</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>Temp\bin\Release\</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <NoConfig>true</NoConfig>
+    <NoStdLib>true</NoStdLib>
+    <AddAdditionalExplicitAssemblyReferences>false</AddAdditionalExplicitAssemblyReferences>
+    <ImplicitlyExpandNETStandardFacades>false</ImplicitlyExpandNETStandardFacades>
+    <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ProjectTypeGuids>{E097FAD1-6243-4DAD-9C02-E9B9EFC3FFC1};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <UnityProjectGenerator>Package</UnityProjectGenerator>
+    <UnityProjectGeneratorVersion>2.0.23</UnityProjectGeneratorVersion>
+    <UnityProjectGeneratorStyle>Legacy</UnityProjectGeneratorStyle>
+    <UnityProjectType>Game:1</UnityProjectType>
+    <UnityBuildTarget>StandaloneWindows64:19</UnityBuildTarget>
+    <UnityVersion>2022.3.61f1</UnityVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Analyzer Include="F:\2022.3.61f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
+    <Analyzer Include="F:\2022.3.61f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Assets\Scripts\Game2\TileMap.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Player\TypePoint.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Player\Revive.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Client\ClientManager.cs" />
+    <Compile Include="Assets\Scripts\Game4\IKbAction.cs" />
+    <Compile Include="Assets\Scripts\Game4\TaskOrder.cs" />
+    <Compile Include="Assets\Scripts\Game2\DartInfo.cs" />
+    <Compile Include="Assets\Scripts\Game6\Cmd.cs" />
+    <Compile Include="Assets\Scripts\Game5\MobTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game6\iPhoneGeneration.cs" />
+    <Compile Include="Assets\Scripts\Game3\SmallDart.cs" />
+    <Compile Include="Assets\Scripts\Game5\MovePoint.cs" />
+    <Compile Include="Assets\Scripts\Game1\InputDlg.cs" />
+    <Compile Include="Assets\Scripts\Game5\SoundMn.cs" />
+    <Compile Include="Assets\Scripts\Game5\Info.cs" />
+    <Compile Include="Assets\Scripts\Game3\Dialog.cs" />
+    <Compile Include="Assets\Scripts\Game4\Session_ME.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Chung\NhatKy.cs" />
+    <Compile Include="Assets\Scripts\Game3\Hint.cs" />
+    <Compile Include="Assets\Scripts\Game6\GameScr.cs" />
+    <Compile Include="Assets\Scripts\Game6\IActionListener.cs" />
+    <Compile Include="Assets\Scripts\Game1\IChatable.cs" />
+    <Compile Include="Assets\Scripts\Game5\iPhoneGeneration.cs" />
+    <Compile Include="Assets\Scripts\Game2\mResources.cs" />
+    <Compile Include="Assets\Scripts\Game3\InputStream.cs" />
+    <Compile Include="Assets\Scripts\Game2\MyAudioClip.cs" />
+    <Compile Include="Assets\Scripts\Game3\MobCapcha.cs" />
+    <Compile Include="Assets\Scripts\Game5\Effect.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Mob\MobController.cs" />
+    <Compile Include="Assets\Scripts\Game3\Assets\src\g\Mabu.cs" />
+    <Compile Include="Assets\Scripts\Game4\CrackBallScr.cs" />
+    <Compile Include="Assets\Scripts\Game4\Dialog.cs" />
+    <Compile Include="Assets\Scripts\Game6\Mob.cs" />
+    <Compile Include="Assets\Scripts\Game1\IActionListener.cs" />
+    <Compile Include="Assets\Scripts\Game6\Assets\src\f\Controller2.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Skill\nSkill.cs" />
+    <Compile Include="Assets\Scripts\Game6\InfoPhuBan.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Item\ItemGroup.cs" />
+    <Compile Include="Assets\Scripts\Game2\CreateCharScr.cs" />
+    <Compile Include="Assets\Scripts\Game3\Assets\src\g\BigBoss.cs" />
+    <Compile Include="Assets\Scripts\Game1\Image.cs" />
+    <Compile Include="Assets\Scripts\Game4\Mob.cs" />
+    <Compile Include="Assets\Scripts\Game6\ItemOptionTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game1\Timer.cs" />
+    <Compile Include="Assets\Scripts\Game3\ChooseCharScr.cs" />
+    <Compile Include="Assets\Scripts\Game2\CharChild.cs" />
+    <Compile Include="Assets\Scripts\Game3\T2.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Client\ClientManager.cs" />
+    <Compile Include="Assets\Scripts\Game4\Arrow.cs" />
+    <Compile Include="Assets\Scripts\Game2\GamePad.cs" />
+    <Compile Include="Assets\Scripts\Game2\LoginScr.cs" />
+    <Compile Include="Assets\Scripts\Game1\IPaint.cs" />
+    <Compile Include="Assets\Scripts\Game2\MobTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\BossList\BossUI.cs" />
+    <Compile Include="Assets\Scripts\Game3\Session_ME2.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Item\ItemGroup.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\PhucLoi\PhucLoiUI.cs" />
+    <Compile Include="Assets\Scripts\Game5\ClanMessage.cs" />
+    <Compile Include="Assets\Scripts\Game3\Menu.cs" />
+    <Compile Include="Assets\Scripts\Game1\EffectCharPaint.cs" />
+    <Compile Include="Assets\Scripts\Game3\Assets\src\g\RegisterScreen.cs" />
+    <Compile Include="Assets\Scripts\Game2\NewPanel.cs" />
+    <Compile Include="Assets\Scripts\Game6\Skills.cs" />
+    <Compile Include="Assets\Scripts\Game2\ImgByName.cs" />
+    <Compile Include="Assets\Scripts\Game3\SplashScr.cs" />
+    <Compile Include="Assets\Scripts\Game2\ServerEffect.cs" />
+    <Compile Include="Assets\Scripts\Game5\ServerListScreen.cs" />
+    <Compile Include="Assets\Scripts\Game2\TaskOrder.cs" />
+    <Compile Include="Assets\Scripts\Game5\TaskTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game1\IKbAction.cs" />
+    <Compile Include="Assets\Scripts\Game2\Res.cs" />
+    <Compile Include="Assets\Scripts\Game1\MobTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game1\Assets\src\e\SmallSave.cs" />
+    <Compile Include="Assets\Scripts\Game4\Res.cs" />
+    <Compile Include="Assets\Scripts\Game1\Archivement.cs" />
+    <Compile Include="Assets\Scripts\Game1\mGraphics.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Chat\ChatUI.cs" />
+    <Compile Include="Assets\Scripts\Game4\myWriter.cs" />
+    <Compile Include="Assets\Scripts\Game1\ItemTime.cs" />
+    <Compile Include="Assets\Scripts\Game4\IMessageHandler.cs" />
+    <Compile Include="Assets\Scripts\Game1\Paint.cs" />
+    <Compile Include="Assets\Scripts\Game6\MyStream.cs" />
+    <Compile Include="Assets\Scripts\Game3\TextInfo.cs" />
+    <Compile Include="Assets\Scripts\Game3\Line.cs" />
+    <Compile Include="Assets\Scripts\Game3\BgItemMn.cs" />
+    <Compile Include="Assets\Scripts\Game5\IPaint.cs" />
+    <Compile Include="Assets\Scripts\Game2\IChatable.cs" />
+    <Compile Include="Assets\Scripts\Game5\ItemOptionTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game6\ChatTextField.cs" />
+    <Compile Include="Assets\Scripts\Game3\EffectPaint.cs" />
+    <Compile Include="Assets\Scripts\Game6\DataInputStream.cs" />
+    <Compile Include="Assets\Scripts\Game1\ipKeyboard.cs" />
+    <Compile Include="Assets\Scripts\Game6\Assets\src\e\ChatVip.cs" />
+    <Compile Include="Assets\Scripts\Game2\MonsterDart.cs" />
+    <Compile Include="Assets\Scripts\Game6\SmallDart.cs" />
+    <Compile Include="Assets\Scripts\Game3\iPhoneSettings.cs" />
+    <Compile Include="Assets\Scripts\Game1\Assets\src\g\GameInfo.cs" />
+    <Compile Include="Assets\Scripts\Game3\DartInfo.cs" />
+    <Compile Include="Assets\Scripts\Game1\Effect.cs" />
+    <Compile Include="Assets\Scripts\Game1\SplashScr.cs" />
+    <Compile Include="Assets\Scripts\Game5\ItemObject.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\SuKien\SuKienUI.cs" />
+    <Compile Include="Assets\Scripts\Game4\ItemTime.cs" />
+    <Compile Include="Assets\Scripts\Game6\Math.cs" />
+    <Compile Include="Assets\Scripts\Game5\Scroll.cs" />
+    <Compile Include="Assets\Scripts\Game4\MagicTree.cs" />
+    <Compile Include="Assets\Scripts\Game4\EffectInfoPaint.cs" />
+    <Compile Include="Assets\Scripts\Game4\RadarScr.cs" />
+    <Compile Include="Assets\Scripts\Game5\T2.cs" />
+    <Compile Include="Assets\Scripts\Game2\FrameImage.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Client\ClientManager.cs" />
+    <Compile Include="Assets\Scripts\Game3\Archivement.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Player\TypePoint.cs" />
+    <Compile Include="Assets\Scripts\Game2\MotherCanvas.cs" />
+    <Compile Include="Assets\Scripts\Game2\PlayerData.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Chat\ChatUI.cs" />
+    <Compile Include="Assets\Scripts\Game6\MonsterDart.cs" />
+    <Compile Include="Assets\Scripts\Game3\ItemOption.cs" />
+    <Compile Include="Assets\Scripts\Game1\Sprite.cs" />
+    <Compile Include="Assets\Scripts\Game4\BachTuoc.cs" />
+    <Compile Include="Assets\Scripts\Game3\Teleport.cs" />
+    <Compile Include="Assets\Scripts\Game1\Mob.cs" />
+    <Compile Include="Assets\Scripts\Game6\ChooseCharScr.cs" />
+    <Compile Include="Assets\Scripts\Game1\MyKeyMap.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Player\TypePoint.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Chon\ChonNhanhUI.cs" />
+    <Compile Include="Assets\Scripts\Game5\ScrollResult.cs" />
+    <Compile Include="Assets\Scripts\Game5\InputDlg.cs" />
+    <Compile Include="Assets\Scripts\Game5\TouchScreenKeyboardType.cs" />
+    <Compile Include="Assets\Scripts\Game4\Info_RadaScr.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Mob\Mobs.cs" />
+    <Compile Include="Assets\Scripts\Game6\Part.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Voice\VoiceConfigUI.cs" />
+    <Compile Include="Assets\Scripts\Game6\T1.cs" />
+    <Compile Include="Assets\Scripts\Game5\GamePad.cs" />
+    <Compile Include="Assets\Scripts\Game1\Skill.cs" />
+    <Compile Include="Assets\Scripts\Game1\MyRandom.cs" />
+    <Compile Include="Assets\Scripts\Game6\ClanObject.cs" />
+    <Compile Include="Assets\Scripts\Game2\Line.cs" />
+    <Compile Include="Assets\Scripts\Game3\Assets\src\f\Controller2.cs" />
+    <Compile Include="Assets\Scripts\Game4\GameMidlet.cs" />
+    <Compile Include="Assets\Scripts\Game4\IMapObject.cs" />
+    <Compile Include="Assets\Scripts\Game2\ImageInfo.cs" />
+    <Compile Include="Assets\Scripts\Game5\EffectCharPaint.cs" />
+    <Compile Include="Assets\Scripts\Game5\Task.cs" />
+    <Compile Include="Assets\Scripts\Game1\Task.cs" />
+    <Compile Include="Assets\Scripts\Game3\mFont.cs" />
+    <Compile Include="Assets\Scripts\Game6\ClanManager.cs" />
+    <Compile Include="Assets\Scripts\Game5\SmallImage.cs" />
+    <Compile Include="Assets\Scripts\Game1\InfoPhuBan.cs" />
+    <Compile Include="Assets\Scripts\Game5\InfoPhuBan.cs" />
+    <Compile Include="Assets\Scripts\Game3\Sprite.cs" />
+    <Compile Include="Assets\Scripts\Game4\Skills.cs" />
+    <Compile Include="Assets\Scripts\Game1\EffectData.cs" />
+    <Compile Include="Assets\Scripts\Game6\Assets\src\g\GameInfo.cs" />
+    <Compile Include="Assets\Scripts\Game6\DartInfo.cs" />
+    <Compile Include="Assets\Scripts\Game5\ImgByName.cs" />
+    <Compile Include="Assets\Scripts\Game1\Member.cs" />
+    <Compile Include="Assets\Scripts\Game5\ActionUpdate.cs" />
+    <Compile Include="Assets\Scripts\Game6\NpcTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game1\ChatBox.cs" />
+    <Compile Include="Assets\Scripts\Game6\Skill.cs" />
+    <Compile Include="Assets\Scripts\Game3\Cmd.cs" />
+    <Compile Include="Assets\Scripts\Game3\Layer.cs" />
+    <Compile Include="Assets\Scripts\Game3\SkillInfoPaint.cs" />
+    <Compile Include="Assets\Scripts\Game5\KeyConstant.cs" />
+    <Compile Include="Assets\Scripts\Game3\Scroll.cs" />
+    <Compile Include="Assets\Scripts\Game4\FrameImage.cs" />
+    <Compile Include="Assets\Scripts\Game5\ClanManager.cs" />
+    <Compile Include="Assets\Scripts\Game5\StaticObj.cs" />
+    <Compile Include="Assets\Scripts\Game4\Char.cs" />
+    <Compile Include="Assets\Scripts\Game5\BallInfo.cs" />
+    <Compile Include="Assets\Scripts\Game2\VoiceChat.cs" />
+    <Compile Include="Assets\Scripts\Game5\Cmd.cs" />
+    <Compile Include="Assets\Scripts\Game5\PopUp.cs" />
+    <Compile Include="Assets\Scripts\Game6\TileMap.cs" />
+    <Compile Include="Assets\Scripts\Game2\Assets\src\e\Small.cs" />
+    <Compile Include="Assets\Scripts\Game3\FireWorkMn.cs" />
+    <Compile Include="Assets\Scripts\Game3\Arrow.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Player\NPoint.cs" />
+    <Compile Include="Assets\Scripts\Game1\ServerEffect.cs" />
+    <Compile Include="Assets\Scripts\Game1\Point.cs" />
+    <Compile Include="Assets\Scripts\Game2\BachTuoc.cs" />
+    <Compile Include="Assets\Scripts\Game6\TabControl.cs" />
+    <Compile Include="Assets\Scripts\Game3\MovePoint.cs" />
+    <Compile Include="Assets\Scripts\Game6\ItemOption.cs" />
+    <Compile Include="Assets\Scripts\Game3\MsgDlg.cs" />
+    <Compile Include="Assets\Scripts\Game3\ServerListScreen.cs" />
+    <Compile Include="Assets\Scripts\Game2\EPosition.cs" />
+    <Compile Include="Assets\Scripts\Game2\ipKeyboard.cs" />
+    <Compile Include="Assets\Scripts\Game5\EffectPaint.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Item\Items.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Chung\HopNhapChu.cs" />
+    <Compile Include="Assets\Scripts\Game6\Info.cs" />
+    <Compile Include="Assets\Scripts\Game6\mScreen.cs" />
+    <Compile Include="Assets\Scripts\Game5\MyHashTable.cs" />
+    <Compile Include="Assets\Scripts\Game5\TextInfo.cs" />
+    <Compile Include="Assets\Scripts\Game4\Assets\src\e\ChatVip.cs" />
+    <Compile Include="Assets\Scripts\Game4\TopInfo.cs" />
+    <Compile Include="Assets\Scripts\Game1\BaseCommand.cs" />
+    <Compile Include="Assets\Scripts\Game4\PartImage.cs" />
+    <Compile Include="Assets\Scripts\Game3\Image.cs" />
+    <Compile Include="Assets\Scripts\Game5\Skills.cs" />
+    <Compile Include="Assets\Scripts\Game2\TransportScr.cs" />
+    <Compile Include="Assets\Scripts\Game1\Waypoint.cs" />
+    <Compile Include="Assets\Scripts\Game6\ScaleGUI.cs" />
+    <Compile Include="Assets\Scripts\Game2\ItemTime.cs" />
+    <Compile Include="Assets\Scripts\Game6\mSystem.cs" />
+    <Compile Include="Assets\Scripts\Game6\MainImage.cs" />
+    <Compile Include="Assets\Scripts\Game2\Menu.cs" />
+    <Compile Include="Assets\Scripts\Game1\GameScr.cs" />
+    <Compile Include="Assets\Scripts\Game5\MobCapcha.cs" />
+    <Compile Include="Assets\Scripts\Game2\Service.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Mob\MobController.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Item\Items.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Chung\BanPhimSo.cs" />
+    <Compile Include="Assets\Scripts\Game2\MainImage.cs" />
+    <Compile Include="Assets\Scripts\Game4\mScreen.cs" />
+    <Compile Include="Assets\Scripts\Game4\MovePoint.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Mob\Mobs.cs" />
+    <Compile Include="Assets\Scripts\Game2\TouchScreenKeyboardType.cs" />
+    <Compile Include="Assets\Scripts\Game6\SkillPaint.cs" />
+    <Compile Include="Assets\Scripts\Game2\ChatPopup.cs" />
+    <Compile Include="Assets\Scripts\Game2\Timer.cs" />
+    <Compile Include="Assets\Scripts\Game1\LoginScr.cs" />
+    <Compile Include="Assets\Scripts\Game1\FireWorkEff.cs" />
+    <Compile Include="Assets\Scripts\Game3\Point.cs" />
+    <Compile Include="Assets\Scripts\Game3\ChatPopup.cs" />
+    <Compile Include="Assets\Scripts\Game2\EffectPaint.cs" />
+    <Compile Include="Assets\Scripts\Game5\BackgroudEffect.cs" />
+    <Compile Include="Assets\Scripts\Game6\Item.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Client\ClientManager.cs" />
+    <Compile Include="Assets\Scripts\Game4\KeyConstant.cs" />
+    <Compile Include="Assets\Scripts\Game4\TabControl.cs" />
+    <Compile Include="Assets\Scripts\Game5\BachTuoc.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Voice\VoiceConfigUI.cs" />
+    <Compile Include="Assets\Scripts\Game2\InfoItem.cs" />
+    <Compile Include="Assets\Scripts\Game4\ItemTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game5\Layer.cs" />
+    <Compile Include="Assets\Scripts\Game5\Assets\src\f\Controller2.cs" />
+    <Compile Include="Assets\Scripts\Game3\Part.cs" />
+    <Compile Include="Assets\Scripts\Game3\TouchScreenKeyboard.cs" />
+    <Compile Include="Assets\Scripts\Game3\BachTuoc.cs" />
+    <Compile Include="Assets\Scripts\Game6\BgItemMn.cs" />
+    <Compile Include="Assets\Scripts\Game2\Controller.cs" />
+    <Compile Include="Assets\Scripts\Game6\BigBoss2.cs" />
+    <Compile Include="Assets\Scripts\Game2\Teleport.cs" />
+    <Compile Include="Assets\Scripts\Game4\BigBoss2.cs" />
+    <Compile Include="Assets\Scripts\Game2\Hint.cs" />
+    <Compile Include="Assets\Scripts\Game5\T1.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\BossList\BossUI.cs" />
+    <Compile Include="Assets\Scripts\Game5\IKbAction.cs" />
+    <Compile Include="Assets\Scripts\Game4\Assets\src\e\SmallSave.cs" />
+    <Compile Include="Assets\Scripts\Game2\Info.cs" />
+    <Compile Include="Assets\Scripts\Game3\SkillOption.cs" />
+    <Compile Include="Assets\Scripts\Game4\Arrowpaint.cs" />
+    <Compile Include="Assets\Scripts\Game5\Npc.cs" />
+    <Compile Include="Assets\Scripts\Game5\ipKeyboard.cs" />
+    <Compile Include="Assets\Scripts\Game1\MotherCanvas.cs" />
+    <Compile Include="Assets\Scripts\Game3\TabControl.cs" />
+    <Compile Include="Assets\Scripts\Game1\Layer.cs" />
+    <Compile Include="Assets\Scripts\Game6\ISession.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Player\TypePoint.cs" />
+    <Compile Include="Assets\Scripts\Game6\PlayerData.cs" />
+    <Compile Include="Assets\Scripts\Game4\PopUpYesNo.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Player\ListChars.cs" />
+    <Compile Include="Assets\Scripts\Game1\ClanManager.cs" />
+    <Compile Include="Assets\Scripts\Game4\Assets\src\g\GameInfo.cs" />
+    <Compile Include="Assets\Scripts\Game6\Sprite.cs" />
+    <Compile Include="Assets\Scripts\Game2\Part.cs" />
+    <Compile Include="Assets\Scripts\Game4\Info.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Player\NPoint.cs" />
+    <Compile Include="Assets\Scripts\Game1\DataInputStream.cs" />
+    <Compile Include="Assets\Scripts\Game6\SoundMn.cs" />
+    <Compile Include="Assets\Scripts\Game4\InfoMe.cs" />
+    <Compile Include="Assets\Scripts\Game1\PlayerDart.cs" />
+    <Compile Include="Assets\Scripts\Game1\EPosition.cs" />
+    <Compile Include="Assets\Scripts\Game2\TField.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Player\PetService.cs" />
+    <Compile Include="Assets\Scripts\Game1\ClanImage.cs" />
+    <Compile Include="Assets\Scripts\Game6\Assets\src\g\RegisterScreen.cs" />
+    <Compile Include="Assets\Scripts\Game5\Session_ME2.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Player\ListChars.cs" />
+    <Compile Include="Assets\Scripts\Game5\mFont.cs" />
+    <Compile Include="Assets\Scripts\Game4\SMS.cs" />
+    <Compile Include="Assets\Scripts\Game3\InputDlg.cs" />
+    <Compile Include="Assets\Scripts\Game5\Net.cs" />
+    <Compile Include="Assets\Scripts\Game3\EffectTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game2\InfoPhuBan.cs" />
+    <Compile Include="Assets\Scripts\Game1\PKFlag.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Chung\BanPhimSo.cs" />
+    <Compile Include="Assets\Scripts\Game5\ScaleGUI.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\MenuTong\MenuTongUI.cs" />
+    <Compile Include="Assets\Scripts\Game6\iOSPlugins.cs" />
+    <Compile Include="Assets\Scripts\Game3\PlayerInfo.cs" />
+    <Compile Include="Assets\Scripts\Game2\ClanImage.cs" />
+    <Compile Include="Assets\Scripts\Game1\Teleport.cs" />
+    <Compile Include="Assets\Scripts\Game1\DataOutputStream.cs" />
+    <Compile Include="Assets\Scripts\Game3\TaskTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game4\Hint.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Map\MapController.cs" />
+    <Compile Include="Assets\Scripts\Game2\GameMidlet.cs" />
+    <Compile Include="Assets\Scripts\Game5\Point.cs" />
+    <Compile Include="Assets\Scripts\Game2\Assets\src\g\Mabu.cs" />
+    <Compile Include="Assets\Scripts\Game6\Npc.cs" />
+    <Compile Include="Assets\Scripts\Game4\MyKeyMap.cs" />
+    <Compile Include="Assets\Scripts\Game6\ImgByName.cs" />
+    <Compile Include="Assets\Scripts\Game5\FireWorkEff.cs" />
+    <Compile Include="Assets\Scripts\Game2\TabClanIcon.cs" />
+    <Compile Include="Assets\Scripts\Game1\MapTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game1\MagicTree.cs" />
+    <Compile Include="Assets\Scripts\Game5\Hint.cs" />
+    <Compile Include="Assets\Scripts\Game2\StaticObj.cs" />
+    <Compile Include="Assets\Scripts\Game3\GameMidlet.cs" />
+    <Compile Include="Assets\Scripts\Game3\Info_RadaScr.cs" />
+    <Compile Include="Assets\Scripts\Game6\IPaint.cs" />
+    <Compile Include="Assets\Scripts\Game5\SkillOption.cs" />
+    <Compile Include="Assets\Scripts\Game3\IMessageHandler.cs" />
+    <Compile Include="Assets\Scripts\Game5\NewPanel.cs" />
+    <Compile Include="Assets\Scripts\Game5\PopUpYesNo.cs" />
+    <Compile Include="Assets\Scripts\Game4\EPosition.cs" />
+    <Compile Include="Assets\Scripts\Game6\MyRandom.cs" />
+    <Compile Include="Assets\Scripts\Game4\NinjaUtil.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Player\PetService.cs" />
+    <Compile Include="Assets\Scripts\Game6\Assets\src\e\SmallSave.cs" />
+    <Compile Include="Assets\Scripts\Game5\TileMap.cs" />
+    <Compile Include="Assets\Scripts\Game2\Image.cs" />
+    <Compile Include="Assets\Scripts\Game1\SkillInfoPaint.cs" />
+    <Compile Include="Assets\Scripts\Game3\EffectFeet.cs" />
+    <Compile Include="Assets\Scripts\Game2\ArrayCast.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Chon\ChonNhanhUI.cs" />
+    <Compile Include="Assets\Scripts\Game6\ListNew.cs" />
+    <Compile Include="Assets\Scripts\Game3\Frame.cs" />
+    <Compile Include="Assets\Scripts\Game2\Skill.cs" />
+    <Compile Include="Assets\Scripts\Game4\DataInputStream.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Player\PlayerInfo.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Chat\ChatUI.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Chon\ChonNhanhUI.cs" />
+    <Compile Include="Assets\Scripts\Game1\GameMidlet.cs" />
+    <Compile Include="Assets\Scripts\Game3\Arrowpaint.cs" />
+    <Compile Include="Assets\Scripts\Game5\Cout.cs" />
+    <Compile Include="Assets\Scripts\Game1\Part.cs" />
+    <Compile Include="Assets\Scripts\Game5\ChatBox.cs" />
+    <Compile Include="Assets\Scripts\Game2\BgItem.cs" />
+    <Compile Include="Assets\Scripts\Game2\SkillTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game2\ScaleGUI.cs" />
+    <Compile Include="Assets\Scripts\Game5\Arrow.cs" />
+    <Compile Include="Assets\Scripts\Game1\ItemTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game4\TouchScreenKeyboard.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\MenuTong\MenuTongUI.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\MenuTong\MenuTongUI.cs" />
+    <Compile Include="Assets\Scripts\Game6\StaticObj.cs" />
+    <Compile Include="Assets\Scripts\Game3\CreateCharScr.cs" />
+    <Compile Include="Assets\Scripts\Game6\SplashScr.cs" />
+    <Compile Include="Assets\Scripts\Game2\TextInfo.cs" />
+    <Compile Include="Assets\Scripts\Game2\Scroll.cs" />
+    <Compile Include="Assets\Scripts\Game3\Effect.cs" />
+    <Compile Include="Assets\Scripts\Game6\PlayerInfo.cs" />
+    <Compile Include="Assets\Scripts\Game2\NewBoss.cs" />
+    <Compile Include="Assets\Scripts\Game6\Cout.cs" />
+    <Compile Include="Assets\Scripts\Game5\ItemTemplates.cs" />
+    <Compile Include="Assets\Scripts\Game1\PlayerData.cs" />
+    <Compile Include="Assets\Scripts\Game5\mGraphics.cs" />
+    <Compile Include="Assets\Scripts\Game5\InputStream.cs" />
+    <Compile Include="Assets\Scripts\Game3\Firework.cs" />
+    <Compile Include="Assets\Scripts\Game2\myWriter.cs" />
+    <Compile Include="Assets\Scripts\Game2\Npc.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\TroChoi\MiniGame.cs" />
+    <Compile Include="Assets\Scripts\Game3\T3.cs" />
+    <Compile Include="Assets\Scripts\Game4\NpcTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game1\Effect2.cs" />
+    <Compile Include="Assets\Scripts\Game4\GamePad.cs" />
+    <Compile Include="Assets\Scripts\Game4\BaseCommand.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Item\Items.cs" />
+    <Compile Include="Assets\Scripts\Game6\Layer.cs" />
+    <Compile Include="Assets\Scripts\Game2\Mob.cs" />
+    <Compile Include="Assets\Scripts\Game5\Clan.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Voice\VoiceConfigUI.cs" />
+    <Compile Include="Assets\Scripts\Game1\TopInfo.cs" />
+    <Compile Include="Assets\Scripts\Game2\PopUpYesNo.cs" />
+    <Compile Include="Assets\Scripts\Game1\FireWorkMn.cs" />
+    <Compile Include="Assets\Scripts\Game5\DataOutputStream.cs" />
+    <Compile Include="Assets\Scripts\Game6\TaskOrder.cs" />
+    <Compile Include="Assets\Scripts\Game2\SmallDart.cs" />
+    <Compile Include="Assets\Scripts\Game2\ActionUpdate.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Utils\Utils.cs" />
+    <Compile Include="Assets\Scripts\Game5\mResources.cs" />
+    <Compile Include="Assets\Scripts\Game1\ClanMessage.cs" />
+    <Compile Include="Assets\Scripts\Game3\Assets\src\e\ChatVip.cs" />
+    <Compile Include="Assets\Scripts\Game1\BgItem.cs" />
+    <Compile Include="Assets\Scripts\Game4\MonsterDart.cs" />
+    <Compile Include="Assets\Scripts\Game4\Skill.cs" />
+    <Compile Include="Assets\Scripts\Game2\mScreen.cs" />
+    <Compile Include="Assets\Scripts\Game3\TransportScr.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\TroChoi\TroChoiUI.cs" />
+    <Compile Include="Assets\Scripts\Game5\Sprite.cs" />
+    <Compile Include="Assets\Scripts\Game2\Point.cs" />
+    <Compile Include="Assets\Scripts\Game3\InfoItem.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Player\PlayerInfo.cs" />
+    <Compile Include="Assets\Scripts\Game3\ListNew.cs" />
+    <Compile Include="Assets\Scripts\Game6\EffectManager.cs" />
+    <Compile Include="Assets\Scripts\Game5\GameScr.cs" />
+    <Compile Include="Assets\Scripts\Game1\Scroll.cs" />
+    <Compile Include="Assets\Scripts\Game3\Session_ME.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Chon\ChonNhanhUI.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Player\NPoint.cs" />
+    <Compile Include="Assets\Scripts\Game1\Firework.cs" />
+    <Compile Include="Assets\Scripts\Game1\ItemOption.cs" />
+    <Compile Include="Assets\Scripts\Game1\Session_ME2.cs" />
+    <Compile Include="Assets\Scripts\Game2\IPaint.cs" />
+    <Compile Include="Assets\Scripts\Game5\Timer.cs" />
+    <Compile Include="Assets\Scripts\Game3\TabCommand.cs" />
+    <Compile Include="Assets\Scripts\Game3\Member.cs" />
+    <Compile Include="Assets\Scripts\Game4\MyStream.cs" />
+    <Compile Include="Assets\Scripts\Game4\ItemTemplates.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Player\PlayerInfo.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Utils\Utils.cs" />
+    <Compile Include="Assets\Scripts\Game2\IMapObject.cs" />
+    <Compile Include="Assets\Scripts\Game4\ActionPaint.cs" />
+    <Compile Include="Assets\Scripts\Game2\T1.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\SuKien\SuKienUI.cs" />
+    <Compile Include="Assets\Scripts\Game5\FireWorkMn.cs" />
+    <Compile Include="Assets\Scripts\Game5\Part.cs" />
+    <Compile Include="Assets\Scripts\Game6\HTTPHandler.cs" />
+    <Compile Include="Assets\Scripts\Game1\NewBoss.cs" />
+    <Compile Include="Assets\Scripts\Game2\Assets\src\g\ImageSource.cs" />
+    <Compile Include="Assets\Scripts\Game5\Skill.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Item\Items.cs" />
+    <Compile Include="Assets\Scripts\Game1\PlayerInfo.cs" />
+    <Compile Include="Assets\Scripts\Game4\TField.cs" />
+    <Compile Include="Assets\Scripts\Game3\TouchScreenKeyboardType.cs" />
+    <Compile Include="Assets\Scripts\Game3\BigBoss2.cs" />
+    <Compile Include="Assets\Scripts\Game6\Assets\src\g\ClientInput.cs" />
+    <Compile Include="Assets\Scripts\Game1\SkillTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game4\BgItem.cs" />
+    <Compile Include="Assets\Scripts\Game6\Controller.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Client\ClientManager.cs" />
+    <Compile Include="Assets\Scripts\Game1\TouchScreenKeyboardType.cs" />
+    <Compile Include="Assets\Scripts\Game1\Info.cs" />
+    <Compile Include="Assets\Scripts\Game5\Math.cs" />
+    <Compile Include="Assets\Scripts\Game6\Sound.cs" />
+    <Compile Include="Assets\Scripts\Game2\BaseCommand.cs" />
+    <Compile Include="Assets\Scripts\Game4\ScaleGUI.cs" />
+    <Compile Include="Assets\Scripts\Game1\ScrollResult.cs" />
+    <Compile Include="Assets\Scripts\Game6\Arrow.cs" />
+    <Compile Include="Assets\Scripts\Game1\iOSPlugins.cs" />
+    <Compile Include="Assets\Scripts\Game2\InputStream.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Boss\BossData.cs" />
+    <Compile Include="Assets\Scripts\Game6\myWriter.cs" />
+    <Compile Include="Assets\Scripts\Game2\Assets\src\g\PetFollow.cs" />
+    <Compile Include="Assets\Scripts\Game3\Math.cs" />
+    <Compile Include="Assets\Scripts\Game2\Session_ME2.cs" />
+    <Compile Include="Assets\Scripts\Game2\ActionPaint.cs" />
+    <Compile Include="Assets\Scripts\Game1\TextInfo.cs" />
+    <Compile Include="Assets\Scripts\Game6\MobCapcha.cs" />
+    <Compile Include="Assets\Scripts\Game6\Image.cs" />
+    <Compile Include="Assets\Scripts\Game4\ActionUpdate.cs" />
+    <Compile Include="Assets\Scripts\Game2\ClanObject.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Co\CoUI.cs" />
+    <Compile Include="Assets\Scripts\Game1\MsgDlg.cs" />
+    <Compile Include="Assets\Scripts\Game4\TouchScreenKeyboardType.cs" />
+    <Compile Include="Assets\Scripts\Game3\MagicTree.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Chung\HopNhapChu.cs" />
+    <Compile Include="Assets\Scripts\Game2\GameScr.cs" />
+    <Compile Include="Assets\Scripts\Game1\Key.cs" />
+    <Compile Include="Assets\Scripts\Game1\InfoDlg.cs" />
+    <Compile Include="Assets\Scripts\Game5\RadarScr.cs" />
+    <Compile Include="Assets\Scripts\Game5\MapTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game1\Dialog.cs" />
+    <Compile Include="Assets\Scripts\Game4\Member.cs" />
+    <Compile Include="Assets\Scripts\Game5\Arrowpaint.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Player\ListChars.cs" />
+    <Compile Include="Assets\Scripts\Game4\ISession.cs" />
+    <Compile Include="Assets\Scripts\Game4\PlayerInfo.cs" />
+    <Compile Include="Assets\Scripts\Game6\InfoItem.cs" />
+    <Compile Include="Assets\Scripts\Game1\Skills.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Mob\Mobs.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Mob\MobController.cs" />
+    <Compile Include="Assets\Scripts\Game5\PlayerData.cs" />
+    <Compile Include="Assets\Scripts\Game3\NewBoss.cs" />
+    <Compile Include="Assets\Scripts\Game6\MyHashTable.cs" />
+    <Compile Include="Assets\Scripts\Game3\Paint.cs" />
+    <Compile Include="Assets\Scripts\Game3\ImgByName.cs" />
+    <Compile Include="Assets\Scripts\Game4\Service.cs" />
+    <Compile Include="Assets\Scripts\Game1\ISession.cs" />
+    <Compile Include="Assets\Scripts\Game2\Effect2.cs" />
+    <Compile Include="Assets\Scripts\Game2\Session_ME.cs" />
+    <Compile Include="Assets\Scripts\Game2\SMS.cs" />
+    <Compile Include="Assets\Scripts\Game1\SMS.cs" />
+    <Compile Include="Assets\Scripts\Game3\TopInfo.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Boss\Boss.cs" />
+    <Compile Include="Assets\Scripts\Game6\Net.cs" />
+    <Compile Include="Assets\Scripts\Game5\Assets\src\g\ClientInput.cs" />
+    <Compile Include="Assets\Scripts\Game1\Assets\src\g\ClientInput.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Player\Revive.cs" />
+    <Compile Include="Assets\Scripts\Game6\BallInfo.cs" />
+    <Compile Include="Assets\Scripts\Game4\Assets\src\e\Small.cs" />
+    <Compile Include="Assets\Scripts\Game6\Point.cs" />
+    <Compile Include="Assets\Scripts\Game2\EffectChar.cs" />
+    <Compile Include="Assets\Scripts\Game2\EffectManager.cs" />
+    <Compile Include="Assets\Scripts\Game4\Assets\src\f\Controller2.cs" />
+    <Compile Include="Assets\Scripts\Game4\Sprite.cs" />
+    <Compile Include="Assets\Scripts\Game1\MoneyAward.cs" />
+    <Compile Include="Assets\Scripts\Game4\Paint.cs" />
+    <Compile Include="Assets\Scripts\Game5\Frame.cs" />
+    <Compile Include="Assets\Scripts\Game1\Line.cs" />
+    <Compile Include="Assets\Scripts\Game4\ItemMap.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\TuiMoi\TuiUI.cs" />
+    <Compile Include="Assets\Scripts\Game5\BigBoss2.cs" />
+    <Compile Include="Assets\Scripts\Game3\Item.cs" />
+    <Compile Include="Assets\Scripts\Game4\SplashScr.cs" />
+    <Compile Include="Assets\Scripts\Game5\NpcTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game1\mSystem.cs" />
+    <Compile Include="Assets\Scripts\Game2\EffectData.cs" />
+    <Compile Include="Assets\Scripts\Game6\EffectData.cs" />
+    <Compile Include="Assets\Scripts\Game3\ChatTextField.cs" />
+    <Compile Include="Assets\Scripts\Game4\Command.cs" />
+    <Compile Include="Assets\Scripts\Game4\EffectData.cs" />
+    <Compile Include="Assets\Scripts\Game6\Session_ME.cs" />
+    <Compile Include="Assets\Scripts\Game2\CrackBallScr.cs" />
+    <Compile Include="Assets\Scripts\Game2\Member.cs" />
+    <Compile Include="Assets\Scripts\Game2\Skills.cs" />
+    <Compile Include="Assets\Scripts\Game5\DartInfo.cs" />
+    <Compile Include="Assets\Scripts\Game2\MagicTree.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Chung\BanPhimSo.cs" />
+    <Compile Include="Assets\Scripts\Game2\SkillOptionTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game2\MovePoint.cs" />
+    <Compile Include="Assets\Scripts\Game1\mScreen.cs" />
+    <Compile Include="Assets\Scripts\Game4\Image.cs" />
+    <Compile Include="Assets\Scripts\Game6\mLine.cs" />
+    <Compile Include="Assets\Scripts\Game3\Clan.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Player\Revive.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Item\ItemGroup.cs" />
+    <Compile Include="Assets\Scripts\Game6\Member.cs" />
+    <Compile Include="Assets\Scripts\Game5\Main.cs" />
+    <Compile Include="Assets\Scripts\Game5\Assets\src\g\ImageSource.cs" />
+    <Compile Include="Assets\Scripts\Game2\ServerScr.cs" />
+    <Compile Include="Assets\Scripts\Game3\ArrayCast.cs" />
+    <Compile Include="Assets\Scripts\Game6\NinjaUtil.cs" />
+    <Compile Include="Assets\Scripts\Game1\Assets\src\g\ImageSource.cs" />
+    <Compile Include="Assets\Scripts\Game3\MyStream.cs" />
+    <Compile Include="Assets\Scripts\Game2\RadarScr.cs" />
+    <Compile Include="Assets\Scripts\Game4\ChatBox.cs" />
+    <Compile Include="Assets\Scripts\Game6\Assets\src\g\ImageSource.cs" />
+    <Compile Include="Assets\Scripts\Game6\Menu.cs" />
+    <Compile Include="Assets\Scripts\Game6\SmallImage.cs" />
+    <Compile Include="Assets\Scripts\Game4\ListNew.cs" />
+    <Compile Include="Assets\Scripts\Game5\Assets\src\e\SmallSave.cs" />
+    <Compile Include="Assets\Scripts\Game5\Rms.cs" />
+    <Compile Include="Assets\Scripts\Game2\Main.cs" />
+    <Compile Include="Assets\Scripts\Game5\mSystem.cs" />
+    <Compile Include="Assets\Scripts\Game4\mFont.cs" />
+    <Compile Include="Assets\Scripts\Game1\Position.cs" />
+    <Compile Include="Assets\Scripts\Game5\Key.cs" />
+    <Compile Include="Assets\Scripts\Game6\VoiceChat.cs" />
+    <Compile Include="Assets\Scripts\Game1\iPhoneSettings.cs" />
+    <Compile Include="Assets\Scripts\Game6\PartImage.cs" />
+    <Compile Include="Assets\Scripts\Game1\Hint.cs" />
+    <Compile Include="Assets\Scripts\Game1\SmallDart.cs" />
+    <Compile Include="Assets\Scripts\Game5\ItemTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Player\TypePoint.cs" />
+    <Compile Include="Assets\Scripts\Game4\EffectPaint.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Mob\MobController.cs" />
+    <Compile Include="Assets\Scripts\Game4\Panel.cs" />
+    <Compile Include="Assets\Scripts\Game2\IMessageHandler.cs" />
+    <Compile Include="Assets\Scripts\Game4\ScreenPointer.cs" />
+    <Compile Include="Assets\Scripts\Game2\Info_RadaScr.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\BossList\BossUI.cs" />
+    <Compile Include="Assets\Scripts\Game5\Message.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Map\MapController.cs" />
+    <Compile Include="Assets\Scripts\Game2\T2.cs" />
+    <Compile Include="Assets\Scripts\Game6\DataOutputStream.cs" />
+    <Compile Include="Assets\Scripts\Game1\Arrow.cs" />
+    <Compile Include="Assets\Scripts\Game4\Assets\src\g\BigBoss.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Chon\ChonNhanhUI.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Chung\NhatKy.cs" />
+    <Compile Include="Assets\Scripts\Game5\EffectPanel.cs" />
+    <Compile Include="Assets\Scripts\Game1\MyAudioClip.cs" />
+    <Compile Include="Assets\Scripts\Game5\FrameImage.cs" />
+    <Compile Include="Assets\Scripts\Game6\EffectTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game4\ActionChat.cs" />
+    <Compile Include="Assets\Scripts\Game6\MotherCanvas.cs" />
+    <Compile Include="Assets\Scripts\Game4\MsgDlg.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Utils\Utils.cs" />
+    <Compile Include="Assets\Scripts\Game2\iPhoneSettings.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Player\PetService.cs" />
+    <Compile Include="Assets\Scripts\Game3\ActionUpdate.cs" />
+    <Compile Include="Assets\Scripts\Game6\FrameImage.cs" />
+    <Compile Include="Assets\Scripts\Game4\TaskTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game4\DataOutputStream.cs" />
+    <Compile Include="Assets\Scripts\Game4\EffectTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game2\PKFlag.cs" />
+    <Compile Include="Assets\Scripts\Game5\SkillInfoPaint.cs" />
+    <Compile Include="Assets\Scripts\Game3\NpcTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\MenuTong\MenuTongUI.cs" />
+    <Compile Include="Assets\Scripts\Game6\TaskTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game2\InfoMe.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Chung\BanPhimSo.cs" />
+    <Compile Include="Assets\Scripts\Game1\T2.cs" />
+    <Compile Include="Assets\Scripts\Game1\ActionChat.cs" />
+    <Compile Include="Assets\Scripts\Game2\ServerListScreen.cs" />
+    <Compile Include="Assets\Scripts\Game2\ClanMessage.cs" />
+    <Compile Include="Assets\Scripts\Game3\KeyConstant.cs" />
+    <Compile Include="Assets\Scripts\Game3\Assets\src\g\ImageSource.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Voice\VoiceConfigUI.cs" />
+    <Compile Include="Assets\Scripts\Game2\ItemObject.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Co\CoUI.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Chat\ChatUI.cs" />
+    <Compile Include="Assets\Scripts\Game4\InfoDlg.cs" />
+    <Compile Include="Assets\Scripts\Game3\Skills.cs" />
+    <Compile Include="Assets\Scripts\Game5\IActionListener.cs" />
+    <Compile Include="Assets\Scripts\Game6\Assets\src\g\BigBoss.cs" />
+    <Compile Include="Assets\Scripts\Game4\Archivement.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Chung\NhatKy.cs" />
+    <Compile Include="Assets\Scripts\Game4\MyRandom.cs" />
+    <Compile Include="Assets\Scripts\Game4\Item.cs" />
+    <Compile Include="Assets\Scripts\Game4\Assets\src\g\ClientInput.cs" />
+    <Compile Include="Assets\Scripts\Game2\Layer.cs" />
+    <Compile Include="Assets\Scripts\Game3\ServerScr.cs" />
+    <Compile Include="Assets\Scripts\Game2\FireWorkEff.cs" />
+    <Compile Include="Assets\Scripts\Game6\SkillOption.cs" />
+    <Compile Include="Assets\Scripts\Game4\PopUp.cs" />
+    <Compile Include="Assets\Scripts\Game3\InfoDlg.cs" />
+    <Compile Include="Assets\Scripts\Game3\EffectCharPaint.cs" />
+    <Compile Include="Assets\Scripts\Game6\Arrowpaint.cs" />
+    <Compile Include="Assets\Scripts\Game1\Panel.cs" />
+    <Compile Include="Assets\Scripts\Game4\FireWorkEff.cs" />
+    <Compile Include="Assets\Scripts\Game5\TaskOrder.cs" />
+    <Compile Include="Assets\Scripts\Game5\T3.cs" />
+    <Compile Include="Assets\Scripts\Game3\Effect_End.cs" />
+    <Compile Include="Assets\Scripts\Game1\SkillOption.cs" />
+    <Compile Include="Assets\Scripts\Game3\Npc.cs" />
+    <Compile Include="Assets\Scripts\Game2\BallInfo.cs" />
+    <Compile Include="Assets\Scripts\Game6\GamePad.cs" />
+    <Compile Include="Assets\Scripts\Game1\SkillOptionTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game6\GameMidlet.cs" />
+    <Compile Include="Assets\Scripts\Game6\Friend.cs" />
+    <Compile Include="Assets\Scripts\Game4\GameScr.cs" />
+    <Compile Include="Assets\Scripts\Game3\PlayerDart.cs" />
+    <Compile Include="Assets\Scripts\Game4\EffectCharPaint.cs" />
+    <Compile Include="Assets\Scripts\Game4\NewPanel.cs" />
+    <Compile Include="Assets\Scripts\Game6\IMessageHandler.cs" />
+    <Compile Include="Assets\Scripts\Game2\ChooseCharScr.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Skill\nSkill.cs" />
+    <Compile Include="Assets\Scripts\Game3\ServerEffect.cs" />
+    <Compile Include="Assets\Scripts\Game1\MyStream.cs" />
+    <Compile Include="Assets\Scripts\Game3\BackgroudEffect.cs" />
+    <Compile Include="Assets\Scripts\Game1\Main.cs" />
+    <Compile Include="Assets\Scripts\Game5\LoginScr.cs" />
+    <Compile Include="Assets\Scripts\Game1\Assets\src\g\RegisterScreen.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Boss\BossData.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\TroChoi\MiniGame.cs" />
+    <Compile Include="Assets\Scripts\Game4\BallInfo.cs" />
+    <Compile Include="Assets\Scripts\Game3\MyKeyMap.cs" />
+    <Compile Include="Assets\Scripts\Game5\PKFlag.cs" />
+    <Compile Include="Assets\Scripts\Game1\EffectPanel.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Chung\HopNhapChu.cs" />
+    <Compile Include="Assets\Scripts\Game1\mResources.cs" />
+    <Compile Include="Assets\Scripts\Game6\Char.cs" />
+    <Compile Include="Assets\Scripts\Game4\ChooseCharScr.cs" />
+    <Compile Include="Assets\Scripts\Game4\Session_ME2.cs" />
+    <Compile Include="Assets\Scripts\Game4\TabClanIcon.cs" />
+    <Compile Include="Assets\Scripts\Game6\Session_ME2.cs" />
+    <Compile Include="Assets\Scripts\Game1\NinjaUtil.cs" />
+    <Compile Include="Assets\Scripts\Game3\IMapObject.cs" />
+    <Compile Include="Assets\Scripts\Game4\Waypoint.cs" />
+    <Compile Include="Assets\Scripts\Game2\Sound.cs" />
+    <Compile Include="Assets\Scripts\Game4\Controller.cs" />
+    <Compile Include="Assets\Scripts\Game6\Command.cs" />
+    <Compile Include="Assets\Scripts\Game3\mLine.cs" />
+    <Compile Include="Assets\Scripts\Game2\Paint.cs" />
+    <Compile Include="Assets\Scripts\Game3\Cout.cs" />
+    <Compile Include="Assets\Scripts\Game5\MsgDlg.cs" />
+    <Compile Include="Assets\Scripts\Game1\myReader.cs" />
+    <Compile Include="Assets\Scripts\Game2\T3.cs" />
+    <Compile Include="Assets\Scripts\Game6\Position.cs" />
+    <Compile Include="Assets\Scripts\Game3\GamePad.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Utils\Utils.cs" />
+    <Compile Include="Assets\Scripts\Game6\T3.cs" />
+    <Compile Include="Assets\Scripts\Game4\DartInfo.cs" />
+    <Compile Include="Assets\Scripts\Game1\ItemMap.cs" />
+    <Compile Include="Assets\Scripts\Game2\PlayerInfo.cs" />
+    <Compile Include="Assets\Scripts\Game6\CrackBallScr.cs" />
+    <Compile Include="Assets\Scripts\Game5\MonsterDart.cs" />
+    <Compile Include="Assets\Scripts\Game2\MobCapcha.cs" />
+    <Compile Include="Assets\Scripts\Game1\MyHashTable.cs" />
+    <Compile Include="Assets\Scripts\Game5\Panel.cs" />
+    <Compile Include="Assets\Scripts\Game3\Main.cs" />
+    <Compile Include="Assets\Scripts\Game5\IMapObject.cs" />
+    <Compile Include="Assets\Scripts\Game5\MainImage.cs" />
+    <Compile Include="Assets\Scripts\Game6\Effect.cs" />
+    <Compile Include="Assets\Scripts\Game2\iOSPlugins.cs" />
+    <Compile Include="Assets\Scripts\Game4\Position.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Player\PetService.cs" />
+    <Compile Include="Assets\Scripts\Game5\PartImage.cs" />
+    <Compile Include="Assets\Scripts\Game4\Npc.cs" />
+    <Compile Include="Assets\Scripts\Game3\ItemObject.cs" />
+    <Compile Include="Assets\Scripts\Game6\InfoDlg.cs" />
+    <Compile Include="Assets\Scripts\Game6\Paint.cs" />
+    <Compile Include="Assets\Scripts\Game3\ItemMap.cs" />
+    <Compile Include="Assets\Scripts\Game5\Service.cs" />
+    <Compile Include="Assets\Scripts\Game6\T2.cs" />
+    <Compile Include="Assets\Scripts\Game4\ImageInfo.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\TuiMoi\TuiUI.cs" />
+    <Compile Include="Assets\Scripts\Game6\EffecMn.cs" />
+    <Compile Include="Assets\Scripts\Game2\GameCanvas.cs" />
+    <Compile Include="Assets\Scripts\Game6\Panel.cs" />
+    <Compile Include="Assets\Scripts\Game6\iPhoneSettings.cs" />
+    <Compile Include="Assets\Scripts\Game2\Clan.cs" />
+    <Compile Include="Assets\Scripts\Game2\ChatBox.cs" />
+    <Compile Include="Assets\Scripts\Game2\TabCommand.cs" />
+    <Compile Include="Assets\Scripts\Game6\ipKeyboard.cs" />
+    <Compile Include="Assets\Scripts\Game4\InputStream.cs" />
+    <Compile Include="Assets\Scripts\Game3\ItemTemplates.cs" />
+    <Compile Include="Assets\Scripts\Game3\mScreen.cs" />
+    <Compile Include="Assets\Scripts\Game3\InfoPhuBan.cs" />
+    <Compile Include="Assets\Scripts\Game5\MyAudioClip.cs" />
+    <Compile Include="Assets\Scripts\Game6\Scroll.cs" />
+    <Compile Include="Assets\Scripts\Game4\MyVector.cs" />
+    <Compile Include="Assets\Scripts\Game2\Assets\src\g\ClientInput.cs" />
+    <Compile Include="Assets\Scripts\Game1\mLine.cs" />
+    <Compile Include="Assets\Scripts\Game4\ServerEffect.cs" />
+    <Compile Include="Assets\Scripts\Game2\Waypoint.cs" />
+    <Compile Include="Assets\Scripts\Game6\Line.cs" />
+    <Compile Include="Assets\Scripts\Game6\PopUpYesNo.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Boss\Boss.cs" />
+    <Compile Include="Assets\Scripts\Game5\IChatable.cs" />
+    <Compile Include="Assets\Scripts\Game1\CharChild.cs" />
+    <Compile Include="Assets\Scripts\Game6\Effect2.cs" />
+    <Compile Include="Assets\Scripts\Game3\Key.cs" />
+    <Compile Include="Assets\Scripts\Game6\Task.cs" />
+    <Compile Include="Assets\Scripts\Game1\TaskTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game6\TouchScreenKeyboardType.cs" />
+    <Compile Include="Assets\Scripts\Game2\Friend.cs" />
+    <Compile Include="Assets\Scripts\Game1\ChatPopup.cs" />
+    <Compile Include="Assets\Scripts\Game5\myWriter.cs" />
+    <Compile Include="Assets\Scripts\Game2\KeyConstant.cs" />
+    <Compile Include="Assets\Scripts\Game5\EPosition.cs" />
+    <Compile Include="Assets\Scripts\Game1\ServerListScreen.cs" />
+    <Compile Include="Assets\Scripts\Game5\Command.cs" />
+    <Compile Include="Assets\Scripts\Game1\StaticObj.cs" />
+    <Compile Include="Assets\Scripts\Game4\Timer.cs" />
+    <Compile Include="Assets\Scripts\Game6\ScreenPointer.cs" />
+    <Compile Include="Assets\Scripts\Game5\GameCanvas.cs" />
+    <Compile Include="Assets\Scripts\Game5\ActionChat.cs" />
+    <Compile Include="Assets\Scripts\Game5\SkillPaint.cs" />
+    <Compile Include="Assets\Scripts\Game5\Image.cs" />
+    <Compile Include="Assets\Scripts\Game3\myReader.cs" />
+    <Compile Include="Assets\Scripts\Game3\ClanImage.cs" />
+    <Compile Include="Assets\Scripts\Game4\SkillOptionTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game1\ActionUpdate.cs" />
+    <Compile Include="Assets\Scripts\Game1\EffectChar.cs" />
+    <Compile Include="Assets\Scripts\Game6\Rms.cs" />
+    <Compile Include="Assets\Scripts\Game4\mLine.cs" />
+    <Compile Include="Assets\Scripts\Game6\mResources.cs" />
+    <Compile Include="Assets\Scripts\Game3\Res.cs" />
+    <Compile Include="Assets\Scripts\Game6\Assets\src\g\PetFollow.cs" />
+    <Compile Include="Assets\Scripts\Game3\Command.cs" />
+    <Compile Include="Assets\Scripts\Game1\T3.cs" />
+    <Compile Include="Assets\Scripts\Game5\Menu.cs" />
+    <Compile Include="Assets\Scripts\Game1\MoneyCharge.cs" />
+    <Compile Include="Assets\Scripts\Game5\MyKeyMap.cs" />
+    <Compile Include="Assets\Scripts\Game1\Assets\src\g\PetFollow.cs" />
+    <Compile Include="Assets\Scripts\Game4\SkillOption.cs" />
+    <Compile Include="Assets\Scripts\Game2\ListNew.cs" />
+    <Compile Include="Assets\Scripts\Game1\ScaleGUI.cs" />
+    <Compile Include="Assets\Scripts\Game4\Rms.cs" />
+    <Compile Include="Assets\Scripts\Game3\T1.cs" />
+    <Compile Include="Assets\Scripts\Game1\Controller.cs" />
+    <Compile Include="Assets\Scripts\Game3\Assets\src\g\PetFollow.cs" />
+    <Compile Include="Assets\Scripts\Game3\ChatBox.cs" />
+    <Compile Include="Assets\Scripts\Game1\SkillPaint.cs" />
+    <Compile Include="Assets\Scripts\Game6\ChatBox.cs" />
+    <Compile Include="Assets\Scripts\Game5\Assets\src\g\Mabu.cs" />
+    <Compile Include="Assets\Scripts\Game4\TextInfo.cs" />
+    <Compile Include="Assets\Scripts\Game6\InputDlg.cs" />
+    <Compile Include="Assets\Scripts\Game1\TabClanIcon.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\BossList\BossUI.cs" />
+    <Compile Include="Assets\Scripts\Game4\mGraphics.cs" />
+    <Compile Include="Assets\Scripts\Game4\Net.cs" />
+    <Compile Include="Assets\Scripts\Game4\Assets\src\g\ImageSource.cs" />
+    <Compile Include="Assets\Scripts\Game4\T2.cs" />
+    <Compile Include="Assets\Scripts\Game1\GameCanvas.cs" />
+    <Compile Include="Assets\Scripts\Game3\Controller.cs" />
+    <Compile Include="Assets\Scripts\Game4\myReader.cs" />
+    <Compile Include="Assets\Scripts\Game5\mScreen.cs" />
+    <Compile Include="Assets\Scripts\Game1\MobCapcha.cs" />
+    <Compile Include="Assets\Scripts\Game4\MotherCanvas.cs" />
+    <Compile Include="Assets\Scripts\Game2\ItemOptionTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game4\MainImage.cs" />
+    <Compile Include="Assets\Scripts\Game1\NClass.cs" />
+    <Compile Include="Assets\Scripts\TabManagement.cs" />
+    <Compile Include="Assets\Scripts\Game3\FrameImage.cs" />
+    <Compile Include="Assets\Scripts\Game5\Item.cs" />
+    <Compile Include="Assets\Scripts\Game2\SkillPaint.cs" />
+    <Compile Include="Assets\Scripts\Game3\TileMap.cs" />
+    <Compile Include="Assets\Scripts\Game1\ActionPaint.cs" />
+    <Compile Include="Assets\Scripts\Game3\Assets\src\e\Small.cs" />
+    <Compile Include="Assets\Scripts\Game3\SMS.cs" />
+    <Compile Include="Assets\Scripts\Game3\ScaleGUI.cs" />
+    <Compile Include="Assets\Scripts\Game5\EffectTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game4\GameCanvas.cs" />
+    <Compile Include="Assets\Scripts\Game5\CharChild.cs" />
+    <Compile Include="Assets\Scripts\Game4\iOSPlugins.cs" />
+    <Compile Include="Assets\Scripts\Game4\PlayerDart.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Player\TypePoint.cs" />
+    <Compile Include="Assets\Scripts\Game3\ItemOptionTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game4\MyAudioClip.cs" />
+    <Compile Include="Assets\Scripts\Game6\ScrollResult.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Item\Items.cs" />
+    <Compile Include="Assets\Scripts\Game1\SoundMn.cs" />
+    <Compile Include="Assets\Scripts\Game2\Dialog.cs" />
+    <Compile Include="Assets\Scripts\Game2\EffecMn.cs" />
+    <Compile Include="Assets\Scripts\Game5\TransportScr.cs" />
+    <Compile Include="Assets\Scripts\Game6\TopInfo.cs" />
+    <Compile Include="Assets\Scripts\Game4\ClanMessage.cs" />
+    <Compile Include="Assets\Scripts\Game6\Info_RadaScr.cs" />
+    <Compile Include="Assets\Scripts\Game1\Char.cs" />
+    <Compile Include="Assets\Scripts\Game4\ChatTextField.cs" />
+    <Compile Include="Assets\Scripts\Game2\mLine.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Skill\nSkill.cs" />
+    <Compile Include="Assets\Scripts\Game4\BgItemMn.cs" />
+    <Compile Include="Assets\Scripts\Game2\EffectInfoPaint.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Mob\Mobs.cs" />
+    <Compile Include="Assets\Scripts\Game2\PartImage.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Boss\Boss.cs" />
+    <Compile Include="Assets\Scripts\Game6\InputStream.cs" />
+    <Compile Include="Assets\Scripts\Game2\Frame.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Boss\Boss.cs" />
+    <Compile Include="Assets\Scripts\Game5\VoiceChat.cs" />
+    <Compile Include="Assets\Scripts\Game5\SkillOptionTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game6\Frame.cs" />
+    <Compile Include="Assets\Scripts\Game6\MsgDlg.cs" />
+    <Compile Include="Assets\Scripts\Game5\Assets\src\g\RegisterScreen.cs" />
+    <Compile Include="Assets\Scripts\Game3\Message.cs" />
+    <Compile Include="Assets\Scripts\Game4\Message.cs" />
+    <Compile Include="Assets\Scripts\Game3\BallInfo.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Chung\HopNhapChu.cs" />
+    <Compile Include="Assets\Scripts\Game5\ISession.cs" />
+    <Compile Include="Assets\Scripts\Game4\Cout.cs" />
+    <Compile Include="Assets\Scripts\Game5\SplashScr.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\MenuTong\MenuTongUI.cs" />
+    <Compile Include="Assets\Scripts\Game1\TabControl.cs" />
+    <Compile Include="Assets\Scripts\Game3\Rms.cs" />
+    <Compile Include="Assets\Scripts\Game5\TField.cs" />
+    <Compile Include="Assets\Scripts\Game2\Net.cs" />
+    <Compile Include="Assets\Scripts\Game3\ClanObject.cs" />
+    <Compile Include="Assets\Scripts\Game1\EffectFeet.cs" />
+    <Compile Include="Assets\Scripts\Game2\Item.cs" />
+    <Compile Include="Assets\Scripts\Game4\ImgByName.cs" />
+    <Compile Include="Assets\Scripts\Game3\mResources.cs" />
+    <Compile Include="Assets\Scripts\Game5\BgItem.cs" />
+    <Compile Include="Assets\Scripts\Game5\EffectChar.cs" />
+    <Compile Include="Assets\Scripts\Game2\Arrowpaint.cs" />
+    <Compile Include="Assets\Scripts\Game5\ChatTextField.cs" />
+    <Compile Include="Assets\Scripts\Game6\NewBoss.cs" />
+    <Compile Include="Assets\Scripts\Game4\MapTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game1\PopUpYesNo.cs" />
+    <Compile Include="Assets\Scripts\Game5\Assets\src\e\Small.cs" />
+    <Compile Include="Assets\Scripts\Game2\MapTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game2\Rms.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Chung\BanPhimSo.cs" />
+    <Compile Include="Assets\Scripts\Game6\Key.cs" />
+    <Compile Include="Assets\Scripts\Game5\PlayerInfo.cs" />
+    <Compile Include="Assets\Scripts\Game1\ItemObject.cs" />
+    <Compile Include="Assets\Scripts\Game2\SkillOption.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Map\MapController.cs" />
+    <Compile Include="Assets\Scripts\Game2\myReader.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\PhucLoi\PhucLoiUI.cs" />
+    <Compile Include="Assets\Scripts\Game3\DataInputStream.cs" />
+    <Compile Include="Assets\Scripts\Game2\MyRandom.cs" />
+    <Compile Include="Assets\Scripts\Game2\ItemMap.cs" />
+    <Compile Include="Assets\Scripts\Game1\Message.cs" />
+    <Compile Include="Assets\Scripts\Game3\StaticObj.cs" />
+    <Compile Include="Assets\Scripts\Game1\MovePoint.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Player\PetService.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Mob\Mobs.cs" />
+    <Compile Include="Assets\Scripts\Game6\MapTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game6\Message.cs" />
+    <Compile Include="Assets\Scripts\Game4\SkillInfoPaint.cs" />
+    <Compile Include="Assets\Scripts\Game5\PlayerDart.cs" />
+    <Compile Include="Assets\Scripts\Game1\GamePad.cs" />
+    <Compile Include="Assets\Scripts\Game4\Math.cs" />
+    <Compile Include="Assets\Scripts\Game5\EffectManager.cs" />
+    <Compile Include="Assets\Scripts\Game6\ActionChat.cs" />
+    <Compile Include="Assets\Scripts\Game3\ScreenPointer.cs" />
+    <Compile Include="Assets\Scripts\Game3\ScrollResult.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Chung\BanPhimSo.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Player\Revive.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Player\PlayerInfo.cs" />
+    <Compile Include="Assets\Scripts\Game2\Assets\src\g\RegisterScreen.cs" />
+    <Compile Include="Assets\Scripts\Game4\Clan.cs" />
+    <Compile Include="Assets\Scripts\Game5\ArrayCast.cs" />
+    <Compile Include="Assets\Scripts\Game1\EffectPaint.cs" />
+    <Compile Include="Assets\Scripts\Game6\SkillTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game2\SkillInfoPaint.cs" />
+    <Compile Include="Assets\Scripts\Game3\myWriter.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\TroChoi\TroChoiUI.cs" />
+    <Compile Include="Assets\Scripts\Game3\ClanManager.cs" />
+    <Compile Include="Assets\Scripts\Game4\EffectFeet.cs" />
+    <Compile Include="Assets\Scripts\Game6\Waypoint.cs" />
+    <Compile Include="Assets\Scripts\Game4\T1.cs" />
+    <Compile Include="Assets\Scripts\Game5\mLine.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Player\PlayerInfo.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Chung\NhatKy.cs" />
+    <Compile Include="Assets\Scripts\Game4\SmallImage.cs" />
+    <Compile Include="Assets\Scripts\Game1\BgItemMn.cs" />
+    <Compile Include="Assets\Scripts\Game5\iPhoneSettings.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\TroChoi\MiniGame.cs" />
+    <Compile Include="Assets\Scripts\Game3\PopUp.cs" />
+    <Compile Include="Assets\Scripts\Game2\Cmd.cs" />
+    <Compile Include="Assets\Scripts\Game6\EffectPanel.cs" />
+    <Compile Include="Assets\Scripts\Game1\Frame.cs" />
+    <Compile Include="Assets\Scripts\Game2\HTTPHandler.cs" />
+    <Compile Include="Assets\Scripts\Game4\Part.cs" />
+    <Compile Include="Assets\Scripts\Game6\IMapObject.cs" />
+    <Compile Include="Assets\Scripts\Game2\ItemOption.cs" />
+    <Compile Include="Assets\Scripts\Game3\MyVector.cs" />
+    <Compile Include="Assets\Scripts\Game5\ItemOption.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\PhucLoi\PhucLoiUI.cs" />
+    <Compile Include="Assets\Scripts\Game6\LoginScr.cs" />
+    <Compile Include="Assets\Scripts\Game1\ImgByName.cs" />
+    <Compile Include="Assets\Scripts\Game1\Clan.cs" />
+    <Compile Include="Assets\Scripts\Game2\EffectCharPaint.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Boss\Boss.cs" />
+    <Compile Include="Assets\Scripts\Game1\VoiceChat.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Map\MapController.cs" />
+    <Compile Include="Assets\Scripts\Game1\NpcTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game4\Frame.cs" />
+    <Compile Include="Assets\Scripts\Game1\DartInfo.cs" />
+    <Compile Include="Assets\Scripts\Game1\EffectInfoPaint.cs" />
+    <Compile Include="Assets\Scripts\Game1\ItemTemplates.cs" />
+    <Compile Include="Assets\Scripts\Game1\Rms.cs" />
+    <Compile Include="Assets\Scripts\Game4\InfoPhuBan.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Player\ListChars.cs" />
+    <Compile Include="Assets\Scripts\Game4\T3.cs" />
+    <Compile Include="Assets\Scripts\Game4\mSystem.cs" />
+    <Compile Include="Assets\Scripts\Game5\EffecMn.cs" />
+    <Compile Include="Assets\Scripts\Game2\Assets\src\e\SmallSave.cs" />
+    <Compile Include="Assets\Scripts\Game6\ArrayCast.cs" />
+    <Compile Include="Assets\Scripts\Game1\ScreenPointer.cs" />
+    <Compile Include="Assets\Scripts\Game2\ScreenPointer.cs" />
+    <Compile Include="Assets\Scripts\Game1\ServerScr.cs" />
+    <Compile Include="Assets\Scripts\Game3\ipKeyboard.cs" />
+    <Compile Include="Assets\Scripts\Game4\SkillTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game2\mGraphics.cs" />
+    <Compile Include="Assets\Scripts\Game6\EffectPaint.cs" />
+    <Compile Include="Assets\Scripts\Game6\ClanMessage.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Boss\BossData.cs" />
+    <Compile Include="Assets\Scripts\Game5\Controller.cs" />
+    <Compile Include="Assets\Scripts\Game3\Timer.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Voice\VoiceConfigUI.cs" />
+    <Compile Include="Assets\Scripts\Game1\myWriter.cs" />
+    <Compile Include="Assets\Scripts\Game6\BackgroudEffect.cs" />
+    <Compile Include="Assets\Scripts\Game3\RadarScr.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\TroChoi\MiniGame.cs" />
+    <Compile Include="Assets\Scripts\Game2\ActionChat.cs" />
+    <Compile Include="Assets\Scripts\Game6\ItemObject.cs" />
+    <Compile Include="Assets\Scripts\Game1\FrameImage.cs" />
+    <Compile Include="Assets\Scripts\Game1\BachTuoc.cs" />
+    <Compile Include="Assets\Scripts\Game6\EffectCharPaint.cs" />
+    <Compile Include="Assets\Scripts\Game3\Friend.cs" />
+    <Compile Include="Assets\Scripts\Game5\InfoItem.cs" />
+    <Compile Include="Assets\Scripts\Game1\NewPanel.cs" />
+    <Compile Include="Assets\Scripts\Game3\Mob.cs" />
+    <Compile Include="Assets\Scripts\Game3\GameScr.cs" />
+    <Compile Include="Assets\Scripts\Game3\SmallImage.cs" />
+    <Compile Include="Assets\Scripts\Game1\ChooseCharScr.cs" />
+    <Compile Include="Assets\Scripts\Game6\MoneyCharge.cs" />
+    <Compile Include="Assets\Scripts\Game4\NClass.cs" />
+    <Compile Include="Assets\Scripts\Game5\Effect2.cs" />
+    <Compile Include="Assets\Scripts\Game6\TabCommand.cs" />
+    <Compile Include="Assets\Scripts\Game4\ArrayCast.cs" />
+    <Compile Include="Assets\Scripts\Game4\PKFlag.cs" />
+    <Compile Include="Assets\Scripts\Game1\PopUp.cs" />
+    <Compile Include="Assets\Scripts\Game6\MyKeyMap.cs" />
+    <Compile Include="Assets\Scripts\Game2\ItemTemplates.cs" />
+    <Compile Include="Assets\Scripts\Game6\ItemTemplate.cs" />
+    <Compile Include="Assets\Scripts\TabType.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\TuiMoi\TuiUI.cs" />
+    <Compile Include="Assets\Scripts\Game3\SoundMn.cs" />
+    <Compile Include="Assets\Scripts\Game4\IPaint.cs" />
+    <Compile Include="Assets\Scripts\Game1\InputStream.cs" />
+    <Compile Include="Assets\Scripts\Game3\BgItem.cs" />
+    <Compile Include="Assets\Scripts\Game6\FireWorkMn.cs" />
+    <Compile Include="Assets\Scripts\Game6\ImageInfo.cs" />
+    <Compile Include="Assets\Scripts\Game1\EffecMn.cs" />
+    <Compile Include="Assets\Scripts\Game6\ActionUpdate.cs" />
+    <Compile Include="Assets\Scripts\Game3\EffectData.cs" />
+    <Compile Include="Assets\Scripts\Game5\MoneyCharge.cs" />
+    <Compile Include="Assets\Scripts\Game5\ChatPopup.cs" />
+    <Compile Include="Assets\Scripts\Game6\BgItem.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\PhucLoi\PhucLoiUI.cs" />
+    <Compile Include="Assets\Scripts\Game3\Char.cs" />
+    <Compile Include="Assets\Scripts\Game2\TaskTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game4\Effect_End.cs" />
+    <Compile Include="Assets\Scripts\Game6\EffectChar.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Voice\VoiceConfigUI.cs" />
+    <Compile Include="Assets\Scripts\Game4\Menu.cs" />
+    <Compile Include="Assets\Scripts\Game3\NinjaUtil.cs" />
+    <Compile Include="Assets\Scripts\Game4\ChatPopup.cs" />
+    <Compile Include="Assets\Scripts\Game2\Char.cs" />
+    <Compile Include="Assets\Scripts\Game3\LoginScr.cs" />
+    <Compile Include="Assets\Scripts\Game2\Key.cs" />
+    <Compile Include="Assets\Scripts\Game1\ListNew.cs" />
+    <Compile Include="Assets\Scripts\Game5\EffectData.cs" />
+    <Compile Include="Assets\Scripts\Game3\EffectManager.cs" />
+    <Compile Include="Assets\Scripts\Game6\PopUp.cs" />
+    <Compile Include="Assets\Scripts\Game2\EffectFeet.cs" />
+    <Compile Include="Assets\Scripts\Game5\ItemMap.cs" />
+    <Compile Include="Assets\Scripts\Game3\MobTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game4\ClanManager.cs" />
+    <Compile Include="Assets\Scripts\Game5\Res.cs" />
+    <Compile Include="Assets\Scripts\Game1\ImageInfo.cs" />
+    <Compile Include="Assets\Scripts\Game6\Teleport.cs" />
+    <Compile Include="Assets\Scripts\Game1\ItemOptionTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game5\MotherCanvas.cs" />
+    <Compile Include="Assets\Scripts\Game6\ServerListScreen.cs" />
+    <Compile Include="Assets\Scripts\Game4\FireWorkMn.cs" />
+    <Compile Include="Assets\Scripts\Game6\MobTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Player\PetService.cs" />
+    <Compile Include="Assets\Scripts\Game3\ItemTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Chung\NhatKy.cs" />
+    <Compile Include="Assets\Scripts\Game3\HTTPHandler.cs" />
+    <Compile Include="Assets\Scripts\Game1\MainImage.cs" />
+    <Compile Include="Assets\Scripts\Game3\MoneyCharge.cs" />
+    <Compile Include="Assets\Scripts\Game4\Main.cs" />
+    <Compile Include="Assets\Scripts\Game6\mGraphics.cs" />
+    <Compile Include="Assets\Scripts\Game1\TransportScr.cs" />
+    <Compile Include="Assets\Scripts\Game1\MyVector.cs" />
+    <Compile Include="Assets\Scripts\Game1\Item.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Item\ItemGroup.cs" />
+    <Compile Include="Assets\Scripts\Game1\InfoMe.cs" />
+    <Compile Include="Assets\Scripts\Game4\Assets\src\g\Mabu.cs" />
+    <Compile Include="Assets\Scripts\Game5\Paint.cs" />
+    <Compile Include="Assets\Scripts\Game1\Service.cs" />
+    <Compile Include="Assets\Scripts\Game1\Cout.cs" />
+    <Compile Include="Assets\Scripts\Game4\SkillPaint.cs" />
+    <Compile Include="Assets\Scripts\Game3\SkillOptionTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game5\TabCommand.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Boss\BossData.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\MenuTong\MenuTongUI.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Boss\BossData.cs" />
+    <Compile Include="Assets\Scripts\Game1\KeyConstant.cs" />
+    <Compile Include="Assets\Scripts\Game2\mFont.cs" />
+    <Compile Include="Assets\Scripts\Game4\Line.cs" />
+    <Compile Include="Assets\Scripts\Game2\Sprite.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Mob\MobController.cs" />
+    <Compile Include="Assets\Scripts\Game4\IActionListener.cs" />
+    <Compile Include="Assets\Scripts\Game6\RadarScr.cs" />
+    <Compile Include="Assets\Scripts\Game3\VoiceChat.cs" />
+    <Compile Include="Assets\Scripts\Game6\TextInfo.cs" />
+    <Compile Include="Assets\Scripts\Game6\TabClanIcon.cs" />
+    <Compile Include="Assets\Scripts\Game6\Timer.cs" />
+    <Compile Include="Assets\Scripts\Game5\Assets\src\g\GameInfo.cs" />
+    <Compile Include="Assets\Scripts\Game2\ItemTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game4\Assets\src\g\RegisterScreen.cs" />
+    <Compile Include="Assets\Scripts\Game6\EffectInfoPaint.cs" />
+    <Compile Include="Assets\Scripts\Game3\IChatable.cs" />
+    <Compile Include="Assets\Scripts\Game3\Assets\src\e\SmallSave.cs" />
+    <Compile Include="Assets\Scripts\Game3\BaseCommand.cs" />
+    <Compile Include="Assets\Scripts\Game1\PartImage.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Player\ListChars.cs" />
+    <Compile Include="Assets\Scripts\Game5\Friend.cs" />
+    <Compile Include="Assets\Scripts\Game4\MyHashTable.cs" />
+    <Compile Include="Assets\Scripts\Game4\ScrollResult.cs" />
+    <Compile Include="Assets\Scripts\Game6\ChatPopup.cs" />
+    <Compile Include="Assets\Scripts\Game6\ActionPaint.cs" />
+    <Compile Include="Assets\Scripts\Game1\IMessageHandler.cs" />
+    <Compile Include="Assets\Scripts\Game5\DataInputStream.cs" />
+    <Compile Include="Assets\Scripts\Game6\MyAudioClip.cs" />
+    <Compile Include="Assets\Scripts\Game6\BachTuoc.cs" />
+    <Compile Include="Assets\Scripts\Game3\mSystem.cs" />
+    <Compile Include="Assets\Scripts\Game2\DataOutputStream.cs" />
+    <Compile Include="Assets\Scripts\Game1\BallInfo.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Boss\BossData.cs" />
+    <Compile Include="Assets\Scripts\Game2\Assets\src\f\Controller2.cs" />
+    <Compile Include="Assets\Scripts\Game4\CreateCharScr.cs" />
+    <Compile Include="Assets\Scripts\Game2\Math.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Mob\MobController.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\TroChoi\TroChoiUI.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\SuKien\SuKienUI.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\TroChoi\TroChoiUI.cs" />
+    <Compile Include="Assets\Scripts\Game2\iPhoneGeneration.cs" />
+    <Compile Include="Assets\Scripts\Game1\TabCommand.cs" />
+    <Compile Include="Assets\Scripts\Game1\InfoItem.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Chung\HopNhapChu.cs" />
+    <Compile Include="Assets\Scripts\Game2\Position.cs" />
+    <Compile Include="Assets\Scripts\Game2\Message.cs" />
+    <Compile Include="Assets\Scripts\Game2\BackgroudEffect.cs" />
+    <Compile Include="Assets\Scripts\Game5\TouchScreenKeyboard.cs" />
+    <Compile Include="Assets\Scripts\Game3\ISession.cs" />
+    <Compile Include="Assets\Scripts\Game5\Session_ME.cs" />
+    <Compile Include="Assets\Scripts\Game3\ClanMessage.cs" />
+    <Compile Include="Assets\Scripts\Game5\InfoMe.cs" />
+    <Compile Include="Assets\Scripts\Game5\Firework.cs" />
+    <Compile Include="Assets\Scripts\Game1\Res.cs" />
+    <Compile Include="Assets\Scripts\Game4\LoginScr.cs" />
+    <Compile Include="Assets\Scripts\Game1\SmallImage.cs" />
+    <Compile Include="Assets\Scripts\Game5\Assets\src\e\ChatVip.cs" />
+    <Compile Include="Assets\Scripts\Game3\Position.cs" />
+    <Compile Include="Assets\Scripts\Game5\MyRandom.cs" />
+    <Compile Include="Assets\Scripts\Game3\EffecMn.cs" />
+    <Compile Include="Assets\Scripts\Game2\IKbAction.cs" />
+    <Compile Include="Assets\Scripts\Game2\SmallImage.cs" />
+    <Compile Include="Assets\Scripts\Game2\TabControl.cs" />
+    <Compile Include="Assets\Scripts\Game6\Assets\src\e\Small.cs" />
+    <Compile Include="Assets\Scripts\Game5\MagicTree.cs" />
+    <Compile Include="Assets\Scripts\Game4\ServerScr.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Co\CoUI.cs" />
+    <Compile Include="Assets\Scripts\Game2\TouchScreenKeyboard.cs" />
+    <Compile Include="Assets\Scripts\Game6\ClanImage.cs" />
+    <Compile Include="Assets\Scripts\Game6\Main.cs" />
+    <Compile Include="Assets\Scripts\Game2\Assets\src\g\BigBoss.cs" />
+    <Compile Include="Assets\Scripts\Game1\mFont.cs" />
+    <Compile Include="Assets\Scripts\Game3\Assets\src\g\ClientInput.cs" />
+    <Compile Include="Assets\Scripts\Game1\EffectTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Item\Items.cs" />
+    <Compile Include="Assets\Scripts\Game2\ScrollResult.cs" />
+    <Compile Include="Assets\Scripts\Game6\TField.cs" />
+    <Compile Include="Assets\Scripts\Game2\EffectTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game6\GameCanvas.cs" />
+    <Compile Include="Assets\Scripts\Game2\ClanManager.cs" />
+    <Compile Include="Assets\Scripts\Game2\InputDlg.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Map\MapController.cs" />
+    <Compile Include="Assets\Scripts\Game1\Menu.cs" />
+    <Compile Include="Assets\Scripts\Game3\ItemTime.cs" />
+    <Compile Include="Assets\Scripts\Game2\InfoDlg.cs" />
+    <Compile Include="Assets\Scripts\Game4\Firework.cs" />
+    <Compile Include="Assets\Scripts\Game5\Effect_End.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Player\NPoint.cs" />
+    <Compile Include="Assets\Scripts\Game6\ItemTemplates.cs" />
+    <Compile Include="Assets\Scripts\Game4\IChatable.cs" />
+    <Compile Include="Assets\Scripts\Game3\CharChild.cs" />
+    <Compile Include="Assets\Scripts\Game5\ItemTime.cs" />
+    <Compile Include="Assets\Scripts\Game3\Effect2.cs" />
+    <Compile Include="Assets\Scripts\Game1\Sound.cs" />
+    <Compile Include="Assets\Scripts\Game1\ClanObject.cs" />
+    <Compile Include="Assets\Scripts\Game5\TabControl.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Chat\ChatUI.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\TuiMoi\TuiUI.cs" />
+    <Compile Include="Assets\Scripts\Game6\KeyConstant.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\TroChoi\TroChoiUI.cs" />
+    <Compile Include="Assets\Scripts\Game6\InfoMe.cs" />
+    <Compile Include="Assets\Scripts\Game3\Sound.cs" />
+    <Compile Include="Assets\Scripts\Game4\Assets\src\g\PetFollow.cs" />
+    <Compile Include="Assets\Scripts\Game1\Math.cs" />
+    <Compile Include="Assets\Scripts\Game6\ServerScr.cs" />
+    <Compile Include="Assets\Scripts\Game3\GameCanvas.cs" />
+    <Compile Include="Assets\Scripts\Game6\Service.cs" />
+    <Compile Include="Assets\Scripts\Game6\PKFlag.cs" />
+    <Compile Include="Assets\Scripts\Game2\NpcTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game5\MyVector.cs" />
+    <Compile Include="Assets\Scripts\Game4\ServerListScreen.cs" />
+    <Compile Include="Assets\Scripts\Game4\mResources.cs" />
+    <Compile Include="Assets\Scripts\Game1\Assets\src\e\ChatVip.cs" />
+    <Compile Include="Assets\Scripts\Game1\BigBoss2.cs" />
+    <Compile Include="Assets\Scripts\Game4\TransportScr.cs" />
+    <Compile Include="Assets\Scripts\Game1\ChatTextField.cs" />
+    <Compile Include="Assets\Scripts\Game4\ItemOptionTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game3\Net.cs" />
+    <Compile Include="Assets\Scripts\Game3\ImageInfo.cs" />
+    <Compile Include="Assets\Scripts\Game3\DataOutputStream.cs" />
+    <Compile Include="Assets\Scripts\Game3\MapTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game2\Panel.cs" />
+    <Compile Include="Assets\Scripts\Game1\TouchScreenKeyboard.cs" />
+    <Compile Include="Assets\Scripts\Game3\MainImage.cs" />
+    <Compile Include="Assets\Scripts\Game4\ClanObject.cs" />
+    <Compile Include="Assets\Scripts\Game5\Mob.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\SuKien\SuKienUI.cs" />
+    <Compile Include="Assets\Scripts\Game6\EPosition.cs" />
+    <Compile Include="Assets\Scripts\Game1\Cmd.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Skill\nSkill.cs" />
+    <Compile Include="Assets\Scripts\Game2\Cout.cs" />
+    <Compile Include="Assets\Scripts\Game1\Friend.cs" />
+    <Compile Include="Assets\Scripts\Game2\ChatTextField.cs" />
+    <Compile Include="Assets\Scripts\Game5\NewBoss.cs" />
+    <Compile Include="Assets\Scripts\Game5\ServerScr.cs" />
+    <Compile Include="Assets\Scripts\Game1\Effect_End.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Co\CoUI.cs" />
+    <Compile Include="Assets\Scripts\Game3\Assets\src\g\GameInfo.cs" />
+    <Compile Include="Assets\Scripts\Game3\MotherCanvas.cs" />
+    <Compile Include="Assets\Scripts\Game3\PlayerData.cs" />
+    <Compile Include="Assets\Scripts\Game6\Firework.cs" />
+    <Compile Include="Assets\Scripts\Game5\ClanImage.cs" />
+    <Compile Include="Assets\Scripts\Game2\mSystem.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\BossList\BossUI.cs" />
+    <Compile Include="Assets\Scripts\Game1\Assets\src\e\Small.cs" />
+    <Compile Include="Assets\Scripts\Game1\iPhoneGeneration.cs" />
+    <Compile Include="Assets\Scripts\Game3\iOSPlugins.cs" />
+    <Compile Include="Assets\Scripts\Game3\EffectChar.cs" />
+    <Compile Include="Assets\Scripts\Game3\Panel.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Player\Revive.cs" />
+    <Compile Include="Assets\Scripts\Game5\InfoDlg.cs" />
+    <Compile Include="Assets\Scripts\Game5\EffectFeet.cs" />
+    <Compile Include="Assets\Scripts\Game1\Command.cs" />
+    <Compile Include="Assets\Scripts\Game5\Assets\src\g\BigBoss.cs" />
+    <Compile Include="Assets\Scripts\Game6\myReader.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Skill\nSkill.cs" />
+    <Compile Include="Assets\Scripts\Game3\MyAudioClip.cs" />
+    <Compile Include="Assets\Scripts\Game3\Service.cs" />
+    <Compile Include="Assets\Scripts\Game1\ArrayCast.cs" />
+    <Compile Include="Assets\Scripts\Game6\PlayerDart.cs" />
+    <Compile Include="Assets\Scripts\Game5\Sound.cs" />
+    <Compile Include="Assets\Scripts\Game4\VoiceChat.cs" />
+    <Compile Include="Assets\Scripts\Game5\Char.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Chung\HopNhapChu.cs" />
+    <Compile Include="Assets\Scripts\Game4\Layer.cs" />
+    <Compile Include="Assets\Scripts\Game4\Task.cs" />
+    <Compile Include="Assets\Scripts\Game3\PopUpYesNo.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\PhucLoi\PhucLoiUI.cs" />
+    <Compile Include="Assets\Scripts\Game2\BgItemMn.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Mob\Mobs.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\BossList\BossUI.cs" />
+    <Compile Include="Assets\Scripts\Game4\Effect.cs" />
+    <Compile Include="Assets\Scripts\Game5\Waypoint.cs" />
+    <Compile Include="Assets\Scripts\Game1\Assets\src\f\Controller2.cs" />
+    <Compile Include="Assets\Scripts\Game1\Arrowpaint.cs" />
+    <Compile Include="Assets\Scripts\Game4\iPhoneGeneration.cs" />
+    <Compile Include="Assets\Scripts\Game5\iOSPlugins.cs" />
+    <Compile Include="Assets\Scripts\Game2\MyVector.cs" />
+    <Compile Include="Assets\Scripts\Game3\ActionPaint.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\TuiMoi\TuiUI.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Utils\Utils.cs" />
+    <Compile Include="Assets\Scripts\Game4\Teleport.cs" />
+    <Compile Include="Assets\Scripts\Game5\SMS.cs" />
+    <Compile Include="Assets\Scripts\Game3\MyRandom.cs" />
+    <Compile Include="Assets\Scripts\Game1\BackgroudEffect.cs" />
+    <Compile Include="Assets\Scripts\Game2\MoneyCharge.cs" />
+    <Compile Include="Assets\Scripts\Game3\InfoMe.cs" />
+    <Compile Include="Assets\Scripts\Game2\Firework.cs" />
+    <Compile Include="Assets\Scripts\Game2\MyStream.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Player\NPoint.cs" />
+    <Compile Include="Assets\Scripts\Game3\IActionListener.cs" />
+    <Compile Include="Assets\Scripts\Game2\Effect.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\TroChoi\MiniGame.cs" />
+    <Compile Include="Assets\Scripts\Game5\Archivement.cs" />
+    <Compile Include="Assets\Scripts\Game6\NewPanel.cs" />
+    <Compile Include="Assets\Scripts\Game2\MsgDlg.cs" />
+    <Compile Include="Assets\Scripts\Game6\ServerEffect.cs" />
+    <Compile Include="Assets\Scripts\Game2\SplashScr.cs" />
+    <Compile Include="Assets\Scripts\Game4\Point.cs" />
+    <Compile Include="Assets\Scripts\Game6\mFont.cs" />
+    <Compile Include="Assets\Scripts\Game5\MyStream.cs" />
+    <Compile Include="Assets\Scripts\Game6\SkillOptionTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game3\NClass.cs" />
+    <Compile Include="Assets\Scripts\Game3\TaskOrder.cs" />
+    <Compile Include="Assets\Scripts\Game5\Dialog.cs" />
+    <Compile Include="Assets\Scripts\Game6\Dialog.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Co\CoUI.cs" />
+    <Compile Include="Assets\Scripts\Game1\Net.cs" />
+    <Compile Include="Assets\Scripts\Game5\BaseCommand.cs" />
+    <Compile Include="Assets\Scripts\Game5\ClanObject.cs" />
+    <Compile Include="Assets\Scripts\Game2\TopInfo.cs" />
+    <Compile Include="Assets\Scripts\Game3\Skill.cs" />
+    <Compile Include="Assets\Scripts\Game3\MyHashTable.cs" />
+    <Compile Include="Assets\Scripts\Game4\Effect2.cs" />
+    <Compile Include="Assets\Scripts\Game3\MonsterDart.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Player\Revive.cs" />
+    <Compile Include="Assets\Scripts\Game1\Assets\src\g\Mabu.cs" />
+    <Compile Include="Assets\Scripts\Game4\EffecMn.cs" />
+    <Compile Include="Assets\Scripts\Game5\ServerEffect.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\TroChoi\TroChoiUI.cs" />
+    <Compile Include="Assets\Scripts\Game1\RadarScr.cs" />
+    <Compile Include="Assets\Scripts\Game4\Sound.cs" />
+    <Compile Include="Assets\Scripts\Game6\NClass.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Skill\nSkill.cs" />
+    <Compile Include="Assets\Scripts\Game4\Scroll.cs" />
+    <Compile Include="Assets\Scripts\Game3\SkillTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game2\MyHashTable.cs" />
+    <Compile Include="Assets\Scripts\Game5\Line.cs" />
+    <Compile Include="Assets\Scripts\Game2\DataInputStream.cs" />
+    <Compile Include="Assets\Scripts\Game6\IKbAction.cs" />
+    <Compile Include="Assets\Scripts\Game3\mGraphics.cs" />
+    <Compile Include="Assets\Scripts\Game6\EffectFeet.cs" />
+    <Compile Include="Assets\Scripts\Game1\Assets\src\g\BigBoss.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Chat\ChatUI.cs" />
+    <Compile Include="Assets\Scripts\Game3\IPaint.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Co\CoUI.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Item\ItemGroup.cs" />
+    <Compile Include="Assets\Scripts\Game2\MyKeyMap.cs" />
+    <Compile Include="Assets\Scripts\Game6\Hint.cs" />
+    <Compile Include="Assets\Scripts\Game6\SkillInfoPaint.cs" />
+    <Compile Include="Assets\Scripts\Game1\HTTPHandler.cs" />
+    <Compile Include="Assets\Scripts\Game1\TField.cs" />
+    <Compile Include="Assets\Scripts\Game5\IMessageHandler.cs" />
+    <Compile Include="Assets\Scripts\Game6\Archivement.cs" />
+    <Compile Include="Assets\Scripts\Game4\Cmd.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Player\NPoint.cs" />
+    <Compile Include="Assets\Scripts\Game3\PartImage.cs" />
+    <Compile Include="Assets\Scripts\Game3\TField.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Map\MapController.cs" />
+    <Compile Include="Assets\Scripts\Game5\GameMidlet.cs" />
+    <Compile Include="Assets\Scripts\Game5\Position.cs" />
+    <Compile Include="Assets\Scripts\Game5\EffectInfoPaint.cs" />
+    <Compile Include="Assets\Scripts\Game3\SkillPaint.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\TuiMoi\TuiUI.cs" />
+    <Compile Include="Assets\Scripts\Game5\Teleport.cs" />
+    <Compile Include="Assets\Scripts\Game2\PlayerDart.cs" />
+    <Compile Include="Assets\Scripts\Game5\CrackBallScr.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Utils\Utils.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Chon\ChonNhanhUI.cs" />
+    <Compile Include="Assets\Scripts\Game5\Assets\src\g\PetFollow.cs" />
+    <Compile Include="Assets\Scripts\Game4\InputDlg.cs" />
+    <Compile Include="Assets\Scripts\Game1\Session_ME.cs" />
+    <Compile Include="Assets\Scripts\Game4\MobTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game3\NewPanel.cs" />
+    <Compile Include="Assets\Scripts\Game4\NewBoss.cs" />
+    <Compile Include="Assets\Scripts\Game4\EffectManager.cs" />
+    <Compile Include="Assets\Scripts\Game4\InfoItem.cs" />
+    <Compile Include="Assets\Scripts\Game3\iPhoneGeneration.cs" />
+    <Compile Include="Assets\Scripts\Game4\SoundMn.cs" />
+    <Compile Include="Assets\Scripts\Game4\MoneyCharge.cs" />
+    <Compile Include="Assets\Scripts\Game4\PlayerData.cs" />
+    <Compile Include="Assets\Scripts\Game3\TabClanIcon.cs" />
+    <Compile Include="Assets\Scripts\Game5\SmallDart.cs" />
+    <Compile Include="Assets\Scripts\Game1\Npc.cs" />
+    <Compile Include="Assets\Scripts\Game4\Friend.cs" />
+    <Compile Include="Assets\Scripts\Game6\ItemTime.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\TroChoi\MiniGame.cs" />
+    <Compile Include="Assets\Scripts\Game6\IChatable.cs" />
+    <Compile Include="Assets\Scripts\Game6\Assets\src\g\Mabu.cs" />
+    <Compile Include="Assets\Scripts\Game1\T1.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\PhucLoi\PhucLoiUI.cs" />
+    <Compile Include="Assets\Scripts\Game2\ISession.cs" />
+    <Compile Include="Assets\Scripts\Game3\Task.cs" />
+    <Compile Include="Assets\Scripts\Game2\NinjaUtil.cs" />
+    <Compile Include="Assets\Scripts\Game2\PopUp.cs" />
+    <Compile Include="Assets\Scripts\Game5\SkillTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game6\BaseCommand.cs" />
+    <Compile Include="Assets\Scripts\Game1\IMapObject.cs" />
+    <Compile Include="Assets\Scripts\Game3\EPosition.cs" />
+    <Compile Include="Assets\Scripts\Game3\EffectInfoPaint.cs" />
+    <Compile Include="Assets\Scripts\Game5\myReader.cs" />
+    <Compile Include="Assets\Scripts\Game1\TileMap.cs" />
+    <Compile Include="Assets\Scripts\Game5\ListNew.cs" />
+    <Compile Include="Assets\Scripts\Game1\TaskOrder.cs" />
+    <Compile Include="Assets\Scripts\Game5\HTTPHandler.cs" />
+    <Compile Include="Assets\Scripts\Game6\SMS.cs" />
+    <Compile Include="Assets\Scripts\Game2\Assets\src\e\ChatVip.cs" />
+    <Compile Include="Assets\Scripts\Game2\FireWorkMn.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Client\ClientManager.cs" />
+    <Compile Include="Assets\Scripts\Game3\Waypoint.cs" />
+    <Compile Include="Assets\Scripts\Game2\IActionListener.cs" />
+    <Compile Include="Assets\Scripts\Game3\PKFlag.cs" />
+    <Compile Include="Assets\Scripts\Game1\Info_RadaScr.cs" />
+    <Compile Include="Assets\Scripts\Game4\CharChild.cs" />
+    <Compile Include="Assets\Scripts\Game5\TopInfo.cs" />
+    <Compile Include="Assets\Scripts\Game6\TransportScr.cs" />
+    <Compile Include="Assets\Scripts\Game2\Command.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Player\PlayerInfo.cs" />
+    <Compile Include="Assets\Scripts\Game5\TabClanIcon.cs" />
+    <Compile Include="Assets\Scripts\Game3\ActionChat.cs" />
+    <Compile Include="Assets\Scripts\Game2\Archivement.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\SuKien\SuKienUI.cs" />
+    <Compile Include="Assets\Scripts\Game2\Arrow.cs" />
+    <Compile Include="Assets\Scripts\Game4\ItemOption.cs" />
+    <Compile Include="Assets\Scripts\Game2\NClass.cs" />
+    <Compile Include="Assets\Scripts\Game4\ipKeyboard.cs" />
+    <Compile Include="Assets\Scripts\Game3\EffectPanel.cs" />
+    <Compile Include="Assets\Scripts\Game5\CreateCharScr.cs" />
+    <Compile Include="Assets\Scripts\Game4\ClanImage.cs" />
+    <Compile Include="Assets\Scripts\Game4\Key.cs" />
+    <Compile Include="Assets\Scripts\Game6\FireWorkEff.cs" />
+    <Compile Include="Assets\Scripts\Game5\ImageInfo.cs" />
+    <Compile Include="Assets\Scripts\Game6\MovePoint.cs" />
+    <Compile Include="Assets\Scripts\Game4\SmallDart.cs" />
+    <Compile Include="Assets\Scripts\Game6\CharChild.cs" />
+    <Compile Include="Assets\Scripts\Game3\Info.cs" />
+    <Compile Include="Assets\Scripts\Game6\MyVector.cs" />
+    <Compile Include="Assets\Scripts\Game5\BgItemMn.cs" />
+    <Compile Include="Assets\Scripts\Game5\Info_RadaScr.cs" />
+    <Compile Include="Assets\Scripts\Game2\BigBoss2.cs" />
+    <Compile Include="Assets\Scripts\Game5\Member.cs" />
+    <Compile Include="Assets\Scripts\Game4\BackgroudEffect.cs" />
+    <Compile Include="Assets\Scripts\Game1\EffectManager.cs" />
+    <Compile Include="Assets\Scripts\Game6\CreateCharScr.cs" />
+    <Compile Include="Assets\Scripts\Game5\ScreenPointer.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Player\ListChars.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Chung\NhatKy.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\SuKien\SuKienUI.cs" />
+    <Compile Include="Assets\Scripts\Game4\StaticObj.cs" />
+    <Compile Include="Assets\Scripts\Game2\SoundMn.cs" />
+    <Compile Include="Assets\Scripts\Game2\Effect_End.cs" />
+    <Compile Include="Assets\Scripts\Game3\CrackBallScr.cs" />
+    <Compile Include="Assets\Scripts\Game6\Res.cs" />
+    <Compile Include="Assets\Scripts\Game6\TouchScreenKeyboard.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Item\ItemGroup.cs" />
+    <Compile Include="Assets\Scripts\Game1\MonsterDart.cs" />
+    <Compile Include="Assets\Scripts\Game4\iPhoneSettings.cs" />
+    <Compile Include="Assets\Scripts\Game6\Effect_End.cs" />
+    <Compile Include="Assets\Scripts\Game2\Task.cs" />
+    <Compile Include="Assets\Scripts\Game4\TileMap.cs" />
+    <Compile Include="Assets\Scripts\Game4\HTTPHandler.cs" />
+    <Compile Include="Assets\Scripts\Game4\EffectChar.cs" />
+    <Compile Include="Assets\Scripts\Game6\ItemMap.cs" />
+    <Compile Include="Assets\Scripts\Game1\CreateCharScr.cs" />
+    <Compile Include="Assets\Scripts\Game4\ItemObject.cs" />
+    <Compile Include="Assets\Scripts\Game1\CrackBallScr.cs" />
+    <Compile Include="Assets\Scripts\Game4\TabCommand.cs" />
+    <Compile Include="Assets\Scripts\Game6\MagicTree.cs" />
+    <Compile Include="Assets\Scripts\Game5\NClass.cs" />
+    <Compile Include="Assets\Scripts\Game5\ActionPaint.cs" />
+    <Compile Include="Assets\Scripts\Game4\EffectPanel.cs" />
+    <Compile Include="Assets\Scripts\Game4\MobCapcha.cs" />
+    <Compile Include="Assets\Scripts\Game6\Clan.cs" />
+    <Compile Include="Assets\Scripts\Game2\EffectPanel.cs" />
+    <Compile Include="Assets\Scripts\Game5\NinjaUtil.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Boss\Boss.cs" />
+    <Compile Include="Assets\Scripts\Game5\ChooseCharScr.cs" />
+    <Compile Include="Assets\Scripts\Game3\FireWorkEff.cs" />
+    <Compile Include="Assets\Scripts\Game3\IKbAction.cs" />
+    <Compile Include="Assets\Scripts\Game2\Assets\src\g\GameInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Assets\Resources\server_ip.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="UnityEngine">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AIModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.AIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ARModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.ARModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AccessibilityModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.AccessibilityModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AndroidJNIModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.AndroidJNIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.AnimationModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.AssetBundleModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.AudioModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ClothModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.ClothModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ClusterInputModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.ClusterInputModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ClusterRendererModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.ClusterRendererModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ContentLoadModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.ContentLoadModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CrashReportingModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.CrashReportingModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.DSPGraphModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.DSPGraphModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.DirectorModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.DirectorModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.GIModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.GIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.GameCenterModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.GameCenterModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.GridModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.GridModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.HotReloadModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.HotReloadModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.ImageConversionModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.InputModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.JSONSerializeModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.LocalizationModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.LocalizationModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ParticleSystemModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.ParticleSystemModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PerformanceReportingModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.PerformanceReportingModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.Physics2DModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.Physics2DModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ProfilerModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.ProfilerModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PropertiesModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.PropertiesModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ScreenCaptureModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.ScreenCaptureModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.SharedInternalsModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.SharedInternalsModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.SpriteMaskModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.SpriteMaskModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.SpriteShapeModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.SpriteShapeModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.StreamingModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.StreamingModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.SubstanceModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.SubstanceModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.SubsystemsModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.SubsystemsModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TLSModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.TLSModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TerrainModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.TerrainModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TerrainPhysicsModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.TerrainPhysicsModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextCoreFontEngineModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextCoreTextEngineModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.TextCoreTextEngineModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TilemapModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.TilemapModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.UIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIElementsModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.UIElementsModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UmbraModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.UmbraModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityAnalyticsModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.UnityAnalyticsModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityAnalyticsCommonModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.UnityAnalyticsCommonModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityConnectModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.UnityConnectModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityCurlModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.UnityCurlModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityTestProtocolModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.UnityTestProtocolModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.UnityWebRequestModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestAudioModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestTextureModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestWWWModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.VFXModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.VFXModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.VRModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.VRModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.VehiclesModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.VehiclesModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.VideoModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.VideoModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.VirtualTexturingModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.VirtualTexturingModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.WindModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.WindModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.XRModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.XRModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.CoreModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.DeviceSimulatorModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.DeviceSimulatorModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.DiagnosticsModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.DiagnosticsModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.EditorToolbarModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.EditorToolbarModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.GraphViewModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.GraphViewModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.PresetsUIModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.PresetsUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.QuickSearchModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.QuickSearchModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.SceneTemplateModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.SceneTemplateModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.SceneViewModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.SceneViewModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.TextCoreFontEngineModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.TextCoreFontEngineModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.TextCoreTextEngineModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.TextCoreTextEngineModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.UIBuilderModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.UIBuilderModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.UIElementsModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.UIElementsModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.UIElementsSamplesModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.UIElementsSamplesModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.UnityConnectModule">
+      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEditor.UnityConnectModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
+      <HintPath>Library\PackageCache\com.unity.visualscripting@1.9.6\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.iOS.Extensions.Xcode">
+      <HintPath>F:\2022.3.61f1\Editor\Data\PlaybackEngines\iOSSupport\UnityEditor.iOS.Extensions.Xcode.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.iOS.Extensions.Common">
+      <HintPath>F:\2022.3.61f1\Editor\Data\PlaybackEngines\iOSSupport\UnityEditor.iOS.Extensions.Common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Android.Types">
+      <HintPath>F:\2022.3.61f1\Editor\Data\PlaybackEngines\AndroidPlayer\Unity.Android.Types.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Android.Gradle">
+      <HintPath>F:\2022.3.61f1\Editor\Data\PlaybackEngines\AndroidPlayer\Unity.Android.Gradle.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Android.GradleProject">
+      <HintPath>F:\2022.3.61f1\Editor\Data\PlaybackEngines\AndroidPlayer\Unity.Android.GradleProject.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="mscorlib">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\mscorlib.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Runtime.Serialization.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Xml.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Xml.Linq.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Numerics">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Numerics.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Numerics.Vectors">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Numerics.Vectors.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Net.Http">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Net.Http.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.IO.Compression.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.CSharp">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Microsoft.CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Data">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Data.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Data.DataSetExtensions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Drawing.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression.FileSystem">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.IO.Compression.FileSystem.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.ComponentModel.Composition">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.ComponentModel.Composition.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Transactions">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Transactions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Win32.Primitives">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\Microsoft.Win32.Primitives.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="netstandard">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\netstandard.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.AppContext">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.AppContext.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Buffers">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Buffers.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Collections.Concurrent">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Collections.Concurrent.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Collections">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Collections.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Collections.NonGeneric">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Collections.NonGeneric.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Collections.Specialized">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Collections.Specialized.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.ComponentModel.Annotations">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ComponentModel.Annotations.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.ComponentModel">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ComponentModel.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.ComponentModel.EventBasedAsync">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ComponentModel.EventBasedAsync.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.ComponentModel.Primitives">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ComponentModel.Primitives.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.ComponentModel.TypeConverter">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ComponentModel.TypeConverter.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Console">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Console.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Data.Common">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Data.Common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Diagnostics.Contracts">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.Contracts.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Diagnostics.Debug">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.Debug.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Diagnostics.FileVersionInfo">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.FileVersionInfo.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Diagnostics.Process">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.Process.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Diagnostics.StackTrace">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.StackTrace.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Diagnostics.TextWriterTraceListener">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.TextWriterTraceListener.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Diagnostics.Tools">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.Tools.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Diagnostics.TraceSource">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.TraceSource.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Drawing.Primitives">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Drawing.Primitives.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Dynamic.Runtime">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Dynamic.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Globalization.Calendars">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Globalization.Calendars.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Globalization">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Globalization.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Globalization.Extensions">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Globalization.Extensions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression.ZipFile">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.Compression.ZipFile.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO.FileSystem">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.FileSystem.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO.FileSystem.DriveInfo">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.FileSystem.DriveInfo.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO.FileSystem.Primitives">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.FileSystem.Primitives.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO.FileSystem.Watcher">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.FileSystem.Watcher.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO.IsolatedStorage">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.IsolatedStorage.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO.MemoryMappedFiles">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.MemoryMappedFiles.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO.Pipes">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.Pipes.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO.UnmanagedMemoryStream">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.UnmanagedMemoryStream.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Linq">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Linq.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Linq.Expressions">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Linq.Expressions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Linq.Parallel">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Linq.Parallel.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Linq.Queryable">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Linq.Queryable.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Memory">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Memory.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Net.Http.Rtc">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.Http.Rtc.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Net.NameResolution">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.NameResolution.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Net.NetworkInformation">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.NetworkInformation.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Net.Ping">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.Ping.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Net.Primitives">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.Primitives.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Net.Requests">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.Requests.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Net.Security">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.Security.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Net.Sockets">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.Sockets.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Net.WebHeaderCollection">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.WebHeaderCollection.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Net.WebSockets.Client">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.WebSockets.Client.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Net.WebSockets">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.WebSockets.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.ObjectModel">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ObjectModel.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Reflection.DispatchProxy">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Reflection.DispatchProxy.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Reflection">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Reflection.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Reflection.Emit">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Reflection.Emit.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Reflection.Emit.ILGeneration">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Reflection.Emit.ILGeneration.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Reflection.Emit.Lightweight">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Reflection.Emit.Lightweight.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Reflection.Extensions">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Reflection.Extensions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Reflection.Primitives">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Reflection.Primitives.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Resources.Reader">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Resources.Reader.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Resources.ResourceManager">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Resources.ResourceManager.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Resources.Writer">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Resources.Writer.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.VisualC">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.CompilerServices.VisualC.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Extensions">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.Extensions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Handles">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.Handles.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.InteropServices">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.InteropServices.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.InteropServices.RuntimeInformation">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.InteropServices.WindowsRuntime">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.InteropServices.WindowsRuntime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Numerics">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.Numerics.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization.Formatters">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.Serialization.Formatters.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization.Json">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.Serialization.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization.Primitives">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.Serialization.Primitives.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization.Xml">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.Serialization.Xml.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Security.Claims">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.Claims.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Algorithms">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.Cryptography.Algorithms.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Csp">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.Cryptography.Csp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Encoding">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.Cryptography.Encoding.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Primitives">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.Cryptography.Primitives.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.X509Certificates">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.Cryptography.X509Certificates.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Security.Principal">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.Principal.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Security.SecureString">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.SecureString.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.ServiceModel.Duplex">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ServiceModel.Duplex.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.ServiceModel.Http">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ServiceModel.Http.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.ServiceModel.NetTcp">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ServiceModel.NetTcp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.ServiceModel.Primitives">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ServiceModel.Primitives.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.ServiceModel.Security">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ServiceModel.Security.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Text.Encoding">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Text.Encoding.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Text.Encoding.Extensions">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Text.Encoding.Extensions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Text.RegularExpressions">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Text.RegularExpressions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Threading">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Threading.Overlapped">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.Overlapped.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Threading.Tasks">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.Tasks.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.Tasks.Extensions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Parallel">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.Tasks.Parallel.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Threading.Thread">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.Thread.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Threading.ThreadPool">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.ThreadPool.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Threading.Timer">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.Timer.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.ValueTuple">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ValueTuple.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml.ReaderWriter">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Xml.ReaderWriter.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml.XDocument">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Xml.XDocument.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml.XmlDocument">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Xml.XmlDocument.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml.XmlSerializer">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Xml.XmlSerializer.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml.XPath">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Xml.XPath.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml.XPath.XDocument">
+      <HintPath>F:\2022.3.61f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Xml.XPath.XDocument.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.SettingsProvider.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.SettingsProvider.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.AI.Navigation">
+      <HintPath>Library\ScriptAssemblies\Unity.AI.Navigation.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.AI.Navigation.Updater">
+      <HintPath>Library\ScriptAssemblies\Unity.AI.Navigation.Updater.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.State.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.State.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.Shared.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.Shared.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualStudio.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.VisualStudio.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.UI">
+      <HintPath>Library\ScriptAssemblies\UnityEditor.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.Core">
+      <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>Library\ScriptAssemblies\UnityEngine.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.Core.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.Core.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.AI.Navigation.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.AI.Navigation.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.State">
+      <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.State.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.AI.Navigation.Editor.ConversionSystem">
+      <HintPath>Library\ScriptAssemblies\Unity.AI.Navigation.Editor.ConversionSystem.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.Flow">
+      <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.Flow.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.Flow.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.Flow.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="GenerateTargetFrameworkMonikerAttribute" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

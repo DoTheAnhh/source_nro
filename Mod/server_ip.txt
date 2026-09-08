@@ -1,0 +1,12 @@
+# Dia chi may chu cho ban chay trong Unity Editor.
+#
+# Trong Editor, Application.dataPath tro toi Mod/Assets nen client tim
+# file o Mod/server_ip.txt — chinh la file nay. Nguon nay UU TIEN CAO
+# NHAT, thang ca so mac dinh trong ma, nen de sai o day la sai het.
+#
+# Truoc day server tu ghi file nay moi lan khoi dong. Da tat (xem
+# server.ipfile.editor trong data/config/data_base.properties), vi may
+# chu gio o VPS.
+#
+# Muon chay thu voi server local thi sua dong duoi thanh 127.0.0.1.
+160.22.107.46

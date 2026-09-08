@@ -1138,11 +1138,38 @@ public class Controller implements IMessageHandler {
                         Service.gI().setClientType(session, msg);
                         break;
                     default:
+                        // KHONG im lang o day.
+                        //
+                        // Ba nhanh tren deu la buoc TRUOC khi vao game, va o
+                        // buoc do client luon bat mot hop cho ("Dang dang
+                        // nhap", "Dang dang ky") ngay truoc khi gui. Hop do chi
+                        // dong khi CO goi tra ve. Nen mot "default: break;" o
+                        // day khong phai la "bo qua lenh la" — no la mot cai
+                        // treo may vinh vien ben may nguoi choi, khong loi,
+                        // khong dau vet. Do dung la loi vua gap voi so 1.
+                        //
+                        // Ghi log de con biet client dang goi so may, va tra ve
+                        // mot cau bao de hop cho dong lai.
+                        Logger.log(Logger.YELLOW,
+                                "messageNotLogin: lenh la " + cmd + "\n");
+                        Service.gI().sendThongBaoOK(session,
+                                "Phiên bản client không khớp với máy chủ."
+                                + " Vui lòng cập nhật lại.");
+                        Service.gI().sendLoginFail(session, false);
                         break;
                 }
             } catch (IOException e) {
                 session.disconnect();
 //                Logger.logException(Controller.class, e);
+            } catch (Exception e) {
+                // Bat ca Exception thuong: mot loi bat ngo o day (NullPointer
+                // khi doc CSDL, JSON hong...) truoc kia lot ra ngoai va cung
+                // cho ra dung cai hop cho xoay mai. Bao cho nguoi choi biet roi
+                // ghi log de con lan ra nguyen nhan.
+                Logger.logException(Controller.class, e, "messageNotLogin");
+                Service.gI().sendThongBaoOK(session,
+                        "Máy chủ gặp lỗi khi xử lý yêu cầu. Vui lòng thử lại.");
+                Service.gI().sendLoginFail(session, false);
             }
         }
     }

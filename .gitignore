@@ -1,0 +1,36 @@
+# =====================================================================
+#  Đẩy tất cả, TRỪ bộ nhớ đệm Unity tự sinh lại.
+#
+#  Yêu cầu là "đẩy tất cả, không trừ file nào". Thư mục Server/ đúng như
+#  vậy — xem Server/.gitignore, không chặn gì cả. Riêng thư mục Mod/
+#  (dự án Unity) thì không đẩy trọn được, và đây là lý do:
+#
+#  1. GitHub TỪ CHỐI CỨNG mọi file thường vượt 100 MB. Trong Mod/Library
+#     có hai file 156 MB:
+#         Library/Bee/artifacts/WinPlayerBuildProgram/u1oik/GameAssembly.pdb
+#         Library/Bee/artifacts/WinPlayerBuildProgram/il2cppOutput/build/GameAssembly.pdb
+#     Còn một file 87 MB và ba file 50-67 MB nữa. Cứ để nguyên mà đẩy thì
+#     lần push nào cũng bị máy chủ chặn giữa chừng — không phải chậm, mà
+#     là hỏng hẳn.
+#
+#  2. Git LFS không cứu được. Kho này đã dùng LFS cho ba file .rar (245 MB
+#     trên hạn 1 GB miễn phí). Mod/Library một mình đã 2,8 GB, Mod/My
+#     project/Library thêm 319 MB — vượt hạn ngay lần đẩy đầu tiên.
+#
+#  3. Và không cần đẩy. Library/ là bộ nhớ đệm biên dịch: Unity dựng lại
+#     toàn bộ từ Assets/ + ProjectSettings/ + Packages/ ngay lần mở dự án
+#     đầu tiên trên máy mới. Nó cũng thay đổi mỗi lần bấm Play, nên để
+#     trong git thì lần commit nào cũng thấy hàng nghìn file "đã sửa".
+#
+#  Cái THẬT SỰ cần thì vẫn được đẩy đủ: Mod/Assets/ (toàn bộ mã C# và tài
+#  nguyên), Mod/ProjectSettings/, Mod/Packages/, các file .sln/.csproj.
+#  Máy khác lấy về, mở bằng Unity là chạy.
+#
+#  Máy chủ trên VPS KHÔNG cần thư mục Mod/ — nó chỉ dùng Server/.
+# =====================================================================
+
+Mod/Library/
+Mod/My project/Library/
+Mod/Logs/
+Mod/My project/Logs/
+Mod/obj/

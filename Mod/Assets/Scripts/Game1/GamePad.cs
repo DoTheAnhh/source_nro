@@ -1,0 +1,328 @@
+namespace Game1
+{
+    using System;
+    
+    public class GamePad
+    {
+    	private int xC;
+    
+    	private int yC;
+    
+    	private int xM;
+    
+    	private int yM;
+    
+    	private int xMLast;
+    
+    	private int yMLast;
+    
+    	private int R;
+    
+    	private int r;
+    
+    	private int d;
+    
+    	private int xTemp;
+    
+    	private int yTemp;
+    
+    	private int deltaX;
+    
+    	private int deltaY;
+    
+    	private int delta;
+    
+    	private int angle;
+    
+    	public int xZone;
+    
+    	public int yZone;
+    
+    	public int wZone;
+    
+    	public int hZone;
+    
+    	private bool isGamePad;
+    
+    	public bool isSmallGamePad;
+    
+    	public bool isMediumGamePad;
+    
+    	public bool isLargeGamePad;
+    
+    	public GamePad()
+    	{
+    		R = 28;
+    		if (GameCanvas.w < 300)
+    		{
+    			isSmallGamePad = true;
+    			isMediumGamePad = false;
+    			isLargeGamePad = false;
+    		}
+    		if (GameCanvas.w >= 300 && GameCanvas.w <= 380)
+    		{
+    			isSmallGamePad = false;
+    			isMediumGamePad = true;
+    			isLargeGamePad = false;
+    		}
+    		if (GameCanvas.w > 380)
+    		{
+    			isSmallGamePad = false;
+    			isMediumGamePad = false;
+    			isLargeGamePad = true;
+    		}
+    		datVungCham();
+    	}
+
+    	/// <summary>
+    	/// Vùng màn hình mà một cú chạm được hiểu là "điều khiển nhân vật".
+    	/// </summary>
+    	/// <remarks>
+    	/// <para>Bề ngang chỉ còn <b>một phần sáu</b> màn hình, thay cho ba phần
+    	/// tám của bản cũ. Con số này quyết định hàng ô kỹ năng bắt đầu từ đâu —
+    	/// <c>GameScr.setTouchBtn</c> đặt <c>xSkill = wZone + 2</c>, vì chạm vào
+    	/// trong vùng thì cần điều khiển nuốt mất cú chạm. Ba phần tám đẩy hàng ô ra
+    	/// tận giữa màn, và phần còn lại không đủ chỗ cho khung chat lẫn hai cụm nút
+    	/// bên phải.</para>
+    	///
+    	/// <para>Chiều dọc giữ đúng con số mà hàm vẽ vẫn áp mỗi khung hình — từ giữa
+    	/// màn trở xuống. Nới lên cao hơn thì chạm vào giữa màn chơi cũng thành lệnh
+    	/// đi, mà đó là chỗ để bấm quái và NPC.</para>
+    	///
+    	/// <para>Gọi lại mỗi khung hình từ <c>paint</c>: cửa sổ đổi kích cỡ thì vùng
+    	/// phải đổi theo.</para>
+    	/// </remarks>
+    	public void datVungCham()
+    	{
+    		xZone = 0;
+    		yZone = (GameCanvas.h >> 1) + 40;
+    		hZone = GameCanvas.h;
+    		if (!isLargeGamePad)
+    		{
+    			wZone = GameCanvas.hw;
+    			return;
+    		}
+    		wZone = GameCanvas.hw / 3;
+    		if (mSystem.clientType == 2)
+    		{
+    			wZone = GameCanvas.hw / 3 - 20;
+    		}
+    	}
+
+    	public void update()
+    	{
+    		try
+    		{
+    			if (GameScr.isAnalog == 0)
+    			{
+    				return;
+    			}
+    			if (GameCanvas.isPointerDown && !GameCanvas.isPointerJustRelease)
+    			{
+    				xTemp = GameCanvas.pxFirst;
+    				yTemp = GameCanvas.pyFirst;
+    				if (xTemp < xZone || xTemp > wZone || yTemp < yZone || yTemp > hZone)
+    				{
+    					return;
+    				}
+    				if (!isGamePad)
+    				{
+    					xC = (xM = xTemp);
+    					yC = (yM = yTemp);
+    				}
+    				isGamePad = true;
+    				deltaX = GameCanvas.px - xC;
+    				deltaY = GameCanvas.py - yC;
+    				delta = Math.pow(deltaX, 2) + Math.pow(deltaY, 2);
+    				d = Res.sqrt(delta);
+    				if (Math.abs(deltaX) <= 4 && Math.abs(deltaY) <= 4)
+    				{
+    					return;
+    				}
+    				angle = Res.angle(deltaX, deltaY);
+    				if (!GameCanvas.isPointerHoldIn(xC - R, yC - R, 2 * R, 2 * R))
+    				{
+    					if (d != 0)
+    					{
+    						yM = deltaY * R / d;
+    						xM = deltaX * R / d;
+    						xM += xC;
+    						yM += yC;
+    						if (!Res.inRect(xC - R, yC - R, 2 * R, 2 * R, xM, yM))
+    						{
+    							xM = xMLast;
+    							yM = yMLast;
+    						}
+    						else
+    						{
+    							xMLast = xM;
+    							yMLast = yM;
+    						}
+    					}
+    					else
+    					{
+    						xM = xMLast;
+    						yM = yMLast;
+    					}
+    				}
+    				else
+    				{
+    					xM = GameCanvas.px;
+    					yM = GameCanvas.py;
+    				}
+    				resetHold();
+    				if (checkPointerMove(2))
+    				{
+    					if ((angle <= 360 && angle >= 340) || (angle >= 0 && angle <= 20))
+    					{
+    						GameCanvas.keyHold[(!Main.isPC) ? 6 : 24] = true;
+    						GameCanvas.keyPressed[(!Main.isPC) ? 6 : 24] = true;
+    					}
+    					else if (angle > 40 && angle < 70)
+    					{
+    						GameCanvas.keyHold[(!Main.isPC) ? 6 : 24] = true;
+    						GameCanvas.keyPressed[(!Main.isPC) ? 6 : 24] = true;
+    					}
+    					else if (angle >= 70 && angle <= 110)
+    					{
+    						GameCanvas.keyHold[(!Main.isPC) ? 8 : 22] = true;
+    						GameCanvas.keyPressed[(!Main.isPC) ? 8 : 22] = true;
+    					}
+    					else if (angle > 110 && angle < 120)
+    					{
+    						GameCanvas.keyHold[(!Main.isPC) ? 4 : 23] = true;
+    						GameCanvas.keyPressed[(!Main.isPC) ? 4 : 23] = true;
+    					}
+    					else if (angle >= 120 && angle <= 200)
+    					{
+    						GameCanvas.keyHold[(!Main.isPC) ? 4 : 23] = true;
+    						GameCanvas.keyPressed[(!Main.isPC) ? 4 : 23] = true;
+    					}
+    					else if (angle > 200 && angle < 250)
+    					{
+    						GameCanvas.keyHold[(!Main.isPC) ? 2 : 21] = true;
+    						GameCanvas.keyPressed[(!Main.isPC) ? 2 : 21] = true;
+    						GameCanvas.keyHold[(!Main.isPC) ? 4 : 23] = true;
+    						GameCanvas.keyPressed[(!Main.isPC) ? 4 : 23] = true;
+    					}
+    					else if (angle >= 250 && angle <= 290)
+    					{
+    						GameCanvas.keyHold[(!Main.isPC) ? 2 : 21] = true;
+    						GameCanvas.keyPressed[(!Main.isPC) ? 2 : 21] = true;
+    					}
+    					else if (angle > 290 && angle < 340)
+    					{
+    						GameCanvas.keyHold[(!Main.isPC) ? 2 : 21] = true;
+    						GameCanvas.keyPressed[(!Main.isPC) ? 2 : 21] = true;
+    						GameCanvas.keyHold[(!Main.isPC) ? 6 : 24] = true;
+    						GameCanvas.keyPressed[(!Main.isPC) ? 6 : 24] = true;
+    					}
+    				}
+    				else
+    				{
+    					resetHold();
+    				}
+    			}
+    			else
+    			{
+    				xM = (xC = 45);
+    				if (!isLargeGamePad)
+    				{
+    					yM = (yC = GameCanvas.h - 90);
+    				}
+    				else
+    				{
+    					yM = (yC = GameCanvas.h - 45);
+    				}
+    				isGamePad = false;
+    				resetHold();
+    			}
+    		}
+    		catch (Exception)
+    		{
+    		}
+    	}
+    
+    	private bool checkPointerMove(int distance)
+    	{
+    		if (GameScr.isAnalog == 0)
+    		{
+    			return false;
+    		}
+    		if (Char.myCharz().statusMe == 3)
+    		{
+    			return true;
+    		}
+    		try
+    		{
+    			for (int num = 2; num > 0; num--)
+    			{
+    				int i = GameCanvas.arrPos[num].x - GameCanvas.arrPos[num - 1].x;
+    				int i2 = GameCanvas.arrPos[num].y - GameCanvas.arrPos[num - 1].y;
+    				if (Res.abs(i) > distance && Res.abs(i2) > distance)
+    				{
+    					return false;
+    				}
+    			}
+    		}
+    		catch (Exception)
+    		{
+    		}
+    		return true;
+    	}
+    
+    	private void resetHold()
+    	{
+    		GameCanvas.clearKeyHold();
+    	}
+    
+    	public void paint(mGraphics g)
+    	{
+    		if (GameScr.isAnalog != 0)
+    		{
+    			// Tinh lai vung cham qua MOT ham chung, khong gan de bon truong
+    			// bang con so viet thang o day nua.
+    			//
+    			// Ban truoc ham VE nay tu gan lai xZone/yZone/wZone/hZone moi khung
+    			// hinh, dung con so 3/4 be ngang cua ban cu. Nghia la moi thay doi
+    			// ben ham dung deu bi xoa ngay khung dau tien: hang o ky nang tinh
+    			// cho dat theo wZone luc khoi tao, roi wZone nhay ve so cu, va hang
+    			// o dung o cho khong con lien quan gi toi vung cham nua. Day dung la
+    			// ly do may lan keo hang o ky nang sang trai deu khong an gi tren
+    			// ban dien thoai.
+    			//
+    			// Van phai tinh lai moi khung: cua so doi kich co thi vung phai doi
+    			// theo, va do chinh la viec duy nhat doan ma cu lam dung.
+    			datVungCham();
+    			g.drawImage(GameScr.imgAnalog1, xC, yC, mGraphics.HCENTER | mGraphics.VCENTER);
+    			g.drawImage(GameScr.imgAnalog2, xM, yM, mGraphics.HCENTER | mGraphics.VCENTER);
+    		}
+    	}
+    
+    	public bool disableCheckDrag()
+    	{
+    		if (GameScr.isAnalog == 0)
+    		{
+    			return false;
+    		}
+    		return isGamePad;
+    	}
+    
+    	public bool disableClickMove()
+    	{
+    		try
+    		{
+    			if (GameScr.isAnalog == 0)
+    			{
+    				return false;
+    			}
+    			bool flag = false;
+    			return ((GameCanvas.px >= xZone && GameCanvas.px <= xZone + wZone && GameCanvas.py >= yZone && GameCanvas.py <= yZone + hZone) || (GameCanvas.px >= xZone && GameCanvas.px <= GameCanvas.w && GameCanvas.py >= yZone && GameCanvas.py <= yZone + hZone) || GameCanvas.px >= GameCanvas.w - 50) ? true : false;
+    		}
+    		catch (Exception)
+    		{
+    			return false;
+    		}
+    	}
+    }
+}
