@@ -21,6 +21,7 @@ import nro.service.PlayerService;
 import nro.service.Service;
 import nro.core.consts.ConstPlayer;
 import nro.repository.ConnectDB;
+import nro.repository.dao.LichSuVatPhamDAO;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
@@ -1648,15 +1649,32 @@ public class InventoryService {
     }
 
     public boolean addItemBox(Player player, Item item) {
-        return addItemList(player.inventory.itemsBox, item);
+        int sl = (item == null ? 0 : item.quantity);
+        boolean xong = addItemList(player.inventory.itemsBox, item);
+        if (xong) {
+            LichSuVatPhamDAO.ghi(player, item, sl, "Rương ở nhà");
+        }
+        return xong;
     }
 
     public boolean addItemBoxCollection(Player player, Item item) {
-        return addItemList(player.inventory.itemsBoxCollection, item);
+        int sl = (item == null ? 0 : item.quantity);
+        boolean xong = addItemList(player.inventory.itemsBoxCollection, item);
+        if (xong) {
+            LichSuVatPhamDAO.ghi(player, item, sl, "Rương sưu tầm");
+        }
+        return xong;
     }
 
     public boolean addItemBoxClan(Player player, Item item) {
-        return addItemList(player.clan.itemsBoxClan, item);
+        int sl = (item == null ? 0 : item.quantity);
+        boolean xong = addItemList(player.clan.itemsBoxClan, item);
+        if (xong) {
+            // Món này thành của BANG chứ không của riêng ai, nhưng vẫn ghi tên
+            // người bỏ vào — đó chính là thứ cần tra khi rương bang hụt đồ.
+            LichSuVatPhamDAO.ghi(player, item, sl, "Rương bang");
+        }
+        return xong;
     }
 
     public boolean addItemList(List<Item> items, Item itemAdd) {
@@ -1792,7 +1810,29 @@ public class InventoryService {
         return true;
     }
 
+    /**
+     * Trao một vật phẩm vào hành trang, và <b>ghi lại</b> lần trao đó.
+     *
+     * <p>Vỏ bọc mỏng quanh {@link #themVaoTui}. Đặt việc ghi nhật ký ở đây chứ
+     * không ở từng chỗ gọi vì có <b>hơn hai trăm</b> chỗ gọi hàm này; sửa hết
+     * chúng thì chỗ viết thêm về sau vẫn sẽ quên, và nhật ký thủng lỗ chỗ mà
+     * không ai biết. Ở đây thì mọi đường vào đều đi qua, kể cả đường viết
+     * sau.</p>
+     *
+     * <p>Số lượng phải chụp <b>trước</b> khi gọi: {@code themVaoTui} đặt
+     * {@code item.quantity = 0} khi gộp vào ô sẵn có, nên đọc sau là ghi ra số
+     * không.</p>
+     */
     public boolean addItemBag(Player player, Item item) {
+        int slBanDau = (item == null ? 0 : item.quantity);
+        boolean xong = themVaoTui(player, item);
+        if (xong) {
+            LichSuVatPhamDAO.ghi(player, item, slBanDau, "Hành trang");
+        }
+        return xong;
+    }
+
+    private boolean themVaoTui(Player player, Item item) {
         // Ngọc Rồng Đen
         if (ItemMapService.gI().isBlackBall(item.template.id)) {
             return BlackBallWarService.gI().pickBlackBall(player, item);

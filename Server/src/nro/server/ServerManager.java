@@ -192,6 +192,13 @@ public class ServerManager {
         }
 
         HistoryTransactionDAO.deleteHistory();
+
+        // Nhật ký nhận vật phẩm: dọn phần quá hạn rồi mở luồng ghi nền.
+        //
+        // Dọn TRƯỚC khi mở luồng ghi để câu DELETE không phải chen với các
+        // lượt INSERT đầu tiên.
+        nro.repository.dao.LichSuVatPhamDAO.donCu();
+        nro.repository.dao.LichSuVatPhamDAO.batDau();
     }
 
     /**
@@ -862,6 +869,18 @@ public class ServerManager {
             }
         } catch (Exception e) {
             Logger.logException(ServerManager.class, e, "Lỗi shutdown gameExecutorService");
+        }
+
+        try {
+            // Xả nốt nhật ký nhận vật phẩm còn trong hàng đợi.
+            //
+            // Luồng ghi là daemon và hàm này kết thúc bằng System.exit(0), nên
+            // không xả ở đây thì phần chưa kịp ghi mất theo tiến trình — mà đó
+            // đúng là quãng ngay trước lúc tắt, quãng hay cần soi nhất.
+            nro.repository.dao.LichSuVatPhamDAO.donDep();
+            Logger.success("SAVE", "Lưu nhật ký nhận vật phẩm thành công");
+        } catch (Exception e) {
+            Logger.logException(ServerManager.class, e, "Lỗi xả nhật ký nhận vật phẩm");
         }
 
         Logger.success("SERVER", "BẢO TRÌ THÀNH CÔNG");

@@ -56,6 +56,7 @@ import nro.entity.template.ItemOptionTemplate;
 import nro.entity.template.ItemTemplate;
 import nro.repository.dao.AccountDAO;
 import nro.repository.dao.ConfigDAO;
+import nro.repository.dao.LichSuVatPhamDAO;
 import nro.repository.dao.PlayerDAO;
 import nro.server.Client;
 import nro.server.Manager;
@@ -443,6 +444,10 @@ public class PlayerManagerPanel extends JPanel {
         act.add(button("Kick", WARN_RED, e -> doKick()));
         act.add(button("Hồi hết chiêu", ACCENT, e -> doResetChieu()));
         act.add(button("Đặt nhiệm vụ", ACCENT, e -> doDatNhiemVu()));
+        // KHÔNG dùng editButton: nút này chỉ đọc nhật ký trong CSDL nên xem
+        // được cả người đang offline — mà đó mới là lúc hay cần xem nhất.
+        act.add(button("Lịch sử vật phẩm", new Color(120, 80, 170),
+                e -> moLichSuVatPham()));
         act.add(button("Lưu DB ngay", OK_GREEN, e -> doSaveNow()));
         act.add(button("Xoá HẾT nhân vật", new Color(150, 30, 30), e -> doDeleteAll()));
         p.add(act, BorderLayout.SOUTH);
@@ -3379,6 +3384,291 @@ public class PlayerManagerPanel extends JPanel {
         } catch (NumberFormatException ex) {
             return fallback;
         }
+    }
+
+    // =====================================================================
+    //  Lịch sử nhận vật phẩm
+    // =====================================================================
+
+    /** Giờ phút giây trước, rồi mới ngày tháng năm. */
+    private static final java.text.SimpleDateFormat GIO_NGAY
+            = new java.text.SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
+
+    /**
+     * Mở cửa sổ nhật ký nhận vật phẩm của nhân vật đang chọn.
+     *
+     * <p><b>Đọc từ CSDL</b>, không đọc đối tượng trong bộ nhớ — nên người chơi
+     * offline cũng tra được. Nhật ký do {@link LichSuVatPhamDAO} ghi lại ở mọi
+     * đường nhận: quái rơi, nhặt dưới đất, mua ở NPC, ghép, giftcode, nhiệm vụ,
+     * sự kiện, admin cấp.</p>
+     *
+     * <p>Cửa sổ <b>không chặn</b> (modeless) để còn vừa xem nhật ký vừa làm
+     * việc khác trong panel, và mọi lần đọc CSDL đều chạy ở {@link SwingWorker}
+     * — bảng này có thể lên hàng chục nghìn dòng, đọc thẳng trên luồng vẽ là
+     * đơ cả panel.</p>
+     */
+    private void moLichSuVatPham() {
+        if (selectedRow == null) {
+            warn("Chọn một nhân vật trong danh sách trước đã.");
+            return;
+        }
+        final long pid = selectedRow.id;
+        final String pten = selectedRow.name;
+
+        JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(this),
+                "Lịch sử nhận vật phẩm — " + pten + " (" + pid + ")",
+                java.awt.Dialog.ModalityType.MODELESS);
+        dlg.setSize(1180, 640);
+        dlg.setLocationRelativeTo(this);
+
+        // --- hàng lọc ---
+        JTextField fVatPham = new JTextField(14);
+        JTextField fPhuongThuc = new JTextField(12);
+        JComboBox<String> cbNgay = new JComboBox<>(new String[]{
+            "Tất cả", "Hôm nay", "3 ngày", "7 ngày", "30 ngày"});
+        JComboBox<String> cbGioiHan = new JComboBox<>(new String[]{
+            "200", "500", "1000", "5000", "20000"});
+        cbGioiHan.setSelectedItem("1000");
+
+        JLabel lblTong = new JLabel(" ");
+        lblTong.setFont(new Font("Segoe UI", Font.BOLD, 12));
+
+        // --- bảng chi tiết ---
+        String[] cot = {"Thời gian", "Vật phẩm", "ID", "SL", "Phương thức",
+            "Nơi nhận", "Bản đồ", "Chỉ số", "Sức mạnh lúc đó", "Nguồn (kỹ thuật)"};
+        DefaultTableModel mCT = new DefaultTableModel(cot, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
+        JTable tCT = new JTable(mCT);
+        tCT.setRowHeight(24);
+        tCT.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        int[] rong = {150, 220, 60, 70, 150, 100, 150, 300, 130, 240};
+        for (int i = 0; i < rong.length; i++) {
+            tCT.getColumnModel().getColumn(i).setPreferredWidth(rong[i]);
+        }
+
+        // --- bảng gộp theo vật phẩm ---
+        DefaultTableModel mVP = new DefaultTableModel(
+                new String[]{"Vật phẩm", "ID", "Tổng số lượng", "Số lần nhận", "Lần cuối"}, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
+        JTable tVP = new JTable(mVP);
+        tVP.setRowHeight(24);
+
+        // --- bảng gộp theo phương thức ---
+        DefaultTableModel mPT = new DefaultTableModel(
+                new String[]{"Phương thức nhận", "Số lần", "Tổng số lượng"}, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
+        JTable tPT = new JTable(mPT);
+        tPT.setRowHeight(24);
+
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.addTab("Chi tiết từng lần", ServerGuiUtils.cuon(tCT));
+        tabs.addTab("Gộp theo vật phẩm", ServerGuiUtils.cuon(tVP));
+        tabs.addTab("Gộp theo phương thức", ServerGuiUtils.cuon(tPT));
+
+        Runnable nap = () -> {
+            LichSuVatPhamDAO.Loc f = new LichSuVatPhamDAO.Loc();
+            f.nguoiId = pid;
+            f.vatPham = fVatPham.getText();
+            f.phuongThuc = fPhuongThuc.getText();
+            f.tu = mocThoiGian((String) cbNgay.getSelectedItem());
+            f.gioiHan = Integer.parseInt((String) cbGioiHan.getSelectedItem());
+            lblTong.setForeground(GREY);
+            lblTong.setText("Đang đọc...");
+
+            new SwingWorker<Object[], Void>() {
+                @Override
+                protected Object[] doInBackground() {
+                    return new Object[]{
+                        LichSuVatPhamDAO.tim(f),
+                        LichSuVatPhamDAO.gopTheoVatPham(pid, 500),
+                        LichSuVatPhamDAO.gopTheoPhuongThuc(pid),
+                        LichSuVatPhamDAO.demCua(pid)
+                    };
+                }
+
+                @Override
+                @SuppressWarnings("unchecked")
+                protected void done() {
+                    try {
+                        Object[] kq = get();
+                        List<LichSuVatPhamDAO.Dong> ds
+                                = (List<LichSuVatPhamDAO.Dong>) kq[0];
+                        mCT.setRowCount(0);
+                        for (LichSuVatPhamDAO.Dong d : ds) {
+                            mCT.addRow(new Object[]{
+                                d.luc == null ? "" : GIO_NGAY.format(d.luc),
+                                d.itemTen, d.itemId, fmt(d.soLuong),
+                                d.phuongThuc, d.noiNhan,
+                                d.mapTen + (d.mapId >= 0 ? " (" + d.mapId + ")" : ""),
+                                d.chiSo, fmt(d.sucManh), d.nguonKyThuat});
+                        }
+
+                        mVP.setRowCount(0);
+                        for (LichSuVatPhamDAO.Gop g
+                                : (List<LichSuVatPhamDAO.Gop>) kq[1]) {
+                            mVP.addRow(new Object[]{g.itemTen, g.itemId,
+                                fmt(g.tongSoLuong), fmt(g.soLan),
+                                g.lanCuoi == null ? "" : GIO_NGAY.format(g.lanCuoi)});
+                        }
+
+                        mPT.setRowCount(0);
+                        for (LichSuVatPhamDAO.GopPT g
+                                : (List<LichSuVatPhamDAO.GopPT>) kq[2]) {
+                            mPT.addRow(new Object[]{g.phuongThuc,
+                                fmt(g.soLan), fmt(g.tongSoLuong)});
+                        }
+
+                        long tong = (Long) kq[3];
+                        lblTong.setForeground(tong == 0 ? WARN_RED : OK_GREEN);
+                        lblTong.setText(tong == 0
+                                ? "Chưa có dòng nào — nhật ký chỉ ghi từ lúc bản này chạy trở đi."
+                                : "Hiện " + fmt(ds.size()) + " / tổng " + fmt(tong)
+                                + " dòng" + (LichSuVatPhamDAO.dangCho() > 0
+                                        ? "  ·  còn " + LichSuVatPhamDAO.dangCho()
+                                        + " dòng đang chờ ghi" : ""));
+                    } catch (Exception ex) {
+                        lblTong.setForeground(WARN_RED);
+                        lblTong.setText("Lỗi đọc nhật ký: " + ex.getMessage());
+                        Logger.logException(PlayerManagerPanel.class, ex,
+                                "Lỗi đọc nhật ký nhận vật phẩm");
+                    }
+                }
+            }.execute();
+        };
+
+        JPanel loc = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        loc.add(new JLabel("Vật phẩm:"));
+        loc.add(fVatPham);
+        loc.add(new JLabel("Phương thức:"));
+        loc.add(fPhuongThuc);
+        loc.add(new JLabel("Trong:"));
+        loc.add(cbNgay);
+        loc.add(new JLabel("Tối đa:"));
+        loc.add(cbGioiHan);
+        loc.add(button("Xem", ACCENT, e -> nap.run()));
+        loc.add(button("Xuất CSV", OK_GREEN, e -> xuatCsv(dlg, mCT, pten, pid)));
+        loc.add(button("Xoá nhật ký người này", WARN_RED, e -> {
+            int c = JOptionPane.showConfirmDialog(dlg,
+                    "Xoá toàn bộ nhật ký nhận vật phẩm của " + pten + "?\n"
+                    + "Không lấy lại được.",
+                    "Xác nhận", JOptionPane.YES_NO_OPTION);
+            if (c == JOptionPane.YES_OPTION) {
+                int n = LichSuVatPhamDAO.xoaCua(pid);
+                JOptionPane.showMessageDialog(dlg, "Đã xoá " + fmt(n) + " dòng.");
+                nap.run();
+            }
+        }));
+        // Gõ xong bấm Enter là xem luôn, khỏi với chuột.
+        fVatPham.addActionListener(e -> nap.run());
+        fPhuongThuc.addActionListener(e -> nap.run());
+        cbNgay.addActionListener(e -> nap.run());
+        cbGioiHan.addActionListener(e -> nap.run());
+
+        JPanel duoi = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        duoi.add(lblTong);
+
+        JPanel noi = new JPanel(new BorderLayout(0, 4));
+        noi.setBorder(new EmptyBorder(6, 8, 6, 8));
+        noi.add(loc, BorderLayout.NORTH);
+        noi.add(tabs, BorderLayout.CENTER);
+        noi.add(duoi, BorderLayout.SOUTH);
+        dlg.setContentPane(noi);
+        dlg.setVisible(true);
+        nap.run();
+    }
+
+    /** Mốc "tính từ lúc nào" của ô chọn khoảng thời gian. */
+    private static java.sql.Timestamp mocThoiGian(String chon) {
+        if (chon == null || "Tất cả".equals(chon)) {
+            return null;
+        }
+        long ngay;
+        switch (chon) {
+            case "Hôm nay":
+                ngay = 1;
+                break;
+            case "3 ngày":
+                ngay = 3;
+                break;
+            case "7 ngày":
+                ngay = 7;
+                break;
+            case "30 ngày":
+                ngay = 30;
+                break;
+            default:
+                return null;
+        }
+        // Nhân bằng long: 25 ngày đã tràn int khi tính ra mili giây.
+        return new java.sql.Timestamp(
+                System.currentTimeMillis() - ngay * 24L * 60L * 60L * 1000L);
+    }
+
+    /**
+     * Ghi bảng đang xem ra tệp CSV.
+     *
+     * <p>Có <b>BOM UTF-8</b> ở đầu tệp: thiếu nó thì Excel đọc CSV theo bảng mã
+     * của Windows và mọi chữ tiếng Việt thành ký tự rác.</p>
+     */
+    private void xuatCsv(java.awt.Component cha, DefaultTableModel m,
+            String tenNguoi, long idNguoi) {
+        if (m.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(cha, "Bảng đang trống, không có gì để xuất.");
+            return;
+        }
+        javax.swing.JFileChooser ch = new javax.swing.JFileChooser();
+        ch.setSelectedFile(new File("lich-su-vat-pham-" + idNguoi + ".csv"));
+        if (ch.showSaveDialog(cha) != javax.swing.JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+        File f = ch.getSelectedFile();
+        try (java.io.PrintWriter pw = new java.io.PrintWriter(
+                new java.io.OutputStreamWriter(new java.io.FileOutputStream(f),
+                        java.nio.charset.StandardCharsets.UTF_8))) {
+            pw.print('﻿');
+            pw.println("Nhật ký nhận vật phẩm của " + oCsv(tenNguoi) + " (" + idNguoi + ")");
+            StringBuilder h = new StringBuilder();
+            for (int c = 0; c < m.getColumnCount(); c++) {
+                if (c > 0) {
+                    h.append(',');
+                }
+                h.append(oCsv(m.getColumnName(c)));
+            }
+            pw.println(h);
+            for (int r = 0; r < m.getRowCount(); r++) {
+                StringBuilder sb = new StringBuilder();
+                for (int c = 0; c < m.getColumnCount(); c++) {
+                    if (c > 0) {
+                        sb.append(',');
+                    }
+                    Object v = m.getValueAt(r, c);
+                    sb.append(oCsv(v == null ? "" : v.toString()));
+                }
+                pw.println(sb);
+            }
+            JOptionPane.showMessageDialog(cha, "Đã ghi " + fmt(m.getRowCount())
+                    + " dòng vào\n" + f.getAbsolutePath());
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(cha, "Không ghi được tệp: " + ex.getMessage(),
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /** Bọc một ô CSV: nhân đôi dấu nháy kép rồi bao ngoài bằng nháy kép. */
+    private static String oCsv(String s) {
+        return "\"" + (s == null ? "" : s.replace("\"", "\"\"")) + "\"";
     }
 
     // =====================================================================

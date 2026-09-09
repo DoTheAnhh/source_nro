@@ -286,6 +286,26 @@ public class ConfigDAO {
     public static final String GIU_LICH_SU_GD_NGAY = "giu_lich_su_gd_ngay";
 
     /**
+     * Có ghi nhật ký <b>nhận vật phẩm</b> hay không (1 bật, 0 tắt).
+     *
+     * <p>Bật thì mỗi lần bất kỳ ai nhận được một món — quái rơi, nhặt, mua,
+     * ghép, giftcode, admin cấp — là một dòng trong bảng {@code lich_su_vat_pham},
+     * xem ở nút "Lịch sử vật phẩm" của tab Quản Lý Người Chơi.</p>
+     *
+     * <p>Việc ghi làm ở <b>luồng riêng</b> nên không níu vòng lặp game. Cái giá
+     * thật là <b>dung lượng CSDL</b>: máy chủ đông thì bảng này lớn nhanh nhất
+     * trong cả CSDL. Tắt đi là mất dấu vết, nên chỉ tắt khi ổ đĩa hết chỗ.</p>
+     */
+    public static final String GHI_LICH_SU_VP = "ghi_lich_su_vp";
+
+    /**
+     * Số ngày giữ nhật ký nhận vật phẩm.
+     *
+     * <p>Dọn <b>mỗi lần khởi động</b>. Đặt {@code 0} để giữ mãi.</p>
+     */
+    public static final String GIU_LICH_SU_VP_NGAY = "giu_lich_su_vp_ngay";
+
+    /**
      * Mở panel quản trị khi có người nhập đúng mật khẩu trong game.
      *
      * <p>Panel nằm <b>trên máy chủ</b>. Người chơi ở máy khác nhập đúng mật khẩu
@@ -356,6 +376,8 @@ public class ConfigDAO {
         DEFAULTS.put(SKH_SAO_MIN, 1L);
         DEFAULTS.put(SKH_SAO_MAX, 2L);
         DEFAULTS.put(GIU_LICH_SU_GD_NGAY, 30L);
+        DEFAULTS.put(GHI_LICH_SU_VP, 1L);
+        DEFAULTS.put(GIU_LICH_SU_VP_NGAY, 30L);
     }
 
     private static final Map<String, String> CACHE = new LinkedHashMap<>();
@@ -420,6 +442,11 @@ public class ConfigDAO {
         NOTES.put(SKH_SAO_MAX, "Số sao pha lê nhiều nhất");
         NOTES.put(GIU_LICH_SU_GD_NGAY,
                 "Số ngày giữ nhật ký giao dịch giữa người chơi — 0 là giữ mãi");
+        NOTES.put(GHI_LICH_SU_VP,
+                "Ghi nhật ký nhận vật phẩm của người chơi (1 bật, 0 tắt). Xem ở "
+                + "nút \"Lịch sử vật phẩm\" trong tab Quản Lý Người Chơi");
+        NOTES.put(GIU_LICH_SU_VP_NGAY,
+                "Số ngày giữ nhật ký nhận vật phẩm — 0 là giữ mãi");
     }
 
     /**
