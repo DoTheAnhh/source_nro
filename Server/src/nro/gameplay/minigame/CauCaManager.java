@@ -123,18 +123,27 @@ public final class CauCaManager {
     public static final int CHO_CAN_MAX_MS = 5200;
 
     /**
-     * Ván vật lộn bỏ dở quá lâu thì dọn đi, tính bằng mili giây.
+     * Ván vật lộn bỏ dở quá lâu thì <b>kết thành hụt cá</b>, tính bằng mili giây.
      *
-     * <p>Ba mươi giây. Một lượt thật dài nhất cũng chỉ chừng mười lăm giây —
-     * năm giây chờ cá cắn cộng mười giây vật lộn con khó nhất — nên quá ba mươi
-     * giây là chắc chắn bỏ dở.</p>
+     * <p><b>Chín mươi giây</b>, và con số phải lớn hơn một lượt thật dài nhất
+     * chứ không phải nhỏ hơn: từ khi cột "tăng" chia cho năm, một lượt hoàn hảo
+     * với cá vàng đã mất chừng <b>bốn mươi giây</b>, cộng năm giây chờ cá cắn.
+     * Ai kéo chậm hơn thế một chút vẫn đang chơi thật.</p>
      *
-     * <p>Trước là chín mươi giây, và đó là một cái bẫy: client tắt giữa lúc vật
-     * lộn thì ván treo lại, và <b>mọi cú quăng sau đều bị từ chối</b> cho tới
-     * hết chín mươi giây ấy. Người chơi bấm quăng mà không thấy gì xảy ra, còn
-     * lời nhắc "đang kéo một con chưa xong" thì trôi mất trong dòng thông báo.</p>
+     * <p>Bản trước ghi ba mươi giây kèm lời giải thích "một lượt thật dài nhất
+     * cũng chỉ chừng mười lăm giây". Câu đó đúng ở thời thanh chạy nhanh gấp
+     * năm, và <b>đã sai từ lúc làm chậm thanh đếm</b> — nó chỉ chưa gây hại vì
+     * hạn này khi ấy chỉ được xét lúc người chơi quăng cần lần sau, mà giữa lúc
+     * vật lộn thì không ai quăng được.</p>
+     *
+     * <p>Nay có {@link #donVanHetHan()} chạy theo nhịp nên hạn này <b>cắt ngang
+     * ván thật</b> — để ba mươi giây là cướp con cá khỏi tay người đang kéo.</p>
+     *
+     * <p>Nỗi lo cũ — "client tắt giữa lúc vật lộn thì ván treo lại và mọi cú
+     * quăng sau đều bị từ chối" — không còn: ván hết hạn bây giờ tự kết thành
+     * hụt cá và tự nhả chỗ, chứ không nằm đợi cú quăng kế tiếp tới dọn.</p>
      */
-    private static final long HET_HAN_MS = 30000;
+    private static final long HET_HAN_MS = 90000;
 
     /**
      * Số thỏi nhận về của từng loại cá.
@@ -212,10 +221,12 @@ public final class CauCaManager {
      * giải thì phải đổi đơn vị cột này sang <i>phần mười phần trăm mỗi giây</i>
      * — và việc đó phải sửa cả client.</p>
      *
-     * <p>Cột giảm giữ nguyên, và hệ số nhân bên client cũng đã hạ xuống một
-     * phần mười — nên tụt rất chậm. Nghĩa là con cá gần như không tuột được
-     * nữa, chỉ là kéo lâu hay nhanh. Đây là lựa chọn có ý thức: đổi cái căng
-     * thẳng "có thể mất" lấy cái chắc chắn "cứ giữ là được".</p>
+     * <p>Cột giảm giữ nguyên; hệ số nhân bên client là {@code CC_HE_SO_TUT}.
+     * Hệ số ấy từng để 0,1 và <b>đó là một lỗi</b>: cá dễ nhất phải buông tay
+     * hai trăm giây mới tuột, tức nhánh "về 0% là hụt cá" nằm trong mã mà không
+     * lần nào chạy tới — câu cá thành ra cứ giữ là chắc được. Nay để 0,25, mốc
+     * tuột nằm trong khoảng hai mươi tới tám mươi giây tuỳ loài, xem bảng ở
+     * chính hằng số đó bên client.</p>
      *
      * <p>Con số nằm ở <b>máy chủ</b> chứ không ở client, dù client mới là bên
      * dùng: một bảng ở một chỗ thì sửa cân bằng không phải dựng lại client, và
@@ -251,7 +262,18 @@ public final class CauCaManager {
         /** Tầm quăng, ghi xuống lịch sử để panel soát được. */
         final int xa;
 
-        VanCho(int loai, long luc, int choMs, int xa) {
+        /**
+         * Người đang kéo.
+         *
+         * <p>Giữ hẳn tham chiếu chứ không chỉ id: ván hết hạn phải gửi được
+         * thông báo "để tuột mất" cho đúng người, mà lúc quét thì không có sẵn
+         * đối tượng nào để tra ngược từ id ra. Người chơi thoát game thì
+         * {@link #nguoiChoiRoiGame} đã bỏ ván đi nên tham chiếu không nằm lại.</p>
+         */
+        final Player pl;
+
+        VanCho(Player pl, int loai, long luc, int choMs, int xa) {
+            this.pl = pl;
             this.loai = loai;
             this.luc = luc;
             this.choMs = choMs;
@@ -278,6 +300,24 @@ public final class CauCaManager {
             }
             tongTrongSo[m] = t;
         }
+        moNhipQuet();
+    }
+
+    /**
+     * Nhịp quét ván bỏ dở, năm giây một lần.
+     *
+     * <p>Luồng nền đánh dấu daemon: máy chủ tắt thì không đợi nó. Việc nó làm
+     * chỉ là gửi thông báo và ghi lịch sử, dừng ngang không mất gì.</p>
+     */
+    private void moNhipQuet() {
+        java.util.concurrent.ScheduledExecutorService nhip
+                = java.util.concurrent.Executors.newSingleThreadScheduledExecutor(r -> {
+                    Thread t = new Thread(r, "Cau Ca quet van bo do");
+                    t.setDaemon(true);
+                    return t;
+                });
+        nhip.scheduleWithFixedDelay(this::donVanHetHan, 5, 5,
+                java.util.concurrent.TimeUnit.SECONDS);
     }
 
     /** Mức tầm ứng với một con số tầm quăng 0..100. */
@@ -389,7 +429,7 @@ public final class CauCaManager {
         int loai = bocCa(xa);
         int choMs = CHO_CAN_MIN_MS
                 + ngauNhien.nextInt(CHO_CAN_MAX_MS - CHO_CAN_MIN_MS + 1);
-        vanCho.put(pl.id, new VanCho(loai, bayGio, choMs, xa));
+        vanCho.put(pl.id, new VanCho(pl, loai, bayGio, choMs, xa));
         MiniGameService.gI().cauCaGuiCaCan(pl, loai, choMs);
     }
 
@@ -449,18 +489,43 @@ public final class CauCaManager {
     }
 
     /**
-     * Dọn những ván treo quá lâu.
+     * Kết những ván treo quá lâu thành <b>hụt cá</b>.
      *
-     * <p>Client tắt giữa lúc vật lộn thì không có ai báo kết quả, và ván treo mãi
-     * — người chơi không quăng tiếp được vì máy chủ tưởng còn đang kéo. Bỏ luôn
-     * chứ không trả lại tiền mồi: mồi đã mất từ lúc quăng, đúng như khi để tuột.</p>
+     * <p>Client tắt giữa lúc vật lộn thì không có ai báo kết quả. Trước đây ván
+     * chỉ bị <i>bỏ đi trong im lặng</i>, và chỉ bỏ vào đúng lúc người chơi quăng
+     * cần lần sau — nên người chơi mất tiền mồi mà không nhận được một câu nào
+     * nói con cá đã đi đâu.</p>
+     *
+     * <p>Nay kết hẳn thành tuột: gửi thông báo, ghi xuống lịch sử như mọi lần
+     * tuột khác, và nhả chỗ để quăng tiếp được ngay. Không trả lại tiền mồi —
+     * mồi mất từ lúc quăng, đúng như khi để tuột thật.</p>
+     *
+     * <p>Chạy theo nhịp năm giây <b>chứ không chỉ lúc quăng cần</b>: giữa lúc
+     * vật lộn thì người chơi không quăng được, nên treo ở lúc quăng nghĩa là
+     * ván bỏ dở nằm đó cho tới khi họ tự tìm cách thoát ra.</p>
      */
     private void donVanHetHan() {
-        long bayGio = System.currentTimeMillis();
-        for (Map.Entry<Long, VanCho> e : vanCho.entrySet()) {
-            if (bayGio - e.getValue().luc > HET_HAN_MS) {
-                vanCho.remove(e.getKey());
+        try {
+            long bayGio = System.currentTimeMillis();
+            for (Map.Entry<Long, VanCho> e : vanCho.entrySet()) {
+                if (bayGio - e.getValue().luc <= HET_HAN_MS) {
+                    continue;
+                }
+                // remove() rồi mới xử lý: hai luồng cùng thấy ván hết hạn thì
+                // chỉ luồng lấy được mới báo, không gửi hai lần thông báo.
+                VanCho v = vanCho.remove(e.getKey());
+                if (v == null || v.pl == null) {
+                    continue;
+                }
+                Service.gI().sendThongBao(v.pl, "Câu Cá: bỏ dây quá lâu, "
+                        + TEN_CA[v.loai] + " thoát mất!");
+                ghiVan(v.pl, v.loai, 0, false, v.xa);
+                MiniGameService.gI().cauCaGuiKetQua(v.pl, v.loai, 0, false);
             }
+        } catch (Exception ex) {
+            // Nem ra khoi scheduleWithFixedDelay la nhip DUNG HAN, khong bao gi.
+            Logger.logException(CauCaManager.class, ex,
+                    "Loi quet van cau ca bo do");
         }
     }
 

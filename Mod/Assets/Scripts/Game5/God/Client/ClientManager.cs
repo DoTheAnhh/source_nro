@@ -64,6 +64,11 @@ namespace Game5.God
             // ra, vi viec do chia thanh nhieu goi gui theo nhip chu khong gui hết
             // trong mot lan.
             TuiUI.getInstance().capNhat();
+            // Luot cau ca chay tiep khi bang da dong: khong ai giu day thi
+            // thanh tut dan, ve 0% la hut ca va bao len may chu. Khong goi o
+            // day thi dong bang giua luot la luot dung hinh — mat tien moi ma
+            // khong co ket qua nao.
+            TroChoiUI.getInstance().capNhatNen();
         }
         /// <summary>Có màn phụ nào (Phúc lợi, cấu hình Voice…) đang mở không.</summary>
         /// <remarks>

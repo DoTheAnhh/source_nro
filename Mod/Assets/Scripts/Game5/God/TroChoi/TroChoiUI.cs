@@ -650,6 +650,22 @@ namespace Game5.God
         // ------------------------------------------------------------------
         public void moRa()
         {
+            // Đang câu dở thì mở thẳng vào thẻ Câu Cá.
+            //
+            // Lượt câu chạy tiếp ở phía sau khi bảng đóng (xem capNhatNen), nên
+            // mở lại mà rơi vào Tài Xỉu thì người chơi phải tự tìm đường về
+            // trong khi con cá đang tuột dần — mà họ mở bảng lên chính là để
+            // cứu nó.
+            if (cauCaDangChay())
+            {
+                the = THE_CAU_CA;
+                the2 = THE2_DAT_CUOC;
+                trang = 0;
+                hienBaoKetQua = false;
+                dangMo = true;
+                cuonToiTheDangMo();
+                return;
+            }
             the = THE_TAI_XIU;
             the2 = THE2_DAT_CUOC;
             trang = 0;
@@ -1571,6 +1587,43 @@ namespace Game5.God
         /// </remarks>
         private const float CC_TOC_VACH_LEN = 0.65f;
         private const float CC_TOC_VACH_XUONG = 0.50f;
+
+        /// <summary>
+        /// Thanh tiến trình tụt bao nhiêu phần so với cột "giảm" của bảng độ khó.
+        /// </summary>
+        /// <remarks>
+        /// <para><b>Đây là con số quyết định cá có tuột được hay không.</b> Thanh
+        /// khởi từ 20%, nên thời gian tụt hết là <c>20 / (giảm × hệ số)</c> giây
+        /// liên tục ra ngoài vùng xanh:</para>
+        ///
+        /// <list type="table">
+        ///   <item>cá ngựa (giảm 1) — 80 giây, thắng cần 20 giây</item>
+        ///   <item>cá thu (giảm 2) — 40 giây, thắng cần 27 giây</item>
+        ///   <item>cá cờ (giảm 2) — 40 giây, thắng cần 40 giây</item>
+        ///   <item>cá mập (giảm 3) — 27 giây, thắng cần 40 giây</item>
+        ///   <item>cá vàng (giảm 4) — 20 giây, thắng cần 40 giây</item>
+        /// </list>
+        ///
+        /// <para><b>Trước đây là 0,1</b> — tức cá ngựa phải buông tay 200 giây
+        /// mới tuột, trong khi máy chủ dọn ván bỏ dở sớm hơn thế nhiều. Nhánh
+        /// "về 0% là hụt cá" vẫn nằm trong mã nhưng <b>không lần nào chạy tới</b>:
+        /// câu cá thành ra cứ giữ là chắc được, chỉ khác nhanh hay chậm.</para>
+        ///
+        /// <para>0,25 chứ không phải 0,5 của bản gốc: cột "tăng" đã chia cho năm
+        /// theo yêu cầu làm chậm thanh đếm, nên trả nguyên cột "giảm" là ba con
+        /// khó nhất tụt nhanh gấp đôi tốc độ kéo — thua trở thành thường xuyên
+        /// chứ không phải có thể. Ở 0,25 thì cá dễ gần như không tuột, còn cá
+        /// đắt thì tuột thật nếu bỏ bê.</para>
+        ///
+        /// <para>Sửa ở đây chứ không sửa cột "giảm" trong bảng độ khó bên máy
+        /// chủ: cột đó gửi xuống dạng byte nguyên, chia rồi làm tròn thì năm mức
+        /// độ khó dồn lại gần nhau (6 9 12 16 20 thành 1 2 2 3 4) và mất luôn
+        /// thứ tự dễ-khó.</para>
+        /// </remarks>
+        private const float CC_HE_SO_TUT = 0.25f;
+
+        /// <summary>Dưới mức này thì cảnh báo sắp tuột.</summary>
+        private const float CC_NGUONG_BAO_TUOT = 15f;
         private bool ccDangGiu;
         private bool ccVachTrongVung;
         private bool ccDaBao;
@@ -1748,6 +1801,55 @@ namespace Game5.God
         /// chuyển động đều đặn đoán trước được, hai hàm chồng nhau thì nó đổi
         /// hướng thất thường như con cá thật đang vùng.</para>
         /// </remarks>
+        /// <summary>
+        /// Một lượt câu có đang chạy dở không.
+        /// </summary>
+        public bool cauCaDangChay()
+        {
+            return ccPha == CC_BAY || ccPha == CC_CHO_CAN
+                    || ccPha == CC_CA_CAN || ccPha == CC_VAT_LON;
+        }
+
+        /// <summary>
+        /// Nhịp chạy <b>khi bảng đã đóng</b>, hoặc khi đang xem thẻ trò khác.
+        /// </summary>
+        /// <remarks>
+        /// <para>Gọi mỗi khung hình từ <c>ClientManager.Update()</c>, tức chạy
+        /// kể cả lúc không có bảng nào mở.</para>
+        ///
+        /// <para><b>Vì sao cần:</b> tiền mồi đã trừ từ lúc quăng. Trước đây
+        /// <c>ccCapNhat</c> chỉ được gọi từ trong hàm vẽ màn Câu Cá, nên đóng
+        /// bảng giữa lượt là toàn bộ lượt <i>đứng hình</i>: không ai kéo, mà
+        /// cũng không tuột, không báo gì lên máy chủ. Ván treo lại bên máy chủ
+        /// và người chơi mất tiền mồi mà không có kết quả nào.</para>
+        ///
+        /// <para>Nay lượt câu chạy tiếp ở phía sau. Không ai giữ dây thì thanh
+        /// tiến trình tụt dần, về 0% là hụt cá — máy chủ nhận báo và gửi thông
+        /// báo "để tuột mất …" ra khung chat như mọi lần tuột khác. Mở bảng lại
+        /// giữa chừng thì thấy đúng thanh đang chạy dở chứ không phải một màn
+        /// mới tinh.</para>
+        ///
+        /// <para>Không chạy khi bảng đang mở ở đúng thẻ Câu Cá: chỗ đó hàm vẽ đã
+        /// gọi <c>ccCapNhat</c> rồi. Gọi hai lần một khung hình không sai kết quả
+        /// (bước thời gian tự chia đôi) nhưng thừa.</para>
+        /// </remarks>
+        public void capNhatNen()
+        {
+            if (!cauCaDangChay())
+            {
+                return;
+            }
+            if (dangMo && the == THE_CAU_CA)
+            {
+                return;
+            }
+            // Bảng đóng thì không có ai giữ dây. Không tự hạ cờ này thì lần
+            // đóng bảng ngay giữa lúc đang giữ để lại cờ bật, và con cá tự kéo
+            // mình lên tới 100%.
+            ccDangGiu = false;
+            ccCapNhat();
+        }
+
         private void ccCapNhat()
         {
             God.MiniGame m = God.MiniGame.gI();
@@ -1854,15 +1956,10 @@ namespace Game5.God
                         }
                         else
                         {
-                            // Ra ngoai vung: tut RAT TU TU.
-                            //
-                            // He so 0.1 chu khong 0.5 — tuc mot phan nam muc
-                            // truoc. Sua o day chu khong sua cot "giam" trong
-                            // bang do kho: chia nam roi lam tron ve so nguyen
-                            // thi nam muc do kho don lai gan nhau het (6 9 12
-                            // 16 20 thanh 1 2 2 3 4), mat luon thu tu de-kho.
-                            // Doi he so thi giu duoc dung ti le giua nam muc.
-                            ccTienTrinh -= m.ccTocDoGiam * 0.1f * daTroi;
+                            // Ra ngoài vùng: thanh tụt. Xem CC_HE_SO_TUT để
+                            // biết vì sao là 0,25 chứ không phải con số khác —
+                            // đó là chỗ quyết định cá tuột được hay không.
+                            ccTienTrinh -= m.ccTocDoGiam * CC_HE_SO_TUT * daTroi;
                         }
 
                         if (ccTienTrinh >= 100f)
@@ -3121,7 +3218,12 @@ namespace Game5.God
             }
             else if (vatLon)
             {
-                chu1 = ccDangGiu ? "ĐANG KÉO" : "GIỮ DÂY";
+                // Sắp tuột thì nút phải nói ra. Thanh đã đổi sang màu đỏ dưới
+                // 30%, nhưng lúc đó mắt người chơi đang dán vào vùng xanh chứ
+                // không nhìn thanh — chữ trên nút mới là chỗ họ thấy.
+                chu1 = ccTienTrinh < CC_NGUONG_BAO_TUOT
+                        ? "SẮP TUỘT!"
+                        : (ccDangGiu ? "ĐANG KÉO" : "GIỮ DÂY");
                 chu2 = ((int) ccTienTrinh) + "%";
             }
             else if (caCan)
