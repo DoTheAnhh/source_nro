@@ -48,6 +48,61 @@ public class MapService {
         return null;
     }
 
+    /**
+     * Cổng dịch chuyển <b>gần người chơi nhất</b> trên bản đồ đang đứng.
+     *
+     * <p>Dùng cho nút dịch chuyển nhanh, khi người chơi <b>không đứng đúng
+     * trong ô cổng</b>. {@link #getWaypointPlayerIn} đòi toạ độ nằm lọt trong
+     * hình chữ nhật của cổng — đúng cho việc đi bộ chạm cổng, nhưng sai cho một
+     * cái nút mà cả ý nghĩa của nó là "đưa tôi đi luôn": đứng ở nhà bấm nút ra
+     * làng thì bị trả lời "Bạn chưa thể đến khu vực này", trong khi lý do thật
+     * chỉ là chưa bước tới cửa.</p>
+     *
+     * <p><b>Không nới lỏng điều kiện nào khác.</b> Cổng chọn ra vẫn phải qua
+     * {@code getMapCanJoin} và {@code checkMapCanJoin} như mọi lần — nhiệm vụ
+     * chưa tới, sức mạnh chưa đủ, khu đầy người thì vẫn bị chặn y như cũ. Chỗ
+     * này chỉ bỏ đúng một đòi hỏi: phải đứng lên ô cổng.</p>
+     *
+     * <p>Đo bằng khoảng cách tới <b>hình chữ nhật</b> của cổng chứ không tới
+     * tâm: cổng ở rìa bản đồ thường rất dài, đo tới tâm thì một cổng dài ngay
+     * dưới chân lại thua một cổng nhỏ ở xa.</p>
+     *
+     * @return {@code null} khi bản đồ không có cổng nào
+     */
+    public WayPoint getWaypointGanNhat(Player player) {
+        if (player == null || player.zone == null || player.zone.map == null
+                || player.location == null) {
+            return null;
+        }
+        WayPoint gan = null;
+        long tot = Long.MAX_VALUE;
+        for (WayPoint wp : player.zone.map.wayPoints) {
+            if (wp == null) {
+                continue;
+            }
+            long dx = 0;
+            if (player.location.x < wp.minX) {
+                dx = wp.minX - player.location.x;
+            } else if (player.location.x > wp.maxX) {
+                dx = player.location.x - wp.maxX;
+            }
+            long dy = 0;
+            if (player.location.y < wp.minY) {
+                dy = wp.minY - player.location.y;
+            } else if (player.location.y > wp.maxY) {
+                dy = player.location.y - wp.maxY;
+            }
+            // Binh phuong khoang cach: khong can can bac hai chi de so sanh,
+            // ma bo no di thi khong co so thuc nao lam tron sai.
+            long d = dx * dx + dy * dy;
+            if (d < tot) {
+                tot = d;
+                gan = wp;
+            }
+        }
+        return gan;
+    }
+
     public Zone getMapCanJoin(Player player, int mapId, int zoneId) {
         if (isMapOffline(mapId) || isMapBangHoi(mapId)) {
             return getMapById(mapId).zones.get(0);

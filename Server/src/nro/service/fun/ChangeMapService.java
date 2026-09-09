@@ -786,6 +786,20 @@ public class ChangeMapService {
         }
         if (zoneJoin == null) {
             wp = MapService.gI().getWaypointPlayerIn(player);
+            if (wp == null) {
+                // Khong dung tren cong thi lay CONG GAN NHAT cua ban do nay.
+                //
+                // Nut dich chuyen nhanh (J K L tren may tinh, ba nut mui ten
+                // goc trai duoi tren dien thoai) goi thang toi day. Doi phai
+                // dung lot trong o cong la o nha bam nut ra lang thi nhan
+                // "Ban chua the den khu vuc nay" — trong khi ly do that chi la
+                // chua buoc toi cua, va cau tra loi do khong he noi ra dieu ay.
+                //
+                // Chi bo dung mot doi hoi: phai dung len o cong. Moi cong chan
+                // khac giu nguyen — getMapCanJoin va checkMapCanJoin ben duoi
+                // van chan nhiem vu chua toi, suc manh chua du, khu day nguoi.
+                wp = MapService.gI().getWaypointGanNhat(player);
+            }
             if (wp != null) {
                 zoneJoin = MapService.gI().getMapCanJoin(player, wp.goMap, -1);
                 if (zoneJoin != null) {
@@ -837,7 +851,23 @@ public class ChangeMapService {
                 Service.gI().sendThongBao(player, "Chưa hạ hết đối thủ");
                 return;
             }
-            Service.gI().sendThongBao(player, "Bạn chưa thể đến khu vực này");
+            // Noi ro hai truong hop khac han nhau.
+            //
+            // Cau cu — "Ban chua the den khu vuc nay" — dung cho ca hai, va
+            // trong ca hai deu goi y sai rang nguoi choi thieu dieu kien gi do.
+            // Ban do khong co cong nao thi khong phai chuyen dieu kien, con
+            // cong co ma khong vao duoc thi ly do nam o dau kia.
+            if (wp == null) {
+                Service.gI().sendThongBao(player,
+                        "Bản đồ này không có cổng đi tiếp.");
+                return;
+            }
+            nro.entity.map.Map dich = getMapById(wp.goMap);
+            String ten = (dich == null || dich.mapName == null)
+                    ? ("bản đồ " + wp.goMap) : dich.mapName;
+            Service.gI().sendThongBao(player, "Chưa vào được " + ten
+                    + " lúc này (hay gặp: chưa làm tới nhiệm vụ mở khu vực, "
+                    + "hoặc mọi khu đang đầy người).");
         }
     }
 
