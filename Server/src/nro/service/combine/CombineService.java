@@ -511,6 +511,13 @@ public class CombineService {
                 NhapNgocRong.nhapNgocRong(player, soLan);
                 break;
             }
+            case ConstNpc.O_NHAP_SO_LUONG_BAN: {
+                // De trong hoac go 0 la ban het o — ShopService tu hieu so 0
+                // theo nghia do, nen o day khong chan gi ca.
+                nro.service.shop.ShopService.gI().nhanSoLuongBan(player,
+                        docSoNguyen(chu));
+                break;
+            }
             default:
                 break;
         }

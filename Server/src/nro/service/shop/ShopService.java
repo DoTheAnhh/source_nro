@@ -729,16 +729,27 @@ public class ShopService {
      * người chơi bán xong bị trừ vàng. Số lượng một ô có thể lên hàng nghìn.</p>
      */
     private long giaBan(Item item) {
+        return giaBanMotCai(item) * item.quantity;
+    }
+
+    /**
+     * Giá bán <b>một cái</b>, chưa nhân số lượng.
+     *
+     * <p>Tách riêng khỏi {@link #giaBan} để bán lẻ tính được đúng: bán 3 cái
+     * trong ô 100 thì phải là ba lần giá đơn, chứ không phải một phần trăm của
+     * giá cả ô — hai cách ấy lệch nhau mỗi khi phép chia không chia hết.</p>
+     */
+    private long giaBanMotCai(Item item) {
         if (item.template.id == ID_THOI_VANG) {
             return nro.repository.dao.ConfigDAO.num(
                     nro.repository.dao.ConfigDAO.THOI_VANG_GIA_VANG,
-                    200_000_000L) * item.quantity;
+                    200_000_000L);
         }
         long don = item.template.goldSell / 4;
         if (don <= 0) {
             don = 1;
         }
-        return don * item.quantity;
+        return don;
     }
 
     public boolean truThoiVang(Player player, int soLuong) {
@@ -1080,6 +1091,29 @@ public class ShopService {
         int quantity = item.quantity;
         long cost = giaBan(item);
 
+        // Nhieu hon mot cai thi HOI BAN BAO NHIEU, khong ban thang ca o.
+        //
+        // Truoc day ban la ban sach o, khong co duong nao ban le. Ai muon giu
+        // lai vai cai phai keo tach o ra truoc — ma tach o thi can o trong, va
+        // o day dung luc hanh trang day moi la luc nguoi ta ban do.
+        //
+        // De trong hoac go 0 van la ban het, nen thao tac cu khong dai them
+        // buoc nao: mo hop, bam Dong y.
+        if (quantity > 1) {
+            long don = giaBanMotCai(item);
+            choBan.put(pl.id, new ChoBan(where, index, item.template.id,
+                    quantity, System.currentTimeMillis()));
+            Service.gI().moHopNhapChu(pl,
+                    "Bán bao nhiêu " + item.template.name + "?\n"
+                    + "Đang có " + quantity + " cái, "
+                    + Util.formatNumber(don, FormatStyle.VIETNAMESE)
+                    + " vàng mỗi cái.\n"
+                    + "Để trống hoặc gõ 0 là bán hết ("
+                    + Util.formatNumber(cost, FormatStyle.VIETNAMESE) + " vàng).",
+                    ConstNpc.O_NHAP_SO_LUONG_BAN);
+            return;
+        }
+
         String text = "Bạn có muốn bán\nx" + quantity
                 + " " + item.template.name + "\nvới giá là "
                 + Util.formatNumber(cost, FormatStyle.VIETNAMESE) + " vàng?";
@@ -1102,6 +1136,16 @@ public class ShopService {
 }
 
    public void sellItem(Player pl, int where, int index) {
+       banSoLuong(pl, where, index, 0);
+   }
+
+    /**
+     * Bán một phần hay cả ô cho cửa hàng.
+     *
+     * @param soBan số cái muốn bán; {@code <= 0} hoặc lớn hơn số đang có thì
+     *              bán hết ô
+     */
+    private void banSoLuong(Player pl, int where, int index, int soBan) {
     if (pl.iDMark.getShopOpen() == null || pl.iDMark.getTagNameShop() == null) {
         Service.gI().sendThongBao(pl, "Không thể thực hiện");
         return;
@@ -1130,8 +1174,13 @@ public class ShopService {
             return;
         }
 
+        // Kep ve khoang co that. Con so nay den tu o nhap cua nguoi choi, va
+        // giua luc hoi voi luc tra loi ho co the da dung mat vai cai.
         int quantity = item.quantity;
-        long cost = giaBan(item);
+        if (soBan <= 0 || soBan > quantity) {
+            soBan = quantity;
+        }
+        long cost = giaBanMotCai(item) * soBan;
 
         if (pl.inventory.gold + cost > Inventory.LIMIT_GOLD) {
             Service.gI().sendThongBao(pl, "Vàng sau khi bán vượt quá giới hạn");
@@ -1140,17 +1189,24 @@ public class ShopService {
 
         pl.inventory.gold += cost;
         Service.gI().sendMoney(pl);
-        Service.gI().sendThongBao(pl, "Đã bán " + item.template.name
+        Service.gI().sendThongBao(pl, "Đã bán x" + soBan + " " + item.template.name
                 + " thu được " + Util.formatNumber(cost, FormatStyle.VIETNAMESE) + " vàng");
 
-        BuyBack.gI().addItem(pl, item);
+        // Mua lai dung SO DA BAN, khong phai ca o.
+        //
+        // Dua thang `item` vao la dua ca o: ban 3 cai trong o 100 thi muc mua
+        // lai ghi 100 cai, va mua lai la duoc 100 cai trong khi chi ban 3 —
+        // mot duong nhan do.
+        Item luuMuaLai = ItemService.gI().copyItem(item);
+        luuMuaLai.quantity = soBan;
+        BuyBack.gI().addItem(pl, luuMuaLai);
 
         if (where == 0) {
-            InventoryService.gI().subQuantityItemsBody(pl, item, quantity);
+            InventoryService.gI().subQuantityItemsBody(pl, item, soBan);
             InventoryService.gI().sendItemBody(pl);
             Service.gI().Send_Caitrang(pl);
         } else {
-            InventoryService.gI().subQuantityItemsBag(pl, item, quantity);
+            InventoryService.gI().subQuantityItemsBag(pl, item, soBan);
             InventoryService.gI().sendItemBag(pl);
         }
 
@@ -1163,6 +1219,89 @@ public class ShopService {
         Service.gI().sendThongBao(pl, "Không thể thực hiện");
     }
 }
+
+    // ==================================================================
+    //  Bán theo số lượng
+    // ==================================================================
+
+    /** Ô người chơi vừa được hỏi "bán bao nhiêu", chờ họ gõ số. */
+    private static final class ChoBan {
+
+        final int where;
+        final int index;
+        final int itemId;
+        final int soLucHoi;
+        final long luc;
+
+        ChoBan(int where, int index, int itemId, int soLucHoi, long luc) {
+            this.where = where;
+            this.index = index;
+            this.itemId = itemId;
+            this.soLucHoi = soLucHoi;
+            this.luc = luc;
+        }
+    }
+
+    /**
+     * Câu hỏi "bán bao nhiêu" đang treo của từng người.
+     *
+     * <p>Giữ ở đây chứ không gắn vào {@code Player}: đây là trạng thái của một
+     * thao tác đang dở, sống vài giây, không phải thứ thuộc về nhân vật và
+     * càng không phải thứ đem lưu xuống CSDL.</p>
+     */
+    private final java.util.Map<Long, ChoBan> choBan
+            = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** Quá hạn này thì câu hỏi cũ không còn giá trị, tính bằng mili giây. */
+    private static final long CHO_BAN_HET_HAN_MS = 120_000;
+
+    /**
+     * Người chơi vừa gõ xong số lượng muốn bán.
+     *
+     * <p><b>Kiểm lại từ đầu.</b> Giữa lúc hỏi và lúc trả lời họ có thể đã đóng
+     * cửa hàng, đổi bản đồ, kéo món sang ô khác, hay dùng bớt vài cái. Chỉ ô
+     * nhớ lại thôi thì không đủ — nên chỗ này soát cả cửa hàng còn mở, ô còn
+     * đúng món ấy, rồi mới bán.</p>
+     *
+     * @param so số người chơi gõ; {@code 0} là bán hết ô
+     */
+    public void nhanSoLuongBan(Player pl, int so) {
+        if (pl == null) {
+            return;
+        }
+        ChoBan cho = choBan.remove(pl.id);
+        if (cho == null) {
+            Service.gI().sendThongBao(pl, "Không còn món nào đang chờ bán.");
+            return;
+        }
+        if (System.currentTimeMillis() - cho.luc > CHO_BAN_HET_HAN_MS) {
+            Service.gI().sendThongBao(pl, "Hỏi lâu quá rồi, chọn lại món cần bán.");
+            return;
+        }
+        if (pl.iDMark.getShopOpen() == null || pl.iDMark.getTagNameShop() == null) {
+            Service.gI().sendThongBao(pl, "Cửa hàng đã đóng.");
+            return;
+        }
+        // O phai con dung MON DO — keo do sang o khac roi ma van ban theo chi
+        // so cu la ban nham mon.
+        Item hienGio = null;
+        java.util.List<Item> ds = (cho.where == 0)
+                ? pl.inventory.itemsBody : pl.inventory.itemsBag;
+        if (cho.index >= 0 && cho.index < ds.size()) {
+            hienGio = ds.get(cho.index);
+        }
+        if (hienGio == null || !hienGio.isNotNullItem()
+                || hienGio.template.id != cho.itemId) {
+            Service.gI().sendThongBao(pl,
+                    "Ô đó không còn món cũ nữa, chọn lại món cần bán.");
+            return;
+        }
+        if (so > hienGio.quantity) {
+            Service.gI().sendThongBao(pl, "Chỉ còn " + hienGio.quantity
+                    + " cái, bán hết chỗ đó.");
+        }
+        banSoLuong(pl, cho.where, cho.index, so);
+    }
 
     private void getItemSideBoxLuckyRound(Player player, List<Item> items, byte type, int index) {
         if (items == null) {

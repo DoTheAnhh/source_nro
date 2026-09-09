@@ -321,6 +321,14 @@ public class ConstNpc {
      */
     public static final short O_NHAP_SO_LAN_NHAP_NGOC = 5210;
 
+    /**
+     * Ô nhập "bán bao nhiêu cái" khi bán vật phẩm cho cửa hàng.
+     *
+     * <p>Chỉ mở cho ô có nhiều hơn một cái. Ô một cái thì vẫn là hộp Đồng ý /
+     * Từ chối như cũ — hỏi số lượng khi chỉ có đúng một cái là bắt gõ thừa.</p>
+     */
+    public static final short O_NHAP_SO_LUONG_BAN = 5211;
+
     // Hoi lai truoc khi xoa sach bua.
     // So menu chi co y nghia trong pham vi MOT npc (BaHatMit.confirmMenu so
     // getIndexMenu voi chinh may hang nay), nen 507 trung voi so cua npc khac
