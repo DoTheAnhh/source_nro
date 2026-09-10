@@ -55,6 +55,12 @@ public class NutMayChu extends JPanel {
         nutKhoiDong.setBackground(UiTheme.DANGER);
         nutKhoiDong.addActionListener(e -> khoiDongLaiMayChu());
         giua.add(nutKhoiDong);
+
+        JButton nutDong = new JButton("Đóng máy chủ");
+        trangThaiNut(nutDong);
+        nutDong.setBackground(new Color(70, 74, 82));
+        nutDong.addActionListener(e -> dongMayChu());
+        giua.add(nutDong);
         add(giua, BorderLayout.CENTER);
 
         trangThai.setForeground(UiTheme.TEXT_MUTED_DARK);
@@ -155,8 +161,10 @@ public class NutMayChu extends JPanel {
      * trước khi thoát, nhưng vẫn phải hỏi lại vì đây là việc không rút lại
      * được.</p>
      *
-     * <p>Chỉ <b>bật lại</b> chứ không dựng lại mã nguồn. Sửa mã xong thì vẫn
-     * phải build rồi mới chạy — nút này không thay được việc đó.</p>
+     * <p>Có <b>dựng lại mã nguồn</b> trước khi bật: sau {@code git pull} thì bấm
+     * nút này là đủ, không cần chạy tay {@code run.bat}. Dựng vào thư mục tạm
+     * trước, dựng xong mới thay — build hỏng thì máy chủ vẫn lên lại bằng bản
+     * cũ chứ không chết hẳn.</p>
      */
     private void khoiDongLaiMayChu() {
         int soNguoi = 0;
@@ -170,8 +178,10 @@ public class NutMayChu extends JPanel {
             hoi += "\n\nĐang có " + soNguoi + " người chơi online — họ sẽ bị"
                     + " đá ra.\nDữ liệu được lưu trước khi tắt.";
         }
-        hoi += "\n\nMáy chủ lên lại sau khoảng 5–10 giây."
-                + "\nLưu ý: chỉ bật lại, KHÔNG dựng lại mã nguồn.";
+        hoi += "\n\nMã nguồn được dựng lại trước khi bật, nên sau \"git pull\""
+                + "\nchỉ cần bấm nút này là ăn code mới."
+                + "\nMáy chủ lên lại sau khoảng 30–60 giây (chờ build)."
+                + "\nBuild hỏng thì vẫn lên lại bằng bản cũ.";
         if (JOptionPane.showConfirmDialog(this, hoi, "Khởi động lại máy chủ",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
@@ -188,5 +198,50 @@ public class NutMayChu extends JPanel {
             }
             nro.server.ServerManager.gI().khoiDongLai();
         }, "KhoiDongLaiMayChu").start();
+    }
+
+    /**
+     * Tắt hẳn máy chủ và thoát bảng điều khiển.
+     *
+     * <p>Khác nút bên trên đúng một chỗ: <b>không bật lại</b>. Phần lưu thì y
+     * hệt — {@code ServerManager.close()} ghi clan, shop ký gửi, chỉ số máy chủ,
+     * nhật ký vật phẩm, rồi đá từng người ra và lưu lại từng người.</p>
+     *
+     * <p>Trước đây muốn tắt phải bấm dấu X ở góc cửa sổ. Việc đó không sai,
+     * nhưng dấu X của một cửa sổ thường có nghĩa "đóng cửa sổ thôi" — không ai
+     * đoán được nó tắt cả máy chủ, nên đặt hẳn một cái nút nói rõ mình làm gì
+     * thì đúng hơn.</p>
+     */
+    private void dongMayChu() {
+        int soNguoi = 0;
+        try {
+            soNguoi = nro.server.Client.gI().getPlayers().size();
+        } catch (Exception boQua) {
+            // Chua khoi dong xong thi coi nhu khong co ai.
+        }
+        String hoi = "Tắt máy chủ và thoát bảng điều khiển?";
+        if (soNguoi > 0) {
+            hoi += "\n\nĐang có " + soNguoi + " người chơi online — họ sẽ bị đá ra.";
+        }
+        hoi += "\n\nDữ liệu được lưu đầy đủ trước khi tắt."
+                + "\nCửa sổ sẽ đứng yên vài giây trong lúc lưu — đừng tắt ngang."
+                + "\nMáy chủ KHÔNG tự bật lại.";
+        if (JOptionPane.showConfirmDialog(this, hoi, "Đóng máy chủ",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+            return;
+        }
+        bao(UiTheme.DANGER, "Đang lưu dữ liệu rồi tắt máy chủ…");
+        // Luong rieng: close() da nguoi choi va ghi CSDL tung nguoi, dong nguoi
+        // thi mat vai giay — chay ngay tren luong giao dien la ca panel dong
+        // bang truoc khi ve xong dong chu vua dat o tren.
+        new Thread(() -> {
+            try {
+                Thread.sleep(400);
+            } catch (InterruptedException boQua) {
+                Thread.currentThread().interrupt();
+            }
+            nro.server.ServerManager.gI().close();
+        }, "DongMayChu").start();
     }
 }

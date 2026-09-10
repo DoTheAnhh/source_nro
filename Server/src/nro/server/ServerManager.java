@@ -798,6 +798,42 @@ public class ServerManager {
         // duong dan tuong doi kieu "data/..." chi dung neu tien trinh moi thuc
         // su dung o thu muc Server.
         sb.append("cd /d \"").append(thuMuc).append("\"\r\n");
+
+        // --- Dung lai ma nguon truoc khi bat ---
+        //
+        // Ban truoc chi chay lai java voi dung classpath cu, khong bien dich gi
+        // ca. Nen sau "git pull" ma bam nut khoi dong lai thi may chu len lai
+        // van la ban CU, khong co dau hieu nao chi ra dieu do — rat ton thoi
+        // gian moi nhan ra.
+        //
+        // Dung vao out-moi truoc, dung roi moi thay cho out. Neu dung hong thi
+        // out cu van con nguyen va may chu van len duoc bang ban cu: mot loi
+        // bien dich khong duoc phep lam may chu chet han, nhat la khi khong co
+        // ai ngoi truoc man hinh.
+        sb.append("call \"").append(thuMuc)
+                .append("\\env.bat\" >nul 2>&1\r\n");
+        sb.append("if not defined JAVAC_EXE set \"JAVAC_EXE=")
+                .append(System.getProperty("java.home"))
+                .append("\\bin\\javac.exe\"\r\n");
+        sb.append("echo [BUILD] Dang dung lai ma nguon...\r\n");
+        sb.append("if exist out-moi rmdir /s /q out-moi\r\n");
+        sb.append("mkdir out-moi\r\n");
+        sb.append("dir /s /b src\\*.java > sources-khoi-dong-lai.txt\r\n");
+        sb.append("\"%JAVAC_EXE%\" -J-Xmx512m -J-Xms64m -encoding UTF-8")
+                .append(" -nowarn -cp \"lib\\*\" -d out-moi")
+                .append(" @sources-khoi-dong-lai.txt\r\n");
+        sb.append("if errorlevel 1 (\r\n");
+        sb.append("  echo [LOI] Build that bai — bat lai bang ban CU trong out\\\r\n");
+        sb.append("  rmdir /s /q out-moi\r\n");
+        sb.append(") else (\r\n");
+        // javac chi bien dich .java, KHONG copy .png. Thieu buoc nay thi toan
+        // bo icon cua giao dien thanh null sau khi thay thu muc out.
+        sb.append("  xcopy /s /y /i /q \"src\\icons\"  \"out-moi\\icons\"  >nul\r\n");
+        sb.append("  xcopy /s /y /i /q \"src\\images\" \"out-moi\\images\" >nul\r\n");
+        sb.append("  if exist out rmdir /s /q out\r\n");
+        sb.append("  move /y out-moi out >nul\r\n");
+        sb.append("  echo [OK] Build thanh cong.\r\n");
+        sb.append(")\r\n");
         sb.append('"').append(javaBin).append('"')
                 .append(" -Xms128m -Xmx3g -Xss256k")
                 .append(" -XX:CompressedClassSpaceSize=128m")
