@@ -313,6 +313,9 @@ public class TaskService {
     public void checkDoneTaskPower(Player player, long power) {
         long start1 = System.currentTimeMillis();
         if (player.isPl()) {
+            // Suc manh len thi suc danh goc thuong cung vua len — kiem tra
+            // luon o day de khoi phu thuoc vao mot duong goi duy nhat.
+            kiemTraSucDanhGoc(player);
             long ep = System.currentTimeMillis();
             if (ep - start1 > 50) {
                 System.out.println("[SLOW] Check done task : " + (ep - start1));
@@ -357,10 +360,44 @@ public class TaskService {
         }
     }
 
+    /** Sức đánh gốc cần đạt ở bước đầu nhiệm vụ 29. */
+    private static final long SUC_DANH_GOC_NV29 = 10_000;
+
     //kiểm tra hoàn thành nhiệm vụ khi player sử dụng tiềm năng
     public void checkDoneTaskUseTiemNang(Player player) {
         if (!player.isBoss && !player.isDeTu && !player.isPhanThan && !player.isNguoiYeu && !player.isConOne && !player.isConTwo && !player.isConThree) {
             doneTask(player, ConstTask.TASK_3_0);
+            kiemTraSucDanhGoc(player);
+        }
+    }
+
+    /**
+     * Bước "Nâng sức đánh gốc lên 10K" của nhiệm vụ 29 — xong <b>ngay khi đủ</b>.
+     *
+     * <h2>Vì sao phải thêm chỗ này</h2>
+     *
+     * <p>Phép kiểm tra {@code dameg >= 10000} vốn <b>chỉ chạy khi người chơi nói
+     * chuyện với Thần Mèo</b>. Ai nâng đủ sức đánh rồi mà không quay lại đúng
+     * NPC ấy thì đứng nguyên ở bước đó — và bảng nhiệm vụ chỉ ghi "Nâng sức đánh
+     * gốc lên 10K", không nói phải đi gặp ai, nên nâng thêm bao nhiêu điểm nữa
+     * cũng không qua. Đúng cảnh đã gặp.</p>
+     *
+     * <p>Nay kiểm tra ngay tại chỗ sức đánh gốc tăng. Vẫn giữ nguyên đường cũ ở
+     * NPC: người đã đủ từ trước, chưa nâng thêm lần nào, vẫn qua được bằng cách
+     * nói chuyện.</p>
+     */
+    public void kiemTraSucDanhGoc(Player player) {
+        try {
+            if (player == null || player.nPoint == null || player.playerTask == null
+                    || player.playerTask.taskMain == null) {
+                return;
+            }
+            if (player.playerTask.taskMain.id == 29
+                    && player.nPoint.dameg >= SUC_DANH_GOC_NV29) {
+                doneTask(player, ConstTask.TASK_29_0);
+            }
+        } catch (Exception boQua) {
+            // Nhiem vu hong khong duoc chan viec cong diem tiem nang.
         }
     }
 

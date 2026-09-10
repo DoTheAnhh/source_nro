@@ -99,6 +99,29 @@ public class Cui extends Npc {
         }
     }
 
+
+    /**
+     * Đưa người chơi sang bản đồ Cold, nếu đã đi đủ xa trong mạch nhiệm vụ.
+     *
+     * <h2>Điều kiện: xong nhiệm vụ 29, hết</h2>
+     *
+     * <p>Bản cũ đòi <b>hai</b> thứ: xong nhiệm vụ 26 <i>và</i> đạt 41 tỉ sức
+     * mạnh. Vế sức mạnh là cái chặn thật sự — người chơi đã đi đúng mạch nhiệm
+     * vụ vẫn bị chặn lại vì một con số không liên quan gì tới cốt truyện, và câu
+     * báo gộp cả hai nên không nói rõ mình đang thiếu vế nào.</p>
+     *
+     * <p>Nay chỉ còn mốc nhiệm vụ, và dời lên <b>xong nhiệm vụ 29</b> cho đúng
+     * mạch: 23 là mốc đi tới tương lai, 29 mới là mốc mở Cold.</p>
+     */
+    private void diCold(Player pl, int idTask) {
+        if (idTask > 29) {
+            ChangeMapService.gI().changeMapBySpaceShip(pl, 109, -1, 295);
+            return;
+        }
+        Service.gI().sendThongBaoOK(pl,
+                "Cần hoàn thành nhiệm vụ 29 trước khi đến Cold.");
+    }
+
     @Override
     public void confirmMenu(Player pl, int select) {
         if (!canOpenNpc(pl)) {
@@ -143,11 +166,7 @@ public class Cui extends Npc {
                 if (pl.iDMark.isBaseMenu()) {
                     switch (select) {
                         case 0: // Cold
-                            if (pl.nPoint.power >= 41_000_000_000L && idTask > 26) {
-                                ChangeMapService.gI().changeMapBySpaceShip(pl, 109, -1, 295);
-                            } else {
-                                Service.gI().sendThongBaoOK(pl, "Hoàn thành nhiệm vụ 26 và đạt trên 41 tỷ sức mạnh");
-                            }
+                            diCold(pl, idTask);
                             break;
                         case 1: // Nappa
                             if (idTask >= 17 || (subTask >= ConstTask.TASK_21_0 && subTask <= ConstTask.TASK_21_2)) {
@@ -178,10 +197,7 @@ public class Cui extends Npc {
                         switch (select) {
                             case 0: openBossLocation(pl, BossID.KUKU, "Kuku"); break;
                             case 1:
-                                if (pl.nPoint.power >= 41_000_000_000L && idTask > 26)
-                                    ChangeMapService.gI().changeMapBySpaceShip(pl, 109, -1, 295);
-                                else
-                                    Service.gI().sendThongBaoOK(pl, "Hoàn thành nhiệm vụ 26 và đạt trên 41 tỷ sức mạnh!");
+                                diCold(pl, idTask);
                                 break;
                             case 2:
                                 if (idTask >= 17 || (subTask >= ConstTask.TASK_21_0 && subTask <= ConstTask.TASK_21_2))
@@ -194,10 +210,7 @@ public class Cui extends Npc {
                         switch (select) {
                             case 0: openBossLocation(pl, BossID.MAP_DAU_DINH, "Mập đầu đinh"); break;
                             case 1:
-                                if (pl.nPoint.power >= 41_000_000_000L && idTask > 26)
-                                    ChangeMapService.gI().changeMapBySpaceShip(pl, 109, -1, 295);
-                                else
-                                    Service.gI().sendThongBaoOK(pl, "Hoàn thành nhiệm vụ 26 và đạt trên 41 tỷ sức mạnh!");
+                                diCold(pl, idTask);
                                 break;
                             case 2:
                                 if (idTask >= 17 || (subTask >= ConstTask.TASK_21_0 && subTask <= ConstTask.TASK_21_2))
@@ -210,10 +223,7 @@ public class Cui extends Npc {
                         switch (select) {
                             case 0: openBossLocation(pl, BossID.RAMBO, "Rambo"); break;
                             case 1:
-                                if (pl.nPoint.power >= 41_000_000_000L && idTask > 26)
-                                    ChangeMapService.gI().changeMapBySpaceShip(pl, 109, -1, 295);
-                                else
-                                    Service.gI().sendThongBaoOK(pl, "Hoàn thành nhiệm vụ 26 và đạt trên 41 tỷ sức mạnh!");
+                                diCold(pl, idTask);
                                 break;
                             case 2:
                                 if (idTask >= 17 || (subTask >= ConstTask.TASK_21_0 && subTask <= ConstTask.TASK_21_2))
