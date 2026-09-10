@@ -281,35 +281,107 @@ public class SystemPanel extends JPanel {
                 : "Đã lưu lời chào — có hiệu lực ngay.");
     }
 
+    /**
+     * Các nhóm của tab Quy ước, theo đúng thứ tự hiện ra.
+     *
+     * <p>Phần tử đầu mỗi mảng là <b>tên nhóm</b>, phần còn lại là các khoá thuộc
+     * nhóm ấy. Khoá nào không có tên ở đây thì rơi vào nhóm "Khác" ở cuối — nên
+     * thêm một quy ước mới mà quên xếp nhóm cũng không mất nó khỏi bảng.</p>
+     */
+    private static final String[][] NHOM_QUY_UOC = {
+        {"Máy chủ và đăng nhập",
+            ConfigDAO.BAO_TRI, ConfigDAO.DANG_KY_TU_DONG,
+            ConfigDAO.DANG_NHAP_CHO_GIAY, ConfigDAO.MAT_KHAU_ADMIN,
+            ConfigDAO.MO_PANEL_KHI_DUNG_PASS},
+        {"Phiên bản dữ liệu gửi cho client",
+            ConfigDAO.VS_DATA, ConfigDAO.VS_ITEM, ConfigDAO.VS_MAP,
+            ConfigDAO.VS_SKILL},
+        {"Giá cả và quy đổi",
+            ConfigDAO.THOI_VANG_GIA_VANG, ConfigDAO.BUA_VV_GIA_VANG,
+            ConfigDAO.NOI_TAI_GIA_NGOC, ConfigDAO.DOI_TV_BAT,
+            ConfigDAO.DOI_TV_MOI_1K, ConfigDAO.DOI_TV_MIN},
+        {"Vé tuần và vé tháng",
+            ConfigDAO.VE_TUAN_GIA, ConfigDAO.VE_TUAN_NGAY,
+            ConfigDAO.VE_THANG_GIA, ConfigDAO.VE_THANG_NGAY},
+        {"Người chơi mới",
+            ConfigDAO.NV_MOI_VANG, ConfigDAO.NV_MOI_NGOC,
+            ConfigDAO.NV_MOI_HONG_NGOC},
+        {"Rơi đồ và phần thưởng",
+            ConfigDAO.VANG_ROI_MIN, ConfigDAO.VANG_ROI_MAX,
+            ConfigDAO.BOSS_GIAY_HOI_SINH, ConfigDAO.TL_DE_TU_CHO_SU_PHU},
+        {"Quãng chờ",
+            ConfigDAO.DOI_KHU_GIAY, ConfigDAO.GIAO_DICH_CHO_GIAY},
+        {"Nhật ký và hiển thị",
+            ConfigDAO.GHI_LICH_SU_VP, ConfigDAO.GIU_LICH_SU_VP_NGAY,
+            ConfigDAO.GIU_LICH_SU_GD_NGAY, ConfigDAO.HIEN_TEN_MAP}
+    };
+
+    /**
+     * Những khoá chỉ có hai trạng thái — vẽ thành ô tích thay vì ô gõ số.
+     *
+     * <p>Một ô chữ chờ đúng chữ "0" hoặc "1" thì vừa dễ gõ nhầm, vừa bắt người
+     * dùng nhớ số nào là bật. Ô tích thì nhìn là biết.</p>
+     */
+    private static final java.util.Set<String> QUY_UOC_BAT_TAT
+            = new java.util.HashSet<>(java.util.Arrays.asList(
+                    ConfigDAO.BAO_TRI, ConfigDAO.DANG_KY_TU_DONG,
+                    ConfigDAO.MO_PANEL_KHI_DUNG_PASS, ConfigDAO.DOI_TV_BAT,
+                    ConfigDAO.GHI_LICH_SU_VP, ConfigDAO.HIEN_TEN_MAP,
+                    nro.repository.dao.VongQuayDAO.KHOA_DUNG_PANEL));
+
+    /** Việc cần chạy lại mỗi lần nạp quy ước, để ô tích khớp với ô chữ. */
+    private final java.util.List<Runnable> dongBoQuyUoc = new ArrayList<>();
+
+    /**
+     * Tab Quy ước — mọi con số dùng chung của máy chủ.
+     *
+     * <h3>Vì sao xếp nhóm và đặt tên tiếng Việt lên trước</h3>
+     *
+     * <p>Bản cũ đổ thẳng bốn chục khoá ra thành một cột phẳng, tên khoá thô của
+     * CSDL đứng đầu dòng: <code>ve_thang_ngay</code>, <code>vs_item</code>,
+     * <code>skh_mota_type</code>… Muốn sửa một con số thì phải đọc gần hết cột
+     * mới thấy, vì thứ tự các khoá là thứ tự chúng được khai trong mã chứ không
+     * theo nghĩa nào cả.</p>
+     *
+     * <p>Nay mỗi dòng bắt đầu bằng <b>câu tiếng Việt</b> nói nó là gì, tên khoá
+     * lùi ra sau dưới dạng chữ xám nhỏ — vẫn tra được khi cần đối chiếu CSDL,
+     * nhưng không còn chắn đường. Các khoá cùng chủ đề đứng chung một nhóm có
+     * tiêu đề.</p>
+     */
     private JComponent buildConfigTab() {
         dangMo = this;
+        dongBoQuyUoc.clear();
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
         form.setBorder(new EmptyBorder(12, 12, 12, 12));
 
         GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(5, 8, 5, 8);
+        c.insets = new Insets(4, 8, 4, 8);
         c.anchor = GridBagConstraints.WEST;
 
+        java.util.List<String> conLai
+                = new ArrayList<>(java.util.Arrays.asList(ConfigDAO.keys()));
         int row = 0;
-        for (String key : ConfigDAO.keys()) {
-            c.gridx = 0;
-            c.gridy = row;
-            JLabel k = new JLabel(key);
-            k.setFont(new Font("Consolas", Font.BOLD, 12));
-            form.add(k, c);
-
-            c.gridx = 1;
-            JTextField f = new JTextField(12);
-            f.setHorizontalAlignment(JTextField.RIGHT);
-            fields.put(key, f);
-            form.add(f, c);
-
-            c.gridx = 2;
-            JLabel note = new JLabel(ConfigDAO.note(key));
-            note.setForeground(GREY);
-            form.add(note, c);
-            row++;
+        for (String[] nhom : NHOM_QUY_UOC) {
+            java.util.List<String> khoa = new ArrayList<>();
+            for (int i = 1; i < nhom.length; i++) {
+                if (conLai.remove(nhom[i])) {
+                    khoa.add(nhom[i]);
+                }
+            }
+            if (khoa.isEmpty()) {
+                continue;
+            }
+            row = tieuDeQuyUoc(form, c, row, nhom[0]);
+            for (String k : khoa) {
+                row = hangQuyUoc(form, c, row, k);
+            }
+        }
+        if (!conLai.isEmpty()) {
+            row = tieuDeQuyUoc(form, c, row, "Khác");
+            for (String k : conLai) {
+                row = hangQuyUoc(form, c, row, k);
+            }
         }
 
         // Cot don day o ben phai: GridBagLayout mac dinh dua noi dung ra GIUA
@@ -446,6 +518,66 @@ public class SystemPanel extends JPanel {
         for (Map.Entry<String, JTextField> e : fields.entrySet()) {
             e.getValue().setText(giaTri(e.getKey()));
         }
+        for (Runnable r : dongBoQuyUoc) {
+            r.run();
+        }
+    }
+
+    /** Tiêu đề một nhóm quy ước. */
+    private int tieuDeQuyUoc(JPanel form, GridBagConstraints c, int y, String ten) {
+        c.gridx = 0;
+        c.gridy = y;
+        c.gridwidth = 3;
+        JLabel l = new JLabel(ten);
+        l.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        l.setForeground(ACCENT);
+        l.setBorder(new EmptyBorder(y == 0 ? 0 : 12, 0, 2, 0));
+        form.add(l, c);
+        c.gridwidth = 1;
+        return y + 1;
+    }
+
+    /**
+     * Một dòng quy ước: câu tiếng Việt, ô nhập, rồi tên khoá bằng chữ xám nhỏ.
+     *
+     * <p>Khoá hai trạng thái được vẽ thành ô tích. Ô chữ của nó vẫn tồn tại và
+     * vẫn nằm trong {@code fields} — chỉ là không hiện ra — nên phần đọc và ghi
+     * không phải biết đến chuyện này.</p>
+     */
+    private int hangQuyUoc(JPanel form, GridBagConstraints c, int y, String key) {
+        String moTa = ConfigDAO.note(key);
+        if (moTa == null || moTa.trim().isEmpty()) {
+            moTa = key;
+        }
+        JTextField f = new JTextField(12);
+        f.setHorizontalAlignment(JTextField.RIGHT);
+        fields.put(key, f);
+
+        c.gridx = 0;
+        c.gridy = y;
+        JLabel nhanMoTa = new JLabel(moTa);
+        form.add(nhanMoTa, c);
+
+        c.gridx = 1;
+        if (QUY_UOC_BAT_TAT.contains(key)) {
+            JCheckBox o = new JCheckBox("Bật");
+            o.setOpaque(false);
+            // Doc mot chieu tu o chu sang o tich, va nguoc lai khi bam. O chu
+            // van la nguon duy nhat luc luu — khong co hai duong ghi song song.
+            dongBoQuyUoc.add(() -> o.setSelected("1".equals(f.getText().trim())));
+            o.addActionListener(e -> f.setText(o.isSelected() ? "1" : "0"));
+            o.setSelected("1".equals(f.getText().trim()));
+            form.add(o, c);
+        } else {
+            form.add(f, c);
+        }
+
+        c.gridx = 2;
+        JLabel tenKhoa = new JLabel(key);
+        tenKhoa.setFont(new Font("Consolas", Font.PLAIN, 11));
+        tenKhoa.setForeground(GREY);
+        form.add(tenKhoa, c);
+        return y + 1;
     }
 
     /** Giá trị hiện tại của một quy ước, đúng kiểu của nó. */

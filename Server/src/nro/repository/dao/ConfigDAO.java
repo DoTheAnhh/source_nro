@@ -297,15 +297,6 @@ public class ConfigDAO {
      * trong cả CSDL. Tắt đi là mất dấu vết, nên chỉ tắt khi ổ đĩa hết chỗ.</p>
      */
     /**
-     * Chia tiềm năng nhận được trong Ngũ Hành Sơn cho số này.
-     *
-     * <p>{@code 1} là không chia. Mặc định {@code 3} — chỗ đó cày nhanh hơn hẳn
-     * mọi bản đồ khác, nên giữ nguyên là mọi con đường lên sức mạnh khác thành
-     * vô nghĩa.</p>
-     */
-    public static final String TL_NGU_HANH_SON = "tl_ngu_hanh_son";
-
-    /**
      * Số ngọc cho một lần mở nội tại.
      *
      * <p>Giá <b>cố định</b>, không tăng dần như giá vàng: đường ngọc là đường
@@ -388,7 +379,6 @@ public class ConfigDAO {
         DEFAULTS.put(SKH_SAO_MIN, 1L);
         DEFAULTS.put(SKH_SAO_MAX, 2L);
         DEFAULTS.put(GIU_LICH_SU_GD_NGAY, 30L);
-        DEFAULTS.put(TL_NGU_HANH_SON, 3L);
         DEFAULTS.put(NOI_TAI_GIA_NGOC, 50L);
         DEFAULTS.put(GHI_LICH_SU_VP, 1L);
         DEFAULTS.put(GIU_LICH_SU_VP_NGAY, 30L);
@@ -458,8 +448,6 @@ public class ConfigDAO {
                 "Số ngày giữ nhật ký giao dịch giữa người chơi — 0 là giữ mãi");
         NOTES.put(NOI_TAI_GIA_NGOC,
                 "Số ngọc cho một lần mở nội tại (dùng cho cả \"mở nhanh\")");
-        NOTES.put(TL_NGU_HANH_SON,
-                "Chia tiềm năng nhận trong Ngũ Hành Sơn cho số này (1 = không chia)");
         NOTES.put(GHI_LICH_SU_VP,
                 "Ghi nhật ký nhận vật phẩm của người chơi (1 bật, 0 tắt). Xem ở "
                 + "nút \"Lịch sử vật phẩm\" trong tab Quản Lý Người Chơi");
