@@ -468,8 +468,16 @@ public class Mob {
 
         start = System.currentTimeMillis();
         tiemNang = Util.CrisGH(pl.nPoint.calSucManhTiemNang(tiemNang));
-        // Ti le tiem nang chinh tren panel. Nhan SAU cung nen khong pha cong
-        // thuc goc; de 100 thi con so y het nhu truoc.
+        // He so tiem nang chinh tren panel — CHUNG cho moi ban do.
+        //
+        // Nhan SAU CUNG, sau khi calSucManhTiemNang da tinh xong het: buff,
+        // co, the nap, VA he so rieng cua tung ban do (kho bau x6, doanh trai
+        // x3, mot so ban do chia 10). Nen no NHAN LEN TREN he so rieng ay chu
+        // khong thay the: ban do von x1 voi he so 0.2 thanh x0,2; ban do von
+        // x3 thanh x0,6.
+        //
+        // De 1 thi con so y het nhu truoc.
+
         tiemNang = nro.repository.dao.ConfigDAO.nhanTiLe(
                 nro.repository.dao.ConfigDAO.TL_EXP, tiemNang);
 

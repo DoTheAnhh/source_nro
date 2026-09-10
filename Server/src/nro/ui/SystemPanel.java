@@ -1934,7 +1934,12 @@ public class SystemPanel extends JPanel {
         c.gridwidth = 2;
         form.add(new JLabel("<html><span style='color:#777'>"
                 + "<b>Hệ số</b> nhận số thập phân: <code>0.5</code> là còn một nửa, "
-                + "<code>10</code> là gấp mười.<br><br>"
+                + "<code>10</code> là gấp mười. Để <code>1</code> là y như gốc.<br><br>"
+                + "Đây là hệ số <b>chung cho mọi bản đồ</b>, và nó <b>nhân lên trên</b> "
+                + "hệ số riêng của từng bản đồ chứ không thay thế. Bản đồ vốn ×1 với "
+                + "hệ số <code>0.2</code> thì thành ×0,2; bản đồ vốn ×3 thì thành ×0,6. "
+                + "Đúng thứ tự ấy vì hệ số này được nhân <i>sau cùng</i>, khi con số "
+                + "tiềm năng đã tính xong mọi thứ khác.<br><br>"
                 + "<b>Đồ set kích hoạt đã chuyển sang tab \"Đồ rơi từ quái\".</b> "
                 + "Ở đó mở hộp <i>Thêm món rơi</i> rồi tích "
                 + "<b>\"Món này là đồ set kích hoạt\"</b>: mỗi dòng tự chọn set, "
