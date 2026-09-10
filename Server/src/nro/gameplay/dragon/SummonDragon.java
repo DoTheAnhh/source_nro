@@ -93,22 +93,12 @@ public class SummonDragon {
         this.update = new Thread(() -> {
             while (active && !Maintenance.isRunning) {
                 try {
-                    if (isShenronAppear) {
-                        if (isPlayerDisconnect) {
-                            List<Player> players = mapShenronAppear.getPlayers();
-                            for (Player plMap : players) {
-                                if (plMap.isPl() && plMap.id == playerSummonShenronId) {
-                                    playerSummonShenron = plMap;
-                                    reSummonShenron();
-                                    isPlayerDisconnect = false;
-                                    break;
-                                }
-                            }
-
-                        }
-                        if (Util.canDoWithTime(lastTimeShenronWait, timeShenronWait)) {
-                            shenronLeave(playerSummonShenron, TIME_UP);
-                        }
+                    // Chi con HAI duong ket thuc: chon dieu uoc, hoac het nam
+                    // phut. Nhanh "cho nguoi ay quay lai" da bo — thoat game la
+                    // huy luon, xem SummonDragon.huyKhiThoatGame.
+                    if (isShenronAppear
+                            && Util.canDoWithTime(lastTimeShenronWait, timeShenronWait)) {
+                        shenronLeave(playerSummonShenron, TIME_UP);
                     }
                     Functions.sleep(1000);
                 } catch (Exception e) {
@@ -528,21 +518,65 @@ public class SummonDragon {
         }
     }
 
+    /**
+     * Rồng đi ngủ và trả bầu trời lại như cũ.
+     *
+     * <h3>Vì sao gói "rồng biến mất" đi trước lời chào</h3>
+     *
+     * <p>Trước đây lời chào của rồng được gửi <b>trước</b>, mà người nhận có thể
+     * đã thoát game — {@code NpcService} ném lỗi, cả hàm dừng ngay tại đó, và
+     * gói báo rồng biến mất <b>không bao giờ được gửi</b>. Kết quả là con rồng
+     * treo lại giữa trời tối trên màn hình của tất cả mọi người, và
+     * {@code isShenronAppear} kẹt ở {@code true} nên không ai gọi rồng được
+     * nữa cho tới lúc khởi động lại máy chủ.</p>
+     *
+     * <p>Nay gói ấy đi đầu tiên và dọn dẹp nằm trong {@code finally}: dù lời
+     * chào có hỏng thế nào thì rồng vẫn biến mất và lượt gọi vẫn được mở lại.</p>
+     */
     public void shenronLeave(Player pl, byte type) {
-        if (type == WISHED) {
-            NpcService.gI().createTutorial(pl, 0, "Điều ước của ngươi đã trở thành sự thật\nHẹn gặp ngươi lần sau, ta đi ngủ đây, bái bai");
-        } else {
-            NpcService.gI().createMenuRongThieng_Nomal(pl, ConstNpc.IGNORE_MENU, "Ta buồn ngủ quá rồi\nHẹn gặp ngươi lần sau, ta đi đây, bái bai");
+        try {
+            activeShenron(pl, false, SummonDragon.DRAGON_SHENRON);
+            if (pl != null) {
+                if (type == WISHED) {
+                    NpcService.gI().createTutorial(pl, 0, "Điều ước của ngươi đã trở thành sự thật\nHẹn gặp ngươi lần sau, ta đi ngủ đây, bái bai");
+                } else {
+                    NpcService.gI().createMenuRongThieng_Nomal(pl, ConstNpc.IGNORE_MENU, "Ta buồn ngủ quá rồi\nHẹn gặp ngươi lần sau, ta đi đây, bái bai");
+                }
+            }
+        } catch (Exception ex) {
+            Logger.logException(SummonDragon.class, ex, "Lỗi khi rồng thần rời đi");
+        } finally {
+            this.isShenronAppear = false;
+            this.isPlayerDisconnect = false;
+            this.menuShenron = -1;
+            this.select = -1;
+            this.playerSummonShenron = null;
+            this.playerSummonShenronId = -1;
+            this.shenronStar = -1;
+            this.mapShenronAppear = null;
+            lastTimeShenronAppeared = System.currentTimeMillis();
         }
-        activeShenron(pl, false, SummonDragon.DRAGON_SHENRON);
-        this.isShenronAppear = false;
-        this.menuShenron = -1;
-        this.select = -1;
-        this.playerSummonShenron = null;
-        this.playerSummonShenronId = -1;
-        this.shenronStar = -1;
-        this.mapShenronAppear = null;
-        lastTimeShenronAppeared = System.currentTimeMillis();
+    }
+
+    /**
+     * Người gọi rồng thoát game — huỷ luôn lượt gọi.
+     *
+     * <p>Trước đây máy chủ <b>giữ</b> con rồng lại và chờ người ấy quay vào để
+     * gọi tiếp. Nhưng người thoát game thì có thể không vào lại trong năm phút
+     * ấy, và suốt thời gian đó cả khu vẫn tối om với một con rồng đứng im, còn
+     * người khác thì không gọi rồng được. Huỷ hẳn là dứt khoát hơn: ngọc đã
+     * mất, nhưng bầu trời trả lại ngay và lượt gọi mở lại cho mọi người.</p>
+     */
+    public void huyKhiThoatGame(Player pl) {
+        if (!this.isShenronAppear || pl == null) {
+            return;
+        }
+        if (this.playerSummonShenronId != (int) pl.id) {
+            return;
+        }
+        // Truyen null: nguoi nhan da roi game, gui loi chao cho ho la vo nghia
+        // va con lam ca ham dung giua chung.
+        shenronLeave(null, TIME_UP);
     }
 
 }

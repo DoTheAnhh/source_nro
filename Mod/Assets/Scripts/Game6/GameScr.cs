@@ -4076,11 +4076,49 @@ namespace Game6
     		}
     	}
     
+    	/// <summary>
+    	/// Moc luc may chu bao rong bien mat, de con biet la da cho qua lau.
+    	/// </summary>
+    	public long mocAnRongThan;
+
     	public void hideRongThanEff()
     	{
     		activeRongThan = false;
     		isUseFreez = true;
     		isMeCallRongThan = false;
+    		mocAnRongThan = mSystem.currentTimeMillis();
+    	}
+
+    	/// <summary>
+    	/// Duong thoat cuoi cung cho con rong.
+    	///
+    	/// Canh chop trang lam rong bien mat chi chay trong paint(), va cai cong
+    	/// vao no doi ChatPopup.currChatPopup == null. May chu lai gui loi chao
+    	/// cua rong ngay truoc goi "bien mat", nen rat hay co dung mot hop thoai
+    	/// dang mo dung luc ay: canh chop khong bao gio chay, isUseFreez ket o
+    	/// true, con rong treo lai giua troi toi. Dung canh vua gap.
+    	///
+    	/// Sau hai giay ma van chua chop thi thoi, an thang.
+    	/// </summary>
+    	public void chotAnRongThanNeuKet()
+    	{
+    		if (activeRongThan || mocAnRongThan == 0L)
+    		{
+    			return;
+    		}
+    		if (!isRongThanXuatHien && !isUseFreez)
+    		{
+    			mocAnRongThan = 0L;
+    			return;
+    		}
+    		if (mSystem.currentTimeMillis() - mocAnRongThan < 2000L)
+    		{
+    			return;
+    		}
+    		isUseFreez = false;
+    		dem = 0;
+    		mocAnRongThan = 0L;
+    		hideRongThan();
     	}
     
     	public void doiMauTroi()
@@ -4936,6 +4974,7 @@ namespace Game6
     	public override void update()
         {
             ClientManager.getInstance().Update();
+            chotAnRongThanNeuKet();
             if (GameCanvas.keyPressed[16])
     		{
     			GameCanvas.keyPressed[16] = false;
@@ -5271,7 +5310,9 @@ namespace Game6
     			return;
     		}
     		GameCanvas.debug("PA1", 1);
-    		if (isFreez || (isUseFreez && ChatPopup.currChatPopup == null))
+    		// !activeRongThan la luc dang AN rong: khong de mot hop thoai
+    		// dang mo chan canh chop lai, khong thi rong treo mai.
+    		if (isFreez || (isUseFreez && (ChatPopup.currChatPopup == null || !activeRongThan)))
     		{
     			dem++;
     			if ((dem < 30 && dem >= 0 && GameCanvas.gameTick % 4 == 0) || (dem >= 30 && dem <= 50 && GameCanvas.gameTick % 3 == 0) || dem > 50)

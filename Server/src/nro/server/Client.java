@@ -465,9 +465,16 @@ public class Client implements Runnable {
                 }
 
                 try {
+                    // Thoat game la HUY luon luot goi rong.
+                    //
+                    // Truoc day may chu giu con rong lai va cho nguoi ay quay
+                    // vao. Nhung nguoi thoat game co the khong vao lai trong
+                    // nam phut ay, ma suot thoi gian do ca khu van toi om voi
+                    // mot con rong dung im, con nguoi khac thi khong goi rong
+                    // duoc.
                     if (SummonDragon.gI().playerSummonShenron != null
                             && SummonDragon.gI().playerSummonShenron.id == player.id) {
-                        SummonDragon.gI().isPlayerDisconnect = true;
+                        SummonDragon.gI().huyKhiThoatGame(player);
                     }
 
                     if (SummonDragonNamek.gI().playerSummonShenron != null

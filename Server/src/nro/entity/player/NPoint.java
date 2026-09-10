@@ -627,6 +627,7 @@ public class NPoint {
             setBasePoint();
             setOutfitFusion();
             apDungSetTuCauHinh();
+            congHpDeTuKhiHopThe();
         } finally {
             this.dangDungLaiDayDu = false;
         }
@@ -634,6 +635,46 @@ public class NPoint {
         capNhatTheoTiLe(hpMaxCu, hpCu, mpMaxCu, mpCu);
         setHp();
         setMp();
+    }
+
+    /**
+     * Cộng máu của đệ tử vào trần máu sư phụ khi đang hợp thể.
+     *
+     * <h3>Vì sao cộng ở đây, sau cùng</h3>
+     *
+     * <p>Trước đây phép cộng này nằm giữa {@code setHpMax()}, nên phần máu của
+     * đệ tử còn phải đi qua <b>toàn bộ</b> các phép nhân phía dưới: bổ huyết
+     * nhân đôi, chibi nhân đôi, hồng đào, Porata, top Whis… rồi lại đi tiếp qua
+     * các dòng phần trăm của set kích hoạt ở {@code apDungSetTuCauHinh()}.</p>
+     *
+     * <p>Một đệ tử 100 triệu máu vì thế có thể thành vài trăm triệu trên người
+     * sư phụ, chỉ vì sư phụ đang uống bổ huyết. Đó là chỗ trần máu phình lên
+     * quá mức — và cũng là lý do con số hiện ra bị chặn ở 2.147.483.647, tức
+     * trần của kiểu số bốn byte mà gói tin dùng.</p>
+     *
+     * <p>Gọi ở đây thì mọi phép nhân đã xong xuôi, nên máu đệ tử vào đúng bằng
+     * chính nó — <b>cộng sau khi tính toán</b>, đúng nghĩa.</p>
+     *
+     * <h3>Các mức</h3>
+     *
+     * <p>Giữ nguyên như cũ: đệ tử loại 1 cho 120% máu của nó, loại 5 cho 140%,
+     * còn lại 100%.</p>
+     */
+    private void congHpDeTuKhiHopThe() {
+        if (this.player.Detu == null
+                || this.player.fusion.typeFusion == ConstPlayer.NON_FUSION) {
+            return;
+        }
+        long hpDe = this.player.Detu.nPoint.hpMax;
+        if (hpDe <= 0) {
+            return;
+        }
+        if (this.player.Detu.typeDeTu == 1) {
+            this.hpMax += hpDe * 20 / 100L;
+        } else if (this.player.Detu.typeDeTu == 5) {
+            this.hpMax += hpDe * 40 / 100L;
+        }
+        this.hpMax += hpDe;
     }
 
     /**
@@ -1439,21 +1480,7 @@ public class NPoint {
             hpMax *= this.player.effectSkin.xHPKI;
         }
 
-        if (this.player.Detu != null && this.player.fusion.typeFusion != ConstPlayer.NON_FUSION) {
-            if (this.player.Detu.typeDeTu == 1) {
-                hpMax += this.player.Detu.nPoint.hpMax *  20 / 100L;
-            }
-        }
-        if (this.player.Detu != null && this.player.fusion.typeFusion != ConstPlayer.NON_FUSION) {
-            if (this.player.Detu.typeDeTu == 5) {
-                hpMax += this.player.Detu.nPoint.hpMax * 40/ 100L;
-            }
-        }
-
-        //+hp đệ
-        if (this.player.Detu != null && this.player.fusion.typeFusion != ConstPlayer.NON_FUSION) {
-            hpMax += this.player.Detu.nPoint.hpMax;
-        }
+        // HP của đệ tử khi hợp thể KHÔNG cộng ở đây nữa — xem congHpDeTuKhiHopThe().
         if (this.player.fusion.typeFusion == ConstPlayer.HOP_THE_PORATA2) {
             hpMax += calPercent(hpMax, 5);
         }
