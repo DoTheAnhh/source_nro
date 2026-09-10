@@ -654,6 +654,23 @@ public class ChangeMapService {
         return true;
     }
 
+    /**
+     * Yêu cầu đổi bản đồ vừa rồi có bị <b>hoãn lại</b> không.
+     *
+     * <p>Dành cho chỗ gọi nào kiểm tra kết quả <b>ngay sau</b> lời gọi bằng cách
+     * so {@code pl.zone} với khu cũ. Phép so đó ngầm coi việc đổi bản đồ là làm
+     * xong ngay trong lời gọi — đúng với mọi bản trước khi có hàng đợi, nhưng
+     * nay một yêu cầu tới sớm sẽ nằm chờ, khu chưa đổi, và chỗ gọi tưởng là
+     * <i>thất bại</i> rồi chạy đường dự phòng của nó.</p>
+     *
+     * <p>Với capsule thì đường dự phòng ấy là "đẩy về nhà" — người chơi chọn
+     * một nơi, được báo là không vào được, rồi bị ném về nhà, trong khi thật ra
+     * chỉ cần chờ thêm một nhịp.</p>
+     */
+    public static boolean dangChoDoiMap(Player pl) {
+        return pl != null && pl.yeuCauDoiMapDangCho != null;
+    }
+
     /** Lượt đổi bản đồ đã xong (client báo nạp xong, hoặc đổi thất bại). */
     public static void xongDoiMap(Player pl) {
         if (pl != null) {

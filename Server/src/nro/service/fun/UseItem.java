@@ -1913,6 +1913,15 @@ public class UseItem {
         //
         // Không thấy đổi khu thì về NHÀ. Nhà không giới hạn người, không đòi
         // nhiệm vụ, không đòi bang hội — luôn vào được.
+        //
+        // Trừ khi lượt đi đang được HOÃN chờ bản đồ hiện tại nạp xong. Lúc ấy
+        // khu chưa đổi là chuyện bình thường, không phải thất bại — đẩy về nhà
+        // ở đây là cướp mất nơi người chơi vừa chọn, và còn ghi đè luôn yêu cầu
+        // đang xếp hàng.
+        if (ChangeMapService.dangChoDoiMap(pl)) {
+            Service.gI().hideWaitDialog(pl);
+            return;
+        }
         if (pl.zone == khuTruoc) {
             Logger.logln(Logger.PURPLE, "[CAPSULE] " + pl.name
                     + " khong roi duoc map " + (khuTruoc == null ? "?"
