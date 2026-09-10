@@ -481,26 +481,24 @@ public class Mob {
         tiemNang = nro.repository.dao.ConfigDAO.nhanTiLe(
                 nro.repository.dao.ConfigDAO.TL_EXP, tiemNang);
 
-        // Ngũ Hành Sơn trả ít hơn hẳn.
+        // He so tiem nang theo BAN DO — mot bang duy nhat tren panel.
         //
-        // Chia ở ĐÂY chứ không ở NPoint.calSubTNSM, vì chia theo BẢN ĐỒ CỦA
-        // QUÁI: đệ tử cày trong Ngũ Hành Sơn thì phần chia cho sư phụ cũng phải
-        // ít theo, mà lúc ấy sư phụ có thể đang đứng ở bản đồ khác — hỏi bản đồ
-        // của sư phụ là hỏi nhầm người.
+        // Ap o day chu khong o NPoint vi day biet BAN DO CUA CON QUAI: de tu cay
+        // trong Ngu Hanh Son thi phan chia cho su phu cung phai theo he so cua
+        // Ngu Hanh Son, ma luc ay su phu co the dang dung o ban do khac — hoi
+        // ban do cua su phu la hoi nham nguoi.
         //
-        // Hệ số để trên panel (tl_ngu_hanh_son, mặc định 3) để cân lại mà không
-        // phải biên dịch.
-        if (this.zone != null && this.zone.map != null
-                && MapService.gI().isMapNguHanhSon(this.zone.map.mapId)) {
-            long chia = nro.repository.dao.ConfigDAO.num(
-                    nro.repository.dao.ConfigDAO.TL_NGU_HANH_SON, 3L);
-            if (chia > 1) {
-                tiemNang /= chia;
+        // Tra ve 0 nghia la nhom ay khoa nguoi choi thuong (Ngu Hanh Son: chi de
+        // tu danh moi duoc tiem nang).
+        if (this.zone != null && this.zone.map != null) {
+            double heSoMap = nro.repository.dao.HeSoTnsmDAO.heSo(
+                    this.zone.map.mapId, pl.isDeTu);
+            if (heSoMap <= 0) {
+                return 0;
             }
-        }
-        elapsed = System.currentTimeMillis() - start;
-        if (elapsed > 10) {
-            System.out.println("[SLOW] apply calSucManhTiemNang: " + elapsed + "ms");
+            if (heSoMap != 1) {
+                tiemNang = Math.round(tiemNang * heSoMap);
+            }
         }
 
         long totalElapsed = System.currentTimeMillis() - startTotal;

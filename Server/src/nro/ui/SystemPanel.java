@@ -10,6 +10,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.Window;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.swing.BorderFactory;
@@ -33,7 +34,9 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import nro.repository.dao.BacGiamTnsmDAO;
 import nro.repository.dao.ConfigDAO;
+import nro.repository.dao.HeSoTnsmDAO;
 
 /**
  * Tab <b>Cấu Hình Hệ Thống</b> — quy ước dùng chung và cấu hình boss.
@@ -1957,7 +1960,499 @@ public class SystemPanel extends JPanel {
         wrap.add(form, BorderLayout.NORTH);
         wrap.add(nam, BorderLayout.CENTER);
         napTiLe();
-        return ServerGuiUtils.cuon(wrap);
+
+        JTabbedPane trong = new JTabbedPane();
+        trong.addTab("1. Hệ số chung", ServerGuiUtils.cuon(wrap));
+        trong.addTab("2. Theo bản đồ", buildHeSoTnsm());
+        trong.addTab("3. Càng mạnh càng giảm", buildBacGiam());
+        return trong;
+    }
+
+    // =====================================================================
+    //  Tỉ lệ — 2. Hệ số tiềm năng theo bản đồ
+    // =====================================================================
+
+    private static final int COT_HS_ID = 0;
+    private static final int COT_HS_TEN = 1;
+    private static final int COT_HS_MAP = 2;
+    private static final int COT_HS_HS = 3;
+    private static final int COT_HS_HSDT = 4;
+    private static final int COT_HS_CHIDT = 5;
+    private static final int COT_HS_GAP = 6;
+    private static final int COT_HS_BAT = 7;
+    private static final int COT_HS_GC = 8;
+
+    private final DefaultTableModel hsModel = new DefaultTableModel(
+            new Object[]{"Id", "Nhóm bản đồ", "Các bản đồ trong nhóm",
+                "Hệ số", "Hệ số đệ tử", "Chỉ đệ tử", "Một con quái cho",
+                "Bật", "Ghi chú"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return c != COT_HS_ID && c != COT_HS_GAP;
+        }
+
+        @Override
+        public Class<?> getColumnClass(int c) {
+            return (c == COT_HS_CHIDT || c == COT_HS_BAT)
+                    ? Boolean.class : String.class;
+        }
+    };
+    private final JTable hsTable = new JTable(hsModel);
+
+    /** Ô "giá trị đúng ra nhận được" — tiềm năng gốc trước mọi hệ số. */
+    private final JTextField hsOGoc = new JTextField("1000", 10);
+
+    /**
+     * Bảng hệ số tiềm năng theo <b>nhóm bản đồ</b>.
+     *
+     * <h3>Vì sao có bảng này</h3>
+     *
+     * <p>Trước đây mấy con số ấy nằm rải ba nơi: {@code NPoint} nhân 6 cho Bản đồ
+     * kho báu, nhân 3 cho Doanh trại, nhân 2 cho Khu vực thám hiểm và chia 10 cho
+     * sáu bản đồ; {@code Mob} có phép chia riêng cho Ngũ Hành Sơn. Muốn biết một
+     * bản đồ cho tiềm năng gấp mấy lần bản đồ thường thì phải đọc cả ba chỗ rồi
+     * tự nhân tay.</p>
+     *
+     * <h3>Ô "giá trị đúng ra nhận được"</h3>
+     *
+     * <p>Hệ số đứng một mình không nói được gì: <code>0.2</code> nhân với ×6 ra
+     * bao nhiêu tiềm năng thật thì vẫn phải nhẩm. Gõ một con số vào ô ấy là cả
+     * cột bên phải đổi theo, hiện thẳng số tiềm năng người chơi cầm về ở từng
+     * nhóm bản đồ.</p>
+     */
+    private JComponent buildHeSoTnsm() {
+        JPanel root = new JPanel(new BorderLayout(0, 6));
+        root.setOpaque(false);
+        root.setBorder(new EmptyBorder(10, 10, 10, 10));
+        hsTable.setRowHeight(24);
+        hsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        int[] w = {36, 160, 210, 62, 82, 62, 190, 40, 240};
+        for (int i = 0; i < hsTable.getColumnCount() && i < w.length; i++) {
+            hsTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
+        }
+
+        JPanel tren = new JPanel(new BorderLayout(0, 4));
+        tren.setOpaque(false);
+        tren.add(nhan("Tiềm năng của <b>một nhóm bản đồ</b> so với bản đồ thường."
+                + "<br><br>"
+                + "<b>Các bản đồ trong nhóm</b>: id đơn hoặc khoảng, ngăn nhau bằng "
+                + "dấu phẩy — <code>68-72,102,103</code>. Thêm hay bớt một bản đồ khỏi "
+                + "nhóm chỉ là sửa ô ấy.<br>"
+                + "<b>Hệ số đệ tử</b> để trống là dùng chung hệ số bên trái. "
+                + "<b>Chỉ đệ tử</b> bật thì người chơi thường đánh trong nhóm ấy "
+                + "<b>không được tiềm năng</b>, chỉ đệ tử mới có — Ngũ Hành Sơn đang "
+                + "đặt như thế.<br>"
+                + "Một bản đồ khớp nhiều nhóm thì lấy <b>nhóm đầu tiên</b> rồi dừng, "
+                + "không nhân dồn."), BorderLayout.NORTH);
+
+        JPanel oGoc = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        oGoc.setOpaque(false);
+        oGoc.add(new JLabel("Giá trị đúng ra nhận được:"));
+        oGoc.add(hsOGoc);
+        oGoc.add(new JLabel("<html><span style='color:#777'>tiềm năng gốc của "
+                + "một con quái, <b>trước</b> khi nhân hệ số chung "
+                + "(" + soGonHs(ConfigDAO.phanTram(ConfigDAO.TL_EXP)) + "). "
+                + "Cột \"Một con quái cho\" tính từ chính con số này."
+                + "</span></html>"));
+        hsOGoc.addCaretListener(e -> capNhatCotGap());
+        // Sua he so xong la thay ket qua ngay. Bo qua chinh cot xem truoc,
+        // khong thi no tu goi lai chinh no khong dut.
+        hsModel.addTableModelListener(e -> {
+            if (e.getColumn() != COT_HS_GAP
+                    && e.getType() == javax.swing.event.TableModelEvent.UPDATE) {
+                SwingUtilities.invokeLater(this::capNhatCotGap);
+            }
+        });
+        tren.add(oGoc, BorderLayout.SOUTH);
+
+        JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        nut.setOpaque(false);
+        nut.add(button("Lưu bảng", OK_GREEN, e -> luuBangHeSo()));
+        nut.add(button("Tải lại", GREY, e -> napBangHeSo()));
+        nut.add(button("Thêm nhóm", ACCENT, e -> themNhomHeSo()));
+        nut.add(button("Về mặc định", new Color(120, 90, 160), e -> {
+            if (JOptionPane.showConfirmDialog(this,
+                    "Xoá sạch bảng rồi gieo lại các nhóm gốc?",
+                    "Về mặc định", JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+                return;
+            }
+            String loi = HeSoTnsmDAO.gieoLai();
+            napBangHeSo();
+            note(loi == null ? OK_GREEN : WARN_RED,
+                    loi == null ? "Đã gieo lại các nhóm gốc." : loi);
+        }));
+
+        root.add(tren, BorderLayout.NORTH);
+        root.add(ServerGuiUtils.cuon(hsTable), BorderLayout.CENTER);
+        root.add(nut, BorderLayout.SOUTH);
+        napBangHeSo();
+        return root;
+    }
+
+    /** Con số trong ô "giá trị đúng ra nhận được", tối thiểu 0. */
+    private double tnGoc() {
+        try {
+            double v = Double.parseDouble(hsOGoc.getText().trim().replace(',', '.'));
+            return v < 0 ? 0 : v;
+        } catch (NumberFormatException ex) {
+            return 0;
+        }
+    }
+
+    /** Một con quái trong nhóm này cho bao nhiêu tiềm năng, tính cả hệ số chung. */
+    private String motConQuaiCho(double heSo, double heSoDeTu, boolean chiDeTu,
+            boolean bat) {
+        if (!bat) {
+            return "— đang tắt, tính như bản đồ thường";
+        }
+        double goc = tnGoc();
+        double chung = ConfigDAO.phanTram(ConfigDAO.TL_EXP);
+        if (chung <= 0) {
+            chung = 1;
+        }
+        double dt = heSoDeTu > 0 ? heSoDeTu : heSo;
+        String thuong = chiDeTu ? "0 (bị khoá)"
+                : PlayerManagerPanel.fmt(Math.round(goc * heSo * chung));
+        return "thường " + thuong + " · đệ tử "
+                + PlayerManagerPanel.fmt(Math.round(goc * dt * chung));
+    }
+
+    /**
+     * In hệ số gọn: bỏ đuôi ,0 và cắt còn ba chữ số thập phân.
+     *
+     * <p>Ba chữ số chứ không phải hai, vì Ngũ Hành Sơn là <b>một phần ba</b> —
+     * cắt còn hai chữ số thì lưu lại thành 0,33 và hệ số tụt đi thật.</p>
+     */
+    private static String soGonHs(double v) {
+        String s = String.format(java.util.Locale.US, "%.3f", v);
+        while (s.contains(".") && (s.endsWith("0") || s.endsWith("."))) {
+            s = s.substring(0, s.length() - 1);
+        }
+        return s;
+    }
+
+    private void napBangHeSo() {
+        if (hsTable.isEditing()) {
+            hsTable.getCellEditor().stopCellEditing();
+        }
+        hsModel.setRowCount(0);
+        for (HeSoTnsmDAO.Dong d : HeSoTnsmDAO.danhSach()) {
+            hsModel.addRow(new Object[]{String.valueOf(d.id), d.ten,
+                d.dsMap == null ? "" : d.dsMap,
+                soGonHs(d.heSo), d.heSoDeTu <= 0 ? "" : soGonHs(d.heSoDeTu),
+                d.chiDeTu, motConQuaiCho(d.heSo, d.heSoDeTu, d.chiDeTu, d.bat),
+                d.bat, d.ghiChu == null ? "" : d.ghiChu});
+        }
+    }
+
+    /**
+     * Tính lại cột "Một con quái cho" từ chính những gì đang gõ trong bảng.
+     *
+     * <p>Đọc ô trong bảng chứ không đọc CSDL — người dùng sửa hệ số xong là thấy
+     * ngay kết quả, không phải bấm Lưu rồi mới biết mình vừa đặt cái gì.</p>
+     */
+    private void capNhatCotGap() {
+        for (int r = 0; r < hsModel.getRowCount(); r++) {
+            double hs;
+            double hsdt;
+            try {
+                hs = Double.parseDouble(oHs(r, COT_HS_HS).replace(',', '.'));
+                String dt = oHs(r, COT_HS_HSDT).replace(',', '.');
+                hsdt = dt.isEmpty() ? 0 : Double.parseDouble(dt);
+            } catch (NumberFormatException ex) {
+                hsModel.setValueAt("hệ số không phải số", r, COT_HS_GAP);
+                continue;
+            }
+            Object cdt = hsModel.getValueAt(r, COT_HS_CHIDT);
+            Object bat = hsModel.getValueAt(r, COT_HS_BAT);
+            hsModel.setValueAt(motConQuaiCho(hs, hsdt,
+                    (cdt instanceof Boolean) && (Boolean) cdt,
+                    !(bat instanceof Boolean) || (Boolean) bat), r, COT_HS_GAP);
+        }
+    }
+
+    private String oHs(int r, int c) {
+        Object v = hsModel.getValueAt(r, c);
+        return v == null ? "" : String.valueOf(v).trim();
+    }
+
+    private void luuBangHeSo() {
+        if (hsTable.isEditing()) {
+            hsTable.getCellEditor().stopCellEditing();
+        }
+        java.util.List<HeSoTnsmDAO.Dong> cu = HeSoTnsmDAO.danhSach();
+        int hong = 0;
+        String hongDau = null;
+        for (int r = 0; r < hsModel.getRowCount() && r < cu.size(); r++) {
+            HeSoTnsmDAO.Dong d = cu.get(r);
+            try {
+                d.heSo = Double.parseDouble(oHs(r, COT_HS_HS).replace(',', '.'));
+                String dt = oHs(r, COT_HS_HSDT).replace(',', '.');
+                d.heSoDeTu = dt.isEmpty() ? 0 : Double.parseDouble(dt);
+            } catch (NumberFormatException ex) {
+                hong++;
+                if (hongDau == null) {
+                    hongDau = "Nhóm \"" + oHs(r, COT_HS_TEN) + "\" có hệ số không phải số.";
+                }
+                continue;
+            }
+            d.ten = oHs(r, COT_HS_TEN);
+            d.dsMap = oHs(r, COT_HS_MAP);
+            Object cdt = hsModel.getValueAt(r, COT_HS_CHIDT);
+            d.chiDeTu = (cdt instanceof Boolean) && (Boolean) cdt;
+            Object bat = hsModel.getValueAt(r, COT_HS_BAT);
+            d.bat = !(bat instanceof Boolean) || (Boolean) bat;
+            d.ghiChu = oHs(r, COT_HS_GC);
+            String loi = HeSoTnsmDAO.luu(d);
+            if (loi != null) {
+                hong++;
+                if (hongDau == null) {
+                    hongDau = loi;
+                }
+            }
+        }
+        napBangHeSo();
+        note(hong == 0 ? OK_GREEN : WARN_RED, hong == 0
+                ? "Đã lưu hệ số tiềm năng theo bản đồ — có hiệu lực ngay."
+                : hongDau + " (" + hong + " nhóm không lưu được)");
+    }
+
+    private void themNhomHeSo() {
+        String ten = JOptionPane.showInputDialog(this,
+                "Tên nhóm bản đồ mới?\n\n"
+                + "Thêm xong thì điền danh sách id bản đồ và hệ số vào bảng rồi bấm Lưu.",
+                "Thêm nhóm bản đồ", JOptionPane.QUESTION_MESSAGE);
+        if (ten == null || ten.trim().isEmpty()) {
+            return;
+        }
+        HeSoTnsmDAO.Dong d = new HeSoTnsmDAO.Dong();
+        d.khoa = "nhom_" + System.currentTimeMillis();
+        d.ten = ten.trim();
+        d.dsMap = "";
+        d.heSo = 1;
+        d.thuTu = 100;
+        d.bat = true;
+        String loi = HeSoTnsmDAO.luu(d);
+        napBangHeSo();
+        note(loi == null ? OK_GREEN : WARN_RED,
+                loi == null ? "Đã thêm nhóm — điền id bản đồ rồi bấm Lưu." : loi);
+    }
+
+    // =====================================================================
+    //  Tỉ lệ — 3. Sức mạnh càng cao, tiềm năng càng ít
+    // =====================================================================
+
+    private static final int COT_BG_MOC = 0;
+    private static final int COT_BG_CON = 1;
+    private static final int COT_BG_BAT = 2;
+    private static final int COT_BG_XEM = 3;
+    private static final int COT_BG_GC = 4;
+
+    private final DefaultTableModel bgModel = new DefaultTableModel(
+            new Object[]{"Từ mốc sức mạnh", "Còn nhận (%)", "Bật",
+                "Một con quái cho", "Ghi chú"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return c != COT_BG_XEM;
+        }
+
+        @Override
+        public Class<?> getColumnClass(int c) {
+            return c == COT_BG_BAT ? Boolean.class : String.class;
+        }
+    };
+    private final JTable bgTable = new JTable(bgModel);
+
+    /** Mốc gốc của từng dòng lúc nạp — để biết dòng nào vừa bị đổi mốc. */
+    private final java.util.List<Long> bgMocCu = new ArrayList<>();
+
+    /**
+     * Bảng "càng mạnh càng nhận ít tiềm năng".
+     *
+     * <p>Mười một con số này quyết định người chơi cày bao lâu thì chững lại, tức
+     * là quyết định nhịp của cả máy chủ — nhưng trước đây chúng nằm cứng trong
+     * {@code NPoint}, muốn nới một bậc phải sửa mã rồi dịch lại.</p>
+     *
+     * <p>Đổi <b>mốc</b> của một dòng là xoá dòng cũ rồi ghi dòng mới, vì mốc chính
+     * là khoá của bảng. Cột "Một con quái cho" dùng chung ô "giá trị đúng ra nhận
+     * được" ở tab bên cạnh, để hai bảng nói cùng một con số.</p>
+     */
+    private JComponent buildBacGiam() {
+        JPanel root = new JPanel(new BorderLayout(0, 6));
+        root.setOpaque(false);
+        root.setBorder(new EmptyBorder(10, 10, 10, 10));
+        bgTable.setRowHeight(24);
+        bgTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        int[] w = {150, 100, 45, 170, 300};
+        for (int i = 0; i < bgTable.getColumnCount() && i < w.length; i++) {
+            bgTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
+        }
+
+        JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        nut.setOpaque(false);
+        nut.add(button("Lưu bảng", OK_GREEN, e -> luuBacGiam()));
+        nut.add(button("Tải lại", GREY, e -> napBacGiam()));
+        nut.add(button("Thêm bậc", ACCENT, e -> themBacGiam()));
+        nut.add(button("Xoá bậc", WARN_RED, e -> xoaBacGiam()));
+        nut.add(button("Về mặc định", new Color(120, 90, 160), e -> {
+            if (JOptionPane.showConfirmDialog(this,
+                    "Xoá sạch bảng rồi gieo lại mười một bậc gốc?",
+                    "Về mặc định", JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+                return;
+            }
+            String loi = BacGiamTnsmDAO.gieoLai();
+            napBacGiam();
+            note(loi == null ? OK_GREEN : WARN_RED,
+                    loi == null ? "Đã gieo lại các bậc gốc." : loi);
+        }));
+
+        root.add(nhan("Sức mạnh càng cao thì tiềm năng nhận được càng ít. Đọc một "
+                + "dòng là: <b>từ mốc sức mạnh này trở lên thì chỉ còn nhận ngần "
+                + "này phần trăm</b>."
+                + "<br><br>"
+                + "Lấy <b>bậc cao nhất người chơi đạt tới</b> rồi dừng, không cộng "
+                + "dồn nhiều bậc. Dưới bậc thấp nhất là nhận nguyên vẹn 100%. Tắt "
+                + "hết mọi dòng thì mạnh yếu nhận như nhau."
+                + "<br>"
+                + "Bảng áp cho <b>cả sư phụ lẫn đệ tử</b>, mỗi bên tra bằng sức mạnh "
+                + "của chính mình — sư phụ mạnh thì phần chia của sư phụ ít đi, "
+                + "không ăn theo bậc của đệ."
+                + "<br><br>"
+                + "Mốc gõ được cả <code>5000000000</code> lẫn <code>5.000.000.000</code>. "
+                + "Đổi mốc của một dòng thì dòng cũ bị xoá và ghi lại thành dòng mới."),
+                BorderLayout.NORTH);
+        root.add(ServerGuiUtils.cuon(bgTable), BorderLayout.CENTER);
+        root.add(nut, BorderLayout.SOUTH);
+        napBacGiam();
+        return root;
+    }
+
+    /** Một con quái cho bao nhiêu tiềm năng ở bậc này — bản đồ thường. */
+    private String bacGiamCho(int conLai, boolean bat) {
+        if (!bat) {
+            return "— đang tắt";
+        }
+        double chung = ConfigDAO.phanTram(ConfigDAO.TL_EXP);
+        if (chung <= 0) {
+            chung = 1;
+        }
+        return PlayerManagerPanel.fmt(
+                Math.round(tnGoc() * chung * conLai / 100.0));
+    }
+
+    private void napBacGiam() {
+        if (bgTable.isEditing()) {
+            bgTable.getCellEditor().stopCellEditing();
+        }
+        bgModel.setRowCount(0);
+        bgMocCu.clear();
+        for (BacGiamTnsmDAO.Dong d : BacGiamTnsmDAO.danhSach()) {
+            bgMocCu.add(d.moc);
+            bgModel.addRow(new Object[]{PlayerManagerPanel.fmt(d.moc),
+                String.valueOf(d.conLai), d.bat,
+                bacGiamCho(d.conLai, d.bat), d.ghiChu == null ? "" : d.ghiChu});
+        }
+    }
+
+    /** Đọc một con số có thể đang mang dấu chấm hay dấu phẩy phân nhóm. */
+    private static long soLon(String s) {
+        return Long.parseLong(s.replaceAll("[^0-9-]", ""));
+    }
+
+    private String oBg(int r, int c) {
+        Object v = bgModel.getValueAt(r, c);
+        return v == null ? "" : String.valueOf(v).trim();
+    }
+
+    private void luuBacGiam() {
+        if (bgTable.isEditing()) {
+            bgTable.getCellEditor().stopCellEditing();
+        }
+        int hong = 0;
+        String hongDau = null;
+        for (int r = 0; r < bgModel.getRowCount(); r++) {
+            BacGiamTnsmDAO.Dong d = new BacGiamTnsmDAO.Dong();
+            try {
+                d.moc = soLon(oBg(r, COT_BG_MOC));
+                d.conLai = (int) soLon(oBg(r, COT_BG_CON));
+            } catch (NumberFormatException ex) {
+                hong++;
+                if (hongDau == null) {
+                    hongDau = "Dòng " + (r + 1) + " có mốc hoặc phần trăm không phải số.";
+                }
+                continue;
+            }
+            Object bat = bgModel.getValueAt(r, COT_BG_BAT);
+            d.bat = !(bat instanceof Boolean) || (Boolean) bat;
+            d.ghiChu = oBg(r, COT_BG_GC);
+            // Moc la khoa cua bang: doi moc thi phai bo dong cu di, khong thi
+            // bang co ca moc cu lan moc moi va nguoi choi dinh bac khong ai dat.
+            Long cu = r < bgMocCu.size() ? bgMocCu.get(r) : null;
+            if (cu != null && cu != d.moc) {
+                BacGiamTnsmDAO.xoa(cu);
+            }
+            String loi = BacGiamTnsmDAO.luu(d);
+            if (loi != null) {
+                hong++;
+                if (hongDau == null) {
+                    hongDau = "Dòng " + (r + 1) + ": " + loi;
+                }
+            }
+        }
+        napBacGiam();
+        note(hong == 0 ? OK_GREEN : WARN_RED, hong == 0
+                ? "Đã lưu bậc giảm theo sức mạnh — có hiệu lực ngay."
+                : hongDau + " (" + hong + " dòng không lưu được)");
+    }
+
+    private void themBacGiam() {
+        String s = JOptionPane.showInputDialog(this,
+                "Mốc sức mạnh của bậc mới?\n\n"
+                + "Từ mốc này trở lên thì người chơi chỉ còn nhận phần trăm\n"
+                + "tiềm năng ghi ở cột bên cạnh.",
+                "Thêm bậc", JOptionPane.QUESTION_MESSAGE);
+        if (s == null || s.trim().isEmpty()) {
+            return;
+        }
+        BacGiamTnsmDAO.Dong d = new BacGiamTnsmDAO.Dong();
+        try {
+            d.moc = soLon(s);
+        } catch (NumberFormatException ex) {
+            note(WARN_RED, "Mốc sức mạnh phải là số.");
+            return;
+        }
+        d.conLai = 100;
+        d.bat = true;
+        String loi = BacGiamTnsmDAO.luu(d);
+        napBacGiam();
+        note(loi == null ? OK_GREEN : WARN_RED,
+                loi == null ? "Đã thêm bậc — sửa phần trăm rồi bấm Lưu." : loi);
+    }
+
+    private void xoaBacGiam() {
+        int r = bgTable.getSelectedRow();
+        if (r < 0) {
+            note(WARN_RED, "Chọn một dòng đã.");
+            return;
+        }
+        long moc;
+        try {
+            moc = soLon(oBg(r, COT_BG_MOC));
+        } catch (NumberFormatException ex) {
+            moc = r < bgMocCu.size() ? bgMocCu.get(r) : 0;
+        }
+        if (JOptionPane.showConfirmDialog(this,
+                "Xoá bậc từ " + PlayerManagerPanel.fmt(moc) + " sức mạnh?",
+                "Xoá bậc", JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+            return;
+        }
+        String loi = BacGiamTnsmDAO.xoa(moc);
+        napBacGiam();
+        note(loi == null ? OK_GREEN : WARN_RED,
+                loi == null ? "Đã xoá bậc." : loi);
     }
 
     private int nhomTiLe(JPanel form, GridBagConstraints c, int y, String ten) {

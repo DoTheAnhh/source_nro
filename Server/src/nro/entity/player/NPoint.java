@@ -2998,9 +2998,6 @@ if (hasFull5NhatAn()) {
                 if (master.nPoint != null) {
                     tiemNang += originalTiemNang / 100 * (master.nPoint.tlTNSMPet + 100);
                 }
-                if (MapService.gI().isMapKVTH(this.player.zone.map.mapId)) {
-                    tiemNang *= 2;
-                }
             }
         }
 
@@ -3012,25 +3009,13 @@ if (hasFull5NhatAn()) {
             tiemNang += originalTiemNang * 2;
         }
 
-        // Map đặc biệt
-        if (this.player.zone != null) {
-            if (MapService.gI().isMapBanDoKhoBau(this.player.zone.map.mapId)) {
-                tiemNang *= 6;
-            }
-            if (MapService.gI().isMapDoanhTrai(this.player.zone.map.mapId)) {
-                tiemNang *= 3;
-            }
-           
-            if (MapService.gI().isMapBinhHutNangLuong(this.player.zone.map.mapId)
-                    || MapService.gI().isMapDiaNguc(this.player.zone.map.mapId)
-                    || MapService.gI().isMapHirudegarn(this.player.zone.map.mapId)
-                    || MapService.gI().isMapPotara(this.player.zone.map.mapId)
-                    || MapService.gI().isMapThanhDia(this.player.zone.map.mapId)
-                    || MapService.gI().isMapHanhTinhThucVat(this.player.zone.map.mapId)) {
-                tiemNang = tiemNang / 10;
-            }
-
-        }
+        // He so theo BAN DO khong con o day.
+        //
+        // Chung da ve mot cho duy nhat: bang he_so_tnsm, ap trong Mob. Ly do la
+        // Mob biet BAN DO CUA CON QUAI, con o day chi biet ban do cua nguoi
+        // choi — de tu cay trong Ngu Hanh Son thi phan chia cho su phu cung
+        // phai theo he so cua Ngu Hanh Son, ma luc ay su phu co the dang dung o
+        // ban do khac. Xem HeSoTnsmDAO.
         if (this.player.isDeTu) {
             Detu pet = (Detu) this.player;
             int type = pet.typeDeTu;
@@ -3128,25 +3113,11 @@ private boolean hasFull5NhatAn() {
         // Nên sư phụ mạnh thì phần chia của sư phụ ít đi, không ăn theo bậc của
         // đệ tử nữa.
         //
-        // Hai cột: mốc sức mạnh, và phần trăm còn lại.
-        final long[][] bacGiam = {
-            {200_000_000_000L, 1},
-            {120_000_000_000L, 2},
-            {100_000_000_000L, 3},
-            { 80_000_000_000L, 5},
-            { 60_000_000_000L, 8},
-            { 50_000_000_000L, 12},
-            { 40_000_000_000L, 20},
-            { 30_000_000_000L, 30},
-            { 20_000_000_000L, 45},
-            { 10_000_000_000L, 60},
-            {  5_000_000_000L, 80},
-        };
-        for (long[] bac : bacGiam) {
-            if (this.power >= bac[0]) {
-                tiemNang = calPercent(tiemNang, (int) bac[1]);
-                break;
-            }
+        // Các mốc nay nằm trong bảng bac_giam_tnsm, sửa được trên panel ở tab
+        // Tỉ lệ. Chưa chạm bậc nào thì trả về 100, tức nhận nguyên vẹn.
+        int conLai = nro.repository.dao.BacGiamTnsmDAO.phanTram(this.power);
+        if (conLai != 100) {
+            tiemNang = calPercent(tiemNang, conLai);
         }
 
         // Tỉ lệ đệ tử chia cho sư phụ, chỉnh được trên panel.
