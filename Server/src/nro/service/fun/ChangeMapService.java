@@ -1153,11 +1153,37 @@ public class ChangeMapService {
         // trong changeMap. Van xoa co cho sach, phong khi con sot lai tu mot
         // luot doi ban do dang do cua ban truoc.
         player.tauChoThaSauKhiNapMap = -1;
+        // Ba viec KHONG dung chung mot khoi try nua.
+        //
+        // Ban cu gop ca ba vao mot try roi nuot loi. Viec dau —
+        // sendUpdateCountSubTask — co the nem loi chi so buoc nhiem vu, va khi
+        // no nem thi HAI VIEC SAU khong bao gio chay: khu khong nap nguoi, khong
+        // nap vat. Nguoi choi vao ban do moi thay man hinh den, mau 0/0, khong
+        // ai xung quanh, va khong mot dong log nao noi vi sao.
+        //
+        // Tach ra thi mot viec hong khong keo hai viec kia theo, va moi loi deu
+        // duoc ghi lai chu khong bien mat.
         try {
             TaskService.gI().sendUpdateCountSubTask(player);
-            player.zone.load_Me_To_Another(player);
-            player.zone.load_Another_To_Me(player);
-        } catch (Exception e) {
+        } catch (Exception ex) {
+            Logger.logException(ChangeMapService.class, ex,
+                    "Loi gui so dem nhiem vu khi nap xong ban do");
+        }
+        try {
+            if (player.zone != null) {
+                player.zone.load_Me_To_Another(player);
+            }
+        } catch (Exception ex) {
+            Logger.logException(ChangeMapService.class, ex,
+                    "Loi nap nguoi choi vao khu khi nap xong ban do");
+        }
+        try {
+            if (player.zone != null) {
+                player.zone.load_Another_To_Me(player);
+            }
+        } catch (Exception ex) {
+            Logger.logException(ChangeMapService.class, ex,
+                    "Loi nap khu cho nguoi choi khi nap xong ban do");
         }
         Service.gI().sendEffAllPlayerMapToMe(player);
         Service.gI().sendEffPlayer(player);

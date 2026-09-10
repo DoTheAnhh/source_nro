@@ -1803,7 +1803,29 @@ public class GodGK {
             dataArray = docCot(rs, "data_task");
             TaskMain taskMain = TaskService.gI().getTaskMainById(player, Byte.parseByte(String.valueOf(dataArray.get(0))));
             taskMain.index = Byte.parseByte(String.valueOf(dataArray.get(1)));
-            taskMain.subTasks.get(taskMain.index).count = Short.parseShort(String.valueOf(dataArray.get(2)));
+            // Kep chi so buoc vao trong day.
+            //
+            // Day la GOC cua mot loi rat kho lan ra: chi so buoc luu tren nhan
+            // vat, con so buoc thi nam o bang mau. Sua bang mau — bot mot buoc,
+            // doi thu tu, hay chi la mot nhiem vu von khong co buoc nao — la
+            // chi so cu tro ra ngoai day. Tu do MOI cho trong ma nguon viet
+            // `subTasks.get(taskMain.index)` deu nem loi, va co hon sau muoi
+            // cho nhu the.
+            //
+            // Nang nhat la luc doi ban do: cho nem loi nam chung mot khoi try
+            // voi hai lenh nap nguoi va vat trong khu, nen mot loi o day cuon
+            // theo ca hai — nguoi choi vao ban do moi thay MAN HINH DEN, mau
+            // 0/0, khong ai xung quanh. Kep o day thi ca ho loi do bien mat.
+            if (taskMain.subTasks == null || taskMain.subTasks.isEmpty()) {
+                taskMain.index = 0;
+            } else {
+                if (taskMain.index < 0) {
+                    taskMain.index = 0;
+                } else if (taskMain.index >= taskMain.subTasks.size()) {
+                    taskMain.index = taskMain.subTasks.size() - 1;
+                }
+                taskMain.subTasks.get(taskMain.index).count = Short.parseShort(String.valueOf(dataArray.get(2)));
+            }
             if (dataArray.size() > 3) {
                 taskMain.lastTime = Long.parseLong(String.valueOf(dataArray.get(3)));
             } else {

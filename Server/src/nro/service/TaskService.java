@@ -152,13 +152,40 @@ public class TaskService {
     }
 
     //số lượng đã hoàn thành
+    /**
+     * Gửi số đếm của bước nhiệm vụ đang làm.
+     *
+     * <h2>Không được phép ném lỗi ra ngoài</h2>
+     *
+     * <p>Bản cũ chỉ bắt {@code IOException}. Lỗi <b>chỉ số bước ngoài dãy</b> —
+     * {@code IndexOutOfBounds} — thì thoát thẳng ra ngoài, và hàm này lại được
+     * gọi ngay đầu {@code finishLoadMap}, nằm chung một khối {@code try} với hai
+     * lệnh nạp người và vật trong khu. Một lỗi ở đây cuốn theo cả hai: người
+     * chơi vào bản đồ mới thấy <b>màn hình đen</b>, máu 0/0, không ai xung
+     * quanh. Đó là toàn bộ câu chuyện của cái lỗi ấy.</p>
+     *
+     * <p>Nay kẹp chỉ số vào trong dãy và bắt mọi loại lỗi. Gốc thì đã chặn ở
+     * {@code GodGK} lúc nạp nhân vật; đây là lưới đỡ thứ hai.</p>
+     */
     public void sendUpdateCountSubTask(Player player) {
         Message msg = null;
         try {
+            if (player == null || player.playerTask == null
+                    || player.playerTask.taskMain == null
+                    || player.playerTask.taskMain.subTasks == null
+                    || player.playerTask.taskMain.subTasks.isEmpty()) {
+                return;
+            }
+            TaskMain tm = player.playerTask.taskMain;
+            if (tm.index < 0) {
+                tm.index = 0;
+            } else if (tm.index >= tm.subTasks.size()) {
+                tm.index = tm.subTasks.size() - 1;
+            }
             msg = new Message(43);
-            msg.writer().writeShort(player.playerTask.taskMain.subTasks.get(player.playerTask.taskMain.index).count);
+            msg.writer().writeShort(tm.subTasks.get(tm.index).count);
             player.sendMessage(msg);
-        } catch (IOException e) {
+        } catch (Exception e) {
         } finally {
             if (msg != null) {
                 msg.cleanup();

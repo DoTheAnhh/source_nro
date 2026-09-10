@@ -926,10 +926,24 @@ public class PlayerDAO {
                     dataArray.clear();
 
                     //data nhiệm vụ
-                    dataArray.add(player.playerTask.taskMain.id);
-                    dataArray.add(player.playerTask.taskMain.index);
-                    dataArray.add(player.playerTask.taskMain.subTasks.get(player.playerTask.taskMain.index).count);
-                    dataArray.add(player.playerTask.taskMain.lastTime);
+                    //
+                    // Kep chi so buoc truoc khi doc: chi so ngoai day thi cau
+                    // .get() nem loi va LAM HONG CA LUOT LUU — mat het moi thu
+                    // lam duoc tu lan luu truoc, chu khong phai chi mat mot con
+                    // so nhiem vu. Xem GodGK cho biet vi sao chi so co the
+                    // tro ra ngoai day.
+                    nro.entity.task.TaskMain tmLuu = player.playerTask.taskMain;
+                    int buocLuu = 0;
+                    short demLuu = 0;
+                    if (tmLuu.subTasks != null && !tmLuu.subTasks.isEmpty()) {
+                        buocLuu = Math.max(0,
+                                Math.min(tmLuu.index, tmLuu.subTasks.size() - 1));
+                        demLuu = tmLuu.subTasks.get(buocLuu).count;
+                    }
+                    dataArray.add(tmLuu.id);
+                    dataArray.add(buocLuu);
+                    dataArray.add(demLuu);
+                    dataArray.add(tmLuu.lastTime);
                     String task = dataArray.toJSONString();
                     dataArray.clear();
 
