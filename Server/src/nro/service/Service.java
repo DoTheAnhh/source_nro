@@ -871,6 +871,11 @@ public class Service {
             return;
         }
         player.nPoint.calPoint();
+        // Buoc "Nang suc danh goc len 10K" cua nhiem vu 29: xet o day vi day la
+        // cho chi so duoc dung lai, tuc luc suc danh goc vua co the doi. Hai
+        // duong goi kia (dung tiem nang, len suc manh) van giu — nguoi da du
+        // tu truoc ma khong nang them lan nao cung qua duoc.
+        nro.service.TaskService.gI().kiemTraSucDanhGoc(player);
         Send_Info_NV(player);
         if (!player.isDeTu && !player.isBo && !player.isMe && !player.isBoss && !player.isPetFollow && !player.isDuongTang && !player.isNguoiYeu && !player.isConOne && !player.isConTwo && !player.isConThree) {
             Message msg;

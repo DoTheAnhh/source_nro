@@ -25,6 +25,10 @@ public class TopDAO {
             + "FROM player "
             + "INNER JOIN account ON account.id = player.account_id "
             + "WHERE account.ban = 0 "
+            // Chi liet ke nguoi DA GAY SAT THUONG. Khong loc thi bang xep
+            // hang day nhung dong "0 sat thuong" cua nguoi chua tung dam mot
+            // cai nao — va nguoi that su co ky luc bi day xuong duoi.
+            + "HAVING don_manh > 0 "
             + "ORDER BY don_manh DESC "
             + "LIMIT 100;";
 
@@ -37,6 +41,7 @@ public class TopDAO {
             + "FROM player "
             + "INNER JOIN account ON account.id = player.account_id "
             + "WHERE account.ban = 0 "
+            + "HAVING dame_30s > 0 "
             + "ORDER BY dame_30s DESC "
             + "LIMIT 100;";
 
