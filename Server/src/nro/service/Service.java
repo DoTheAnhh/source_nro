@@ -1652,6 +1652,12 @@ public class Service {
             pl.canGuiTien = false;
             sendMoney(pl);
         }
+        if (pl.shopMoLaiSauGom != null) {
+            String tag = pl.shopMoLaiSauGom;
+            boolean ag = pl.shopMoLaiAllGender;
+            pl.shopMoLaiSauGom = null;
+            nro.service.shop.ShopService.gI().opendShop(pl, tag, ag);
+        }
         if (pl.thongBaoGom != null) {
             String s = pl.thongBaoGom;
             pl.thongBaoGom = null;

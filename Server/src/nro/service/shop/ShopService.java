@@ -71,6 +71,18 @@ public class ShopService {
     }
 
     public void opendShop(Player player, String tagName, boolean allGender) {
+        // Dang lam hang loat thi hoan lai, cuoi dot mo mot lan.
+        //
+        // Moi lan mua nhieu nhanh deu goi lai ham nay, ma goi cua hang la mot
+        // trong nhung goi to nhat cua giao thuc — ca bang hang, ca chi so tung
+        // mon. Mua chin muoi chin mon la chin muoi chin lan ban nguyen bang
+        // hang xuong client, cong voi hanh trang va tien. Client ngap roi rot
+        // ve man dang nhap: dung canh "mua nhieu thi vang game".
+        if (player != null && player.gomGoi > 0) {
+            player.shopMoLaiSauGom = tagName;
+            player.shopMoLaiAllGender = allGender;
+            return;
+        }
         switch (tagName) {
             case "ITEMS_LUCKY_ROUND":
                 openShopType4(player, tagName, player.inventory.itemsBoxCrackBall);

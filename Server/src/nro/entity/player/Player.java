@@ -350,6 +350,16 @@ public class Player implements Runnable {
     public byte tauChoThaSauKhiNapMap = -1;
 
     /**
+     * Cua hang can mo lai sau khi xong mot khoi lam hang loat.
+     *
+     * <p>{ null} la khong can. Xem { Service.batGomGoi}.</p>
+     */
+    public String shopMoLaiSauGom;
+
+    /** Co allGender cua lan mo lai ay. */
+    public boolean shopMoLaiAllGender;
+
+    /**
      * Lượt đổi bản đồ tới sớm, đang <b>chờ bản đồ hiện tại nạp xong</b>.
      *
      * <p>Chỉ giữ yêu cầu mới nhất, và được chạy ở cuối
