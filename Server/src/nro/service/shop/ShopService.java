@@ -1609,26 +1609,32 @@ public class ShopService {
                 break;
             }
         }
-        if (task != null) {
-            if (task.isDone()) {
-                BadgesData newBadge = new BadgesData(pl, idBadgesCanBuy, 30);
-                pl.dataBadges.add(newBadge);
-                Service.gI().sendThongBao(pl, "Chúc mừng bạn đã nhận được danh hiệu: " + is.temp.name);
-            } else {
-                String taskName = "N/A";
-                for (BadgesTaskTemplate btt : Manager.TASKS_BADGES_TEMPLATE) {
-                    if (btt.idbadgesReward == idBadgesCanBuy) {
-                        taskName = btt.name;
-                        break;
-                    }
-                }
-
-                String thongBao = "Bạn chưa hoàn thành yêu cầu để nhận danh hiệu này.\n";
-                thongBao += "Nhiệm vụ: " + taskName + "\b";
-                thongBao += "Tiến độ: " + task.count + " / " + task.countMax;
-                NpcService.gI().createTutorial(pl, 2993, thongBao);
-            }
+        // Khong co nhiem vu nao trao danh hieu nay -> BAO RO.
+        //
+        // Ban cu ket thuc lang le o day: bam vao khong co gi xay ra, khong mot
+        // dong chu nao. Nguoi choi bam di bam lai va tuong game hong. Nay noi
+        // thang la chua co duong nhan.
+        if (task == null) {
+            NpcService.gI().createTutorial(pl, 2993,
+                    "Danh hiệu này chưa có cách nhận nào trong game.\b"
+                    + "Chỉ quản trị viên cấp tay được.");
+            return;
         }
+        if (task.isDone()) {
+            BadgesData newBadge = new BadgesData(pl, idBadgesCanBuy, 30);
+            pl.dataBadges.add(newBadge);
+            Service.gI().sendThongBao(pl, "Chúc mừng bạn đã nhận được danh hiệu: " + is.temp.name);
+            return;
+        }
+        String taskName = nro.service.badges.DanhHieuShopService
+                .cachNhan(idBadgesCanBuy);
+        if (taskName.isEmpty()) {
+            taskName = "N/A";
+        }
+        String thongBao = "Bạn chưa hoàn thành yêu cầu để nhận danh hiệu này.\n";
+        thongBao += "Cách nhận: " + taskName + "\b";
+        thongBao += "Tiến độ: " + task.count + " / " + task.countMax;
+        NpcService.gI().createTutorial(pl, 2993, thongBao);
     }
 
     /**
