@@ -551,6 +551,112 @@ public class ConfigDAO {
                     SKH_SAO_BAT, SKH_SAO_TILE, SKH_SAO_MIN, SKH_SAO_MAX,
                     LOI_CHAO));
 
+    // =====================================================================
+    //  Tự đẩy dữ liệu cho client
+    // =====================================================================
+
+    /**
+     * Bảng nào đổi thì phải tăng phiên bản nào.
+     *
+     * <p>Client giữ các gói dữ liệu này trong bộ nhớ đệm và <b>chỉ tải lại khi
+     * số phiên bản khác đi</b>. Thêm cải trang, sửa mẫu vật phẩm, thêm quái mới
+     * mà quên tăng thì người chơi mặc vào không thấy gì, hoặc tệ hơn: máy chủ
+     * gửi xuống một con quái mà bảng mẫu bên client chưa có, và cả lượt nạp bản
+     * đồ hỏng.</p>
+     */
+    private static final String[][] BANG_DOI_PHIEN_BAN = {
+        {"item_template", VS_ITEM},
+        {"mob_template", VS_DATA},
+        {"npc_template", VS_DATA},
+        {"skill_template", VS_SKILL},
+        {"map_template", VS_MAP},
+        {"part", VS_DATA},
+    };
+
+    /** Đang tự tăng phiên bản — đừng để việc ghi ấy gọi lại chính mình. */
+    private static volatile boolean dangDayDuLieu;
+
+    /** Lần tăng gần nhất của từng khoá, để một lượt sửa hàng loạt chỉ tăng một lần. */
+    private static final Map<String, Long> MOC_DAY = new java.util.HashMap<>();
+
+    /**
+     * Gộp các lần tăng trong khoảng này thành một, tính bằng mili giây.
+     *
+     * <p>Sửa một bảng thường là sửa nhiều dòng liền nhau trong một vòng lặp.
+     * Tăng phiên bản theo từng dòng vừa thừa vừa tốn — mà tăng mười lần hay một
+     * lần thì client cũng chỉ thấy "số đã khác", nên gộp lại.</p>
+     */
+    private static final long GOP_DAY_MS = 3000;
+
+    /**
+     * Câu lệnh vừa chạy có đụng vào dữ liệu client giữ đệm không — nếu có thì
+     * tăng phiên bản tương ứng ngay.
+     *
+     * <p>Gọi từ {@code ConnectDB.executeUpdate}, tức là <b>một chỗ duy nhất</b>
+     * cho mọi nơi ghi CSDL, kể cả những chỗ viết sau này. Trước đây việc này là
+     * một cái nút trên panel mà người dùng phải nhớ bấm — mà cái phải nhớ thì
+     * sẽ có lúc quên, và lúc quên thì không có dấu hiệu nào cả.</p>
+     */
+    public static void tuDayDuLieu(String sql) {
+        // Loc that nhanh truoc: executeUpdate con dung cho luu nguoi choi, chay
+        // rat day. Khong khop "_template" hay "part" thi ra ngay.
+        if (sql == null || dangDayDuLieu) {
+            return;
+        }
+        String s = sql.toLowerCase();
+        if (s.indexOf("_template") < 0 && s.indexOf("part") < 0) {
+            return;
+        }
+        // Chi INSERT/UPDATE/DELETE moi lam doi du lieu.
+        if (s.indexOf("insert") < 0 && s.indexOf("update") < 0
+                && s.indexOf("delete") < 0 && s.indexOf("replace") < 0) {
+            return;
+        }
+        for (String[] c : BANG_DOI_PHIEN_BAN) {
+            if (s.indexOf(c[0]) >= 0) {
+                tangPhienBan(c[1]);
+            }
+        }
+    }
+
+    /** Tăng một khoá phiên bản, gộp các lần gọi sát nhau. */
+    private static void tangPhienBan(String khoa) {
+        long bayGio = System.currentTimeMillis();
+        synchronized (MOC_DAY) {
+            Long moc = MOC_DAY.get(khoa);
+            if (moc != null && bayGio - moc < GOP_DAY_MS) {
+                return;
+            }
+            MOC_DAY.put(khoa, bayGio);
+        }
+        // Ghi o LUONG KHAC, khong ghi ngay tai cho.
+        //
+        // Ham nay duoc goi tu giua executeUpdate, luc ket noi cua cau lenh kia
+        // van dang mo. Xin them mot ket noi nua ngay tai do la long ket noi
+        // trong ket noi — pool nho thi co luc khong con cai nao de cap, va ca
+        // hai ben cung doi nhau.
+        Thread t = new Thread(() -> {
+            dangDayDuLieu = true;
+            try {
+                // Byte co dau: 127 la het tran, quay ve 0. Client chi so SANH
+                // BANG nen quay vong khong sao, mien la khac so cu.
+                long v = (num(khoa) + 1) % 128;
+                if (set(khoa, String.valueOf(v))) {
+                    reload();
+                    Logger.success("CONFIG", "Dữ liệu đổi — tự tăng " + khoa
+                            + " lên " + v + ", client đăng nhập lại sẽ tải bản mới");
+                }
+            } catch (Exception ex) {
+                Logger.logException(ConfigDAO.class, ex,
+                        "Lỗi tự tăng phiên bản " + khoa);
+            } finally {
+                dangDayDuLieu = false;
+            }
+        }, "TuDayDuLieu-" + khoa);
+        t.setDaemon(true);
+        t.start();
+    }
+
     /** Tỉ lệ phần trăm của một quy ước dạng chữ, ví dụ {@code "0.05"}. */
     public static double phanTram(String key) {
         try {

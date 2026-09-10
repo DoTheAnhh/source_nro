@@ -577,7 +577,6 @@ public class SystemPanel extends JPanel {
         btn.setOpaque(false);
         btn.add(button("Lưu", OK_GREEN, e -> saveConfig()));
         btn.add(button("Đọc lại", GREY, e -> loadConfig()));
-        btn.add(button("Đẩy dữ liệu cho client", ACCENT, e -> bumpVersion()));
         // Hai nut "Bat bao tri" va "Khoi dong lai may chu" da chuyen sang
         // thanh ben trai (NutMayChu): chung ngat ket noi cua nguoi dang choi,
         // khac han moi thu khac o day von chi luu mot con so — de lan giua
@@ -654,41 +653,6 @@ public class SystemPanel extends JPanel {
                 : "Có " + loi + " quy ước không lưu được — xem log máy chủ.");
     }
 
-    /**
-     * Tăng phiên bản dữ liệu để client tải lại.
-     *
-     * <p>Client giữ gói dữ liệu (part, hiệu ứng, ảnh, bảng vật phẩm) trong bộ nhớ
-     * đệm và <b>chỉ tải lại khi số phiên bản đổi</b>. Thêm cải trang hay phụ kiện
-     * mới mà quên bước này thì người chơi mặc vào không thấy gì — đó là bẫy hay
-     * gặp nhất khi thêm đồ.</p>
-     *
-     * <p>Người đang online phải <b>thoát ra vào lại</b> mới nhận: gói dữ liệu chỉ
-     * gửi một lần lúc đăng nhập.</p>
-     */
-    private void bumpVersion() {
-        long d = ConfigDAO.num(ConfigDAO.VS_DATA);
-        long i = ConfigDAO.num(ConfigDAO.VS_ITEM);
-        int ok = JOptionPane.showConfirmDialog(this,
-                "Tăng phiên bản để client tải lại dữ liệu?\n\n"
-                + "vs_data: " + d + " → " + (d + 1) + "   (part, hiệu ứng, ảnh)\n"
-                + "vs_item: " + i + " → " + (i + 1) + "   (bảng vật phẩm)\n\n"
-                + "Người đang online phải thoát ra vào lại mới nhận —\n"
-                + "gói dữ liệu chỉ gửi một lần lúc đăng nhập.",
-                "Đẩy dữ liệu cho client", JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE);
-        if (ok != JOptionPane.YES_OPTION) {
-            return;
-        }
-        // Byte co dau: 127 la het tran, quay ve 0. Client chi so SANH BANG nen
-        // quay vong khong sao, mien la khac so cu.
-        boolean a = ConfigDAO.set(ConfigDAO.VS_DATA, String.valueOf((d + 1) % 128));
-        boolean b = ConfigDAO.set(ConfigDAO.VS_ITEM, String.valueOf((i + 1) % 128));
-        ConfigDAO.reload();
-        loadConfigQuiet();
-        note(a && b ? OK_GREEN : WARN_RED, a && b
-                ? "Đã tăng phiên bản — client đăng nhập lại sẽ tải dữ liệu mới."
-                : "Không lưu được phiên bản mới, xem log máy chủ.");
-    }
 
     private void loadConfigQuiet() {
         for (Map.Entry<String, JTextField> e : fields.entrySet()) {

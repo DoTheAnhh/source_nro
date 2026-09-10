@@ -225,6 +225,7 @@ public class ConnectDB {
                 Logger.log(Logger.GREEN, "Thực thi thành công câu lệnh: " + ps.toString() + "\n");
             }
             rowUpdated = ps.executeUpdate();
+            nro.repository.dao.ConfigDAO.tuDayDuLieu(query);
         } catch (final Exception e) {
             Logger.log(Logger.RED, "Có lỗi xảy ra khi thực thi câu lệnh: " + query + "\n");
             throw e;
@@ -277,7 +278,12 @@ public class ConnectDB {
                 Logger.log(Logger.GREEN, "Thực thi thành công câu lệnh: " + ps.toString() + "\n");
             }
 
-            return ps.executeUpdate();
+            int soDong = ps.executeUpdate();
+            // Doi du lieu ma client giu dem thi tu tang phien ban ngay.
+            // Dat o day vi day la CHO DUY NHAT moi noi ghi CSDL di qua,
+            // ke ca nhung cho viet sau nay.
+            nro.repository.dao.ConfigDAO.tuDayDuLieu(query);
+            return soDong;
         } catch (final Exception ex) {
             Logger.log(Logger.RED, "Có lỗi xảy ra khi thực thi câu lệnh: " + query + "\n");
             throw ex;

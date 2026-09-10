@@ -1764,7 +1764,7 @@ public class ItemManagerPanel extends JPanel {
         form.add(new JLabel("<html><span style='color:#666'>"
                 + "ID do máy chủ tự cấp và <b>không sửa được</b> — client tra bảng vật phẩm "
                 + "theo thứ tự nên id phải liên tục.<br>"
-                + "Thêm xong nhớ bấm <b>Cấu Hình → Đẩy dữ liệu cho client</b>."
+                + "Máy chủ tự đẩy dữ liệu mới cho client."
                 + "</span></html>"), c);
 
         if (JOptionPane.showConfirmDialog(this, form,
@@ -1843,7 +1843,7 @@ public class ItemManagerPanel extends JPanel {
 
         LamMoi.bao(LamMoi.VAT_PHAM);
         note(OK_GREEN, "Đã thêm \"" + ten + "\" (id " + idMoi
-                + "). Nhớ bấm \"Đẩy dữ liệu cho client\".");
+                + "). Client đăng nhập lại là thấy.");
     }
 
     private void suaMauVatPham() {
@@ -1919,7 +1919,7 @@ public class ItemManagerPanel extends JPanel {
                 + "<b>Head / Body / Leg</b> trỏ vào bảng <code>part</code> — bộ ảnh vẽ "
                 + "nhân vật khi mặc món này. Áo dùng Body, quần dùng Leg, cải trang dùng "
                 + "cả ba.<br><code>-1</code> là không đổi phần đó.<br>"
-                + "Sửa xong nhớ bấm <b>Cấu Hình → Đẩy dữ liệu cho client</b>, "
+                + "Máy chủ tự đẩy dữ liệu mới cho client, "
                 + "nếu không người chơi vẫn thấy y như cũ."
                 + "</span></html>"), c);
         c.gridy = y;
@@ -2091,7 +2091,7 @@ public class ItemManagerPanel extends JPanel {
                 BorderLayout.NORTH);
         p.add(ServerGuiUtils.cuon(ta), BorderLayout.CENTER);
         p.add(new JLabel("<html><span style='color:#777'>Sửa xong nhớ bấm "
-                + "<b>Cấu Hình → Đẩy dữ liệu cho client</b>, nếu không người chơi "
+                + "tự đẩy dữ liệu mới cho client, nhưng người chơi "
                 + "vẫn thấy mô tả cũ.</span></html>"), BorderLayout.SOUTH);
 
         int ok = JOptionPane.showConfirmDialog(this, p, "Sửa mô tả vật phẩm",
