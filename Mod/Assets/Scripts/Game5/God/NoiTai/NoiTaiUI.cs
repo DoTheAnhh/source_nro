@@ -4,22 +4,22 @@ using System.Collections.Generic;
 namespace Game5.God
 {
     /// <summary>
-    /// Báº£ng <b>Ná»i táº¡i</b> â váº½ ÄÃ¨ lÃªn mÃ n chÆ¡i, tá»± báº¯t cháº¡m.
+    /// Bảng <b>Nội tại</b> — vẽ đè lên màn chơi, tự bắt chạm.
     /// </summary>
     /// <remarks>
-    /// <para>TrÆ°á»c ÄÃ¢y ná»i táº¡i chá» vÃ o ÄÆ°á»£c qua má»t menu bá»n nÃºt cá»§a NPC, vÃ 
-    /// muá»n xem cÃ³ nhá»¯ng ná»i táº¡i nÃ o thÃ¬ pháº£i má» má»t báº£ng khÃ¡c ná»¯a. Báº£ng nÃ y gom
-    /// háº¿t vÃ o má»t chá», má» tháº³ng tá»« tab Ká»¹ nÄng.</para>
+    /// <para>Trước đây nội tại chỉ vào được qua một menu bốn nút của NPC, và
+    /// muốn xem có những nội tại nào thì phải mở một bảng khác nữa. Bảng này gom
+    /// hết vào một chỗ, mở thẳng từ tab Kỹ năng.</para>
     ///
-    /// <para><b>Chá» hiá»n ná»i táº¡i cá»§a hÃ nh tinh mÃ¬nh.</b> Danh sÃ¡ch do mÃ¡y chá»§
-    /// lá»c sáºµn theo <c>player.gender</c> rá»i má»i gá»­i xuá»ng, nÃªn khÃ´ng cÃ³ ÄÆ°á»ng
-    /// nÃ o nhÃ¬n tháº¥y â hay má» trÃºng â ná»i táº¡i cá»§a hÃ nh tinh khÃ¡c.</para>
+    /// <para><b>Chỉ hiện nội tại của hành tinh mình.</b> Danh sách do máy chủ
+    /// lọc sẵn theo <c>player.gender</c> rồi mới gửi xuống, nên không có đường
+    /// nào nhìn thấy — hay mở trúng — nội tại của hành tinh khác.</para>
     ///
-    /// <h2>Má»i vÃ¹ng do <see cref="oBang"/> tÃ­nh má»t láº§n</h2>
+    /// <h2>Mọi vùng do <see cref="oBang"/> tính một lần</h2>
     ///
-    /// <para>Cáº£ pháº§n váº½ láº«n pháº§n báº¯t cháº¡m Äá»u Äá»c tá»« ÄÃ³. Báº£n trÆ°á»c hai bÃªn tá»±
-    /// cá»ng láº¥y toáº¡ Äá» báº±ng cÃ¹ng má»t dÃ£y sá» gÃµ tay, vÃ  chá» cáº§n má»t chá» lá»ch vÃ i
-    /// Äiá»m lÃ  chá»¯ chá»ng lÃªn nhau cÃ²n nÃºt thÃ¬ báº¥m trÆ°á»£t.</para>
+    /// <para>Cả phần vẽ lẫn phần bắt chạm đều đọc từ đó. Bản trước hai bên tự
+    /// cộng lấy toạ độ bằng cùng một dãy số gõ tay, và chỉ cần một chỗ lệch vài
+    /// điểm là chữ chồng lên nhau còn nút thì bấm trượt.</para>
     /// </remarks>
     public class NoiTaiUI
     {
@@ -33,7 +33,7 @@ namespace Game5.God
         public bool dangMo;
 
         // ==================================================================
-        //  MÃ u
+        //  Màu
         // ==================================================================
 
         private const int MAU_NEN = 0x241D33;
@@ -48,13 +48,13 @@ namespace Game5.God
         private const int MAU_NHANH = 0x8A5BD0;
 
         // ==================================================================
-        //  KÃ­ch thÆ°á»c
+        //  Kích thước
         // ==================================================================
 
-        /// <summary>Cao má»t dÃ²ng trong danh sÃ¡ch.</summary>
+        /// <summary>Cao một dòng trong danh sách.</summary>
         private const int CAO_DONG = 24;
 
-        /// <summary>Sá» dÃ²ng tháº¥y ÄÆ°á»£c cÃ¹ng lÃºc.</summary>
+        /// <summary>Số dòng thấy được cùng lúc.</summary>
         private const int SO_DONG_THAY = 5;
 
         private const int LE = 8;
@@ -70,7 +70,7 @@ namespace Game5.God
         private int cuon;
         private int dongChon = -1;
 
-        /// <summary>Má»t ná»i táº¡i trong danh sÃ¡ch cá»§a hÃ nh tinh nÃ y.</summary>
+        /// <summary>Một nội tại trong danh sách của hành tinh này.</summary>
         public sealed class Muc
         {
             public int id;
@@ -89,11 +89,11 @@ namespace Game5.God
         private long vangDangCo;
         private int ngocDangCo;
 
-        /// <summary>ÄÃ£ nháº­n dá»¯ liá»u tá»« mÃ¡y chá»§ láº§n nÃ o chÆ°a.</summary>
+        /// <summary>Đã nhận dữ liệu từ máy chủ lần nào chưa.</summary>
         private bool coDuLieu;
 
         // ==================================================================
-        //  Má» / ÄÃ³ng
+        //  Mở / đóng
         // ==================================================================
 
         public void mo()
@@ -110,7 +110,7 @@ namespace Game5.God
             dangMo = false;
         }
 
-        /// <summary>MÃ¡y chá»§ gá»­i xuá»ng toÃ n bá» dá»¯ liá»u báº£ng.</summary>
+        /// <summary>Máy chủ gửi xuống toàn bộ dữ liệu bảng.</summary>
         public void nhanBang(string tenHienTai, int icon, long vang, int ngoc,
                 long vangCo, int ngocCo, List<Muc> ds)
         {
@@ -133,16 +133,16 @@ namespace Game5.God
         }
 
         // ==================================================================
-        //  Toáº¡ Äá» â Má»T nguá»n cho cáº£ váº½ láº«n cháº¡m
+        //  Toạ độ — MỘT nguồn cho cả vẽ lẫn chạm
         // ==================================================================
 
         /// <summary>
-        /// CÃ¡c vÃ¹ng cá»§a báº£ng: {x, y, rá»ng, cao}.
+        /// Các vùng của bảng: {x, y, rộng, cao}.
         /// </summary>
         /// <remarks>
-        /// Thá»© tá»±: 0 khung, 1 nÃºt X, 2 tháº» "Äang mang", 3 hÃ ng tiá»n,
-        /// 4 nÃºt má» báº±ng vÃ ng, 5 nÃºt má» báº±ng ngá»c, 6 nhÃ£n danh sÃ¡ch,
-        /// 7 vÃ¹ng danh sÃ¡ch, 8 nÃºt LÃªn, 9 nÃºt Xuá»ng, 10 nÃºt Má» nhanh.
+        /// Thứ tự: 0 khung, 1 nút X, 2 thẻ "đang mang", 3 hàng tiền,
+        /// 4 nút mở bằng vàng, 5 nút mở bằng ngọc, 6 nhãn danh sách,
+        /// 7 vùng danh sách, 8 nút Lên, 9 nút Xuống, 10 nút Mở nhanh.
         /// </remarks>
         private int[][] oBang()
         {
@@ -207,11 +207,11 @@ namespace Game5.God
             return o;
         }
 
-        /// <summary>Sá» dÃ²ng tháº­t sá»± tháº¥y ÄÆ°á»£c á» khung hÃ¬nh vá»«a tÃ­nh.</summary>
+        /// <summary>Số dòng thật sự thấy được ở khung hình vừa tính.</summary>
         private int soDongThay = SO_DONG_THAY;
 
         // ==================================================================
-        //  Váº½
+        //  Vẽ
         // ==================================================================
 
         public void ve(mGraphics g)
@@ -233,7 +233,7 @@ namespace Game5.God
             veHangTien(g, o[3]);
             veHaiNutMo(g, o[4], o[5]);
 
-            mFont.tahoma_7_grey.drawString(g, "Ná»i táº¡i cá»§a hÃ nh tinh báº¡n",
+            mFont.tahoma_7_grey.drawString(g, "Nội tại của hành tinh bạn",
                     o[6][0], o[6][1], mFont.LEFT);
 
             veDanhSach(g, o[7]);
@@ -254,16 +254,16 @@ namespace Game5.God
             // Dai tieu de rieng mot mau, de phan biet voi than bang.
             g.setColor(MAU_NEN_2, 1f);
             g.fillRect(k[0] + 2, k[1] + 2, k[2] - 4, CAO_TIEU_DE - 4, 7);
-            mFont.tahoma_7b_yellow.drawString(g, "Ná»I Táº I",
+            mFont.tahoma_7b_yellow.drawString(g, "NỘI TẠI",
                     k[0] + k[2] / 2, k[1] + 4, mFont.CENTER);
             veNut(g, nutX, "X", MAU_O, true);
         }
 
-        /// <summary>Tháº» "Äang mang": icon, tÃªn, vÃ  dÃ²ng mÃ´ táº£ tÃ¡c dá»¥ng.</summary>
+        /// <summary>Thẻ "đang mang": icon, tên, và dòng mô tả tác dụng.</summary>
         /// <remarks>
-        /// TÃªn vÃ  mÃ´ táº£ tÃ¡ch lÃ m hai dÃ²ng riÃªng. Báº£n trÆ°á»c nhÃ©t cáº£ chuá»i mÃ¡y chá»§
-        /// gá»­i vÃ o má»t dÃ²ng rá»i cáº¯t bá»t, nÃªn pháº§n <i>tÃ¡c dá»¥ng</i> â thá»© ÄÃ¡ng Äá»c
-        /// nháº¥t â luÃ´n lÃ  pháº§n bá» cáº¯t máº¥t.
+        /// Tên và mô tả tách làm hai dòng riêng. Bản trước nhét cả chuỗi máy chủ
+        /// gửi vào một dòng rồi cắt bớt, nên phần <i>tác dụng</i> — thứ đáng đọc
+        /// nhất — luôn là phần bị cắt mất.
         /// </remarks>
         private void veTheDangMang(mGraphics g, int[] k)
         {
@@ -287,15 +287,15 @@ namespace Game5.God
 
             if (!coDuLieu)
             {
-                mFont.tahoma_7_grey.drawString(g, "Äang táº£i...",
+                mFont.tahoma_7_grey.drawString(g, "Đang tải...",
                         xChu, k[1] + 14, mFont.LEFT);
                 return;
             }
             if (tenDangCo.Length == 0)
             {
-                mFont.tahoma_7b_yellow.drawString(g, "ChÆ°a cÃ³ ná»i táº¡i",
+                mFont.tahoma_7b_yellow.drawString(g, "Chưa có nội tại",
                         xChu, k[1] + 7, mFont.LEFT);
-                mFont.tahoma_7_grey.drawString(g, "Má» má»t cÃ¡i á» dÆ°á»i",
+                mFont.tahoma_7_grey.drawString(g, "Mở một cái ở dưới",
                         xChu, k[1] + 21, mFont.LEFT);
                 return;
             }
@@ -311,33 +311,33 @@ namespace Game5.God
             }
         }
 
-        /// <summary>HÃ ng tiá»n: vÃ ng bÃªn trÃ¡i, ngá»c bÃªn pháº£i, khÃ´ng chá»ng nhau.</summary>
+        /// <summary>Hàng tiền: vàng bên trái, ngọc bên phải, không chồng nhau.</summary>
         private void veHangTien(mGraphics g, int[] k)
         {
             g.setColor(MAU_O_MO, 1f);
             g.fillRect(k[0], k[1], k[2], k[3], 4);
-            mFont.tahoma_7b_yellow.drawString(g, "VÃ ng " + soCham(vangDangCo),
+            mFont.tahoma_7b_yellow.drawString(g, "Vàng " + soCham(vangDangCo),
                     k[0] + 6, k[1] + 2, mFont.LEFT);
-            mFont.tahoma_7b_green.drawString(g, "Ngá»c " + soCham(ngocDangCo),
+            mFont.tahoma_7b_green.drawString(g, "Ngọc " + soCham(ngocDangCo),
                     k[0] + k[2] - 6, k[1] + 2, mFont.RIGHT);
         }
 
         /// <summary>
-        /// Hai nÃºt má», giÃ¡ náº±m <b>trong</b> nÃºt.
+        /// Hai nút mở, giá nằm <b>trong</b> nút.
         /// </summary>
         /// <remarks>
-        /// Báº£n trÆ°á»c Äá» giÃ¡ á» má»t dÃ²ng chá»¯ xÃ¡m ngay <i>dÆ°á»i</i> nÃºt, vÃ  dÃ²ng áº¥y
-        /// rÆ¡i ÄÃºng vÃ o chá» pháº§n tiáº¿p theo báº¯t Äáº§u â hai thá»© chá»ng lÃªn nhau. GiÃ¡
-        /// lÃ  má»t pháº§n cá»§a cÃ¡i nÃºt, nÃªn nÃ³ thuá»c vá» bÃªn trong nÃºt.
+        /// Bản trước để giá ở một dòng chữ xám ngay <i>dưới</i> nút, và dòng ấy
+        /// rơi đúng vào chỗ phần tiếp theo bắt đầu — hai thứ chồng lên nhau. Giá
+        /// là một phần của cái nút, nên nó thuộc về bên trong nút.
         /// </remarks>
         private void veHaiNutMo(mGraphics g, int[] kv, int[] kn)
         {
             bool duVang = vangDangCo >= giaVang;
             bool duNgoc = ngocDangCo >= giaNgoc;
 
-            veNutHaiDong(g, kv, "Má» báº±ng vÃ ng", soCham(giaVang),
+            veNutHaiDong(g, kv, "Mở bằng vàng", soCham(giaVang),
                     duVang ? MAU_NUT_VANG : MAU_NUT_TAT);
-            veNutHaiDong(g, kn, "Má» báº±ng ngá»c", giaNgoc + " ngá»c",
+            veNutHaiDong(g, kn, "Mở bằng ngọc", giaNgoc + " ngọc",
                     duNgoc ? MAU_NUT_NGOC : MAU_NUT_TAT);
         }
 
@@ -350,13 +350,13 @@ namespace Game5.God
 
             if (!coDuLieu)
             {
-                mFont.tahoma_7_grey.drawString(g, "Äang táº£i...",
+                mFont.tahoma_7_grey.drawString(g, "Đang tải...",
                         k[0] + k[2] / 2, k[1] + k[3] / 2 - 6, mFont.CENTER);
                 return;
             }
             if (danhSach.Count == 0)
             {
-                mFont.tahoma_7_grey.drawString(g, "KhÃ´ng cÃ³ ná»i táº¡i nÃ o",
+                mFont.tahoma_7_grey.drawString(g, "Không có nội tại nào",
                         k[0] + k[2] / 2, k[1] + k[3] / 2 - 6, mFont.CENTER);
                 return;
             }
@@ -398,8 +398,8 @@ namespace Game5.God
             {
                 return;
             }
-            veNut(g, len, "LÃªn", MAU_O, cuon > 0);
-            veNut(g, xuong, "Xuá»ng", MAU_O,
+            veNut(g, len, "Lên", MAU_O, cuon > 0);
+            veNut(g, xuong, "Xuống", MAU_O,
                     cuon < danhSach.Count - soDongThay);
             mFont.tahoma_7_grey.drawString(g,
                     (cuon + 1) + "-" + Math.min(danhSach.Count, cuon + soDongThay)
@@ -415,18 +415,18 @@ namespace Game5.God
                 g.setColor(MAU_O_MO, 1f);
                 g.fillRect(k[0], k[1], k[2], k[3], 5);
                 mFont.tahoma_7_grey.drawString(g,
-                        "Cháº¡m má»t dÃ²ng á» trÃªn Äá» dÃ¹ng \"Má» nhanh\"",
+                        "Chạm một dòng ở trên để dùng \"Mở nhanh\"",
                         k[0] + k[2] / 2, k[1] + (k[3] - 11) / 2, mFont.CENTER);
                 return;
             }
             Muc m = danhSach[dongChon];
-            veNut(g, k, "Má» NHANH â " + tenNgan(m.moTa)
+            veNut(g, k, "MỞ NHANH — " + tenNgan(m.moTa)
                     + " (" + m.chiSoMin + "-" + m.chiSoMax + ")",
                     MAU_NHANH, true);
         }
 
         // ==================================================================
-        //  Váº½ nÃºt
+        //  Vẽ nút
         // ==================================================================
 
         private static void veNut(mGraphics g, int[] k, string chu, int mau,
@@ -457,14 +457,14 @@ namespace Game5.God
         }
 
         // ==================================================================
-        //  Chá»¯
+        //  Chữ
         // ==================================================================
 
-        /// <summary>Pháº§n tÃªn, tá»©c chá»¯ trÆ°á»c dáº¥u "+" Äáº§u tiÃªn.</summary>
+        /// <summary>Phần tên, tức chữ trước dấu "+" đầu tiên.</summary>
         /// <remarks>
-        /// MÃ¡y chá»§ gá»­i cáº£ cÃ¢u, vÃ­ dá»¥ "ChiÃªu Äáº¥m Galick +5% Äáº¿n 25% sÃ¡t thÆ°Æ¡ng".
-        /// TÃ¡ch ra Äá» tÃªn vÃ  tÃ¡c dá»¥ng náº±m hai dÃ²ng, thay vÃ¬ má»t dÃ²ng dÃ i rá»i bá»
-        /// cáº¯t máº¥t ÄÃºng pháº§n tÃ¡c dá»¥ng.
+        /// Máy chủ gửi cả câu, ví dụ "Chiêu đấm Galick +5% đến 25% sát thương".
+        /// Tách ra để tên và tác dụng nằm hai dòng, thay vì một dòng dài rồi bị
+        /// cắt mất đúng phần tác dụng.
         /// </remarks>
         private static string tenNgan(string s)
         {
@@ -480,7 +480,7 @@ namespace Game5.God
             return (k > 0) ? s.Substring(0, k).Trim() : s.Trim();
         }
 
-        /// <summary>Pháº§n tÃ¡c dá»¥ng, tá»©c pháº§n cÃ²n láº¡i sau tÃªn.</summary>
+        /// <summary>Phần tác dụng, tức phần còn lại sau tên.</summary>
         private static string phanTacDung(string s)
         {
             if (s == null)
@@ -495,11 +495,11 @@ namespace Game5.God
             return (k >= 0 && k < s.Length) ? s.Substring(k).Trim() : "";
         }
 
-        /// <summary>Cáº¯t chuá»i cho vá»«a Bá» Rá»NG, khÃ´ng pháº£i vá»«a sá» kÃ½ tá»±.</summary>
+        /// <summary>Cắt chuỗi cho vừa BỀ RỘNG, không phải vừa số ký tự.</summary>
         /// <remarks>
-        /// Äáº¿m kÃ½ tá»± thÃ¬ chá»¯ hoa vÃ  chá»¯ cÃ³ dáº¥u rá»ng hÆ¡n háº³n chá»¯ thÆ°á»ng, nÃªn cÃ¹ng
-        /// má»t sá» kÃ½ tá»± cÃ³ chuá»i vá»«a khÃ­t, cÃ³ chuá»i trÃ n ra ngoÃ i khung. Äo báº±ng
-        /// chÃ­nh phÃ´ng sáº¯p váº½ thÃ¬ khÃ´ng bao giá» trÃ n.
+        /// Đếm ký tự thì chữ hoa và chữ có dấu rộng hơn hẳn chữ thường, nên cùng
+        /// một số ký tự có chuỗi vừa khít, có chuỗi tràn ra ngoài khung. Đo bằng
+        /// chính phông sắp vẽ thì không bao giờ tràn.
         /// </remarks>
         private static string catTheoBeRong(mFont f, string s, int rongToiDa)
         {
@@ -512,14 +512,14 @@ namespace Game5.God
                 return s;
             }
             int n = s.Length;
-            while (n > 1 && f.getWidth(s.Substring(0, n) + "â¦") > rongToiDa)
+            while (n > 1 && f.getWidth(s.Substring(0, n) + "…") > rongToiDa)
             {
                 n--;
             }
-            return s.Substring(0, n) + "â¦";
+            return s.Substring(0, n) + "…";
         }
 
-        /// <summary>Sá» nguyÃªn cÃ³ dáº¥u cháº¥m ngÄn nghÃ¬n.</summary>
+        /// <summary>Số nguyên có dấu chấm ngăn nghìn.</summary>
         private static string soCham(long so)
         {
             string s = so.ToString();
@@ -537,7 +537,7 @@ namespace Game5.God
         }
 
         // ==================================================================
-        //  Cháº¡m
+        //  Chạm
         // ==================================================================
 
         public bool capNhatCham()
@@ -614,20 +614,20 @@ namespace Game5.God
         }
 
         /// <summary>
-        /// Há»i chá» sá» mong muá»n rá»i giao cho mÃ¡y chá»§ bá»c.
+        /// Hỏi chỉ số mong muốn rồi giao cho máy chủ bốc.
         /// </summary>
         /// <remarks>
-        /// NÃ³i rÃµ khoáº£ng chá» sá» cá»§a chÃ­nh ná»i táº¡i ÄÃ³ ngay trÃªn há»p nháº­p: gÃµ má»t
-        /// con sá» cao hÆ¡n tráº§n cá»§a nÃ³ thÃ¬ bá»c bao nhiÃªu láº§n cÅ©ng khÃ´ng ra, mÃ 
-        /// ngÆ°á»i chÆ¡i khÃ´ng cÃ³ cÃ¡ch nÃ o biáº¿t tráº§n lÃ  bao nhiÃªu náº¿u khÃ´ng nÃ³i.
+        /// Nói rõ khoảng chỉ số của chính nội tại đó ngay trên hộp nhập: gõ một
+        /// con số cao hơn trần của nó thì bốc bao nhiêu lần cũng không ra, mà
+        /// người chơi không có cách nào biết trần là bao nhiêu nếu không nói.
         /// </remarks>
         private void hoiChiSoMongMuon(Muc m)
         {
             HopNhapChu.getInstance().moRa(
-                    "Má» nhanh â " + tenNgan(m.moTa) + "\n"
-                    + "Chá» sá» ná»i táº¡i nÃ y tá»« " + m.chiSoMin + " Äáº¿n " + m.chiSoMax + "\n"
-                    + "Má»i láº§n bá»c tá»n " + giaNgoc + " ngá»c, Äang cÃ³ " + soCham(ngocDangCo) + "\n"
-                    + "GÃµ chá» sá» muá»n Äáº¡t (Äá» trá»ng = chá» cáº§n ÄÃºng ná»i táº¡i):",
+                    "Mở nhanh — " + tenNgan(m.moTa) + "\n"
+                    + "Chỉ số nội tại này từ " + m.chiSoMin + " đến " + m.chiSoMax + "\n"
+                    + "Mỗi lần bốc tốn " + giaNgoc + " ngọc, đang có " + soCham(ngocDangCo) + "\n"
+                    + "Gõ chỉ số muốn đạt (để trống = chỉ cần đúng nội tại):",
                     "", 6, delegate (string s)
                     {
                         int muon = 0;
