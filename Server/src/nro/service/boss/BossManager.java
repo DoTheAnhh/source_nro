@@ -181,6 +181,7 @@ public class BossManager implements Runnable {
             Logger.success("Đã gieo " + ds.size()
                     + " dòng danh sách boss xuống bảng boss_spawn\n");
         }
+        ds = themDongMoi(ds);
         int con = 0;
         int ban = 0;
         for (nro.repository.dao.BossSpawnDAO.Dong d : ds) {
@@ -207,6 +208,49 @@ public class BossManager implements Runnable {
         }
         Logger.success("Đã dựng " + con + " loại boss, tổng " + ban
                 + " bản, theo bảng boss_spawn\n");
+    }
+
+    /**
+     * Thêm những con <b>mới có trong bản này</b> mà bảng chưa biết tới.
+     *
+     * <h2>Vì sao cần</h2>
+     *
+     * <p>{@code danhSachMacDinh()} chỉ được gieo <b>một lần duy nhất</b>, lần
+     * đầu bảng còn trống. Máy chủ đã chạy rồi thì thêm một con vào danh sách ấy
+     * <i>không có tác dụng gì</i> — nó không bao giờ xuất hiện, và không câu lỗi
+     * nào nói vì sao.</p>
+     *
+     * <p>Ở đây chỉ thêm con nào <b>chưa từng có dòng nào</b> trong bảng. Quản
+     * trị viên đã tắt hay xoá một con thì đó là cố ý — con đã bị xoá sẽ mọc lại
+     * đúng một lần rồi họ tắt tiếp, đổi lại là con mới không cần ai chạy SQL.</p>
+     */
+    private java.util.List<nro.repository.dao.BossSpawnDAO.Dong> themDongMoi(
+            java.util.List<nro.repository.dao.BossSpawnDAO.Dong> ds) {
+        // Bao cat Goku SSJ o Dao Kame — cho nhiem vu "danh bai 10 nguoi choi".
+        boolean coRoi = false;
+        for (nro.repository.dao.BossSpawnDAO.Dong d : ds) {
+            if (d.bossId == nro.entity.boss.BossID.GOKU_SSJ_BAO_CAT) {
+                coRoi = true;
+                break;
+            }
+        }
+        if (!coRoi) {
+            nro.repository.dao.BossSpawnDAO.Dong d
+                    = new nro.repository.dao.BossSpawnDAO.Dong();
+            d.bossId = nro.entity.boss.BossID.GOKU_SSJ_BAO_CAT;
+            d.ten = "Gôku SSJ (bao cát Đảo Kame)";
+            d.soBanSao = 1;
+            d.bat = true;
+            d.ghiChu = "1 máu, đứng yên, chết là hồi sinh — cho nhiệm vụ 16";
+            String loi = nro.repository.dao.BossSpawnDAO.luu(d);
+            if (loi == null) {
+                ds = nro.repository.dao.BossSpawnDAO.tatCa();
+                Logger.success("Đã thêm bao cát Gôku SSJ vào boss_spawn\n");
+            } else {
+                Logger.error("Không thêm được bao cát Gôku SSJ: " + loi + "\n");
+            }
+        }
+        return ds;
     }
 
     /** Danh sách gõ cứng cũ, chỉ dùng để gieo lần đầu. */
@@ -426,6 +470,8 @@ public class BossManager implements Runnable {
                     return new ODo();
                 case BossID.AN_TROM_NOMAL:
                     return new AnTrom();
+                case BossID.GOKU_SSJ_BAO_CAT:
+                    return new nro.entity.boss.map.bossnomal.GokuSSJBaoCat();
                 case BossID.RAI_TI_NOMAL:
                     return new RaiTi();
                 case BossID.XIN_BA_TO_NOMAL:

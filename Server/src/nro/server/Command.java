@@ -111,6 +111,33 @@ public class Command {
      * này in ra giá trị thật ở từng nấc, nên phân biệt được ngay là <b>máy chủ
      * gửi sai</b> hay <b>client không vẽ</b>.</p>
      */
+    /**
+     * Lệnh {@code cs} — in các chỉ số quan trọng, đủ chữ số.
+     *
+     * <p>Bảng chỉ số trong game rút gọn thành "1,5 Tỷ", đủ để liếc nhưng không
+     * đủ để so hai món đồ hay tính xem còn thiếu bao nhiêu tiềm năng. Ở đây in
+     * đủ chữ số theo định dạng 1.000.</p>
+     */
+    private void inChiSo(Player player) {
+        if (player.nPoint == null) {
+            return;
+        }
+        nro.entity.player.NPoint p = player.nPoint;
+        Service.gI().sendThongBaoFromAdmin(player,
+                "|7|- CHỈ SỐ -\n"
+                + "|0|Sức mạnh: " + nro.core.util.Util.soCham(p.power) + "\n"
+                + "|0|Tiềm năng: " + nro.core.util.Util.soCham(p.tiemNang) + "\n"
+                + "|2|HP: " + nro.core.util.Util.soCham(p.hp) + " / "
+                + nro.core.util.Util.soCham(p.hpMax) + "\n"
+                + "|2|KI: " + nro.core.util.Util.soCham(p.mp) + " / "
+                + nro.core.util.Util.soCham(p.mpMax) + "\n"
+                + "|3|HP gốc: " + nro.core.util.Util.soCham(p.hpg)
+                + "   KI gốc: " + nro.core.util.Util.soCham(p.mpg) + "\n"
+                + "|3|Sức đánh: " + nro.core.util.Util.soCham(p.dame)
+                + "   Giáp: " + nro.core.util.Util.soCham(p.def) + "\n"
+                + "|3|Chí mạng: " + p.crit + "%   Né: " + p.tlNeDon + "%");
+    }
+
     private void soiHaoQuang(Player player) {
         StringBuilder sb = new StringBuilder("|7|- SOI HÀO QUANG -\n");
 
@@ -287,6 +314,39 @@ public class Command {
     }
 
     public boolean check(Player player, String text) {
+        // ------------------------------------------------------------------
+        //  Lenh danh cho MOI nguoi choi
+        // ------------------------------------------------------------------
+        //
+        // Dat trong cung mot khoi va co mot lenh "lenh" liet ke ra het. Truoc
+        // day cac lenh nay nam rai rac va khong cho nao noi cho nguoi choi biet
+        // chung ton tai — mot tinh nang khong ai biet thi bang khong co.
+        if (text.equals("lenh") || text.equals("help") || text.equals("?")) {
+            Service.gI().sendThongBaoFromAdmin(player,
+                    "|7|- LỆNH GÕ TRONG KHUNG CHAT -\n"
+                    + "|0|lenh — bảng này\n"
+                    + "|0|toado — id bản đồ, khu, toạ độ x y\n"
+                    + "|0|tn — giá nâng 1 điểm của cả năm chỉ số\n"
+                    + "|0|cs — chỉ số đang có\n"
+                    + "|0|aura — chọn hào quang, aura? để soi\n"
+                    + "|0|dh — chọn danh hiệu\n"
+                    + "|0|sukien, phucloi — mở hai bảng đó\n"
+                    + "|0|tocdo — đổi tốc độ khung hình (xử lý ở máy bạn)\n"
+                    + "|0|ts — mở bảng tàn sát");
+            return true;
+        }
+        if (text.equals("tn") || text.equals("tiemnang")) {
+            if (player.nPoint != null) {
+                Service.gI().sendThongBaoFromAdmin(player,
+                        "|7|- GIÁ NÂNG TIỀM NĂNG -\n|0|"
+                        + player.nPoint.bangGiaMotDiem().replace("\n", "\n|0|"));
+            }
+            return true;
+        }
+        if (text.equals("cs") || text.equals("chiso")) {
+            inChiSo(player);
+            return true;
+        }
         // Toa do dang dung — cho MOI nguoi choi, khong gioi han admin.
         // Client khong tu hien duoc toa do cho nguoi thuong; day la duong duy
         // nhat may chu tra ve duoc ma khong phai sua client.

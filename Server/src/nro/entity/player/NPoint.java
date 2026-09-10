@@ -3162,6 +3162,179 @@ private boolean hasFull5NhatAn() {
         this.tiemNang += tiemNang;
     }
 
+    /**
+     * Giá tiềm năng của một lần nâng, tính <b>trước khi nâng</b>.
+     *
+     * <h2>Vì sao cần một hàm riêng</h2>
+     *
+     * <p>Năm công thức này trước đây chỉ tồn tại <i>bên trong</i>
+     * {@link #increasePoint}, tính xong là tiêu luôn. Nên không chỗ nào nói
+     * được cho người chơi biết một lần nâng tốn bao nhiêu — họ chỉ thấy tiềm
+     * năng biến mất, hoặc thấy câu "không đủ tiềm năng" mà không biết còn thiếu
+     * bao nhiêu.</p>
+     *
+     * <p>Công thức giữ <b>y nguyên</b>; {@code increasePoint} nay gọi hàm này
+     * chứ không tự tính lại, nên hai bên không thể lệch nhau.</p>
+     *
+     * @param type  0 HP, 1 KI, 2 sức đánh, 3 giáp, 4 chí mạng
+     * @param point số điểm muốn nâng
+     * @return số tiềm năng phải trả; {@code 0} nếu loại không hợp lệ
+     */
+    public long giaNangTiemNang(byte type, int point) {
+        if (point <= 0) {
+            return 0;
+        }
+        switch (type) {
+            case 0: {
+                long pointHp = point * 20L;
+                return point * (2 * (this.hpg + 1000) + pointHp - 20) / 2;
+            }
+            case 1: {
+                long pointMp = point * 20L;
+                return point * (2 * (this.mpg + 1000) + pointMp - 20) / 2;
+            }
+            case 2:
+                return (long) point * (2L * this.dameg + point - 1) / 2L * 100L;
+            case 3:
+                return (long) point * (2L * (this.defg + 5) + point - 1) / 2L * 100000L;
+            case 4: {
+                // Cong dan tung buoc: so nhan la nam nen tong lon rat nhanh, va
+                // cong dan thi chan duoc tran long ngay tai buoc gay tran.
+                long giaMotDiem = 50_000_000L;
+                for (int i = 0; i < this.critg; i++) {
+                    if (giaMotDiem > Long.MAX_VALUE / 5L) {
+                        return Long.MAX_VALUE;
+                    }
+                    giaMotDiem *= 5L;
+                }
+                long tong = 0;
+                for (int i = 0; i < point; i++) {
+                    if (giaMotDiem >= Long.MAX_VALUE - tong) {
+                        return Long.MAX_VALUE;
+                    }
+                    tong += giaMotDiem;
+                    if (giaMotDiem > Long.MAX_VALUE / 5L) {
+                        return Long.MAX_VALUE;
+                    }
+                    giaMotDiem *= 5L;
+                }
+                return tong;
+            }
+            default:
+                return 0;
+        }
+    }
+
+    /** Tên loại chỉ số, để in trong câu hỏi xác nhận. */
+    public static String tenLoaiChiSo(byte type) {
+        switch (type) {
+            case 0:
+                return "HP gốc";
+            case 1:
+                return "KI gốc";
+            case 2:
+                return "Sức đánh";
+            case 3:
+                return "Giáp";
+            case 4:
+                return "Chí mạng";
+            default:
+                return "?";
+        }
+    }
+
+    /**
+     * Bảng giá nâng <b>một điểm</b> của cả năm chỉ số.
+     *
+     * <p>Dùng cho lệnh chat và cho khung hỏi xác nhận: người chơi cần thấy cả
+     * năm con số cùng lúc mới so được nên bỏ tiềm năng vào đâu.</p>
+     */
+    public String bangGiaMotDiem() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Giá nâng 1 điểm:\n");
+        for (byte t = 0; t <= 4; t++) {
+            sb.append(tenLoaiChiSo(t)).append(": ")
+                    .append(Util.soCham(giaNangTiemNang(t, 1)));
+            if (t < 4) {
+                sb.append('\n');
+            }
+        }
+        sb.append("\nTiềm năng đang có: ").append(Util.soCham(this.tiemNang));
+        return sb.toString();
+    }
+
+    /** Nâng từ bao nhiêu điểm trở lên thì hỏi lại. */
+    private static final int NGUONG_HOI_LAI = 2;
+
+    /** Yêu cầu nâng đang chờ người chơi bấm Đồng ý. */
+    private byte choType = -1;
+    private short choPoint;
+    private boolean choChoDeTu;
+
+    /**
+     * Người chơi bấm nâng tiềm năng — hỏi lại nếu là một lượt nâng lớn.
+     *
+     * <h2>Vì sao chen thêm một bước</h2>
+     *
+     * <p>Ô nhập số trong bảng tiềm năng không có bước xác nhận nào. Gõ nhầm một
+     * số không là tiêu sạch tiềm năng của cả tuần, và <b>không lấy lại
+     * được</b>. Nâng từng điểm (bấm mũi tên) thì giữ nguyên như cũ — hỏi mỗi
+     * lần bấm là không ai chịu nổi.</p>
+     *
+     * <p>Câu hỏi in ra con số <b>chính xác</b> theo định dạng 1.000, cùng số
+     * tiềm năng đang có và số còn lại sau khi nâng.</p>
+     */
+    public void xinNangTiemNang(byte type, short point, boolean choDeTu) {
+        if (point <= 0) {
+            return;
+        }
+        if (point < NGUONG_HOI_LAI) {
+            increasePoint(type, point, choDeTu);
+            return;
+        }
+        long gia = giaNangTiemNang(type, point);
+        if (gia <= 0) {
+            increasePoint(type, point, choDeTu);
+            return;
+        }
+        if (this.tiemNang < gia) {
+            // Chua du thi khoi hoi — noi thang con thieu bao nhieu.
+            Service.gI().sendThongBaoOK(player, "Không đủ tiềm năng.\nNâng "
+                    + point + " điểm " + tenLoaiChiSo(type) + " cần "
+                    + Util.soCham(gia) + "\nĐang có " + Util.soCham(this.tiemNang)
+                    + "\nThiếu " + Util.soCham(gia - this.tiemNang));
+            return;
+        }
+        this.choType = type;
+        this.choPoint = point;
+        this.choChoDeTu = choDeTu;
+        nro.service.NpcService.gI().createMenuConMeo(player,
+                nro.core.consts.ConstNpc.XAC_NHAN_NANG_TIEM_NANG, 4028,
+                "Nâng " + point + " điểm " + tenLoaiChiSo(type)
+                + "\nsẽ tốn " + Util.soCham(gia) + " tiềm năng."
+                + "\nĐang có " + Util.soCham(this.tiemNang)
+                + "\nCòn lại " + Util.soCham(this.tiemNang - gia)
+                + "\n\nBạn có chắc chắn không?",
+                "Đồng ý", "Huỷ");
+    }
+
+    /** Người chơi vừa trả lời câu hỏi xác nhận. */
+    public void traLoiNangTiemNang(boolean dongY) {
+        byte t = this.choType;
+        short p = this.choPoint;
+        boolean de = this.choChoDeTu;
+        this.choType = -1;
+        this.choPoint = 0;
+        if (t < 0 || p <= 0) {
+            return;
+        }
+        if (!dongY) {
+            Service.gI().sendThongBao(player, "Đã huỷ, chưa trừ tiềm năng nào.");
+            return;
+        }
+        increasePoint(t, p, de);
+    }
+
     public void increasePoint(byte type, short point, boolean manualForPet) {
         if (player.baovetaikhoan) {
             Service.gI().sendThongBao(player, "Chức năng bảo vệ đã được bật. Bạn vui lòng kiểm tra lại");
@@ -3196,7 +3369,7 @@ private boolean hasFull5NhatAn() {
         // thẳng ra sát thương nên phải lên theo bậc.
         if (type == 0) {
             int pointHp = point * 20;
-            tiemNangUse = point * (2 * (this.hpg + 1000) + pointHp - 20) / 2;
+            tiemNangUse = giaNangTiemNang(type, point);
             if (this.hpg + pointHp <= TRAN_HP_GOC
                     && (tranDe == null || this.hpg + pointHp <= tranDe[0])) {
                 if (doUseTiemNang(tiemNangUse)) {
@@ -3216,7 +3389,7 @@ private boolean hasFull5NhatAn() {
         }
         if (type == 1) {
             int pointMp = point * 20;
-            tiemNangUse = point * (2 * (this.mpg + 1000) + pointMp - 20) / 2;
+            tiemNangUse = giaNangTiemNang(type, point);
             if (this.mpg + pointMp <= TRAN_KI_GOC
                     && (tranDe == null || this.mpg + pointMp <= tranDe[0])) {
                 if (doUseTiemNang(tiemNangUse)) {
@@ -3235,7 +3408,7 @@ private boolean hasFull5NhatAn() {
             }
         }
         if (type == 2) {
-            tiemNangUse = point * (2 * this.dameg + point - 1) / 2 * 100;
+            tiemNangUse = giaNangTiemNang(type, point);
             if ((this.dameg + point) <= powerLimit.getDamage()
                     && this.dameg + point <= TRAN_SUC_DANH_GOC
                     && (tranDe == null || this.dameg + point <= tranDe[1])) {
@@ -3258,8 +3431,7 @@ private boolean hasFull5NhatAn() {
             // tinh theo tong cap so cong; day la cho duy nhat bo sot.
             //
             // Tong cua point so hang, so hang thu k la (defg + 5 + k) * 100000.
-            tiemNangUse = (long) point * (2L * (this.defg + 5) + point - 1)
-                    / 2L * 100000L;
+            tiemNangUse = giaNangTiemNang(type, point);
             if ((this.defg + point) <= powerLimit.getDefense()
                     && (tranDe == null || this.defg + point <= tranDe[2])) {
                 if (doUseTiemNang(tiemNangUse)) {
@@ -3283,27 +3455,7 @@ private boolean hasFull5NhatAn() {
             // nhan la 5 nen tong lon rat nhanh, va cong dan thi chan duoc tran
             // long ngay tai buoc gay tran. Tran thi de tiemNangUse bang gia tri
             // lon nhat, va doUseTiemNang se tu bao khong du tiem nang.
-            long giaMotDiem = 50000000L;
-            for (int i = 0; i < this.critg; i++) {
-                if (giaMotDiem > Long.MAX_VALUE / 5L) {
-                    giaMotDiem = Long.MAX_VALUE;
-                    break;
-                }
-                giaMotDiem *= 5L;
-            }
-            tiemNangUse = 0;
-            for (int i = 0; i < point; i++) {
-                if (giaMotDiem >= Long.MAX_VALUE - tiemNangUse) {
-                    tiemNangUse = Long.MAX_VALUE;
-                    break;
-                }
-                tiemNangUse += giaMotDiem;
-                if (giaMotDiem > Long.MAX_VALUE / 5L) {
-                    giaMotDiem = Long.MAX_VALUE;
-                } else {
-                    giaMotDiem *= 5L;
-                }
-            }
+            tiemNangUse = giaNangTiemNang(type, point);
             if ((this.critg + point) <= powerLimit.getCritical()
                     && (tranDe == null || this.critg + point <= tranDe[3])) {
                 if (doUseTiemNang(tiemNangUse)) {

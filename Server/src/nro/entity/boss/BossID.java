@@ -307,4 +307,12 @@ public class BossID {
     //---------------BOSS TRAINING----------------------------------------------
     public static final int DRABULA2 = -4357;
     public static final int DRABULA3 = -4358;
+
+    /**
+     * Bao cát Gôku SSJ ở Đảo Kame — 1 HP, đứng yên, chết là hồi sinh ngay.
+     *
+     * <p>Có để nhiệm vụ "đánh bại 10 người chơi" (nhiệm vụ 16) làm được mà
+     * không phải rình người thật.</p>
+     */
+    public static final int GOKU_SSJ_BAO_CAT = -4359;
 }

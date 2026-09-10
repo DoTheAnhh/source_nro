@@ -329,6 +329,15 @@ public class ConstNpc {
      */
     public static final short O_NHAP_SO_LUONG_BAN = 5211;
 
+    /**
+     * Hỏi lại trước khi nâng <b>nhiều điểm</b> tiềm năng một lúc.
+     *
+     * <p>Nâng từng điểm thì không hỏi — hỏi mỗi lần bấm là không ai chịu nổi.
+     * Chỉ hỏi khi người chơi gõ một con số, vì đó là lúc một cái bấm nhầm tiêu
+     * hết sạch tiềm năng dành dụm.</p>
+     */
+    public static final int XAC_NHAN_NANG_TIEM_NANG = 31072051;
+
     // Hoi lai truoc khi xoa sach bua.
     // So menu chi co y nghia trong pham vi MOT npc (BaHatMit.confirmMenu so
     // getIndexMenu voi chinh may hang nay), nen 507 trung voi so cua npc khac

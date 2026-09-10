@@ -3316,6 +3316,25 @@ public byte getAura() {
             nro.service.badges.BadgesTaskService.tangTheoLoai(plAtt,
                     nro.entity.badges.BadgesTaskTemplate.HA_NGUOI_CHOI, -1, 1);
         }
+        // Nhiệm vụ 16 — "đánh bại 10 người chơi".
+        //
+        // TaskService.checkDoneTaskKillPlayer() vốn đã có sẵn nhưng <b>không
+        // chỗ nào gọi</b>, nên nhiệm vụ ấy đứng ở 0/10 mãi mãi dù hạ bao nhiêu
+        // người. Đây là chỗ duy nhất mà mọi cái chết đi qua, nên gọi ở đây thì
+        // cả hai đường người dùng nhắc tới đều tính: hạ người đang bật cờ, và
+        // thắng một trận mời PK.
+        //
+        // Đếm cho NGƯỜI HẠ, và chỉ khi cả hai bên là nhân vật thật — không tính
+        // đệ tử, phân thân, bố mẹ, người yêu, bot; và không tính tự sát.
+        if (plAtt != null && plAtt != this && plAtt.isPl()
+                && !plAtt.isBoss && !plAtt.getBot()
+                && (this.isPl() || this.isBoss)) {
+            try {
+                nro.service.TaskService.gI().checkDoneTaskKillPlayer(plAtt);
+            } catch (Exception boQua) {
+                // Nhiem vu hong thi thoi, khong duoc chan phan xu ly cai chet.
+            }
+        }
         if (this.isPl() && !MapService.gI().isMapWar(this.zone.map.mapId)) {
             long vangtru = this.nPoint.power / 1000000;
             if (vangtru > 32000) {

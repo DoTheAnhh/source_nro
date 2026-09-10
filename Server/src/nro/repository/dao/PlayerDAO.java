@@ -382,7 +382,13 @@ public class PlayerDAO {
             String itemTime = dataArray.toJSONString();
             dataArray.clear();
 
-            dataArray.add(0); //id nhiệm vụ
+            // Nhiem vu dau tien la ĐÁNH MỘC NHÂN — nhiem vu so 1.
+            //
+            // Truoc day dat 0, tuc nhiem vu huong dan trong nha (lay rada o
+            // ruong, thu hoach dau than). Nguoi choi moi vao game khong duoc
+            // giao viec gi ra ngoai lam, va man huong dan do da co NPC trong
+            // nha lo — dat thang nhiem vu 1 thi vao game la co viec ngay.
+            dataArray.add(1); //id nhiệm vụ: đánh mộc nhân
             dataArray.add(0); //index nhiệm vụ con
             dataArray.add(0); //số lượng đã làm
 

@@ -1365,7 +1365,9 @@ public class Controller implements IMessageHandler {
                         byte type = _msg.reader().readByte();
                         short point = _msg.reader().readShort();
                         if (player != null && player.nPoint != null) {
-                            player.nPoint.increasePoint(type, point, false);
+                            // Nang nhieu diem mot luc thi hoi lai truoc.
+                            // Bam tung diem van vao thang nhu cu.
+                            player.nPoint.xinNangTiemNang(type, point, false);
                         }
                         break;
                     case 18:
