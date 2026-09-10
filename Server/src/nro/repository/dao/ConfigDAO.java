@@ -343,14 +343,6 @@ public class ConfigDAO {
     /** Dòng chữ hiện ra khi người chơi vừa vào game. Để trống là không hiện. */
     public static final String LOI_CHAO = "loi_chao_vao_game";
 
-    /** Nội dung hộp "Sự kiện" — nút trên HUD. Xuống dòng bằng 
-. */
-    public static final String ND_SU_KIEN = "noi_dung_su_kien";
-
-    /** Nội dung hộp "Phúc lợi" — nút trên HUD. Xuống dòng bằng 
-. */
-    public static final String ND_PHUC_LOI = "noi_dung_phuc_loi";
-
     /**
      * Giá trị dùng khi CSDL chưa có khoá đó.
      *
@@ -445,8 +437,6 @@ public class ConfigDAO {
                 "Nhập đúng mật khẩu quản trị trong game thì mở panel (1 = bật, 0 = tắt)");
         NOTES.put(MAT_KHAU_ADMIN, "Mật khẩu Quyền Điều Hành Hệ Thống (gõ ở NPC trong game)");
         NOTES.put(LOI_CHAO, "Lời chào hiện ra khi vừa vào game — để trống là không hiện gì");
-        NOTES.put(ND_SU_KIEN, "Nội dung nút Sự kiện trên màn hình — xuống dòng bằng \n");
-        NOTES.put(ND_PHUC_LOI, "Nội dung nút Phúc lợi trên màn hình — xuống dòng bằng \n");
         NOTES.put(TL_EXP, "Hệ số tiềm năng — 1 là như gốc, 10 là gấp mười");
         NOTES.put(TL_VANG, "Hệ số vàng rơi từ quái — 1 là như gốc");
         NOTES.put(SKH_TILE, "Tỉ lệ giết một quái rơi một món đồ set kích hoạt (%). "
@@ -485,12 +475,6 @@ public class ConfigDAO {
         DEFAULTS_CHUOI.put(MAT_KHAU_ADMIN, "190823");
         DEFAULTS_CHUOI.put(LOI_CHAO,
                 "Chúc anh em chơi game vui vẻ !!");
-        DEFAULTS_CHUOI.put(ND_SU_KIEN,
-                "|7|SỰ KIỆN\n|0|Chưa có sự kiện nào đang diễn ra.\n"
-                + "|0|Sửa nội dung ở panel: Cấu hình hệ thống -> Quy ước -> noi_dung_su_kien");
-        DEFAULTS_CHUOI.put(ND_PHUC_LOI,
-                "|7|PHÚC LỢI\n|0|Chưa có phúc lợi nào.\n"
-                + "|0|Sửa nội dung ở panel: Cấu hình hệ thống -> Quy ước -> noi_dung_phuc_loi");
         DEFAULTS_CHUOI.put(SKH_MAP, "");
         DEFAULTS_CHUOI.put(SKH_TILE, "1");
         DEFAULTS_CHUOI.put(SKH_SAO_TILE, "10");
@@ -499,17 +483,18 @@ public class ConfigDAO {
     }
 
     /**
-     * Các quy ước <b>chỉ hiện ở tab "Tỉ lệ"</b>, không hiện ở tab "Quy ước".
+     * Các quy ước <b>đã có tab riêng</b>, nên không hiện ở tab "Quy ước".
      *
      * <p>Tab Quy ước liệt kê theo tên khoá trong CSDL — tiện sửa nhanh nhưng
      * không nói được ý nghĩa. Những con số này có tab riêng giải thích rõ đơn vị,
      * để cả hai chỗ thì sửa một nơi mà nơi kia vẫn hiện số cũ, dễ tưởng là không
      * lưu được.</p>
      */
-    private static final java.util.Set<String> CHI_TAB_TI_LE =
+    private static final java.util.Set<String> CO_TAB_RIENG =
             new java.util.HashSet<>(java.util.Arrays.asList(
                     TL_EXP, TL_VANG, SKH_BAT, SKH_TILE, SKH_MAP, SKH_SO_NGAY,
-                    SKH_SAO_BAT, SKH_SAO_TILE, SKH_SAO_MIN, SKH_SAO_MAX));
+                    SKH_SAO_BAT, SKH_SAO_TILE, SKH_SAO_MIN, SKH_SAO_MAX,
+                    LOI_CHAO));
 
     /** Tỉ lệ phần trăm của một quy ước dạng chữ, ví dụ {@code "0.05"}. */
     public static double phanTram(String key) {
@@ -543,7 +528,7 @@ public class ConfigDAO {
     public static String[] keys() {
         java.util.List<String> ds = new java.util.ArrayList<>(DEFAULTS.keySet());
         ds.addAll(DEFAULTS_CHUOI.keySet());
-        ds.removeAll(CHI_TAB_TI_LE);
+        ds.removeAll(CO_TAB_RIENG);
         return ds.toArray(new String[0]);
     }
 
@@ -689,23 +674,54 @@ public class ConfigDAO {
     private static void doiGiaTriCu() {
         try {
             long daChay = num(BUOC_DOI_GIA_TRI, 0);
-            if (daChay >= 1) {
-                return;
+            if (daChay < 1) {
+                // Bước 1: bùa vĩnh viễn ở Bà Hạt Mít thành cho không.
+                String cu;
+                synchronized (CACHE) {
+                    cu = CACHE.get(BUA_VV_GIA_VANG);
+                }
+                if (cu != null && "500000000".equals(cu.trim())) {
+                    set(BUA_VV_GIA_VANG, "0");
+                    Logger.success("CONFIG", "Bùa vĩnh viễn ở Bà Hạt Mít: 500.000.000 -> cho không");
+                }
             }
-            // Bước 1: bùa vĩnh viễn ở Bà Hạt Mít thành cho không.
-            String cu;
-            synchronized (CACHE) {
-                cu = CACHE.get(BUA_VV_GIA_VANG);
+            if (daChay < 2) {
+                // Buoc 2: don hai khoa chet.
+                //
+                // noi_dung_su_kien va noi_dung_phuc_loi khong noi nao doc ca —
+                // hai nut Su kien / Phuc loi tren man hinh lay noi dung tu bang
+                // rieng cua chung (tab "Su kien" va "Phuc loi"). Hai dong nay la
+                // do sot lai, va de nguyen thi tab Quy uoc con hai o chu dai
+                // ngoang ma go vao khong co tac dung gi.
+                try {
+                    nro.repository.ConnectDB.executeUpdate(
+                            "DELETE FROM panel_config WHERE k IN"
+                            + " ('noi_dung_su_kien','noi_dung_phuc_loi')");
+                    synchronized (CACHE) {
+                        CACHE.remove("noi_dung_su_kien");
+                        CACHE.remove("noi_dung_phuc_loi");
+                    }
+                } catch (Exception boQua) {
+                    // Khong don duoc thi thoi, khong chan may chu khoi dong.
+                }
             }
-            if (cu != null && "500000000".equals(cu.trim())) {
-                set(BUA_VV_GIA_VANG, "0");
-                Logger.success("CONFIG", "Bùa vĩnh viễn ở Bà Hạt Mít: 500.000.000 -> cho không");
+            if (daChay < BUOC_MOI_NHAT) {
+                set(BUOC_DOI_GIA_TRI, String.valueOf(BUOC_MOI_NHAT));
             }
-            set(BUOC_DOI_GIA_TRI, "1");
         } catch (Exception ex) {
             Logger.logException(ConfigDAO.class, ex, "Lỗi đổi giá trị quy ước cũ");
         }
     }
+
+    /**
+     * Bước cao nhất đã viết ở {@link #doiGiaTriCu}.
+     *
+     * <p>Ghi ở <b>một chỗ duy nhất</b>, sau khi mọi bước đã chạy. Trước đây mỗi
+     * bước tự ghi số của mình, nên thêm một bước mới mà quên sửa dòng ghi của
+     * bước cũ là con số tụt lại — bước mới chạy đi chạy lại mỗi lần khởi
+     * động.</p>
+     */
+    private static final int BUOC_MOI_NHAT = 2;
 
     // ---------------------------------------------------------------- ghi
 

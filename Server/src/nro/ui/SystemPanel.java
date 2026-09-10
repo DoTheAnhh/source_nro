@@ -69,6 +69,7 @@ public class SystemPanel extends JPanel {
         JTabbedPane tabs = new JTabbedPane();
         tabs.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
         tabs.addTab("Quy ước", buildConfigTab());
+        tabs.addTab("Lời chào", buildLoiChaoTab());
         tabs.addTab("Boss", buildBossTongHop());
         tabs.addTab("Đồ rơi từ quái", buildDoRoiTongHop());
         tabs.addTab("Tỉ lệ", buildTiLeTab());
@@ -154,6 +155,9 @@ public class SystemPanel extends JPanel {
                 case "Nhiệm vụ chính tuyến":
                     napBangNhiemVuChinh();
                     break;
+                case "Lời chào":
+                    napLoiChao();
+                    break;
                 default:
                     // Nhung tab con lai doc du lieu tinh, khong can nap lai.
                     break;
@@ -204,6 +208,67 @@ public class SystemPanel extends JPanel {
         if (b != null) {
             SwingUtilities.invokeLater(b::loadConfig);
         }
+    }
+
+    private final JTextArea oLoiChao = new JTextArea(8, 60);
+
+    /**
+     * Tab <b>Lời chào</b> — dòng chữ hiện ra khi người chơi vừa vào game.
+     *
+     * <h2>Vì sao tách khỏi tab Quy ước</h2>
+     *
+     * <p>Tab Quy ước là một cột ô nhập <b>một dòng</b>, hợp với những con số. Lời
+     * chào thì là câu chữ, có thể dài và nhiều dòng — nhét vào một ô hẹp thì
+     * không đọc được hết, không xuống dòng được, và nằm lẫn giữa mấy chục con số
+     * nên chẳng ai nghĩ tới việc sửa nó.</p>
+     */
+    private JComponent buildLoiChaoTab() {
+        JPanel root = new JPanel(new BorderLayout(0, 8));
+        root.setOpaque(false);
+        root.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        oLoiChao.setLineWrap(true);
+        oLoiChao.setWrapStyleWord(true);
+        oLoiChao.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        nut.setOpaque(false);
+        nut.add(button("Lưu", OK_GREEN, e -> luuLoiChao()));
+        nut.add(button("Đọc lại", GREY, e -> napLoiChao()));
+        nut.add(button("Tắt lời chào", WARN_RED, e -> {
+            oLoiChao.setText("");
+            luuLoiChao();
+        }));
+
+        root.add(nhan("Dòng chữ hiện ra ngay khi người chơi vào game, dưới dạng "
+                + "thông báo của quản trị viên. <b>Để trống là không hiện gì</b> — "
+                + "đó cũng là việc của nút \"Tắt lời chào\"."
+                + "<br><br>"
+                + "Xuống dòng cứ bấm Enter, hiện ra trong game đúng như gõ ở đây. "
+                + "Có hiệu lực <b>ngay</b> với người đăng nhập sau khi lưu, không "
+                + "cần khởi động lại máy chủ."), BorderLayout.NORTH);
+        root.add(ServerGuiUtils.cuon(oLoiChao), BorderLayout.CENTER);
+        root.add(nut, BorderLayout.SOUTH);
+        napLoiChao();
+        return root;
+    }
+
+    private void napLoiChao() {
+        oLoiChao.setText(ConfigDAO.chuoi(ConfigDAO.LOI_CHAO));
+        oLoiChao.setCaretPosition(0);
+    }
+
+    private void luuLoiChao() {
+        String v = oLoiChao.getText() == null ? "" : oLoiChao.getText();
+        if (!ConfigDAO.set(ConfigDAO.LOI_CHAO, v)) {
+            note(WARN_RED, "Không lưu được lời chào — xem log máy chủ.");
+            return;
+        }
+        ConfigDAO.reload();
+        napLoiChao();
+        note(OK_GREEN, v.trim().isEmpty()
+                ? "Đã tắt lời chào — vào game sẽ không hiện gì."
+                : "Đã lưu lời chào — có hiệu lực ngay.");
     }
 
     private JComponent buildConfigTab() {
