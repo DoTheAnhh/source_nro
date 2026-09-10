@@ -410,23 +410,28 @@ namespace Game3
     		return false;
     	}
     
+
+    	/// <summary>Nạp bộ ô địa hình của bản đồ đang vào.</summary>
+    	/// <remarks>
+    	/// <para><b>Bản iOS trước đây không có ô địa hình nào.</b> Ở đây từng có
+    	/// một nhánh riêng cho <c>typeClient == 3 || 5</c> (5 là iOS) đi tìm hai
+    	/// đường tệp khác hẳn: <c>/t/&lt;id&gt;.png</c> gộp cả bộ, hoặc
+    	/// <c>/t/&lt;id&gt;/1.png</c> … <c>/100.png</c>.</para>
+    	///
+    	/// <para>Còn thư mục tài nguyên của dự án <b>chỉ có một cách đặt tên</b>:
+    	/// <c>res/x1/t/&lt;id&gt;/t_01.png</c> … <c>t_100.png</c>. Hai đường kia
+    	/// không có tệp nào, nên trên iOS <c>imgTile</c> toàn phần tử rỗng —
+    	/// bản đồ không vẽ ra được ô nào, và phần còn lại nhìn như mặt đất xếp
+    	/// lộn xộn.</para>
+    	///
+    	/// <para>Không ai thấy vì hai lẽ: PC và Android đi nhánh dưới nên vẫn
+    	/// chạy, còn <c>loadImage</c> trả về <c>null</c> lặng lẽ chứ không kêu.</para>
+    	///
+    	/// <para>Nhánh riêng ấy đã bỏ: mọi bản build nay nạp cùng một cách —
+    	/// cách duy nhất có tệp thật.</para>
+    	/// </remarks>
     	public static void getTile()
     	{
-    		if (Main.typeClient == 3 || Main.typeClient == 5)
-    		{
-    			if (mGraphics.zoomLevel == 1)
-    			{
-    				imgTile = new Image[1];
-    				imgTile[0] = GameCanvas.loadImage("/t/" + tileID + ".png");
-    				return;
-    			}
-    			imgTile = new Image[100];
-    			for (int i = 0; i < imgTile.Length; i++)
-    			{
-    				imgTile[i] = GameCanvas.loadImage("/t/" + tileID + "/" + (i + 1) + ".png");
-    			}
-    			return;
-    		}
     		if (mGraphics.zoomLevel == 1)
     		{
     			if (imgTile != null)

@@ -381,15 +381,14 @@ namespace Game1
     		}
     		if (GameCanvas.isPointerJustRelease)
     		{
-    			int num = 110;
-    			int num2 = 60;
-    			int num3 = 78;
-    			if (GameCanvas.w > GameCanvas.h)
-    			{
-    				num = 100;
-    				num2 = 40;
-    			}
-    			if (GameCanvas.isPointerHoldIn(GameCanvas.w / 2 - 3 * num3 / 2, 15, num3 * 3, 80))
+    			// Vung bam doc tu oThe() — cung mot nguon voi phan ve.
+    			//
+    			// Ban cu tinh lai bang mot day so go tay (110 / 60 / 78 / 45) va
+    			// suy ra o nao bang phep chia toa do, nen chi can le hay khoang
+    			// cach doi mot chut la bam trung o ben canh. Va vi phan ve dung
+    			// dung day so ay o mot ham khac, sua mot ben la lech hai ben.
+    			int[][] o = oThe();
+    			if (GameCanvas.isPointerHoldIn(o[1][0], o[1][1], o[1][2], o[1][3]))
     			{
     				selected = 0;
     				tAddName.isFocus = true;
@@ -409,40 +408,29 @@ namespace Game1
     							chu => tAddName.setText(chu));
     				}
     			}
-    			if (GameCanvas.isPointerHoldIn(GameCanvas.w / 2 - 3 * num3 / 2, num - 30, num3 * 3, num2 + 5))
+    			for (int i = 0; i < 3; i++)
     			{
-    				selected = 1;
-    				int num4 = indexGender;
-    				indexGender = (GameCanvas.px - (GameCanvas.w / 2 - 3 * num3 / 2)) / num3;
-    				if (indexGender < 0)
+    				if (GameCanvas.isPointerHoldIn(o[2 + i][0], o[2 + i][1],
+    						o[2 + i][2], o[2 + i][3]))
     				{
-    					indexGender = 0;
+    					selected = 1;
+    					if (indexGender != i)
+    					{
+    						indexGender = i;
+    						// Toc cua hanh tinh cu co the khong co ban o hanh
+    						// tinh moi — keo ve trong khoang truoc khi ve.
+    						if (indexHair >= mResources.hairStyleName[indexGender].Length)
+    						{
+    							indexHair = 0;
+    						}
+    						doChangeMap();
+    					}
     				}
-    				if (indexGender > mResources.MENUGENDER.Length - 1)
+    				if (GameCanvas.isPointerHoldIn(o[5 + i][0], o[5 + i][1],
+    						o[5 + i][2], o[5 + i][3]))
     				{
-    					indexGender = mResources.MENUGENDER.Length - 1;
-    				}
-    				if (num4 != indexGender)
-    				{
-    					doChangeMap();
-    				}
-    			}
-    			if (GameCanvas.isPointerHoldIn(GameCanvas.w / 2 - 3 * num3 / 2, num - 30 + num2 + 5, num3 * 3, 65))
-    			{
-    				selected = 2;
-    				int num5 = indexHair;
-    				indexHair = (GameCanvas.px - (GameCanvas.w / 2 - 3 * num3 / 2)) / num3;
-    				if (indexHair < 0)
-    				{
-    					indexHair = 0;
-    				}
-    				if (indexHair > mResources.hairStyleName[0].Length - 1)
-    				{
-    					indexHair = mResources.hairStyleName[0].Length - 1;
-    				}
-    				if (num5 != selected)
-    				{
-    					doChangeMap();
+    					selected = 2;
+    					indexHair = i;
     				}
     			}
     		}
@@ -529,76 +517,7 @@ namespace Game1
     		}
     		else
     		{
-    			if (!Main.isPC)
-    			{
-    				if (mGraphics.addYWhenOpenKeyBoard != 0)
-    				{
-    					yButton = 110;
-    					disY = 60;
-    					if (GameCanvas.w > GameCanvas.h)
-    					{
-    						yButton = GameScr.popupY + 30 + 3 * num + part3.pi[Char.CharInfo[0][2][0]].dy + dy - 15;
-    						disY = 35;
-    					}
-    				}
-    				else
-    				{
-    					yButton = 110;
-    					disY = 60;
-    					if (GameCanvas.w > GameCanvas.h)
-    					{
-    						yButton = 100;
-    						disY = 45;
-    					}
-    				}
-    				tAddName.y = yButton - tAddName.height - disY + 5;
-    			}
-    			else
-    			{
-    				yButton = 110;
-    				disY = 60;
-    				if (GameCanvas.w > GameCanvas.h)
-    				{
-    					yButton = 100;
-    					disY = 45;
-    				}
-    				tAddName.y = yBegin;
-    			}
-    			for (int l = 0; l < 3; l++)
-    			{
-    				int num5 = 78;
-    				if (l != indexGender)
-    				{
-    					g.drawImage(GameScr.imgLbtn, GameCanvas.w / 2 - num5 + l * num5, yButton, 3);
-    				}
-    				else
-    				{
-    					if (selected == 1)
-    					{
-    						g.drawRegion(GameScr.arrow, 0, 0, 13, 16, 4, GameCanvas.w / 2 - num5 + l * num5, yButton - 20 + ((GameCanvas.gameTick % 7 > 3) ? 1 : 0), StaticObj.VCENTER_HCENTER);
-    					}
-    					g.drawImage(GameScr.imgLbtnFocus, GameCanvas.w / 2 - num5 + l * num5, yButton, 3);
-    				}
-    				mFont.tahoma_7b_dark.drawString(g, mResources.MENUGENDER[l], GameCanvas.w / 2 - num5 + l * num5, yButton - 5, mFont.CENTER);
-    			}
-    			for (int m = 0; m < 3; m++)
-    			{
-    				int num6 = 78;
-    				if (m != indexHair)
-    				{
-    					g.drawImage(GameScr.imgLbtn, GameCanvas.w / 2 - num6 + m * num6, yButton + disY, 3);
-    				}
-    				else
-    				{
-    					if (selected == 2)
-    					{
-    						g.drawRegion(GameScr.arrow, 0, 0, 13, 16, 4, GameCanvas.w / 2 - num6 + m * num6, yButton + disY - 20 + ((GameCanvas.gameTick % 7 > 3) ? 1 : 0), StaticObj.VCENTER_HCENTER);
-    					}
-    					g.drawImage(GameScr.imgLbtnFocus, GameCanvas.w / 2 - num6 + m * num6, yButton + disY, 3);
-    				}
-    				mFont.tahoma_7b_dark.drawString(g, mResources.hairStyleName[indexGender][m], GameCanvas.w / 2 - num6 + m * num6, yButton + disY - 5, mFont.CENTER);
-    			}
-    			tAddName.paint(g);
+    			veTheTaoNhanVat(g, part, part2, part3);
     		}
     		g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
     		mFont.tahoma_7b_white.drawString(g, mResources.server + " " + LoginScr.serverName, 5, 5, 0, mFont.tahoma_7b_dark);
@@ -610,6 +529,201 @@ namespace Game1
     		God.HopNhapChu.getInstance().ve(g);
     	}
     
+    	// ==================================================================
+    	//  Thẻ tạo nhân vật — bản vẽ lại
+    	// ==================================================================
+    	//
+    	// Bản cũ rải ba thứ ra giữa màn hình: ô nhập tên nổi lơ lửng ở trên,
+    	// rồi hai hàng nút hình `imgLbtn` — cùng một ảnh nút dùng cho cả hành
+    	// tinh lẫn kiểu tóc, không nhãn nhóm, không viền, không biết đâu là
+    	// nhóm nào. Toạ độ thì tính bằng một mớ số 110 / 60 / 78 / 45 gõ thẳng
+    	// vào giữa hàm vẽ, và phần bắt chạm tính LẠI cũng bằng đúng mớ số ấy ở
+    	// một hàm khác — sửa một bên là lệch.
+    	//
+    	// Nay gom vào một thẻ: mọi vùng do `oThe()` tính một lần, cả lúc vẽ lẫn
+    	// lúc bắt chạm đều đọc từ đó.
+
+    	private const int MAU_THE = 0x241C33;
+    	private const int MAU_THE_VIEN = 0xC8933C;
+    	private const int MAU_O_TAT = 0x453C5A;
+    	private const int MAU_O_BAT = 0x7A5CC0;
+    	private const int MAU_KHUNG_XEM = 0x191430;
+
+    	/// <summary>Màu nhấn của ba hành tinh: Trái Đất, Namếc, Xayda.</summary>
+    	private static readonly int[] MAU_HANH_TINH = { 0x3D7BD4, 0x3FA84A, 0xD4A93D };
+
+    	/// <summary>
+    	/// Các vùng của thẻ, tính một lần: {x, y, rộng, cao}.
+    	/// </summary>
+    	/// <remarks>
+    	/// Trả về một mảng để cả phần vẽ và phần bắt chạm dùng CHUNG. Đây là chỗ
+    	/// bản cũ hay sai nhất: hai bên tự tính lấy bằng cùng một dãy số gõ tay,
+    	/// và chỉ cần sửa một bên là bấm trượt.
+    	///
+    	/// Thứ tự: 0 thẻ, 1 ô tên, 2..4 ba nút hành tinh, 5..7 ba nút tóc,
+    	/// 8 khung xem trước.
+    	/// </remarks>
+    	private int[][] oThe()
+    	{
+    		int rong = GameCanvas.w - 24;
+    		if (rong > 306)
+    		{
+    			rong = 306;
+    		}
+    		if (rong < 210)
+    		{
+    			rong = 210;
+    		}
+    		int cao = 152;
+    		int x = (GameCanvas.w - rong) / 2;
+    		int y = 14;
+    		// Ban phim may dang che nua duoi man hinh thi keo the len.
+    		if (mGraphics.addYWhenOpenKeyBoard != 0)
+    		{
+    			y = 6;
+    		}
+
+    		int rongXem = 92;
+    		int xTrai = x + 8;
+    		int rongTrai = rong - rongXem - 24;
+    		int rongNut = (rongTrai - 8) / 3;
+
+    		int[][] o = new int[9][];
+    		o[0] = new int[] { x, y, rong, cao };
+    		o[1] = new int[] { xTrai, y + 22, rongTrai, 21 };
+    		for (int i = 0; i < 3; i++)
+    		{
+    			o[2 + i] = new int[] { xTrai + i * (rongNut + 4), y + 60, rongNut, 22 };
+    			o[5 + i] = new int[] { xTrai + i * (rongNut + 4), y + 104, rongNut, 22 };
+    		}
+    		o[8] = new int[] { x + rong - rongXem - 8, y + 22, rongXem, cao - 30 };
+    		return o;
+    	}
+
+    	private void veTheTaoNhanVat(mGraphics g, Part part, Part part2, Part part3)
+    	{
+    		int[][] o = oThe();
+    		int[] the = o[0];
+
+    		// Nen the: mot khoi toi bo goc, vien vang — de doc tren moi ban do,
+    		// ba ban do nen cua ba hanh tinh sang toi rat khac nhau.
+    		g.setColor(0, 0.35f);
+    		g.fillRect(0, 0, GameCanvas.w, GameCanvas.h);
+    		g.setColor(MAU_THE_VIEN, 0.9f);
+    		g.fillRect(the[0] - 2, the[1] - 2, the[2] + 4, the[3] + 4, 10);
+    		g.setColor(MAU_THE, 0.97f);
+    		g.fillRect(the[0], the[1], the[2], the[3], 9);
+
+    		mFont.tahoma_7b_yellow.drawString(g, "TẠO NHÂN VẬT",
+    				the[0] + the[2] / 2, the[1] + 5, mFont.CENTER);
+
+    		// ---- o ten ----
+    		int[] oTen = o[1];
+    		bool dangChonTen = (selected == 0);
+    		g.setColor(dangChonTen ? MAU_O_BAT : MAU_O_TAT, 1f);
+    		g.fillRect(oTen[0], oTen[1], oTen[2], oTen[3], 4);
+    		g.setColor(MAU_THE_VIEN, 0.6f);
+    		g.drawRect(oTen[0], oTen[1], oTen[2], oTen[3]);
+    		string ten = tAddName.getText();
+    		if (ten == null || ten.Length == 0)
+    		{
+    			mFont.tahoma_7_grey.drawString(g, "Chạm để nhập tên...",
+    					oTen[0] + 6, oTen[1] + 5, mFont.LEFT);
+    		}
+    		else
+    		{
+    			mFont.tahoma_7b_white.drawString(g, ten, oTen[0] + 6, oTen[1] + 5,
+    					mFont.LEFT);
+    			// Con tro nhay, de biet o dang nhan chu.
+    			if (dangChonTen && GameCanvas.gameTick % 14 < 7)
+    			{
+    				int wTen = mFont.tahoma_7b_white.getWidth(ten);
+    				g.setColor(0xFFFFFF, 0.9f);
+    				g.fillRect(oTen[0] + 8 + wTen, oTen[1] + 4, 1, 12);
+    			}
+    		}
+
+    		// ---- hanh tinh ----
+    		mFont.tahoma_7_white.drawString(g, "Hành tinh", o[2][0], o[2][1] - 13,
+    				mFont.LEFT);
+    		for (int i = 0; i < 3; i++)
+    		{
+    			veNutChon(g, o[2 + i], mResources.MENUGENDER[i], i == indexGender,
+    					MAU_HANH_TINH[i]);
+    		}
+
+    		// ---- kieu toc ----
+    		mFont.tahoma_7_white.drawString(g, "Kiểu tóc", o[5][0], o[5][1] - 13,
+    				mFont.LEFT);
+    		for (int i = 0; i < 3; i++)
+    		{
+    			veNutChon(g, o[5 + i], mResources.hairStyleName[indexGender][i],
+    					i == indexHair, MAU_HANH_TINH[indexGender]);
+    		}
+
+    		// ---- khung xem truoc ----
+    		//
+    		// Ve lai nhan vat NGAY TRONG the, khong trong cay vao hinh dung
+    		// ngoai ban do: hinh do nam sau lop nen va co the bi cay coi hay o
+    		// dia hinh che, tuy ban do cua tung hanh tinh.
+    		int[] xem = o[8];
+    		g.setColor(MAU_KHUNG_XEM, 1f);
+    		g.fillRect(xem[0], xem[1], xem[2], xem[3], 6);
+    		g.setColor(MAU_HANH_TINH[indexGender], 0.85f);
+    		g.drawRect(xem[0], xem[1], xem[2], xem[3]);
+    		mFont.tahoma_7_grey.drawString(g, "Xem trước",
+    				xem[0] + xem[2] / 2, xem[1] + 3, mFont.CENTER);
+
+    		int xNv = xem[0] + xem[2] / 2;
+    		int yNv = xem[1] + xem[3] - 26;
+    		if (TileMap.bong != null)
+    		{
+    			g.drawImage(TileMap.bong, xNv, yNv + 4, 3);
+    		}
+    		veMotPhan(g, part, 0, xNv, yNv);
+    		veMotPhan(g, part2, 1, xNv, yNv);
+    		veMotPhan(g, part3, 2, xNv, yNv);
+
+    		mFont.tahoma_7b_yellow.drawString(g, mResources.MENUGENDER[indexGender],
+    				xem[0] + xem[2] / 2, xem[1] + xem[3] - 14, mFont.CENTER);
+    	}
+
+    	/// <summary>Vẽ một bộ phận nhân vật ở khung hình đang chạy.</summary>
+    	/// <remarks>
+    	/// Tách ra vì ba lời gọi giống hệt nhau chỉ khác chỉ số bộ phận, và dòng
+    	/// gốc dài tới mức không đọc ra nổi nó đang cộng những gì.
+    	/// </remarks>
+    	private void veMotPhan(mGraphics g, Part phan, int chiSo, int x, int y)
+    	{
+    		if (phan == null || phan.pi == null)
+    		{
+    			return;
+    		}
+    		int khung = Char.CharInfo[cf][chiSo][0];
+    		if (khung < 0 || khung >= phan.pi.Length || phan.pi[khung] == null)
+    		{
+    			return;
+    		}
+    		SmallImage.drawSmallImage(g, phan.pi[khung].id,
+    				x + Char.CharInfo[cf][chiSo][1] + phan.pi[khung].dx,
+    				y - Char.CharInfo[cf][chiSo][2] + phan.pi[khung].dy, 0, 0);
+    	}
+
+    	private static void veNutChon(mGraphics g, int[] o, string chu, bool bat,
+    			int mauNhan)
+    	{
+    		g.setColor(bat ? mauNhan : MAU_O_TAT, 1f);
+    		g.fillRect(o[0], o[1], o[2], o[3], 4);
+    		if (bat)
+    		{
+    			g.setColor(0xFFFFFF, 0.85f);
+    			g.drawRect(o[0], o[1], o[2], o[3]);
+    		}
+    		(bat ? mFont.tahoma_7b_white : mFont.tahoma_7_white)
+    				.drawString(g, chu, o[0] + o[2] / 2, o[1] + (o[3] - 11) / 2,
+    						mFont.CENTER);
+    	}
+
     	public void perform(int idAction, object p)
     	{
     		switch (idAction)
