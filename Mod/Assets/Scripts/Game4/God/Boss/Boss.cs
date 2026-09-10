@@ -23,7 +23,19 @@ namespace Game4.God
         /// Gom toạ độ, cỡ chữ và màu vào một chỗ để chỉnh chỉ phải sửa ở đây.
         /// </remarks>
         private const int LE_PHAI = 4;
-        private const int DONG_DAU = 37;
+        /// <summary>Mép trên của khung, tính từ đỉnh màn hình.</summary>
+        /// <remarks>
+        /// <para>Phải nằm DƯỚI hàng nút góc phải — "Cờ", "Khu", "Tab", "Chat".
+        /// Con số cũ là 37, tức khung bắt đầu ngay dưới thanh trên cùng và đè
+        /// lên đúng chỗ hai hàng nút ấy: nút vẫn bấm được nhưng chữ chồng chữ,
+        /// nhìn không ra cái nào.</para>
+        ///
+        /// <para>Hàng nút cuối cùng ("Tab" / "Chat") kết thúc quanh 150, nên 160
+        /// là vừa hở. Không đọc thẳng toạ độ nút vì chúng nằm rải trong
+        /// <c>GameScr</c> và đổi theo cỡ màn hình — một con số ở đây dễ chỉnh
+        /// hơn nhiều so với việc bám vào bố cục của màn khác.</para>
+        /// </remarks>
+        private const int DONG_DAU = 160;
         private const int CAO_DONG = 10;
         private const int DEM_NGANG = 4;
         private const int DEM_DOC = 3;
@@ -66,7 +78,16 @@ namespace Game4.God
             int rongKhung = rong + DEM_NGANG * 2;
             int caoKhung = dongChu.Count * CAO_DONG + DEM_DOC * 2;
             int xKhung = GameCanvas.w - LE_PHAI - rongKhung;
-            int yKhung = DONG_DAU - DEM_DOC;
+            // Man hinh thap thi keo len cho khung khong tran khoi day. Khung dai
+            // ra theo so boss, nen mot con so co dinh khong du: nam boss la cao
+            // gap nam mot boss.
+            int yDau = DONG_DAU;
+            int yToiDa = GameCanvas.h - 40 - caoKhung;
+            if (yDau > yToiDa)
+            {
+                yDau = (yToiDa < 4) ? 4 : yToiDa;
+            }
+            int yKhung = yDau - DEM_DOC;
 
             g.setColor(MAU_NEN, 0.45f);
             g.fillRect(xKhung, yKhung, rongKhung, caoKhung);
@@ -78,7 +99,7 @@ namespace Game4.God
             int xChu = GameCanvas.w - LE_PHAI - DEM_NGANG;
             for (int i = 0; i < dongChu.Count; i++)
             {
-                chu.drawString(g, dongChu[i], xChu, DONG_DAU + CAO_DONG * i,
+                chu.drawString(g, dongChu[i], xChu, yDau + CAO_DONG * i,
                         mFont.RIGHT, mFont.tahoma_7);
             }
         }
