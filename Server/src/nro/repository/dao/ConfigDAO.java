@@ -372,6 +372,7 @@ public class ConfigDAO {
         DEFAULTS.put(DANG_KY_TU_DONG, 1L);
         DEFAULTS.put(BAO_TRI, 0L);
         DEFAULTS.put(nro.repository.dao.TopMayDamDAO.KHOA_RESET_NGAY, 0L);
+        DEFAULTS.put(nro.repository.dao.VongQuayDAO.KHOA_DUNG_PANEL, 0L);
         DEFAULTS.put(NV_MOI_VANG, 2000L);
         DEFAULTS.put(NV_MOI_NGOC, 0L);
         DEFAULTS.put(NV_MOI_HONG_NGOC, 0L);
@@ -404,6 +405,7 @@ public class ConfigDAO {
     private static final Map<String, String> NOTES = new LinkedHashMap<>();
 
     static {
+        NOTES.put(nro.repository.dao.VongQuayDAO.KHOA_DUNG_PANEL, "Vòng quay Thượng Đế lấy quà từ tab panel thay vì danh sách trong mã (1 = bật, 0 = tắt)");
         NOTES.put(nro.repository.dao.TopMayDamDAO.KHOA_RESET_NGAY, "Tự xoá bảng xếp hạng máy đo sức mạnh mỗi ngày (1 = bật, 0 = tắt)");
         NOTES.put(BAO_TRI, "Chế độ bảo trì: bật thì CHỈ tài khoản quản trị vào được game, người chơi thường bị từ chối ở màn đăng nhập (1 = bật, 0 = tắt)");
         NOTES.put(TL_DE_TU_CHO_SU_PHU, "Đệ tử đi săn thì sư phụ hưởng bao nhiêu PHẦN TRĂM chỗ đó (100 = hưởng trọn, đúng thiết kế; đặt 200 để giữ y như trước ngày 08/09/2026 khi máy chủ đang cộng đúp)");

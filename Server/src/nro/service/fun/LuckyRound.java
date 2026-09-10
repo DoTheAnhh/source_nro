@@ -238,15 +238,23 @@ public class LuckyRound {
     /**
      * Bốc {@code num} món cho một lượt quay.
      *
-     * <p>Kho quà lấy từ <b>bảng {@code vong_quay_qua}</b> — sửa trên panel, xem
-     * {@code VongQuayDAO}. Danh sách viết cứng cũ đã được gieo xuống bảng ấy
-     * nguyên vẹn ở lần chạy đầu, nên đổi sang cách này không làm lệch tỉ lệ.</p>
+     * <h2>Hai nguồn quà, chọn bằng một công tắc</h2>
      *
-     * <p>Bốc hụt thì rơi về vàng, y như cũ: người chơi không bao giờ mất lượt
-     * quay mà chẳng nhận gì.</p>
+     * <p>Mặc định vẫn là <b>danh sách viết trong mã</b> ngay dưới đây — đúng thứ
+     * vòng quay chạy từ trước tới nay. Bảng {@code vong_quay_qua} trên panel chỉ
+     * được dùng khi quy ước {@code vong_quay_panel} bật lên.</p>
+     *
+     * <p>Để tắt sẵn vì bản gieo đầu tiên <b>ra sai món</b>: id vật phẩm trong mã
+     * cũ được tra theo <i>vị trí</i> trong bảng mẫu, mà bảng mẫu đã đổi từ lúc
+     * đoạn mã ấy được viết — nên chép nguyên id sang bảng mới cho ra một danh
+     * sách quà khác hẳn thứ người chơi vẫn nhận. Bật lên chỉ khi đã soát lại
+     * từng dòng trên panel.</p>
      */
     public List<Item> getListItemLuckyRound(Player player, int num, boolean vip) {
         List<Item> list = new ArrayList<>();
+        boolean theoPanel = nro.repository.dao.ConfigDAO.on(
+                nro.repository.dao.VongQuayDAO.KHOA_DUNG_PANEL);
+        List<Supplier<Item>> itemPool = theoPanel ? null : buildItemPool(vip);
 
         for (int i = 0; i < num; i++) {
             Item it = null;
@@ -254,7 +262,11 @@ public class LuckyRound {
 
             if (success) {
                 for (int attempt = 0; attempt < 5 && it == null; attempt++) {
-                    it = nro.repository.dao.VongQuayDAO.boc(vip);
+                    if (theoPanel) {
+                        it = nro.repository.dao.VongQuayDAO.boc(vip);
+                    } else if (!itemPool.isEmpty()) {
+                        it = itemPool.get(Util.nextInt(itemPool.size())).get();
+                    }
                 }
             }
 

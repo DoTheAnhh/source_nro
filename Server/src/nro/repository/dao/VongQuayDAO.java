@@ -36,9 +36,8 @@ import nro.service.item.ItemService;
  *       {@code 1} là mức thường; {@code 3} là dễ ra gấp ba lần một món trọng số
  *       một. Không phải phần trăm, nên sửa một dòng không bắt sửa lại dòng
  *       khác.</li>
- *   <li><b>Mã riêng</b> — vài món cần mã nguồn tính tại chỗ (bốc trị số ngẫu
- *       nhiên theo khoảng, gắn hạn dùng). Ô này ghi tên của đoạn mã ấy; để
- *       trống là món thường. Xem {@link #TEN_MA_RIENG}.</li>
+ *   <li><b>Hạn dùng</b> — bốc trong khoảng ngày đặt sẵn, kèm một tỉ lệ ra bản
+ *       VĨNH VIỄN. Hạn tối đa bằng 0 là món không có hạn.</li>
  * </ul>
  */
 public final class VongQuayDAO {
@@ -46,21 +45,20 @@ public final class VongQuayDAO {
     private VongQuayDAO() {
     }
 
+    /**
+     * Bật dùng bảng này thay cho danh sách viết trong mã.
+     *
+     * <p>Mặc định <b>tắt</b>. Bản gieo đầu tiên ra sai món — id vật phẩm trong
+     * mã cũ tra theo vị trí trong bảng mẫu, mà bảng mẫu đã đổi từ lúc đoạn mã
+     * ấy được viết — nên phải soát lại từng dòng trên panel rồi mới bật.</p>
+     */
+    public static final String KHOA_DUNG_PANEL = "vong_quay_panel";
+
     /** Vòng quay thường. */
     public static final int NHOM_THUONG = 0;
 
     /** Vòng quay VIP. */
     public static final int NHOM_VIP = 1;
-
-    /**
-     * Tên các đoạn mã riêng dùng được ở ô "Mã riêng".
-     *
-     * <p>Chỉ để panel hiện danh sách chọn; máy chủ vẫn nhận bất cứ tên nào và bỏ
-     * qua tên lạ.</p>
-     */
-    public static final String[] TEN_MA_RIENG = {
-        "", "item613", "nhom_hsd"
-    };
 
     /** Một dòng quà. */
     public static final class Qua {
@@ -72,7 +70,13 @@ public final class VongQuayDAO {
         public int trongSo = 1;
         public int soLuongMin = 1;
         public int soLuongMax = 1;
-        public String maRieng = "";
+
+        /** Hạn dùng bốc trong khoảng này, đơn vị ngày. { 0} là không gắn. */
+        public int hsdMin;
+        public int hsdMax;
+
+        /** Bao nhiêu phần trăm số lần bốc ra bản VĨNH VIỄN (không gắn hạn). */
+        public int tiLeVinhVien;
         public boolean bat = true;
         public String ghiChu = "";
     }
@@ -86,7 +90,9 @@ public final class VongQuayDAO {
             + " `trong_so` int(11) NOT NULL DEFAULT 1,"
             + " `sl_min` int(11) NOT NULL DEFAULT 1,"
             + " `sl_max` int(11) NOT NULL DEFAULT 1,"
-            + " `ma_rieng` varchar(40) NOT NULL DEFAULT '',"
+            + " `hsd_min` int(11) NOT NULL DEFAULT 0,"
+            + " `hsd_max` int(11) NOT NULL DEFAULT 0,"
+            + " `ti_le_vv` int(11) NOT NULL DEFAULT 0,"
             + " `bat` tinyint(1) NOT NULL DEFAULT 1,"
             + " `ghi_chu` varchar(255) NOT NULL DEFAULT '',"
             + " PRIMARY KEY (`id`)"
@@ -109,6 +115,12 @@ public final class VongQuayDAO {
                         + " sl_min int(11) NOT NULL DEFAULT 1");
                 themCot("ALTER TABLE vong_quay_qua ADD COLUMN IF NOT EXISTS"
                         + " sl_max int(11) NOT NULL DEFAULT 1");
+                themCot("ALTER TABLE vong_quay_qua ADD COLUMN IF NOT EXISTS"
+                        + " hsd_min int(11) NOT NULL DEFAULT 0");
+                themCot("ALTER TABLE vong_quay_qua ADD COLUMN IF NOT EXISTS"
+                        + " hsd_max int(11) NOT NULL DEFAULT 0");
+                themCot("ALTER TABLE vong_quay_qua ADD COLUMN IF NOT EXISTS"
+                        + " ti_le_vv int(11) NOT NULL DEFAULT 0");
                 daTao = true;
             } catch (Exception ex) {
                 Logger.logException(VongQuayDAO.class, ex,
@@ -153,7 +165,8 @@ public final class VongQuayDAO {
         CrisResultSet rs = null;
         try {
             rs = ConnectDB.executeQuery("SELECT id, nhom, vat_pham, chi_so,"
-                    + " trong_so, sl_min, sl_max, ma_rieng, bat, ghi_chu FROM vong_quay_qua"
+                    + " trong_so, sl_min, sl_max, hsd_min, hsd_max, ti_le_vv,"
+                    + " bat, ghi_chu FROM vong_quay_qua"
                     + " ORDER BY nhom, id");
             while (rs.next()) {
                 Qua q = new Qua();
@@ -164,7 +177,9 @@ public final class VongQuayDAO {
                 q.trongSo = rs.getInt("trong_so");
                 q.soLuongMin = rs.getInt("sl_min");
                 q.soLuongMax = rs.getInt("sl_max");
-                q.maRieng = rs.getString("ma_rieng");
+                q.hsdMin = rs.getInt("hsd_min");
+                q.hsdMax = rs.getInt("hsd_max");
+                q.tiLeVinhVien = rs.getInt("ti_le_vv");
                 q.bat = rs.getBoolean("bat");
                 q.ghiChu = rs.getString("ghi_chu");
                 ds.add(q);
@@ -195,18 +210,20 @@ public final class VongQuayDAO {
             if (q.id > 0) {
                 ConnectDB.executeUpdate("UPDATE vong_quay_qua SET nhom = ?,"
                         + " vat_pham = ?, chi_so = ?, trong_so = ?, sl_min = ?,"
-                        + " sl_max = ?, ma_rieng = ?, bat = ?, ghi_chu = ? WHERE id = ?",
+                        + " sl_max = ?, hsd_min = ?, hsd_max = ?, ti_le_vv = ?,"
+                        + " bat = ?, ghi_chu = ? WHERE id = ?",
                         q.nhom, q.vatPham.trim(), q.chiSo == null ? "" : q.chiSo.trim(),
                         q.trongSo, q.soLuongMin, q.soLuongMax,
-                        q.maRieng == null ? "" : q.maRieng.trim(),
+                        q.hsdMin, q.hsdMax, q.tiLeVinhVien,
                         q.bat ? 1 : 0, q.ghiChu == null ? "" : q.ghiChu, q.id);
             } else {
                 ConnectDB.executeUpdate("INSERT INTO vong_quay_qua (nhom,"
-                        + " vat_pham, chi_so, trong_so, sl_min, sl_max, ma_rieng,"
-                        + " bat, ghi_chu) VALUES (?,?,?,?,?,?,?,?,?)",
+                        + " vat_pham, chi_so, trong_so, sl_min, sl_max, hsd_min,"
+                        + " hsd_max, ti_le_vv, bat, ghi_chu)"
+                        + " VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                         q.nhom, q.vatPham.trim(), q.chiSo == null ? "" : q.chiSo.trim(),
                         q.trongSo, q.soLuongMin, q.soLuongMax,
-                        q.maRieng == null ? "" : q.maRieng.trim(),
+                        q.hsdMin, q.hsdMax, q.tiLeVinhVien,
                         q.bat ? 1 : 0, q.ghiChu == null ? "" : q.ghiChu);
             }
             return null;
@@ -279,49 +296,42 @@ public final class VongQuayDAO {
         if (it == null) {
             return null;
         }
+        // Moi dong chi so co mot KHOANG tri so. Hai dau bang nhau la tri co dinh.
         for (int[] cs : docChiSo(q.chiSo)) {
-            it.itemOptions.add(new ItemOption(cs[0], cs[1]));
+            int min = cs[1];
+            int max = Math.max(min, cs[2]);
+            it.itemOptions.add(new ItemOption(cs[0],
+                    min == max ? min : Util.nextInt(min, max + 1)));
         }
-        apMaRieng(it, q.maRieng);
+        // So luong tu..toi. Hai o bang nhau la so co dinh; de 1..1 la mot mon.
+        int slMin = Math.max(1, q.soLuongMin);
+        int slMax = Math.max(slMin, q.soLuongMax);
+        it.quantity = (slMin == slMax) ? slMin : Util.nextInt(slMin, slMax + 1);
+        themHanDung(it, q);
         return it;
     }
 
     /**
-     * Mấy món cần mã nguồn tính tại chỗ.
+     * Gắn hạn dùng, trừ khi lần này bốc trúng bản vĩnh viễn.
      *
-     * <p>Trị số bốc theo khoảng và hạn dùng ngẫu nhiên thì không diễn được bằng
-     * một ô chữ, nên chúng ở lại trong mã. Tên lạ thì bỏ qua — dòng vẫn ra món,
-     * chỉ là không có phần tính thêm.</p>
+     * <p>Hai con số này trước đây nằm trong mã: một đoạn cho món 613, một đoạn
+     * cho nhóm pet, mỗi đoạn một khoảng ngày và một tỉ lệ vĩnh viễn viết cứng.
+     * Nay là ba ô trên panel, đặt riêng cho từng dòng quà.</p>
+     *
+     * <p>{@code hsdMax} bằng 0 nghĩa là món này <b>không có hạn</b> — không gắn
+     * gì cả, kể cả khi tỉ lệ vĩnh viễn để 0.</p>
      */
-    private static void apMaRieng(Item it, String ma) {
-        if (ma == null || ma.trim().isEmpty()) {
+    private static void themHanDung(Item it, Qua q) {
+        if (q.hsdMax <= 0) {
             return;
         }
-        switch (ma.trim()) {
-            case "item613":
-                it.itemOptions.add(new ItemOption(50, Util.nextInt(20, 31)));
-                it.itemOptions.add(new ItemOption(77, Util.nextInt(20, 31)));
-                it.itemOptions.add(new ItemOption(103, Util.nextInt(20, 31)));
-                it.itemOptions.add(new ItemOption(101, Util.nextInt(30, 71)));
-                themHanDung(it, 1, 5);
-                break;
-            case "nhom_hsd":
-                it.itemOptions.add(new ItemOption(50, Util.nextInt(8, 15)));
-                it.itemOptions.add(new ItemOption(77, Util.nextInt(8, 15)));
-                it.itemOptions.add(new ItemOption(103, Util.nextInt(8, 15)));
-                themHanDung(it, 1, 5);
-                break;
-            default:
-                break;
-        }
-    }
-
-    /** Một phần hai mươi số món là vĩnh viễn — số còn lại có hạn. */
-    private static void themHanDung(Item it, int min, int max) {
-        if (Util.isTrue(5, 100)) {
+        if (q.tiLeVinhVien > 0 && Util.isTrue(Math.min(q.tiLeVinhVien, 100), 100)) {
             return;
         }
-        it.itemOptions.add(new ItemOption(93, Util.nextInt(min, max + 1)));
+        int min = Math.max(1, q.hsdMin);
+        int max = Math.max(min, q.hsdMax);
+        it.itemOptions.add(new ItemOption(93,
+                min == max ? min : Util.nextInt(min, max + 1)));
     }
 
     // =====================================================================
@@ -348,7 +358,13 @@ public final class VongQuayDAO {
         return ra;
     }
 
-    /** Đọc {@code "87:0,30:0"} thành các cặp {id chỉ số, trị số}. */
+    /**
+     * Đọc chuỗi chỉ số thành các bộ ba {id, trị số từ, trị số tới}.
+     *
+     * <p>Dạng đầy đủ là {@code "50:20:30"} — chỉ số 50, bốc trong khoảng 20 đến
+     * 30. Dạng cũ {@code "30:0"} vẫn đọc được: thiếu vế thứ ba thì tới bằng từ,
+     * tức trị số cố định.</p>
+     */
     public static List<int[]> docChiSo(String s) {
         List<int[]> ra = new ArrayList<>();
         if (s == null) {
@@ -359,11 +375,12 @@ public final class VongQuayDAO {
             if (t.isEmpty()) {
                 continue;
             }
-            String[] doi = t.split(":");
+            String[] phan = t.split(":");
             try {
-                int id = Integer.parseInt(doi[0].trim());
-                int tri = doi.length > 1 ? Integer.parseInt(doi[1].trim()) : 0;
-                ra.add(new int[]{id, tri});
+                int id = Integer.parseInt(phan[0].trim());
+                int tu = phan.length > 1 ? Integer.parseInt(phan[1].trim()) : 0;
+                int toi = phan.length > 2 ? Integer.parseInt(phan[2].trim()) : tu;
+                ra.add(new int[]{id, tu, Math.max(tu, toi)});
             } catch (Exception boQua) {
                 // Nhu tren.
             }
@@ -376,67 +393,82 @@ public final class VongQuayDAO {
     // =====================================================================
 
     private static Qua q(int nhom, String vatPham, String chiSo, int trongSo,
-            String maRieng, String ghiChu) {
+            String ghiChu) {
         Qua x = new Qua();
         x.nhom = nhom;
         x.vatPham = vatPham;
         x.chiSo = chiSo;
         x.trongSo = trongSo;
-        x.maRieng = maRieng;
         x.ghiChu = ghiChu;
+        return x;
+    }
+
+    private static Qua qHsd(int nhom, String vatPham, String chiSo, int trongSo,
+            int hsdMin, int hsdMax, int tiLeVinhVien, String ghiChu) {
+        Qua x = q(nhom, vatPham, chiSo, trongSo, ghiChu);
+        x.hsdMin = hsdMin;
+        x.hsdMax = hsdMax;
+        x.tiLeVinhVien = tiLeVinhVien;
         return x;
     }
 
     /**
      * Đúng danh sách quà đang chạy trước khi có bảng này.
      *
-     * <p>Chép từng dòng từ {@code LuckyRound.buildItemPool()} cũ, kể cả trọng số
-     * — mấy mục gọi {@code addWeighted(..., n)} thành trọng số {@code n}, mục
-     * thường thành trọng số 1. Nhờ thế lần chạy đầu sau khi đổi, vòng quay ra
-     * đúng như hôm trước.</p>
+     * <p>Chép từng dòng từ {@code LuckyRound.buildItemPool()}, kể cả trọng số —
+     * mấy mục gọi {@code addWeighted(..., n)} thành trọng số {@code n}, mục
+     * thường thành trọng số 1.</p>
+     *
+     * <p>Hai mục vốn phải nhờ mã nguồn tính (món 613 và nhóm pet có hạn dùng)
+     * nay <b>viết thẳng ra dữ liệu</b>: khoảng trị số của từng chỉ số, khoảng
+     * ngày hạn dùng, và tỉ lệ ra bản vĩnh viễn. Nhờ thế không còn ô nào trong
+     * bảng mà panel không sửa được.</p>
      */
     private static List<Qua> khoGoc() {
         List<Qua> ds = new ArrayList<>();
 
         // Ba dong dung chung cho ca hai vong quay.
         for (int nhom : new int[]{NHOM_THUONG, NHOM_VIP}) {
-            ds.add(q(nhom, "18", "", 1, "", "Ngọc rồng 1 sao"));
-            ds.add(q(nhom, "1143", "30:0", 1, "", ""));
-            ds.add(q(nhom, "1173", "30:0", 1, "", ""));
+            ds.add(q(nhom, "18", "", 1, ""));
+            ds.add(q(nhom, "1143", "30:0", 1, ""));
+            ds.add(q(nhom, "1173", "30:0", 1, ""));
         }
 
         // ---- vòng quay VIP ----
-        ds.add(q(NHOM_VIP, "1150,1151,1152,1153,1154", "86:0", 1, "", ""));
-        ds.add(q(NHOM_VIP, "1404,1405,1406,1407,1409,1410,1411,1412,1413", "87:0", 1, "", ""));
-        ds.add(q(NHOM_VIP, "1408", "87:0", 1, "", ""));
-        ds.add(q(NHOM_VIP, "2062", "87:0", 1, "", ""));
-        ds.add(q(NHOM_VIP, "2069", "87:0", 1, "", ""));
-        ds.add(q(NHOM_VIP, "840,841,842,859,956", "87:0,30:0", 1, "", ""));
-        ds.add(q(NHOM_VIP, "1517,1518", "87:0", 1, "", ""));
+        ds.add(q(NHOM_VIP, "1150,1151,1152,1153,1154", "86:0", 1, ""));
+        ds.add(q(NHOM_VIP, "1404,1405,1406,1407,1409,1410,1411,1412,1413", "87:0", 1, ""));
+        ds.add(q(NHOM_VIP, "1408", "87:0", 1, ""));
+        ds.add(q(NHOM_VIP, "2062", "87:0", 1, ""));
+        ds.add(q(NHOM_VIP, "2069", "87:0", 1, ""));
+        ds.add(q(NHOM_VIP, "840,841,842,859,956", "87:0,30:0", 1, ""));
+        ds.add(q(NHOM_VIP, "1517,1518", "87:0", 1, ""));
 
         // ---- vòng quay thường ----
-        ds.add(q(NHOM_THUONG, "18,19,20", "", 1, "", "Ngọc rồng 1-3 sao"));
-        ds.add(q(NHOM_THUONG, "381,382,383,384,385", "86:0", 1, "", ""));
-        // createSpecialItem: moi cap {vat pham, chi so} thanh mot dong rieng,
-        // trong so 1 — gop lai van dung ti le cu vi chung von duoc boc deu nhau.
-        ds.add(q(NHOM_THUONG, "220", "68:0", 1, "", ""));
-        ds.add(q(NHOM_THUONG, "221", "70:0", 1, "", ""));
-        ds.add(q(NHOM_THUONG, "222", "69:0", 1, "", ""));
-        ds.add(q(NHOM_THUONG, "223", "71:0", 1, "", ""));
-        ds.add(q(NHOM_THUONG, "224", "67:0", 1, "", ""));
-        // createSpecialItemWithValue: tri so 3 cho chi so 98/99, con lai 5.
-        ds.add(q(NHOM_THUONG, "441", "95:5", 1, "", ""));
-        ds.add(q(NHOM_THUONG, "442", "96:5", 1, "", ""));
-        ds.add(q(NHOM_THUONG, "443", "97:5", 1, "", ""));
-        ds.add(q(NHOM_THUONG, "444", "98:3", 1, "", ""));
-        ds.add(q(NHOM_THUONG, "445", "99:3", 1, "", ""));
-        ds.add(q(NHOM_THUONG, "446", "100:5", 1, "", ""));
-        ds.add(q(NHOM_THUONG, "447", "101:5", 1, "", ""));
-        ds.add(q(NHOM_THUONG, "2063,2064,2065,2066,2067,2068", "87:0", 1, "", ""));
-        ds.add(q(NHOM_THUONG, "1150,1151,1152,1153,1154", "", 3, "", ""));
-        ds.add(q(NHOM_THUONG, "2431,2432", "", 2, "", ""));
-        ds.add(q(NHOM_THUONG, "613", "30:0", 2, "item613", ""));
-        ds.add(q(NHOM_THUONG, "1947,1654,1810,1107,1633", "30:0", 3, "nhom_hsd", ""));
+        ds.add(q(NHOM_THUONG, "18,19,20", "", 1, ""));
+        ds.add(q(NHOM_THUONG, "381,382,383,384,385", "86:0", 1, ""));
+        // Moi cap {vat pham, chi so} thanh mot dong rieng, trong so 1 — gop lai
+        // van dung ti le cu vi chung von duoc boc deu nhau.
+        ds.add(q(NHOM_THUONG, "220", "68:0", 1, ""));
+        ds.add(q(NHOM_THUONG, "221", "70:0", 1, ""));
+        ds.add(q(NHOM_THUONG, "222", "69:0", 1, ""));
+        ds.add(q(NHOM_THUONG, "223", "71:0", 1, ""));
+        ds.add(q(NHOM_THUONG, "224", "67:0", 1, ""));
+        ds.add(q(NHOM_THUONG, "441", "95:5", 1, ""));
+        ds.add(q(NHOM_THUONG, "442", "96:5", 1, ""));
+        ds.add(q(NHOM_THUONG, "443", "97:5", 1, ""));
+        ds.add(q(NHOM_THUONG, "444", "98:3", 1, ""));
+        ds.add(q(NHOM_THUONG, "445", "99:3", 1, ""));
+        ds.add(q(NHOM_THUONG, "446", "100:5", 1, ""));
+        ds.add(q(NHOM_THUONG, "447", "101:5", 1, ""));
+        ds.add(q(NHOM_THUONG, "2063,2064,2065,2066,2067,2068", "87:0", 1, ""));
+        ds.add(q(NHOM_THUONG, "1150,1151,1152,1153,1154", "", 3, ""));
+        ds.add(q(NHOM_THUONG, "2431,2432", "", 2, ""));
+        // Hai dong duoi day truoc kia nam trong ma nguon.
+        ds.add(qHsd(NHOM_THUONG, "613", "30:0,50:20:30,77:20:30,103:20:30,101:30:70",
+                2, 1, 5, 5, "Trước ở mã nguồn (createItem613)"));
+        ds.add(qHsd(NHOM_THUONG, "1947,1654,1810,1107,1633",
+                "30:0,50:8:14,77:8:14,103:8:14",
+                3, 1, 5, 5, "Trước ở mã nguồn (createOption93GroupItem)"));
 
         return ds;
     }

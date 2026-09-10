@@ -182,7 +182,6 @@ public class BossManager implements Runnable {
                     + " dòng danh sách boss xuống bảng boss_spawn\n");
         }
         ds = donDongCu(ds);
-        ds = boSungConThieu(ds);
         int con = 0;
         int ban = 0;
         for (nro.repository.dao.BossSpawnDAO.Dong d : ds) {
@@ -212,137 +211,48 @@ public class BossManager implements Runnable {
     }
 
     /**
-     * Dọn những dòng boss <b>không còn lớp nào nhận</b> ra khỏi bảng.
+     * Dọn những dòng boss <b>không còn lớp nào nhận</b>, và dọn hậu quả của một
+     * lần dò hỏng.
      *
-     * <h2>Vì sao cần</h2>
+     * <h2>Vì sao có phần thứ hai</h2>
      *
-     * <p>Bảng {@code boss_spawn} là dữ liệu, còn lớp boss là mã nguồn. Gỡ một
-     * lớp đi thì dòng của nó vẫn nằm lại trong bảng: panel vẫn liệt kê nó, quản
-     * trị viên vẫn thấy nó trong "boss trong máy chủ", chỉ là nó không bao giờ
-     * xuất hiện được. Dọn ở đây để hai bên khớp nhau.</p>
+     * <p>Một bản trước đây có hàm "bổ sung con còn thiếu": nó dò xem
+     * {@code createBoss(id)} dựng được những id nào bằng cách <b>thử dựng
+     * thật</b>. Đó là sai lầm — vài lớp boss <i>tự đẻ một bản cho mỗi khu</i>
+     * ngay trong hàm dựng, nên phép thử ấy sinh ra hàng trăm con boss thật:
+     * danh sách nhảy từ năm mươi tư lên gần năm trăm dòng, Bùi Bụi đứng đủ chín
+     * khu, Tàu Pảy Pảy đủ năm mươi khu.</p>
      *
-     * <p>Hiện chỉ dọn bao cát Gôku SSJ: nó đã thành NPC thường ở Đảo Kame
-     * (xem {@code GokuSSJKame}), không còn là boss nữa.</p>
+     * <p>Hàm dò đã bị gỡ. Ở đây dọn nốt những dòng nó đã kịp ghi xuống bảng —
+     * nhận ra bằng ghi chú riêng nó để lại — để danh sách trở về đúng như
+     * trước.</p>
      */
     private java.util.List<nro.repository.dao.BossSpawnDAO.Dong> donDongCu(
             java.util.List<nro.repository.dao.BossSpawnDAO.Dong> ds) {
         final int ID_BAO_CAT_CU = -4359;
-        boolean con = false;
+        final String GHI_CHU_DO_HONG = "Tự bổ sung — bật nếu muốn con này xuất hiện";
+        java.util.List<Integer> canXoa = new java.util.ArrayList<>();
         for (nro.repository.dao.BossSpawnDAO.Dong d : ds) {
-            if (d.bossId == ID_BAO_CAT_CU) {
-                con = true;
-                break;
+            if (d.bossId == ID_BAO_CAT_CU
+                    || (d.ghiChu != null && GHI_CHU_DO_HONG.equals(d.ghiChu.trim()))) {
+                canXoa.add(d.bossId);
             }
         }
-        if (con) {
-            String loi = nro.repository.dao.BossSpawnDAO.xoa(ID_BAO_CAT_CU);
-            if (loi == null) {
-                ds = nro.repository.dao.BossSpawnDAO.tatCa();
-                Logger.success("Đã bỏ bao cát Gôku SSJ khỏi boss_spawn — nay là NPC thường\n");
+        if (canXoa.isEmpty()) {
+            return ds;
+        }
+        int xoa = 0;
+        for (int id : canXoa) {
+            if (nro.repository.dao.BossSpawnDAO.xoa(id) == null) {
+                xoa++;
             }
         }
-        return ds;
-    }
-
-
-    /**
-     * Bổ sung vào bảng <b>mọi boss có lớp mà bảng chưa biết tới</b>.
-     *
-     * <h2>Vì sao thiếu</h2>
-     *
-     * <p>{@code danhSachMacDinh()} chỉ có 32 dòng, gieo đúng <b>một lần</b> lúc
-     * bảng còn trống. Nhưng {@code createBoss()} dựng được gần trăm con. Chênh
-     * lệch ấy là những con <b>không bao giờ được dựng</b>: không có dòng trong
-     * bảng thì {@code loadBoss} không gọi tới, nên chúng không tồn tại trong máy
-     * chủ, không hiện trong danh sách boss của panel, và cũng chẳng có câu lỗi
-     * nào nói vì sao — Android 13, Android 15 và nhiều con khác nằm cả ở đây.</p>
-     *
-     * <p>Nay dò ngược: id nào {@code createBoss} dựng được mà bảng chưa có thì
-     * thêm một dòng. <b>Để TẮT sẵn</b> — bật cả mấy chục con lạ cùng lúc là đổi
-     * hẳn thế giới trong game mà không ai kịp cân lại. Quản trị viên nhìn thấy
-     * chúng trong bảng và tự quyết bật con nào.</p>
-     *
-     * <p>Dò bằng cách <b>thử dựng</b> chứ không đọc danh sách hằng số: hằng số
-     * trong {@code BossID} nhiều hơn số lớp có thật, nên đọc hằng số sẽ đẻ ra
-     * một đống dòng chết. Con vừa thử dựng được thì bị vứt đi ngay — nó chưa vào
-     * bản đồ nào, chỉ mới nằm trong bộ nhớ.</p>
-     */
-    private java.util.List<nro.repository.dao.BossSpawnDAO.Dong> boSungConThieu(
-            java.util.List<nro.repository.dao.BossSpawnDAO.Dong> ds) {
-        java.util.Set<Integer> daCo = new java.util.HashSet<>();
-        for (nro.repository.dao.BossSpawnDAO.Dong d : ds) {
-            daCo.add(d.bossId);
-        }
-        int them = 0;
-        for (int id : ID_DUNG_DUOC) {
-            if (daCo.contains(id)) {
-                continue;
-            }
-            Boss thu;
-            try {
-                thu = this.createBoss(id);
-            } catch (Exception boQua) {
-                continue;
-            }
-            if (thu == null) {
-                continue;
-            }
-            String ten = thu.name == null || thu.name.trim().isEmpty()
-                    ? ("Boss " + id) : thu.name.trim();
-            this.bosses.remove(thu);
-            nro.repository.dao.BossSpawnDAO.Dong d
-                    = new nro.repository.dao.BossSpawnDAO.Dong();
-            d.bossId = id;
-            d.ten = ten;
-            d.soBanSao = 1;
-            d.bat = false;
-            d.ghiChu = "Tự bổ sung — bật nếu muốn con này xuất hiện";
-            if (nro.repository.dao.BossSpawnDAO.luu(d) == null) {
-                them++;
-            }
-        }
-        if (them > 0) {
-            Logger.success("Đã bổ sung " + them
-                    + " boss có lớp nhưng chưa có dòng trong boss_spawn (để tắt sẵn)\n");
+        if (xoa > 0) {
+            Logger.success("Đã dọn " + xoa
+                    + " dòng boss thừa khỏi boss_spawn\n");
             ds = nro.repository.dao.BossSpawnDAO.tatCa();
         }
         return ds;
-    }
-
-    /**
-     * Mọi id mà {@link #createBoss(int)} nhận.
-     *
-     * <p>Sinh một lần bằng cách quét chính khối {@code switch} kia — xem
-     * {@code docIdTuCreateBoss()}.</p>
-     */
-    private static final int[] ID_DUNG_DUOC = docIdTuCreateBoss();
-
-    /**
-     * Đọc mọi hằng số {@code BossID} bằng phản chiếu.
-     *
-     * <p>Không có cách nào đọc thẳng các nhãn {@code case} của một khối
-     * {@code switch} lúc chạy, nên lấy toàn bộ hằng số của {@code BossID} rồi
-     * để {@link #boSungConThieu} lọc bằng cách thử dựng: id nào không lớp nào
-     * nhận thì {@code createBoss} trả {@code null} và bị bỏ qua.</p>
-     */
-    private static int[] docIdTuCreateBoss() {
-        java.util.List<Integer> ra = new java.util.ArrayList<>();
-        try {
-            for (java.lang.reflect.Field f : BossID.class.getDeclaredFields()) {
-                if (java.lang.reflect.Modifier.isStatic(f.getModifiers())
-                        && f.getType() == int.class) {
-                    f.setAccessible(true);
-                    ra.add(f.getInt(null));
-                }
-            }
-        } catch (Exception ex) {
-            Logger.logException(BossManager.class, ex, "Lỗi đọc danh sách id boss");
-        }
-        int[] m = new int[ra.size()];
-        for (int i = 0; i < m.length; i++) {
-            m[i] = ra.get(i);
-        }
-        return m;
     }
 
     /** Danh sách gõ cứng cũ, chỉ dùng để gieo lần đầu. */

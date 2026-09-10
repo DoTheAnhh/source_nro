@@ -5758,6 +5758,20 @@ public class SystemPanel extends JPanel {
 
         JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
         nut.setOpaque(false);
+        JCheckBox oDung = new JCheckBox("Máy chủ dùng bảng này",
+                ConfigDAO.on(nro.repository.dao.VongQuayDAO.KHOA_DUNG_PANEL));
+        oDung.setOpaque(false);
+        oDung.addActionListener(e -> {
+            ConfigDAO.set(nro.repository.dao.VongQuayDAO.KHOA_DUNG_PANEL,
+                    oDung.isSelected() ? "1" : "0");
+            ConfigDAO.reload();
+            capNhatNhanVongQuay();
+            note(oDung.isSelected() ? WARN_RED : OK_GREEN, oDung.isSelected()
+                    ? "ĐÃ BẬT — vòng quay nay lấy quà từ bảng này. Soát lại từng "
+                    + "dòng trước khi để người chơi quay."
+                    : "Đã tắt — vòng quay quay về danh sách trong mã như cũ.");
+        });
+        nut.add(oDung);
         nut.add(button("Sửa dòng đang chọn", ACCENT, e -> suaVongQuayDialog(false)));
         nut.add(button("Thêm dòng quà", OK_GREEN, e -> suaVongQuayDialog(true)));
         nut.add(button("Bật các dòng đã chọn", new Color(90, 140, 90),
@@ -5765,32 +5779,77 @@ public class SystemPanel extends JPanel {
         nut.add(button("Tắt các dòng đã chọn", new Color(150, 120, 60),
                 e -> batTatVongQuay(false)));
         nut.add(button("Xoá các dòng đã chọn", WARN_RED, e -> xoaDongVongQuay()));
+        nut.add(button("Gieo lại từ mã nguồn", new Color(120, 90, 160),
+                e -> gieoLaiVongQuay()));
         nut.add(button("Tải lại", GREY, e -> napBangVongQuay()));
 
-        root.add(nhan("Kho quà của vòng quay Thượng Đế. Máy chủ <b>chỉ đọc bảng "
-                + "này</b> — danh sách viết cứng cũ đã được gieo xuống đây nguyên "
-                + "vẹn ở lần chạy đầu, nên tỉ lệ không lệch đi đâu cả."
-                + "<br><br>"
-                + "<b>Nháy đúp một dòng để sửa.</b> Chọn nhiều dòng (giữ Ctrl hoặc "
-                + "Shift) rồi bấm \"Sửa dòng đang chọn\" thì sửa được cả loạt — "
-                + "trong hộp thoại chỉ những ô bạn <i>tích chọn</i> mới được áp, "
-                + "phần còn lại của mỗi dòng giữ nguyên."
-                + "<br><br>"
-                + "Một dòng có thể chứa <b>nhiều vật phẩm</b>: lúc quay trúng dòng "
-                + "đó thì bốc ngẫu nhiên một món trong danh sách, cơ hội đều nhau — "
-                + "đó là cách gói gọn những mục kiểu \"một trong năm mảnh\"."
-                + "<br>"
-                + "<b>Trọng số</b> là trọng số, không phải phần trăm: không cần cộng "
-                + "cho tròn một trăm, sửa một dòng không bắt sửa lại dòng khác. Cột "
-                + "\"Cơ hội\" là phần trăm tính ra từ chính các trọng số đang bật của "
-                + "cùng vòng quay."
-                + "<br><br>"
-                + "Quay hụt thì rơi về vàng như cũ, nên tắt hết quà cũng không làm ai "
-                + "mất lượt mà chẳng nhận gì."), BorderLayout.NORTH);
+        vqNhan = nhan("");
+        capNhatNhanVongQuay();
+        JPanel dau = new JPanel(new BorderLayout(0, 4));
+        dau.setOpaque(false);
+        dau.add(vqNhan, BorderLayout.NORTH);
+        root.add(dau, BorderLayout.NORTH);
         root.add(ServerGuiUtils.cuon(vqTable), BorderLayout.CENTER);
         root.add(nut, BorderLayout.SOUTH);
         napBangVongQuay();
         return root;
+    }
+
+    /** Nhãn giải thích của tab, đổi màu theo việc máy chủ có dùng bảng hay không. */
+    private JLabel vqNhan;
+
+    private void capNhatNhanVongQuay() {
+        if (vqNhan == null) {
+            return;
+        }
+        boolean dung = ConfigDAO.on(nro.repository.dao.VongQuayDAO.KHOA_DUNG_PANEL);
+        vqNhan.setText("<html><body style='width:900px'>"
+                + (dung
+                        ? "<b style='color:#c0392b'>ĐANG BẬT</b> — vòng quay lấy quà "
+                        + "từ bảng này."
+                        : "<b style='color:#c0392b'>ĐANG TẮT</b> — vòng quay vẫn chạy "
+                        + "theo danh sách viết trong mã, bảng này chưa có tác dụng "
+                        + "gì. Tắt sẵn vì bản gieo đầu tiên <b>ra sai món</b>: id vật "
+                        + "phẩm trong mã cũ được tra theo <i>vị trí</i> trong bảng "
+                        + "mẫu, mà bảng mẫu đã đổi từ lúc đoạn mã ấy được viết — nên "
+                        + "chép nguyên id sang đây cho ra một danh sách quà khác hẳn "
+                        + "thứ người chơi vẫn nhận. Soát lại từng dòng rồi hãy bật.")
+                + "<br><br>"
+                + "<b>Nháy đúp một dòng để sửa.</b> Chọn nhiều dòng (giữ Ctrl hoặc "
+                + "Shift) rồi bấm \"Sửa dòng đang chọn\" thì sửa được cả loạt — trong "
+                + "hộp thoại chỉ những ô bạn <i>tích chọn</i> mới được áp, phần còn "
+                + "lại của mỗi dòng giữ nguyên."
+                + "<br><br>"
+                + "Một dòng có thể chứa <b>nhiều vật phẩm</b>: quay trúng dòng đó thì "
+                + "bốc ngẫu nhiên một món trong danh sách, cơ hội đều nhau. "
+                + "<b>Trọng số</b> là trọng số, không phải phần trăm — cột \"Cơ hội\" "
+                + "là phần trăm tính ra từ chính các trọng số đang bật của cùng vòng "
+                + "quay. Mỗi dòng chỉ số có <b>khoảng trị số từ–tới</b>, và mỗi dòng "
+                + "quà có <b>hạn dùng từ–tới</b> cùng <b>tỉ lệ ra bản vĩnh viễn</b>."
+                + "<br><br>"
+                + "Quay hụt thì rơi về vàng như cũ, nên tắt hết quà cũng không làm ai "
+                + "mất lượt mà chẳng nhận gì.</body></html>");
+    }
+
+    /**
+     * Xoá sạch bảng rồi gieo lại từ danh sách trong mã.
+     *
+     * <p>Dùng khi đã sửa lung tung và muốn về mốc ban đầu để soát lại từ đầu.</p>
+     */
+    private void gieoLaiVongQuay() {
+        if (JOptionPane.showConfirmDialog(this,
+                "Xoá sạch bảng rồi gieo lại từ danh sách trong mã?\n\n"
+                + "Mọi dòng đang có — kể cả dòng bạn tự thêm — sẽ mất.",
+                "Gieo lại kho quà", JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+            return;
+        }
+        for (nro.repository.dao.VongQuayDAO.Qua q
+                : nro.repository.dao.VongQuayDAO.danhSach()) {
+            nro.repository.dao.VongQuayDAO.xoa(q.id);
+        }
+        napBangVongQuay();
+        note(OK_GREEN, "Đã gieo lại kho quà từ danh sách trong mã.");
     }
 
     /** Tên vật phẩm của một dòng: một món thì tên thẳng, nhiều món thì gộp. */
@@ -5839,13 +5898,23 @@ public class SystemPanel extends JPanel {
                 sb.append("; ");
             }
             String ten = OptionPicker.tenChiSo(cs[0]);
-            sb.append(cs[1] > 0 ? ten.replace("#", String.valueOf(cs[1])) : ten);
+            // Khoang tri so thi in ca hai dau: "+20 den 30% suc danh".
+            String tri = (cs[2] > cs[1]) ? (cs[1] + " đến " + cs[2])
+                    : String.valueOf(cs[1]);
+            sb.append(cs[1] > 0 || cs[2] > 0 ? ten.replace("#", tri) : ten);
         }
-        if (q.maRieng != null && !q.maRieng.trim().isEmpty()) {
+        if (q.hsdMax > 0) {
             if (sb.length() > 0) {
                 sb.append("; ");
             }
-            sb.append("+ mã riêng \"").append(q.maRieng.trim()).append("\"");
+            sb.append("HSD ").append(Math.max(1, q.hsdMin));
+            if (q.hsdMax > q.hsdMin) {
+                sb.append(" đến ").append(q.hsdMax);
+            }
+            sb.append(" ngày");
+            if (q.tiLeVinhVien > 0) {
+                sb.append(" (").append(q.tiLeVinhVien).append("% ra vĩnh viễn)");
+            }
         }
         return sb.length() == 0 ? "(không có)" : sb.toString();
     }
@@ -5999,20 +6068,21 @@ public class SystemPanel extends JPanel {
 
         // ---- chỉ số kèm theo ----
         DefaultTableModel mCs = new DefaultTableModel(
-                new Object[]{"Id", "Chỉ số", "Trị số"}, 0) {
+                new Object[]{"Id", "Chỉ số", "Trị số từ", "tới"}, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
-                return c == 2;
+                return c >= 2;
             }
         };
         JTable bCs = new JTable(mCs);
         bCs.setRowHeight(24);
-        bCs.getColumnModel().getColumn(0).setPreferredWidth(50);
-        bCs.getColumnModel().getColumn(1).setPreferredWidth(300);
+        bCs.getColumnModel().getColumn(0).setPreferredWidth(45);
+        bCs.getColumnModel().getColumn(1).setPreferredWidth(280);
         bCs.getColumnModel().getColumn(2).setPreferredWidth(70);
+        bCs.getColumnModel().getColumn(3).setPreferredWidth(70);
         for (int[] cs : nro.repository.dao.VongQuayDAO.docChiSo(mau.chiSo)) {
             mCs.addRow(new Object[]{cs[0], OptionPicker.tenChiSo(cs[0]),
-                String.valueOf(cs[1])});
+                String.valueOf(cs[1]), String.valueOf(cs[2])});
         }
 
         JPanel nutCs = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
@@ -6020,7 +6090,7 @@ public class SystemPanel extends JPanel {
         nutCs.add(button("Thêm chỉ số…", ACCENT, ev -> {
             int id = OptionPicker.chonChiSo(this, -1);
             if (id >= 0) {
-                mCs.addRow(new Object[]{id, OptionPicker.tenChiSo(id), "0"});
+                mCs.addRow(new Object[]{id, OptionPicker.tenChiSo(id), "0", "0"});
             }
         }));
         nutCs.add(button("Bỏ dòng đang chọn", WARN_RED, ev -> {
@@ -6037,9 +6107,9 @@ public class SystemPanel extends JPanel {
         JTextField fMax = new JTextField(
                 String.valueOf(Math.max(Math.max(1, mau.soLuongMin), mau.soLuongMax)), 6);
         JTextField fTs = new JTextField(String.valueOf(mau.trongSo), 6);
-        JComboBox<String> fMa = new JComboBox<>(
-                nro.repository.dao.VongQuayDAO.TEN_MA_RIENG);
-        fMa.setSelectedItem(mau.maRieng == null ? "" : mau.maRieng);
+        JTextField fHsdMin = new JTextField(String.valueOf(mau.hsdMin), 6);
+        JTextField fHsdMax = new JTextField(String.valueOf(mau.hsdMax), 6);
+        JTextField fVv = new JTextField(String.valueOf(mau.tiLeVinhVien), 6);
         JCheckBox fBat = new JCheckBox("Bật", mau.bat);
         fBat.setOpaque(false);
         JTextField fGc = new JTextField(mau.ghiChu == null ? "" : mau.ghiChu, 30);
@@ -6050,11 +6120,11 @@ public class SystemPanel extends JPanel {
         JCheckBox apCs = new JCheckBox("áp", !nhieu);
         JCheckBox apSl = new JCheckBox("áp", !nhieu);
         JCheckBox apTs = new JCheckBox("áp", !nhieu);
-        JCheckBox apMa = new JCheckBox("áp", !nhieu);
+        JCheckBox apHsd = new JCheckBox("áp", !nhieu);
         JCheckBox apBat = new JCheckBox("áp", !nhieu);
         JCheckBox apGc = new JCheckBox("áp", !nhieu);
         for (JCheckBox cb : new JCheckBox[]{apNhom, apVp, apCs, apSl, apTs,
-            apMa, apBat, apGc}) {
+            apHsd, apBat, apGc}) {
             cb.setOpaque(false);
             cb.setVisible(nhieu);
         }
@@ -6093,7 +6163,16 @@ public class SystemPanel extends JPanel {
         hangVq(form, c, y++, apCs, "Chỉ số kèm theo:", hopCs);
 
         hangVq(form, c, y++, apTs, "Trọng số:", fTs);
-        hangVq(form, c, y++, apMa, "Mã riêng:", fMa);
+        JPanel hopHsd = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        hopHsd.setOpaque(false);
+        hopHsd.add(new JLabel("từ"));
+        hopHsd.add(fHsdMin);
+        hopHsd.add(new JLabel("tới"));
+        hopHsd.add(fHsdMax);
+        hopHsd.add(new JLabel("ngày · tỉ lệ ra vĩnh viễn"));
+        hopHsd.add(fVv);
+        hopHsd.add(new JLabel("%"));
+        hangVq(form, c, y++, apHsd, "Hạn dùng:", hopHsd);
         hangVq(form, c, y++, apBat, "Trạng thái:", fBat);
         hangVq(form, c, y++, apGc, "Ghi chú:", fGc);
 
@@ -6131,17 +6210,24 @@ public class SystemPanel extends JPanel {
                 cs.append(",");
             }
             cs.append(String.valueOf(mCs.getValueAt(r, 0)).trim()).append(":")
-                    .append(String.valueOf(mCs.getValueAt(r, 2)).trim());
+                    .append(String.valueOf(mCs.getValueAt(r, 2)).trim()).append(":")
+                    .append(String.valueOf(mCs.getValueAt(r, 3)).trim());
         }
         int min;
         int max;
         int ts;
+        int hsdMin;
+        int hsdMax;
+        int vv;
         try {
             min = Math.max(1, Integer.parseInt(fMin.getText().trim()));
             max = Math.max(min, Integer.parseInt(fMax.getText().trim()));
             ts = Integer.parseInt(fTs.getText().trim());
+            hsdMin = Integer.parseInt(fHsdMin.getText().trim());
+            hsdMax = Integer.parseInt(fHsdMax.getText().trim());
+            vv = Integer.parseInt(fVv.getText().trim());
         } catch (NumberFormatException ex) {
-            note(WARN_RED, "Số lượng và trọng số phải là số nguyên.");
+            note(WARN_RED, "Số lượng, trọng số, hạn dùng và tỉ lệ phải là số nguyên.");
             return;
         }
 
@@ -6166,8 +6252,10 @@ public class SystemPanel extends JPanel {
             if (apTs.isSelected()) {
                 q.trongSo = ts;
             }
-            if (apMa.isSelected()) {
-                q.maRieng = String.valueOf(fMa.getSelectedItem());
+            if (apHsd.isSelected()) {
+                q.hsdMin = hsdMin;
+                q.hsdMax = hsdMax;
+                q.tiLeVinhVien = vv;
             }
             if (apBat.isSelected()) {
                 q.bat = fBat.isSelected();
