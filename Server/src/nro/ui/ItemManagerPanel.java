@@ -740,6 +740,8 @@ public class ItemManagerPanel extends JPanel {
             }
         }));
         optBtn.add(button("Xoá hết", GREY, e -> optModel.setRowCount(0)));
+        optBtn.add(button("Chỉ số gốc", new Color(120, 90, 160),
+                e -> dienChiSoSanCo(true)));
         // Do khoa: mot o tich thay vi bat nguoi dung nho id 30.
         optBtn.add(OptionPicker.oKhoaChoBang(optModel, 3));
         opts.add(optBtn, BorderLayout.SOUTH);
@@ -781,6 +783,10 @@ public class ItemManagerPanel extends JPanel {
         lblName.setText(t.name + "   " + PlayerManagerPanel.typeName(t.type));
         lblName.setForeground(ACCENT);
         lblIcon.setIcon(PlayerManagerPanel.iconOf(t.iconID));
+        // Ao, quan, gang, giay, rada... deu co chi so san trong game — dien
+        // luon de chi viec sua, khoi phai tu tra tung id. Chi dien khi bang con
+        // nguyen nhu lan dien truoc, de khong xoa mat so ai do vua go.
+        dienChiSoSanCo(false);
         if (vichSao != null) {
             note(GREY, "\"" + t.name + "\": " + vichSao
                     + " — thêm vào hành trang thì game tự xử lý đúng, "
@@ -839,6 +845,161 @@ public class ItemManagerPanel extends JPanel {
             // Qua OptionPicker: no co san duong doc CSDL khi bang chi so
             // trong bo nho chua nap xong.
             optModel.setValueAt(OptionPicker.tenCua(id), i, 2);
+        }
+    }
+
+    // =====================================================================
+    //  Chỉ số sẵn có của vật phẩm
+    // =====================================================================
+
+    /**
+     * Dấu vết của lần tự điền gần nhất, để biết bảng có còn nguyên hay không.
+     *
+     * <p>Rỗng nghĩa là chưa tự điền lần nào, hoặc người dùng đã tự sửa.</p>
+     */
+    private String optDauVetTuDien = "";
+
+    /**
+     * Chỉ số <b>sẵn có trong game</b> của một mẫu vật phẩm.
+     *
+     * <h3>Lấy ở đâu ra</h3>
+     *
+     * <p>Ở chính bảng bán của NPC. Áo, quần, găng, giày, rađa… đều được bày bán
+     * ở đâu đó, và dòng bán ấy mang đúng bộ chỉ số mà người chơi nhận được khi
+     * mua — nên nó là con số thật của món đồ, không phải con số tôi đoán.</p>
+     *
+     * <p>Món không bày bán ở NPC nào (đồ rơi từ boss, đồ sự kiện) thì trả về
+     * danh sách rỗng; lúc ấy {@link #khungChiSoTheoLoai} dựng sẵn khung trống
+     * đúng loại để chỉ việc điền số.</p>
+     *
+     * @return các cặp {@code {id chỉ số, giá trị}}, rỗng nếu không tra được
+     */
+    private static java.util.List<int[]> chiSoSanCo(ItemTemplate t) {
+        java.util.List<int[]> ds = new java.util.ArrayList<>();
+        if (t == null) {
+            return ds;
+        }
+        try {
+            for (nro.entity.shop.Shop s : nro.server.Manager.SHOPS) {
+                if (s == null || s.tabShops == null) {
+                    continue;
+                }
+                for (nro.entity.shop.tab.TabShop tab : s.tabShops) {
+                    if (tab == null || tab.itemShops == null) {
+                        continue;
+                    }
+                    for (nro.entity.shop.ItemShop is : tab.itemShops) {
+                        if (is == null || is.temp == null || is.temp.id != t.id
+                                || is.options == null || is.options.isEmpty()) {
+                            continue;
+                        }
+                        for (nro.entity.item.ItemOption o : is.options) {
+                            if (o != null) {
+                                ds.add(new int[]{o.optionTemplate.id, o.param});
+                            }
+                        }
+                        return ds;
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            // Bang shop chua nap xong (panel mo truoc khi may chu chay) thi coi
+            // nhu khong tra duoc — van dung khung trong theo loai.
+            ds.clear();
+        }
+        return ds;
+    }
+
+    /**
+     * Khung chỉ số trống của một loại trang bị — đúng dòng, giá trị để 0.
+     *
+     * <p>Dành cho món không bày bán ở NPC nào. Biết một cái áo thì phải có dòng
+     * HP còn cái găng thì phải có dòng sức đánh là việc của máy, không nên bắt
+     * người dùng nhớ id nào đi với loại nào.</p>
+     */
+    private static java.util.List<int[]> khungChiSoTheoLoai(int type) {
+        java.util.List<int[]> ds = new java.util.ArrayList<>();
+        switch (type) {
+            case 0:                             // Áo
+                ds.add(new int[]{47, 0});       // HP
+                break;
+            case 1:                             // Quần
+                ds.add(new int[]{22, 0});       // giáp
+                break;
+            case 2:                             // Găng
+                ds.add(new int[]{0, 0});        // sức đánh
+                break;
+            case 3:                             // Giày
+                ds.add(new int[]{23, 0});       // né đòn
+                break;
+            case 4:                             // Rađa
+                ds.add(new int[]{14, 0});       // chí mạng
+                break;
+            default:
+                return ds;                      // loại khác: không dựng khung
+        }
+        ds.add(new int[]{21, 0});               // yêu cầu sức mạnh
+        return ds;
+    }
+
+    /** Loại này có phải trang bị mang chỉ số không. */
+    private static boolean laTrangBi(int type) {
+        return type >= 0 && type <= 4;
+    }
+
+    /** Chuỗi nhận dạng nội dung bảng chỉ số, để so xem có ai sửa tay chưa. */
+    private String dauVetBangChiSo() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < optModel.getRowCount(); i++) {
+            sb.append(optModel.getValueAt(i, 0)).append('=')
+                    .append(optModel.getValueAt(i, 1)).append(';');
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Điền chỉ số sẵn có của mẫu vật phẩm vào bảng.
+     *
+     * @param batBuoc {@code true} là ghi đè dù người dùng đã sửa tay — dùng cho
+     *        nút bấm; {@code false} là chỉ điền khi bảng còn nguyên như lần tự
+     *        điền trước, để không xoá mất số ai đó vừa gõ
+     */
+    private void dienChiSoSanCo(boolean batBuoc) {
+        ItemTemplate t = PlayerManagerPanel.templateOf(fId.getText());
+        if (t == null) {
+            return;
+        }
+        if (!batBuoc && !dauVetBangChiSo().equals(optDauVetTuDien)) {
+            return;
+        }
+        java.util.List<int[]> ds = chiSoSanCo(t);
+        boolean tuShop = !ds.isEmpty();
+        if (ds.isEmpty()) {
+            ds = khungChiSoTheoLoai(t.type);
+        }
+        if (ds.isEmpty()) {
+            if (batBuoc) {
+                note(GREY, "\"" + t.name + "\" không có chỉ số sẵn trong game "
+                        + "và cũng không phải trang bị — cứ tự thêm dòng.");
+            }
+            if (!batBuoc && optModel.getRowCount() > 0) {
+                optModel.setRowCount(0);
+                optDauVetTuDien = dauVetBangChiSo();
+            }
+            return;
+        }
+        optModel.setRowCount(0);
+        for (int[] o : ds) {
+            optModel.addRow(new Object[]{String.valueOf(o[0]),
+                String.valueOf(o[1]), OptionPicker.tenCua(o[0])});
+        }
+        optDauVetTuDien = dauVetBangChiSo();
+        if (batBuoc || tuShop) {
+            note(GREY, tuShop
+                    ? "Đã lấy chỉ số của \"" + t.name + "\" theo đúng bảng bán ở NPC "
+                    + "— sửa thoải mái trước khi phát."
+                    : "\"" + t.name + "\" không bày bán ở NPC nào nên không tra được "
+                    + "chỉ số thật; đây là khung trống đúng loại, điền số vào là được.");
         }
     }
 
