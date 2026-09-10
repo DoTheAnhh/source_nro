@@ -82,23 +82,86 @@ public class TaySach {
      * mang chỉ số <b>không còn nằm trong kho</b>. Tẩy nhìn vào kho, không nhận
      * ra dòng nào, và cuốn sách thành không tẩy được.</p>
      *
-     * <p>Nay lật ngược: giữ lại đúng mấy dòng <b>thuộc về cấu trúc cuốn sách</b>
-     * và tẩy tất cả phần còn lại. Một cuốn sách chỉ gồm hai thứ — mấy dòng cấu
-     * trúc này, và các chỉ số do giám định gắn vào — nên tẩy sạch phần còn lại
-     * luôn đúng, bất kể kho hôm nay ra sao.</p>
+     * <p>Nay xét theo <b>kho chỉ số trên panel</b>, tức đúng tập những dòng mà
+     * giám định có thể bốc ra. Dòng nào không nằm trong kho — độ bền, số lần
+     * tẩy, yêu cầu sức mạnh, hay bất cứ thứ gì công thức gắn thêm — <b>không bị
+     * đụng tới</b>. Nhờ thế số ô giám định của cuốn sách không bao giờ phình
+     * ra: tẩy chỉ trả những ô đã bốc về trạng thái chưa bốc.</p>
+     *
+     * <p>Bản trước làm ngược — giữ lại một danh sách nhỏ rồi tẩy tất cả phần
+     * còn lại — và đó là lý do số dòng "Chưa giám định" tự tăng: mấy dòng vốn
+     * không phải ô giám định cũng bị biến thành ô giám định.</p>
      */
     private static final Set<Integer> DONG_GIU_LAI = new HashSet<>(
             java.util.Arrays.asList(
-                    SachTuyetKyDAO.OPTION_CHUA_GIAM_DINH, // 217 — chính nó
-                    219,   // số lượt tẩy còn lại
+                    SachTuyetKyDAO.OPTION_CHUA_GIAM_DINH, // 217
+                    219,   // so lan tay — xem OPTION_SO_LAN_TAY
                     21,    // yêu cầu sức mạnh
                     30,    // không thể giao dịch
                     31,    // số lượng
                     72,    // cấp
-                    93,    // hạn sử dụng
-                    218,   // dòng riêng của sách, không phải chỉ số giám định
-                    220,   // hoàn thành %
-                    221));
+                    93));  // hạn sử dụng
+
+    /** Chỉ số "Số lần tẩy" — luôn đứng cuối danh sách. */
+    private static final int OPTION_SO_LAN_TAY = 219;
+
+    /**
+     * Tập id chỉ số mà giám định có thể bốc ra — tức tập tẩy được.
+     *
+     * <p>Đọc từ kho trên panel, kể cả dòng đang tắt: một chỉ số vừa bị tắt vẫn
+     * còn nằm trên những cuốn sách giám định từ trước, và người chơi phải tẩy
+     * được nó.</p>
+     */
+    private static Set<Integer> idChiSoTayDuoc() {
+        Set<Integer> ids = new HashSet<>();
+        for (SachTuyetKyDAO.ChiSo cs : SachTuyetKyDAO.danhSachChiSo()) {
+            if (cs != null) {
+                ids.add(cs.optionId);
+            }
+        }
+        return ids;
+    }
+
+    /**
+     * Xếp lại các dòng của cuốn sách cho dễ đọc.
+     *
+     * <p>Ba nhóm, theo đúng thứ tự: dòng cấu trúc (yêu cầu sức mạnh, không giao
+     * dịch…) — rồi <b>toàn bộ ô giám định liền nhau</b> — rồi "Số lần tẩy" đứng
+     * cuối cùng.</p>
+     *
+     * <p>Không xếp thì ô giám định nằm rải xen giữa mấy dòng khác, vì giám định
+     * thay tại chỗ còn công thức thì gắn thêm dòng vào cuối lúc nào cũng được.
+     * Nhìn vào một cuốn sách không đếm nổi nó còn mấy ô.</p>
+     */
+    public static void sapXep(Item sach) {
+        if (sach == null || sach.itemOptions == null) {
+            return;
+        }
+        Set<Integer> kho = idChiSoTayDuoc();
+        java.util.List<ItemOption> cauTruc = new java.util.ArrayList<>();
+        java.util.List<ItemOption> oGiamDinh = new java.util.ArrayList<>();
+        ItemOption soLanTay = null;
+        for (ItemOption io : sach.itemOptions) {
+            if (io == null || io.optionTemplate == null) {
+                continue;
+            }
+            int id = io.optionTemplate.id;
+            if (id == OPTION_SO_LAN_TAY) {
+                soLanTay = io;
+            } else if (id == SachTuyetKyDAO.OPTION_CHUA_GIAM_DINH
+                    || kho.contains(id)) {
+                oGiamDinh.add(io);
+            } else {
+                cauTruc.add(io);
+            }
+        }
+        sach.itemOptions.clear();
+        sach.itemOptions.addAll(cauTruc);
+        sach.itemOptions.addAll(oGiamDinh);
+        if (soLanTay != null) {
+            sach.itemOptions.add(soLanTay);
+        }
+    }
 
     public static void taySach(Player player) {
         if (player.combine.itemsCombine.size() != 1) {
@@ -110,18 +173,19 @@ public class TaySach {
             Service.gI().sendServerMessage(player, "Vật phẩm này không phải Sách Tuyệt Kỹ.");
             return;
         }
-        if (sachTuyetKy.getOptionParam(219) <= 0) {
+        if (sachTuyetKy.getOptionParam(OPTION_SO_LAN_TAY) <= 0) {
             Service.gI().sendServerMessage(player, "Cuốn này đã hết lượt tẩy.");
             return;
         }
 
+        Set<Integer> kho = idChiSoTayDuoc();
         int daTay = 0;
         for (int i = 0; i < sachTuyetKy.itemOptions.size(); i++) {
             ItemOption io = sachTuyetKy.itemOptions.get(i);
             if (io == null || io.optionTemplate == null) {
                 continue;
             }
-            if (!DONG_GIU_LAI.contains(io.optionTemplate.id)) {
+            if (kho.contains(io.optionTemplate.id)) {
                 sachTuyetKy.itemOptions.set(i,
                         new ItemOption(SachTuyetKyDAO.OPTION_CHUA_GIAM_DINH, 0));
                 daTay++;
@@ -137,10 +201,11 @@ public class TaySach {
             return;
         }
 
-        sachTuyetKy.subOptionParam(219, 1);
+        sachTuyetKy.subOptionParam(OPTION_SO_LAN_TAY, 1);
+        sapXep(sachTuyetKy);
         CombineService.gI().sendEffectSuccessCombine(player);
         Service.gI().sendThongBao(player, "Đã tẩy " + daTay
-                + " dòng chỉ số, còn " + sachTuyetKy.getOptionParam(219)
+                + " dòng chỉ số, còn " + sachTuyetKy.getOptionParam(OPTION_SO_LAN_TAY)
                 + " lượt tẩy.");
         InventoryService.gI().sendItemBag(player);
         CombineService.gI().reOpenItemCombine(player);
@@ -151,10 +216,11 @@ public class TaySach {
         if (sach == null || sach.itemOptions == null) {
             return 0;
         }
+        Set<Integer> kho = idChiSoTayDuoc();
         int n = 0;
         for (ItemOption io : sach.itemOptions) {
             if (io != null && io.optionTemplate != null
-                    && !DONG_GIU_LAI.contains(io.optionTemplate.id)) {
+                    && kho.contains(io.optionTemplate.id)) {
                 n++;
             }
         }

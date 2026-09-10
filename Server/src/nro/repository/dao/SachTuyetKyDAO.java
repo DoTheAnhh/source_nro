@@ -401,6 +401,8 @@ public final class SachTuyetKyDAO {
         for (int i = 0; i < soDong; i++) {
             sach.itemOptions.add(new ItemOption(OPTION_CHUA_GIAM_DINH, 0));
         }
+        // Xep lai ngay tu luc tao: o giam dinh lien nhau, "So lan tay" cuoi cung.
+        nro.entity.combine.list.TaySach.sapXep(sach);
     }
 
     /**

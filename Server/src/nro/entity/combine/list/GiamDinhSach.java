@@ -70,6 +70,7 @@ public class GiamDinhSach {
                 }
             }
         }
+        nro.entity.combine.list.TaySach.sapXep(sachTuyetKy);
         CombineService.gI().sendEffectSuccessCombine(player);
         InventoryService.gI().subQuantityItemsBag(player, buaGiamDinh, 1);
         InventoryService.gI().sendItemBag(player);
