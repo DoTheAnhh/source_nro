@@ -162,6 +162,12 @@ public class MapNhanhService {
                     "Đang chết, hồi sinh đã rồi hãy đi.");
             return;
         }
+        // Luot doi ban do truoc chua nap xong thi cho.
+        if (nro.service.fun.ChangeMapService.dangDoiMap(player)) {
+            Service.gI().hideWaitDialog(player);
+            Service.gI().sendThongBao(player, "Đang chuyển bản đồ, chờ một chút.");
+            return;
+        }
         int mapId = d.theoHanhTinh ? d.mapId + player.gender : d.mapId;
         nro.entity.map.Map map = ChangeMapService.gI().getMapById(mapId);
         if (map == null) {

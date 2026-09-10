@@ -1828,6 +1828,16 @@ public class UseItem {
     }
 
     public void choseMapCapsule(Player pl, int index) {
+        // Dang doi ban do do dang thi khong nhan them mot luot nua.
+        //
+        // Capsule cung dinh dung loi do: bam chon ban do hai lan lien, hoac bam
+        // capsule ngay khi vua qua mot cong dich chuyen, la hai luot chong nhau
+        // va client nhan hai bo du lieu dan xen.
+        if (nro.service.fun.ChangeMapService.dangDoiMap(pl)) {
+            Service.gI().hideWaitDialog(pl);
+            Service.gI().sendThongBao(pl, "Đang chuyển bản đồ, chờ một chút.");
+            return;
+        }
         if (pl.idNRNM != -1) {
             Service.gI().sendThongBao(pl, "Không thể mang ngọc rồng này lên Phi thuyền");
             Service.gI().hideWaitDialog(pl);

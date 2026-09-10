@@ -1618,7 +1618,55 @@ public class Service {
         sendBigMessage(player, 1139, text);
     }
 
+    /**
+     * Mở một khối làm hàng loạt: các gói làm mới bị hoãn tới khi đóng khối.
+     *
+     * <p>Đếm theo độ sâu nên lồng nhau được — một hàm gộp gói gọi vào hàm khác
+     * cũng gộp gói thì chỉ khối ngoài cùng mới xả.</p>
+     *
+     * <p><b>Luôn đặt {@link #xaGomGoi} trong khối {@code finally}.</b> Quên xả
+     * là người chơi đó không nhận được hành trang hay số tiền mới nữa cho tới
+     * khi có việc khác gửi lại — nhìn như hành trang đứng hình.</p>
+     */
+    public void batGomGoi(Player pl) {
+        if (pl != null) {
+            pl.gomGoi++;
+        }
+    }
+
+    /** Đóng khối làm hàng loạt và gửi những gói đã hoãn. */
+    public void xaGomGoi(Player pl) {
+        if (pl == null) {
+            return;
+        }
+        pl.gomGoi--;
+        if (pl.gomGoi > 0) {
+            return;      // con o trong mot khoi ngoai, chua toi luot xa
+        }
+        pl.gomGoi = 0;
+        if (pl.canGuiTui) {
+            pl.canGuiTui = false;
+            nro.service.inventory.InventoryService.gI().sendItemBag(pl);
+        }
+        if (pl.canGuiTien) {
+            pl.canGuiTien = false;
+            sendMoney(pl);
+        }
+        if (pl.thongBaoGom != null) {
+            String s = pl.thongBaoGom;
+            pl.thongBaoGom = null;
+            sendThongBao(pl, s);
+        }
+    }
+
     public void sendThongBao(Player pl, String thongBao) {
+        if (pl != null && pl.gomGoi > 0) {
+            // Giu cau CUOI CUNG. Mot tram vong lap moi vong mot dong thong bao
+            // thi khung chat cuon het, va nguoi choi khong doc duoc gi ca —
+            // cau dang ke luon la cau cuoi (ket qua, hoac ly do dung lai).
+            pl.thongBaoGom = thongBao;
+            return;
+        }
         Message msg;
         try {
             msg = new Message(-25);
@@ -1672,6 +1720,10 @@ public class Service {
     }
 
     public void sendMoney(Player pl) {
+        if (pl != null && pl.gomGoi > 0) {
+            pl.canGuiTien = true;
+            return;
+        }
         Message msg;
         try {
             msg = new Message(6);

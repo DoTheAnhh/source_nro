@@ -1291,6 +1291,12 @@ public class InventoryService {
     }
 
     public void sendItemBag(Player player) {
+        // Dang lam hang loat thi chi danh dau, cuoi dot gui mot lan.
+        // Xem Player.gomGoi de biet vi sao.
+        if (player != null && player.gomGoi > 0) {
+            player.canGuiTui = true;
+            return;
+        }
         sortItems(player.inventory.itemsBag);
         Message msg;
         try {

@@ -483,14 +483,26 @@ public class Controller implements IMessageHandler {
                         if (soLuong > 99) {
                             soLuong = 99;
                         }
-                        for (int lan = 0; lan < soLuong; lan++) {
-                            // Hết chỗ thì dừng, đừng để mỗi vòng lại bắn một
-                            // thông báo "hành trang đã đầy".
-                            if (lan > 0 && nro.service.inventory.InventoryService.gI()
-                                    .getCountEmptyBag(player) == 0) {
-                                break;
+                        // Gộp gói tin trong suốt vòng lặp.
+                        //
+                        // Mỗi lần mua bản cũ gửi lại CẢ hành trang, cả số tiền,
+                        // cộng một dòng thông báo — mua 99 món là gần bốn trăm
+                        // gói bắn liên tiếp, mà hành trang là gói to nhất trong
+                        // giao thức. Client ngập rồi rớt: đúng cảnh "mua nhiều
+                        // thì văng game". Nay gửi đúng một lần ở cuối.
+                        Service.gI().batGomGoi(player);
+                        try {
+                            for (int lan = 0; lan < soLuong; lan++) {
+                                // Hết chỗ thì dừng, đừng để mỗi vòng lại bắn một
+                                // thông báo "hành trang đã đầy".
+                                if (lan > 0 && nro.service.inventory.InventoryService.gI()
+                                        .getCountEmptyBag(player) == 0) {
+                                    break;
+                                }
+                                ShopService.gI().takeItem(player, typeBuy, tempId);
                             }
-                            ShopService.gI().takeItem(player, typeBuy, tempId);
+                        } finally {
+                            Service.gI().xaGomGoi(player);
                         }
                     }
                     break;

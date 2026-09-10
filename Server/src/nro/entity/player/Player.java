@@ -315,6 +315,53 @@ public class Player implements Runnable {
     public long lastTimeDropTail;
     public long lastTimeChangeBadges;
     public long MapTransitionTime;
+
+    /**
+     * Đang trong một lượt đổi bản đồ, chưa nghe client báo nạp xong.
+     *
+     * <h2>Vì sao cần</h2>
+     *
+     * <p>Đổi bản đồ không phải một việc tức thì: máy chủ gửi dữ liệu bản đồ,
+     * client dựng ô địa hình, dựng nhân vật, rồi mới báo lại bằng gói
+     * {@code -39}. Trong quãng ấy client vẫn nhận phím — bấm J/K/L thêm một
+     * cái là một lượt đổi <b>thứ hai</b> chen vào giữa lượt đầu.</p>
+     *
+     * <p>Hai lượt chồng nhau thì client nhận hai bộ dữ liệu bản đồ đan xen: ô
+     * địa hình của bản đồ này ghép với danh sách vật thể của bản đồ kia. Đó
+     * đúng là cảnh <b>"xé hình bản đồ, các ô sắp xếp lộn xộn, HP/KI 0/0, bấm gì
+     * cũng không ăn"</b> — và vì phụ thuộc vào việc bấm nhanh cỡ nào nên nó chỉ
+     * <i>thi thoảng</i> xảy ra.</p>
+     *
+     * <p>Cờ này chặn lượt thứ hai cho tới khi lượt đầu xong hẳn.</p>
+     */
+    public volatile boolean dangDoiMap;
+
+    /** Mốc bắt đầu lượt đổi bản đồ đang treo, để còn tự mở khoá nếu kẹt. */
+    public volatile long mocBatDauDoiMap;
+
+    // ------------------------------------------------------------------
+    //  Gộp gói tin cho những việc làm HÀNG LOẠT
+    // ------------------------------------------------------------------
+    //
+    // Mua 99 món, đập sao x100, dùng một lúc vài chục vật phẩm — mỗi vòng lặp
+    // bản cũ gửi lại CẢ hành trang, cả số tiền, cộng một dòng thông báo. Một
+    // trăm vòng là bốn trăm gói tin bắn liên tiếp vào một client, và hành trang
+    // là gói to nhất trong cả giao thức. Client ngập, treo, rồi rớt kết nối —
+    // đúng cảnh "chọn số lượng lớn thì quá tải và văng game".
+    //
+    // Cách chữa: trong lúc chạy hàng loạt thì các gói LÀM MỚI ấy chỉ được đánh
+    // dấu là "cần gửi" chứ không gửi ngay; xong việc thì gửi đúng một lần.
+    // Đây là gói làm mới trạng thái nên gửi một lần cuối là đủ — nội dung của
+    // lần cuối đã bao gồm mọi thay đổi của các vòng trước.
+
+    /** Độ sâu lồng nhau của khối gộp gói. Lớn hơn 0 nghĩa là đang gộp. */
+    public int gomGoi;
+
+    public boolean canGuiTui;
+    public boolean canGuiTien;
+
+    /** Thông báo cuối cùng trong lúc gộp — chỉ giữ cái cuối, bỏ các cái trước. */
+    public String thongBaoGom;
     private static final long TIME_TRUNG_THU = 120000;
     private static long LAST_TIME_UPDATE_LOGIN;
     private int wrongPasswordAttempts = 0;

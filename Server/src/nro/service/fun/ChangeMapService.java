@@ -506,6 +506,51 @@ public class ChangeMapService {
         changeMap(pl, zoneJoin, -1, -1, x, y, TELEPORT_YARDRAT);
     }
 
+    /**
+     * Kéo toạ độ hạ cánh vào trong viền bản đồ đích, và xuống mặt đất.
+     *
+     * <p>Chừa 60 điểm mỗi bên — đúng khoảng mà {@code resetPoint} vẫn dùng, để
+     * nhân vật không dính sát mép và không lọt qua viền.</p>
+     *
+     * <p>Nếu cột đó không có mặt đất thì bốc lại một cột có đất: đứng lơ lửng
+     * trên khoảng trống thì client không đặt được nhân vật.</p>
+     */
+    private void keoVaoVienBanDo(Player pl, Zone zoneJoin) {
+        if (pl == null || pl.location == null || zoneJoin == null
+                || zoneJoin.map == null) {
+            return;
+        }
+        Map m = zoneJoin.map;
+        int le = 60;
+        int trai = le;
+        int phai = m.mapWidth - le;
+        if (phai < trai) {
+            trai = 0;
+            phai = Math.max(0, m.mapWidth);
+        }
+        if (pl.location.x < trai) {
+            pl.location.x = trai;
+        } else if (pl.location.x > phai) {
+            pl.location.x = phai;
+        }
+        if (pl.location.y < 0) {
+            pl.location.y = 0;
+        } else if (pl.location.y > m.mapHeight) {
+            pl.location.y = m.mapHeight;
+        }
+        // Duoi chan co dat khong. yPhysicInTop tra 0 khi quet het xuong duoi ma
+        // khong gap o mat dat nao.
+        int dat = m.yPhysicInTop(pl.location.x, Math.max(1, pl.location.y - 100));
+        if (dat <= 0) {
+            int xMoi = chonHoanhDoCoDat(zoneJoin, 100);
+            int datMoi = m.yPhysicInTop(xMoi, 100);
+            if (datMoi > 0) {
+                pl.location.x = xMoi;
+                pl.location.y = datMoi;
+            }
+        }
+    }
+
     /** Số lần bốc ngẫu nhiên trước khi chịu thua và dùng phương án dự phòng. */
     private static final int SO_LAN_BOC_CHO_HA_CANH = 30;
 
@@ -552,6 +597,68 @@ public class ChangeMapService {
         // Ca bản đồ không có chỗ nào đứng được thì trả về như cũ — ít nhất
         // không tệ hơn bản cũ, và không treo vòng lặp.
         return trai;
+    }
+
+    /**
+     * Một lượt đổi bản đồ treo quá lâu thì tự mở khoá, tính bằng mili giây.
+     *
+     * <p>Client bình thường báo nạp xong trong dưới một giây. Năm giây là để
+     * dành cho máy yếu và mạng kém. Quá thế thì gói {@code -39} đã mất, và giữ
+     * khoá mãi nghĩa là người chơi <b>không đổi bản đồ được nữa</b> cho tới khi
+     * thoát game — tệ hơn hẳn lỗi ban đầu.</p>
+     */
+    private static final long KHOA_DOI_MAP_HET_HAN_MS = 5000;
+
+    /**
+     * Quãng nghỉ tối thiểu giữa hai lần đi qua cổng dịch chuyển, mili giây.
+     *
+     * <p>Một giây, đúng như đã yêu cầu. Khoá {@code dangDoiMap} ở trên đã chặn
+     * được hai lượt <b>chồng nhau</b>; con số này chặn thêm kiểu chạy đi chạy
+     * lại qua cổng liên tục — lượt trước vừa xong là lượt sau đã bắt đầu, và
+     * client chưa kịp dựng xong cảnh cũ.</p>
+     */
+    private static final long CHO_QUA_CONG_MS = 1000;
+
+    /** Đang có một lượt đổi bản đồ chưa xong hay không. */
+    public static boolean dangDoiMap(Player pl) {
+        if (pl == null || !pl.dangDoiMap) {
+            return false;
+        }
+        if (System.currentTimeMillis() - pl.mocBatDauDoiMap > KHOA_DOI_MAP_HET_HAN_MS) {
+            // Het han: coi nhu xong, khong giu nguoi choi lai mai mai.
+            pl.dangDoiMap = false;
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Xin bắt đầu một lượt đổi bản đồ.
+     *
+     * @return {@code false} nếu đang có lượt khác chạy dở — lúc đó đã báo cho
+     *         người chơi và đóng hộp "Xin chờ" rồi
+     */
+    public static boolean xinDoiMap(Player pl) {
+        if (pl == null) {
+            return false;
+        }
+        if (dangDoiMap(pl)) {
+            // Dong hop "Xin cho" lai: client mo no ngay khi gui yeu cau, khong
+            // dong thi nguoi choi ngoi nhin chu "Xin cho" ma khong hieu gi.
+            Service.gI().hideWaitDialog(pl);
+            Service.gI().sendThongBao(pl, "Đang chuyển bản đồ, chờ một chút.");
+            return false;
+        }
+        pl.dangDoiMap = true;
+        pl.mocBatDauDoiMap = System.currentTimeMillis();
+        return true;
+    }
+
+    /** Lượt đổi bản đồ đã xong (client báo nạp xong, hoặc đổi thất bại). */
+    public static void xongDoiMap(Player pl) {
+        if (pl != null) {
+            pl.dangDoiMap = false;
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -666,6 +773,19 @@ public class ChangeMapService {
                 pl.location.x = chonHoanhDoCoDat(zoneJoin, y);
             }
             pl.location.y = y;
+            // Kep vao trong VIEN ban do dich.
+            //
+            // Toa do di kem loi goi la toa do cua ban do CU: cong dich chuyen
+            // ghi san goX/goY, capsule ghi toa do noi vua dung. Ban do dich co
+            // the hep hon, va tha nguoi choi ra ngoai vien la client khong tim
+            // ra o dia hinh nao — nhan vat dung im, khong di duoc, khong bam
+            // duoc. Chinh la canh "ket duoi vien duoi ban do".
+            keoVaoVienBanDo(pl, zoneJoin);
+            // Khoa lai cho toi khi client bao nap xong (goi -39). Dat SAT truoc
+            // goToMap: tu day tro di la du lieu ban do da bat dau chay xuong
+            // client, va mot luot thu hai chen vao la hai bo du lieu dan nhau.
+            pl.dangDoiMap = true;
+            pl.mocBatDauDoiMap = System.currentTimeMillis();
             this.goToMap(pl, zoneJoin);
             if (pl.Detu != null) {
                 pl.Detu.joinMapMaster();
@@ -772,6 +892,22 @@ public class ChangeMapService {
             resetPoint(player);
             return;
         }
+        // Lượt trước chưa nạp xong thì BỎ QUA lượt này.
+        //
+        // Đây là cửa mà J/K/L và ba nút mũi tên trên điện thoại đều đi vào. Bấm
+        // nhanh hai cái là hai lượt đổi bản đồ chồng nhau, và client nhận hai
+        // bộ dữ liệu đan xen — "xé hình bản đồ, HP/KI 0/0, bấm gì cũng không
+        // ăn". Chặn ở đây thì cái bấm thứ hai chỉ đơn giản là không làm gì.
+        //
+        // Không tự đặt khoá ở đây: khoá do chính {@code changeMap} đặt, đúng
+        // lúc dữ liệu bản đồ bắt đầu chạy xuống client. Đặt sớm hơn thì mọi
+        // đường thoát giữa chừng (không có cổng, khu đầy, chưa đủ nhiệm vụ)
+        // đều phải nhớ nhả ra — và quên một đường là người chơi kẹt luôn.
+        if (dangDoiMap(player)) {
+            Service.gI().hideWaitDialog(player);
+            resetPoint(player);
+            return;
+        }
         int xGo = (player.location.x);
         int yGo = player.location.y;
 
@@ -836,12 +972,19 @@ public class ChangeMapService {
             if (player.HoTongDuongTang) {
                 player.lastTimeDuongTang = System.currentTimeMillis();
             }
-            if (player.zone.map.mapId != 21 + player.gender) {
-                if (!Util.canDoWithTime(player.MapTransitionTime, 0)) {
-                    resetPoint(player);
-                    Service.gI().sendThongBao(player, "Di chuyển chậm thôi, Đcm mày");
-                    return;
-                }
+            // Quang nghi toi thieu giua hai lan qua cong, cho MOI ban do.
+            //
+            // Ba thay doi:
+            //  1. Con so cu la 0 — tuc khong gioi han gi ca, dieu kien luon
+            //     dung. Nay lay CHO_QUA_CONG_MS.
+            //  2. Bo mien tru cho ban do NHA: nha khong khac gi cac ban do
+            //     khac ve mat nay, ma dung la cho de kich lien tuc nhat.
+            //  3. Doi cau bao. Cau cu chui nguoi choi vi mot viec ho khong lam
+            //     sai — bam nhanh khong phai loi cua ho.
+            if (!Util.canDoWithTime(player.MapTransitionTime, CHO_QUA_CONG_MS)) {
+                resetPoint(player);
+                Service.gI().sendThongBao(player, "Chờ một chút rồi hãy qua tiếp.");
+                return;
             }
             player.MapTransitionTime = System.currentTimeMillis();
             changeMap(player, zoneJoin, -1, -1, xGo, yGo, NON_SPACE_SHIP);
@@ -882,6 +1025,12 @@ public class ChangeMapService {
     }
 
     public void finishLoadMap(Player player) {
+        // Client bao da dung xong ban do: mo khoa cho luot doi ke tiep.
+        //
+        // Mo khoa o DAU ham chu khong o cuoi: phan duoi co the nem loi (khoi
+        // try/catch nuot lang le ngay day la bang chung), va nem loi thi khoa
+        // khong bao gio duoc mo — nguoi choi ket, khong doi ban do duoc nua.
+        xongDoiMap(player);
         try {
             TaskService.gI().sendUpdateCountSubTask(player);
             player.zone.load_Me_To_Another(player);
