@@ -331,6 +331,12 @@ public class ItemService {
         item.createTime = System.currentTimeMillis();
         item.content = item.getContent();
         item.info = item.getInfo();
+        // Chân Mệnh Thiên Tử lấy chỉ số từ tab "Chân mệnh" trên panel.
+        //
+        // Đặt ở đây vì cấp MỘT không đi qua đường nâng cấp — nó là cấp nhận
+        // được đầu tiên, nên dòng cấp 1 trên panel trước giờ không có tác dụng.
+        // Ở đây thì mọi đường nhận đều đi qua.
+        nro.repository.dao.TrangSucDAO.apDungChiSoChanMenh(item);
         return item;
     }
 

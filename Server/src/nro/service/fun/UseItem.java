@@ -1921,6 +1921,12 @@ public class UseItem {
             Service.gI().sendThongBao(pl,
                     "Không vào được nơi đã chọn, đã đưa ngươi về nhà.");
         }
+        // Hồi ĐẦY sau khi đã tới nơi, không phải trước.
+        //
+        // Trần máu tính cả hệ số của bản đồ đang đứng (5000 năm trước hạ 90%,
+        // Cereal chia đôi với Xayda). Hồi trước khi bay là hồi đầy theo trần
+        // của bản đồ CŨ, rồi tới nơi mới trần đổi và thanh máu lại thiếu.
+        PlayerService.gI().hoiDayHpMp(pl);
         Service.gI().hideWaitDialog(pl);
     }
 

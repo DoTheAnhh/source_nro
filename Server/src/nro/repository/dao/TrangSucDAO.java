@@ -523,6 +523,62 @@ public class TrangSucDAO {
         return docChiSo("chan_menh_chi_so", cap, chiBat, false);
     }
 
+    /** Món này có phải Chân Mệnh Thiên Tử không. */
+    public static boolean laChanMenh(nro.entity.item.Item item) {
+        if (item == null || !item.isNotNullItem()) {
+            return false;
+        }
+        int id = item.template.id;
+        return id >= ID_CHAN_MENH_DAU
+                && id < ID_CHAN_MENH_DAU + SO_CAP_CHAN_MENH;
+    }
+
+    /**
+     * Gắn chỉ số của cấp tương ứng vào một Chân Mệnh Thiên Tử.
+     *
+     * <h2>Vì sao cần gọi cả lúc TẠO chứ không chỉ lúc nâng cấp</h2>
+     *
+     * <p>{@code NangCapChanMenh} gắn chỉ số cho cấp <b>vừa nâng lên</b>. Nhưng
+     * <b>cấp một</b> thì không ai nâng lên cả — nó là cấp người chơi nhận được
+     * đầu tiên. Nên dòng "Chân Mệnh Thiên Tử cấp 1" trên panel chưa bao giờ có
+     * tác dụng: sửa số ở đó rồi nhận một cái cấp 1 mới vẫn ra chỉ số cũ.</p>
+     *
+     * <p>Gọi ở {@code ItemService.createNewItem} thì mọi đường nhận đều đi qua —
+     * rơi từ quái, mua, quà, admin cấp.</p>
+     *
+     * <p><b>Đè lên</b> dòng cùng id chỉ số nếu đã có, và <b>thêm</b> dòng chưa
+     * có: bảng trên panel là bản khai đầy đủ chỉ số của cấp đó, không phải bản
+     * vá. Chưa khai dòng nào cho cấp ấy thì không đụng gì — giữ nguyên hành vi
+     * cũ, đúng như mọi bảng khác của lớp này.</p>
+     */
+    public static void apDungChiSoChanMenh(nro.entity.item.Item item) {
+        if (!laChanMenh(item)) {
+            return;
+        }
+        int cap = item.template.id - ID_CHAN_MENH_DAU;
+        List<ChiSo> ds = chiSoChanMenh(cap, true);
+        if (ds.isEmpty()) {
+            return;
+        }
+        if (item.itemOptions == null) {
+            item.itemOptions = new ArrayList<>();
+        }
+        for (ChiSo cs : ds) {
+            boolean daCo = false;
+            for (nro.entity.item.ItemOption io : item.itemOptions) {
+                if (io != null && io.optionTemplate != null
+                        && io.optionTemplate.id == cs.optionId) {
+                    io.param = cs.min;
+                    daCo = true;
+                    break;
+                }
+            }
+            if (!daCo) {
+                item.itemOptions.add(new nro.entity.item.ItemOption(cs.optionId, cs.min));
+            }
+        }
+    }
+
     public static String luuCapChanMenh(Cap c) {
         damBaoBang();
         String loi = kiemTraCap(c);

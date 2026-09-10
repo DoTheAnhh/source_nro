@@ -467,19 +467,49 @@ public class ShopService {
         }
     }
 
+    /**
+     * Rương phụ (vòng quay may mắn) và hòm thư.
+     *
+     * <h2>Vì sao trước đây không mở được</h2>
+     *
+     * <p>Hai danh sách này có <b>ô trống</b> — vật phẩm rỗng do
+     * {@code createItemNull()} tạo ra, {@code template} là {@code null}. Chính
+     * NPC Thượng Đế cũng biết điều đó: nó đếm số món bằng
+     * {@code size() - getCountEmptyListItem(...)}.</p>
+     *
+     * <p>Nhưng vòng lặp ở đây đọc thẳng {@code item.template.id} cho <i>mọi</i>
+     * phần tử. Gặp ô trống là {@link NullPointerException} ném ra <b>giữa lúc
+     * đang ghi gói tin</b>: khối {@code catch} nuốt lỗi, gói không bao giờ được
+     * gửi, và người chơi bấm "Rương phụ" thì không có gì hiện ra — không báo
+     * lỗi, không treo, chỉ là không có gì.</p>
+     *
+     * <p>Nay lọc ra danh sách món thật trước, rồi mới ghi. Số lượng ghi xuống
+     * cũng phải là số món thật — ghi {@code items.size()} rồi gửi ít hơn thế thì
+     * client đọc lệch và hỏng cả những gói sau nó.</p>
+     */
     private void openShopType4(Player player, String tagName, List<Item> items) {
         if (items == null) {
             return;
         }
+        List<Item> coThat = new ArrayList<>();
+        for (Item it : items) {
+            if (it != null && it.isNotNullItem()) {
+                coThat.add(it);
+            }
+        }
         player.iDMark.setTagNameShop(tagName);
+        if (coThat.isEmpty()) {
+            Service.gI().sendThongBao(player, "Rương đang trống.");
+            return;
+        }
         Message msg = null;
         try {
             msg = new Message(-44);
             msg.writer().writeByte(4);
             msg.writer().writeByte(1);
             msg.writer().writeUTF("Phần\nthưởng");
-            msg.writer().writeByte(items.size());
-            for (Item item : items) {
+            msg.writer().writeByte(coThat.size());
+            for (Item item : coThat) {
                 msg.writer().writeShort(item.template.id);
                 msg.writer().writeUTF("\n|2|LUCKY DRAGON BALL");
                 msg.writer().writeByte(item.itemOptions.size() + 1);
@@ -525,11 +555,16 @@ public class ShopService {
             msg.writer().writeUTF("Mua lại\n[" + items.size() + "/" + BuyBack.MAX_COUNT_IN_BOX + "]");
             msg.writer().writeByte(items.size());
             for (Item item : items) {
-                int giamualaingoc = item.template.gemSell / 2;
-                int giamualaivang = giamualaingoc == 0 ? (int) item.template.goldSell / 2 > 0 ? (int) item.template.goldSell / 2 : item.quantity * 100 : 0;
+                // Gia HIEN RA phai bang gia THU that su — xem giaMuaLai().
+                // Truoc day cho nay va cho tinh tien dung hai cong thuc khac
+                // nhau, nen bang ghi mot so ma tru mot so khac.
+                long giaVang = giaMuaLai(item);
+                if (giaVang > Integer.MAX_VALUE) {
+                    giaVang = Integer.MAX_VALUE;   // o gia cua goi tin la int
+                }
                 msg.writer().writeShort(item.template.id);
-                msg.writer().writeInt(giamualaivang);
-                msg.writer().writeInt(giamualaingoc);
+                msg.writer().writeInt((int) giaVang);
+                msg.writer().writeInt(0);
                 msg.writer().writeInt(item.quantity);
                 msg.writer().writeByte(item.itemOptions.size());
                 for (ItemOption io : item.itemOptions) {
@@ -1303,86 +1338,186 @@ public class ShopService {
         banSoLuong(pl, cho.where, cho.index, so);
     }
 
+    /**
+     * Chỉ số THẬT trong danh sách, tính từ chỉ số client gửi lên.
+     *
+     * <p>{@code openShopType4} chỉ gửi xuống những món thật, bỏ qua ô trống —
+     * nên chỉ số client trả lại đếm theo danh sách <b>đã lọc</b>. Lấy thẳng chỉ
+     * số ấy áp vào danh sách gốc là nhận nhầm món, và nhầm đúng theo số ô trống
+     * nằm phía trước.</p>
+     *
+     * @return chỉ số trong danh sách gốc, hoặc {@code -1} nếu ngoài khoảng
+     */
+    private static int chiSoThat(List<Item> items, int chiSoLoc) {
+        if (items == null || chiSoLoc < 0) {
+            return -1;
+        }
+        int dem = 0;
+        for (int i = 0; i < items.size(); i++) {
+            Item it = items.get(i);
+            if (it == null || !it.isNotNullItem()) {
+                continue;
+            }
+            if (dem == chiSoLoc) {
+                return i;
+            }
+            dem++;
+        }
+        return -1;
+    }
+
     private void getItemSideBoxLuckyRound(Player player, List<Item> items, byte type, int index) {
         if (items == null) {
             return;
         }
-        if (index < 0 || index >= items.size()) {
-            Service.gI().sendThongBao(player, "Không thể thực hiện");
+        if (type == 2) {
+            // Nhận hết: duyệt từ cuối để xoá không làm lệch chỉ số phía trước.
+            int nhan = 0;
+            for (int i = items.size() - 1; i >= 0; i--) {
+                Item it = items.get(i);
+                if (it == null || !it.isNotNullItem()) {
+                    continue;
+                }
+                if (InventoryService.gI().getCountEmptyBag(player) == 0) {
+                    Service.gI().sendThongBao(player,
+                            "Hành trang đã đầy, mới nhận được " + nhan + " món.");
+                    break;
+                }
+                if (InventoryService.gI().addItemBag(player, it)) {
+                    nhan++;
+                    items.remove(i);
+                }
+            }
+            if (nhan > 0) {
+                Service.gI().sendThongBao(player, "Đã nhận " + nhan + " món.");
+            } else {
+                Service.gI().sendThongBao(player, "Không nhận được món nào.");
+            }
+            InventoryService.gI().sendItemBag(player);
+            openShopType4(player, player.iDMark.getTagNameShop(), items);
             return;
         }
-        Item item = items.get(index);
+
+        int that = chiSoThat(items, index);
+        if (that < 0) {
+            Service.gI().sendThongBao(player, "Không còn món đó trong rương.");
+            return;
+        }
+        Item item = items.get(that);
         switch (type) {
             case 0: //nhận
-                if (item.isNotNullItem()) {
-                    if (InventoryService.gI().getCountEmptyBag(player) != 0) {
-                        InventoryService.gI().addItemBag(player, item);
-                        Service.gI().sendThongBao(player,
-                                "Bạn nhận được " + (item.template.id == 189
-                                        ? Util.formatNumber(item.quantity, FormatStyle.VIETNAMESE) + " vàng" : item.template.name));
-                        InventoryService.gI().sendItemBag(player);
-                        items.remove(index);
-                    } else {
-                        Service.gI().sendThongBao(player, "Hàng trang đã đầy, cần một ô trống trong hành trang");
-                    }
-                } else {
-                    Service.gI().sendThongBao(player, "Không thể thực hiện");
+                if (InventoryService.gI().getCountEmptyBag(player) == 0) {
+                    Service.gI().sendThongBao(player,
+                            "Hành trang đã đầy, cần một ô trống trong hành trang");
+                    return;
                 }
+                InventoryService.gI().addItemBag(player, item);
+                Service.gI().sendThongBao(player,
+                        "Bạn nhận được " + (item.template.id == 189
+                                ? Util.soCham(item.quantity) + " vàng" : item.template.name));
+                InventoryService.gI().sendItemBag(player);
+                items.remove(that);
                 break;
             case 1: //xóa
-                items.remove(index);
-                Service.gI().sendThongBao(player, "Xóa vật phẩm thành công");
+                items.remove(that);
+                Service.gI().sendThongBao(player, "Đã xoá " + item.template.name
+                        + " khỏi rương.");
                 break;
-            case 2: //nhận hết
-                for (int i = items.size() - 1; i >= 0; i--) {
-                    item = items.get(i);
-                    if (InventoryService.gI().addItemBag(player, item)) {
-                        Service.gI().sendThongBao(player,
-                                "Bạn nhận được " + (item.template.id == 189
-                                        ? Util.formatNumber(item.quantity, FormatStyle.VIETNAMESE) + " vàng" : item.template.name));
-                        items.remove(i);
-                    }
-                }
-                InventoryService.gI().sendItemBag(player);
-                break;
+            default:
+                Service.gI().sendThongBao(player, "Không thể thực hiện");
+                return;
         }
         openShopType4(player, player.iDMark.getTagNameShop(), items);
+    }
+
+    /**
+     * Những món <b>không</b> vào danh sách mua lại.
+     *
+     * <p>Thỏi vàng là tiền chứ không phải đồ: nó có giá đổi cố định, nên đưa nó
+     * qua cửa mua lại chỉ tạo thêm một chỗ để giá bán và giá mua lệch nhau.</p>
+     */
+    private static final int[] KHONG_MUA_LAI = {ID_THOI_VANG};
+
+    /** Món này có được đưa vào danh sách mua lại không. */
+    public static boolean choMuaLai(Item item) {
+        if (item == null || !item.isNotNullItem()) {
+            return false;
+        }
+        for (int id : KHONG_MUA_LAI) {
+            if (item.template.id == id) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Giá mua lại một món đã bán: <b>đúng bằng số vàng đã nhận khi bán</b>.
+     *
+     * <h2>Vì sao đổi công thức</h2>
+     *
+     * <p>Công thức cũ là {@code goldSell / 2} — <b>không nhân số lượng</b>. Ô
+     * một trăm thỏi vàng bán ra hai mươi tỉ, mua lại hết một nửa giá của
+     * <i>một</i> cái. Đó là một lỗ nhân vàng chạy được vô hạn: bán rồi mua lại,
+     * bán rồi mua lại.</p>
+     *
+     * <p>Còn với món rẻ thì nhánh dự phòng {@code quantity * 100} lại đắt hơn
+     * tiền bán, nên mua lại thành ra lỗ. Cùng một hàm, hai hướng sai ngược
+     * nhau.</p>
+     *
+     * <p>Nay dùng lại đúng {@link #giaBanMotCai} — mua lại trả đúng số vàng vừa
+     * nhận. Không lời, không lỗ, và không có khe nào để lách.</p>
+     */
+    private long giaMuaLai(Item item) {
+        return giaBanMotCai(item) * Math.max(1, item.quantity);
     }
 
     private void buyItemDaBan(Player player, List<Item> items, int index) {
         if (items == null) {
             return;
         }
-        if (index >= items.size()) {
-            Service.gI().sendThongBao(player, "Không thể thực hiện");
+        // Chan ca chi so AM. Ban cu chi chan index >= size, nen mot goi tin bia
+        // voi so am nem thang IndexOutOfBounds ra giua vong xu ly goi.
+        if (index < 0 || index >= items.size()) {
+            Service.gI().sendThongBao(player, "Không còn món đó trong danh sách mua lại.");
             return;
         }
         Item item = items.get(index);
-        int giamualaingoc = item.template.gemSell / 2;
-        int giamualaivang = giamualaingoc == 0 ? (int) item.template.goldSell / 2 > 0 ? (int) item.template.goldSell / 2 : item.quantity * 100 : 0;
-        if (giamualaivang > 0 && player.inventory.gold < giamualaivang) {
-            Service.gI().sendThongBao(player, "Bạn không có đủ vàng!");
+        if (item == null || !item.isNotNullItem()) {
+            items.remove(index);
+            Service.gI().sendThongBao(player, "Món này đã hỏng, đã bỏ khỏi danh sách.");
+            openShopType8(player, player.iDMark.getTagNameShop(), items);
             return;
         }
-        if (giamualaingoc > 0 && player.inventory.gem < giamualaingoc) {
-            Service.gI().sendThongBao(player, "Bạn không có đủ ngọc xanh!");
+        if (!choMuaLai(item)) {
+            Service.gI().sendThongBao(player, "Món này không mua lại được.");
             return;
         }
-        player.inventory.gem -= giamualaingoc;
-        player.inventory.gold -= giamualaivang;
+
+        // Kiem tra HET moi dieu kien roi moi tru tien.
+        //
+        // Ban cu tru vang va ngoc TRUOC, roi moi hoi hanh trang con o trong
+        // khong. Hanh trang day thi tien da mat ma mon do van nam trong danh
+        // sach mua lai — nguoi choi tra tien de khong nhan duoc gi.
+        long giaVang = giaMuaLai(item);
+        if (player.inventory.gold < giaVang) {
+            Service.gI().sendThongBao(player, "Không đủ vàng, còn thiếu "
+                    + Util.soCham(giaVang - player.inventory.gold) + " vàng.");
+            return;
+        }
+        if (InventoryService.gI().getCountEmptyBag(player) == 0) {
+            Service.gI().sendThongBao(player,
+                    "Hành trang đã đầy, cần một ô trống để mua lại.");
+            return;
+        }
+
+        player.inventory.gold -= giaVang;
         Service.gI().sendMoney(player);
-        if (item.isNotNullItem()) {
-            if (InventoryService.gI().getCountEmptyBag(player) != 0) {
-                InventoryService.gI().addItemBag(player, item);
-                Service.gI().sendThongBao(player, "Bạn nhận được " + (item.template.id == 189 ? Util.formatNumber(item.quantity, FormatStyle.VIETNAMESE) + " vàng" : item.template.name));
-                InventoryService.gI().sendItemBag(player);
-                items.remove(index);
-            } else {
-                Service.gI().sendThongBao(player, "Hàng trang đã đầy, cần một ô trống trong hành trang");
-            }
-        } else {
-            Service.gI().sendThongBao(player, "Không thể thực hiện");
-        }
+        InventoryService.gI().addItemBag(player, item);
+        Service.gI().sendThongBao(player, "Mua lại x" + item.quantity + " "
+                + item.template.name + " hết " + Util.soCham(giaVang) + " vàng.");
+        InventoryService.gI().sendItemBag(player);
+        items.remove(index);
         openShopType8(player, player.iDMark.getTagNameShop(), items);
     }
 

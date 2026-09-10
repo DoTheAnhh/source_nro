@@ -174,27 +174,12 @@ public class NangCapChanMenh {
 
             ChanMenh.template = ItemService.gI().getTemplate(ChanMenh.template.id + 1);
 
-            // Chi so khai tren panel (tab "Chan menh") thang cach tinh viet cung.
-            // Cap MOI la capbac + 1 vi template.id vua tang mot bac o tren.
-            java.util.List<nro.repository.dao.TrangSucDAO.ChiSo> dsCS =
-                    nro.repository.dao.TrangSucDAO.chiSoChanMenh(capbac + 1, true);
-            if (!dsCS.isEmpty()) {
-                for (nro.repository.dao.TrangSucDAO.ChiSo cs : dsCS) {
-                    boolean daCo = false;
-                    for (ItemOption io : ChanMenh.itemOptions) {
-                        if (io.optionTemplate.id == cs.optionId) {
-                            io.param = cs.min;
-                            daCo = true;
-                            break;
-                        }
-                    }
-                    // Chua co dong nay thi THEM vao, khong bo qua: bang tren panel
-                    // la ban khai day du chi so cua cap do, khong phai ban va.
-                    if (!daCo) {
-                        ChanMenh.itemOptions.add(new ItemOption(cs.optionId, cs.min));
-                    }
-                }
-            }
+            // Chi so khai tren panel (tab "Chan menh"). Cap doc tu chinh
+            // template.id vua tang, nen khong con phep +1 de lech mot bac.
+            //
+            // Dung chung ham voi luc TAO ra mon do, de cap 1 va cac cap sau
+            // khong the ap dung hai kieu khac nhau.
+            nro.repository.dao.TrangSucDAO.apDungChiSoChanMenh(ChanMenh);
             // Khong con cach tinh viet cung. Cap nao chua khai chi so thi do giu
             // nguyen chi so cu — thay vi lang le dat mot con so ma khong ai go.
 

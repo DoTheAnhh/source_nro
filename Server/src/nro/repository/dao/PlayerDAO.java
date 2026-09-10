@@ -2303,12 +2303,55 @@ public class PlayerDAO {
     /** Đổi tên một nhân vật. */
     public static boolean doiTen(long playerId, String tenMoi) {
         try {
-            return ConnectDB.executeUpdate(
+            boolean xong = ConnectDB.executeUpdate(
                     "UPDATE player SET name = ? WHERE id = ?", tenMoi, playerId) == 1;
+            if (xong) {
+                doiTenTrongBang(playerId, tenMoi);
+            }
+            return xong;
         } catch (Exception ex) {
             nro.core.log.Logger.logException(PlayerDAO.class, ex,
                     "Lỗi đổi tên nhân vật " + playerId);
             return false;
+        }
+    }
+
+    /**
+     * Đổi luôn tên trong danh sách thành viên bang.
+     *
+     * <h2>Vì sao phải làm riêng</h2>
+     *
+     * <p>Danh sách thành viên bang <b>không</b> đọc tên từ bảng {@code player}.
+     * Nó là một khối JSON nằm trong cột {@code clan.members}, và tên được
+     * <i>chép vào</i> khối đó lúc người chơi gia nhập. Đổi tên ở bảng
+     * {@code player} thì khối JSON kia không biết gì cả — nên vào bang vẫn thấy
+     * tên cũ, mãi mãi, cho tới khi người đó rời bang rồi vào lại.</p>
+     *
+     * <p>Sửa <b>cả bản trong bộ nhớ lẫn bản dưới CSDL</b>: bang đang được nạp
+     * sẵn trong bộ nhớ máy chủ, chỉ ghi CSDL thì lần lưu tiếp theo của bang sẽ
+     * ghi đè bằng tên cũ trong bộ nhớ.</p>
+     */
+    private static void doiTenTrongBang(long playerId, String tenMoi) {
+        try {
+            for (nro.entity.clan.Clan clan : nro.server.Manager.CLANS) {
+                if (clan == null || clan.members == null) {
+                    continue;
+                }
+                boolean coDoi = false;
+                for (nro.entity.clan.ClanMember cm : clan.members) {
+                    if (cm != null && cm.id == playerId) {
+                        cm.name = tenMoi;
+                        coDoi = true;
+                    }
+                }
+                if (coDoi) {
+                    nro.service.clan.ClanService.gI().updateClanMembersToDB(clan);
+                    return;
+                }
+            }
+        } catch (Exception ex) {
+            nro.core.log.Logger.logException(PlayerDAO.class, ex,
+                    "Lỗi đổi tên trong bang cho nhân vật " + playerId);
         }
     }
 }

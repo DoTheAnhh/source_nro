@@ -1116,10 +1116,45 @@ public class NPoint {
         }
     }
 
+    /**
+     * Dựng lại toàn bộ chỉ số dẫn xuất từ trang bị, set, bùa, bản đồ...
+     *
+     * <h2>HP và KI giữ theo TỈ LỆ, không bị kẹp một chiều</h2>
+     *
+     * <p>Trước đây {@code setHp()} chỉ làm đúng một việc: {@code hp > hpMax} thì
+     * kéo {@code hp} xuống bằng {@code hpMax}. Nghe thì hợp lý, nhưng nó là một
+     * <b>bánh cóc</b> — chỉ quay được một chiều.</p>
+     *
+     * <p>{@code hpMax} không cố định: nó dựng lại từ đầu ở mỗi lần gọi, cộng dồn
+     * trang bị, set, thẻ bài, bùa, và cả hệ số riêng của bản đồ. Chỉ cần một lần
+     * gọi rơi vào lúc trang bị chưa nạp xong — đổi bản đồ, vừa đăng nhập, vừa
+     * mặc/cởi một món — là {@code hpMax} tụt về gần {@code hpg} trong khoảnh
+     * khắc ấy, {@code hp} bị kéo theo, rồi {@code hpMax} trở lại 330 triệu mà
+     * {@code hp} <b>nằm nguyên dưới đáy</b>.</p>
+     *
+     * <p>Đó là lý do "hồi kiểu gì cũng không đầy": không phải các cách hồi máu
+     * hỏng, mà là cái trần bị hạ xuống rồi nâng lên trong khi máu không được
+     * nâng theo. Về nhà thì có đường hồi đầy riêng nên trông như chỉ ở nhà mới
+     * đúng.</p>
+     *
+     * <p>Nay ghi lại tỉ lệ máu <b>trước</b> khi dựng lại, và sau khi có trần mới
+     * thì đặt máu về đúng tỉ lệ đó. Trần tụt thật (bản đồ 5000 năm trước, Cereal
+     * với Xayda) thì máu vẫn tụt theo đúng tỉ lệ — không ai được hồi máu chùa;
+     * trần trở lại thì máu cũng trở lại.</p>
+     */
     public void setBasePoint() {
+        // Chup ti le TRUOC khi dung lai tran.
+        final long hpMaxCu = this.hpMax;
+        final long mpMaxCu = this.mpMax;
+        final long hpCu = this.hp;
+        final long mpCu = this.mp;
+
         setHpMax();
-        setHp();
         setMpMax();
+
+        capNhatTheoTiLe(hpMaxCu, hpCu, mpMaxCu, mpCu);
+
+        setHp();
         setMp();
         setDame();
         setDef();
@@ -1487,6 +1522,40 @@ public class NPoint {
             hpMax += calPercent(hpMax, 5);
         }
         this.hpMax = hpMax;
+    }
+
+    /**
+     * Giữ máu và khí theo đúng <b>tỉ lệ</b> khi trần vừa đổi.
+     *
+     * <p>Chỉ làm gì khi trần thật sự đổi. Trần y nguyên thì không đụng vào con
+     * số đang có — đây là trường hợp thường gặp nhất, và mọi phép nhân chia ở
+     * đây đều làm tròn xuống, nên đụng vào không lý do là mỗi lần gọi lại bào
+     * mất vài điểm máu.</p>
+     *
+     * <p>Người đang chết thì để yên: máu bằng 0 là trạng thái, không phải một tỉ
+     * lệ cần giữ.</p>
+     */
+    private void capNhatTheoTiLe(long hpMaxCu, long hpCu, long mpMaxCu, long mpCu) {
+        if (hpMaxCu > 0 && hpCu > 0 && this.hpMax != hpMaxCu) {
+            // Nhan truoc chia sau, va nhan bang so nguyen 128 bit de khong tran:
+            // hpCu va hpMax deu co the lon hon hai ti.
+            this.hp = java.math.BigInteger.valueOf(hpCu)
+                    .multiply(java.math.BigInteger.valueOf(this.hpMax))
+                    .divide(java.math.BigInteger.valueOf(hpMaxCu))
+                    .longValue();
+            if (this.hp < 1) {
+                this.hp = 1;      // dang song thi khong duoc rot ve 0 vi lam tron
+            }
+        }
+        if (mpMaxCu > 0 && mpCu > 0 && this.mpMax != mpMaxCu) {
+            this.mp = java.math.BigInteger.valueOf(mpCu)
+                    .multiply(java.math.BigInteger.valueOf(this.mpMax))
+                    .divide(java.math.BigInteger.valueOf(mpMaxCu))
+                    .longValue();
+            if (this.mp < 0) {
+                this.mp = 0;
+            }
+        }
     }
 
     // (hp sư phụ + hp đệ tử ) + 15%

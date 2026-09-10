@@ -139,6 +139,30 @@ public class PlayerService {
         sendInfoMp(player);
     }
 
+    /**
+     * Hồi <b>đầy</b> máu và khí, chắc chắn đầy.
+     *
+     * <p>Dựng lại chỉ số trước khi đặt: {@code hpMax} là con số tính ra từ trang
+     * bị, set, bùa và bản đồ đang đứng, và nó có thể đang <b>cũ</b> — chẳng hạn
+     * vừa đổi bản đồ xong. Đặt máu bằng một cái trần cũ thì "đầy" hoá ra không
+     * đầy, và người chơi thấy đúng cái cảnh dùng đủ mọi cách mà thanh máu vẫn
+     * thiếu một khúc.</p>
+     *
+     * <p>Gán thẳng chứ không cộng: {@code addHp} nhận một lượng, mà lượng ấy
+     * luôn phải tính từ {@code hpMax} — tức lại vướng đúng chỗ vừa nói.</p>
+     */
+    public void hoiDayHpMp(Player player) {
+        if (player == null || player.nPoint == null) {
+            return;
+        }
+        player.nPoint.calPoint();
+        player.nPoint.setHp(player.nPoint.hpMax);
+        player.nPoint.setMp(player.nPoint.mpMax);
+        Service.gI().point(player);
+        Service.getInstance().Send_Info_NV(player);
+        sendInfoHpMp(player);
+    }
+
     public void hoiPhuc(Player player, long hp, long mp) {
         if (!player.isDie()) {
             player.nPoint.addHp(hp);
