@@ -2296,13 +2296,7 @@ public class SystemPanel extends JPanel {
                 "Bật", "Ghi chú"}, 0) {
         @Override
         public boolean isCellEditable(int r, int c) {
-            if (c == COT_HS_ID || c == COT_HS_GAP) {
-                return false;
-            }
-            // Nhom "chi de tu" thi he so cua nguoi thuong khong con nghia gi:
-            // ho nhan 0 du o do ghi bao nhieu. Khoa lai cho khoi go nham roi
-            // ngoi doan vi sao so ay khong an thua gi.
-            return c != COT_HS_HS || !hsChiDeTu(r);
+            return c != COT_HS_ID && c != COT_HS_GAP;
         }
 
         @Override
@@ -2363,11 +2357,15 @@ public class SystemPanel extends JPanel {
                 + "<br><br>"
                 + "<b>Các bản đồ trong nhóm</b>: id đơn hoặc khoảng, ngăn nhau bằng "
                 + "dấu phẩy — <code>68-72,102,103</code>. Thêm hay bớt một bản đồ khỏi "
-                + "nhóm chỉ là sửa ô ấy.<br>"
-                + "<b>Hệ số đệ tử</b> để trống là dùng chung hệ số bên trái. "
-                + "<b>Chỉ đệ tử</b> bật thì người chơi thường đánh trong nhóm ấy "
-                + "<b>không được tiềm năng</b>, chỉ đệ tử mới có — Ngũ Hành Sơn đang "
-                + "đặt như thế.<br>"
+                + "nhóm chỉ là sửa ô ấy.<br><br>"
+                + "<b>Hệ số</b> là số nhân khi <b>người thường hoặc sư phụ tự đánh</b>. "
+                + "<b>Hệ số đệ tử</b> là số nhân khi <b>đệ tử đánh</b> — để trống thì "
+                + "đệ tử dùng chung hệ số bên trái.<br>"
+                + "Ví dụ đặt hệ số 1, hệ số đệ tử 2: trong nhóm ấy đệ tử đánh được "
+                + "gấp đôi, còn sư phụ tự đánh vẫn như bản đồ thường.<br><br>"
+                + "<b>Chỉ đệ tử</b> chỉ làm đúng một việc: bật lên thì <b>người thường "
+                + "đánh không được tiềm năng</b>, chỉ đệ tử mới có. Nó không đụng gì "
+                + "tới hai ô hệ số — hai ô ấy vẫn sửa được như thường.<br><br>"
                 + "Một bản đồ khớp nhiều nhóm thì lấy <b>nhóm đầu tiên</b> rồi dừng, "
                 + "không nhân dồn."), BorderLayout.NORTH);
 
@@ -2388,35 +2386,8 @@ public class SystemPanel extends JPanel {
                     || e.getType() != javax.swing.event.TableModelEvent.UPDATE) {
                 return;
             }
-            if (e.getColumn() == COT_HS_CHIDT) {
-                final int r = e.getFirstRow();
-                SwingUtilities.invokeLater(() -> doiChiDeTu(r));
-                return;
-            }
             if (e.getColumn() != COT_HS_GAP) {
                 SwingUtilities.invokeLater(this::capNhatCotGap);
-            }
-        });
-        // O he so cua nhom "chi de tu" phai NHIN RA la dang khoa, khong chi la
-        // bam vao khong go duoc.
-        hsTable.getColumnModel().getColumn(COT_HS_HS).setCellRenderer(
-                new javax.swing.table.DefaultTableCellRenderer() {
-            @Override
-            public java.awt.Component getTableCellRendererComponent(JTable bang,
-                    Object v, boolean chon, boolean tieuDiem, int r, int c) {
-                java.awt.Component o = super.getTableCellRendererComponent(
-                        bang, v, chon, tieuDiem, r, c);
-                boolean khoa = hsChiDeTu(r);
-                o.setEnabled(!khoa);
-                if (!chon) {
-                    o.setBackground(khoa ? new Color(238, 238, 238)
-                            : bang.getBackground());
-                }
-                setToolTipText(khoa
-                        ? "Nhóm này chỉ đệ tử mới được tiềm năng — người chơi "
-                        + "thường luôn nhận 0, nên ô này không dùng tới."
-                        : null);
-                return o;
             }
         });
         tren.add(oGoc, BorderLayout.SOUTH);
@@ -2496,22 +2467,11 @@ public class SystemPanel extends JPanel {
         hsDangTuSua = true;
         try {
             for (HeSoTnsmDAO.Dong d : HeSoTnsmDAO.danhSach()) {
-                double hs = d.heSo;
-                double hsdt = d.heSoDeTu;
-                if (d.chiDeTu) {
-                    // Nhom "chi de tu" thi he so cua nguoi thuong luon hien la
-                    // 0, vi do dung la thu ho nhan duoc. Dong cu trong CSDL con
-                    // giu so khac thi chuyen no sang cot de tu — bo thang di la
-                    // ca nhom mat luon phan cua de tu.
-                    if (hsdt <= 0 && hs > 0) {
-                        hsdt = hs;
-                    }
-                    hs = 0;
-                }
                 hsModel.addRow(new Object[]{String.valueOf(d.id), d.ten,
                     d.dsMap == null ? "" : d.dsMap,
-                    soGonHs(hs), hsdt <= 0 ? "" : soGonHs(hsdt),
-                    d.chiDeTu, motConQuaiCho(hs, hsdt, d.chiDeTu, d.bat),
+                    soGonHs(d.heSo), d.heSoDeTu <= 0 ? "" : soGonHs(d.heSoDeTu),
+                    d.chiDeTu,
+                    motConQuaiCho(d.heSo, d.heSoDeTu, d.chiDeTu, d.bat),
                     d.bat, d.ghiChu == null ? "" : d.ghiChu});
             }
         } finally {
@@ -2550,45 +2510,6 @@ public class SystemPanel extends JPanel {
         return v == null ? "" : String.valueOf(v).trim();
     }
 
-    /**
-     * Vừa bật hoặc tắt "chỉ đệ tử" ở một dòng — dọn lại hai ô hệ số cho khớp.
-     *
-     * <h3>Vì sao phải chuyển số chứ không chỉ xoá</h3>
-     *
-     * <p>Bật "chỉ đệ tử" mà đặt thẳng hệ số về 0 thì đúng cho người chơi thường,
-     * nhưng <b>đệ tử cũng mất luôn</b> nếu ô "hệ số đệ tử" đang để trống: lúc ấy
-     * đệ tử dùng chung hệ số bên trái, mà bên trái vừa thành 0. Cả nhóm bản đồ
-     * chết lặng, không ai được gì.</p>
-     *
-     * <p>Nên con số đang có được <b>chuyển sang</b> ô hệ số đệ tử trước, rồi mới
-     * đặt bên trái về 0. Ý người dùng giữ nguyên: "nhóm này chỉ đệ tử ăn, và ăn
-     * đúng bằng hệ số tôi vừa đặt".</p>
-     *
-     * <p>Tắt đi thì làm ngược lại, để không bỏ lại một dòng hệ số 0 mà nhìn
-     * tưởng bình thường.</p>
-     */
-    private void doiChiDeTu(int r) {
-        if (r < 0 || r >= hsModel.getRowCount()) {
-            return;
-        }
-        hsDangTuSua = true;
-        try {
-            double hs = soHs(oHs(r, COT_HS_HS));
-            double hsdt = soHs(oHs(r, COT_HS_HSDT));
-            if (hsChiDeTu(r)) {
-                if (hsdt <= 0 && hs > 0) {
-                    hsModel.setValueAt(soGonHs(hs), r, COT_HS_HSDT);
-                }
-                hsModel.setValueAt("0", r, COT_HS_HS);
-            } else if (hs <= 0) {
-                hsModel.setValueAt(soGonHs(hsdt > 0 ? hsdt : 1), r, COT_HS_HS);
-            }
-        } finally {
-            hsDangTuSua = false;
-        }
-        capNhatCotGap();
-        hsTable.repaint();
-    }
 
     /** Đọc một ô hệ số; gõ sai hay để trống đều là 0. */
     private static double soHs(String s) {
@@ -2623,18 +2544,6 @@ public class SystemPanel extends JPanel {
             d.dsMap = oHs(r, COT_HS_MAP);
             Object cdt = hsModel.getValueAt(r, COT_HS_CHIDT);
             d.chiDeTu = (cdt instanceof Boolean) && (Boolean) cdt;
-            // "Chi de tu" ma he so de tu cung bang 0 la ca nhom chet lang:
-            // nguoi thuong bi khoa, con de tu thi rot ve he so ben trai —
-            // dung cai vua bi dat ve 0. Tu choi han con hon luu mot bang nhin
-            // thi binh thuong ma trong game khong ai duoc gi.
-            if (d.chiDeTu && d.heSoDeTu <= 0) {
-                hong++;
-                if (hongDau == null) {
-                    hongDau = "Nhóm \"" + d.ten + "\" bật \"chỉ đệ tử\" thì phải "
-                            + "điền hệ số đệ tử lớn hơn 0.";
-                }
-                continue;
-            }
             Object bat = hsModel.getValueAt(r, COT_HS_BAT);
             d.bat = !(bat instanceof Boolean) || (Boolean) bat;
             d.ghiChu = oHs(r, COT_HS_GC);

@@ -466,24 +466,14 @@ public class Mob {
             System.out.println("[SLOW] apply special case adjustments: " + elapsed + "ms");
         }
 
-        start = System.currentTimeMillis();
-        tiemNang = Util.CrisGH(pl.nPoint.calSucManhTiemNang(tiemNang));
-        // He so tiem nang chinh tren panel — CHUNG cho moi ban do.
+        // He so tiem nang theo BAN DO — nhan NGAY VAO GIA TRI GOC.
         //
-        // Nhan SAU CUNG, sau khi calSucManhTiemNang da tinh xong het: buff,
-        // co, the nap, VA he so rieng cua tung ban do (kho bau x6, doanh trai
-        // x3, mot so ban do chia 10). Nen no NHAN LEN TREN he so rieng ay chu
-        // khong thay the: ban do von x1 voi he so 0.2 thanh x0,2; ban do von
-        // x3 thanh x0,6.
+        // Dat truoc calSucManhTiemNang, tuc la truoc bua, item, buff, co, the
+        // nap: he so ban do la "con quai o day dang gia gap may lan", nen no
+        // phai nhan vao chinh con so goc, roi moi den luot cac thu cong them
+        // cua nguoi choi tinh tren con so da nhan ay.
         //
-        // De 1 thi con so y het nhu truoc.
-
-        tiemNang = nro.repository.dao.ConfigDAO.nhanTiLe(
-                nro.repository.dao.ConfigDAO.TL_EXP, tiemNang);
-
-        // He so tiem nang theo BAN DO — mot bang duy nhat tren panel.
-        //
-        // Ap o day chu khong o NPoint vi day biet BAN DO CUA CON QUAI: de tu cay
+        // Ap o Mob chu khong o NPoint vi day biet BAN DO CUA CON QUAI: de tu cay
         // trong Ngu Hanh Son thi phan chia cho su phu cung phai theo he so cua
         // Ngu Hanh Son, ma luc ay su phu co the dang dung o ban do khac — hoi
         // ban do cua su phu la hoi nham nguoi.
@@ -498,8 +488,25 @@ public class Mob {
             }
             if (heSoMap != 1) {
                 tiemNang = Math.round(tiemNang * heSoMap);
+                if (tiemNang <= 0) {
+                    // He so nho lam tron xuong 0 thi coi nhu duoc mot diem, con
+                    // hon danh ca buoi khong len duoc gi.
+                    tiemNang = 1;
+                }
             }
         }
+
+        start = System.currentTimeMillis();
+        tiemNang = Util.CrisGH(pl.nPoint.calSucManhTiemNang(tiemNang));
+
+        // He so tiem nang CHUNG cho moi ban do, chinh tren panel.
+        //
+        // Nhan sau cung, khi da tinh xong het. Vi moi thu o day deu la phep
+        // nhan nen no khong thay the he so rieng cua tung ban do ma chong len
+        // tren: ban do von x1 voi he so 0.2 thanh x0,2; ban do von x3 thanh
+        // x0,6. De 1 thi con so y het nhu truoc.
+        tiemNang = nro.repository.dao.ConfigDAO.nhanTiLe(
+                nro.repository.dao.ConfigDAO.TL_EXP, tiemNang);
 
         long totalElapsed = System.currentTimeMillis() - startTotal;
         if (totalElapsed > 50) {

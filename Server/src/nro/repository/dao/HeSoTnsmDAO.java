@@ -302,12 +302,10 @@ public final class HeSoTnsmDAO {
                 3, 0, false, "Trước ở NPoint: ×3"));
         ds.add(d(30, "kvth", "Khu vực thám hiểm", "179",
                 1, 2, false, "Trước ở NPoint: ×2 nhưng CHỈ cho đệ tử"));
-        // He so cua nguoi thuong la 0 chu khong phai 1/3: nhom nay khoa nguoi
-        // thuong, nen 0 moi dung voi thu ho nhan duoc. Phan 1/3 chuyen sang cot
-        // de tu — de trong o do thi de tu se roi ve he so ben trai, tuc la 0,
-        // va ca nhom khong ai duoc gi.
+        // Chia 3 cho ca hai cot: do la muc von co cua Ngu Hanh Son. Co "chi de
+        // tu" lo phan chan nguoi thuong, nen he so ben trai khong can dat ve 0.
         ds.add(d(40, "ngu_hanh_son", "Ngũ Hành Sơn", "122-124",
-                0, 1.0 / 3, true,
+                1.0 / 3, 1.0 / 3, true,
                 "Trước ở Mob: chia 3. Nay chỉ đệ tử đánh mới được tiềm năng."));
         ds.add(d(50, "binh_hut", "Bình hút năng lượng", "180",
                 0.1, 0, false, "Trước ở NPoint: chia 10"));
