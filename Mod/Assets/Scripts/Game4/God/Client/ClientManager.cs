@@ -930,9 +930,12 @@ namespace Game4.God
             // sang chuc nang khac ma khong bao gi ca.
             // Ba kenh voice khong con muc rieng trong menu: doi kenh nam trong hop
             // cau hinh. Ma 13/14/15 van giu vi lenh chat vk/vm/vb goi thang toi.
-            // Ma 17 = mo bang chon kieu tan sat (thay cho ma 3 bat/tat thang).
+            // Ma 18 = mo bang chon kieu tan sat (thay cho ma 3 bat/tat thang).
             // Ma 3 van giu cho cho nao goi thang toi no.
-            int[] maHanhDong = { 11, 1, 2, 17, 12, 4, 5, 6, 7, 8, 9, 10, 16 };
+            //
+            // 18 chu khong phai 17: 17 da la nut bat/tat am thanh trong cung
+            // switch cua perform().
+            int[] maHanhDong = { 11, 1, 2, 18, 12, 4, 5, 6, 7, 8, 9, 10, 16 };
             MyVector myVector = new MyVector();
             for(int i = 0; i < listIndex.Length && i < maHanhDong.Length; i++)
             {
@@ -1065,7 +1068,7 @@ namespace Game4.God
                     return true;
                 case "ts":
                     // Mo bang chon, khong bat/tat thang nua — xem TanSatUI.
-                    perform(17, null);
+                    perform(18, null);
                     return true;
                 case "ts!":
                     // Duong tat cho ai chi muon bat/tat that nhanh, khong qua
@@ -1159,9 +1162,11 @@ namespace Game4.God
                 case 16:
                     VoiceConfigUI.getInstance().mo();
                     break;
-                case 17:
+                case 18:
                     // Mo bang chon kieu tan sat. Xem TanSatUI de biet vi sao
                     // tach ra khoi cong tac bat/tat o ma 3.
+                    //
+                    // Ma 18 chu khong phai 17: 17 da la nut bat/tat am thanh.
                     TanSatUI.getInstance().mo();
                     break;
                 case 13:
