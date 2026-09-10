@@ -795,7 +795,14 @@ public final class Manager {
             ps = con.prepareStatement("SELECT id, task_main_template.name, detail, "
                     + "task_sub_template.name AS 'sub_name', max_count, notify, npc_id, map "
                     + "FROM task_main_template JOIN task_sub_template ON task_main_template.id = "
-                    + "task_sub_template.task_main_id");
+                    + "task_sub_template.task_main_id "
+                    // Thu tu cac BUOC chinh la mach nhiem vu, va TaskService xac
+                    // dinh viec phai lam theo dung so thu tu buoc. Truy van cu
+                    // khong rang buoc thu tu nao ca — chay dung chi vi may chu
+                    // co dua ve theo khoa chinh. Doi bo may luu tru, them mot
+                    // chi muc, hay chi la mot lan toi uu bang la thu tu doi, va
+                    // moi nhiem vu lech buoc cung mot luc ma khong co gi bao.
+                    + "ORDER BY task_main_template.id, task_sub_template.idmain");
             rs = ps.executeQuery();
             int taskId = -1;
             TaskMain task = null;

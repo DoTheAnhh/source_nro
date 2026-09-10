@@ -76,6 +76,7 @@ public class SystemPanel extends JPanel {
         tabs.addTab("Set kích hoạt", buildSetTab());
         tabs.addTab("Tỉ lệ set kích hoạt", buildTiLeKichHoatTab());
         tabs.addTab("Nội tại", buildNoiTaiTab());
+        tabs.addTab("Nhiệm vụ chính tuyến", buildNhiemVuChinhTab());
         tabs.addTab("Kỹ năng", buildKyNangTab());
         tabs.addTab("Hào quang", buildAuraTab());
         tabs.addTab("Danh hiệu", buildDanhHieuTab());
@@ -149,6 +150,9 @@ public class SystemPanel extends JPanel {
                     break;
                 case "Nội tại":
                     napBangNoiTai();
+                    break;
+                case "Nhiệm vụ chính tuyến":
+                    napBangNhiemVuChinh();
                     break;
                 default:
                     // Nhung tab con lai doc du lieu tinh, khong can nap lai.
@@ -5118,6 +5122,335 @@ public class SystemPanel extends JPanel {
      * dựng lại máy chủ. Tab này đọc và ghi thẳng vào chính bảng đó, và nạp lại
      * vào bộ nhớ ngay sau khi lưu.</p>
      */
+    // ---------------------------------------------------------------- nhiệm vụ
+    private static final int COT_B_STT = 0;
+    private static final int COT_B_TEN = 1;
+    private static final int COT_B_SL = 2;
+    private static final int COT_B_TB = 3;
+    private static final int COT_B_NPC = 4;
+    private static final int COT_B_MAP = 5;
+
+    /** Danh sách nhiệm vụ đang hiện trên tab, để tra lại theo dòng. */
+    private java.util.List<nro.repository.dao.NhiemVuDAO.NhiemVu> dsNhiemVu
+            = new java.util.ArrayList<>();
+
+    private final DefaultTableModel nvcModel = new DefaultTableModel(
+            new Object[]{"Id", "Tên nhiệm vụ", "Số bước"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return false;
+        }
+    };
+    private final JTable nvcTable = new JTable(nvcModel);
+
+    private final DefaultTableModel buocModel = new DefaultTableModel(
+            new Object[]{"Thứ tự", "Tên bước", "Số lượng cần", "Thông báo",
+                "NPC", "Bản đồ"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return c != COT_B_STT;
+        }
+    };
+    private final JTable buocTable = new JTable(buocModel);
+
+    private final JTextField nvcTen = new JTextField();
+    private final JTextArea nvcMoTa = new JTextArea(6, 40);
+
+    /**
+     * Tab <b>Nhiệm vụ chính tuyến</b>.
+     *
+     * <p>Xem {@code NhiemVuDAO} cho phần giải thích một nhiệm vụ gồm những gì.
+     * Ở đây chỉ nhắc lại phần người dùng cần biết trước khi gõ.</p>
+     */
+    private JComponent buildNhiemVuChinhTab() {
+        JPanel root = new JPanel(new BorderLayout(0, 8));
+        root.setOpaque(false);
+        root.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        nvcTable.setRowHeight(24);
+        nvcTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        int[] wl = {40, 260, 60};
+        for (int i = 0; i < nvcTable.getColumnCount() && i < wl.length; i++) {
+            nvcTable.getColumnModel().getColumn(i).setPreferredWidth(wl[i]);
+        }
+        nvcTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                hienNhiemVuDangChon();
+            }
+        });
+
+        buocTable.setRowHeight(24);
+        buocTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        int[] wb = {55, 300, 90, 300, 60, 60};
+        for (int i = 0; i < buocTable.getColumnCount() && i < wb.length; i++) {
+            buocTable.getColumnModel().getColumn(i).setPreferredWidth(wb[i]);
+        }
+
+        nvcMoTa.setLineWrap(true);
+        nvcMoTa.setWrapStyleWord(true);
+
+        JPanel dau = new JPanel(new BorderLayout(6, 4));
+        dau.setOpaque(false);
+        JPanel dongTen = new JPanel(new BorderLayout(6, 0));
+        dongTen.setOpaque(false);
+        dongTen.add(new JLabel("Tên nhiệm vụ:"), BorderLayout.WEST);
+        dongTen.add(nvcTen, BorderLayout.CENTER);
+        dau.add(dongTen, BorderLayout.NORTH);
+        dau.add(ServerGuiUtils.cuon(nvcMoTa), BorderLayout.CENTER);
+        dau.setBorder(BorderFactory.createTitledBorder("Nhiệm vụ đang chọn"));
+
+        JPanel duoi = new JPanel(new BorderLayout(0, 4));
+        duoi.setOpaque(false);
+        duoi.add(ServerGuiUtils.cuon(buocTable), BorderLayout.CENTER);
+        duoi.setBorder(BorderFactory.createTitledBorder(
+                "Các bước — làm lần lượt từ trên xuống"));
+
+        JSplitPane phai = new JSplitPane(JSplitPane.VERTICAL_SPLIT, dau, duoi);
+        phai.setResizeWeight(0.28);
+        phai.setBorder(null);
+
+        JSplitPane chia = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+                ServerGuiUtils.cuon(nvcTable), phai);
+        chia.setResizeWeight(0.28);
+        chia.setBorder(null);
+
+        JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        nut.setOpaque(false);
+        nut.add(button("Lưu nhiệm vụ đang chọn", OK_GREEN, e -> luuNhiemVuDangChon()));
+        nut.add(button("Tải lại", GREY, e -> napBangNhiemVuChinh()));
+        nut.add(button("Thêm nhiệm vụ", ACCENT, e -> themNhiemVu()));
+        nut.add(button("Thêm bước vào cuối", new Color(120, 90, 160),
+                e -> themBuocCuoi()));
+        nut.add(button("Xoá bước đang chọn", WARN_RED, e -> xoaBuocDangChon()));
+
+        root.add(nhan("Nhiệm vụ chính tuyến: mỗi nhiệm vụ là một dãy <b>bước</b> "
+                + "làm lần lượt từ trên xuống, xong bước cuối là sang nhiệm vụ "
+                + "có id kế tiếp — nên <b>id vừa là khoá vừa là thứ tự chơi</b>."
+                + "<br><br>"
+                + "<b>Số lượng cần</b> là con số hay phải chỉnh nhất: đánh bao "
+                + "nhiêu con, nhặt bao nhiêu món thì xong bước. Đổi nó là có hiệu "
+                + "lực thật. Để <code>-1</code> nghĩa là không đếm — bước xong bằng "
+                + "một việc khác (nói chuyện với NPC, tới nơi, hạ một con boss)."
+                + "<br><br>"
+                + "<b>NPC</b> và <b>Bản đồ</b> là chỗ mũi tên chỉ dẫn trỏ tới; "
+                + "<code>-1</code> là không trỏ. Số âm nhỏ hơn -1 là mã đặc biệt, "
+                + "được đổi thành NPC/bản đồ thật <i>tuỳ hành tinh</i> của người "
+                + "chơi — ví dụ <code>-2</code> là ông thầy ở làng. Trong lời văn, "
+                + "<code>%1</code> đến <code>%14</code> cũng được thay theo hành "
+                + "tinh, nên một dòng chữ đọc đúng ở cả ba nơi."
+                + "<br><br>"
+                + "<b>Việc gì làm bước đó tiến lên thì không sửa ở đây được</b> — "
+                + "cái đó viết cứng trong mã theo đúng cặp (nhiệm vụ, số thứ tự "
+                + "bước). Thêm hay xoá một bước ở <i>giữa</i> dãy sẽ làm lệch mọi "
+                + "bước sau nó và nhiệm vụ kẹt lại không đi tiếp được. Chỉ thêm "
+                + "bước khi có người viết mã cho nó."
+                + "<br><br>"
+                + "Lưu xong có hiệu lực với người <b>đăng nhập sau đó</b>; người "
+                + "đang online giữ bản cũ tới khi vào lại. Tiến độ của người chơi "
+                + "không bị đụng tới."), BorderLayout.NORTH);
+        root.add(chia, BorderLayout.CENTER);
+        root.add(nut, BorderLayout.SOUTH);
+        napBangNhiemVuChinh();
+        return root;
+    }
+
+    private void napBangNhiemVuChinh() {
+        if (buocTable.isEditing()) {
+            buocTable.getCellEditor().stopCellEditing();
+        }
+        int giu = nvcTable.getSelectedRow();
+        dsNhiemVu = nro.repository.dao.NhiemVuDAO.danhSach();
+        nvcModel.setRowCount(0);
+        for (nro.repository.dao.NhiemVuDAO.NhiemVu nv : dsNhiemVu) {
+            nvcModel.addRow(new Object[]{nv.id, nv.ten, nv.buoc.size()});
+        }
+        if (giu >= 0 && giu < nvcModel.getRowCount()) {
+            nvcTable.setRowSelectionInterval(giu, giu);
+        } else if (nvcModel.getRowCount() > 0) {
+            nvcTable.setRowSelectionInterval(0, 0);
+        } else {
+            hienNhiemVuDangChon();
+        }
+    }
+
+    private nro.repository.dao.NhiemVuDAO.NhiemVu nhiemVuDangChon() {
+        int r = nvcTable.getSelectedRow();
+        if (r < 0) {
+            return null;
+        }
+        r = nvcTable.convertRowIndexToModel(r);
+        return r < dsNhiemVu.size() ? dsNhiemVu.get(r) : null;
+    }
+
+    private void hienNhiemVuDangChon() {
+        if (buocTable.isEditing()) {
+            buocTable.getCellEditor().stopCellEditing();
+        }
+        buocModel.setRowCount(0);
+        nro.repository.dao.NhiemVuDAO.NhiemVu nv = nhiemVuDangChon();
+        if (nv == null) {
+            nvcTen.setText("");
+            nvcMoTa.setText("");
+            return;
+        }
+        nvcTen.setText(nv.ten);
+        nvcMoTa.setText(nv.moTa);
+        nvcMoTa.setCaretPosition(0);
+        for (nro.repository.dao.NhiemVuDAO.Buoc b : nv.buoc) {
+            buocModel.addRow(new Object[]{b.idmain, b.ten,
+                String.valueOf(b.soLuong), b.thongBao,
+                String.valueOf(b.npcId), String.valueOf(b.mapId)});
+        }
+    }
+
+    private void luuNhiemVuDangChon() {
+        if (buocTable.isEditing()) {
+            buocTable.getCellEditor().stopCellEditing();
+        }
+        nro.repository.dao.NhiemVuDAO.NhiemVu nv = nhiemVuDangChon();
+        if (nv == null) {
+            note(WARN_RED, "Chưa chọn nhiệm vụ nào.");
+            return;
+        }
+        String loi = nro.repository.dao.NhiemVuDAO.luuNhiemVu(
+                nv.id, nvcTen.getText(), nvcMoTa.getText());
+        int hong = 0;
+        String hongDau = loi;
+        if (loi != null) {
+            hong++;
+        }
+        for (int r = 0; r < buocModel.getRowCount(); r++) {
+            nro.repository.dao.NhiemVuDAO.Buoc b
+                    = new nro.repository.dao.NhiemVuDAO.Buoc();
+            try {
+                b.idmain = Integer.parseInt(oB(r, COT_B_STT));
+                b.soLuong = Integer.parseInt(oB(r, COT_B_SL));
+                b.npcId = Integer.parseInt(oB(r, COT_B_NPC));
+                b.mapId = Integer.parseInt(oB(r, COT_B_MAP));
+            } catch (NumberFormatException ex) {
+                hong++;
+                if (hongDau == null) {
+                    hongDau = "Bước dòng " + (r + 1) + " có ô không phải số.";
+                }
+                continue;
+            }
+            b.nhiemVuId = nv.id;
+            b.ten = oB(r, COT_B_TEN);
+            b.thongBao = oB(r, COT_B_TB);
+            String kq = nro.repository.dao.NhiemVuDAO.luuBuoc(b);
+            if (kq != null) {
+                hong++;
+                if (hongDau == null) {
+                    hongDau = "Bước " + b.idmain + ": " + kq;
+                }
+            }
+        }
+        String loiNap = nro.repository.dao.NhiemVuDAO.napLaiVaoBoNho();
+        napBangNhiemVuChinh();
+        if (hong == 0) {
+            note(OK_GREEN, loiNap == null
+                    ? "Đã lưu nhiệm vụ " + nv.id
+                    + " — người đăng nhập sau sẽ nhận bản mới."
+                    : loiNap);
+        } else {
+            note(WARN_RED, hongDau + " (" + hong + " mục không lưu được)");
+        }
+    }
+
+    private String oB(int r, int c) {
+        Object v = buocModel.getValueAt(r, c);
+        return v == null ? "" : String.valueOf(v).trim();
+    }
+
+    private void themNhiemVu() {
+        String s = JOptionPane.showInputDialog(this,
+                "Id của nhiệm vụ mới?\n\n"
+                + "Id vừa là khoá vừa là THỨ TỰ CHƠI: xong nhiệm vụ này là\n"
+                + "người chơi sang nhiệm vụ có id kế tiếp. Chèn một id vào\n"
+                + "giữa dãy đang có sẽ xen nhiệm vụ mới vào mạch chính.\n"
+                + "Thường thì nên thêm vào cuối.",
+                "Thêm nhiệm vụ", JOptionPane.QUESTION_MESSAGE);
+        if (s == null) {
+            return;
+        }
+        int id;
+        try {
+            id = Integer.parseInt(s.trim());
+        } catch (NumberFormatException ex) {
+            note(WARN_RED, "\"" + s + "\" không phải là số.");
+            return;
+        }
+        for (nro.repository.dao.NhiemVuDAO.NhiemVu nv : dsNhiemVu) {
+            if (nv.id == id) {
+                note(WARN_RED, "Đã có nhiệm vụ id " + id + " — chọn nó để sửa.");
+                return;
+            }
+        }
+        String loi = nro.repository.dao.NhiemVuDAO.luuNhiemVu(
+                id, "Nhiệm vụ mới", "Chi tiết nhiệm vụ");
+        nro.repository.dao.NhiemVuDAO.napLaiVaoBoNho();
+        napBangNhiemVuChinh();
+        note(loi == null ? OK_GREEN : WARN_RED,
+                loi == null ? "Đã thêm nhiệm vụ id " + id
+                        + " — nhớ thêm bước cho nó." : loi);
+    }
+
+    private void themBuocCuoi() {
+        nro.repository.dao.NhiemVuDAO.NhiemVu nv = nhiemVuDangChon();
+        if (nv == null) {
+            note(WARN_RED, "Chưa chọn nhiệm vụ nào.");
+            return;
+        }
+        int chon = JOptionPane.showConfirmDialog(this,
+                "Thêm một bước vào cuối nhiệm vụ " + nv.id + "?\n\n"
+                + "Bước mới KHÔNG có gì làm nó tiến lên: việc gì hoàn thành\n"
+                + "bước nào được viết cứng trong mã theo số thứ tự bước.\n"
+                + "Người chơi sẽ kẹt ở bước này cho tới khi có người viết mã\n"
+                + "cho nó.",
+                "Thêm bước", JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (chon != JOptionPane.YES_OPTION) {
+            return;
+        }
+        String loi = nro.repository.dao.NhiemVuDAO.themBuoc(nv.id, "Bước mới");
+        nro.repository.dao.NhiemVuDAO.napLaiVaoBoNho();
+        napBangNhiemVuChinh();
+        note(loi == null ? OK_GREEN : WARN_RED,
+                loi == null ? "Đã thêm bước vào cuối nhiệm vụ " + nv.id + "." : loi);
+    }
+
+    private void xoaBuocDangChon() {
+        int r = buocTable.getSelectedRow();
+        if (r < 0) {
+            note(WARN_RED, "Chưa chọn bước nào.");
+            return;
+        }
+        r = buocTable.convertRowIndexToModel(r);
+        int stt;
+        try {
+            stt = Integer.parseInt(oB(r, COT_B_STT));
+        } catch (NumberFormatException ex) {
+            note(WARN_RED, "Dòng này không có số thứ tự hợp lệ.");
+            return;
+        }
+        int chon = JOptionPane.showConfirmDialog(this,
+                "Xoá bước \"" + oB(r, COT_B_TEN) + "\"?\n\n"
+                + "Mọi bước SAU nó sẽ lùi lên một chỗ, mà việc hoàn thành từng\n"
+                + "bước lại viết cứng theo số thứ tự — nhiệm vụ này sẽ lệch và\n"
+                + "có thể kẹt không đi tiếp được.\n\n"
+                + "Chỉ xoá nếu bạn biết rõ mình đang làm gì.",
+                "Xoá bước", JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (chon != JOptionPane.YES_OPTION) {
+            return;
+        }
+        String loi = nro.repository.dao.NhiemVuDAO.xoaBuoc(stt);
+        nro.repository.dao.NhiemVuDAO.napLaiVaoBoNho();
+        napBangNhiemVuChinh();
+        note(loi == null ? OK_GREEN : WARN_RED,
+                loi == null ? "Đã xoá bước " + stt + "." : loi);
+    }
+
     private JComponent buildNoiTaiTab() {
         JPanel root = new JPanel(new BorderLayout(0, 8));
         root.setOpaque(false);
