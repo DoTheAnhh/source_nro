@@ -1621,8 +1621,9 @@ public class SkillService {
     /**
      * Phần trăm giảm HP/KI tiêu hao khi dùng kỹ năng, do set kích hoạt cộng.
      *
-     * <p>Kẹp trần ở 90: để chạm 100 thì mọi kỹ năng thành miễn phí, và những
-     * chiêu lấy KI làm giá (Kaioken lấy HP) mất hẳn cái giá của chúng.</p>
+     * <p>Kẹp trần ở 100 — chạm trần là kỹ năng thành miễn phí hoàn toàn, kể cả
+     * giá HP của Kaioken. Đó là mức cố ý cho phép, nên đặt tới đó thì phải biết
+     * mình đang bỏ hẳn cái giá của mọi chiêu.</p>
      */
     private static int giamTieuHao(Player player) {
         if (player == null) {
@@ -1633,7 +1634,7 @@ public class SkillService {
         if (pct <= 0) {
             return 0;
         }
-        return Math.min(pct, 90);
+        return Math.min(pct, 100);
     }
 
     /**

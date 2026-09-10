@@ -74,7 +74,7 @@ public class SetBonusDAO {
         LOAI.put("chi_mang_ca_hai",
                 "Chí mạng: cộng cùng lúc CẢ tỉ lệ lẫn sát thương + % (một số cho cả hai)");
         LOAI.put("giam_tieu_hao_pct",
-                "Giảm HP/KI tiêu hao khi dùng kỹ năng + % (tối đa 90)");
+                "Giảm HP/KI tiêu hao khi dùng kỹ năng + % (tối đa 100)");
         LOAI.put("hp_hoi", "HP hồi + (cộng thẳng)");
         LOAI.put("ne_don", "Né đòn + %");
         LOAI.put("pst", "Phản sát thương + %");

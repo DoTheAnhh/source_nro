@@ -45,6 +45,12 @@ public class QuyLaoKame extends Npc {
      */
     private static final String NHAN_GIAI_TAN = "Giải tán\nBang hội";
 
+    /** Nhãn mục làm mới hồi chiêu — cùng lý do một hằng số như trên. */
+    private static final String NHAN_RESET_HOI_CHIEU = "Làm mới\nhồi chiêu";
+
+    /** Vật phẩm trả cho một lần làm mới hồi chiêu. */
+    private static final short ID_THOI_VANG = 457;
+
     /**
      * Dựng danh sách mục của menu gốc.
      *
@@ -72,10 +78,46 @@ public class QuyLaoKame extends Npc {
         //
         // Mục này vẫn còn trong menu con "Nói chuyện", nhưng ở đó nó nằm hai lớp
         // sâu, cạnh "Nhiệm vụ" và "Học kỹ năng" — chủ bang gần như không tìm ra.
+        menu.add(NHAN_RESET_HOI_CHIEU);
         if (player.clan != null && player.clan.isLeader(player)) {
             menu.add(NHAN_GIAI_TAN);
         }
         return menu;
+    }
+
+
+    /**
+     * Làm mới hồi chiêu của <b>toàn bộ</b> kỹ năng, giá một Thỏi Vàng.
+     *
+     * <p>Việc gửi cho client và đặt lại mốc đã có sẵn ở
+     * {@code Service.releaseCooldownSkill} — chỗ này chỉ thu tiền rồi gọi nó.</p>
+     *
+     * <p>Phải tự tay xoá {@code mocSanSang} trước: chiêu đánh liên tục (đấm,
+     * chưởng) chạy theo mốc đó chứ không theo {@code lastTimeUseThisSkill}, mà
+     * hàm kia chỉ lùi cái thứ hai. Quên nó thì bấm xong thấy Thỏi Vàng mất mà
+     * đấm vẫn phải chờ.</p>
+     */
+    private void lamMoiHoiChieu(Player player) {
+        if (player == null || player.playerSkill == null
+                || player.playerSkill.skills == null) {
+            return;
+        }
+        Item tv = InventoryService.gI().findItemBag(player, ID_THOI_VANG);
+        if (tv == null || tv.quantity < 1) {
+            Service.gI().sendThongBao(player,
+                    "Cần 1 Thỏi Vàng để làm mới hồi chiêu.");
+            return;
+        }
+        for (nro.entity.skill.Skill sk : player.playerSkill.skills) {
+            if (sk != null) {
+                sk.mocSanSang = 0;
+            }
+        }
+        InventoryService.gI().subQuantityItemsBag(player, tv, 1);
+        InventoryService.gI().sendItemBag(player);
+        Service.gI().releaseCooldownSkill(player);
+        Service.gI().sendThongBao(player,
+                "Đã làm mới hồi chiêu toàn bộ kỹ năng.");
     }
 
     @Override
@@ -104,6 +146,11 @@ public class QuyLaoKame extends Npc {
                     // Nó là mục cuối và chỉ có với chủ bang, nên chỉ số của nó đổi
                     // theo việc có "Đổi quà sự kiện" hay "Giao Rùa con" hay không.
                     ArrayList<String> menuGoc = dungMenuGoc(player);
+                    if (select >= 0 && select < menuGoc.size()
+                            && NHAN_RESET_HOI_CHIEU.equals(menuGoc.get(select))) {
+                        lamMoiHoiChieu(player);
+                        break;
+                    }
                     if (select >= 0 && select < menuGoc.size()
                             && NHAN_GIAI_TAN.equals(menuGoc.get(select))) {
                         Clan bang = player.clan;
