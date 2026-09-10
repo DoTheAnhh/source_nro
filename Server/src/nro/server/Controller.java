@@ -377,10 +377,42 @@ public class Controller implements IMessageHandler {
                         Input.gI().doInput(player, _msg);
                     }
                     break;
-                // [112] Nội tại: mở menu
+                // [112] Nội tại.
+                //
+                // Gói KHÔNG có phần thân là client cũ, giữ nguyên menu NPC bốn
+                // nút như trước. Có phần thân là bảng nội tại mới (NoiTaiUI):
+                //   0 xin dữ liệu bảng
+                //   1 mở bằng vàng
+                //   2 mở bằng ngọc
+                //   3 mở nhanh — kèm byte id nội tại muốn và int chỉ số muốn
                 case 112:
                     if (player != null) {
-                        IntrinsicService.gI().showMenu(player);
+                        int viecNT = -1;
+                        try {
+                            viecNT = _msg.reader().readByte();
+                        } catch (Exception clientCu) {
+                            viecNT = -1;
+                        }
+                        switch (viecNT) {
+                            case 0:
+                                IntrinsicService.gI().guiBangNoiTai(player);
+                                break;
+                            case 1:
+                                IntrinsicService.gI().open(player);
+                                break;
+                            case 2:
+                                IntrinsicService.gI().moBangNgoc(player);
+                                break;
+                            case 3: {
+                                int idNT = _msg.reader().readByte();
+                                int csNT = _msg.reader().readInt();
+                                IntrinsicService.gI().moNhanh(player, idNT, csNT);
+                                break;
+                            }
+                            default:
+                                IntrinsicService.gI().showMenu(player);
+                                break;
+                        }
                     }
                     break;
                 // [-34] Danh sách kẻ thù

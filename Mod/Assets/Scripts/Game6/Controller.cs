@@ -173,6 +173,32 @@ namespace Game6
                                 Panel.spearcialImage = msg.reader().readShort();
                                 Panel.specialInfo = msg.reader().readUTF();
                             }
+                            else if (b24 == 5)
+                            {
+                                // Bang Noi tai (God.NoiTaiUI). Thu tu doc phai
+                                // khop dung IntrinsicService.guiBangNoiTai.
+                                string tenNT = msg.reader().readUTF();
+                                int iconNT = msg.reader().readShort();
+                                long giaVangNT = msg.reader().readLong();
+                                int giaNgocNT = msg.reader().readInt();
+                                long vangCoNT = msg.reader().readLong();
+                                int ngocCoNT = msg.reader().readInt();
+                                int soNT = msg.reader().readByte();
+                                System.Collections.Generic.List<God.NoiTaiUI.Muc> dsNT
+                                        = new System.Collections.Generic.List<God.NoiTaiUI.Muc>();
+                                for (int iNT = 0; iNT < soNT; iNT++)
+                                {
+                                    God.NoiTaiUI.Muc mNT = new God.NoiTaiUI.Muc();
+                                    mNT.id = msg.reader().readByte();
+                                    mNT.icon = msg.reader().readShort();
+                                    mNT.moTa = msg.reader().readUTF();
+                                    mNT.chiSoMin = msg.reader().readShort();
+                                    mNT.chiSoMax = msg.reader().readShort();
+                                    dsNT.Add(mNT);
+                                }
+                                God.NoiTaiUI.getInstance().nhanBang(tenNT, iconNT,
+                                        giaVangNT, giaNgocNT, vangCoNT, ngocCoNT, dsNT);
+                            }
                             else
                             {
                                 if (b24 != 1)

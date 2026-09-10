@@ -1994,6 +1994,7 @@ namespace Game2.God
 
             int yND2 = veKhungCoTieuDe(g, xPhai, yThan, rongPhai, caoThan,
                     "Skill", 0, MAU_DAI_CAM);
+            yND2 = veNutNoiTai(g, xPhai, rongPhai, yND2);
             veDsKyNang(g, xPhai, rongPhai, yND2);
         }
 
@@ -2190,6 +2191,55 @@ namespace Game2.God
         /// Cấp đã học tra từ <c>vSkill</c> theo <c>template.id</c>; không tìm thấy
         /// nghĩa là chưa học.
         /// </remarks>
+        /// <summary>Cao của ô "Nội tại" nằm trên đầu cột Skill.</summary>
+        private const int CAO_O_NOI_TAI = 22;
+
+        /// <summary>
+        /// Ô mở bảng Nội tại, đặt trên đầu cột "Skill".
+        /// </summary>
+        /// <remarks>
+        /// <para>Nội tại là một kỹ năng bị động, nên chỗ của nó là cạnh danh sách
+        /// kỹ năng. Trước bản này nó <b>không có ô nào trong bảng nhân vật</b>:
+        /// đường duy nhất vào là một NPC ngoài bản đồ, và không có gì trong game
+        /// nói cho người chơi biết chuyện đó.</para>
+        ///
+        /// <para>Ô hiện luôn nội tại đang mang, để biết mình đang có gì mà không
+        /// phải mở bảng ra xem.</para>
+        /// </remarks>
+        private int veNutNoiTai(mGraphics g, int x, int w, int yDau)
+        {
+            int y = yDau + 2;
+            yDauNoiTai = y;
+            veKhungBo(g, x + 4, y, w - 8, CAO_O_NOI_TAI, MAU_O_DO, 0.95f,
+                    MAU_VIEN_O, 0.9f, 1);
+            mFont.tahoma_7b_yellow.drawString(g, "Nội tại", x + 10, y + 2,
+                    mFont.LEFT);
+            string s = Panel.specialInfo;
+            if (s == null || s.Length == 0)
+            {
+                s = "chạm để mở";
+            }
+            int k = s.IndexOf('[');
+            if (k > 0)
+            {
+                s = s.Substring(0, k).Trim();
+            }
+            mFont.tahoma_7_white.drawString(g, catBot(s, 26), x + 10, y + 12,
+                    mFont.LEFT);
+            return y + CAO_O_NOI_TAI + 2;
+        }
+
+        /// <summary>Vùng bấm của ô Nội tại — cùng công thức với lúc vẽ.</summary>
+        private int[] oNutNoiTai()
+        {
+            // yThan + chieu cao dai tieu de: veKhungCoTieuDe tra ve dung moc do,
+            // ma o day khong goi lai duoc nen tinh lai bang chinh con so no dung.
+            return new int[] { xPhai + 4, yDauNoiTai, rongPhai - 8, CAO_O_NOI_TAI };
+        }
+
+        /// <summary>Mốc trên của ô Nội tại ở khung hình vừa vẽ.</summary>
+        private int yDauNoiTai;
+
         private void veDsKyNang(mGraphics g, int x, int w, int yDau)
         {
             yDauKyNang = yDau;
@@ -6312,6 +6362,15 @@ namespace Game2.God
                     moHopNang(i);
                     return true;
                 }
+            }
+            // O "Noi tai" nam tren dau cot phai, xet TRUOC danh sach ky nang:
+            // hai vung nay khong chong nhau, nhung xet truoc thi thu tu doc ra
+            // giong thu tu nhin thay.
+            int[] oNT = oNutNoiTai();
+            if (cham(oNT[0], oNT[1], oNT[2], oNT[3]))
+            {
+                God.NoiTaiUI.getInstance().mo();
+                return true;
             }
             // Cot phai: bam mot ky nang thi mo hop chi tiet kem nut gan phim.
             //

@@ -228,7 +228,8 @@ namespace Game3.God
                     || BossUI.getInstance().dangMo
                     || TuiUI.getInstance().dangMo
                     || VoiceConfigUI.getInstance().dangMo
-                    || TanSatUI.getInstance().dangMo;
+                    || TanSatUI.getInstance().dangMo
+                    || NoiTaiUI.getInstance().dangMo;
         }
 
         public void UpdateTouch()
@@ -275,6 +276,10 @@ namespace Game3.God
                 return;
             }
             if (PhucLoiUI.getInstance().capNhatCham())
+            {
+                return;
+            }
+            if (NoiTaiUI.getInstance().capNhatCham())
             {
                 return;
             }
@@ -785,6 +790,7 @@ namespace Game3.God
             // Ve sau cung: hai man nay phai nam tren moi thu khac.
             VoiceConfigUI.getInstance().ve(g);
             TanSatUI.getInstance().ve(g);
+            NoiTaiUI.getInstance().ve(g);
             PhucLoiUI.getInstance().ve(g);
             // Ve SAU ba man kia de popup menu nam tren cung khi vua bam mo.
             MenuTongUI.getInstance().ve(g);

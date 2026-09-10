@@ -903,6 +903,64 @@ namespace Game4
     		}
     	}
     
+    	/// <summary>Xin máy chủ gửi toàn bộ dữ liệu bảng Nội tại.</summary>
+    	/// <remarks>
+    	/// Gói 112 <b>có phần thân</b> là bảng nội tại mới; gói 112 rỗng vẫn là
+    	/// menu NPC bốn nút của bản cũ. Nhờ vậy client cũ và mới dùng chung một
+    	/// mã gói mà không giẫm lên nhau.
+    	/// </remarks>
+    	public void noiTaiXinBang()
+    	{
+    		guiNoiTai(0, 0, 0);
+    	}
+
+    	public void noiTaiMoBangVang()
+    	{
+    		guiNoiTai(1, 0, 0);
+    	}
+
+    	public void noiTaiMoBangNgoc()
+    	{
+    		guiNoiTai(2, 0, 0);
+    	}
+
+    	/// <summary>Bốc bằng ngọc tới khi ra nội tại này với chỉ số đủ cao.</summary>
+    	/// <remarks>
+    	/// Vòng bốc chạy <b>ở máy chủ</b>. Để client bấm lặp thì mỗi lần là một
+    	/// gói tin, và vài trăm gói liên tiếp là rớt kết nối.
+    	/// </remarks>
+    	public void noiTaiMoNhanh(int idNoiTai, int chiSoMuon)
+    	{
+    		guiNoiTai(3, idNoiTai, chiSoMuon);
+    	}
+
+    	private void guiNoiTai(int viec, int idNoiTai, int chiSoMuon)
+    	{
+    		Message message = null;
+    		try
+    		{
+    			message = new Message((sbyte)112);
+    			message.writer().writeByte((sbyte)viec);
+    			if (viec == 3)
+    			{
+    				message.writer().writeByte((sbyte)idNoiTai);
+    				message.writer().writeInt(chiSoMuon);
+    			}
+    			session.sendMessage(message);
+    		}
+    		catch (Exception ex)
+    		{
+    			Cout.println(ex.Message + ex.StackTrace);
+    		}
+    		finally
+    		{
+    			if (message != null)
+    			{
+    				message.cleanup();
+    			}
+    		}
+    	}
+
     	public void requestChangeMap()
     	{
     		Message message = new Message((sbyte)(-23));

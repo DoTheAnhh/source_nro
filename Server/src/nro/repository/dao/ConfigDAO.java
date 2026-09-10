@@ -305,6 +305,15 @@ public class ConfigDAO {
      */
     public static final String TL_NGU_HANH_SON = "tl_ngu_hanh_son";
 
+    /**
+     * Số ngọc cho một lần mở nội tại.
+     *
+     * <p>Giá <b>cố định</b>, không tăng dần như giá vàng: đường ngọc là đường
+     * dùng cho "mở nhanh" — bốc liên tục tới khi ra thứ mình muốn — nên giá
+     * phải đoán trước được.</p>
+     */
+    public static final String NOI_TAI_GIA_NGOC = "noi_tai_gia_ngoc";
+
     public static final String GHI_LICH_SU_VP = "ghi_lich_su_vp";
 
     /**
@@ -386,6 +395,7 @@ public class ConfigDAO {
         DEFAULTS.put(SKH_SAO_MAX, 2L);
         DEFAULTS.put(GIU_LICH_SU_GD_NGAY, 30L);
         DEFAULTS.put(TL_NGU_HANH_SON, 3L);
+        DEFAULTS.put(NOI_TAI_GIA_NGOC, 50L);
         DEFAULTS.put(GHI_LICH_SU_VP, 1L);
         DEFAULTS.put(GIU_LICH_SU_VP_NGAY, 30L);
     }
@@ -452,6 +462,8 @@ public class ConfigDAO {
         NOTES.put(SKH_SAO_MAX, "Số sao pha lê nhiều nhất");
         NOTES.put(GIU_LICH_SU_GD_NGAY,
                 "Số ngày giữ nhật ký giao dịch giữa người chơi — 0 là giữ mãi");
+        NOTES.put(NOI_TAI_GIA_NGOC,
+                "Số ngọc cho một lần mở nội tại (dùng cho cả \"mở nhanh\")");
         NOTES.put(TL_NGU_HANH_SON,
                 "Chia tiềm năng nhận trong Ngũ Hành Sơn cho số này (1 = không chia)");
         NOTES.put(GHI_LICH_SU_VP,
