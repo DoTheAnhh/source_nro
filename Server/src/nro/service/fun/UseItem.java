@@ -309,8 +309,14 @@ public class UseItem {
      * thì chạy y như trước, không chậm đi một nhịp nào.</p>
      */
     private void useItem(Player pl, Item item, int indexBag) {
+        // Dieu kien KHONG duoc doi choDungSoLan > 0.
+        //
+        // Luot dau tien la mot lan dung THAT, luc do hang doi con rong. Doi
+        // hang doi phai co san mot luot thi cong cho nay khong bao gio dong
+        // o lan bam thu hai — va toan bo chuoi "dung nhieu" chay tuot nhu cu.
+        // Cai quyet dinh la: mon nay dang con hieu luc hay khong.
         if (pl != null && item != null && item.isNotNullItem()
-                && pl.choDungSoLan > 0 && pl.choDungTemplate == item.template.id
+                && pl.choDungTemplate == item.template.id
                 && System.currentTimeMillis() < pl.choDungToi) {
             // Dang cho luot truoc het hieu luc: xep hang, dung tieu mon.
             pl.choDungSoLan++;
