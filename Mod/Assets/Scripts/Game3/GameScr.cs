@@ -4598,7 +4598,15 @@ namespace Game3
     				isPointerDowning = false;
     				if (GameCanvas.isPointerClick && GameCanvas.isPointerJustRelease)
     				{
-    					ChatTextField.gI().startChat(this, string.Empty);
+    					// Dung chung duong gui voi khung chat o day man hinh.
+    					//
+    					// Nut nay truoc day goi ChatTextField.startChat, va cai
+    					// do gui bang Service.chat(text) — chat THUONG, khong
+    					// thuoc kenh nao. Con khung chat co bon the kenh va gui
+    					// dung the dang mo. Hai duong khac nhau cho cung mot
+    					// viec: dang xem the "Khu", bam nut nay go mot cau, va
+    					// cau do khong ra kenh Khu.
+    					God.ChatUI.getInstance().moGoChuTuNgoai();
     					SoundMn.gI().buttonClick();
     					Char.myCharz().currentMovePoint = null;
     					GameCanvas.clearAllPointerEvent();
@@ -7035,6 +7043,25 @@ namespace Game3
     	/// <summary>Lề trái dùng chung cho mọi thứ trong cột.</summary>
     	public const int LE_COT_TRAI = 8;
 
+    	/// <summary>Phần "  X:123 Y:456" nối sau số khu.</summary>
+    	/// <remarks>
+    	/// Đọc thẳng từ nhân vật của mình nên nó chạy theo từng bước chân. Không
+    	/// hỏi máy chủ, và cũng không hỏi được: máy chủ chỉ biết vị trí ở thời
+    	/// điểm gói tin cuối, còn ô này phải khớp với cái người chơi đang nhìn.
+    	///
+    	/// Trả về chuỗi rỗng khi chưa có nhân vật — lúc mới vào game hay đang
+    	/// đổi bản đồ. Bảng bản đồ vẫn phải vẽ được, chỉ thiếu phần toạ độ.
+    	/// </remarks>
+    	private static string toaDoChu()
+    	{
+    		Char c = Char.myCharz();
+    		if (c == null)
+    		{
+    			return "";
+    		}
+    		return "  X:" + c.cx + " Y:" + c.cy;
+    	}
+
     	/// <summary>
     	/// Bảng tên bản đồ và số khu, xếp ngay dưới khung nhân vật.
     	/// </summary>
@@ -7049,7 +7076,7 @@ namespace Game3
     	public static void veBangBanDo(mGraphics g)
     	{
     		string d1 = TileMap.mapID + " - " + TileMap.mapName;
-    		string d2 = "Khu " + TileMap.zoneID;
+    		string d2 = "Khu " + TileMap.zoneID + toaDoChu();
     		int w = mFont.tahoma_7_white.getWidth(d1);
     		int w2 = mFont.tahoma_7_white.getWidth(d2);
     		if (w2 > w)

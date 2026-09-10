@@ -69,6 +69,66 @@ namespace Game3.God
             // day thi dong bang giua luot la luot dung hinh — mat tien moi ma
             // khong co ket qua nao.
             TroChoiUI.getInstance().capNhatNen();
+            canhDoiMapKet();
+        }
+
+        // ------------------------------------------------------------------
+        //  Chot an toan: khong bao gio ket o trang thai "dang doi ban do"
+        // ------------------------------------------------------------------
+
+        private static bool doiMapTruoc;
+        private static long mocDoiMap;
+
+        /// <summary>Quá lâu mà chưa vào được bản đồ mới thì thôi, mili giây.</summary>
+        /// <remarks>
+        /// Máy chủ trả lời trong dưới một giây ở mạng bình thường. Tám giây là
+        /// để dành cho mạng rất kém.
+        /// </remarks>
+        private const long HAN_DOI_MAP = 8000L;
+
+        /// <summary>
+        /// Mở khoá nếu lượt đổi bản đồ treo mãi không xong.
+        /// </summary>
+        /// <remarks>
+        /// <para><c>Char.ischangingMap</c> bật lên lúc gửi yêu cầu và chỉ tắt khi
+        /// máy chủ trả về bản đồ mới, hoặc trả về lệnh đứng yên tại chỗ. Mất một
+        /// trong hai gói ấy — mạng vấp, máy chủ bỏ gói vì trùng lượt — là cờ
+        /// nằm bật <b>vĩnh viễn</b>.</para>
+        ///
+        /// <para>Và khi nó bật thì gần như cả game ngừng nhận thao tác: hộp
+        /// thông tin không cập nhật, không gửi được lệnh di chuyển, các màn phụ
+        /// bỏ qua phím. Nhìn ra đúng là <b>"đơ hết, bấm gì cũng không vào"</b>.
+        /// Phải thoát game mới chơi lại được.</para>
+        ///
+        /// <para>Chốt này không sửa nguyên nhân — nguyên nhân đã chặn ở máy chủ
+        /// bằng khoá đổi bản đồ. Nó chỉ bảo đảm rằng dù có chuyện gì thì sau tám
+        /// giây người chơi vẫn điều khiển được, thay vì phải tắt game.</para>
+        /// </remarks>
+        private static void canhDoiMapKet()
+        {
+            if (!Char.ischangingMap)
+            {
+                doiMapTruoc = false;
+                return;
+            }
+            long gio = mSystem.currentTimeMillis();
+            if (!doiMapTruoc)
+            {
+                doiMapTruoc = true;
+                mocDoiMap = gio;
+                return;
+            }
+            if (gio - mocDoiMap < HAN_DOI_MAP)
+            {
+                return;
+            }
+            doiMapTruoc = false;
+            Char.ischangingMap = false;
+            Char.isLockKey = false;
+            InfoDlg.hide();
+            GameCanvas.clearKeyHold();
+            GameCanvas.clearKeyPressed();
+            GameScr.info1.addInfo("Chuyển bản đồ không xong, thử lại nhé", 0);
         }
         /// <summary>Có màn phụ nào (Phúc lợi, cấu hình Voice…) đang mở không.</summary>
         /// <remarks>
@@ -167,7 +227,8 @@ namespace Game3.God
                     || SuKienUI.getInstance().dangMo
                     || BossUI.getInstance().dangMo
                     || TuiUI.getInstance().dangMo
-                    || VoiceConfigUI.getInstance().dangMo;
+                    || VoiceConfigUI.getInstance().dangMo
+                    || TanSatUI.getInstance().dangMo;
         }
 
         public void UpdateTouch()
@@ -214,6 +275,10 @@ namespace Game3.God
                 return;
             }
             if (PhucLoiUI.getInstance().capNhatCham())
+            {
+                return;
+            }
+            if (TanSatUI.getInstance().capNhatCham())
             {
                 return;
             }
@@ -719,6 +784,7 @@ namespace Game3.God
             veNutHud(g);
             // Ve sau cung: hai man nay phai nam tren moi thu khac.
             VoiceConfigUI.getInstance().ve(g);
+            TanSatUI.getInstance().ve(g);
             PhucLoiUI.getInstance().ve(g);
             // Ve SAU ba man kia de popup menu nam tren cung khi vua bam mo.
             MenuTongUI.getInstance().ve(g);
@@ -763,9 +829,15 @@ namespace Game3.God
                     ClientManager.getInstance().MenuClient();
                     break;
                 case 't':
-                    // Phim tat cho Tan Sat: menu mod dong lien tuc khi dang
-                    // tan sat nen phai co duong bat/tat khong qua menu.
-                    perform(3, null);
+                    // Mo BANG CHON kieu tan sat thay vi bat/tat thang.
+                    //
+                    // Cong tac cu chi lam duoc mot viec: danh moi thu trong
+                    // tam. Cac lua chon tinh hon — chi danh vai loai, ne sieu
+                    // quai, co danh nguoi hay khong — van nam trong ma
+                    // (Mobs.TypeMobsTanSat, neSieuQuai, tsPlayer) nhung khong
+                    // co duong nao tu trong game cham toi. Bang nay la duong do,
+                    // va no van co nut bat/tat ngay dong dau.
+                    TanSatUI.getInstance().mo();
                     break;
                 case 'j':
                     MapController.getInstance().NextMap(0);
@@ -852,7 +924,9 @@ namespace Game3.God
             // sang chuc nang khac ma khong bao gi ca.
             // Ba kenh voice khong con muc rieng trong menu: doi kenh nam trong hop
             // cau hinh. Ma 13/14/15 van giu vi lenh chat vk/vm/vb goi thang toi.
-            int[] maHanhDong = { 11, 1, 2, 3, 12, 4, 5, 6, 7, 8, 9, 10, 16 };
+            // Ma 17 = mo bang chon kieu tan sat (thay cho ma 3 bat/tat thang).
+            // Ma 3 van giu cho cho nao goi thang toi no.
+            int[] maHanhDong = { 11, 1, 2, 17, 12, 4, 5, 6, 7, 8, 9, 10, 16 };
             MyVector myVector = new MyVector();
             for(int i = 0; i < listIndex.Length && i < maHanhDong.Length; i++)
             {
@@ -860,12 +934,98 @@ namespace Game3.God
             }
             GameCanvas.menu.startAt(myVector, 0);
         }
+        /// <summary>Trần tốc độ game. Trên mức này thì máy chủ và client lệch nhau.</summary>
+        /// <remarks>
+        /// Máy chủ mới là bên chốt vị trí và sát thương. Chạy nhanh gấp mấy lần
+        /// thì client gửi lệnh dày hơn máy chủ chịu nhận, và những gì vượt quá
+        /// bị bỏ — nhìn ra là nhân vật giật về sau, đấm không ăn. Gấp đôi là mức
+        /// còn chạy trơn.
+        /// </remarks>
+        private const float TOC_DO_TOI_DA = 2f;
+
+        private static float kepTocDo(float x)
+        {
+            if (x < 0.25f)
+            {
+                return 0.25f;   // 0 la game dung han, khong con duong go lenh
+            }
+            return x > TOC_DO_TOI_DA ? TOC_DO_TOI_DA : x;
+        }
+
+        /// <summary>
+        /// Lệnh <c>tocdo</c> — đổi tốc độ chạy và số khung hình mỗi giây.
+        /// </summary>
+        /// <remarks>
+        /// <para>Gõ <c>tocdo</c> để xem đang ở mức nào, <c>tocdo 1.5</c> để đổi,
+        /// <c>tocdo 1</c> để về bình thường.</para>
+        ///
+        /// <para>Đổi <b>cả hai</b> thứ: <c>Time.timeScale</c> là tốc độ chạy của
+        /// mọi thứ trong game, còn <c>targetFrameRate</c> là số khung hình mỗi
+        /// giây. Chỉ tăng timeScale mà giữ nguyên khung hình thì mọi thứ nhanh
+        /// lên nhưng giật hơn — nhìn còn tệ hơn lúc đầu.</para>
+        ///
+        /// <para>Đây là việc chạy <b>ở máy người chơi</b>, không hỏi máy chủ. Nên
+        /// nó không cho lợi thế gì: sát thương, tiềm năng, hồi chiêu đều do máy
+        /// chủ đếm bằng đồng hồ của máy chủ.</para>
+        /// </remarks>
+        private void doiTocDo(string text)
+        {
+            string[] phan = text.Split(' ');
+            if (phan.Length < 2 || phan[1].Trim().Length == 0)
+            {
+                GameScr.info1.addInfo("Tốc độ: x" + Time.timeScale
+                        + " — gõ 'tocdo 1.5' để đổi (0.25 đến "
+                        + TOC_DO_TOI_DA + ")", 0);
+                return;
+            }
+            float x;
+            if (!float.TryParse(phan[1].Trim().Replace(',', '.'),
+                    System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out x))
+            {
+                GameScr.info1.addInfo("Phải là một con số, ví dụ 1.5", 0);
+                return;
+            }
+            x = kepTocDo(x);
+            Time.timeScale = x;
+            // 60 khung la muc goc; nhan theo toc do va kep o 120 — cao hon thi
+            // man hinh cua may khong theo kip, chi ton pin.
+            int khung = (int)(60f * x);
+            if (khung > 120)
+            {
+                khung = 120;
+            }
+            if (khung < 30)
+            {
+                khung = 30;
+            }
+            Application.targetFrameRate = khung;
+            GameScr.info1.addInfo("Tốc độ game: x" + x + " (" + khung + " khung/giây)", 0);
+        }
+
         public bool Chat(string text)
         {
+            if (text == "tocdo" || text.StartsWith("tocdo "))
+            {
+                doiTocDo(text);
+                return true;
+            }
             if(text.StartsWith("cheat "))
             {
-                int cheat = int.Parse(text.Split(' ')[1]);
-                Time.timeScale = cheat;
+                // Kep lai trong khoang chay duoc.
+                //
+                // Ban cu nhan thang so nguoi choi go vao Time.timeScale, khong
+                // chan gi ca: go "cheat 0" la game DUNG HAN va khong con duong
+                // nao go lenh khac de mo lai; go mot so am thi Unity chay lui
+                // dong ho va moi thu tinh theo thoi gian deu hong.
+                int cheat;
+                if (!int.TryParse(text.Split(' ')[1], out cheat))
+                {
+                    GameScr.info1.addInfo("Phải là một con số", 0);
+                    return true;
+                }
+                Time.timeScale = kepTocDo(cheat);
+                GameScr.info1.addInfo("Tốc độ game: x" + Time.timeScale, 0);
                 return true;
             }
             if(text.StartsWith("k "))
@@ -898,6 +1058,12 @@ namespace Game3.God
                     perform(4, null);
                     return true;
                 case "ts":
+                    // Mo bang chon, khong bat/tat thang nua — xem TanSatUI.
+                    perform(17, null);
+                    return true;
+                case "ts!":
+                    // Duong tat cho ai chi muon bat/tat that nhanh, khong qua
+                    // bang chon. Giu lai vi thoi quen cu la go "ts" roi go tiep.
                     perform(3, null);
                     return true;
                 case "tsn":
@@ -986,6 +1152,11 @@ namespace Game3.God
                     break;
                 case 16:
                     VoiceConfigUI.getInstance().mo();
+                    break;
+                case 17:
+                    // Mo bang chon kieu tan sat. Xem TanSatUI de biet vi sao
+                    // tach ra khoi cong tac bat/tat o ma 3.
+                    TanSatUI.getInstance().mo();
                     break;
                 case 13:
                     VoiceChat.doiKenh(VoiceChat.KENH_KHU);

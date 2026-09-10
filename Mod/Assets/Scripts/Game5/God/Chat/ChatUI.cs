@@ -1006,6 +1006,29 @@ namespace Game5.God
         /// "Hệ thống" và "Thế giới" là tin một chiều từ máy chủ, người chơi
         /// không gửi vào đó được, nên gửi chat thường là nghĩa gần nhất.
         /// </remarks>
+        /// <summary>
+        /// Mở hộp gõ chữ cho <b>nút chat ở góc phải màn hình</b>.
+        /// </summary>
+        /// <remarks>
+        /// <para>Nút đó trước đây đi đường riêng: nó gọi
+        /// <c>ChatTextField.startChat</c> rồi <c>Service.chat(text)</c> — chat
+        /// THƯỜNG, không thuộc kênh nào. Còn khung chat ở đáy màn hình có bốn
+        /// thẻ kênh và gửi đúng kênh đang mở. Hai đường khác nhau cho cùng một
+        /// việc: người chơi đang xem thẻ "Khu", bấm nút góc phải gõ một câu, và
+        /// câu đó không ra kênh Khu.</para>
+        ///
+        /// <para>Nay nút góc phải gọi thẳng vào đây, nên nó dùng chung thẻ đang
+        /// chọn, chung hộp gõ tiếng Việt, chung mọi thứ.</para>
+        ///
+        /// <para>Mở luôn khung chat nếu đang thu gọn: gõ xong mà không thấy câu
+        /// mình vừa gửi ở đâu thì không biết nó đã đi hay chưa.</para>
+        /// </remarks>
+        public void moGoChuTuNgoai()
+        {
+            thuGon = false;
+            moHopGo();
+        }
+
         private void moHopGo()
         {
             int kenhLucGo = theChon;

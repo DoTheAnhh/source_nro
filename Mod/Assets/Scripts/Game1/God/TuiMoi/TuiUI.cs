@@ -6420,6 +6420,26 @@ namespace Game1.God
 
         private void moHop(Item it, string tenO, int oMac, int oTui)
         {
+            // Ô TRỐNG trong hành trang thì bỏ qua hẳn.
+            //
+            // Hộp "Ô trống — Chưa mặc gì ở ô này" từng là cố ý: bấm mà im hẳn
+            // thì không phân biệt được ô trống với màn hình treo. Nhưng lý do ấy
+            // chỉ đúng với các Ô TRANG BỊ — ở đó ô trống là một chỗ có ý nghĩa
+            // ("chưa mặc áo"), và hộp nói ra điều đó.
+            //
+            // Hành trang thì khác: nó có hàng chục ô trống liền nhau, và người
+            // chơi lướt qua chúng suốt. Mở một hộp rồi phải bấm tắt cho mỗi lần
+            // chạm nhầm là phiền chứ không phải giúp.
+            //
+            // oMac < 0 nghĩa là ô này KHÔNG phải ô trang bị — tức ô hành trang,
+            // ô rương, ô đệ. Kèm điều kiện món rỗng thì đúng là "ô trống trong
+            // hành trang".
+            if ((it == null || it.template == null) && oMac < 0)
+            {
+                hienHop = false;
+                GameCanvas.clearAllPointerEvent();
+                return;
+            }
             monXem = it;
             tenOXem = (tenO == null) ? "" : tenO;
             oMacXem = oMac;
