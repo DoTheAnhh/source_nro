@@ -456,6 +456,9 @@ public final class Manager {
 
     TestDame testdame = new TestDame();
     testdame.initTestDame();
+
+    // NPC ho tro nhiem vu o Dao Kame — khong phai boss, xem GokuSSJKame.
+    new nro.entity.player.GokuSSJKame().dungTaiDaoKame();
 }
 
     /**
