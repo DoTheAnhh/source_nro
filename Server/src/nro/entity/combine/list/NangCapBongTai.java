@@ -224,6 +224,8 @@ public class NangCapBongTai {
                     InventoryService.gI().subQuantityItemsBag(player, manhVo, 99);
                 }
                 InventoryService.gI().addItemBag(player, btc2);
+                nro.service.badges.BadgesTaskService.tangTheoLoai(player,
+                        nro.entity.badges.BadgesTaskTemplate.NANG_BONG_TAI, -1, 1);
                 CombineService.gI().sendEffectSuccessCombine(player);
                 Service.gI().sendThongBao(player,
                         "Nâng thành công! Bông tai Porata [+2].");
@@ -267,6 +269,8 @@ public class NangCapBongTai {
                 } else {
                     InventoryService.gI().subQuantityItemsBag(player, manhVo, 999);
                 }
+                nro.service.badges.BadgesTaskService.tangTheoLoai(player,
+                        nro.entity.badges.BadgesTaskTemplate.NANG_BONG_TAI, -1, 1);
                 CombineService.gI().sendEffectSuccessCombine(player);
                 Service.gI().sendThongBao(player,
                         "Nâng thành công! Bông tai Porata [+3].");

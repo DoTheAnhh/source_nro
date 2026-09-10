@@ -3350,6 +3350,12 @@ public byte getAura() {
             this.DeTrung.dispose();
             this.DeTrung = null;
         }
+        if (isPl()) {
+            // Nhiem vu danh hieu loai "bi ha guc". Dat o setDie vi day la duong
+            // chung cua moi cai chet, khong phai chi PK.
+            nro.service.badges.BadgesTaskService.tangTheoLoai(this,
+                    nro.entity.badges.BadgesTaskTemplate.CHET, -1, 1);
+        }
         Service.gI().charDie(this);
         if (!this.isDeTu && !this.isBo && !this.isMe && !this.isPetFollow && !this.isDuongTang && !this.isPhanThan && !this.isNguoiYeu && !this.isConOne && !this.isConTwo && !this.isConThree && !this.isBoss
                 && plAtt != null && !plAtt.isDeTu && !plAtt.isBo && !plAtt.isMe && !plAtt.isPetFollow && !plAtt.isDuongTang && !plAtt.isBoss && !plAtt.isPhanThan && !plAtt.isNguoiYeu && !plAtt.isConOne && !plAtt.isConTwo && !plAtt.isConThree) {

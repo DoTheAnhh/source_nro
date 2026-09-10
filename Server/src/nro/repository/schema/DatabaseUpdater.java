@@ -160,6 +160,12 @@ public class DatabaseUpdater {
 
             if (rowsAffected > 0) {
                 player.getSession().vnd -= num;
+                // Nhiem vu danh hieu loai "doi tien nap" — moi 1.000d mot diem.
+                // Dat o day vi day la cua duy nhat tru so du nap cua nguoi
+                // choi: doi thoi vang, ngoc xanh, hong ngoc va mua ve deu di qua.
+                nro.service.badges.BadgesTaskService.tangTheoLoai(player,
+                        nro.entity.badges.BadgesTaskTemplate.NAP_THE, -1,
+                        num / 1000);
                 return true;
             }
         } catch (SQLException e) {

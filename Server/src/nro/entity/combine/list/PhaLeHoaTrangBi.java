@@ -197,6 +197,8 @@ public class PhaLeHoaTrangBi {
 
         if (success) {
             item.addOptionParam(107, 1);
+            nro.service.badges.BadgesTaskService.tangTheoLoai(player,
+                    nro.entity.badges.BadgesTaskTemplate.DAP_SAO, star + 1, 1);
             // Loa ca may chu tu bay sao tro len. Dieu kien cu la `star > 7`,
             // ma star la so sao TRUOC khi nang va tran la 8 — nen no chi dung
             // khi star = 8, tuc luc da het nang duoc. Cau loa chua bao gio chay.

@@ -1195,6 +1195,15 @@ public class ChangeMapService {
             nro.entity.map.hirudegarn.MapHirudegarn.gI().joinMap22h(player);
             player.zone.sendBigBoss(player);
         }
+        // Nhiem vu danh hieu loai "toi ban do". Dat o day chu khong o luc bat
+        // dau doi: chi khi client bao da dung xong thi nguoi choi moi thuc su
+        // CO MAT o ban do do.
+        try {
+            nro.service.badges.BadgesTaskService.tangTheoLoai(player,
+                    nro.entity.badges.BadgesTaskTemplate.DEN_BAN_DO,
+                    player.zone == null ? -1 : player.zone.map.mapId, 1);
+        } catch (Exception boQua) {
+        }
         chayYeuCauDoiMapDangCho(player);
     }
 

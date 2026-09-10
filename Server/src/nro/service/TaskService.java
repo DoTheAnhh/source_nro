@@ -125,6 +125,14 @@ public class TaskService {
     //chuyển sang task mới
     public void sendNextTaskMain(Player player) {
         rewardDoneTask(player);
+        // Nhiem vu danh hieu loai "xong nhiem vu chinh tuyen" — dem ID CU,
+        // tuc cai vua lam xong, chu khong phai cai sap nhan.
+        try {
+            nro.service.badges.BadgesTaskService.tangTheoLoai(player,
+                    nro.entity.badges.BadgesTaskTemplate.XONG_NHIEM_VU,
+                    player.playerTask.taskMain.id, 1);
+        } catch (Exception boQua) {
+        }
         switch (player.playerTask.taskMain.id) {
             case 3:
                 player.playerTask.taskMain = TaskService.gI().getTaskMainById(player, player.gender + 4);

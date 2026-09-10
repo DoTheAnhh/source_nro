@@ -145,6 +145,8 @@ public class IntrinsicService {
         moi.param1 = (short) Util.nextInt(moi.paramFrom1, moi.paramTo1);
         moi.param2 = (short) Util.nextInt(moi.paramFrom2, moi.paramTo2);
         player.playerIntrinsic.intrinsic = moi;
+        nro.service.badges.BadgesTaskService.tangTheoLoai(player,
+                nro.entity.badges.BadgesTaskTemplate.MO_NOI_TAI, moi.id, 1);
     }
 
     private void changeIntrinsic(Player player) {

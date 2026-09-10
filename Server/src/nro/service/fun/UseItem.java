@@ -1984,6 +1984,8 @@ public class UseItem {
 
             InventoryService.gI().subQuantityItemsBag(player, pea, 1);
             InventoryService.gI().sendItemBag(player);
+            nro.service.badges.BadgesTaskService.tangTheoLoai(player,
+                    nro.entity.badges.BadgesTaskTemplate.AN_DAU, -1, 1);
         }
     }
 

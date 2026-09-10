@@ -173,6 +173,8 @@ public class Detu extends Player {
                 master.fusion.typeFusion = ConstPlayer.LUONG_LONG_NHAT_THE;
                 ItemTimeService.gI().sendItemTime(master, master.gender == ConstPlayer.NAMEC ? 3901 : 3790, Fusion.TIME_FUSION / 1000);
             }
+            nro.service.badges.BadgesTaskService.tangTheoLoai(master,
+                    nro.entity.badges.BadgesTaskTemplate.HOP_THE, -1, 1);
             this.status = FUSION;
             ChangeMapService.gI().exitMap(this);
             fusionEffect(master.fusion.typeFusion);
@@ -199,6 +201,8 @@ public class Detu extends Player {
                 master.fusion.typeFusion = ConstPlayer.LUONG_LONG_NHAT_THE;
                 ItemTimeService.gI().sendItemTime(master, master.gender == ConstPlayer.NAMEC ? 3901 : 3790, Fusion.TIME_FUSION / 1000);
             }
+            nro.service.badges.BadgesTaskService.tangTheoLoai(master,
+                    nro.entity.badges.BadgesTaskTemplate.HOP_THE, -1, 1);
             this.status = FUSION;
             ChangeMapService.gI().exitMap(this);
             fusionEffect(master.fusion.typeFusion);
@@ -225,6 +229,8 @@ public class Detu extends Player {
                 master.fusion.typeFusion = ConstPlayer.LUONG_LONG_NHAT_THE;
                 ItemTimeService.gI().sendItemTime(master, master.gender == ConstPlayer.NAMEC ? 3901 : 3790, Fusion.TIME_FUSION / 1000);
             }
+            nro.service.badges.BadgesTaskService.tangTheoLoai(master,
+                    nro.entity.badges.BadgesTaskTemplate.HOP_THE, -1, 1);
             this.status = FUSION;
             ChangeMapService.gI().exitMap(this);
             fusionEffect(master.fusion.typeFusion);
@@ -251,6 +257,8 @@ public class Detu extends Player {
                 master.fusion.typeFusion = ConstPlayer.LUONG_LONG_NHAT_THE;
                 ItemTimeService.gI().sendItemTime(master, master.gender == ConstPlayer.NAMEC ? 3901 : 3790, Fusion.TIME_FUSION / 1000);
             }
+            nro.service.badges.BadgesTaskService.tangTheoLoai(master,
+                    nro.entity.badges.BadgesTaskTemplate.HOP_THE, -1, 1);
             this.status = FUSION;
             ChangeMapService.gI().exitMap(this);
             fusionEffect(master.fusion.typeFusion);
@@ -277,6 +285,8 @@ public class Detu extends Player {
                 master.fusion.typeFusion = ConstPlayer.LUONG_LONG_NHAT_THE;
                 ItemTimeService.gI().sendItemTime(master, master.gender == ConstPlayer.NAMEC ? 3901 : 3790, Fusion.TIME_FUSION / 1000);
             }
+            nro.service.badges.BadgesTaskService.tangTheoLoai(master,
+                    nro.entity.badges.BadgesTaskTemplate.HOP_THE, -1, 1);
             this.status = FUSION;
             ChangeMapService.gI().exitMap(this);
             fusionEffect(master.fusion.typeFusion);

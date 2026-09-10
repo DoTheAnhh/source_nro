@@ -484,6 +484,10 @@ public final class CauCaManager {
                     "Câu Cá: hành trang đầy, không nhận được thưởng!");
         }
 
+        if (batDuoc) {
+            nro.service.badges.BadgesTaskService.tangTheoLoai(pl,
+                    nro.entity.badges.BadgesTaskTemplate.CAU_CA, v.loai, 1);
+        }
         ghiVan(pl, v.loai, thuong, batDuoc, v.xa);
         MiniGameService.gI().cauCaGuiKetQua(pl, v.loai, thuong, batDuoc);
     }
