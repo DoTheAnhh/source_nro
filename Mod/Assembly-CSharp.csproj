@@ -20,7 +20,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <NoWarn>0169;USG0001</NoWarn>
-    <DefineConstants>UNITY_2022_3_61;UNITY_2022_3;UNITY_2022;UNITY_5_3_OR_NEWER;UNITY_5_4_OR_NEWER;UNITY_5_5_OR_NEWER;UNITY_5_6_OR_NEWER;UNITY_2017_1_OR_NEWER;UNITY_2017_2_OR_NEWER;UNITY_2017_3_OR_NEWER;UNITY_2017_4_OR_NEWER;UNITY_2018_1_OR_NEWER;UNITY_2018_2_OR_NEWER;UNITY_2018_3_OR_NEWER;UNITY_2018_4_OR_NEWER;UNITY_2019_1_OR_NEWER;UNITY_2019_2_OR_NEWER;UNITY_2019_3_OR_NEWER;UNITY_2019_4_OR_NEWER;UNITY_2020_1_OR_NEWER;UNITY_2020_2_OR_NEWER;UNITY_2020_3_OR_NEWER;UNITY_2021_1_OR_NEWER;UNITY_2021_2_OR_NEWER;UNITY_2021_3_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_2022_2_OR_NEWER;UNITY_2022_3_OR_NEWER;UNITY_INCLUDE_TESTS;ENABLE_AR;ENABLE_AUDIO;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_MICROPHONE;ENABLE_MULTIPLE_DISPLAYS;ENABLE_PHYSICS;ENABLE_TEXTURE_STREAMING;ENABLE_LZMA;ENABLE_UNITYEVENTS;ENABLE_VR;ENABLE_WEBCAM;ENABLE_UNITYWEBREQUEST;ENABLE_WWW;ENABLE_CLOUD_SERVICES;ENABLE_CLOUD_SERVICES_ADS;ENABLE_CLOUD_SERVICES_USE_WEBREQUEST;ENABLE_CLOUD_SERVICES_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_PURCHASING;ENABLE_CLOUD_SERVICES_ANALYTICS;ENABLE_CLOUD_SERVICES_BUILD;ENABLE_EDITOR_GAME_SERVICES;ENABLE_UNITY_GAME_SERVICES_ANALYTICS_SUPPORT;ENABLE_CLOUD_LICENSE;ENABLE_EDITOR_HUB_LICENSE;ENABLE_WEBSOCKET_CLIENT;ENABLE_GENERATE_NATIVE_PLUGINS_FOR_ASSEMBLIES_API;ENABLE_DIRECTOR_AUDIO;ENABLE_DIRECTOR_TEXTURE;ENABLE_MANAGED_JOBS;ENABLE_MANAGED_TRANSFORM_JOBS;ENABLE_MANAGED_ANIMATION_JOBS;ENABLE_MANAGED_AUDIO_JOBS;ENABLE_ENGINE_CODE_STRIPPING;ENABLE_ONSCREEN_KEYBOARD;ENABLE_MANAGED_UNITYTLS;INCLUDE_DYNAMIC_GI;ENABLE_SCRIPTING_GC_WBARRIERS;PLATFORM_SUPPORTS_MONO;ENABLE_VIDEO;ENABLE_ACCELERATOR_CLIENT_DEBUGGING;ENABLE_NAVIGATION_PACKAGE_DEBUG_VISUALIZATION;ENABLE_NAVIGATION_HEIGHTMESH_RUNTIME_SUPPORT;ENABLE_NAVIGATION_UI_REQUIRES_PACKAGE;PLATFORM_IOS;TEXTCORE_1_0_OR_NEWER;ENABLE_RUNTIME_GI;ENABLE_GAMECENTER;ENABLE_NETWORK;ENABLE_IOS_ON_DEMAND_RESOURCES;ENABLE_IOS_APP_SLICING;PLAYERCONNECTION_LISTENS_FIXED_PORT;DEBUGGER_LISTENS_FIXED_PORT;PLATFORM_SUPPORTS_ADS_ID;SUPPORT_ENVIRONMENT_VARIABLES;PLATFORM_SUPPORTS_PROFILER;ENABLE_CRUNCH_TEXTURE_COMPRESSION;ENABLE_ETC_COMPRESSION;UNITY_IPHONE_API;ENABLE_UNITYADS_RUNTIME;UNITY_UNITYADS_API;UNITY_IOS;PLATFORM_IPHONE;UNITY_IPHONE;UNITY_HAS_GOOGLEVR;ENABLE_SPATIALTRACKING;ENABLE_MONO;NET_4_6;NET_UNITY_4_8;ENABLE_PROFILER;DEBUG;TRACE;UNITY_ASSERTIONS;UNITY_EDITOR;UNITY_EDITOR_64;UNITY_EDITOR_WIN;ENABLE_UNITY_COLLECTIONS_CHECKS;ENABLE_BURST_AOT;UNITY_TEAM_LICENSE;ENABLE_CUSTOM_RENDER_TEXTURE;ENABLE_DIRECTOR;ENABLE_LOCALIZATION;ENABLE_SPRITES;ENABLE_TERRAIN;ENABLE_TILEMAP;ENABLE_TIMELINE;ENABLE_LEGACY_INPUT_MANAGER;TEXTCORE_FONT_ENGINE_1_5_OR_NEWER;CSHARP_7_OR_LATER;CSHARP_7_3_OR_NEWER</DefineConstants>
+    <DefineConstants>UNITY_2022_3_61;UNITY_2022_3;UNITY_2022;UNITY_5_3_OR_NEWER;UNITY_5_4_OR_NEWER;UNITY_5_5_OR_NEWER;UNITY_5_6_OR_NEWER;UNITY_2017_1_OR_NEWER;UNITY_2017_2_OR_NEWER;UNITY_2017_3_OR_NEWER;UNITY_2017_4_OR_NEWER;UNITY_2018_1_OR_NEWER;UNITY_2018_2_OR_NEWER;UNITY_2018_3_OR_NEWER;UNITY_2018_4_OR_NEWER;UNITY_2019_1_OR_NEWER;UNITY_2019_2_OR_NEWER;UNITY_2019_3_OR_NEWER;UNITY_2019_4_OR_NEWER;UNITY_2020_1_OR_NEWER;UNITY_2020_2_OR_NEWER;UNITY_2020_3_OR_NEWER;UNITY_2021_1_OR_NEWER;UNITY_2021_2_OR_NEWER;UNITY_2021_3_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_2022_2_OR_NEWER;UNITY_2022_3_OR_NEWER;UNITY_INCLUDE_TESTS;ENABLE_AR;ENABLE_AUDIO;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_EVENT_QUEUE;ENABLE_MICROPHONE;ENABLE_MULTIPLE_DISPLAYS;ENABLE_PHYSICS;ENABLE_TEXTURE_STREAMING;ENABLE_LZMA;ENABLE_UNITYEVENTS;ENABLE_VR;ENABLE_WEBCAM;ENABLE_UNITYWEBREQUEST;ENABLE_WWW;ENABLE_CLOUD_SERVICES;ENABLE_CLOUD_SERVICES_ADS;ENABLE_CLOUD_SERVICES_USE_WEBREQUEST;ENABLE_CLOUD_SERVICES_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_NATIVE_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_PURCHASING;ENABLE_CLOUD_SERVICES_ANALYTICS;ENABLE_CLOUD_SERVICES_BUILD;ENABLE_EDITOR_GAME_SERVICES;ENABLE_UNITY_GAME_SERVICES_ANALYTICS_SUPPORT;ENABLE_CLOUD_LICENSE;ENABLE_EDITOR_HUB_LICENSE;ENABLE_WEBSOCKET_CLIENT;ENABLE_GENERATE_NATIVE_PLUGINS_FOR_ASSEMBLIES_API;ENABLE_DIRECTOR_AUDIO;ENABLE_DIRECTOR_TEXTURE;ENABLE_MANAGED_JOBS;ENABLE_MANAGED_TRANSFORM_JOBS;ENABLE_MANAGED_ANIMATION_JOBS;ENABLE_MANAGED_AUDIO_JOBS;ENABLE_RUNTIME_PERMISSIONS;ENABLE_ENGINE_CODE_STRIPPING;ENABLE_ONSCREEN_KEYBOARD;ENABLE_MANAGED_UNITYTLS;INCLUDE_DYNAMIC_GI;ENABLE_SCRIPTING_GC_WBARRIERS;PLATFORM_SUPPORTS_MONO;ENABLE_VIDEO;ENABLE_ACCELERATOR_CLIENT_DEBUGGING;ENABLE_NAVIGATION_PACKAGE_DEBUG_VISUALIZATION;ENABLE_NAVIGATION_HEIGHTMESH_RUNTIME_SUPPORT;ENABLE_NAVIGATION_UI_REQUIRES_PACKAGE;PLATFORM_ANDROID;TEXTCORE_1_0_OR_NEWER;UNITY_ANDROID;UNITY_ANDROID_API;ENABLE_EGL;ENABLE_NETWORK;ENABLE_RUNTIME_GI;ENABLE_CRUNCH_TEXTURE_COMPRESSION;UNITY_CAN_SHOW_SPLASH_SCREEN;UNITY_HAS_GOOGLEVR;UNITY_HAS_TANGO;ENABLE_SPATIALTRACKING;ENABLE_ETC_COMPRESSION;PLATFORM_EXTENDS_VULKAN_DEVICE;PLATFORM_HAS_MULTIPLE_SWAPCHAINS;UNITY_ANDROID_SUPPORTS_SHADOWFILES;PLATFORM_UPDATES_TIME_OUTSIDE_OF_PLAYER_LOOP;ENABLE_UNITYADS_RUNTIME;UNITY_UNITYADS_API;ENABLE_MONO;NET_4_6;NET_UNITY_4_8;ENABLE_PROFILER;DEBUG;TRACE;UNITY_ASSERTIONS;UNITY_EDITOR;UNITY_EDITOR_64;UNITY_EDITOR_WIN;ENABLE_UNITY_COLLECTIONS_CHECKS;ENABLE_BURST_AOT;UNITY_TEAM_LICENSE;ENABLE_CUSTOM_RENDER_TEXTURE;ENABLE_DIRECTOR;ENABLE_LOCALIZATION;ENABLE_SPRITES;ENABLE_TERRAIN;ENABLE_TILEMAP;ENABLE_TIMELINE;ENABLE_LEGACY_INPUT_MANAGER;TEXTCORE_FONT_ENGINE_1_5_OR_NEWER;CSHARP_7_OR_LATER;CSHARP_7_3_OR_NEWER</DefineConstants>
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -51,7 +51,7 @@
     <UnityProjectGeneratorVersion>2.0.23</UnityProjectGeneratorVersion>
     <UnityProjectGeneratorStyle>Legacy</UnityProjectGeneratorStyle>
     <UnityProjectType>Game:1</UnityProjectType>
-    <UnityBuildTarget>iOS:9</UnityBuildTarget>
+    <UnityBuildTarget>Android:13</UnityBuildTarget>
     <UnityVersion>2022.3.61f1</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
@@ -79,6 +79,7 @@
     <Compile Include="Assets\Scripts\Game6\God\Chung\NhatKy.cs" />
     <Compile Include="Assets\Scripts\Game3\Hint.cs" />
     <Compile Include="Assets\Scripts\Game6\GameScr.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\NoiTai\NoiTaiUI.cs" />
     <Compile Include="Assets\Scripts\Game6\IActionListener.cs" />
     <Compile Include="Assets\Scripts\Game1\IChatable.cs" />
     <Compile Include="Assets\Scripts\Game5\iPhoneGeneration.cs" />
@@ -309,6 +310,7 @@
     <Compile Include="Assets\Scripts\Game4\BigBoss2.cs" />
     <Compile Include="Assets\Scripts\Game2\Hint.cs" />
     <Compile Include="Assets\Scripts\Game5\T1.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\TanSat\TanSatUI.cs" />
     <Compile Include="Assets\Scripts\Game5\God\BossList\BossUI.cs" />
     <Compile Include="Assets\Scripts\Game5\IKbAction.cs" />
     <Compile Include="Assets\Scripts\Game4\Assets\src\e\SmallSave.cs" />
@@ -369,6 +371,7 @@
     <Compile Include="Assets\Scripts\Game5\FireWorkEff.cs" />
     <Compile Include="Assets\Scripts\Game2\TabClanIcon.cs" />
     <Compile Include="Assets\Scripts\Game1\MapTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\TanSat\TanSatUI.cs" />
     <Compile Include="Assets\Scripts\Game1\MagicTree.cs" />
     <Compile Include="Assets\Scripts\Game5\Hint.cs" />
     <Compile Include="Assets\Scripts\Game2\StaticObj.cs" />
@@ -760,6 +763,7 @@
     <Compile Include="Assets\Scripts\Game6\Paint.cs" />
     <Compile Include="Assets\Scripts\Game3\ItemMap.cs" />
     <Compile Include="Assets\Scripts\Game5\Service.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\NoiTai\NoiTaiUI.cs" />
     <Compile Include="Assets\Scripts\Game6\T2.cs" />
     <Compile Include="Assets\Scripts\Game4\ImageInfo.cs" />
     <Compile Include="Assets\Scripts\Game5\God\TuiMoi\TuiUI.cs" />
@@ -777,8 +781,8 @@
     <Compile Include="Assets\Scripts\Game3\InfoPhuBan.cs" />
     <Compile Include="Assets\Scripts\Game5\MyAudioClip.cs" />
     <Compile Include="Assets\Scripts\Game6\Scroll.cs" />
-    <Compile Include="Assets\Scripts\Game4\MyVector.cs" />
     <Compile Include="Assets\Scripts\Game2\Assets\src\g\ClientInput.cs" />
+    <Compile Include="Assets\Scripts\Game4\MyVector.cs" />
     <Compile Include="Assets\Scripts\Game1\mLine.cs" />
     <Compile Include="Assets\Scripts\Game4\ServerEffect.cs" />
     <Compile Include="Assets\Scripts\Game2\Waypoint.cs" />
@@ -789,6 +793,7 @@
     <Compile Include="Assets\Scripts\Game1\CharChild.cs" />
     <Compile Include="Assets\Scripts\Game6\Effect2.cs" />
     <Compile Include="Assets\Scripts\Game3\Key.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\TanSat\TanSatUI.cs" />
     <Compile Include="Assets\Scripts\Game6\Task.cs" />
     <Compile Include="Assets\Scripts\Game1\TaskTemplate.cs" />
     <Compile Include="Assets\Scripts\Game6\TouchScreenKeyboardType.cs" />
@@ -966,6 +971,7 @@
     <Compile Include="Assets\Scripts\Game3\God\Chung\NhatKy.cs" />
     <Compile Include="Assets\Scripts\Game4\SmallImage.cs" />
     <Compile Include="Assets\Scripts\Game1\BgItemMn.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\TanSat\TanSatUI.cs" />
     <Compile Include="Assets\Scripts\Game5\iPhoneSettings.cs" />
     <Compile Include="Assets\Scripts\Game2\God\TroChoi\MiniGame.cs" />
     <Compile Include="Assets\Scripts\Game3\PopUp.cs" />
@@ -1026,6 +1032,7 @@
     <Compile Include="Assets\Scripts\Game3\Mob.cs" />
     <Compile Include="Assets\Scripts\Game3\GameScr.cs" />
     <Compile Include="Assets\Scripts\Game3\SmallImage.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\TanSat\TanSatUI.cs" />
     <Compile Include="Assets\Scripts\Game1\ChooseCharScr.cs" />
     <Compile Include="Assets\Scripts\Game6\MoneyCharge.cs" />
     <Compile Include="Assets\Scripts\Game4\NClass.cs" />
@@ -1034,6 +1041,7 @@
     <Compile Include="Assets\Scripts\Game4\ArrayCast.cs" />
     <Compile Include="Assets\Scripts\Game4\PKFlag.cs" />
     <Compile Include="Assets\Scripts\Game1\PopUp.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\NoiTai\NoiTaiUI.cs" />
     <Compile Include="Assets\Scripts\Game6\MyKeyMap.cs" />
     <Compile Include="Assets\Scripts\Game2\ItemTemplates.cs" />
     <Compile Include="Assets\Scripts\Game6\ItemTemplate.cs" />
@@ -1133,6 +1141,7 @@
     <Compile Include="Assets\Scripts\Game6\BachTuoc.cs" />
     <Compile Include="Assets\Scripts\Game3\mSystem.cs" />
     <Compile Include="Assets\Scripts\Game2\DataOutputStream.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\TanSat\TanSatUI.cs" />
     <Compile Include="Assets\Scripts\Game1\BallInfo.cs" />
     <Compile Include="Assets\Scripts\Game1\God\Boss\BossData.cs" />
     <Compile Include="Assets\Scripts\Game2\Assets\src\f\Controller2.cs" />
@@ -1302,6 +1311,7 @@
     <Compile Include="Assets\Scripts\Game2\SplashScr.cs" />
     <Compile Include="Assets\Scripts\Game4\Point.cs" />
     <Compile Include="Assets\Scripts\Game6\mFont.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\NoiTai\NoiTaiUI.cs" />
     <Compile Include="Assets\Scripts\Game5\MyStream.cs" />
     <Compile Include="Assets\Scripts\Game6\SkillOptionTemplate.cs" />
     <Compile Include="Assets\Scripts\Game3\NClass.cs" />
@@ -1430,15 +1440,16 @@
     <Compile Include="Assets\Scripts\Game3\Info.cs" />
     <Compile Include="Assets\Scripts\Game6\MyVector.cs" />
     <Compile Include="Assets\Scripts\Game5\BgItemMn.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\NoiTai\NoiTaiUI.cs" />
     <Compile Include="Assets\Scripts\Game5\Info_RadaScr.cs" />
     <Compile Include="Assets\Scripts\Game2\BigBoss2.cs" />
-    <Compile Include="Assets\Scripts\Game5\Member.cs" />
     <Compile Include="Assets\Scripts\Game4\BackgroudEffect.cs" />
     <Compile Include="Assets\Scripts\Game1\EffectManager.cs" />
     <Compile Include="Assets\Scripts\Game6\CreateCharScr.cs" />
     <Compile Include="Assets\Scripts\Game5\ScreenPointer.cs" />
     <Compile Include="Assets\Scripts\Game1\God\Player\ListChars.cs" />
     <Compile Include="Assets\Scripts\Game4\God\Chung\NhatKy.cs" />
+    <Compile Include="Assets\Scripts\Game5\Member.cs" />
     <Compile Include="Assets\Scripts\Game4\God\SuKien\SuKienUI.cs" />
     <Compile Include="Assets\Scripts\Game4\StaticObj.cs" />
     <Compile Include="Assets\Scripts\Game2\SoundMn.cs" />
@@ -1466,6 +1477,7 @@
     <Compile Include="Assets\Scripts\Game4\MobCapcha.cs" />
     <Compile Include="Assets\Scripts\Game6\Clan.cs" />
     <Compile Include="Assets\Scripts\Game2\EffectPanel.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\NoiTai\NoiTaiUI.cs" />
     <Compile Include="Assets\Scripts\Game5\NinjaUtil.cs" />
     <Compile Include="Assets\Scripts\Game1\God\Boss\Boss.cs" />
     <Compile Include="Assets\Scripts\Game5\ChooseCharScr.cs" />
