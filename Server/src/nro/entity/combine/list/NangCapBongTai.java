@@ -23,7 +23,39 @@ public class NangCapBongTai {
     private static final int MANH_BT1 = 933;   // Mảnh vỡ bông tai (dùng nâng BT1 -> BT2)
     private static final int MANH_BT3 = 1927;  // Mảnh bông tai cấp 3 (dùng nâng BT2 -> BT3)
 
+    /**
+     * Đang hợp thể thì <b>không nâng cấp bông tai được</b>.
+     *
+     * <h2>Vì sao chặn</h2>
+     *
+     * <p>Hợp thể là trạng thái <i>đang dùng</i> bông tai: chỉ số của sư phụ và
+     * đệ tử đang gộp làm một, và kiểu hợp thể ({@code fusion.typeFusion}) ghi
+     * rõ nó do bông tai cấp mấy tạo ra. Nâng cấp lúc ấy là đổi cái bông tai
+     * dưới chân một trạng thái đang sống — trạng thái đó vẫn trỏ tới một cấp
+     * không còn tồn tại trong hành trang nữa.</p>
+     *
+     * <p>Nên chặn ngay ở cửa, kèm câu nói rõ phải làm gì, thay vì để nó hỏng ở
+     * một chỗ khác về sau mà không ai nối được hai việc lại với nhau.</p>
+     *
+     * @return {@code true} nếu đã chặn và đã báo cho người chơi
+     */
+    private static boolean chanKhiDangHopThe(Player player) {
+        if (player == null || player.fusion == null) {
+            return false;
+        }
+        if (player.fusion.typeFusion == nro.core.consts.ConstPlayer.NON_FUSION) {
+            return false;
+        }
+        Service.gI().sendDialogMessage(player,
+                "Đang hợp thể — tách hợp thể rồi mới nâng cấp bông tai được.\n"
+                + "Bấm dùng bông tai bất kỳ trong hành trang để tách.");
+        return true;
+    }
+
     public static void showInfoCombine(Player player) {
+        if (chanKhiDangHopThe(player)) {
+            return;
+        }
         if (player.combine.itemsCombine.size() != 2) {
             Service.gI().sendDialogMessage(player, "Cần nguyên liệu hợp lệ để nâng bông tai.");
             return;
@@ -120,7 +152,14 @@ public class NangCapBongTai {
     }
 
     public static void nangCapBongTai(Player player) {
+        // Chan lai o CA hai cua. Man xem truoc va man lam that la hai goi tin
+        // khac nhau, va nguoi choi co the hop the trong khoang giua.
+        if (chanKhiDangHopThe(player)) {
+            return;
+        }
         if (player.combine.itemsCombine.size() != 2) {
+            Service.gI().sendThongBao(player,
+                    "Cần đúng 1 bông tai và 1 loại mảnh trong ô.");
             return;
         }
 
@@ -128,19 +167,27 @@ public class NangCapBongTai {
         Item manhVo = null;
         int type = 0;
 
+        // Uu tien cap CAO NHAT: hai o dat mot cai cap 1 va mot cai cap 2 thi
+        // nang cai cap 2. Vong lap cu ghi de theo thu tu duyet, nen ket qua
+        // phu thuoc vao o nao dung truoc — mot cai bay im lang.
         for (Item item : player.combine.itemsCombine) {
-            if (item.template.id == BT1) {
-                bongTai = item;
-                type = 1;
-            } else if (item.template.id == BT2) {
+            if (item == null || !item.isNotNullItem()) {
+                continue;
+            }
+            if (item.template.id == BT2) {
                 bongTai = item;
                 type = 2;
+            } else if (item.template.id == BT1 && type < 2) {
+                bongTai = item;
+                type = 1;
             } else if (item.template.id == MANH_BT1 || item.template.id == MANH_BT3) {
                 manhVo = item;
             }
         }
 
         if (bongTai == null || manhVo == null) {
+            Service.gI().sendThongBao(player,
+                    "Cần 1 bông tai cấp 1 hoặc 2, cùng đúng loại mảnh của nó.");
             return;
         }
 
@@ -149,7 +196,19 @@ public class NangCapBongTai {
 
         if (type == 1) {
             // BT1 -> BT2
-            if (quantityManhVo < 99 || player.inventory.gold < 500_000_000 || player.inventory.getRuby() < 20) {
+            if (quantityManhVo < 99) {
+                Service.gI().sendThongBao(player, "Không đủ Mảnh vỡ bông tai — cần 99, đang có "
+                        + quantityManhVo + ".");
+                return;
+            }
+            if (player.inventory.gold < 500_000_000) {
+                Service.gI().sendThongBao(player, "Không đủ vàng, còn thiếu "
+                        + Util.soCham(500_000_000L - player.inventory.gold) + " vàng.");
+                return;
+            }
+            if (player.inventory.getRuby() < 20) {
+                Service.gI().sendThongBao(player, "Không đủ hồng ngọc — cần 20, đang có "
+                        + player.inventory.getRuby() + ".");
                 return;
             }
             player.inventory.gold -= 500_000_000;
@@ -177,7 +236,20 @@ public class NangCapBongTai {
 
         } else if (type == 2) {
             // BT2 -> BT3
-            if (quantityManhVo < 999 || player.inventory.gold < 2000_000_000 || player.inventory.getRuby() < 50) {
+            if (quantityManhVo < 999) {
+                Service.gI().sendThongBao(player,
+                        "Không đủ Mảnh bông tai cấp 3 — cần 999, đang có "
+                        + quantityManhVo + ".");
+                return;
+            }
+            if (player.inventory.gold < 2_000_000_000L) {
+                Service.gI().sendThongBao(player, "Không đủ vàng, còn thiếu "
+                        + Util.soCham(2_000_000_000L - player.inventory.gold) + " vàng.");
+                return;
+            }
+            if (player.inventory.getRuby() < 50) {
+                Service.gI().sendThongBao(player, "Không đủ hồng ngọc — cần 50, đang có "
+                        + player.inventory.getRuby() + ".");
                 return;
             }
             player.inventory.gold -= 2_000_000_000;

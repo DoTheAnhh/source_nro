@@ -4478,35 +4478,129 @@ public class ItemUseHandler {
         }
     }
 
-    public void usePorata(Player pl, Item item) {
-        class FusionRule {
+    /**
+     * Bông tai Porata theo cấp, thấp lên cao. Cấp 3 là trần.
+     *
+     * <p>Chỉ có ba mẫu bông tai thật; 2105 và 2106 từng nằm trong danh sách này
+     * nhưng chúng là vật phẩm khác, không phải bông tai — xem
+     * {@code TrangSucDAO.ID_BONG_TAI}.</p>
+     */
+    private static final short[] ID_BONG_TAI = {454, 921, 1943};
 
-            int[] bannedTypes;
-            Consumer<Detu> fusionMethod;
+    /** Kiểu hợp thể mà mỗi cấp bông tai tạo ra, cùng thứ tự với {@link #ID_BONG_TAI}. */
+    private static final byte[] KIEU_HOP_THE = {
+        ConstPlayer.HOP_THE_PORATA,
+        ConstPlayer.HOP_THE_PORATA2,
+        ConstPlayer.HOP_THE_PORATA3
+    };
 
-            FusionRule(int[] bannedTypes, Consumer<Detu> fusionMethod) {
-                this.bannedTypes = bannedTypes;
-                this.fusionMethod = fusionMethod;
+    /** Cấp của một mẫu bông tai (0, 1, 2), hoặc {@code -1} nếu không phải bông tai. */
+    public static int capBongTai(int itemId) {
+        for (int i = 0; i < ID_BONG_TAI.length; i++) {
+            if (ID_BONG_TAI[i] == itemId) {
+                return i;
             }
         }
-        Map<Short, FusionRule> rules = new HashMap<>();
-        rules.put((short) 454, new FusionRule(new int[]{4, 8, 10, 12, 14}, detu -> detu.fusion(true)));
-        rules.put((short) 921, new FusionRule(new int[]{4, 6, 10, 12, 14}, detu -> detu.fusion2(true)));
-        rules.put((short) 1943, new FusionRule(new int[]{4, 6, 8, 12, 14}, detu -> detu.fusion3(true)));
-        rules.put((short) 2105, new FusionRule(new int[]{4, 6, 8, 10, 14}, detu -> detu.fusion4(true)));
-        rules.put((short) 2106, new FusionRule(new int[]{4, 6, 8, 10, 12}, detu -> detu.fusion5(true)));
-        FusionRule rule = rules.get(item.template.id);
-        if (rule == null) {
+        return -1;
+    }
+
+    /**
+     * Bông tai <b>cấp cao nhất</b> đang có trong hành trang.
+     *
+     * <p>Hai cái cùng cấp cao nhất thì lấy cái <b>đứng trước</b> trong hành
+     * trang — tức cái vào hành trang trước. Một luật rõ ràng và đoán được, thay
+     * vì phụ thuộc vào ô nào người chơi vừa bấm.</p>
+     *
+     * @return món bông tai, hoặc {@code null} nếu không có cái nào
+     */
+    public static Item bongTaiCaoNhat(Player pl) {
+        if (pl == null || pl.inventory == null || pl.inventory.itemsBag == null) {
+            return null;
+        }
+        Item tot = null;
+        int capTot = -1;
+        for (Item it : pl.inventory.itemsBag) {
+            if (it == null || !it.isNotNullItem()) {
+                continue;
+            }
+            int cap = capBongTai(it.template.id);
+            // Chi lay khi cap THUC SU cao hon: bang nhau thi giu cai tim thay
+            // truoc, dung dung luat "cai dau tien trong hanh trang".
+            if (cap > capTot) {
+                capTot = cap;
+                tot = it;
+            }
+        }
+        return tot;
+    }
+
+    /**
+     * Bấm dùng một Bông tai Porata: hợp thể, hoặc tách hợp thể.
+     *
+     * <h2>Hai luật, và vì sao đổi</h2>
+     *
+     * <p><b>Tách thì bông tai nào cũng tách được.</b> Bản cũ mỗi cấp mang một
+     * danh sách "kiểu hợp thể bị cấm": bông tai cấp 3 cấm kiểu 6 và 8, tức
+     * <i>kiểu do bông tai cấp 1 và cấp 2 tạo ra</i>. Nên hợp thể bằng cấp 2 rồi
+     * bấm cấp 3 để tách là nhận đúng câu <b>"Không thể thực hiện"</b> — và
+     * người chơi không có cách nào đoán ra rằng mình phải tìm lại đúng cái bông
+     * tai đã dùng lúc hợp. Tách là gỡ một trạng thái, không phải một phép thuật
+     * riêng của từng cấp.</p>
+     *
+     * <p><b>Hợp thì luôn dùng cấp cao nhất đang có.</b> Bấm cái nào cũng vậy —
+     * máy chủ tự tìm cái tốt nhất trong hành trang. Bằng cấp thì lấy cái đứng
+     * trước. Trước đây bấm nhầm cái cấp 1 nằm lẫn trong túi là hợp thể ra mức
+     * yếu nhất mà không có gì báo.</p>
+     */
+    public void usePorata(Player pl, Item item) {
+        if (pl == null || item == null || !item.isNotNullItem()) {
             return;
         }
-        if (pl.Detu == null || Arrays.stream(rule.bannedTypes).anyMatch(t -> t == pl.fusion.typeFusion)) {
+        if (capBongTai(item.template.id) < 0) {
+            return;
+        }
+        if (pl.Detu == null) {
+            Service.getInstance().sendThongBao(pl,
+                    "Chưa có đệ tử thì không hợp thể được.");
+            return;
+        }
+
+        // ---- TACH: bong tai nao cung tach duoc, moi kieu hop the porata ----
+        if (pl.fusion.typeFusion != ConstPlayer.NON_FUSION) {
+            if (pl.fusion.typeFusion == ConstPlayer.LUONG_LONG_NHAT_THE) {
+                Service.getInstance().sendThongBao(pl,
+                        "Đang Lưỡng Long Nhất Thể, bông tai không tách được kiểu này.");
+                return;
+            }
+            pl.Detu.unFusion();
+            Service.getInstance().sendThongBao(pl, "Đã tách hợp thể.");
+            return;
+        }
+
+        // ---- HOP: luon dung cap CAO NHAT trong hanh trang ----
+        Item dung = bongTaiCaoNhat(pl);
+        if (dung == null) {
+            dung = item;
+        }
+        int cap = capBongTai(dung.template.id);
+        if (cap < 0) {
             Service.getInstance().sendThongBao(pl, "Không thể thực hiện");
             return;
         }
-        if (pl.fusion.typeFusion == ConstPlayer.NON_FUSION) {
-            rule.fusionMethod.accept(pl.Detu);
-        } else {
-            pl.Detu.unFusion();
+        switch (cap) {
+            case 0:
+                pl.Detu.fusion(true);
+                break;
+            case 1:
+                pl.Detu.fusion2(true);
+                break;
+            default:
+                pl.Detu.fusion3(true);
+                break;
+        }
+        if (dung != item) {
+            Service.getInstance().sendThongBao(pl, "Đã hợp thể bằng "
+                    + dung.template.name + " — bông tai cấp cao nhất đang có.");
         }
     }
 

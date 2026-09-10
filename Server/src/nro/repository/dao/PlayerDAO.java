@@ -636,8 +636,145 @@ public class PlayerDAO {
      * tự hoá thành JSON ngay trong hàm này.</p>
      */
     public static void updatePlayer(Player player) {
-        if (player.isSaving()) {
+        updatePlayer(player, false);
+    }
+
+    /**
+     * Tuần tự hoá một danh sách vật phẩm thành JSON để ghi xuống CSDL.
+     *
+     * <h2>Vì sao gộp bảy vòng lặp thành một hàm</h2>
+     *
+     * <p>Bảy chỗ trong {@link #updatePlayer} — đồ đang mặc, hành trang, rương ở
+     * nhà, rương sưu tầm, rương vòng quay, hòm thư, danh sách mua lại — chép
+     * <b>y hệt</b> hai mươi dòng như nhau. Sửa một chỗ mà quên sáu chỗ kia là
+     * chuyện gần như chắc chắn.</p>
+     *
+     * <h2>Hai chỗ vỡ làm mất sạch dữ liệu một phiên</h2>
+     *
+     * <p>Cả bảy vòng nằm trong <b>một khối try</b> duy nhất bọc toàn bộ lệnh
+     * ghi. Vòng nào ném lỗi thì {@code catch} nuốt lại, và <b>không cột nào
+     * được ghi cả</b> — mất hết mọi thứ kể từ lần lưu thành công trước. Hai
+     * đường ném:</p>
+     *
+     * <ul>
+     *   <li>{@code io.optionTemplate.id} — {@code optionTemplate} là
+     *       {@code null} khi món đồ mang một mã chỉ số không có trong bảng
+     *       {@code item_option_template}. Một món hỏng ở bất kỳ đâu là hỏng cả
+     *       lần lưu, kể cả những thứ chẳng liên quan.</li>
+     *   <li>{@code ConcurrentModificationException} — lượt tự lưu chạy ở luồng
+     *       hẹn giờ, còn luồng game thì đang bỏ đồ vào rương. Duyệt một
+     *       {@code List} trong khi luồng khác thêm/bớt phần tử là ném ngay.
+     *       Đây đúng là "bỏ đồ vào rương rồi thoát thì mất đồ".</li>
+     * </ul>
+     *
+     * <p>Nay: chép danh sách ra một bản riêng rồi mới duyệt (luồng kia có sửa
+     * cũng không đụng tới bản chép), và bỏ qua dòng chỉ số hỏng thay vì ném.
+     * Một món hỏng cùng lắm mất một dòng chỉ số của chính nó.</p>
+     */
+    private static String chuoiDanhSachItem(java.util.List<Item> ds) {
+        JSONArray dataArray = new JSONArray();
+        if (ds == null) {
+            return dataArray.toJSONString();
+        }
+        // Chep ra ban rieng. Dung ArrayList(coll) thay vi duyet thang: luong
+        // game co the them/bot phan tu ngay giua chung.
+        java.util.List<Item> banChep;
+        try {
+            banChep = new java.util.ArrayList<>(ds);
+        } catch (Exception doiGiuaChung) {
+            // Ngay ca luc chep cung co the vap neu danh sach doi dung luc do.
+            // Thu lai mot lan; van hong thi ghi danh sach rong con hon lam
+            // hong CA lan luu.
+            try {
+                banChep = new java.util.ArrayList<>(ds);
+            } catch (Exception van) {
+                Logger.logException(PlayerDAO.class, van,
+                        "Không chép được danh sách vật phẩm để lưu");
+                return dataArray.toJSONString();
+            }
+        }
+
+        JSONArray dataItem = new JSONArray();
+        for (Item item : banChep) {
+            JSONArray opt = new JSONArray();
+            if (item != null && item.isNotNullItem()) {
+                dataItem.add(item.template.id);
+                dataItem.add(item.quantity);
+                JSONArray options = new JSONArray();
+                java.util.List<ItemOption> dsOpt = item.itemOptions;
+                if (dsOpt != null) {
+                    for (ItemOption io : new java.util.ArrayList<>(dsOpt)) {
+                        if (io == null || io.optionTemplate == null) {
+                            // Chi so hong: bo dong nay thoi, dung lam hong ca
+                            // lan luu cua nhan vat.
+                            continue;
+                        }
+                        opt.add(io.optionTemplate.id);
+                        opt.add(io.param);
+                        options.add(opt.toJSONString());
+                        opt.clear();
+                    }
+                }
+                dataItem.add(options.toJSONString());
+            } else {
+                dataItem.add(-1);
+                dataItem.add(0);
+                dataItem.add(opt.toJSONString());
+            }
+            dataItem.add(item == null ? 0L : item.createTime);
+            dataArray.add(dataItem.toJSONString());
+            dataItem.clear();
+        }
+        return dataArray.toJSONString();
+    }
+
+    /**
+     * Chờ nhiều nhất bao lâu cho lượt lưu đang chạy xong, tính bằng mili giây.
+     *
+     * <p>Một lượt lưu bình thường mất vài chục mili giây. Hai giây là để dành
+     * cho lúc CSDL đang bận. Quá thế thì thà bỏ còn hơn giữ luồng đóng kết nối
+     * mãi không thoát.</p>
+     */
+    private static final long CHO_LUU_XONG_MS = 2000;
+
+    /**
+     * Lưu nhân vật xuống CSDL.
+     *
+     * @param batBuoc {@code true} khi đây là <b>lần lưu cuối</b> lúc rời game.
+     *
+     * <h2>Vì sao cần cờ này</h2>
+     *
+     * <p>Bản cũ mở đầu bằng {@code if (player.isSaving()) return;} — nghĩa là
+     * <b>lần lưu lúc thoát bị bỏ hẳn</b> nếu lượt tự lưu định kỳ (mỗi 8 giây)
+     * đang chạy dở. Mọi thứ làm sau khi lượt tự lưu ấy chụp xong đều mất.</p>
+     *
+     * <p>Đúng cái cảnh "cho đồ vào rương rồi đăng xuất thì mất đồ": bỏ đồ vào
+     * rương, thoát ngay, và nếu vừa lúc trùng nhịp tự lưu thì đồ nằm lại ở bản
+     * cũ. Vì phụ thuộc nhịp nên nó chỉ <i>đôi khi</i> xảy ra.</p>
+     *
+     * <p>Nay lần lưu cuối <b>chờ</b> lượt kia xong rồi lưu tiếp, thay vì bỏ đi.</p>
+     */
+    public static void updatePlayer(Player player, boolean batBuoc) {
+        if (player == null) {
             return;
+        }
+        if (player.isSaving()) {
+            if (!batBuoc) {
+                return;
+            }
+            long het = System.currentTimeMillis() + CHO_LUU_XONG_MS;
+            while (player.isSaving() && System.currentTimeMillis() < het) {
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+            if (player.isSaving()) {
+                Logger.error("Luot luu truoc chua xong sau " + CHO_LUU_XONG_MS
+                        + "ms, van luu lan cuoi cho " + player.name + "\n");
+            }
         }
         player.setSaving(true);
         // Phut online giu trong bo nho, day xuong CSDL cung luot luu chung —
@@ -727,137 +864,22 @@ public class PlayerDAO {
 
                     //data body
                     JSONArray dataItem = new JSONArray();
-                    for (Item item : player.inventory.itemsBody) {
-                        JSONArray opt = new JSONArray();
-                        if (item.isNotNullItem()) {
-                            dataItem.add(item.template.id);
-                            dataItem.add(item.quantity);
-                            JSONArray options = new JSONArray();
-                            for (ItemOption io : item.itemOptions) {
-                                opt.add(io.optionTemplate.id);
-                                opt.add(io.param);
-                                options.add(opt.toJSONString());
-                                opt.clear();
-                            }
-                            dataItem.add(options.toJSONString());
-                        } else {
-                            dataItem.add(-1);
-                            dataItem.add(0);
-                            dataItem.add(opt.toJSONString());
-                        }
-                        dataItem.add(item.createTime);
-                        dataArray.add(dataItem.toJSONString());
-                        dataItem.clear();
-                    }
-                    String itemsBody = dataArray.toJSONString();
-                    dataArray.clear();
+                    String itemsBody = chuoiDanhSachItem(player.inventory.itemsBody);
 
                     //data bag
-                    for (Item item : player.inventory.itemsBag) {
-                        JSONArray opt = new JSONArray();
-                        if (item.isNotNullItem()) {
-                            dataItem.add(item.template.id);
-                            dataItem.add(item.quantity);
-                            JSONArray options = new JSONArray();
-                            for (ItemOption io : item.itemOptions) {
-                                opt.add(io.optionTemplate.id);
-                                opt.add(io.param);
-                                options.add(opt.toJSONString());
-                                opt.clear();
-                            }
-                            dataItem.add(options.toJSONString());
-                        } else {
-                            dataItem.add(-1);
-                            dataItem.add(0);
-                            dataItem.add(opt.toJSONString());
-                        }
-                        dataItem.add(item.createTime);
-                        dataArray.add(dataItem.toJSONString());
-                        dataItem.clear();
-                    }
-                    String itemsBag = dataArray.toJSONString();
-                    dataArray.clear();
+                    String itemsBag = chuoiDanhSachItem(player.inventory.itemsBag);
 
                     //data box
-                    for (Item item : player.inventory.itemsBox) {
-                        JSONArray opt = new JSONArray();
-                        if (item.isNotNullItem()) {
-                            dataItem.add(item.template.id);
-                            dataItem.add(item.quantity);
-                            JSONArray options = new JSONArray();
-                            for (ItemOption io : item.itemOptions) {
-                                opt.add(io.optionTemplate.id);
-                                opt.add(io.param);
-                                options.add(opt.toJSONString());
-                                opt.clear();
-                            }
-                            dataItem.add(options.toJSONString());
-                        } else {
-                            dataItem.add(-1);
-                            dataItem.add(0);
-                            dataItem.add(opt.toJSONString());
-                        }
-                        dataItem.add(item.createTime);
-                        dataArray.add(dataItem.toJSONString());
-                        dataItem.clear();
-                    }
-                    String itemsBox = dataArray.toJSONString();
-                    dataArray.clear();
+                    String itemsBox = chuoiDanhSachItem(player.inventory.itemsBox);
 
                     //data boxCollection
-                    for (Item item : player.inventory.itemsBoxCollection) {
-                        JSONArray opt = new JSONArray();
-                        if (item.isNotNullItem()) {
-                            dataItem.add(item.template.id);
-                            dataItem.add(item.quantity);
-                            JSONArray options = new JSONArray();
-                            for (ItemOption io : item.itemOptions) {
-                                opt.add(io.optionTemplate.id);
-                                opt.add(io.param);
-                                options.add(opt.toJSONString());
-                                opt.clear();
-                            }
-                            dataItem.add(options.toJSONString());
-                        } else {
-                            dataItem.add(-1);
-                            dataItem.add(0);
-                            dataItem.add(opt.toJSONString());
-                        }
-                        dataItem.add(item.createTime);
-                        dataArray.add(dataItem.toJSONString());
-                        dataItem.clear();
-                    }
-                    String itemsBoxCollection = dataArray.toJSONString();
-                    dataArray.clear();
+                    String itemsBoxCollection = chuoiDanhSachItem(player.inventory.itemsBoxCollection);
 
                     //Card
                     String dataCard = JSONValue.toJSONString(player.Cards);
 
                     //data box crack ball
-                    for (Item item : player.inventory.itemsBoxCrackBall) {
-                        JSONArray opt = new JSONArray();
-                        if (item.isNotNullItem()) {
-                            dataItem.add(item.template.id);
-                            dataItem.add(item.quantity);
-                            JSONArray options = new JSONArray();
-                            for (ItemOption io : item.itemOptions) {
-                                opt.add(io.optionTemplate.id);
-                                opt.add(io.param);
-                                options.add(opt.toJSONString());
-                                opt.clear();
-                            }
-                            dataItem.add(options.toJSONString());
-                        } else {
-                            dataItem.add(-1);
-                            dataItem.add(0);
-                            dataItem.add(opt.toJSONString());
-                        }
-                        dataItem.add(item.createTime);
-                        dataArray.add(dataItem.toJSONString());
-                        dataItem.clear();
-                    }
-                    String itemsBoxLuckyRound = dataArray.toJSONString();
-                    dataArray.clear();
+                    String itemsBoxLuckyRound = chuoiDanhSachItem(player.inventory.itemsBoxCrackBall);
 
                     //Ma Bao Ve
                     dataArray.add(player.mbv);
@@ -946,56 +968,10 @@ public class PlayerDAO {
                     dataArray.clear();
 
                     //data box mail
-                    for (Item item : player.inventory.itemsMailBox) {
-                        JSONArray opt = new JSONArray();
-                        if (item.isNotNullItem()) {
-                            dataItem.add(item.template.id);
-                            dataItem.add(item.quantity);
-                            JSONArray options = new JSONArray();
-                            for (ItemOption io : item.itemOptions) {
-                                opt.add(io.optionTemplate.id);
-                                opt.add(io.param);
-                                options.add(opt.toJSONString());
-                                opt.clear();
-                            }
-                            dataItem.add(options.toJSONString());
-                        } else {
-                            dataItem.add(-1);
-                            dataItem.add(0);
-                            dataItem.add(opt.toJSONString());
-                        }
-                        dataItem.add(item.createTime);
-                        dataArray.add(dataItem.toJSONString());
-                        dataItem.clear();
-                    }
-                    String itemMailBox = dataArray.toJSONString();
-                    dataArray.clear();
+                    String itemMailBox = chuoiDanhSachItem(player.inventory.itemsMailBox);
 
                     //data item da ban
-                    for (Item item : player.inventory.itemsDaBan) {
-                        JSONArray opt = new JSONArray();
-                        if (item.isNotNullItem()) {
-                            dataItem.add(item.template.id);
-                            dataItem.add(item.quantity);
-                            JSONArray options = new JSONArray();
-                            for (ItemOption io : item.itemOptions) {
-                                opt.add(io.optionTemplate.id);
-                                opt.add(io.param);
-                                options.add(opt.toJSONString());
-                                opt.clear();
-                            }
-                            dataItem.add(options.toJSONString());
-                        } else {
-                            dataItem.add(-1);
-                            dataItem.add(0);
-                            dataItem.add(opt.toJSONString());
-                        }
-                        dataItem.add(item.createTime);
-                        dataArray.add(dataItem.toJSONString());
-                        dataItem.clear();
-                    }
-                    String itemsDaBan = dataArray.toJSONString();
-                    dataArray.clear();
+                    String itemsDaBan = chuoiDanhSachItem(player.inventory.itemsDaBan);
 
                     //data item time
                     dataArray.add((player.itemTime.isUseBoHuyet ? (ItemTime.TIME_ITEM_10M - (System.currentTimeMillis() - player.itemTime.lastTimeBoHuyet)) : 0));

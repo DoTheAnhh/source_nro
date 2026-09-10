@@ -503,7 +503,12 @@ public class Client implements Runnable {
             Logger.logException(Client.class, e);
         } finally {
             try {
-                PlayerDAO.updatePlayer(player);
+                // batBuoc = true: day la lan luu CUOI CUNG.
+                //
+                // Khong duoc bo qua vi luot tu luu dinh ky dang chay — bo qua
+                // la mat het nhung gi lam sau luc luot kia chup xong, va do
+                // dung la canh "cho do vao ruong roi dang xuat thi mat do".
+                PlayerDAO.updatePlayer(player, true);
             } catch (Exception e) {
                 Logger.logException(Client.class, e);
             }

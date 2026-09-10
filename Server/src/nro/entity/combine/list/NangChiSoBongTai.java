@@ -29,7 +29,13 @@ public class NangChiSoBongTai {
                 switch (item.template.id) {
                     case 921: // BT2
                     case 1943: // BT3
-                        bongTai = item;
+                        // Uu tien cap CAO NHAT: dat ca BT2 lan BT3 vao o thi
+                        // nang chi so cho BT3. Vong lap cu ghi de theo thu
+                        // tu duyet nen ket qua phu thuoc o nao dung truoc.
+                        if (bongTai == null
+                                || item.template.id > bongTai.template.id) {
+                            bongTai = item;
+                        }
                         break;
                     case 934: // Mảnh hồn
                         manhHonBongTai = item;
@@ -98,7 +104,13 @@ public class NangChiSoBongTai {
                 switch (item.template.id) {
                     case 921: // BT2
                     case 1943: // BT3
-                        bongTai = item;
+                        // Uu tien cap CAO NHAT: dat ca BT2 lan BT3 vao o thi
+                        // nang chi so cho BT3. Vong lap cu ghi de theo thu
+                        // tu duyet nen ket qua phu thuoc o nao dung truoc.
+                        if (bongTai == null
+                                || item.template.id > bongTai.template.id) {
+                            bongTai = item;
+                        }
                         break;
                     case 934: // Mảnh hồn
                         manhHonBongTai = item;
