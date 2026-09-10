@@ -662,7 +662,81 @@ public class ChangeMapService {
     }
 
     //--------------------------------------------------------------------------
+    /**
+     * Một yêu cầu đổi bản đồ <b>bị hoãn lại</b> vì lượt trước chưa nạp xong.
+     *
+     * <p>Giữ nguyên xi bộ tham số của lời gọi, để chạy lại y hệt khi client báo
+     * đã dựng xong bản đồ.</p>
+     */
+    public static final class YeuCauDoiMap {
+
+        final Zone zoneJoin;
+        final int mapId;
+        final int zoneId;
+        final int x;
+        final int y;
+        final byte typeSpace;
+        final long moc = System.currentTimeMillis();
+
+        YeuCauDoiMap(Zone zoneJoin, int mapId, int zoneId, int x, int y, byte typeSpace) {
+            this.zoneJoin = zoneJoin;
+            this.mapId = mapId;
+            this.zoneId = zoneId;
+            this.x = x;
+            this.y = y;
+            this.typeSpace = typeSpace;
+        }
+    }
+
+    /**
+     * Cửa duy nhất của <b>mọi</b> cách đổi bản đồ.
+     *
+     * <h2>Chờ nạp xong rồi mới cho sang</h2>
+     *
+     * <p>Mọi đường đi bản đồ đều đổ về đây: cổng dịch chuyển, nút dịch nhanh,
+     * capsule, tàu vũ trụ, dịch chuyển Yardrat, đổi khu, NPC đưa đi, và các lệnh
+     * của quản trị viên. Trước bản này chỉ riêng đường <b>cổng dịch chuyển</b>
+     * kiểm tra xem lượt trước đã nạp xong chưa; những đường còn lại thì không,
+     * nên vẫn chèn được một lượt thứ hai vào giữa lúc dữ liệu bản đồ đang chạy
+     * xuống client. Hai bộ dữ liệu đan nhau ra đúng cảnh đã gặp: hình bản đồ bị
+     * xé, nhân vật đứng im, bấm gì cũng không ăn.</p>
+     *
+     * <p>Đặt cổng chặn ở đây thì <b>không đường nào lọt</b>, kể cả đường viết
+     * sau này.</p>
+     *
+     * <h2>Hoãn lại, không vứt đi</h2>
+     *
+     * <p>Yêu cầu tới sớm được <b>giữ lại</b> và chạy ngay khi client báo nạp
+     * xong, chứ không bị bỏ. Vứt đi thì những lượt đi <b>do máy chủ tự quyết</b>
+     * — hết giờ đưa về làng, kết thúc phó bản, sự kiện dời người — sẽ mất hẳn
+     * nếu chẳng may rơi trúng lúc người chơi đang nạp bản đồ, và người đó kẹt
+     * lại một nơi đáng ra phải rời khỏi. Chỉ giữ <b>yêu cầu mới nhất</b>: bấm
+     * dồn năm cái thì đi một cái cuối, không phải đi năm chặng.</p>
+     *
+     * <p>Riêng nút dịch nhanh và cổng dịch chuyển thì {@code changeMapWaypoint}
+     * đã chặn từ trước khi tới đây, nên bấm dồn vẫn chỉ đi một bản đồ như cũ —
+     * chủ ý là thế, để cái bấm thừa không thành một chặng đi bất ngờ.</p>
+     *
+     * <p>Khoá chỉ áp cho <b>người chơi thật</b>. Boss, đệ tử, phân thân, thú
+     * cưng không phải là client và không bao giờ gửi gói báo "đã nạp xong", nên
+     * khoá chúng lại là khoá vĩnh viễn cho tới lúc hết hạn — chúng sẽ đứng đờ
+     * năm giây mỗi lần đổi bản đồ.</p>
+     */
     private void changeMap(Player pl, Zone zoneJoin, int mapId, int zoneId, int x, int y, byte typeSpace) {
+        if (pl != null && pl.isPl() && dangDoiMap(pl)) {
+            pl.yeuCauDoiMapDangCho
+                    = new YeuCauDoiMap(zoneJoin, mapId, zoneId, x, y, typeSpace);
+            // Dong hop "Xin cho": client mo no ngay khi gui yeu cau, khong dong
+            // thi nguoi choi ngoi nhin chu "Xin cho" ma khong hieu gi.
+            Service.gI().hideWaitDialog(pl);
+            return;
+        }
+        // Toi day nghia la dang doi ban do THAT. Moi yeu cau hoan tu truoc deu
+        // da cu: no doi mot ban do khac, tu mot hoan canh khac. Bo di, khong thi
+        // no se no ra sau lan nap nay va keo nguoi choi di dau do bat ngo.
+        if (pl != null) {
+            pl.yeuCauDoiMapDangCho = null;
+        }
         if (pl.idNRNM != -1 && !Util.canDoWithTime(pl.lastTimePickNRNM, 30000)) {
             resetPoint(pl);
             Service.gI().sendThongBao(pl, "Không thể chuyển map quá nhanh khi đeo Ngọc Rồng Namếc");
@@ -796,8 +870,14 @@ public class ChangeMapService {
             // Khoa lai cho toi khi client bao nap xong (goi -39). Dat SAT truoc
             // goToMap: tu day tro di la du lieu ban do da bat dau chay xuong
             // client, va mot luot thu hai chen vao la hai bo du lieu dan nhau.
-            pl.dangDoiMap = true;
-            pl.mocBatDauDoiMap = System.currentTimeMillis();
+            //
+            // Chi khoa NGUOI CHOI THAT: boss, de tu, phan than, thu cung khong
+            // phai client va khong bao gio gui goi -39, nen khoa chung lai la
+            // khoa cho toi khi het han — dung do nam giay moi lan doi ban do.
+            if (pl.isPl()) {
+                pl.dangDoiMap = true;
+                pl.mocBatDauDoiMap = System.currentTimeMillis();
+            }
             this.goToMap(pl, zoneJoin);
             if (pl.Detu != null) {
                 pl.Detu.joinMapMaster();
@@ -1115,7 +1195,39 @@ public class ChangeMapService {
             nro.entity.map.hirudegarn.MapHirudegarn.gI().joinMap22h(player);
             player.zone.sendBigBoss(player);
         }
+        chayYeuCauDoiMapDangCho(player);
+    }
 
+    /**
+     * Chạy lượt đổi bản đồ đã bị hoãn, nếu có.
+     *
+     * <p>Gọi ở <b>cuối</b> {@code finishLoadMap}: bản đồ vừa dựng xong phải được
+     * dựng cho trọn — hiệu ứng, người xung quanh, nhiệm vụ — rồi mới rời đi. Bỏ
+     * dở giữa chừng thì cảnh cũ để lại rác trên client.</p>
+     *
+     * <p>Xoá tay cầm <b>trước</b> khi gọi: lượt mới có thể lại bị hoãn lần nữa và
+     * tự đặt một yêu cầu khác vào đúng chỗ này, xoá sau là xoá mất nó.</p>
+     */
+    private void chayYeuCauDoiMapDangCho(Player player) {
+        if (player == null || player.yeuCauDoiMapDangCho == null) {
+            return;
+        }
+        YeuCauDoiMap yc = player.yeuCauDoiMapDangCho;
+        player.yeuCauDoiMapDangCho = null;
+        // Qua cu thi thoi. Goi -39 co the mat han; luc do khoa tu het han sau
+        // KHOA_DOI_MAP_HET_HAN_MS va cac luot sau chay binh thuong, nhung yeu
+        // cau hoan nay thi nam lai. No ma no ra o mot lan nap ban do nao do rat
+        // lau sau se keo nguoi choi di dau do khong duyen co gi.
+        if (System.currentTimeMillis() - yc.moc > KHOA_DOI_MAP_HET_HAN_MS * 2) {
+            return;
+        }
+        try {
+            changeMap(player, yc.zoneJoin, yc.mapId, yc.zoneId, yc.x, yc.y,
+                    yc.typeSpace);
+        } catch (Exception ex) {
+            nro.core.log.Logger.logException(ChangeMapService.class, ex,
+                    "Lỗi chạy lượt đổi bản đồ bị hoãn");
+        }
     }
 
     private void sendEffectMeToMap(Player player) {

@@ -349,6 +349,15 @@ public class Player implements Runnable {
      */
     public byte tauChoThaSauKhiNapMap = -1;
 
+    /**
+     * Lượt đổi bản đồ tới sớm, đang <b>chờ bản đồ hiện tại nạp xong</b>.
+     *
+     * <p>Chỉ giữ yêu cầu mới nhất, và được chạy ở cuối
+     * {@code ChangeMapService.finishLoadMap}. Xem chú thích ở cửa chung
+     * {@code ChangeMapService.changeMap} để biết vì sao hoãn chứ không vứt.</p>
+     */
+    public nro.service.fun.ChangeMapService.YeuCauDoiMap yeuCauDoiMapDangCho;
+
     // ------------------------------------------------------------------
     //  Gộp gói tin cho những việc làm HÀNG LOẠT
     // ------------------------------------------------------------------
