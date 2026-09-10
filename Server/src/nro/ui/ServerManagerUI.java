@@ -1004,7 +1004,13 @@ public class ServerManagerUI extends JFrame {
         scrollSidebar.setBackground(UiTheme.SIDEBAR);
         sidebarContainer.add(scrollSidebar, BorderLayout.CENTER);
 
-        sidebarContainer.add(new ServerAddressPanel(), BorderLayout.SOUTH);
+        // Duoi thanh ben: hai nut dieu khien may chu, roi toi dia chi may chu.
+        // Xem NutMayChu de biet vi sao chung khong con nam trong tab Quy uoc.
+        JPanel duoiThanhBen = new JPanel(new BorderLayout());
+        duoiThanhBen.setBackground(UiTheme.SIDEBAR);
+        duoiThanhBen.add(new NutMayChu(), BorderLayout.NORTH);
+        duoiThanhBen.add(new ServerAddressPanel(), BorderLayout.SOUTH);
+        sidebarContainer.add(duoiThanhBen, BorderLayout.SOUTH);
 
         add(sidebarContainer, BorderLayout.WEST);
 

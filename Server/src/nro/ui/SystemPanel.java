@@ -188,108 +188,26 @@ public class SystemPanel extends JPanel {
     private final Map<String, JTextField> fields = new LinkedHashMap<>();
 
     /**
-     * Tắt máy chủ rồi tự bật lại.
+     * Bảng đang mở, để nơi khác nhờ vẽ lại tab Quy ước.
      *
-     * <p>Người chơi đang online sẽ <b>bị đá ra</b> — dữ liệu của họ được lưu
-     * trước khi thoát, nhưng vẫn phải hỏi lại vì đây là việc không rút lại
-     * được.</p>
-     *
-     * <p>Chỉ <b>bật lại</b> chứ không dựng lại mã nguồn. Sửa mã xong thì vẫn
-     * phải build rồi mới chạy — nút này không thay được việc đó.</p>
+     * <p>Chỉ có <b>một</b> bảng trong cả chương trình — {@code ServerManagerUI}
+     * dựng đúng một lần. Cần tham chiếu này vì nút bảo trì nay nằm ở thanh bên,
+     * mà bật tắt bảo trì thì ô chữ {@code bao_tri} trong tab Quy ước phải đổi
+     * theo: ô đó đọc từ {@code ConfigDAO} lúc nạp, không tự biết là giá trị vừa
+     * đổi.</p>
      */
-    private void khoiDongLaiMayChu() {
-        int soNguoi = 0;
-        try {
-            soNguoi = nro.server.Client.gI().getPlayers().size();
-        } catch (Exception boQua) {
-            // Khong dem duoc thi van cho khoi dong lai.
-        }
-        String hoi = "Tắt máy chủ rồi bật lại ngay?";
-        if (soNguoi > 0) {
-            hoi += "\n\nĐang có " + soNguoi + " người chơi online — họ sẽ bị"
-                    + " đá ra.\nDữ liệu được lưu trước khi tắt.";
-        }
-        hoi += "\n\nMáy chủ lên lại sau khoảng 5–10 giây."
-                + "\nLưu ý: chỉ bật lại, KHÔNG dựng lại mã nguồn.";
-        if (JOptionPane.showConfirmDialog(this, hoi, "Khởi động lại máy chủ",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
-            return;
-        }
-        note(WARN_RED, "Đang tắt máy chủ — sẽ tự bật lại sau vài giây…");
-        // Chay o luong khac: khoiDongLai() ket thuc bang System.exit(0), goi
-        // thang tren luong giao dien thi cua so treo cung truoc khi ve xong.
-        new Thread(() -> {
-            try {
-                Thread.sleep(400);
-            } catch (InterruptedException boQua) {
-                Thread.currentThread().interrupt();
-            }
-            nro.server.ServerManager.gI().khoiDongLai();
-        }, "KhoiDongLaiMayChu").start();
-    }
-    /** Nút bật/tắt bảo trì — nhãn và màu đổi theo trạng thái hiện tại. */
-    private JButton nutBaoTri;
+    private static volatile SystemPanel dangMo;
 
-    /**
-     * Vẽ lại nhãn và màu nút bảo trì theo trạng thái đang lưu.
-     *
-     * <p>Ghi thẳng trạng thái lên nhãn chứ không để một nút trung tính như
-     * "Bảo trì": nhìn nút là biết máy chủ đang ở chế độ nào, khỏi phải bấm thử
-     * rồi đọc thông báo mới biết vừa đổi sang gì.</p>
-     */
-    private void capNhatNutBaoTri() {
-        if (nutBaoTri == null) {
-            return;
+    /** Nạp lại tab Quy ước, nếu bảng đang mở. */
+    public static void dongBoQuyUoc() {
+        SystemPanel b = dangMo;
+        if (b != null) {
+            SwingUtilities.invokeLater(b::loadConfig);
         }
-        boolean dangBaoTri = ConfigDAO.on(ConfigDAO.BAO_TRI);
-        nutBaoTri.setText(dangBaoTri
-                ? "⛔ ĐANG BẢO TRÌ — bấm để mở lại"
-                : "Bật bảo trì");
-        nutBaoTri.setBackground(dangBaoTri ? WARN_RED : GREY);
-    }
-
-    /**
-     * Bật hoặc tắt chế độ bảo trì.
-     *
-     * <p>Chỉ chặn <b>đăng nhập mới</b>. Người đang chơi vẫn ở lại — muốn đuổi
-     * thì dùng nút khởi động lại máy chủ. Nói rõ điều này trong hộp hỏi để không
-     * ai bật bảo trì rồi tưởng là sân đã trống.</p>
-     */
-    private void doiBaoTri() {
-        boolean dangBaoTri = ConfigDAO.on(ConfigDAO.BAO_TRI);
-        // String.join thay cho chuoi mang ky tu xuong dong: khong con
-        // escape nao de viet sai, va doc ra thay ro tung dong cua hop hoi.
-        String hoi = dangBaoTri
-                ? String.join(System.lineSeparator(),
-                        "Tắt chế độ bảo trì?",
-                        "",
-                        "Mọi người sẽ đăng nhập lại được như bình thường.")
-                : String.join(System.lineSeparator(),
-                        "Bật chế độ bảo trì?",
-                        "",
-                        "Chỉ tài khoản quản trị đăng nhập được.",
-                        "Người đang chơi VẮN Ở LẠI trong game — muốn đuổi hết",
-                        "thì bấm nút Khởi động lại máy chủ sau khi bật.");
-        if (JOptionPane.showConfirmDialog(this, hoi, "Chế độ bảo trì",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
-            return;
-        }
-        if (!ConfigDAO.set(ConfigDAO.BAO_TRI, dangBaoTri ? "0" : "1")) {
-            note(WARN_RED, "Không lưu được chế độ bảo trì — xem log.");
-            return;
-        }
-        ConfigDAO.reload();
-        capNhatNutBaoTri();
-        // Dong bo o chu trong tab: no doc tu ConfigDAO luc nap, khong tu doi.
-        loadConfig();
-        note(dangBaoTri ? OK_GREEN : WARN_RED,
-                dangBaoTri ? "Đã tắt bảo trì — mọi người vào được."
-                        : "ĐANG BẢO TRÌ — chỉ tài khoản quản trị vào được.");
     }
 
     private JComponent buildConfigTab() {
+        dangMo = this;
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
         form.setBorder(new EmptyBorder(12, 12, 12, 12));
@@ -337,10 +255,11 @@ public class SystemPanel extends JPanel {
         btn.add(button("Lưu", OK_GREEN, e -> saveConfig()));
         btn.add(button("Đọc lại", GREY, e -> loadConfig()));
         btn.add(button("Đẩy dữ liệu cho client", ACCENT, e -> bumpVersion()));
-        nutBaoTri = button("", GREY, e -> doiBaoTri());
-        capNhatNutBaoTri();
-        btn.add(nutBaoTri);
-        btn.add(button("Khởi động lại máy chủ", WARN_RED, e -> khoiDongLaiMayChu()));
+        // Hai nut "Bat bao tri" va "Khoi dong lai may chu" da chuyen sang
+        // thanh ben trai (NutMayChu): chung ngat ket noi cua nguoi dang choi,
+        // khac han moi thu khac o day von chi luu mot con so — de lan giua
+        // "Luu" va "Doc lai" o cuoi mot bieu mau dai la vua kho tim luc can
+        // gap, vua de bam nham luc dang sua con so khac.
         form.add(btn, c);
 
         c.gridy = row + 1;

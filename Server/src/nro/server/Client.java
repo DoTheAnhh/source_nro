@@ -613,6 +613,49 @@ public class Client implements Runnable {
     }
 
     /**
+     * Đá <b>mọi người chơi thường</b>, giữ lại tài khoản quản trị.
+     *
+     * <h2>Vì sao bảo trì phải đá người đang chơi</h2>
+     *
+     * <p>Cờ bảo trì vốn chỉ chặn <b>đăng nhập mới</b>. Người đã ở trong game thì
+     * ở nguyên đó — nên bật bảo trì xong sân vẫn đông, và mọi lý do để bảo trì
+     * (sửa lỗi đang gây hại, vá dữ liệu, chuẩn bị dựng lại máy chủ) đều diễn ra
+     * ngay giữa lúc người chơi vẫn đang chơi.</p>
+     *
+     * <p>Đá qua {@link #kickSession} chứ không cắt kết nối thẳng: đó là đường ra
+     * duy nhất có lưu dữ liệu. Cắt thẳng là mất mọi thứ làm được từ lượt tự lưu
+     * gần nhất.</p>
+     *
+     * <p>Quản trị viên — cả cờ Founder lẫn quyền quản trị của panel — được ở
+     * lại, để còn người kiểm tra trong lúc bảo trì.</p>
+     *
+     * @return số người đã bị đá
+     */
+    public int daNguoiThuong() {
+        List<Player> snapshot = getPlayersSnapshot();
+        int da = 0;
+        for (Player pl : snapshot) {
+            try {
+                if (pl == null || pl.getSession() == null) {
+                    continue;
+                }
+                if (pl.isFounder() || pl.isQuanTriVien()) {
+                    continue;
+                }
+                Service.gI().sendThongBaoOK(pl.getSession(),
+                        "Máy chủ vào bảo trì. Hẹn gặp lại sau.");
+                this.kickSession(pl.getSession());
+                da++;
+            } catch (Exception e) {
+                // Mot nguoi loi khong duoc lam nhung nguoi con lai o lai.
+                Logger.logException(Client.class, e);
+            }
+        }
+        Logger.log(Logger.YELLOW, "[BAO TRI] da " + da + " nguoi choi thuong\n");
+        return da;
+    }
+
+    /**
      * Nhịp mỗi giây: đếm ngược {@code timeWait} và đá session không chịu đăng nhập.
      *
      * <p>{@code MySession.timeWait} khởi tạo bằng 100 và được đặt về 0 ngay khi đăng
