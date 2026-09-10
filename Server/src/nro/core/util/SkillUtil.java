@@ -125,8 +125,27 @@ public class SkillUtil {
         return 300000;
     }
 
+    /**
+     * Thời gian trói, tính bằng mili giây.
+     *
+     * <h2>Vì sao có mức sàn</h2>
+     *
+     * <p>Công thức cũ là {@code level * 5000} — không có sàn. Con số truyền vào
+     * là {@code skillSelect.point}, tức trị số của cấp kỹ năng trong bảng
+     * {@code skill_template}, <b>không phải cấp</b>. Cấp nào để {@code point}
+     * bằng 0 thì thời gian trói ra <b>0 mili giây</b>: người bị trói được thả ở
+     * đúng nhịp cập nhật kế tiếp, tức là chưa kịp thấy gì.</p>
+     *
+     * <p>Nhìn từ trong game là <b>"trói toàn hụt"</b> — hiệu ứng hiện lên rồi
+     * tắt ngay, đối thủ đi tiếp như không có gì. Và vì không có câu lỗi nào,
+     * người chơi tưởng chiêu bị trượt.</p>
+     *
+     * <p>Sàn năm giây: bằng đúng một bậc của công thức cũ, nên cấp nào có
+     * {@code point} tử tế thì không đổi gì cả.</p>
+     */
     public static int getTimeTroi(int level) { // thời gian trói
-        return level * 5000;
+        int t = level * 5000;
+        return t < 5000 ? 5000 : t;
     }
 
     public static int getTimeDCTT(int level) { // thời gian choáng dịch chuyển tức thời

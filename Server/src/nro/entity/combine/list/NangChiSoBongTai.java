@@ -62,9 +62,10 @@ public class NangChiSoBongTai {
             text.append(ConstFont.BOLD_GREEN).append("Chỉ thay thế dòng cuối bằng random mới\n");
         }
 
+        int soManh = soLuongThat(manhHonBongTai);
         text.append(ConstFont.BOLD_BLUE).append("Tỉ lệ thành công: 50%\n");
-        text.append(manhHonBongTai.quantity >= 99 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED)
-            .append("Cần 99 Mảnh hồn bông tai\n");
+        text.append(soManh >= 99 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED)
+            .append("Cần 99 Mảnh hồn bông tai (đang có ").append(soManh).append(")\n");
         text.append(daXanhLam.quantity >= 1 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED)
             .append("Cần 1 Đá xanh lam\n");
         text.append(player.inventory.getGemAndRuby() >= 250 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED)
@@ -80,9 +81,9 @@ public class NangChiSoBongTai {
                 "Còn thiếu\nĐá xanh lam");
             return;
         }
-        if (manhHonBongTai.quantity < 99) {
+        if (soManh < 99) {
             CombineService.gI().baHatMit.createOtherMenu(player, ConstNpc.IGNORE_MENU, text.toString(),
-                "Còn thiếu\n" + (99 - manhHonBongTai.quantity) + " Mảnh hồn bông tai");
+                "Còn thiếu\n" + (99 - soManh) + " Mảnh hồn bông tai");
             return;
         }
 
@@ -122,10 +123,24 @@ public class NangChiSoBongTai {
             }
         }
 
-        if (bongTai == null || manhHonBongTai == null || daXanhLam == null
-                || player.inventory.getGemAndRuby() < 250
-                || daXanhLam.quantity < 1
-                || manhHonBongTai.quantity < 99) {
+        if (bongTai == null || manhHonBongTai == null || daXanhLam == null) {
+            Service.gI().sendThongBao(player,
+                    "Cần bông tai cấp 2 hoặc 3, 99 mảnh hồn Porata và 1 đá xanh lam.");
+            return;
+        }
+        int soManh = soLuongThat(manhHonBongTai);
+        if (player.inventory.getGemAndRuby() < 250) {
+            Service.gI().sendThongBao(player, "Không đủ ngọc — cần 250, đang có "
+                    + player.inventory.getGemAndRuby() + ".");
+            return;
+        }
+        if (daXanhLam.quantity < 1) {
+            Service.gI().sendThongBao(player, "Không có Đá xanh lam.");
+            return;
+        }
+        if (soManh < 99) {
+            Service.gI().sendThongBao(player, "Không đủ Mảnh hồn bông tai — cần 99, đang có "
+                    + soManh + ".");
             return;
         }
 
@@ -212,10 +227,44 @@ public class NangChiSoBongTai {
             CombineService.gI().sendEffectFailCombine(player);
         }
 
-        // Trừ nguyên liệu
-        InventoryService.gI().subQuantityItemsBag(player, manhHonBongTai, 99);
+        // Trừ nguyên liệu — trừ CẢ khi thất bại, và trừ đúng chỗ đang giữ số.
+        //
+        // Mảnh hồn bông tai giữ số lượng ở option 31 ("số lượng ảo") chứ không
+        // ở `quantity`: một ô chứa được hàng vạn mảnh mà `quantity` vẫn là 1.
+        // subQuantityItemsBag trừ vào `quantity`, nên với món kiểu này nó trừ
+        // 1 xuống 0 và <b>xoá luôn cả ô</b> — hoặc không trừ được gì cả.
+        truNguyenLieu(player, manhHonBongTai, 99);
         InventoryService.gI().subQuantityItemsBag(player, daXanhLam, 1);
         InventoryService.gI().sendItemBag(player);
+        Service.gI().sendMoney(player);
         CombineService.gI().reOpenItemCombine(player);
+    }
+
+    /**
+     * Số lượng thật của một món, tính cả <b>số lượng ảo</b> ở option 31.
+     *
+     * <p>Vài món gộp số lượng vào một dòng chỉ số thay vì vào {@code quantity}
+     * — mảnh hồn bông tai là một trong số đó. Đọc thẳng {@code quantity} với
+     * những món ấy thì luôn ra <b>1</b>, và bảng chọn báo "còn thiếu 98 mảnh"
+     * trong khi hành trang đang có hàng vạn.</p>
+     */
+    private static int soLuongThat(Item it) {
+        if (it == null || !it.isNotNullItem()) {
+            return 0;
+        }
+        int ao = it.getOptionParam(31);
+        return ao > 0 ? ao : it.quantity;
+    }
+
+    /** Trừ nguyên liệu, vào đúng chỗ món đó đang giữ số lượng. */
+    private static void truNguyenLieu(Player player, Item it, int so) {
+        if (it == null || !it.isNotNullItem() || so <= 0) {
+            return;
+        }
+        if (it.getOptionParam(31) > 0) {
+            it.subOptionParam(31, so);
+        } else {
+            InventoryService.gI().subQuantityItemsBag(player, it, so);
+        }
     }
 }

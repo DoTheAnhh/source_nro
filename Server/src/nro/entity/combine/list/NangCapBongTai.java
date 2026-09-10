@@ -225,6 +225,8 @@ public class NangCapBongTai {
                 }
                 InventoryService.gI().addItemBag(player, btc2);
                 CombineService.gI().sendEffectSuccessCombine(player);
+                Service.gI().sendThongBao(player,
+                        "Nâng thành công! Bông tai Porata [+2].");
             } else {
                 CombineService.gI().sendEffectFailCombine(player);
                 if (opSoLuong > 0) {
@@ -232,6 +234,8 @@ public class NangCapBongTai {
                 } else {
                     InventoryService.gI().subQuantityItemsBag(player, manhVo, 99);
                 }
+                Service.gI().sendThongBao(player,
+                        "Nâng thất bại, mất 99 Mảnh vỡ bông tai.");
             }
 
         } else if (type == 2) {
@@ -264,6 +268,8 @@ public class NangCapBongTai {
                     InventoryService.gI().subQuantityItemsBag(player, manhVo, 999);
                 }
                 CombineService.gI().sendEffectSuccessCombine(player);
+                Service.gI().sendThongBao(player,
+                        "Nâng thành công! Bông tai Porata [+3].");
             } else {
                 CombineService.gI().sendEffectFailCombine(player);
                 if (opSoLuong > 0) {
@@ -271,7 +277,23 @@ public class NangCapBongTai {
                 } else {
                     InventoryService.gI().subQuantityItemsBag(player, manhVo, 999);
                 }
+                Service.gI().sendThongBao(player,
+                        "Nâng thất bại, mất 999 Mảnh bông tai cấp 3.");
             }
         }
+
+        // Gửi lại hành trang và tiền — CẢ hai nhánh, thành công lẫn thất bại.
+        //
+        // Hàm này trước đây kết thúc ngay sau khối if/else, không gửi lại gì.
+        // Nên nâng cấp 2 lên 3 xong, món đồ trong hành trang đã là cấp 3 ở máy
+        // chủ nhưng client vẫn giữ bản cũ: icon, tên, mọi thứ đứng nguyên cho
+        // tới khi có việc khác tình cờ gửi lại hành trang — thường là lúc hợp
+        // thể. Đúng cái cảnh "phải hợp thể xong icon mới đổi".
+        //
+        // Cả tiền cũng vậy: hai tỉ vàng và 50 hồng ngọc đã trừ ở máy chủ mà
+        // thanh tiền dưới màn hình chưa đổi.
+        InventoryService.gI().sendItemBag(player);
+        Service.gI().sendMoney(player);
+        CombineService.gI().reOpenItemCombine(player);
     }
 }

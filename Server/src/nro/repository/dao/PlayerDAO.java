@@ -181,7 +181,13 @@ public class PlayerDAO {
             String point = dataArray.toJSONString();
             dataArray.clear();
 
-            dataArray.add(1); //level
+            // Cay dau than: nhan vat moi bat dau o CAP 10, tuc cap cao nhat.
+            //
+            // Truoc day bat dau o cap 1 — moi lan hai hat dau, va phai bo hang
+            // tuan nang dan len. Voi mot may chu tu mo thi quang do la mot cai
+            // cong khong ai muon di qua, con cai no bao ve — so dau moi ngay —
+            // thi da co gioi han thu hoach theo gio lo roi.
+            dataArray.add(10); //level: cap toi da
             dataArray.add(5); //curent pea
             dataArray.add(0); //is upgrade
             dataArray.add(new Date().getTime()); //last time harvest

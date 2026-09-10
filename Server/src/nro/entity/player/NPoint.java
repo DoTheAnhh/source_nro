@@ -3263,6 +3263,26 @@ private boolean hasFull5NhatAn() {
         return sb.toString();
     }
 
+    /**
+     * Báo cho <b>người chơi thật</b>, bỏ qua đệ tử, phân thân, bot, boss.
+     *
+     * <h2>Vì sao cần lọc</h2>
+     *
+     * <p>Đệ tử tự tiêu tiềm năng bằng {@code Detu.increasePoint()} — hai mươi
+     * lượt mỗi giây, và phần lớn số lượt ấy <b>đâm vào trần</b> vì đệ đã đầy
+     * một chỉ số nào đó. Mỗi lần đâm trần là một câu "đã đạt mức tối đa" hoặc
+     * "không đủ tiềm năng".</p>
+     *
+     * <p>Những câu ấy nói về đệ tử chứ không phải về sư phụ, mà lại gửi tới sư
+     * phụ. Hai mươi câu mỗi giây thì khung chat không còn đọc được gì nữa, và
+     * mỗi câu là một gói tin.</p>
+     */
+    private void baoChoNguoi(Player pl, String chu) {
+        if (pl != null && pl.isPl()) {
+            Service.gI().sendThongBao(pl, chu);
+        }
+    }
+
     /** Nâng từ bao nhiêu điểm trở lên thì hỏi lại. */
     private static final int NGUONG_HOI_LAI = 2;
 
@@ -3379,7 +3399,7 @@ private boolean hasFull5NhatAn() {
             } else {
                 long tran = (tranDe == null) ? TRAN_HP_GOC
                         : Math.min(TRAN_HP_GOC, tranDe[0]);
-                Service.gI().sendThongBao(player, "HP gốc đã đạt mức tối đa ("
+                baoChoNguoi(player, "HP gốc đã đạt mức tối đa ("
                         + Util.soCham(tran)
                         + "), đang có "
                         + Util.soCham(this.hpg) + ".");
@@ -3399,7 +3419,7 @@ private boolean hasFull5NhatAn() {
             } else {
                 long tran = (tranDe == null) ? TRAN_KI_GOC
                         : Math.min(TRAN_KI_GOC, tranDe[0]);
-                Service.gI().sendThongBao(player, "KI gốc đã đạt mức tối đa ("
+                baoChoNguoi(player, "KI gốc đã đạt mức tối đa ("
                         + Util.soCham(tran)
                         + "), đang có "
                         + Util.soCham(this.mpg) + ".");
@@ -3417,7 +3437,7 @@ private boolean hasFull5NhatAn() {
                     updatePoint = true;
                 }
             } else {
-                Service.gI().sendThongBao(player, "Sức đánh của bạn đã đạt mức tối đa");
+                baoChoNguoi(player, "Sức đánh của bạn đã đạt mức tối đa");
                 Service.gI().sendMoney(player);
                 return;
             }
@@ -3439,7 +3459,7 @@ private boolean hasFull5NhatAn() {
                     updatePoint = true;
                 }
             } else {
-                Service.gI().sendThongBao(player, "Giáp của bạn đã đạt mức tối đa");
+                baoChoNguoi(player, "Giáp của bạn đã đạt mức tối đa");
                 Service.gI().sendMoney(player);
                 return;
             }
@@ -3463,7 +3483,7 @@ private boolean hasFull5NhatAn() {
                     updatePoint = true;
                 }
             } else {
-                Service.gI().sendThongBao(player, "Chí mạng của bạn đã đạt mức tối đa");
+                baoChoNguoi(player, "Chí mạng của bạn đã đạt mức tối đa");
                 Service.gI().sendMoney(player);
                 return;
             }
@@ -3482,6 +3502,12 @@ private boolean hasFull5NhatAn() {
 
     private boolean doUseTiemNang(long tiemNang) {
         if (this.tiemNang < tiemNang) {
+            // De tu tu tieu tiem nang moi giay, va phan lon so luot ay het
+            // tiem nang — bao ra la hai muoi cau moi giay gui toi su phu, noi
+            // ve mot chuyen khong phai cua su phu.
+            if (player == null || !player.isPl()) {
+                return false;
+            }
             // Noi ro CAN bao nhieu, DANG CO bao nhieu, THIEU bao nhieu.
             //
             // Cau cu chi co "Ban khong du tiem nang" — dung nhung vo dung: gia

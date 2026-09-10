@@ -339,6 +339,16 @@ public class Player implements Runnable {
     /** Mốc bắt đầu lượt đổi bản đồ đang treo, để còn tự mở khoá nếu kẹt. */
     public volatile long mocBatDauDoiMap;
 
+    /**
+     * Loại tàu vũ trụ cần thả <b>sau khi client nạp xong bản đồ</b>.
+     * {@code -1} là không có gì phải thả.
+     *
+     * <p>Hiệu ứng tàu là lệnh "thả người chơi xuống từ trên cao". Gửi nó trước
+     * khi client dựng xong ô địa hình thì người chơi rơi vào một bản đồ chưa có
+     * mặt đất — đứng im trên không, hoặc rơi xuyên qua đáy, HP/KI hiện 0/0.</p>
+     */
+    public byte tauChoThaSauKhiNapMap = -1;
+
     // ------------------------------------------------------------------
     //  Gộp gói tin cho những việc làm HÀNG LOẠT
     // ------------------------------------------------------------------

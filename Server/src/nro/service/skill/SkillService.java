@@ -162,8 +162,39 @@ public class SkillService {
                     && player.playerSkill.skillSelect.template.id != Skill.QUA_CAU_KENH_KHI
                     && player.playerSkill.skillSelect.template.id != Skill.MAKANKOSAPPO))
                     || (plTarget != null && !canAttackPlayer(player, plTarget))
-                    || (mobTarget != null && mobTarget.isDie())
-                    || !canUseSkillWithMana(player) || !canUseSkillWithCooldown(player)) {
+                    || (mobTarget != null && mobTarget.isDie())) {
+                return false;
+            }
+            // Hai cong duoi day truoc kia cung nam trong khoi `if` tren, va
+            // cung tra ve false TRONG IM LANG.
+            //
+            // Voi mot chieu danh lien tuc thi im lang la dung — bao moi lan
+            // khong du KI se thanh mua thong bao. Nhung voi chieu bam TUNG
+            // LAN nhu Troi, Thoi mien, Dich chuyen tuc thoi thi nguoi choi bam
+            // mot cai, khong co gi xay ra, va khong co cach nao biet vi sao:
+            // het KI hay chua hoi chieu, hai chuyen khac han nhau ma nhin ra
+            // giong het — dung canh "an nut troi van bi hut".
+            boolean chieuBamTay = laChieuBamTungLan(
+                    player.playerSkill.skillSelect.template.id);
+            if (!canUseSkillWithMana(player)) {
+                if (chieuBamTay) {
+                    Service.gI().sendThongBao(player, "Không đủ KI để dùng "
+                            + player.playerSkill.skillSelect.template.name + ".");
+                }
+                return false;
+            }
+            if (!canUseSkillWithCooldown(player)) {
+                if (chieuBamTay) {
+                    long con = player.playerSkill.skillSelect.coolDown
+                            - (System.currentTimeMillis()
+                            - player.playerSkill.skillSelect.lastTimeUseThisSkill);
+                    if (con < 0) {
+                        con = 0;
+                    }
+                    Service.gI().sendThongBao(player,
+                            player.playerSkill.skillSelect.template.name
+                            + " còn " + ((con + 999) / 1000) + " giây nữa mới dùng lại được.");
+                }
                 return false;
             }
 
@@ -1641,6 +1672,30 @@ public class SkillService {
      * nhanh hơn quá một phần ba.</p>
      */
     private static final int NOI_HOI_CHIEU_MS = 200;
+
+    /**
+     * Chiêu người chơi <b>bấm từng lần</b>, không phải chiêu đánh liên tục.
+     *
+     * <p>Chỉ những chiêu này mới báo lý do khi bị từ chối. Chiêu đánh liên tục
+     * (đấm, chưởng) bị từ chối vài lần một giây là chuyện bình thường của nhịp
+     * đánh — báo ra thì khung chat thành một dòng chảy vô nghĩa.</p>
+     */
+    private static boolean laChieuBamTungLan(int idChieu) {
+        switch (idChieu) {
+            case Skill.TROI:
+            case Skill.THOI_MIEN:
+            case Skill.DICH_CHUYEN_TUC_THOI:
+            case Skill.THAI_DUONG_HA_SAN:
+            case Skill.SOCOLA:
+            case Skill.TU_SAT:
+            case Skill.KAIOKEN:
+            case Skill.BIEN_KHI:
+            case Skill.KHIEN_NANG_LUONG:
+                return true;
+            default:
+                return false;
+        }
+    }
 
     public boolean canUseSkillWithCooldown(Player player) {
         int cho = player.playerSkill.skillSelect.coolDown - NOI_HOI_CHIEU_MS;

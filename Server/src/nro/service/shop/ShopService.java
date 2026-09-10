@@ -513,13 +513,22 @@ public class ShopService {
                 msg.writer().writeShort(item.template.id);
                 msg.writer().writeUTF("\n|2|LUCKY DRAGON BALL");
                 msg.writer().writeByte(item.itemOptions.size() + 1);
+                // BA int moi dong chi so: id, tri so, va TRAN cua khoang.
+                //
+                // Client doc du ba (xem Controller case -44). Hai cho nay chi
+                // ghi hai, nen tu dong chi so dau tien tro di luong doc LECH
+                // mot int — client doc phan con lai cua goi ra so rac, va goi
+                // vo. Nhin tu trong game la bam "Ruong phu" thi khong co gi
+                // hien ra ca.
                 for (ItemOption io : item.itemOptions) {
                     msg.writer().writeInt(io.optionTemplate.id);
                     msg.writer().writeInt(io.param);
+                    msg.writer().writeInt(io.paramMax);
                 }
                 //số lượng
                 msg.writer().writeInt(31);
                 msg.writer().writeInt(item.quantity);
+                msg.writer().writeInt(-1);
                 //
                 msg.writer().writeByte(1);
                 if (item.template.type == 5) {
@@ -567,9 +576,11 @@ public class ShopService {
                 msg.writer().writeInt(0);
                 msg.writer().writeInt(item.quantity);
                 msg.writer().writeByte(item.itemOptions.size());
+                // BA int moi dong, y nhu openShopType4 — xem chu thich o do.
                 for (ItemOption io : item.itemOptions) {
                     msg.writer().writeInt(io.optionTemplate.id);
                     msg.writer().writeInt(io.param);
+                    msg.writer().writeInt(io.paramMax);
                 }
                 msg.writer().writeByte(0);
                 if (item.template.type == 5) {

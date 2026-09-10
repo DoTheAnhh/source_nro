@@ -290,14 +290,46 @@ public class Detu extends Player {
         }
     }
 
+    /**
+     * Tách hợp thể.
+     *
+     * <h2>Phải hồi đầy máu cho CẢ HAI</h2>
+     *
+     * <p>Trong lúc hợp thể, chỉ số của hai người gộp làm một: {@code hpMax} của
+     * sư phụ cộng thêm phần của đệ, còn đệ thì <b>không được nuôi</b> — nó
+     * không ở trên bản đồ, không hồi máu, và {@code hp} của nó nằm nguyên ở con
+     * số lúc nhập vào, thường là 1 hoặc 0 vì lúc ấy nó vừa bị gộp.</p>
+     *
+     * <p>Bản cũ tách xong chỉ đặt lại {@code typeFusion} rồi gọi
+     * {@code Service.point}. Không ai dựng lại chỉ số, không ai hồi máu — nên
+     * tách ra là đệ đứng đó với <b>1 máu</b>, còn sư phụ thì tụt mất phần máu
+     * của đệ mà thanh máu không được cập nhật cho khớp.</p>
+     *
+     * <p>Nay: dựng lại chỉ số cho cả hai <b>trước</b> (vì trần máu vừa đổi), rồi
+     * đổ đầy, rồi mới gửi xuống client.</p>
+     */
     public void unFusion() {
         master.fusion.typeFusion = 0;
         this.status = PROTECT;
-        Service.gI().point(master);
         joinMapMaster();
         fusionEffect(master.fusion.typeFusion);
         Service.gI().Send_Caitrang(master);
+
+        // Dung lai chi so TRUOC khi do day: tran mau cua ca hai vua doi vi
+        // phan gop vao nhau da tach ra.
+        master.nPoint.calPoint();
+        master.nPoint.setFullHpMp();
+        if (this.nPoint != null) {
+            this.nPoint.calPoint();
+            this.nPoint.setFullHpMp();
+        }
+
         Service.gI().point(master);
+        nro.service.PlayerService.gI().sendInfoHpMpMoney(master);
+        Service.gI().Send_Info_NV(master);
+        Service.gI().InfoPetGoc(master);
+        Service.gI().showInfoPet(master);
+
         this.lastTimeUnfusion = System.currentTimeMillis();
     }
 
@@ -771,12 +803,25 @@ public class Detu extends Player {
 //            }
 //        }
 //    }
+ /**
+  * Đệ tử tự tiêu tiềm năng của nó vào các chỉ số.
+  *
+  * <h2>Một giây một lượt, không phải mỗi khung hình</h2>
+  *
+  * <p>Điều kiện cũ là {@code canDoWithTime(..., 0)} — tức <b>không giới hạn
+  * gì cả</b>, đúng nào cũng thoả. Nên vòng hai mươi lượt này chạy ở
+  * <i>mỗi nhịp cập nhật</i> của mỗi đệ tử trên toàn máy chủ. Mỗi lượt là một
+  * lần tính giá theo cấp số cộng và một lần dựng lại toàn bộ chỉ số.</p>
+  *
+  * <p>Một giây một lượt vẫn tiêu hết tiềm năng nhanh hơn tốc độ đệ kiếm ra,
+  * nên không đổi gì về mặt chơi — chỉ bỏ đi phần việc thừa.</p>
+  */
  private void increasePoint() {
-    if (this.nPoint != null && Util.canDoWithTime(lastTimeIncreasePoint, 0)) {
+    if (this.nPoint != null && Util.canDoWithTime(lastTimeIncreasePoint, 1000)) {
         for (int i = 0; i < 20; i++) {
             this.nPoint.increasePoint(
                 (byte) Util.nextInt(0, 4),
-                (short) 1,                
+                (short) 1,
                 false
             );
         }

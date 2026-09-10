@@ -753,9 +753,21 @@ public class ChangeMapService {
                     x = xSpawn;
                     y = ground;
                 } else {
-                    // Các map khác vẫn giữ hiệu ứng tàu như cũ
-                    spaceShipArrive(pl, (byte) 0, pl.haveTennisSpaceShip ? TENNIS_SPACE_SHIP : DEFAULT_SPACE_SHIP);
-                    pl.iDMark.setIdSpaceShip(pl.haveTennisSpaceShip ? TENNIS_SPACE_SHIP : DEFAULT_SPACE_SHIP);
+                    // Hiệu ứng tàu phát SAU khi client dựng xong bản đồ.
+                    //
+                    // Bản cũ gửi gói tàu ngay tại đây — tức TRƯỚC cả gói dữ
+                    // liệu bản đồ. Client nhận lệnh "thả người xuống từ tàu"
+                    // trong khi nó còn chưa dựng xong ô địa hình, nên nhân vật
+                    // rơi vào một bản đồ chưa có mặt đất: đứng im ở y = 5 hoặc
+                    // rơi thẳng qua đáy, HP/KI hiện 0/0, và các ô địa hình vẽ
+                    // ra lộn xộn vì lớp vẽ chạy trước lớp nạp.
+                    //
+                    // Nay chỉ ĐÁNH DẤU ở đây; finishLoadMap — chỗ client báo
+                    // "tôi dựng xong rồi" — mới phát hiệu ứng.
+                    byte loaiTau = pl.haveTennisSpaceShip
+                            ? TENNIS_SPACE_SHIP : DEFAULT_SPACE_SHIP;
+                    pl.tauChoThaSauKhiNapMap = loaiTau;
+                    pl.iDMark.setIdSpaceShip(loaiTau);
                 }
             } else {
                 pl.iDMark.setIdSpaceShip(typeSpace);
@@ -1031,6 +1043,18 @@ public class ChangeMapService {
         // try/catch nuot lang le ngay day la bang chung), va nem loi thi khoa
         // khong bao gio duoc mo — nguoi choi ket, khong doi ban do duoc nua.
         xongDoiMap(player);
+        // Bay gio ban do da dung xong: moi tha phi thuyen.
+        //
+        // Xem cho dat co trong changeMap de biet vi sao khong tha som hon.
+        try {
+            if (player.tauChoThaSauKhiNapMap >= 0) {
+                byte loaiTau = player.tauChoThaSauKhiNapMap;
+                player.tauChoThaSauKhiNapMap = -1;
+                spaceShipArrive(player, (byte) 0, loaiTau);
+            }
+        } catch (Exception boQua) {
+            player.tauChoThaSauKhiNapMap = -1;
+        }
         try {
             TaskService.gI().sendUpdateCountSubTask(player);
             player.zone.load_Me_To_Another(player);

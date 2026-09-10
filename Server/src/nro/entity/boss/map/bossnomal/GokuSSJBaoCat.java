@@ -142,6 +142,29 @@ public class GokuSSJBaoCat extends Boss {
     public void reward(Player plAtt) {
     }
 
+    /**
+     * <b>Không bao giờ tự rời bản đồ.</b>
+     *
+     * <p>Bản gốc dùng {@code secondsRest} cho <i>hai</i> việc khác hẳn nhau:
+     * vừa là quãng chờ hồi sinh, vừa là hạn "không ai đánh thì bỏ đi". Con này
+     * đặt {@code secondsRest = 3} để đứng dậy nhanh sau khi ngã — và vì thế
+     * <b>ba giây sau khi hiện ra là nó tự biến mất</b> nếu chưa ai kịp đánh.</p>
+     *
+     * <p>Nhìn từ trong game: tới Đảo Kame thì chẳng thấy Gôku SSJ đâu, hoặc
+     * thấy loáng một cái rồi mất. Đó chính là "NPC chưa tấn công được".</p>
+     *
+     * <p>Bao cát thì phải luôn có mặt — nó tồn tại để người chơi tìm tới, chứ
+     * không phải một con boss ghé qua rồi đi.</p>
+     */
+    @Override
+    protected void checkAutoResetBySecondsRest() {
+    }
+
+    /** Không loa, không gọi con khác. */
+    @Override
+    public void wakeupAnotherBossWhenAppear() {
+    }
+
     @Override
     public Player getPlayerAttack() {
         // Khong chon muc tieu: no khong danh ai ca.
