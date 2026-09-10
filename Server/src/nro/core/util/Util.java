@@ -228,6 +228,19 @@ public class Util {
         if (piercing || biDanh == null || biDanh.nPoint == null) {
             return false;
         }
+        // CHỈ BOSS mới có chỉ số né.
+        //
+        // Quái thường ({@code Mob}) vốn không có đường né nào — chúng không
+        // dùng {@code NPoint} nên không có {@code tlNeDon}. Nhưng những con
+        // trong {@code boss/map/bossnomal} (Ăn Trộm, Ó Đo, Rai Ti, Sói Héc
+        // Quyn, Virus, Xin Ba Tô) thì <b>là Boss về mặt mã</b> dù người chơi
+        // nhìn chúng như quái thường, và chúng đi qua đúng hàm này.
+        //
+        // Chốt ở đây, một chỗ, thay vì sửa ba mươi lớp boss: ai không phải
+        // boss thì không né được, chấm hết.
+        if (!biDanh.isBoss) {
+            return false;
+        }
         int ne = biDanh.nPoint.tlNeDon;
         if (nguoiDanh != null && nguoiDanh.nPoint != null) {
             ne -= nguoiDanh.nPoint.tlchinhxac;
