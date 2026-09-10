@@ -83,6 +83,7 @@ public class SystemPanel extends JPanel {
         tabs.addTab("Danh hiệu", buildDanhHieuTab());
         tabs.addTab("Nhiệm vụ danh hiệu", buildNhiemVuTab());
         tabs.addTab("Top máy đấm", buildTopMayDamTab());
+        tabs.addTab("Vòng quay Thượng Đế", buildVongQuayTab());
         tabs.addTab("Điểm đến capsule", buildCapsuleTab());
         tabs.addTab("Bản đồ nhanh", buildMapNhanhTab());
         tabs.addTab("Sách tuyệt kỹ", buildSachTuyetKyTab());
@@ -152,6 +153,9 @@ public class SystemPanel extends JPanel {
                     break;
                 case "Nội tại":
                     napBangNoiTai();
+                    break;
+                case "Vòng quay Thượng Đế":
+                    napBangVongQuay();
                     break;
                 case "Top máy đấm":
                     napBangTop();
@@ -5499,6 +5503,212 @@ public class SystemPanel extends JPanel {
      * dựng lại máy chủ. Tab này đọc và ghi thẳng vào chính bảng đó, và nạp lại
      * vào bộ nhớ ngay sau khi lưu.</p>
      */
+    // ---------------------------------------------------------------- vòng quay
+    private static final int COT_VQ_ID = 0;
+    private static final int COT_VQ_NHOM = 1;
+    private static final int COT_VQ_VP = 2;
+    private static final int COT_VQ_CS = 3;
+    private static final int COT_VQ_TS = 4;
+    private static final int COT_VQ_MA = 5;
+    private static final int COT_VQ_BAT = 6;
+    private static final int COT_VQ_GC = 7;
+    private static final int COT_VQ_CH = 8;
+
+    private final DefaultTableModel vqModel = new DefaultTableModel(
+            new Object[]{"Id", "Vòng quay", "Vật phẩm", "Chỉ số", "Trọng số",
+                "Mã riêng", "Bật", "Ghi chú", "Cơ hội"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return c != COT_VQ_ID && c != COT_VQ_CH;
+        }
+
+        @Override
+        public Class<?> getColumnClass(int c) {
+            return c == COT_VQ_BAT ? Boolean.class : String.class;
+        }
+    };
+    private final JTable vqTable = new JTable(vqModel);
+
+    /**
+     * Tab <b>Vòng quay Thượng Đế</b> — kho quà, sửa được từ panel.
+     *
+     * <p>Danh sách quà vốn viết cứng trong mã. Bảng {@code vong_quay_qua} được
+     * gieo đúng danh sách ấy ở lần chạy đầu, nên đổi sang cách này không làm
+     * lệch tỉ lệ; từ đó trở đi máy chủ <b>chỉ đọc bảng</b>.</p>
+     */
+    private JComponent buildVongQuayTab() {
+        JPanel root = new JPanel(new BorderLayout(0, 8));
+        root.setOpaque(false);
+        root.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        vqTable.setRowHeight(24);
+        vqTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        int[] w = {45, 95, 230, 150, 70, 90, 45, 200, 70};
+        for (int i = 0; i < vqTable.getColumnCount() && i < w.length; i++) {
+            vqTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
+        }
+        JComboBox<String> oNhom = new JComboBox<>(new String[]{"Thường", "VIP"});
+        vqTable.getColumnModel().getColumn(COT_VQ_NHOM)
+                .setCellEditor(new javax.swing.DefaultCellEditor(oNhom));
+        JComboBox<String> oMa = new JComboBox<>(
+                nro.repository.dao.VongQuayDAO.TEN_MA_RIENG);
+        vqTable.getColumnModel().getColumn(COT_VQ_MA)
+                .setCellEditor(new javax.swing.DefaultCellEditor(oMa));
+
+        JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        nut.setOpaque(false);
+        nut.add(button("Lưu bảng", OK_GREEN, e -> luuBangVongQuay()));
+        nut.add(button("Tải lại", GREY, e -> napBangVongQuay()));
+        nut.add(button("Thêm dòng quà", ACCENT, e -> themDongVongQuay()));
+        nut.add(button("Xoá dòng đang chọn", WARN_RED, e -> xoaDongVongQuay()));
+
+        root.add(nhan("Kho quà của vòng quay Thượng Đế. Máy chủ <b>chỉ đọc bảng "
+                + "này</b> — danh sách viết cứng cũ đã được gieo xuống đây nguyên "
+                + "vẹn ở lần chạy đầu, nên tỉ lệ không lệch đi đâu cả."
+                + "<br><br>"
+                + "<b>Vật phẩm</b>: một hoặc nhiều id ngăn nhau bằng dấu phẩy. "
+                + "Nhiều id thì bốc ngẫu nhiên <i>một</i> cái, cơ hội đều nhau — "
+                + "đó là cách gói gọn những mục kiểu \"một trong năm mảnh\"."
+                + "<br>"
+                + "<b>Chỉ số</b>: dạng <code>87:0,30:0</code> — id chỉ số hai chấm "
+                + "trị số. Để trống là món trơn."
+                + "<br>"
+                + "<b>Trọng số</b>: là <i>trọng số</i>, không phải phần trăm. Không "
+                + "cần cộng cho tròn một trăm, sửa một dòng không bắt sửa lại dòng "
+                + "khác. Cột \"Cơ hội\" là phần trăm tính ra từ chính các trọng số "
+                + "đang bật của cùng vòng quay."
+                + "<br>"
+                + "<b>Mã riêng</b>: vài món cần mã nguồn tính tại chỗ (bốc trị số "
+                + "theo khoảng, gắn hạn dùng). Để trống là món thường."
+                + "<br><br>"
+                + "Quay hụt thì rơi về vàng như cũ, nên tắt hết quà cũng không làm "
+                + "ai mất lượt mà chẳng nhận gì."), BorderLayout.NORTH);
+        root.add(ServerGuiUtils.cuon(vqTable), BorderLayout.CENTER);
+        root.add(nut, BorderLayout.SOUTH);
+        napBangVongQuay();
+        return root;
+    }
+
+    private void napBangVongQuay() {
+        if (vqTable.isEditing()) {
+            vqTable.getCellEditor().stopCellEditing();
+        }
+        vqModel.setRowCount(0);
+        java.util.List<nro.repository.dao.VongQuayDAO.Qua> ds
+                = nro.repository.dao.VongQuayDAO.danhSach();
+        int tongThuong = 0;
+        int tongVip = 0;
+        for (nro.repository.dao.VongQuayDAO.Qua q : ds) {
+            if (!q.bat || q.trongSo <= 0) {
+                continue;
+            }
+            if (q.nhom == nro.repository.dao.VongQuayDAO.NHOM_VIP) {
+                tongVip += q.trongSo;
+            } else {
+                tongThuong += q.trongSo;
+            }
+        }
+        for (nro.repository.dao.VongQuayDAO.Qua q : ds) {
+            int tong = q.nhom == nro.repository.dao.VongQuayDAO.NHOM_VIP
+                    ? tongVip : tongThuong;
+            String coHoi = (!q.bat || q.trongSo <= 0 || tong <= 0) ? "—"
+                    : String.format("%.2f%%", q.trongSo * 100.0 / tong);
+            vqModel.addRow(new Object[]{String.valueOf(q.id),
+                q.nhom == nro.repository.dao.VongQuayDAO.NHOM_VIP ? "VIP" : "Thường",
+                q.vatPham, q.chiSo, String.valueOf(q.trongSo),
+                q.maRieng == null ? "" : q.maRieng, q.bat,
+                q.ghiChu == null ? "" : q.ghiChu, coHoi});
+        }
+    }
+
+    private String oVq(int r, int c) {
+        Object v = vqModel.getValueAt(r, c);
+        return v == null ? "" : String.valueOf(v).trim();
+    }
+
+    private void luuBangVongQuay() {
+        if (vqTable.isEditing()) {
+            vqTable.getCellEditor().stopCellEditing();
+        }
+        int hong = 0;
+        String hongDau = null;
+        for (int r = 0; r < vqModel.getRowCount(); r++) {
+            nro.repository.dao.VongQuayDAO.Qua q
+                    = new nro.repository.dao.VongQuayDAO.Qua();
+            try {
+                q.id = Integer.parseInt(oVq(r, COT_VQ_ID));
+                q.trongSo = Integer.parseInt(oVq(r, COT_VQ_TS));
+            } catch (NumberFormatException ex) {
+                hong++;
+                if (hongDau == null) {
+                    hongDau = "Dòng " + (r + 1) + " có ô không phải số.";
+                }
+                continue;
+            }
+            q.nhom = "VIP".equalsIgnoreCase(oVq(r, COT_VQ_NHOM))
+                    ? nro.repository.dao.VongQuayDAO.NHOM_VIP
+                    : nro.repository.dao.VongQuayDAO.NHOM_THUONG;
+            q.vatPham = oVq(r, COT_VQ_VP);
+            q.chiSo = oVq(r, COT_VQ_CS);
+            q.maRieng = oVq(r, COT_VQ_MA);
+            Object bat = vqModel.getValueAt(r, COT_VQ_BAT);
+            q.bat = !(bat instanceof Boolean) || (Boolean) bat;
+            q.ghiChu = oVq(r, COT_VQ_GC);
+            String loi = nro.repository.dao.VongQuayDAO.luu(q);
+            if (loi != null) {
+                hong++;
+                if (hongDau == null) {
+                    hongDau = "Dòng " + (r + 1) + ": " + loi;
+                }
+            }
+        }
+        napBangVongQuay();
+        note(hong == 0 ? OK_GREEN : WARN_RED, hong == 0
+                ? "Đã lưu kho quà vòng quay — có hiệu lực ngay lượt quay sau."
+                : hongDau + " (" + hong + " dòng không lưu được)");
+    }
+
+    private void themDongVongQuay() {
+        nro.repository.dao.VongQuayDAO.Qua q
+                = new nro.repository.dao.VongQuayDAO.Qua();
+        q.nhom = nro.repository.dao.VongQuayDAO.NHOM_THUONG;
+        q.vatPham = "18";
+        q.chiSo = "";
+        q.trongSo = 1;
+        q.bat = true;
+        q.ghiChu = "Dòng mới — sửa lại rồi Lưu";
+        String loi = nro.repository.dao.VongQuayDAO.luu(q);
+        napBangVongQuay();
+        note(loi == null ? OK_GREEN : WARN_RED,
+                loi == null ? "Đã thêm một dòng quà." : loi);
+    }
+
+    private void xoaDongVongQuay() {
+        int r = vqTable.getSelectedRow();
+        if (r < 0) {
+            note(WARN_RED, "Chưa chọn dòng nào.");
+            return;
+        }
+        r = vqTable.convertRowIndexToModel(r);
+        int id;
+        try {
+            id = Integer.parseInt(oVq(r, COT_VQ_ID));
+        } catch (NumberFormatException ex) {
+            note(WARN_RED, "Dòng này không có id hợp lệ.");
+            return;
+        }
+        if (JOptionPane.showConfirmDialog(this,
+                "Xoá dòng quà \"" + oVq(r, COT_VQ_VP) + "\"?",
+                "Xoá quà vòng quay", JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+            return;
+        }
+        String loi = nro.repository.dao.VongQuayDAO.xoa(id);
+        napBangVongQuay();
+        note(loi == null ? OK_GREEN : WARN_RED,
+                loi == null ? "Đã xoá dòng quà." : loi);
+    }
+
     // ---------------------------------------------------------------- top máy đấm
     private final DefaultTableModel topModel = new DefaultTableModel(
             new Object[]{"#", "Id", "Tên nhân vật", "Đòn mạnh nhất",

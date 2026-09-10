@@ -235,17 +235,26 @@ public class LuckyRound {
         player.inventory.itemsBoxCrackBall.addAll(items);
     }
 
+    /**
+     * Bốc {@code num} món cho một lượt quay.
+     *
+     * <p>Kho quà lấy từ <b>bảng {@code vong_quay_qua}</b> — sửa trên panel, xem
+     * {@code VongQuayDAO}. Danh sách viết cứng cũ đã được gieo xuống bảng ấy
+     * nguyên vẹn ở lần chạy đầu, nên đổi sang cách này không làm lệch tỉ lệ.</p>
+     *
+     * <p>Bốc hụt thì rơi về vàng, y như cũ: người chơi không bao giờ mất lượt
+     * quay mà chẳng nhận gì.</p>
+     */
     public List<Item> getListItemLuckyRound(Player player, int num, boolean vip) {
         List<Item> list = new ArrayList<>();
-        List<Supplier<Item>> itemPool = buildItemPool(vip);
 
         for (int i = 0; i < num; i++) {
             Item it = null;
             boolean success = Util.isTrue(vip ? 60 : 50, 100);
 
-            if (success && !itemPool.isEmpty()) {
+            if (success) {
                 for (int attempt = 0; attempt < 5 && it == null; attempt++) {
-                    it = itemPool.get(Util.nextInt(itemPool.size())).get();
+                    it = nro.repository.dao.VongQuayDAO.boc(vip);
                 }
             }
 
