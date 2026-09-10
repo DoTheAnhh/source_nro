@@ -37,8 +37,16 @@ public class TrangSucDAO {
     private TrangSucDAO() {
     }
 
-    /** Id vật phẩm của năm cấp bông tai, theo đúng thứ tự cấp 1 đến cấp 5. */
-    public static final int[] ID_BONG_TAI = {454, 921, 1943, 2105, 2106};
+    /**
+     * Id vật phẩm của <b>ba</b> cấp bông tai Porata, theo thứ tự cấp 1 đến 3.
+     *
+     * <p><b>Cấp 3 là trần.</b> Danh sách cũ có năm mục — thêm 2105 và 2106 —
+     * nhưng hai id ấy <b>không phải bông tai</b>: chúng là vật phẩm hợp thể của
+     * đệ tử ({@code ItemUseHandler} khai chúng trong bảng {@code FusionRule}).
+     * Vì thế tab "Bông tai" trên panel dựng ra năm cấp trong khi game chỉ có ba,
+     * và hai cấp cuối không bao giờ có món nào khớp.</p>
+     */
+    public static final int[] ID_BONG_TAI = {454, 921, 1943};
 
     /**
      * Id vật phẩm của các cấp chân mệnh.

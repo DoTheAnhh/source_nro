@@ -142,8 +142,19 @@ public class BaHatMit extends Npc {
                                     );
                                     break;
                                 case 1://Chuyển hoá trang bị
-                                    createOtherMenu(player, ConstMenu.MENU_NANG_CAP_TRANG_BI, "Ta sẽ biến trang bị của ngươi thành trang bị Kích Hoạt",
-                                            "Nâng đồ Hủy diệt","Kích hoạt\nThường", "Kích hoạt\nVIP");
+                                    // MOT muc nang set kich hoat, khong con
+                                    // "Thuong" va "VIP" rieng.
+                                    //
+                                    // Hai duong cu tra ve hai bo do khac han
+                                    // nhau, va ca hai deu boc theo bang option
+                                    // go cung trong ma — set moi khai tren
+                                    // panel khong bao gio ra o duong nao.
+                                    // Duong con lai boc thang trong bang set
+                                    // cua panel, bac do theo trong so cung o
+                                    // panel, nen mot muc la du.
+                                    createOtherMenu(player, ConstMenu.MENU_NANG_CAP_TRANG_BI,
+                                            "Ta sẽ biến trang bị của ngươi thành trang bị Kích Hoạt",
+                                            "Nâng đồ\nHủy diệt", "Nâng cấp\nset kích hoạt");
                                     break;
                                 case 2:
                                     ChangeMapService.gI().changeMapNonSpaceship(player, 112, 200 + Util.nextInt(-100, 100), 408);
@@ -269,9 +280,6 @@ public class BaHatMit extends Npc {
                                     break;
                                 case 1:
                                     CombineService.gI().openTabCombine(player, CombineService.NANG_CAP_KICH_HOAT);
-                                    break;
-                                case 2:
-                                    CombineService.gI().openTabCombine(player, CombineService.NANG_CAP_KICH_HOAT_VIP);
                                     break;
                             }
                             break;
@@ -565,21 +573,34 @@ public class BaHatMit extends Npc {
                                 CombineService.gI().openTabCombine(player, CombineService.NANG_CAP_VAT_PHAM);
                                 break;
                             case 4: { // Bông tai Porata
-                                if (InventoryService.gI().findItem(player, 454)) {
-                                    // Có BT1 -> mở tab nâng BT2
-                                    CombineService.gI().openTabCombine(player, CombineService.NANG_CAP_BONG_TAI);
-
-                                } else if (InventoryService.gI().findItem(player, 921)) {
-                                    // Có BT2 -> submenu cho 2 chức năng
+                                // Xét theo cấp CAO NHẤT đang có, không phải cấp
+                                // đầu tiên tìm thấy.
+                                //
+                                // Chuỗi if cũ hỏi 454 (cấp 1) trước, nên ai còn
+                                // sót một cái cấp 1 trong hành trang thì dù đang
+                                // có cấp 3 cũng chỉ được mời nâng lên cấp 2 —
+                                // và đó chính là chỗ "bông tai cấp 3 không hiện
+                                // option mở chỉ số cấp 3".
+                                boolean bt3 = InventoryService.gI().findItem(player, 1943);
+                                boolean bt2 = InventoryService.gI().findItem(player, 921);
+                                boolean bt1 = InventoryService.gI().findItem(player, 454);
+                                if (bt3) {
+                                    // Cấp 3 là trần. Không còn gì để nâng, chỉ
+                                    // mở thêm chỉ số.
+                                    CombineService.gI().openTabCombine(player,
+                                            CombineService.NANG_CHI_SO_BONG_TAI_3);
+                                } else if (bt2) {
                                     this.createOtherMenu(player, ConstMenu.MENU_BONG_TAI,
                                             "Ngươi muốn làm gì với Bông Tai [+2]?",
-                                            "Nâng cấp lên BT3",
-                                            "Mở chỉ số BT2",
+                                            "Nâng cấp\nlên BT3",
+                                            "Mở chỉ số\nBT2",
                                             "Từ chối");
-
-                                } else if (InventoryService.gI().findItem(player, 1943)) {
-                                    // Có BT3 -> mở tab mở chỉ số BT3
-                                    CombineService.gI().openTabCombine(player, CombineService.NANG_CHI_SO_BONG_TAI_3);
+                                } else if (bt1) {
+                                    CombineService.gI().openTabCombine(player,
+                                            CombineService.NANG_CAP_BONG_TAI);
+                                } else {
+                                    Service.gI().sendThongBao(player,
+                                            "Ngươi chưa có Bông Tai Porata nào trong hành trang.");
                                 }
                                 break;
                             }

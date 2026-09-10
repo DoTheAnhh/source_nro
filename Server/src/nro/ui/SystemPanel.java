@@ -74,6 +74,7 @@ public class SystemPanel extends JPanel {
         tabs.addTab("Tỉ lệ", buildTiLeTab());
         tabs.addTab("Tỉ lệ nâng sao", buildTiLeSaoTab());
         tabs.addTab("Set kích hoạt", buildSetTab());
+        tabs.addTab("Tỉ lệ set kích hoạt", buildTiLeKichHoatTab());
         tabs.addTab("Kỹ năng", buildKyNangTab());
         tabs.addTab("Hào quang", buildAuraTab());
         tabs.addTab("Danh hiệu", buildDanhHieuTab());
@@ -3410,6 +3411,21 @@ public class SystemPanel extends JPanel {
     };
     private final JTable saoTable = new JTable(saoModel);
 
+    /** Bảng trọng số bậc đồ khi nâng Huỷ Diệt thành đồ set kích hoạt. */
+    private final DefaultTableModel khModel = new DefaultTableModel(
+            new Object[]{"Bậc", "Trọng số", "Cơ hội", "Bật", "Ghi chú"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return c == 1 || c == 3 || c == 4;   // "Bac" va "Co hoi" chi de xem
+        }
+
+        @Override
+        public Class<?> getColumnClass(int c) {
+            return c == 3 ? Boolean.class : String.class;
+        }
+    };
+    private final JTable khTable = new JTable(khModel);
+
     // Chi so cot cua bang "Ban do nhanh". Dat ten thay vi go so: chen them mot
     // cot vao giua la moi con so dich di, ma loi kieu do khong bao gi ca.
     private static final int COT_MN_ID = 0;
@@ -5162,6 +5178,107 @@ public class SystemPanel extends JPanel {
         } else {
             note(WARN_RED, loiDau + " (" + loi + " dòng không lưu được)");
         }
+    }
+
+    /**
+     * Tab "Tỉ lệ set kích hoạt" — bậc đồ nào hay ra khi nâng Huỷ Diệt.
+     */
+    private JComponent buildTiLeKichHoatTab() {
+        JPanel root = new JPanel(new BorderLayout(0, 8));
+        root.setOpaque(false);
+        root.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        khTable.setRowHeight(26);
+        khTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        int[] w = {80, 120, 90, 60, 480};
+        for (int i = 0; i < khTable.getColumnCount() && i < w.length; i++) {
+            khTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
+        }
+
+        JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        nut.setOpaque(false);
+        nut.add(button("Lưu bảng", OK_GREEN, e -> luuBangKichHoat()));
+        nut.add(button("Tải lại", GREY, e -> napBangKichHoat()));
+        nut.add(button("Về mặc định", new Color(120, 90, 160), e -> {
+            String loi = nro.repository.dao.TiLeKichHoatDAO.datLaiMacDinh();
+            napBangKichHoat();
+            note(loi == null ? OK_GREEN : WARN_RED,
+                    loi == null ? "Đã trả bảng về mặc định." : loi);
+        }));
+
+        root.add(nhan("Nâng một món Huỷ Diệt ở Bà Hạt Mít cho ra một món đồ set "
+                + "kích hoạt <b>ngẫu nhiên</b>. Bảng này quyết định <b>bậc đồ</b> nào "
+                + "hay ra: bậc 1 là mẫu thấp nhất, bậc 7 là cao nhất — Lưỡng Long / "
+                + "Jeancalic / Vàng Zealot Tướng tuỳ hành tinh."
+                + "<br><br>"
+                + "Là <b>trọng số</b>, không phải phần trăm: không cần cộng cho tròn "
+                + "một trăm, sửa một dòng không bắt sửa lại các dòng khác. Cột "
+                + "\"Cơ hội\" là phần trăm tính ra từ chính các trọng số đang có. "
+                + "Đặt 0 hoặc tắt là bậc đó không bao giờ ra."
+                + "<br><br>"
+                + "<b>Set gắn lên món đồ bốc trong tab \"Set kích hoạt\"</b>, lọc theo "
+                + "hành tinh của người chơi (set để trống hành tinh thì hành tinh nào "
+                + "cũng ra được). Thêm một set ở tab đó là nó vào ngay vòng bốc — "
+                + "trước bản này thì không, vì đường nâng cấp giữ một bản danh sách "
+                + "riêng gõ cứng trong mã."), BorderLayout.NORTH);
+        root.add(ServerGuiUtils.cuon(khTable), BorderLayout.CENTER);
+        root.add(nut, BorderLayout.SOUTH);
+        napBangKichHoat();
+        return root;
+    }
+
+    private void napBangKichHoat() {
+        if (khTable.isEditing()) {
+            khTable.getCellEditor().stopCellEditing();
+        }
+        khModel.setRowCount(0);
+        for (nro.repository.dao.TiLeKichHoatDAO.Bac b
+                : nro.repository.dao.TiLeKichHoatDAO.napLai()) {
+            khModel.addRow(new Object[]{"Bậc " + (b.bac + 1),
+                String.valueOf(b.trongSo),
+                String.format("%.2f", nro.repository.dao.TiLeKichHoatDAO
+                        .phanTram(b.bac)).replace('.', ',') + "%",
+                b.bat, b.ghiChu});
+        }
+    }
+
+    private void luuBangKichHoat() {
+        if (khTable.isEditing()) {
+            khTable.getCellEditor().stopCellEditing();
+        }
+        int loi = 0;
+        String loiDau = null;
+        for (int r = 0; r < khModel.getRowCount(); r++) {
+            nro.repository.dao.TiLeKichHoatDAO.Bac b
+                    = new nro.repository.dao.TiLeKichHoatDAO.Bac();
+            b.bac = r;
+            try {
+                b.trongSo = Long.parseLong(
+                        String.valueOf(khModel.getValueAt(r, 1)).trim().replace(".", ""));
+            } catch (NumberFormatException ex) {
+                loi++;
+                if (loiDau == null) {
+                    loiDau = "Bậc " + (r + 1) + ": trọng số không phải số.";
+                }
+                continue;
+            }
+            Object bat = khModel.getValueAt(r, 3);
+            b.bat = (bat instanceof Boolean) ? (Boolean) bat : true;
+            Object gc = khModel.getValueAt(r, 4);
+            b.ghiChu = gc == null ? "" : String.valueOf(gc);
+
+            String kq = nro.repository.dao.TiLeKichHoatDAO.luu(b);
+            if (kq != null) {
+                loi++;
+                if (loiDau == null) {
+                    loiDau = "Bậc " + (r + 1) + ": " + kq;
+                }
+            }
+        }
+        napBangKichHoat();
+        note(loi == 0 ? OK_GREEN : WARN_RED,
+                loi == 0 ? "Đã lưu bảng tỉ lệ set kích hoạt — có hiệu lực ngay."
+                        : loiDau + " (" + loi + " dòng không lưu được)");
     }
 
     private JComponent buildCapsuleTab() {
