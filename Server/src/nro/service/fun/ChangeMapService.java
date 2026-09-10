@@ -827,20 +827,29 @@ public class ChangeMapService {
                     x = xSpawn;
                     y = ground;
                 } else {
-                    // Hiệu ứng tàu phát SAU khi client dựng xong bản đồ.
+                    // Gói -65 phát NGAY tại đây, ở bản đồ CŨ. Đây là chỗ đúng
+                    // của nó, đừng dời đi.
                     //
-                    // Bản cũ gửi gói tàu ngay tại đây — tức TRƯỚC cả gói dữ
-                    // liệu bản đồ. Client nhận lệnh "thả người xuống từ tàu"
-                    // trong khi nó còn chưa dựng xong ô địa hình, nên nhân vật
-                    // rơi vào một bản đồ chưa có mặt đất: đứng im ở y = 5 hoặc
-                    // rơi thẳng qua đáy, HP/KI hiện 0/0, và các ô địa hình vẽ
-                    // ra lộn xộn vì lớp vẽ chạy trước lớp nạp.
+                    // Tên hàm là "spaceShipArrive" nên rất dễ tưởng đây là cảnh
+                    // tàu hạ xuống nơi mới. Không phải: client dựng một
+                    // {@code Teleport} kiểu 0 — con tàu bốc nhân vật bay LÊN —
+                    // và ngay khi nhận gói nó đặt {@code isStopReadMessage},
+                    // tức là <b>ngừng xử lý mọi gói tới</b> cho tới khi con tàu
+                    // ra khỏi mép trên màn hình. Cảnh hạ xuống ở nơi mới là
+                    // việc của {@code iDMark.setIdSpaceShip} ngay dưới đây, đi
+                    // kèm gói dữ liệu bản đồ.
                     //
-                    // Nay chỉ ĐÁNH DẤU ở đây; finishLoadMap — chỗ client báo
-                    // "tôi dựng xong rồi" — mới phát hiệu ứng.
+                    // Vì thế quãng ngừng đọc ấy phải nằm TRÙNG với lúc dữ liệu
+                    // bản đồ mới đang chạy xuống: client xếp hàng chúng lại,
+                    // cất cánh xong thì xử lý một lượt. Dời gói này xuống sau
+                    // finishLoadMap — như bản trước đã làm — là bắt client
+                    // đóng băng giữa lúc đã đứng trong bản đồ mới, và mọi gói
+                    // gửi sau đó (người xung quanh, hiệu ứng, nhiệm vụ) kẹt lại
+                    // sau một hoạt ảnh cất cánh vô duyên. Chính là lỗi bản đồ
+                    // nghiêm trọng vừa gặp.
                     byte loaiTau = pl.haveTennisSpaceShip
                             ? TENNIS_SPACE_SHIP : DEFAULT_SPACE_SHIP;
-                    pl.tauChoThaSauKhiNapMap = loaiTau;
+                    spaceShipArrive(pl, (byte) 0, loaiTau);
                     pl.iDMark.setIdSpaceShip(loaiTau);
                 }
             } else {
@@ -1123,18 +1132,10 @@ public class ChangeMapService {
         // try/catch nuot lang le ngay day la bang chung), va nem loi thi khoa
         // khong bao gio duoc mo — nguoi choi ket, khong doi ban do duoc nua.
         xongDoiMap(player);
-        // Bay gio ban do da dung xong: moi tha phi thuyen.
-        //
-        // Xem cho dat co trong changeMap de biet vi sao khong tha som hon.
-        try {
-            if (player.tauChoThaSauKhiNapMap >= 0) {
-                byte loaiTau = player.tauChoThaSauKhiNapMap;
-                player.tauChoThaSauKhiNapMap = -1;
-                spaceShipArrive(player, (byte) 0, loaiTau);
-            }
-        } catch (Exception boQua) {
-            player.tauChoThaSauKhiNapMap = -1;
-        }
+        // Hoat anh tau KHONG phat o day — no thuoc ve ban do cu, xem chu thich
+        // trong changeMap. Van xoa co cho sach, phong khi con sot lai tu mot
+        // luot doi ban do dang do cua ban truoc.
+        player.tauChoThaSauKhiNapMap = -1;
         try {
             TaskService.gI().sendUpdateCountSubTask(player);
             player.zone.load_Me_To_Another(player);
