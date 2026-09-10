@@ -462,14 +462,20 @@ namespace Game4
     				}
     			}
     		}
+    		// iOS ve Y HET Android: nen rieng cua iOS chi la mot lop LOT, khong
+    		// phai thu thay the tilemap.
+    		//
+    		// Ban cu dat hai thu vao hai nhanh loai tru: iOS ve anh nen roi
+    		// THOI, khong ve o dia hinh nao — man tao nhan vat cua iOS thanh ra
+    		// khac han Android, mat ca mat dat lan canh vat.
+    		//
+    		// GameScr von da lam dung: goi paint_ios_bg TRUOC roi van
+    		// paintTilemap. O day chep lai dung trinh tu ay.
     		if (mSystem.clientType == 5)
     		{
     			GameCanvas.paint_ios_bg(g);
     		}
-    		else
-    		{
-    			TileMap.paintTilemap(g);
-    		}
+    		TileMap.paintTilemap(g);
     		int num = 30;
     		if (GameCanvas.w == 128)
     		{

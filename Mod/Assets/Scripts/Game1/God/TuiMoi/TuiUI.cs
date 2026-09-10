@@ -6539,26 +6539,96 @@ namespace Game1.God
                     dangKeo = true;
                     daKeoXa = false;
                     yMocKeo = GameCanvas.pyFirst;
+                    duCuon = 0f;
+                    vanTocCuon = 0f;
                 }
                 if (Math.abs(GameCanvas.py - GameCanvas.pyFirst) > NGUONG_KEO)
                 {
                     daKeoXa = true;
                 }
-                // Cuon theo HANG chu khong theo diem: mot buoc bang mot o, nen
-                // luoi khong bao gio dung o nua hang va vung bam luon trung vung
-                // ve.
-                int buoc = (GameCanvas.py - yMocKeo) / buocMot;
-                if (buoc != 0)
+                // Doi quang ngon vua di thanh PHAN LE cua hang, khong chia
+                // nguyen nua.
+                //
+                // Ban cu lay `(py - yMocKeo) / buocMot` — phep chia nguyen. Mot
+                // hang cao gan bon chuc diem, nen phai keo tron bon chuc diem
+                // moi thay luoi nhuc nhich, roi no nhay THANG mot hang. Cam
+                // giac dung la "keo mai khong di roi giat mot cai" — do la cai
+                // khung ma nguoi dung gap tren dien thoai.
+                //
+                // Nay phan le duoc giu lai o `duCuon`, nen luoi chay deu theo
+                // ngon; chi phan NGUYEN moi doi thanh so hang, va nho the moi
+                // cong thuc ve/bat cham theo hang van dung y nguyen.
+                int dy = GameCanvas.py - yMocKeo;
+                if (dy != 0)
                 {
-                    cuon -= buoc;
-                    yMocKeo += buoc * buocMot;
+                    yMocKeo = GameCanvas.py;
+                    float hang = (float) dy / buocMot;
+                    duCuon -= hang;
+                    // Van toc lay trung binh truot, khong lay rieng quang cuoi:
+                    // mot cai giat nho luc nha ngon khong duoc quyet dinh ca
+                    // cu quan tinh.
+                    vanTocCuon = vanTocCuon * 0.55f - hang * 0.45f;
+                    apDuCuon();
                 }
             }
             else
             {
                 dangKeo = false;
+                // Quan tinh: nha ngon roi luoi con troi tiep va cham dan.
+                //
+                // Day moi la thu lam cho cam giac "muot". Ban cu dung phat khi
+                // nha ngon, nen luot mot danh sach dai phai vuot lien tuc chuc
+                // lan.
+                if (vanTocCuon > 0.01f || vanTocCuon < -0.01f)
+                {
+                    duCuon += vanTocCuon;
+                    apDuCuon();
+                    vanTocCuon *= MA_SAT_CUON;
+                }
+                else
+                {
+                    vanTocCuon = 0f;
+                    duCuon = 0f;
+                }
             }
+            int truoc = cuon;
             gioiHanCuon(soDong);
+            if (cuon != truoc)
+            {
+                // Cham bien: dung han, dung de van toc day mai vao tuong.
+                vanTocCuon = 0f;
+                duCuon = 0f;
+            }
+        }
+
+        /// <summary>Ma sát của quán tính: mỗi khung hình còn lại bấy nhiêu.</summary>
+        /// <remarks>
+        /// 0,90 cho quãng trôi chừng nửa giây ở 60 khung hình mỗi giây — đủ để
+        /// lướt qua một hành trang dài bằng vài cú vuốt, không lâu tới mức phải
+        /// chờ nó dừng mới bấm được vào ô.
+        /// </remarks>
+        private const float MA_SAT_CUON = 0.90f;
+
+        /// <summary>Phần lẻ của hàng đang tích lại, khoảng -1 tới 1.</summary>
+        private float duCuon;
+
+        /// <summary>Vận tốc cuộn, tính bằng HÀNG mỗi khung hình.</summary>
+        private float vanTocCuon;
+
+        /// <summary>Chuyển phần NGUYÊN của <c>duCuon</c> thành số hàng đã cuộn.</summary>
+        /// <remarks>
+        /// Giữ lại phần lẻ. Làm tròn về 0 (ép kiểu <c>int</c>) chứ không làm
+        /// tròn gần nhất: làm tròn gần nhất thì một cú chạm rung tay nhích nửa
+        /// hàng cũng đủ đẩy lưới đi một hàng.
+        /// </remarks>
+        private void apDuCuon()
+        {
+            int buoc = (int) duCuon;
+            if (buoc != 0)
+            {
+                cuon += buoc;
+                duCuon -= buoc;
+            }
         }
 
         /// <summary>Số dòng cuộn được của thẻ đang xem.</summary>

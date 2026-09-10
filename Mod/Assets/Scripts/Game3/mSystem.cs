@@ -52,22 +52,30 @@ namespace Game3
     		curINAPP = 0;
     	}
     
+    	/// <summary>Bề ngang của một ảnh.</summary>
+    	/// <remarks>
+    	/// Hai nhánh cũ trả về y hệt nhau — giữ lại chỉ tổ làm người đọc tưởng
+    	/// iOS có gì khác.
+    	/// </remarks>
     	public static int getWidth(Image img)
     	{
-    		if (clientType == 5)
-    		{
-    			return img.getWidth();
-    		}
     		return img.getWidth();
     	}
     
+    	/// <summary>Chiều cao của một ảnh.</summary>
+    	/// <remarks>
+    	/// <para><b>Nhánh cũ trả về BỀ NGANG cho mọi nền tảng trừ iOS.</b> Tức
+    	/// cùng một ảnh, iOS đo ra một số còn Android đo ra số khác — đúng loại
+    	/// chênh lệch làm hai bản build bày khác nhau mà không ai lần ra
+    	/// được.</para>
+    	///
+    	/// <para>Chưa gây hại vì hiện không chỗ nào gọi tới, và ảnh ô địa hình
+    	/// thì vuông nên hai số bằng nhau. Nhưng để nguyên thì người viết sau
+    	/// gọi vào và dính bẫy.</para>
+    	/// </remarks>
     	public static int getHeight(Image img)
     	{
-    		if (clientType == 5)
-    		{
-    			return img.getHeight();
-    		}
-    		return img.getWidth();
+    		return img.getHeight();
     	}
     
     	public static string getTimeCountDown(long timeStart, int secondCount, bool isOnlySecond, bool isShortText)
