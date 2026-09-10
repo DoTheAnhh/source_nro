@@ -333,7 +333,37 @@ public class NPoint {
         this.setPointWhenWearClothes();
     }
 
+    /**
+     * Dựng lại toàn bộ chỉ số từ trang bị, thẻ bài, bùa, set…
+     *
+     * <h2>Vì sao ảnh chụp tỉ lệ máu nằm ở đây chứ không ở trong</h2>
+     *
+     * <p>Trần máu được dựng qua <b>hai chặng</b>: {@code setBasePoint()} tính
+     * gốc cộng trang bị, rồi {@code apDungSetTuCauHinh()} mới cộng phần của set
+     * kích hoạt. Trước bản này, chỗ giữ máu theo tỉ lệ nằm <b>trong</b>
+     * {@code setBasePoint()} — tức là nó so trần <i>cũ đã có set</i> với trần
+     * <i>mới chưa có set</i>, rồi hạ máu theo đúng cái tỉ lệ lệch ấy. Sang chặng
+     * hai trần trở lại đầy đủ, nhưng máu <b>không được nâng theo</b>.</p>
+     *
+     * <p>Nghĩa là <b>mỗi lần</b> tính lại chỉ số, máu bị nhân với
+     * {@code trần-chưa-set / trần-có-set}. Set cộng 50% HP thì mỗi lần gọi máu
+     * còn hai phần ba. Mà hàm này được gọi rất thường: đổi bản đồ, mặc cởi một
+     * món, bùa hết hạn, hợp thể, tách hợp thể… Máu vì thế cứ tụt dần trong khi
+     * không có gì đánh — đúng cảnh "HP tự trừ".</p>
+     *
+     * <p>Nay chụp tỉ lệ ở <b>đầu</b> và trả lại ở <b>cuối</b>, khi cả hai chặng
+     * đã xong: hai đầu so sánh là hai trần đầy đủ như nhau, nên không còn phần
+     * lệch nào để mà mất.</p>
+     */
     private void setPointWhenWearClothes() {
+        // Chup TRUOC khi reset: sau resetPoint thi hpMax van con nguyen tri cu,
+        // nhung chup o day cho ro rang la "truoc moi thu".
+        final long hpMaxCu = this.hpMax;
+        final long mpMaxCu = this.mpMax;
+        final long hpCu = this.hp;
+        final long mpCu = this.mp;
+        this.dangDungLaiDayDu = true;
+        try {
         resetPoint();
         if (this.player.rewardBlackBall.timeOutOfDateReward[2] > System.currentTimeMillis()) {
             tlHutHp += RewardBlackBall.R3S_1;
@@ -597,7 +627,23 @@ public class NPoint {
         setBasePoint();
         setOutfitFusion();
         apDungSetTuCauHinh();
+        } finally {
+            this.dangDungLaiDayDu = false;
+        }
+        // Gio tran moi da day du CA HAI chang — moi tra mau ve dung ti le cu.
+        capNhatTheoTiLe(hpMaxCu, hpCu, mpMaxCu, mpCu);
+        setHp();
+        setMp();
     }
+
+    /**
+     * Đang ở giữa một lượt dựng lại chỉ số <b>đầy đủ</b>.
+     *
+     * <p>Cờ này để {@code setBasePoint()} biết là nó đang bị gọi ở chặng giữa,
+     * và đừng tự chỉnh máu theo một cái trần chưa cộng set — việc đó đã có
+     * {@code setPointWhenWearClothes()} lo ở hai đầu.</p>
+     */
+    private boolean dangDungLaiDayDu;
 
     /**
      * Áp các dòng chỉ số set lấy từ bảng {@code set_bonus}.
@@ -770,13 +816,13 @@ public class NPoint {
                 // không được làm hỏng chỉ số của người chơi.
                 break;
         }
-        // Máu và KI hiện tại không được vượt trần mới.
-        if (this.hp > this.hpMax) {
-            this.hp = this.hpMax;
-        }
-        if (this.mp > this.mpMax) {
-            this.mp = this.mpMax;
-        }
+        // KHONG kep mau o day.
+        //
+        // Ham nay chay giua chung: tran moi cong duoc vai dong set, con thieu
+        // cac dong sau. Kep vao mot con so dang dang la cat mau xuong theo mot
+        // tran khong bao gio ton tai that — va cat roi thi khong co gi dung no
+        // len lai. Cho kep dung mot lan, o cuoi setPointWhenWearClothes, khi
+        // tran da la tran that.
     }
 
     private void addOption(ItemOption io) {
@@ -1152,6 +1198,12 @@ public class NPoint {
      */
     public void setBasePoint() {
         // Chup ti le TRUOC khi dung lai tran.
+        //
+        // Chi lam khi duoc goi TRUC TIEP (thu cung, Duong Tang) — duong day du
+        // la setPointWhenWearClothes() da tu chup va tra o hai dau cua ca hai
+        // chang, va chup them mot lan o giua chinh la loi cu: no so tran cu DA
+        // CO SET voi tran moi CHUA CO SET roi ha mau theo phan lech ay.
+        final boolean tuChup = !this.dangDungLaiDayDu;
         final long hpMaxCu = this.hpMax;
         final long mpMaxCu = this.mpMax;
         final long hpCu = this.hp;
@@ -1160,10 +1212,11 @@ public class NPoint {
         setHpMax();
         setMpMax();
 
-        capNhatTheoTiLe(hpMaxCu, hpCu, mpMaxCu, mpCu);
-
-        setHp();
-        setMp();
+        if (tuChup) {
+            capNhatTheoTiLe(hpMaxCu, hpCu, mpMaxCu, mpCu);
+            setHp();
+            setMp();
+        }
         setDame();
         setDef();
         setCrit();
@@ -1535,16 +1588,20 @@ public class NPoint {
     /**
      * Giữ máu và khí theo đúng <b>tỉ lệ</b> khi trần vừa đổi.
      *
-     * <p>Chỉ làm gì khi trần thật sự đổi. Trần y nguyên thì không đụng vào con
-     * số đang có — đây là trường hợp thường gặp nhất, và mọi phép nhân chia ở
-     * đây đều làm tròn xuống, nên đụng vào không lý do là mỗi lần gọi lại bào
-     * mất vài điểm máu.</p>
+     * <p>Trần y nguyên thì phép nhân chia ở đây trả về đúng con số cũ, không hơn
+     * không kém — nên vẫn gọi, để dựng lại phần máu mà một chặng giữa chừng có
+     * thể đã kéo xuống.</p>
      *
      * <p>Người đang chết thì để yên: máu bằng 0 là trạng thái, không phải một tỉ
      * lệ cần giữ.</p>
      */
     private void capNhatTheoTiLe(long hpMaxCu, long hpCu, long mpMaxCu, long mpCu) {
-        if (hpMaxCu > 0 && hpCu > 0 && this.hpMax != hpMaxCu) {
+        // Khong doi hoi tran phai THAY DOI moi lam.
+        //
+        // Tran khong doi ma van phai dat lai: mau co the da bi mot chang giua
+        // chung keo xuong, va khi hai tran bang nhau thi phep nhan chia nay tra
+        // ve dung hpCu — tuc la dung mau luc dau, khong hon khong kem.
+        if (hpMaxCu > 0 && hpCu > 0) {
             // Nhan truoc chia sau, va nhan bang so nguyen 128 bit de khong tran:
             // hpCu va hpMax deu co the lon hon hai ti.
             this.hp = java.math.BigInteger.valueOf(hpCu)
@@ -1555,7 +1612,7 @@ public class NPoint {
                 this.hp = 1;      // dang song thi khong duoc rot ve 0 vi lam tron
             }
         }
-        if (mpMaxCu > 0 && mpCu > 0 && this.mpMax != mpMaxCu) {
+        if (mpMaxCu > 0 && mpCu > 0) {
             this.mp = java.math.BigInteger.valueOf(mpCu)
                     .multiply(java.math.BigInteger.valueOf(this.mpMax))
                     .divide(java.math.BigInteger.valueOf(mpMaxCu))
