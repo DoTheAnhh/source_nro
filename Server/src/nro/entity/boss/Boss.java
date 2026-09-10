@@ -1917,6 +1917,9 @@ protected void autoResetBossBecauseNoHunter() {
      * @return {@code null} nếu đã cho hồi sinh, hoặc câu giải thích vì sao không được
      */
     public String hoiSinhNgay() {
+        if (this.data == null || this.data.length == 0) {
+            return "Boss không có dữ liệu cấp nào.";
+        }
         // Bam nut la PHAI len, du dang o trang thai nao. Con dang song hay
         // dang thoai thi go xuong truoc roi cho len lai — truoc day chi bao
         // "khong phai dang cho hoi sinh" roi thoi, muon goi lai phai ngoi doi
@@ -1929,16 +1932,16 @@ protected void autoResetBossBecauseNoHunter() {
             }
             this.zone = null;
             this.lastZone = null;
-            this.currentLevel = 0;
             this.changeStatus(BossStatus.REST);
         }
-        int ke = this.currentLevel + 1;
-        if (this.data == null || this.data.length == 0) {
-            return "Boss không có dữ liệu cấp nào.";
-        }
-        if (ke >= this.data.length) {
-            ke = 0;
-        }
+        // Dat currentLevel ve CAP CUOI, khong phai ve 0.
+        //
+        // Nghe nguoc, nhung day la cach may hoi sinh chay: respawn() bat dau
+        // bang currentLevel++ roi moi quay vong ve 0 khi vuot qua cap cuoi.
+        // Nen dat 0 o day la lan hoi sinh ke tiep len CAP HAI — bam "hoi sinh
+        // ngay" cho Xen bo hung thi ra Xen bo hung 2, va cap mot khong bao gio
+        // thay dau. Dat cap cuoi thi phep tang kia quay vong dung ve cap mot.
+        this.currentLevel = this.data.length - 1;
         this.lastTimeRest = 0;
         // Con theo nhom khong nhin lastTimeRest ma nhin so luot cua nhom, nen
         // chi xoa dong ho rieng la bam nut xong van nam im. Ha moc luot xuong
@@ -1947,7 +1950,7 @@ protected void autoResetBossBecauseNoHunter() {
         // Con khong tu xuat hien (phai trieu bang vat pham, hoac di theo con
         // khac) thi rest() khong bao gio cho len — ep thang sang RESPAWN. Bam
         // nut la phai len, do la y nghia cua nut nay.
-        if (this.data[ke].getTypeAppear() != TypeAppear.DEFAULT_APPEAR) {
+        if (this.data[0].getTypeAppear() != TypeAppear.DEFAULT_APPEAR) {
             this.changeStatus(BossStatus.RESPAWN);
         }
         return null;
