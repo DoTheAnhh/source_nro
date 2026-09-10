@@ -600,7 +600,7 @@ public class SkillService {
                 if (player.nPoint.hp < player.nPoint.hpMax / 10) {
                     Service.gI().sendThongBao(player, "Không thể dùng chiêu khi HP dưới 10%");
                 }
-                long hpUse = Util.CrisGH(player.nPoint.hpMax / 100 * 10);
+                long hpUse = giaThat(player, Util.CrisGH(player.nPoint.hpMax / 100 * 10));
                 if (Util.CrisGH(player.nPoint.hp) <= hpUse) {
                     break;
                 } else {
@@ -1618,10 +1618,44 @@ public class SkillService {
         }
     }
 
+    /**
+     * Phần trăm giảm HP/KI tiêu hao khi dùng kỹ năng, do set kích hoạt cộng.
+     *
+     * <p>Kẹp trần ở 90: để chạm 100 thì mọi kỹ năng thành miễn phí, và những
+     * chiêu lấy KI làm giá (Kaioken lấy HP) mất hẳn cái giá của chúng.</p>
+     */
+    private static int giamTieuHao(Player player) {
+        if (player == null) {
+            return 0;
+        }
+        int pct = nro.repository.dao.SetBonusDAO.phanTramLoai(
+                player.setClothes, "giam_tieu_hao_pct");
+        if (pct <= 0) {
+            return 0;
+        }
+        return Math.min(pct, 90);
+    }
+
+    /**
+     * Giá thật của một lần dùng chiêu, sau khi trừ phần set giảm tiêu hao.
+     *
+     * <p>Phải dùng ở <b>cả hai</b> nơi — cổng kiểm tra "đủ KI chưa" và chỗ trừ
+     * thật. Chỉ trừ ở một nơi thì hoặc là bị chặn oan dù đủ KI theo giá đã
+     * giảm, hoặc là qua cổng rồi trừ nhiều hơn mức đáng trừ.</p>
+     */
+    private static long giaThat(Player player, long goc) {
+        int pct = giamTieuHao(player);
+        if (pct == 0) {
+            return goc;
+        }
+        long ra = goc - goc * pct / 100;
+        return ra < 0 ? 0 : ra;
+    }
+
     public boolean canUseSkillWithMana(Player player) {
         if (player.playerSkill.skillSelect != null) {
             if (player.playerSkill.skillSelect.template.id == Skill.KAIOKEN) {
-                long hpUse = Util.CrisGH(player.nPoint.hpMax / 100 * 10);
+                long hpUse = giaThat(player, Util.CrisGH(player.nPoint.hpMax / 100 * 10));
                 if (player.isBoss && player instanceof Rival) {
                     hpUse = 0;
                 }
@@ -1631,10 +1665,12 @@ public class SkillService {
             }
             switch (player.playerSkill.skillSelect.template.manaUseType) {
                 case 0: {
-                    return Util.CrisGH(player.nPoint.mp) >= player.playerSkill.skillSelect.manaUse;
+                    return Util.CrisGH(player.nPoint.mp)
+                            >= giaThat(player, player.playerSkill.skillSelect.manaUse);
                 }
                 case 1: {
-                    long mpUse = Util.CrisGH((player.nPoint.mpMax * player.playerSkill.skillSelect.manaUse / 100));
+                    long mpUse = giaThat(player, Util.CrisGH(
+                            (player.nPoint.mpMax * player.playerSkill.skillSelect.manaUse / 100)));
                     return Util.CrisGH(player.nPoint.mp) >= mpUse;
                 }
                 case 2: {
@@ -1795,21 +1831,28 @@ public class SkillService {
         if (player.playerSkill.skillSelect != null) {
             switch (player.playerSkill.skillSelect.template.manaUseType) {
                 case 0: {
-                    if (Util.CrisGH(player.nPoint.mp) >= player.playerSkill.skillSelect.manaUse) {
-                        player.nPoint.setMp(Util.CrisGH(player.nPoint.mp - player.playerSkill.skillSelect.manaUse));
-                    }
-                    break;
-                }
-                case 1: {
-                    long mpUse = Util.CrisGH(player.nPoint.mpMax * player.playerSkill.skillSelect.manaUse / 100);
+                    long mpUse = giaThat(player, player.playerSkill.skillSelect.manaUse);
                     if (Util.CrisGH(player.nPoint.mp) >= mpUse) {
                         player.nPoint.setMp(Util.CrisGH(player.nPoint.mp - mpUse));
                     }
                     break;
                 }
-                case 2:
-                    player.nPoint.setMp(Util.CrisGH(0));
+                case 1: {
+                    long mpUse = giaThat(player, Util.CrisGH(
+                            player.nPoint.mpMax * player.playerSkill.skillSelect.manaUse / 100));
+                    if (Util.CrisGH(player.nPoint.mp) >= mpUse) {
+                        player.nPoint.setMp(Util.CrisGH(player.nPoint.mp - mpUse));
+                    }
                     break;
+                }
+                case 2: {
+                    // Kieu 2 la "vet sach KI". Set giam tieu hao khong bo qua
+                    // duoc kieu nay: no chua lai dung ti le da giam.
+                    long con = Util.CrisGH(player.nPoint.mp)
+                            - giaThat(player, Util.CrisGH(player.nPoint.mp));
+                    player.nPoint.setMp(Util.CrisGH(con));
+                    break;
+                }
             }
             PlayerService.gI().sendInfoHpMpMoney(player);
         }

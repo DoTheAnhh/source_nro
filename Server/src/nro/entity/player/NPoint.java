@@ -698,6 +698,13 @@ public class NPoint {
                 this.tlSDCM += (int) v;
                 this.tlDameCrit.add((int) v);
                 break;
+            case "chi_mang_ca_hai":
+                // Mot con so, an ca hai cho — nguoi dat set khoi phai them hai
+                // dong roi nho giu chung bang nhau.
+                this.crit += (int) v;
+                this.tlSDCM += (int) v;
+                this.tlDameCrit.add((int) v);
+                break;
             case "hp_hoi":
                 this.hpHoi += v;
                 break;
@@ -753,6 +760,7 @@ public class NPoint {
             case "tai_tao_pct":
             case "hoi_chieu_pct":
             case "choang_pct":
+            case "giam_tieu_hao_pct":
                 // Ba loai nay khong cong vao truong nao cua NPoint: cho dung
                 // chung nam ngoai lop nay (luc gong, luc dung chieu, luc gay
                 // choang). Doc thang bang SetBonusDAO.phanTramLoai() tai cho.

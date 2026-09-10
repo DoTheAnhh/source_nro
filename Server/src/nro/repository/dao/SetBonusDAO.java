@@ -71,6 +71,10 @@ public class SetBonusDAO {
         LOAI.put("def_pct", "Giáp + %");
         LOAI.put("crit", "Chí mạng + % (điểm)");
         LOAI.put("sdcm", "Sức đánh chí mạng + %");
+        LOAI.put("chi_mang_ca_hai",
+                "Chí mạng: cộng cùng lúc CẢ tỉ lệ lẫn sát thương + % (một số cho cả hai)");
+        LOAI.put("giam_tieu_hao_pct",
+                "Giảm HP/KI tiêu hao khi dùng kỹ năng + % (tối đa 90)");
         LOAI.put("hp_hoi", "HP hồi + (cộng thẳng)");
         LOAI.put("ne_don", "Né đòn + %");
         LOAI.put("pst", "Phản sát thương + %");
@@ -123,6 +127,12 @@ public class SetBonusDAO {
             case "def_pct": than = dau + giaTri + "% giáp"; break;
             case "crit": than = dau + giaTri + "% tỷ lệ chí mạng"; break;
             case "sdcm": than = dau + giaTri + "% sát thương chí mạng"; break;
+            case "chi_mang_ca_hai":
+                than = dau + giaTri + "% tỷ lệ và " + dau + giaTri + "% sát thương chí mạng";
+                break;
+            case "giam_tieu_hao_pct":
+                than = dau + giaTri + "% giảm HP/KI tiêu hao khi dùng kỹ năng";
+                break;
             case "hp_hoi": than = dau + giaTri + " HP hồi"; break;
             case "ne_don": than = dau + giaTri + "% né đòn"; break;
             case "pst": than = dau + giaTri + "% phản sát thương"; break;
