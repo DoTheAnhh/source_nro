@@ -182,6 +182,7 @@ public class BossManager implements Runnable {
                     + " dòng danh sách boss xuống bảng boss_spawn\n");
         }
         ds = donDongCu(ds);
+        ds = boSungConThieu(ds);
         int con = 0;
         int ban = 0;
         for (nro.repository.dao.BossSpawnDAO.Dong d : ds) {
@@ -241,6 +242,107 @@ public class BossManager implements Runnable {
             }
         }
         return ds;
+    }
+
+
+    /**
+     * Bổ sung vào bảng <b>mọi boss có lớp mà bảng chưa biết tới</b>.
+     *
+     * <h2>Vì sao thiếu</h2>
+     *
+     * <p>{@code danhSachMacDinh()} chỉ có 32 dòng, gieo đúng <b>một lần</b> lúc
+     * bảng còn trống. Nhưng {@code createBoss()} dựng được gần trăm con. Chênh
+     * lệch ấy là những con <b>không bao giờ được dựng</b>: không có dòng trong
+     * bảng thì {@code loadBoss} không gọi tới, nên chúng không tồn tại trong máy
+     * chủ, không hiện trong danh sách boss của panel, và cũng chẳng có câu lỗi
+     * nào nói vì sao — Android 13, Android 15 và nhiều con khác nằm cả ở đây.</p>
+     *
+     * <p>Nay dò ngược: id nào {@code createBoss} dựng được mà bảng chưa có thì
+     * thêm một dòng. <b>Để TẮT sẵn</b> — bật cả mấy chục con lạ cùng lúc là đổi
+     * hẳn thế giới trong game mà không ai kịp cân lại. Quản trị viên nhìn thấy
+     * chúng trong bảng và tự quyết bật con nào.</p>
+     *
+     * <p>Dò bằng cách <b>thử dựng</b> chứ không đọc danh sách hằng số: hằng số
+     * trong {@code BossID} nhiều hơn số lớp có thật, nên đọc hằng số sẽ đẻ ra
+     * một đống dòng chết. Con vừa thử dựng được thì bị vứt đi ngay — nó chưa vào
+     * bản đồ nào, chỉ mới nằm trong bộ nhớ.</p>
+     */
+    private java.util.List<nro.repository.dao.BossSpawnDAO.Dong> boSungConThieu(
+            java.util.List<nro.repository.dao.BossSpawnDAO.Dong> ds) {
+        java.util.Set<Integer> daCo = new java.util.HashSet<>();
+        for (nro.repository.dao.BossSpawnDAO.Dong d : ds) {
+            daCo.add(d.bossId);
+        }
+        int them = 0;
+        for (int id : ID_DUNG_DUOC) {
+            if (daCo.contains(id)) {
+                continue;
+            }
+            Boss thu;
+            try {
+                thu = this.createBoss(id);
+            } catch (Exception boQua) {
+                continue;
+            }
+            if (thu == null) {
+                continue;
+            }
+            String ten = thu.name == null || thu.name.trim().isEmpty()
+                    ? ("Boss " + id) : thu.name.trim();
+            this.bosses.remove(thu);
+            nro.repository.dao.BossSpawnDAO.Dong d
+                    = new nro.repository.dao.BossSpawnDAO.Dong();
+            d.bossId = id;
+            d.ten = ten;
+            d.soBanSao = 1;
+            d.bat = false;
+            d.ghiChu = "Tự bổ sung — bật nếu muốn con này xuất hiện";
+            if (nro.repository.dao.BossSpawnDAO.luu(d) == null) {
+                them++;
+            }
+        }
+        if (them > 0) {
+            Logger.success("Đã bổ sung " + them
+                    + " boss có lớp nhưng chưa có dòng trong boss_spawn (để tắt sẵn)\n");
+            ds = nro.repository.dao.BossSpawnDAO.tatCa();
+        }
+        return ds;
+    }
+
+    /**
+     * Mọi id mà {@link #createBoss(int)} nhận.
+     *
+     * <p>Sinh một lần bằng cách quét chính khối {@code switch} kia — xem
+     * {@code docIdTuCreateBoss()}.</p>
+     */
+    private static final int[] ID_DUNG_DUOC = docIdTuCreateBoss();
+
+    /**
+     * Đọc mọi hằng số {@code BossID} bằng phản chiếu.
+     *
+     * <p>Không có cách nào đọc thẳng các nhãn {@code case} của một khối
+     * {@code switch} lúc chạy, nên lấy toàn bộ hằng số của {@code BossID} rồi
+     * để {@link #boSungConThieu} lọc bằng cách thử dựng: id nào không lớp nào
+     * nhận thì {@code createBoss} trả {@code null} và bị bỏ qua.</p>
+     */
+    private static int[] docIdTuCreateBoss() {
+        java.util.List<Integer> ra = new java.util.ArrayList<>();
+        try {
+            for (java.lang.reflect.Field f : BossID.class.getDeclaredFields()) {
+                if (java.lang.reflect.Modifier.isStatic(f.getModifiers())
+                        && f.getType() == int.class) {
+                    f.setAccessible(true);
+                    ra.add(f.getInt(null));
+                }
+            }
+        } catch (Exception ex) {
+            Logger.logException(BossManager.class, ex, "Lỗi đọc danh sách id boss");
+        }
+        int[] m = new int[ra.size()];
+        for (int i = 0; i < m.length; i++) {
+            m[i] = ra.get(i);
+        }
+        return m;
     }
 
     /** Danh sách gõ cứng cũ, chỉ dùng để gieo lần đầu. */
