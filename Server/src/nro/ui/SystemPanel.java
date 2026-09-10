@@ -81,7 +81,6 @@ public class SystemPanel extends JPanel {
         tabs.addTab("Kỹ năng", buildKyNangTab());
         tabs.addTab("Hào quang", buildAuraTab());
         tabs.addTab("Danh hiệu", buildDanhHieuTab());
-        tabs.addTab("Nhiệm vụ danh hiệu", buildNhiemVuTab());
         tabs.addTab("Top máy đấm", buildTopMayDamTab());
         tabs.addTab("Vòng quay Thượng Đế", buildVongQuayTab());
         tabs.addTab("Điểm đến capsule", buildCapsuleTab());
@@ -4508,7 +4507,16 @@ public class SystemPanel extends JPanel {
         root.setOpaque(false);
         root.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        dhTable.setRowHeight(24);
+        dhTable.setRowHeight(30);
+        // Nhay dup mot dong = sua danh hieu do, ke ca phan cach nhan.
+        dhTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2 && dhTable.getSelectedRow() >= 0) {
+                    suaDanhHieuDialog(false);
+                }
+            }
+        });
         dhTable.setAutoCreateRowSorter(true);
         dhTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         int[] w = {50, 90, 100, 220, 420, 120};
@@ -4535,13 +4543,29 @@ public class SystemPanel extends JPanel {
         return root;
     }
 
+
+    /** Ảnh của danh hiệu — lấy theo vật phẩm dùng để đổi. */
+    private static javax.swing.ImageIcon anhDanhHieu(
+            nro.repository.dao.DanhHieuDAO.DanhHieu d) {
+        if (d == null || d.idItem <= 0) {
+            return null;
+        }
+        try {
+            nro.entity.template.ItemTemplate t
+                    = nro.service.item.ItemService.gI().getTemplate(d.idItem);
+            return t == null ? null : PlayerManagerPanel.iconOf(t.iconID);
+        } catch (Exception boQua) {
+            return null;
+        }
+    }
+
     private void napBangDanhHieu() {
         dhModel.setRowCount(0);
         java.util.List<nro.repository.dao.NhiemVuDanhHieuDAO.NhiemVu> nvs
                 = nro.repository.dao.NhiemVuDanhHieuDAO.danhSach();
         for (nro.repository.dao.DanhHieuDAO.DanhHieu d
                 : nro.repository.dao.DanhHieuDAO.danhSach()) {
-            dhModel.addRow(new Object[]{d.id, d.idEffect, d.idItem, d.ten,
+            dhModel.addRow(new Object[]{anhDanhHieu(d), d.id, d.idEffect, d.idItem, d.ten,
                 d.moTaChiSo(), cachNhan(d, nvs),
                 nro.repository.dao.DanhHieuDAO.soNguoiDangGiu(d.idEffect)});
         }
@@ -4603,6 +4627,90 @@ public class SystemPanel extends JPanel {
      *
      * @return {@code true} nếu đã thêm được
      */
+
+    /**
+     * Hộp sửa một cách nhận đã có.
+     *
+     * <p>Dùng lại đúng bộ ô của {@link #themCachNhanDialog}: mẫu có sẵn, loại,
+     * số lần, tham số. Khác một điểm — danh hiệu thưởng giữ nguyên, vì đổi nó là
+     * chuyển nhiệm vụ này sang danh hiệu khác, việc đó nên làm ở tab nhiệm vụ
+     * chứ không phải lẫn trong hộp sửa của một danh hiệu.</p>
+     *
+     * @return {@code true} nếu đã lưu
+     */
+    private boolean suaCachNhanDialog(int idNhiemVu) {
+        nro.repository.dao.NhiemVuDanhHieuDAO.NhiemVu n
+                = nro.repository.dao.NhiemVuDanhHieuDAO.theoId(idNhiemVu);
+        if (n == null) {
+            note(WARN_RED, "Không tìm thấy nhiệm vụ id " + idNhiemVu + ".");
+            return false;
+        }
+        JTextField fTen = new JTextField(n.ten, 30);
+        JComboBox<String> oLoai = new JComboBox<>();
+        for (String l : nro.entity.badges.BadgesTaskTemplate.cacLoai()) {
+            oLoai.addItem(l);
+        }
+        oLoai.setRenderer(new javax.swing.DefaultListCellRenderer() {
+            @Override
+            public java.awt.Component getListCellRendererComponent(
+                    javax.swing.JList<?> list, Object value, int index,
+                    boolean sel, boolean focus) {
+                super.getListCellRendererComponent(list, value, index, sel, focus);
+                setText(nro.entity.badges.BadgesTaskTemplate
+                        .tenLoai(String.valueOf(value)));
+                return this;
+            }
+        });
+        oLoai.setSelectedItem(n.loai);
+        JTextField fSoLan = new JTextField(String.valueOf(n.soLan), 10);
+        JTextField fThamSo = new JTextField(String.valueOf(n.thamSo), 10);
+        JLabel nhanThamSo = new JLabel(" ");
+        nhanThamSo.setForeground(GREY);
+        Runnable capNhat = () -> {
+            String y = nro.entity.badges.BadgesTaskTemplate.yNghiaThamSo(
+                    String.valueOf(oLoai.getSelectedItem()));
+            fThamSo.setEnabled(!y.isEmpty());
+            nhanThamSo.setText(y.isEmpty() ? "Loại này không dùng tham số" : y);
+        };
+        oLoai.addActionListener(e -> capNhat.run());
+        capNhat.run();
+
+        JPanel form = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(5, 6, 5, 6);
+        c.anchor = GridBagConstraints.WEST;
+        int r = 0;
+        addRowC(form, c, r++, "Tên hiện cho người chơi:", fTen);
+        addRowC(form, c, r++, "Loại:", oLoai);
+        addRowC(form, c, r++, "Số lần cần đạt:", fSoLan);
+        addRowC(form, c, r++, "Tham số:", fThamSo);
+        c.gridx = 1;
+        c.gridy = r++;
+        form.add(nhanThamSo, c);
+
+        if (JOptionPane.showConfirmDialog(this, form, "Sửa cách nhận",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
+            return false;
+        }
+        n.ten = fTen.getText().trim();
+        n.loai = String.valueOf(oLoai.getSelectedItem());
+        try {
+            n.soLan = Integer.parseInt(fSoLan.getText().trim().replace(".", ""));
+            n.thamSo = Integer.parseInt(fThamSo.getText().trim().replace(".", ""));
+        } catch (NumberFormatException ex) {
+            note(WARN_RED, "\"Số lần\" và \"Tham số\" phải là số nguyên.");
+            return false;
+        }
+        String loi = nro.repository.dao.NhiemVuDanhHieuDAO.sua(n);
+        if (loi != null) {
+            note(WARN_RED, loi);
+            return false;
+        }
+        note(OK_GREEN, "Đã sửa cách nhận.");
+        return true;
+    }
+
     private boolean themCachNhanDialog(nro.repository.dao.DanhHieuDAO.DanhHieu d) {
         JComboBox<nro.entity.badges.BadgesTaskTemplate.Mau> oMau
                 = new JComboBox<>(nro.entity.badges.BadgesTaskTemplate.cacMau());
@@ -4775,7 +4883,6 @@ public class SystemPanel extends JPanel {
         nut.add(button("Thêm cách nhận…", OK_GREEN, e -> {
             if (themCachNhanDialog(d)) {
                 nap.run();
-                napBangNhiemVu();
                 napBangDanhHieu();
             }
         }));
@@ -4795,7 +4902,6 @@ public class SystemPanel extends JPanel {
             }
             String loi = nro.repository.dao.NhiemVuDanhHieuDAO.xoa(id);
             nap.run();
-            napBangNhiemVu();
             napBangDanhHieu();
             note(loi == null ? OK_GREEN : WARN_RED,
                     loi == null ? "Đã xoá." : loi);
@@ -4813,7 +4919,7 @@ public class SystemPanel extends JPanel {
             return null;
         }
         int id = Integer.parseInt(String.valueOf(dhModel.getValueAt(
-                dhTable.convertRowIndexToModel(r), 0)));
+                dhTable.convertRowIndexToModel(r), 1)));
         return nro.repository.dao.DanhHieuDAO.theoId(id);
     }
 
@@ -4913,6 +5019,87 @@ public class SystemPanel extends JPanel {
         form.add(sp, g);
         g.gridy = ++y;
         form.add(nutOpt, g);
+
+        // ---------- cách nhận: nhiệm vụ trao danh hiệu này ----------
+        //
+        // Gop vao day thay vi de mot tab rieng: hai thu la MOT viec. Tach ra
+        // thi dat mot danh hieu xong con phai nho sang tab kia, nho id hieu ung
+        // cua no, roi do trong mot bang chung cua moi danh hieu. Khong ai lam
+        // dung duoc buoc hai, va danh hieu ra doi ma khong co duong nhan.
+        DefaultTableModel mNv = new DefaultTableModel(
+                new Object[]{"Id", "Tên nhiệm vụ", "Loại", "Số lần"}, 0) {
+            @Override
+            public boolean isCellEditable(int r, int cc) {
+                return false;
+            }
+        };
+        JTable bNv = new JTable(mNv);
+        bNv.setRowHeight(24);
+        bNv.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        Runnable napNv = () -> {
+            mNv.setRowCount(0);
+            if (them && d.idEffect <= 0) {
+                return;
+            }
+            for (nro.repository.dao.NhiemVuDanhHieuDAO.NhiemVu n
+                    : nro.repository.dao.NhiemVuDanhHieuDAO.danhSach()) {
+                if (n.danhHieuThuong == d.idEffect) {
+                    mNv.addRow(new Object[]{n.id, n.ten, n.moTaLoai(), n.soLan});
+                }
+            }
+        };
+        napNv.run();
+
+        JPanel nutNv = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
+        nutNv.setOpaque(false);
+        nutNv.add(button("Thêm cách nhận…", OK_GREEN, ev -> {
+            if (d.idEffect <= 0) {
+                note(WARN_RED, "Chọn id hiệu ứng trước đã — cách nhận gắn theo id đó.");
+                return;
+            }
+            if (themCachNhanDialog(d)) {
+                napNv.run();
+            }
+        }));
+        nutNv.add(button("Sửa cách nhận…", ACCENT, ev -> {
+            int r = bNv.getSelectedRow();
+            if (r < 0) {
+                note(WARN_RED, "Chưa chọn cách nhận nào.");
+                return;
+            }
+            int idNv = Integer.parseInt(String.valueOf(mNv.getValueAt(r, 0)));
+            if (suaCachNhanDialog(idNv)) {
+                napNv.run();
+            }
+        }));
+        nutNv.add(button("Xoá cách nhận", WARN_RED, ev -> {
+            int r = bNv.getSelectedRow();
+            if (r < 0) {
+                note(WARN_RED, "Chưa chọn cách nhận nào.");
+                return;
+            }
+            int idNv = Integer.parseInt(String.valueOf(mNv.getValueAt(r, 0)));
+            if (JOptionPane.showConfirmDialog(this,
+                    "Xoá nhiệm vụ \"" + mNv.getValueAt(r, 1) + "\"?\n\n"
+                    + "Ai đang làm dở sẽ mất tiến độ.",
+                    "Xoá cách nhận", JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+                return;
+            }
+            nro.repository.dao.NhiemVuDanhHieuDAO.xoa(idNv);
+            napNv.run();
+        }));
+
+        g.gridy = ++y;
+        form.add(nhan("<b>Cách nhận danh hiệu này</b> — các nhiệm vụ trao nó. "
+                + (d.idItem > 0 ? "Ngoài ra còn đổi được bằng vật phẩm ở trên. " : "")
+                + "Để trống thì chỉ quản trị viên cấp tay được."), g);
+        g.gridy = ++y;
+        JScrollPane spNv = ServerGuiUtils.cuon(bNv);
+        spNv.setPreferredSize(new java.awt.Dimension(420, 110));
+        form.add(spNv, g);
+        g.gridy = ++y;
+        form.add(nutNv, g);
 
         if (JOptionPane.showConfirmDialog(this, form,
                 them ? "Thêm danh hiệu" : "Sửa danh hiệu",
@@ -5271,7 +5458,6 @@ public class SystemPanel extends JPanel {
                 + "sẽ xoá sạch tiến độ đang có.</html>"), BorderLayout.NORTH);
         root.add(ServerGuiUtils.cuon(nvTable), BorderLayout.CENTER);
         root.add(nut, BorderLayout.SOUTH);
-        napBangNhiemVu();
         return root;
     }
 
@@ -5452,7 +5638,6 @@ public class SystemPanel extends JPanel {
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
-        napBangNhiemVu();
         note(OK_GREEN, them
                 ? "Đã thêm nhiệm vụ — người chơi thấy ở lần đăng nhập sau."
                 : "Đã lưu nhiệm vụ.");
@@ -5474,7 +5659,6 @@ public class SystemPanel extends JPanel {
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
-        napBangNhiemVu();
         note(OK_GREEN, "Đã xoá nhiệm vụ.");
     }
 
