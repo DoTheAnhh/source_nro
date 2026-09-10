@@ -13,6 +13,55 @@ namespace Game1
         protected static Controller me2;
     
         public Message messWait;
+
+        // Dinh danh cua ban do DANG CHO duoc ap.
+        //
+        // Goi -24 mang ten, tile, nen cua ban do moi. Ban cu ghi de thang len
+        // TileMap TRUOC khi kiem tra xem may co mau ban do do khong; khong co
+        // thi no xin mau roi thoat ra — de lai ten va nen cua ban do MOI ngoi
+        // tren dia hinh CU. Do chinh la canh "map vo": nen tuyet cua map nay
+        // dan voi co cua map kia, mau 0/0.
+        //
+        // Nay doc vao day truoc, dung duoc mau roi moi ap sang TileMap.
+        private int mapIdCho;
+
+        private sbyte planetIdCho;
+
+        private int tileIdCho;
+
+        private int bgIdCho;
+
+        private int typeMapCho;
+
+        private string mapNameCho = string.Empty;
+
+        private int zoneIdCho;
+
+        /// <summary>
+        /// Ap dinh danh ban do dang cho sang TileMap.
+        ///
+        /// Chi goi khi chac chan da co mau ban do trong may, tuc la dia hinh
+        /// sap dung duoc dung khop voi cai ten sap hien ra.
+        /// </summary>
+        private void apDungDinhDanhBanDo(int mapCu, int khuCu)
+        {
+            TileMap.mapID = mapIdCho;
+            TileMap.planetID = planetIdCho;
+            TileMap.tileID = tileIdCho;
+            TileMap.bgID = bgIdCho;
+            TileMap.typeMap = typeMapCho;
+            TileMap.mapName = mapNameCho;
+            TileMap.zoneID = zoneIdCho;
+            GameScr.isPaint_CT = TileMap.mapID != 170;
+            try
+            {
+                God.ChatUI.getInstance().doiChoDung(mapCu, khuCu,
+                        TileMap.mapID, TileMap.zoneID);
+            }
+            catch (Exception)
+            {
+            }
+        }
     
         public static bool isLoadingData = false;
     
@@ -3938,6 +3987,11 @@ namespace Game1
                         Res.outz("***************MAP_INFO**************");
                         GameScr.isPickNgocRong = false;
                         Char.isLoadingMap = true;
+                        // Bat dau mot luot tai ban do moi: dat lai han
+                        // chot cua man hinh cho, khong thi no van la han
+                        // cua luot truoc va da qua tu doi nao.
+                        GameCanvas.hanChotTaiBanDo = 0L;
+                        GameCanvas.canGuiXongTaiBanDo = false;
                         Cout.println("GET MAP INFO");
                         GameScr.gI().magicTree = null;
                         GameCanvas.isLoading = true;
@@ -3951,35 +4005,32 @@ namespace Game1
                         // doi bang do hay doi khu khong — xem ChatUI.doiChoDung.
                         int mapCu = TileMap.mapID;
                         int khuCu = TileMap.zoneID;
-                        TileMap.mapID = msg.reader().readUnsignedByte();
-                        TileMap.planetID = msg.reader().readByte();
-                        TileMap.tileID = msg.reader().readByte();
-                        TileMap.bgID = msg.reader().readByte();
-                        GameScr.isPaint_CT = TileMap.mapID != 170;
-                        Cout.println("load planet from server: " + TileMap.planetID + "bgType= " + TileMap.bgType + ".............................");
-                        TileMap.typeMap = msg.reader().readByte();
-                        TileMap.mapName = msg.reader().readUTF();
-                        TileMap.zoneID = msg.reader().readByte();
-                        try
-                        {
-                            God.ChatUI.getInstance().doiChoDung(mapCu, khuCu,
-                                    TileMap.mapID, TileMap.zoneID);
-                        }
-                        catch (Exception)
-                        {
-                        }
+                        mapIdCho = msg.reader().readUnsignedByte();
+                        planetIdCho = msg.reader().readByte();
+                        tileIdCho = msg.reader().readByte();
+                        bgIdCho = msg.reader().readByte();
+                        typeMapCho = msg.reader().readByte();
+                        mapNameCho = msg.reader().readUTF();
+                        zoneIdCho = msg.reader().readByte();
                         GameCanvas.debug("SA75x1", 2);
                         try
                         {
-                            TileMap.loadMapFromResource(TileMap.mapID);
+                            TileMap.loadMapFromResource(mapIdCho);
                         }
                         catch (Exception)
                         {
-                            Service.gI().requestMaptemplate(TileMap.mapID);
+                            // Chua co mau ban do nay trong may. Xin mau, cat goi
+                            // lai, va GIU NGUYEN ban do cu tren man hinh — man
+                            // hinh cho da che kin roi. Ap dinh danh moi ngay bay
+                            // gio la de ten va nen cua ban do moi ngoi len dia
+                            // hinh cu, dung canh "map vo" da gap.
+                            Service.gI().requestMaptemplate(mapIdCho);
                             messWait = msg;
                             break;
                         }
+                        apDungDinhDanhBanDo(mapCu, khuCu);
                         loadInfoMap(msg);
+
                         try
                         {
                             sbyte b32 = msg.reader().readByte();
@@ -5974,6 +6025,7 @@ namespace Game1
                         {
                             if (messWait != null)
                             {
+                                apDungDinhDanhBanDo(TileMap.mapID, TileMap.zoneID);
                                 loadInfoMap(messWait);
                                 try
                                 {

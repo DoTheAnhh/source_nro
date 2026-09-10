@@ -961,8 +961,24 @@ namespace Game4
     		}
     	}
 
+    	/// <summary>
+    	/// Client con dang dung ban do — chua duoc xin di dau ca.
+    	///
+    	/// Bam sang map khi luot truoc chua dung xong la hai bo du lieu ban do
+    	/// dan vao nhau. May chu da xep hang cac yeu cau nay, nhung chan ngay
+    	/// tu day thi cai bam thua khong thanh mot chang di bat ngo.
+    	/// </summary>
+    	public static bool dangTaiBanDo()
+    	{
+    		return Char.isLoadingMap || GameCanvas.isLoading;
+    	}
+
     	public void requestChangeMap()
     	{
+    		if (dangTaiBanDo())
+    		{
+    			return;
+    		}
     		Message message = new Message((sbyte)(-23));
     		session.sendMessage(message);
     		message.cleanup();
@@ -984,6 +1000,10 @@ namespace Game4
     
     	public void requestChangeZone(int zoneId, int indexUI)
     	{
+    		if (dangTaiBanDo())
+    		{
+    			return;
+    		}
     		Message message = new Message((sbyte)21);
     		try
     		{
@@ -3119,6 +3139,10 @@ namespace Game4
     
     	public void requestMapSelect(int selected)
     	{
+    		if (dangTaiBanDo())
+    		{
+    			return;
+    		}
     		Res.outz("request magic tree");
     		Message message = null;
     		try

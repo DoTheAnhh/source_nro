@@ -195,6 +195,70 @@ namespace Game2
     	public static int isRequestMapID = -1;
     
     	public static long waitingTimeChangeMap;
+
+    	/// <summary>
+    	/// Han chot cua man hinh cho: qua moc nay thi vao man du con thieu gi.
+    	///
+    	/// Ngoi mai truoc man hinh den ma khong loi ra duoc con te hon vao man
+    	/// voi du lieu thieu, vi it nhat con di duoc ra cho khac.
+    	/// </summary>
+    	public static long hanChotTaiBanDo;
+
+    	/// <summary>
+    	/// Con no may chu mot goi "da nap xong ban do" (-39).
+    	///
+    	/// Truoc day GameScr.switchToMe gui goi nay NGAY khi doi man hinh, tuc
+    	/// la khi dia hinh moi vua bat dau dung. May chu thay bao xong la mo
+    	/// khoa va tha luot doi ban do dang xep hang di tiep — hai bo du lieu
+    	/// ban do dan vao nhau, ra dung canh nen vo, mau 0/0, nhan vat dung im.
+    	///
+    	/// Nay goi ay chi di khi ban do that su dung xong.
+    	/// </summary>
+    	public static bool canGuiXongTaiBanDo;
+
+    	/// <summary>
+    	/// Ban do da dung xong den muc cho nguoi choi vao chua.
+    	/// </summary>
+    	public static bool banDoDaSanSang()
+    	{
+    		if (hanChotTaiBanDo == 0L)
+    		{
+    			hanChotTaiBanDo = mSystem.currentTimeMillis() + 20000L;
+    		}
+    		if (mSystem.currentTimeMillis() > hanChotTaiBanDo)
+    		{
+    			return true;
+    		}
+    		try
+    		{
+    			if (isLoading)
+    			{
+    				return false;
+    			}
+    			if (TileMap.tmw <= 0 || TileMap.tmh <= 0)
+    			{
+    				return false;
+    			}
+    			if (TileMap.maps == null || TileMap.types == null)
+    			{
+    				return false;
+    			}
+    			int can = TileMap.tmw * TileMap.tmh;
+    			if (TileMap.maps.Length < can || TileMap.types.Length < can)
+    			{
+    				return false;
+    			}
+    			if (Char.myCharz() == null)
+    			{
+    				return false;
+    			}
+    			return true;
+    		}
+    		catch (Exception)
+    		{
+    			return false;
+    		}
+    	}
     
     	private static int dir_ = -1;
     
@@ -569,9 +633,22 @@ namespace Game2
     		{
     			if (currentScreen == GameScr.gI())
     			{
-    				if (Char.isLoadingMap)
+    				// Man hinh cho o lai cho toi khi ban do dung xong that.
+    				//
+    				// Ban cu ha no xuong sau dung MOT giay ke tu luc goi ban do
+    				// toi, khong hoi han gi den viec dia hinh da dung xong chua.
+    				// May yeu hay mang cham la nguoi choi nhin thay ban do dang
+    				// dung do.
+    				if (Char.isLoadingMap && banDoDaSanSang())
     				{
     					Char.isLoadingMap = false;
+    					hanChotTaiBanDo = 0L;
+    				}
+    				// Bao cho may chu SAU khi da thay ban do, khong phai truoc.
+    				if (canGuiXongTaiBanDo && !Char.isLoadingMap)
+    				{
+    					canGuiXongTaiBanDo = false;
+    					Service.gI().finishLoadMap();
     				}
     				if (ServerListScreen.waitToLogin)
     				{

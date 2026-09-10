@@ -1208,10 +1208,15 @@ namespace Game4
     			SoundMn.gI().rain();
     		}
     		LoginScr.isContinueToLogin = false;
-    		Char.isLoadingMap = false;
+    		// KHONG ha man hinh cho o day, va cung khong bao may chu ngay.
+    		//
+    		// Toi day dia hinh moi chi vua bat dau dung. Bao xong bay gio la may
+    		// chu mo khoa va tha luot doi ban do ke tiep di, hai bo du lieu dan
+    		// vao nhau — dung canh nen vo, mau 0/0. GameCanvas.update se ha man
+    		// hinh cho va gui goi -39 khi ban do that su xong.
     		if (!isPaintOther)
     		{
-    			Service.gI().finishLoadMap();
+    			GameCanvas.canGuiXongTaiBanDo = true;
     		}
     		if (TileMap.isTrainingMap())
     		{
