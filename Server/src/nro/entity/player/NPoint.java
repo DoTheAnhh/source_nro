@@ -16,6 +16,7 @@ import nro.service.TaskService;
 import nro.core.log.Logger;
 import nro.core.util.SkillUtil;
 import nro.core.util.Util;
+import nro.core.util.FormatStyle;
 import nro.core.consts.ConstAttribute;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -2980,14 +2981,38 @@ private boolean hasFull5NhatAn() {
             return 0;
         }
 
-        if (this.power >= 120_000_000_000L) {
-            tiemNang = calPercent(tiemNang, 1);   // giảm 99.9%
-        } else if (this.power >= 100_000_000_000L) {
-            tiemNang = calPercent(tiemNang, 1);   // giảm 99%
-        } else if (this.power >= 50_000_000_000L) {
-            tiemNang = calPercent(tiemNang, 20);  // giảm 80%
-        } else if (this.power >= 40_000_000_000L) {
-            tiemNang = calPercent(tiemNang, 50);  // giảm 50%
+        // Càng mạnh càng nhận ít — mười một bậc, đi từ nguyên vẹn xuống 1%.
+        //
+        // Bảng cũ chỉ có bốn bậc và bậc đầu ở tận 40 tỉ: dưới mốc đó thì mạnh
+        // hay yếu cũng nhận y như nhau, rồi qua mốc là tụt thẳng một nửa. Người
+        // chơi cảm thấy đúng một chuyện — "tự nhiên chững lại" — chứ không thấy
+        // một đường dốc.
+        //
+        // Bảng này áp cho <b>cả sư phụ lẫn đệ tử</b>, vì mỗi bên gọi hàm này
+        // bằng sức mạnh CỦA CHÍNH MÌNH: đệ tử gọi lúc tính phần mình, còn phần
+        // chia cho sư phụ thì Service.addSMTN gọi lại bằng NPoint của sư phụ.
+        // Nên sư phụ mạnh thì phần chia của sư phụ ít đi, không ăn theo bậc của
+        // đệ tử nữa.
+        //
+        // Hai cột: mốc sức mạnh, và phần trăm còn lại.
+        final long[][] bacGiam = {
+            {200_000_000_000L, 1},
+            {120_000_000_000L, 2},
+            {100_000_000_000L, 3},
+            { 80_000_000_000L, 5},
+            { 60_000_000_000L, 8},
+            { 50_000_000_000L, 12},
+            { 40_000_000_000L, 20},
+            { 30_000_000_000L, 30},
+            { 20_000_000_000L, 45},
+            { 10_000_000_000L, 60},
+            {  5_000_000_000L, 80},
+        };
+        for (long[] bac : bacGiam) {
+            if (this.power >= bac[0]) {
+                tiemNang = calPercent(tiemNang, (int) bac[1]);
+                break;
+            }
         }
 
         // Tỉ lệ đệ tử chia cho sư phụ, chỉnh được trên panel.
@@ -3091,18 +3116,31 @@ private boolean hasFull5NhatAn() {
             tranDe = nro.repository.dao.DeTuDAO.tranCuaDeTu(
                     ((nro.entity.player.Detu) this.player).typeDeTu);
         }
+        // HP gốc và KI gốc chỉ chịu MỘT trần: 600.000.
+        //
+        // Trước đây còn phải qua powerLimit.getHp()/getMp() — trần theo bậc sức
+        // mạnh đọc từ bảng — và bảng đó dừng thấp hơn 600.000 nhiều, nên con số
+        // 600.000 viết trong mã không ai với tới được. Hai chỉ số này nay lấy
+        // đúng trần cứng, không hỏi bảng nữa.
+        //
+        // Sức đánh, giáp, chí mạng ở dưới GIỮ NGUYÊN powerLimit: chúng đổi
+        // thẳng ra sát thương nên phải lên theo bậc.
         if (type == 0) {
             int pointHp = point * 20;
             tiemNangUse = point * (2 * (this.hpg + 1000) + pointHp - 20) / 2;
-            if ((this.hpg + pointHp) <= powerLimit.getHp()
-                    && this.hpg + pointHp <= TRAN_HP_GOC
+            if (this.hpg + pointHp <= TRAN_HP_GOC
                     && (tranDe == null || this.hpg + pointHp <= tranDe[0])) {
                 if (doUseTiemNang(tiemNangUse)) {
                     hpg += pointHp;
                     updatePoint = true;
                 }
             } else {
-                Service.gI().sendThongBao(player, "HP của bạn đã đạt mức tối đa");
+                long tran = (tranDe == null) ? TRAN_HP_GOC
+                        : Math.min(TRAN_HP_GOC, tranDe[0]);
+                Service.gI().sendThongBao(player, "HP gốc đã đạt mức tối đa ("
+                        + Util.soCham(tran)
+                        + "), đang có "
+                        + Util.soCham(this.hpg) + ".");
                 Service.gI().sendMoney(player);
                 return;
             }
@@ -3110,15 +3148,19 @@ private boolean hasFull5NhatAn() {
         if (type == 1) {
             int pointMp = point * 20;
             tiemNangUse = point * (2 * (this.mpg + 1000) + pointMp - 20) / 2;
-            if ((this.mpg + pointMp) <= powerLimit.getMp()
-                    && this.mpg + pointMp <= TRAN_KI_GOC
+            if (this.mpg + pointMp <= TRAN_KI_GOC
                     && (tranDe == null || this.mpg + pointMp <= tranDe[0])) {
                 if (doUseTiemNang(tiemNangUse)) {
                     mpg += pointMp;
                     updatePoint = true;
                 }
             } else {
-                Service.gI().sendThongBao(player, "KI của bạn đã đạt mức tối đa");
+                long tran = (tranDe == null) ? TRAN_KI_GOC
+                        : Math.min(TRAN_KI_GOC, tranDe[0]);
+                Service.gI().sendThongBao(player, "KI gốc đã đạt mức tối đa ("
+                        + Util.soCham(tran)
+                        + "), đang có "
+                        + Util.soCham(this.mpg) + ".");
                 Service.gI().sendMoney(player);
                 return;
             }
@@ -3219,7 +3261,17 @@ private boolean hasFull5NhatAn() {
 
     private boolean doUseTiemNang(long tiemNang) {
         if (this.tiemNang < tiemNang) {
-            Service.gI().sendThongBaoOK(player, "Bạn không đủ tiềm năng");
+            // Noi ro CAN bao nhieu, DANG CO bao nhieu, THIEU bao nhieu.
+            //
+            // Cau cu chi co "Ban khong du tiem nang" — dung nhung vo dung: gia
+            // moi diem tang dan, nen nguoi choi khong the tu tinh ra minh thieu
+            // bao nhieu de biet phai cay them bao lau.
+            Service.gI().sendThongBaoOK(player, "Không đủ tiềm năng.\nCần "
+                    + Util.soCham(tiemNang)
+                    + "\nĐang có "
+                    + Util.soCham(this.tiemNang)
+                    + "\nThiếu "
+                    + Util.soCham(tiemNang - this.tiemNang));
             return false;
         }
         if (this.tiemNang >= tiemNang && this.tiemNang - tiemNang >= 0) {

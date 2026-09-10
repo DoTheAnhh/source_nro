@@ -59,6 +59,47 @@ public class Util {
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
+    /**
+     * Số nguyên có dấu chấm ngăn nghìn: {@code 1000000} thành {@code "1.000.000"}.
+     *
+     * <h2>Khác gì {@link #formatNumber}</h2>
+     *
+     * <p>{@code formatNumber} <b>rút gọn</b> — nó trả về "1,5 Triệu", "2,3 Tỷ".
+     * Đọc nhanh thì tiện, nhưng mất chữ số: người chơi không biết mình đang
+     * thiếu 1.500.000 hay 1.549.999 tiềm năng, mà đó đúng là con số họ cần khi
+     * đứng trước một cái nút tiêu hết sạch tiềm năng.</p>
+     *
+     * <p>Nên chỗ nào là <b>giá phải trả</b> hay <b>số đang có</b> thì dùng hàm
+     * này; chỗ nào chỉ để liếc qua (sức mạnh trên bảng xếp hạng) thì dùng hàm
+     * kia.</p>
+     *
+     * <p>Tự ghép chứ không nhờ {@code DecimalFormat} theo miền: máy chủ chạy ở
+     * miền nào thì {@code DecimalFormat} theo miền đó, và trên một máy đặt miền
+     * Anh thì dấu ngăn nghìn thành dấu phẩy — người Việt đọc "1,000" ra một
+     * phẩy không.</p>
+     */
+    public static String soCham(long so) {
+        boolean am = so < 0;
+        // Math.abs(Long.MIN_VALUE) van la so am. Doi sang chuoi truoc roi bo
+        // dau tru di thi khong vap phai cho do.
+        String s = Long.toString(so);
+        if (am) {
+            s = s.substring(1);
+        }
+        StringBuilder sb = new StringBuilder();
+        int dem = 0;
+        for (int i = s.length() - 1; i >= 0; i--) {
+            sb.append(s.charAt(i));
+            if (++dem % 3 == 0 && i > 0) {
+                sb.append('.');
+            }
+        }
+        if (am) {
+            sb.append('-');
+        }
+        return sb.reverse().toString();
+    }
+
     public static String formatNumber(double power, FormatStyle style) {
         Locale locale = new Locale("vi", "VN");
         DecimalFormat df = (DecimalFormat) DecimalFormat.getInstance(locale);

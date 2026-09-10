@@ -31,6 +31,7 @@ import nro.server.Manager;
 import nro.core.util.SkillUtil;
 import nro.core.util.TimeUtil;
 import nro.core.util.Util;
+import nro.core.util.FormatStyle;
 import nro.core.log.Logger;
 import java.util.Random;
 import nro.service.boss.BossManager;
@@ -558,11 +559,22 @@ public class UseItem {
                             case 1799:
                                 ItemUseHandler.gI().useThiepChuc(pl, item);
                                 break;
-                            case 457:
-                                NpcService.gI().createMenuConMeo(pl, ConstNpc.USE_THOI_VANG, 4028, "|8|Bạn Muốn Bán Bao Nhiêu Thỏi Vàng?",
+                            case 457: {
+                                // Nói rõ giá, và nói bằng đúng con số đang chạy.
+                                //
+                                // Bảng chọn cũ chỉ ghi số thỏi, người chơi phải
+                                // đoán mỗi thỏi được bao nhiêu — mà con số ấy
+                                // đổi được trên panel.
+                                long giaThoi = nro.repository.dao.ConfigDAO.num(
+                                        nro.repository.dao.ConfigDAO.THOI_VANG_GIA_VANG,
+                                        200_000_000L);
+                                NpcService.gI().createMenuConMeo(pl, ConstNpc.USE_THOI_VANG, 4028,
+                                        "|8|Bạn Muốn Bán Bao Nhiêu Thỏi Vàng?\n|2|Mỗi thỏi được "
+                                        + Util.formatNumber(giaThoi, FormatStyle.VIETNAMESE) + " vàng",
                                         "1 Thỏi Vàng", "5 Thỏi Vàng", "10 Thỏi Vàng", "20 Thỏi Vàng", "50 Thỏi Vàng",
                                         "100 Thỏi Vàng", "200 Thỏi Vàng", "500 Thỏi Vàng", "1000 Thỏi Vàng", "Đóng");
                                 break;
+                            }
                             case 1124:
                                 NpcService.gI().createMenuConMeo(pl, ConstNpc.CAN_CUOC_CONG_DAN, pl.head == 31 ? 518 : pl.head == 64 ? 516 : pl.head == 30 ? 519
                                         : pl.head == 32 ? 525 : pl.head == 29 ? 523 : pl.head == 9 ? 524

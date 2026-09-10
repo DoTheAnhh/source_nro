@@ -369,55 +369,28 @@ public class Mob {
             System.out.println("[SLOW] mob death/alive handling: " + elapsed + "ms");
         }
 
-        if (plAtt != null && plAtt.isNguoiYeu) {
-            Service.gI().addSMTN(plAtt, (byte) 2, getTiemNangForPlayer(plAtt, damage), true);
-        }
-        long start2 = 0;
-        long start3 = 0;
+        // Tiềm năng trả MỘT LẦN cho mỗi cú đánh.
+        //
+        // Ba lỗi của đoạn cũ, cả ba đều lặng lẽ:
+        //
+        //  1. Người đang có "người yêu" được cộng HAI LẦN — một lần ở nhánh
+        //     isNguoiYeu, rồi lại một lần ở khối chung ngay dưới. Cùng một con
+        //     số, cùng một cú đánh.
+        //  2. tangTnsmLuyenTap gọi hai lần cho MỌI người, không kèm điều kiện
+        //     nào — chỉ là một dòng bị dán lại.
+        //  3. getTiemNangForPlayer chạy hai lần khi có người yêu; hàm đó không
+        //     rẻ, mà nó nằm trong đường đi của từng cú đánh của từng người.
+        //
+        // Bỏ luôn cả loạt System.out.println đo giờ. Chúng in thẳng ra console
+        // từ trong vòng lặp đánh quái, và console của máy chủ là một khoá chung
+        // — đông người thì chính mấy dòng đo ấy làm chậm cái mà nó đang đo.
         if (plAtt != null) {
-            // Các xử lý buff và trainning cho player
-            start = System.currentTimeMillis();
             if (plAtt.isPl() && plAtt.satellite != null && plAtt.satellite.isDefend) {
                 plAtt.satellite.isDefend = false;
             }
-            start2 = System.currentTimeMillis();
-
             long tiemNang = getTiemNangForPlayer(plAtt, damage);
-            long afterCal = System.currentTimeMillis();
-
-            if (afterCal - start2 > 50) {
-                System.out.println("[SLOW] GET tiemnanng : " + (afterCal - start2) + "ms");
-            }
             Service.gI().addSMTN(plAtt, (byte) 2, tiemNang, true);
-            long afterAddSMTN = System.currentTimeMillis();
-
-            if (afterAddSMTN - afterCal > 50) {
-                System.out.println("[SLOW] ADD TNSM " + (afterAddSMTN - afterCal));
-            }
-
             TrainningService.gI().tangTnsmLuyenTap(plAtt, tiemNang);
-            long afterTrain = System.currentTimeMillis();
-            if (afterTrain - afterAddSMTN > 50) {
-                System.out.println("[SLOW] TRAINGING : " + (afterTrain - afterAddSMTN) + "ms");
-            }
-
-            if (afterTrain - start2 > 50) {
-                System.out.println("[TIME] calSucManh: " + (afterCal - start) + "ms");
-                System.out.println("[TIME] addSMTN: " + (afterAddSMTN - afterCal) + "ms");
-                System.out.println("[TIME] tangTnsmLuyenTap: " + (afterTrain - afterAddSMTN) + "ms");
-            }
-
-            start3 = System.currentTimeMillis();
-            TrainningService.gI().tangTnsmLuyenTap(plAtt, tiemNang);
-        }
-        elapsed = System.currentTimeMillis() - start;
-        if (elapsed > 50) {
-            System.out.println("[SLOW] buff & training update: " + elapsed + "ms" + " START 2 : " + (System.currentTimeMillis() - start2) + " START 3 : " + (System.currentTimeMillis() - start3));
-        }
-
-        long totalElapsed = System.currentTimeMillis() - startTotal;
-        if (totalElapsed > 500) {
-            System.out.println("[SLOW] Total injured() time: " + totalElapsed + "ms for mob id: " + this.id + ", attacker: " + (plAtt != null ? plAtt.name : "null"));
         }
     }
 
@@ -499,6 +472,24 @@ public class Mob {
         // thuc goc; de 100 thi con so y het nhu truoc.
         tiemNang = nro.repository.dao.ConfigDAO.nhanTiLe(
                 nro.repository.dao.ConfigDAO.TL_EXP, tiemNang);
+
+        // Ngũ Hành Sơn trả ít hơn hẳn.
+        //
+        // Chia ở ĐÂY chứ không ở NPoint.calSubTNSM, vì chia theo BẢN ĐỒ CỦA
+        // QUÁI: đệ tử cày trong Ngũ Hành Sơn thì phần chia cho sư phụ cũng phải
+        // ít theo, mà lúc ấy sư phụ có thể đang đứng ở bản đồ khác — hỏi bản đồ
+        // của sư phụ là hỏi nhầm người.
+        //
+        // Hệ số để trên panel (tl_ngu_hanh_son, mặc định 3) để cân lại mà không
+        // phải biên dịch.
+        if (this.zone != null && this.zone.map != null
+                && MapService.gI().isMapNguHanhSon(this.zone.map.mapId)) {
+            long chia = nro.repository.dao.ConfigDAO.num(
+                    nro.repository.dao.ConfigDAO.TL_NGU_HANH_SON, 3L);
+            if (chia > 1) {
+                tiemNang /= chia;
+            }
+        }
         elapsed = System.currentTimeMillis() - start;
         if (elapsed > 10) {
             System.out.println("[SLOW] apply calSucManhTiemNang: " + elapsed + "ms");
@@ -767,14 +758,47 @@ public class Mob {
         this.setTiemNang();
     }
 
+    /**
+     * Bốc xem con này có thành <b>siêu quái</b> không, và dựng máu cho nó.
+     *
+     * <h2>Hai lỗi của bản cũ</h2>
+     *
+     * <p><b>1. Máu vượt trần máu.</b> Nó nhân {@code hp} lên mười lần nhưng để
+     * nguyên {@code maxHp}. Client vẽ thanh máu bằng {@code hp/maxHp} nên hiện
+     * ra "280.000/40.000" — số bên trái lớn hơn số bên phải, thanh máu tràn ra
+     * ngoài khung. Đánh mãi mới thấy thanh nhúc nhích vì phải hạ hết chín phần
+     * thừa mới chạm tới phần vẽ được.</p>
+     *
+     * <p><b>2. Siêu quái tự báo mình không phải siêu quái.</b> Vòng lặp đầu
+     * duyệt <i>cả chính nó</i>: con đã là siêu quái (do bản đồ đặt sẵn, như Con
+     * Đường Rắn Độc hay Kho Báu Dưới Biển) thì gặp ngay chính mình ở vòng đầu
+     * và trả về 0. Mà {@code sendMobHoiSinh} gửi thẳng con số ấy xuống client,
+     * nên client vẽ nó như quái thường: không hào quang, không khung riêng.</p>
+     *
+     * <p>Nay con đã là siêu quái thì trả về đúng bậc của nó và không bốc lại —
+     * bốc lại còn có thể nhân máu chồng lên nhau.</p>
+     */
     public int lvMob() {
+        // Da la sieu quai roi: giu nguyen, khong boc lai, khong dung toi mau.
+        if (this.lvMob > 0) {
+            return this.lvMob;
+        }
+        // Moi khu chi mot sieu quai. Bo qua chinh minh o vong nay — nhanh tren
+        // da lo truong hop do.
         for (Mob mobMap : this.zone.mobs) {
-            if (mobMap.lvMob > 0) {
+            if (mobMap != this && mobMap.lvMob > 0) {
                 return 0;
             }
         }
-        this.lvMob = this.tempId > 18 && !isBigBoss() ? Util.isTrue(10, 100) ? 1 : 0 : 0;
-        this.point.hp = this.lvMob > 0 ? this.point.maxHp <= 20000000 ? this.point.maxHp * 10 : 2000000000 : this.point.maxHp;
+        this.lvMob = (this.tempId > 18 && !isBigBoss() && Util.isTrue(10, 100)) ? 1 : 0;
+        if (this.lvMob > 0) {
+            // Nang CA HAI so. Tran hai ti giu nguyen y bang cu: mau quai gui
+            // xuong client bang so nguyen co dau.
+            long mauMoi = this.point.maxHp <= 20_000_000L
+                    ? this.point.maxHp * 10L : 2_000_000_000L;
+            this.point.maxHp = mauMoi;
+        }
+        this.point.hp = this.point.maxHp;
         return this.lvMob;
     }
 

@@ -1806,17 +1806,16 @@ public class NpcFactory {
                         break;
                     case ConstNpc.USE_THOI_VANG: {
                         int[] quantities = {1, 5, 10, 20, 50, 100, 200, 500, 1000};
-                        long[] prices = {
-                            500_000_000L, // 1 thỏi vàng
-                            2_500_000_000L, // 5 thỏi vàng
-                            5_000_000_000L, // 10
-                            10_000_000_000L, // 20
-                            25_000_000_000L, // 50
-                            50_000_000_000L, // 100
-                            100_000_000_000L, // 200
-                            250_000_000_000L, // 500
-                            500_000_000_000L // 1000
-                        };
+                        // Giá đọc từ quy ước, KHÔNG còn bảng gõ cứng.
+                        //
+                        // Bảng cũ ghi 500.000.000 một thỏi, trong khi cửa hàng
+                        // và UseItem.usethoivang đã đọc thoi_vang_gia_vang
+                        // (200.000.000). Ba đường ba giá cho cùng một món, và
+                        // sửa giá trên panel thì đường này vẫn trả giá cũ —
+                        // người chơi bán ở đây được gấp hai lần rưỡi chỗ khác.
+                        long giaMotThoi = nro.repository.dao.ConfigDAO.num(
+                                nro.repository.dao.ConfigDAO.THOI_VANG_GIA_VANG,
+                                200_000_000L);
                         long MAX_GOLD = Inventory.LIMIT_GOLD;
 
                         if (select < 0 || select >= quantities.length) {
@@ -1825,7 +1824,7 @@ public class NpcFactory {
                         }
 
                         int sltv = quantities[select];
-                        long cost = prices[select];
+                        long cost = giaMotThoi * sltv;
 
                         Item usethoivang = InventoryService.gI().findItemBag(player, 457);
 

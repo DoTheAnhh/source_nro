@@ -1618,8 +1618,36 @@ public class SkillService {
         }
     }
 
+    /**
+     * Phần nới của cổng hồi chiêu, tính bằng mili giây.
+     *
+     * <h2>Vì sao 200 chứ không phải 50</h2>
+     *
+     * <p>Client tự đếm hồi chiêu bằng đồng hồ của nó rồi mới gửi gói tấn công.
+     * Hai đồng hồ không bao giờ khớp, và đường truyền thì <b>dồn gói</b>: mạng
+     * khựng một nhịp rồi thông lại là hai gói cách nhau đúng bằng hồi chiêu ở
+     * máy người chơi lại tới máy chủ cách nhau sáu bảy chục mili giây.</p>
+     *
+     * <p>Với phần nới 50, gói thứ hai <b>bị bỏ trong im lặng</b>: không sát
+     * thương, không thông báo, không log. Client vẫn chạy hoạt ảnh đấm nên
+     * người chơi thấy đúng cảnh "đấm mà không ăn" — mà chỉ thỉnh thoảng, đúng
+     * lúc mạng vấp.</p>
+     *
+     * <p>Tàn sát không dính vì nó gọi thẳng {@code mob.injured} chứ không đi qua
+     * cổng này. Đó là lý do "tàn sát thì đòn nào cũng tính".</p>
+     *
+     * <p>200 phủ được nhịp vấp thường gặp mà vẫn chặn được client sửa để đấm
+     * liên tục — hồi chiêu của đấm là 500 trở lên, nên nới 200 không cho đánh
+     * nhanh hơn quá một phần ba.</p>
+     */
+    private static final int NOI_HOI_CHIEU_MS = 200;
+
     public boolean canUseSkillWithCooldown(Player player) {
-        return Util.canDoWithTime(player.playerSkill.skillSelect.lastTimeUseThisSkill, player.playerSkill.skillSelect.coolDown - 50);
+        int cho = player.playerSkill.skillSelect.coolDown - NOI_HOI_CHIEU_MS;
+        if (cho < 0) {
+            cho = 0;
+        }
+        return Util.canDoWithTime(player.playerSkill.skillSelect.lastTimeUseThisSkill, cho);
     }
 
     public void affterUseSkill(Player player, int skillId) {

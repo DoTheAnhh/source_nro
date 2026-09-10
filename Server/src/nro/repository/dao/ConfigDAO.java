@@ -296,6 +296,15 @@ public class ConfigDAO {
      * thật là <b>dung lượng CSDL</b>: máy chủ đông thì bảng này lớn nhanh nhất
      * trong cả CSDL. Tắt đi là mất dấu vết, nên chỉ tắt khi ổ đĩa hết chỗ.</p>
      */
+    /**
+     * Chia tiềm năng nhận được trong Ngũ Hành Sơn cho số này.
+     *
+     * <p>{@code 1} là không chia. Mặc định {@code 3} — chỗ đó cày nhanh hơn hẳn
+     * mọi bản đồ khác, nên giữ nguyên là mọi con đường lên sức mạnh khác thành
+     * vô nghĩa.</p>
+     */
+    public static final String TL_NGU_HANH_SON = "tl_ngu_hanh_son";
+
     public static final String GHI_LICH_SU_VP = "ghi_lich_su_vp";
 
     /**
@@ -345,7 +354,7 @@ public class ConfigDAO {
         DEFAULTS.put(BOSS_GIAY_HOI_SINH, 0L);
         DEFAULTS.put(THOI_VANG_GIA_VANG, 200_000_000L);
         DEFAULTS.put(TL_DE_TU_CHO_SU_PHU, 100L);
-        DEFAULTS.put(BUA_VV_GIA_VANG, 500_000_000L);
+        DEFAULTS.put(BUA_VV_GIA_VANG, 0L);
         DEFAULTS.put(DOI_TV_MOI_1K, 5L);
         DEFAULTS.put(DOI_TV_MIN, 1000L);
         DEFAULTS.put(DOI_TV_BAT, 1L);
@@ -376,6 +385,7 @@ public class ConfigDAO {
         DEFAULTS.put(SKH_SAO_MIN, 1L);
         DEFAULTS.put(SKH_SAO_MAX, 2L);
         DEFAULTS.put(GIU_LICH_SU_GD_NGAY, 30L);
+        DEFAULTS.put(TL_NGU_HANH_SON, 3L);
         DEFAULTS.put(GHI_LICH_SU_VP, 1L);
         DEFAULTS.put(GIU_LICH_SU_VP_NGAY, 30L);
     }
@@ -442,6 +452,8 @@ public class ConfigDAO {
         NOTES.put(SKH_SAO_MAX, "Số sao pha lê nhiều nhất");
         NOTES.put(GIU_LICH_SU_GD_NGAY,
                 "Số ngày giữ nhật ký giao dịch giữa người chơi — 0 là giữ mãi");
+        NOTES.put(TL_NGU_HANH_SON,
+                "Chia tiềm năng nhận trong Ngũ Hành Sơn cho số này (1 = không chia)");
         NOTES.put(GHI_LICH_SU_VP,
                 "Ghi nhật ký nhận vật phẩm của người chơi (1 bật, 0 tắt). Xem ở "
                 + "nút \"Lịch sử vật phẩm\" trong tab Quản Lý Người Chơi");
@@ -635,6 +647,52 @@ public class ConfigDAO {
         // Đặt cờ kể cả khi đọc hỏng: nếu không, mỗi lần gọi lại thử truy vấn một
         // lần nữa, và trong luồng game thì đó là chặn lặp đi lặp lại.
         loaded = true;
+        if (docDuoc) {
+            doiGiaTriCu();
+        }
+    }
+
+    /**
+     * Khoá đánh dấu các lần đổi giá trị mặc định đã chạy.
+     *
+     * <p>Chỉ là một con số tăng dần. Máy chủ đã chạy tới bước nào thì ghi số đó,
+     * lần khởi động sau bỏ qua các bước cũ.</p>
+     */
+    private static final String BUOC_DOI_GIA_TRI = "buoc_doi_gia_tri";
+
+    /**
+     * Đổi những giá trị đã lưu trong CSDL khi mặc định trong mã đổi ý nghĩa.
+     *
+     * <h2>Vì sao cần</h2>
+     *
+     * <p>{@link #DEFAULTS} chỉ có tác dụng với khoá <b>chưa từng lưu</b>. Khoá
+     * đã có một dòng trong {@code panel_config} thì dòng đó thắng mãi mãi — nên
+     * đổi mặc định trong mã <i>không</i> tới được máy chủ đang chạy, và người
+     * quản trị phải tự vào panel sửa tay. Đây chính là chỗ hay quên.</p>
+     *
+     * <p>Mỗi bước chỉ chạy <b>một lần</b> và chỉ đổi khi giá trị đang lưu vẫn
+     * đúng bằng mặc định cũ — quản trị viên đã tự đặt số khác thì không đụng
+     * vào.</p>
+     */
+    private static void doiGiaTriCu() {
+        try {
+            long daChay = num(BUOC_DOI_GIA_TRI, 0);
+            if (daChay >= 1) {
+                return;
+            }
+            // Bước 1: bùa vĩnh viễn ở Bà Hạt Mít thành cho không.
+            String cu;
+            synchronized (CACHE) {
+                cu = CACHE.get(BUA_VV_GIA_VANG);
+            }
+            if (cu != null && "500000000".equals(cu.trim())) {
+                set(BUA_VV_GIA_VANG, "0");
+                Logger.success("CONFIG", "Bùa vĩnh viễn ở Bà Hạt Mít: 500.000.000 -> cho không");
+            }
+            set(BUOC_DOI_GIA_TRI, "1");
+        } catch (Exception ex) {
+            Logger.logException(ConfigDAO.class, ex, "Lỗi đổi giá trị quy ước cũ");
+        }
     }
 
     // ---------------------------------------------------------------- ghi

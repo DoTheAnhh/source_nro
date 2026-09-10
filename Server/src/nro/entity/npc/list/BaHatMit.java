@@ -549,7 +549,7 @@ public class BaHatMit extends Npc {
                             case 2:
                                 createOtherMenu(player, ConstNpc.MENU_OPTION_SHOP_BUA,
                                         loiChaoCuaHangBua(player),
-                                        "Bùa\n(vĩnh viễn)",
+                                        "Bùa\n(vĩnh viễn)\n" + giaBuaChu(),
                                         "Xoá bùa\n" + GIA_HOA_GIAI_BUA + " thỏi vàng",
                                         "Đóng");
                                 break;
@@ -746,20 +746,35 @@ public class BaHatMit extends Npc {
      * cái này thì mỗi lần bấm là một lần trừ tiền mà chẳng thay đổi gì — bùa
      * đang vĩnh viễn rồi, gán lại vẫn vĩnh viễn.</p>
      */
+    /**
+     * Dòng giá in trên nút mua bùa.
+     *
+     * <p>In ra giá <b>đang chạy</b> chứ không viết cứng: giá đổi được trên
+     * panel, mà nút ghi một đằng trừ tiền một nẻo là chuyện tệ nhất ở một cửa
+     * hàng.</p>
+     */
+    private String giaBuaChu() {
+        long gia = ConfigDAO.num(ConfigDAO.BUA_VV_GIA_VANG, 0L);
+        return gia <= 0 ? "Miễn phí"
+                : Util.formatNumber(gia, FormatStyle.VIETNAMESE) + " vàng";
+    }
+
     private void muaFullBuaVinhVien(Player player) {
         if (player.charms.daDuBuaVinhVien()) {
             Service.gI().sendThongBao(player,
                     "Ngươi đã có đủ bảy lá bùa vĩnh viễn rồi, mua thêm làm gì.");
             return;
         }
-        long gia = ConfigDAO.num(ConfigDAO.BUA_VV_GIA_VANG, 500_000_000L);
-        if (player.inventory.gold < gia) {
+        long gia = ConfigDAO.num(ConfigDAO.BUA_VV_GIA_VANG, 0L);
+        if (gia > 0 && player.inventory.gold < gia) {
             Service.gI().sendThongBao(player, "Bạn không đủ vàng, còn thiếu "
                     + Util.formatNumber(gia - player.inventory.gold, FormatStyle.VIETNAMESE)
                     + " vàng nữa");
             return;
         }
-        player.inventory.gold -= gia;
+        if (gia > 0) {
+            player.inventory.gold -= gia;
+        }
         player.charms.datVinhVienGoiBua();
         Service.gI().sendMoney(player);
         Service.gI().sendThongBao(player,
