@@ -5506,28 +5506,41 @@ public class SystemPanel extends JPanel {
     // ---------------------------------------------------------------- vòng quay
     private static final int COT_VQ_ID = 0;
     private static final int COT_VQ_NHOM = 1;
-    private static final int COT_VQ_VP = 2;
-    private static final int COT_VQ_CS = 3;
-    private static final int COT_VQ_TS = 4;
-    private static final int COT_VQ_MA = 5;
-    private static final int COT_VQ_BAT = 6;
-    private static final int COT_VQ_GC = 7;
-    private static final int COT_VQ_CH = 8;
+    private static final int COT_VQ_ANH = 2;
+    private static final int COT_VQ_TEN = 3;
+    private static final int COT_VQ_SL = 4;
+    private static final int COT_VQ_CS = 5;
+    private static final int COT_VQ_TS = 6;
+    private static final int COT_VQ_CH = 7;
+    private static final int COT_VQ_BAT = 8;
+    private static final int COT_VQ_GC = 9;
 
+    /**
+     * Bảng kho quà — <b>chỉ để xem</b>, sửa bằng hộp thoại.
+     *
+     * <p>Sửa thẳng trong ô thì mọi thứ phải là chữ thô: id vật phẩm, id chỉ số,
+     * mã riêng gõ tay. Nhìn một bảng toàn số không biết món nào là món nào. Nên
+     * bảng lo phần <i>nhìn</i> — ảnh, tên, chỉ số viết ra chữ — còn phần
+     * <i>sửa</i> giao cho hộp thoại có ô chọn đàng hoàng.</p>
+     */
     private final DefaultTableModel vqModel = new DefaultTableModel(
-            new Object[]{"Id", "Vòng quay", "Vật phẩm", "Chỉ số", "Trọng số",
-                "Mã riêng", "Bật", "Ghi chú", "Cơ hội"}, 0) {
+            new Object[]{"Id", "Vòng quay", "Ảnh", "Vật phẩm", "Số lượng",
+                "Chỉ số kèm theo", "Trọng số", "Cơ hội", "Bật", "Ghi chú"}, 0) {
         @Override
         public boolean isCellEditable(int r, int c) {
-            return c != COT_VQ_ID && c != COT_VQ_CH;
+            return false;
         }
 
         @Override
         public Class<?> getColumnClass(int c) {
-            return c == COT_VQ_BAT ? Boolean.class : String.class;
+            return c == COT_VQ_ANH ? javax.swing.ImageIcon.class : Object.class;
         }
     };
     private final JTable vqTable = new JTable(vqModel);
+
+    /** Bản đang hiện, tra ngược từ dòng bảng về dòng dữ liệu. */
+    private java.util.List<nro.repository.dao.VongQuayDAO.Qua> dsVongQuay
+            = new java.util.ArrayList<>();
 
     /**
      * Tab <b>Vòng quay Thượng Đế</b> — kho quà, sửa được từ panel.
@@ -5541,64 +5554,124 @@ public class SystemPanel extends JPanel {
         root.setOpaque(false);
         root.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        vqTable.setRowHeight(24);
-        vqTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        int[] w = {45, 95, 230, 150, 70, 90, 45, 200, 70};
+        vqTable.setRowHeight(30);
+        vqTable.setSelectionMode(
+                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        int[] w = {40, 80, 40, 300, 90, 300, 65, 65, 40, 180};
         for (int i = 0; i < vqTable.getColumnCount() && i < w.length; i++) {
             vqTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
         }
-        JComboBox<String> oNhom = new JComboBox<>(new String[]{"Thường", "VIP"});
-        vqTable.getColumnModel().getColumn(COT_VQ_NHOM)
-                .setCellEditor(new javax.swing.DefaultCellEditor(oNhom));
-        JComboBox<String> oMa = new JComboBox<>(
-                nro.repository.dao.VongQuayDAO.TEN_MA_RIENG);
-        vqTable.getColumnModel().getColumn(COT_VQ_MA)
-                .setCellEditor(new javax.swing.DefaultCellEditor(oMa));
+        // Nhay dup mot dong = sua dong do. Day la thao tac ai cung thu dau tien
+        // voi mot bang, nen no phai lam dung viec nguoi ta cho doi.
+        vqTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2 && vqTable.getSelectedRow() >= 0) {
+                    suaVongQuayDialog(false);
+                }
+            }
+        });
 
         JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
         nut.setOpaque(false);
-        nut.add(button("Lưu bảng", OK_GREEN, e -> luuBangVongQuay()));
+        nut.add(button("Sửa dòng đang chọn", ACCENT, e -> suaVongQuayDialog(false)));
+        nut.add(button("Thêm dòng quà", OK_GREEN, e -> suaVongQuayDialog(true)));
+        nut.add(button("Bật các dòng đã chọn", new Color(90, 140, 90),
+                e -> batTatVongQuay(true)));
+        nut.add(button("Tắt các dòng đã chọn", new Color(150, 120, 60),
+                e -> batTatVongQuay(false)));
+        nut.add(button("Xoá các dòng đã chọn", WARN_RED, e -> xoaDongVongQuay()));
         nut.add(button("Tải lại", GREY, e -> napBangVongQuay()));
-        nut.add(button("Thêm dòng quà", ACCENT, e -> themDongVongQuay()));
-        nut.add(button("Xoá dòng đang chọn", WARN_RED, e -> xoaDongVongQuay()));
 
         root.add(nhan("Kho quà của vòng quay Thượng Đế. Máy chủ <b>chỉ đọc bảng "
                 + "này</b> — danh sách viết cứng cũ đã được gieo xuống đây nguyên "
                 + "vẹn ở lần chạy đầu, nên tỉ lệ không lệch đi đâu cả."
                 + "<br><br>"
-                + "<b>Vật phẩm</b>: một hoặc nhiều id ngăn nhau bằng dấu phẩy. "
-                + "Nhiều id thì bốc ngẫu nhiên <i>một</i> cái, cơ hội đều nhau — "
+                + "<b>Nháy đúp một dòng để sửa.</b> Chọn nhiều dòng (giữ Ctrl hoặc "
+                + "Shift) rồi bấm \"Sửa dòng đang chọn\" thì sửa được cả loạt — "
+                + "trong hộp thoại chỉ những ô bạn <i>tích chọn</i> mới được áp, "
+                + "phần còn lại của mỗi dòng giữ nguyên."
+                + "<br><br>"
+                + "Một dòng có thể chứa <b>nhiều vật phẩm</b>: lúc quay trúng dòng "
+                + "đó thì bốc ngẫu nhiên một món trong danh sách, cơ hội đều nhau — "
                 + "đó là cách gói gọn những mục kiểu \"một trong năm mảnh\"."
                 + "<br>"
-                + "<b>Chỉ số</b>: dạng <code>87:0,30:0</code> — id chỉ số hai chấm "
-                + "trị số. Để trống là món trơn."
-                + "<br>"
-                + "<b>Trọng số</b>: là <i>trọng số</i>, không phải phần trăm. Không "
-                + "cần cộng cho tròn một trăm, sửa một dòng không bắt sửa lại dòng "
-                + "khác. Cột \"Cơ hội\" là phần trăm tính ra từ chính các trọng số "
-                + "đang bật của cùng vòng quay."
-                + "<br>"
-                + "<b>Mã riêng</b>: vài món cần mã nguồn tính tại chỗ (bốc trị số "
-                + "theo khoảng, gắn hạn dùng). Để trống là món thường."
+                + "<b>Trọng số</b> là trọng số, không phải phần trăm: không cần cộng "
+                + "cho tròn một trăm, sửa một dòng không bắt sửa lại dòng khác. Cột "
+                + "\"Cơ hội\" là phần trăm tính ra từ chính các trọng số đang bật của "
+                + "cùng vòng quay."
                 + "<br><br>"
-                + "Quay hụt thì rơi về vàng như cũ, nên tắt hết quà cũng không làm "
-                + "ai mất lượt mà chẳng nhận gì."), BorderLayout.NORTH);
+                + "Quay hụt thì rơi về vàng như cũ, nên tắt hết quà cũng không làm ai "
+                + "mất lượt mà chẳng nhận gì."), BorderLayout.NORTH);
         root.add(ServerGuiUtils.cuon(vqTable), BorderLayout.CENTER);
         root.add(nut, BorderLayout.SOUTH);
         napBangVongQuay();
         return root;
     }
 
-    private void napBangVongQuay() {
-        if (vqTable.isEditing()) {
-            vqTable.getCellEditor().stopCellEditing();
+    /** Tên vật phẩm của một dòng: một món thì tên thẳng, nhiều món thì gộp. */
+    private static String moTaVatPham(nro.repository.dao.VongQuayDAO.Qua q) {
+        java.util.List<Integer> ids
+                = nro.repository.dao.VongQuayDAO.docDanhSachSo(q.vatPham);
+        if (ids.isEmpty()) {
+            return "(chưa chọn vật phẩm)";
         }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < ids.size(); i++) {
+            if (i > 0) {
+                sb.append(" / ");
+            }
+            sb.append(tenVatPham(ids.get(i)));
+        }
+        if (ids.size() > 1) {
+            return "1 trong " + ids.size() + ": " + sb;
+        }
+        return sb.toString();
+    }
+
+    /** Ảnh của dòng: lấy theo món đầu tiên. */
+    private static javax.swing.ImageIcon anhVatPham(
+            nro.repository.dao.VongQuayDAO.Qua q) {
+        java.util.List<Integer> ids
+                = nro.repository.dao.VongQuayDAO.docDanhSachSo(q.vatPham);
+        if (ids.isEmpty()) {
+            return null;
+        }
+        try {
+            nro.entity.template.ItemTemplate t
+                    = nro.service.item.ItemService.gI().getTemplate(ids.get(0));
+            return t == null ? null : PlayerManagerPanel.iconOf(t.iconID);
+        } catch (Exception boQua) {
+            return null;
+        }
+    }
+
+    /** Các dòng chỉ số viết ra chữ, thay vì {@code "87:0,30:0"}. */
+    private static String moTaChiSoQua(nro.repository.dao.VongQuayDAO.Qua q) {
+        java.util.List<int[]> ds = nro.repository.dao.VongQuayDAO.docChiSo(q.chiSo);
+        StringBuilder sb = new StringBuilder();
+        for (int[] cs : ds) {
+            if (sb.length() > 0) {
+                sb.append("; ");
+            }
+            String ten = OptionPicker.tenChiSo(cs[0]);
+            sb.append(cs[1] > 0 ? ten.replace("#", String.valueOf(cs[1])) : ten);
+        }
+        if (q.maRieng != null && !q.maRieng.trim().isEmpty()) {
+            if (sb.length() > 0) {
+                sb.append("; ");
+            }
+            sb.append("+ mã riêng \"").append(q.maRieng.trim()).append("\"");
+        }
+        return sb.length() == 0 ? "(không có)" : sb.toString();
+    }
+
+    private void napBangVongQuay() {
         vqModel.setRowCount(0);
-        java.util.List<nro.repository.dao.VongQuayDAO.Qua> ds
-                = nro.repository.dao.VongQuayDAO.danhSach();
+        dsVongQuay = nro.repository.dao.VongQuayDAO.danhSach();
         int tongThuong = 0;
         int tongVip = 0;
-        for (nro.repository.dao.VongQuayDAO.Qua q : ds) {
+        for (nro.repository.dao.VongQuayDAO.Qua q : dsVongQuay) {
             if (!q.bat || q.trongSo <= 0) {
                 continue;
             }
@@ -5608,105 +5681,365 @@ public class SystemPanel extends JPanel {
                 tongThuong += q.trongSo;
             }
         }
-        for (nro.repository.dao.VongQuayDAO.Qua q : ds) {
+        for (nro.repository.dao.VongQuayDAO.Qua q : dsVongQuay) {
             int tong = q.nhom == nro.repository.dao.VongQuayDAO.NHOM_VIP
                     ? tongVip : tongThuong;
             String coHoi = (!q.bat || q.trongSo <= 0 || tong <= 0) ? "—"
                     : String.format("%.2f%%", q.trongSo * 100.0 / tong);
-            vqModel.addRow(new Object[]{String.valueOf(q.id),
+            int min = Math.max(1, q.soLuongMin);
+            int max = Math.max(min, q.soLuongMax);
+            vqModel.addRow(new Object[]{q.id,
                 q.nhom == nro.repository.dao.VongQuayDAO.NHOM_VIP ? "VIP" : "Thường",
-                q.vatPham, q.chiSo, String.valueOf(q.trongSo),
-                q.maRieng == null ? "" : q.maRieng, q.bat,
-                q.ghiChu == null ? "" : q.ghiChu, coHoi});
+                anhVatPham(q), moTaVatPham(q),
+                min == max ? String.valueOf(min) : (min + " – " + max),
+                moTaChiSoQua(q), q.trongSo, coHoi,
+                q.bat ? "✔" : "", q.ghiChu == null ? "" : q.ghiChu});
         }
     }
 
-    private String oVq(int r, int c) {
-        Object v = vqModel.getValueAt(r, c);
-        return v == null ? "" : String.valueOf(v).trim();
+    /** Các dòng dữ liệu ứng với những dòng bảng đang chọn. */
+    private java.util.List<nro.repository.dao.VongQuayDAO.Qua> vqDangChon() {
+        java.util.List<nro.repository.dao.VongQuayDAO.Qua> ra
+                = new java.util.ArrayList<>();
+        for (int r : vqTable.getSelectedRows()) {
+            int i = vqTable.convertRowIndexToModel(r);
+            if (i >= 0 && i < dsVongQuay.size()) {
+                ra.add(dsVongQuay.get(i));
+            }
+        }
+        return ra;
     }
 
-    private void luuBangVongQuay() {
-        if (vqTable.isEditing()) {
-            vqTable.getCellEditor().stopCellEditing();
+    private void batTatVongQuay(boolean bat) {
+        java.util.List<nro.repository.dao.VongQuayDAO.Qua> chon = vqDangChon();
+        if (chon.isEmpty()) {
+            note(WARN_RED, "Chưa chọn dòng nào.");
+            return;
         }
+        for (nro.repository.dao.VongQuayDAO.Qua q : chon) {
+            q.bat = bat;
+            nro.repository.dao.VongQuayDAO.luu(q);
+        }
+        napBangVongQuay();
+        note(OK_GREEN, (bat ? "Đã bật " : "Đã tắt ") + chon.size() + " dòng quà.");
+    }
+
+    private void xoaDongVongQuay() {
+        java.util.List<nro.repository.dao.VongQuayDAO.Qua> chon = vqDangChon();
+        if (chon.isEmpty()) {
+            note(WARN_RED, "Chưa chọn dòng nào.");
+            return;
+        }
+        if (JOptionPane.showConfirmDialog(this,
+                "Xoá " + chon.size() + " dòng quà đã chọn?",
+                "Xoá quà vòng quay", JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+            return;
+        }
+        for (nro.repository.dao.VongQuayDAO.Qua q : chon) {
+            nro.repository.dao.VongQuayDAO.xoa(q.id);
+        }
+        napBangVongQuay();
+        note(OK_GREEN, "Đã xoá " + chon.size() + " dòng quà.");
+    }
+
+    /**
+     * Hộp sửa một hoặc <b>nhiều</b> dòng quà.
+     *
+     * <h2>Sửa nhiều dòng thì tích ô nào áp ô đó</h2>
+     *
+     * <p>Sửa hàng loạt mà áp hết mọi ô là hỏng: hai dòng khác nhau ở vật phẩm
+     * nhưng ta chỉ muốn đổi trọng số của cả hai, áp hết thì chúng thành hai dòng
+     * giống hệt nhau. Nên mỗi ô có một dấu tích riêng — <b>chỉ ô được tích mới
+     * ghi đè</b>, phần còn lại của mỗi dòng giữ nguyên.</p>
+     *
+     * <p>Sửa một dòng thì mọi ô tích sẵn, vì lúc đó ghi đè hết là đúng ý.</p>
+     */
+    private void suaVongQuayDialog(boolean them) {
+        java.util.List<nro.repository.dao.VongQuayDAO.Qua> chon;
+        if (them) {
+            nro.repository.dao.VongQuayDAO.Qua moi
+                    = new nro.repository.dao.VongQuayDAO.Qua();
+            moi.vatPham = "";
+            chon = java.util.Collections.singletonList(moi);
+        } else {
+            chon = vqDangChon();
+            if (chon.isEmpty()) {
+                note(WARN_RED, "Chưa chọn dòng nào — nháy đúp một dòng để sửa.");
+                return;
+            }
+        }
+        final boolean nhieu = chon.size() > 1;
+        nro.repository.dao.VongQuayDAO.Qua mau = chon.get(0);
+
+        JComboBox<String> fNhom = new JComboBox<>(new String[]{"Thường", "VIP"});
+        fNhom.setSelectedIndex(
+                mau.nhom == nro.repository.dao.VongQuayDAO.NHOM_VIP ? 1 : 0);
+
+        // ---- danh sách vật phẩm của dòng ----
+        DefaultTableModel mVp = new DefaultTableModel(
+                new Object[]{"Ảnh", "Id", "Tên vật phẩm"}, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+
+            @Override
+            public Class<?> getColumnClass(int c) {
+                return c == 0 ? javax.swing.ImageIcon.class : Object.class;
+            }
+        };
+        JTable bVp = new JTable(mVp);
+        bVp.setRowHeight(28);
+        bVp.getColumnModel().getColumn(0).setPreferredWidth(40);
+        bVp.getColumnModel().getColumn(1).setPreferredWidth(60);
+        bVp.getColumnModel().getColumn(2).setPreferredWidth(300);
+        for (int id : nro.repository.dao.VongQuayDAO.docDanhSachSo(mau.vatPham)) {
+            themDongVatPhamVq(mVp, id);
+        }
+
+        JPanel nutVp = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
+        nutVp.setOpaque(false);
+        nutVp.add(button("Chọn vật phẩm…", ACCENT, ev -> {
+            int id = OptionPicker.chonVatPham(this, -1);
+            if (id > 0) {
+                themDongVatPhamVq(mVp, id);
+            }
+        }));
+        nutVp.add(button("Bỏ dòng đang chọn", WARN_RED, ev -> {
+            int r = bVp.getSelectedRow();
+            if (r >= 0) {
+                mVp.removeRow(bVp.convertRowIndexToModel(r));
+            }
+        }));
+
+        // ---- chỉ số kèm theo ----
+        DefaultTableModel mCs = new DefaultTableModel(
+                new Object[]{"Id", "Chỉ số", "Trị số"}, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return c == 2;
+            }
+        };
+        JTable bCs = new JTable(mCs);
+        bCs.setRowHeight(24);
+        bCs.getColumnModel().getColumn(0).setPreferredWidth(50);
+        bCs.getColumnModel().getColumn(1).setPreferredWidth(300);
+        bCs.getColumnModel().getColumn(2).setPreferredWidth(70);
+        for (int[] cs : nro.repository.dao.VongQuayDAO.docChiSo(mau.chiSo)) {
+            mCs.addRow(new Object[]{cs[0], OptionPicker.tenChiSo(cs[0]),
+                String.valueOf(cs[1])});
+        }
+
+        JPanel nutCs = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
+        nutCs.setOpaque(false);
+        nutCs.add(button("Thêm chỉ số…", ACCENT, ev -> {
+            int id = OptionPicker.chonChiSo(this, -1);
+            if (id >= 0) {
+                mCs.addRow(new Object[]{id, OptionPicker.tenChiSo(id), "0"});
+            }
+        }));
+        nutCs.add(button("Bỏ dòng đang chọn", WARN_RED, ev -> {
+            int r = bCs.getSelectedRow();
+            if (r >= 0) {
+                if (bCs.isEditing()) {
+                    bCs.getCellEditor().stopCellEditing();
+                }
+                mCs.removeRow(bCs.convertRowIndexToModel(r));
+            }
+        }));
+
+        JTextField fMin = new JTextField(String.valueOf(Math.max(1, mau.soLuongMin)), 6);
+        JTextField fMax = new JTextField(
+                String.valueOf(Math.max(Math.max(1, mau.soLuongMin), mau.soLuongMax)), 6);
+        JTextField fTs = new JTextField(String.valueOf(mau.trongSo), 6);
+        JComboBox<String> fMa = new JComboBox<>(
+                nro.repository.dao.VongQuayDAO.TEN_MA_RIENG);
+        fMa.setSelectedItem(mau.maRieng == null ? "" : mau.maRieng);
+        JCheckBox fBat = new JCheckBox("Bật", mau.bat);
+        fBat.setOpaque(false);
+        JTextField fGc = new JTextField(mau.ghiChu == null ? "" : mau.ghiChu, 30);
+
+        // Dau tich "ap o nay" — chi hien khi sua nhieu dong.
+        JCheckBox apNhom = new JCheckBox("áp", !nhieu);
+        JCheckBox apVp = new JCheckBox("áp", !nhieu);
+        JCheckBox apCs = new JCheckBox("áp", !nhieu);
+        JCheckBox apSl = new JCheckBox("áp", !nhieu);
+        JCheckBox apTs = new JCheckBox("áp", !nhieu);
+        JCheckBox apMa = new JCheckBox("áp", !nhieu);
+        JCheckBox apBat = new JCheckBox("áp", !nhieu);
+        JCheckBox apGc = new JCheckBox("áp", !nhieu);
+        for (JCheckBox cb : new JCheckBox[]{apNhom, apVp, apCs, apSl, apTs,
+            apMa, apBat, apGc}) {
+            cb.setOpaque(false);
+            cb.setVisible(nhieu);
+        }
+
+        JPanel form = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(4, 6, 4, 6);
+        c.anchor = GridBagConstraints.WEST;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        int y = 0;
+
+        hangVq(form, c, y++, apNhom, "Vòng quay:", fNhom);
+
+        JPanel hopVp = new JPanel(new BorderLayout(0, 2));
+        hopVp.setOpaque(false);
+        JScrollPane spVp = ServerGuiUtils.cuon(bVp);
+        spVp.setPreferredSize(new Dimension(460, 110));
+        hopVp.add(spVp, BorderLayout.CENTER);
+        hopVp.add(nutVp, BorderLayout.SOUTH);
+        hangVq(form, c, y++, apVp, "Vật phẩm (nhiều món = bốc 1):", hopVp);
+
+        JPanel hopSl = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        hopSl.setOpaque(false);
+        hopSl.add(new JLabel("từ"));
+        hopSl.add(fMin);
+        hopSl.add(new JLabel("tới"));
+        hopSl.add(fMax);
+        hangVq(form, c, y++, apSl, "Số lượng:", hopSl);
+
+        JPanel hopCs = new JPanel(new BorderLayout(0, 2));
+        hopCs.setOpaque(false);
+        JScrollPane spCs = ServerGuiUtils.cuon(bCs);
+        spCs.setPreferredSize(new Dimension(460, 110));
+        hopCs.add(spCs, BorderLayout.CENTER);
+        hopCs.add(nutCs, BorderLayout.SOUTH);
+        hangVq(form, c, y++, apCs, "Chỉ số kèm theo:", hopCs);
+
+        hangVq(form, c, y++, apTs, "Trọng số:", fTs);
+        hangVq(form, c, y++, apMa, "Mã riêng:", fMa);
+        hangVq(form, c, y++, apBat, "Trạng thái:", fBat);
+        hangVq(form, c, y++, apGc, "Ghi chú:", fGc);
+
+        c.gridx = 0;
+        c.gridy = y;
+        c.gridwidth = 3;
+        form.add(nhan(nhieu
+                ? "Đang sửa <b>" + chon.size() + " dòng</b> cùng lúc. Chỉ những ô "
+                + "bạn tích <b>áp</b> mới ghi đè; phần còn lại của mỗi dòng giữ "
+                + "nguyên."
+                : "<b>Trọng số</b> là trọng số, không phải phần trăm. "
+                + "<b>Số lượng</b> để hai ô bằng nhau là số cố định."), c);
+
+        if (JOptionPane.showConfirmDialog(this, form,
+                them ? "Thêm dòng quà" : (nhieu ? "Sửa " + chon.size() + " dòng quà"
+                        : "Sửa dòng quà"),
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
+            return;
+        }
+        if (bCs.isEditing()) {
+            bCs.getCellEditor().stopCellEditing();
+        }
+
+        StringBuilder vp = new StringBuilder();
+        for (int r = 0; r < mVp.getRowCount(); r++) {
+            if (vp.length() > 0) {
+                vp.append(",");
+            }
+            vp.append(String.valueOf(mVp.getValueAt(r, 1)).trim());
+        }
+        StringBuilder cs = new StringBuilder();
+        for (int r = 0; r < mCs.getRowCount(); r++) {
+            if (cs.length() > 0) {
+                cs.append(",");
+            }
+            cs.append(String.valueOf(mCs.getValueAt(r, 0)).trim()).append(":")
+                    .append(String.valueOf(mCs.getValueAt(r, 2)).trim());
+        }
+        int min;
+        int max;
+        int ts;
+        try {
+            min = Math.max(1, Integer.parseInt(fMin.getText().trim()));
+            max = Math.max(min, Integer.parseInt(fMax.getText().trim()));
+            ts = Integer.parseInt(fTs.getText().trim());
+        } catch (NumberFormatException ex) {
+            note(WARN_RED, "Số lượng và trọng số phải là số nguyên.");
+            return;
+        }
+
         int hong = 0;
         String hongDau = null;
-        for (int r = 0; r < vqModel.getRowCount(); r++) {
-            nro.repository.dao.VongQuayDAO.Qua q
-                    = new nro.repository.dao.VongQuayDAO.Qua();
-            try {
-                q.id = Integer.parseInt(oVq(r, COT_VQ_ID));
-                q.trongSo = Integer.parseInt(oVq(r, COT_VQ_TS));
-            } catch (NumberFormatException ex) {
-                hong++;
-                if (hongDau == null) {
-                    hongDau = "Dòng " + (r + 1) + " có ô không phải số.";
-                }
-                continue;
+        for (nro.repository.dao.VongQuayDAO.Qua q : chon) {
+            if (apNhom.isSelected()) {
+                q.nhom = fNhom.getSelectedIndex() == 1
+                        ? nro.repository.dao.VongQuayDAO.NHOM_VIP
+                        : nro.repository.dao.VongQuayDAO.NHOM_THUONG;
             }
-            q.nhom = "VIP".equalsIgnoreCase(oVq(r, COT_VQ_NHOM))
-                    ? nro.repository.dao.VongQuayDAO.NHOM_VIP
-                    : nro.repository.dao.VongQuayDAO.NHOM_THUONG;
-            q.vatPham = oVq(r, COT_VQ_VP);
-            q.chiSo = oVq(r, COT_VQ_CS);
-            q.maRieng = oVq(r, COT_VQ_MA);
-            Object bat = vqModel.getValueAt(r, COT_VQ_BAT);
-            q.bat = !(bat instanceof Boolean) || (Boolean) bat;
-            q.ghiChu = oVq(r, COT_VQ_GC);
+            if (apVp.isSelected()) {
+                q.vatPham = vp.toString();
+            }
+            if (apCs.isSelected()) {
+                q.chiSo = cs.toString();
+            }
+            if (apSl.isSelected()) {
+                q.soLuongMin = min;
+                q.soLuongMax = max;
+            }
+            if (apTs.isSelected()) {
+                q.trongSo = ts;
+            }
+            if (apMa.isSelected()) {
+                q.maRieng = String.valueOf(fMa.getSelectedItem());
+            }
+            if (apBat.isSelected()) {
+                q.bat = fBat.isSelected();
+            }
+            if (apGc.isSelected()) {
+                q.ghiChu = fGc.getText();
+            }
             String loi = nro.repository.dao.VongQuayDAO.luu(q);
             if (loi != null) {
                 hong++;
                 if (hongDau == null) {
-                    hongDau = "Dòng " + (r + 1) + ": " + loi;
+                    hongDau = loi;
                 }
             }
         }
         napBangVongQuay();
         note(hong == 0 ? OK_GREEN : WARN_RED, hong == 0
-                ? "Đã lưu kho quà vòng quay — có hiệu lực ngay lượt quay sau."
+                ? (them ? "Đã thêm một dòng quà."
+                        : "Đã lưu " + chon.size() + " dòng quà — có hiệu lực ngay "
+                        + "lượt quay sau.")
                 : hongDau + " (" + hong + " dòng không lưu được)");
     }
 
-    private void themDongVongQuay() {
-        nro.repository.dao.VongQuayDAO.Qua q
-                = new nro.repository.dao.VongQuayDAO.Qua();
-        q.nhom = nro.repository.dao.VongQuayDAO.NHOM_THUONG;
-        q.vatPham = "18";
-        q.chiSo = "";
-        q.trongSo = 1;
-        q.bat = true;
-        q.ghiChu = "Dòng mới — sửa lại rồi Lưu";
-        String loi = nro.repository.dao.VongQuayDAO.luu(q);
-        napBangVongQuay();
-        note(loi == null ? OK_GREEN : WARN_RED,
-                loi == null ? "Đã thêm một dòng quà." : loi);
+    /** Một hàng của hộp sửa: dấu tích "áp" · nhãn · ô nhập. */
+    private static void hangVq(JPanel form, GridBagConstraints c, int y,
+            JCheckBox ap, String nhan, java.awt.Component o) {
+        c.gridwidth = 1;
+        c.gridx = 0;
+        c.gridy = y;
+        c.weightx = 0;
+        form.add(ap, c);
+        c.gridx = 1;
+        form.add(new JLabel(nhan), c);
+        c.gridx = 2;
+        c.weightx = 1;
+        form.add(o, c);
+        c.weightx = 0;
     }
 
-    private void xoaDongVongQuay() {
-        int r = vqTable.getSelectedRow();
-        if (r < 0) {
-            note(WARN_RED, "Chưa chọn dòng nào.");
-            return;
+    private static void themDongVatPhamVq(DefaultTableModel m, int id) {
+        for (int r = 0; r < m.getRowCount(); r++) {
+            if (String.valueOf(m.getValueAt(r, 1)).trim().equals(String.valueOf(id))) {
+                return;     // da co roi, dung them lan hai
+            }
         }
-        r = vqTable.convertRowIndexToModel(r);
-        int id;
+        javax.swing.ImageIcon anh = null;
         try {
-            id = Integer.parseInt(oVq(r, COT_VQ_ID));
-        } catch (NumberFormatException ex) {
-            note(WARN_RED, "Dòng này không có id hợp lệ.");
-            return;
+            nro.entity.template.ItemTemplate t
+                    = nro.service.item.ItemService.gI().getTemplate(id);
+            if (t != null) {
+                anh = PlayerManagerPanel.iconOf(t.iconID);
+            }
+        } catch (Exception boQua) {
+            // Bang mau chua nap -> van them dong, chi thieu anh.
         }
-        if (JOptionPane.showConfirmDialog(this,
-                "Xoá dòng quà \"" + oVq(r, COT_VQ_VP) + "\"?",
-                "Xoá quà vòng quay", JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
-            return;
-        }
-        String loi = nro.repository.dao.VongQuayDAO.xoa(id);
-        napBangVongQuay();
-        note(loi == null ? OK_GREEN : WARN_RED,
-                loi == null ? "Đã xoá dòng quà." : loi);
+        m.addRow(new Object[]{anh, id, tenVatPham(id)});
     }
 
     // ---------------------------------------------------------------- top máy đấm
@@ -6284,7 +6617,16 @@ public class SystemPanel extends JPanel {
         root.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         noiTable.setRowHeight(26);
-        noiTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        noiTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        // Nhay dup mot dong = sua dong do, giong moi bang khac trong panel.
+        noiTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2 && noiTable.getSelectedRow() >= 0) {
+                    suaNoiTaiDialog();
+                }
+            }
+        });
         int[] w = {50, 430, 60, 60, 60, 60, 60, 110, 150};
         for (int i = 0; i < noiTable.getColumnCount() && i < w.length; i++) {
             noiTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
@@ -6298,6 +6640,7 @@ public class SystemPanel extends JPanel {
         nut.setOpaque(false);
         nut.add(button("Lưu bảng", OK_GREEN, e -> luuBangNoiTai()));
         nut.add(button("Tải lại", GREY, e -> napBangNoiTai()));
+        nut.add(button("Sửa dòng đang chọn", new Color(90, 120, 170), e -> suaNoiTaiDialog()));
         nut.add(button("Thêm nội tại", ACCENT, e -> themDongNoiTai()));
         nut.add(button("Xoá dòng đang chọn", WARN_RED, e -> xoaDongNoiTai()));
 
@@ -6404,6 +6747,166 @@ public class SystemPanel extends JPanel {
     private String oNoi(int r, int c) {
         Object v = noiModel.getValueAt(r, c);
         return v == null ? "" : String.valueOf(v).trim();
+    }
+
+
+    /**
+     * Hộp sửa một hoặc <b>nhiều</b> nội tại.
+     *
+     * <p>Bảng vẫn sửa thẳng trong ô được như cũ — hộp này thêm vào cho hai việc
+     * ô nhập không làm nổi: sửa <b>cả loạt</b> dòng cùng lúc, và thấy rõ mình
+     * đang đổi cái gì thay vì gõ vào một ô hẹp giữa bảy cột.</p>
+     *
+     * <p>Sửa nhiều dòng thì chỉ ô nào được <b>tích</b> mới ghi đè — không thì
+     * mấy dòng khác nhau bị san bằng thành giống hệt nhau.</p>
+     */
+    private void suaNoiTaiDialog() {
+        int[] rows = noiTable.getSelectedRows();
+        if (rows.length == 0) {
+            note(WARN_RED, "Chưa chọn dòng nào — nháy đúp một dòng để sửa.");
+            return;
+        }
+        java.util.List<nro.entity.intrinsic.Intrinsic> chon
+                = new java.util.ArrayList<>();
+        for (int r : rows) {
+            int i = noiTable.convertRowIndexToModel(r);
+            nro.entity.intrinsic.Intrinsic it = new nro.entity.intrinsic.Intrinsic();
+            try {
+                it.id = Integer.parseInt(oNoi(i, COT_NOI_ID));
+                it.name = oNoi(i, COT_NOI_TEN);
+                it.paramFrom1 = Short.parseShort(oNoi(i, COT_NOI_TU1));
+                it.paramTo1 = Short.parseShort(oNoi(i, COT_NOI_DEN1));
+                it.paramFrom2 = Short.parseShort(oNoi(i, COT_NOI_TU2));
+                it.paramTo2 = Short.parseShort(oNoi(i, COT_NOI_DEN2));
+                it.icon = Short.parseShort(oNoi(i, COT_NOI_ICON));
+                it.gender = genderTuTen(noiModel.getValueAt(i, COT_NOI_HT));
+            } catch (NumberFormatException ex) {
+                note(WARN_RED, "Dòng đang chọn có ô không phải số.");
+                return;
+            }
+            chon.add(it);
+        }
+        final boolean nhieu = chon.size() > 1;
+        nro.entity.intrinsic.Intrinsic mau = chon.get(0);
+
+        JTextField fTen = new JTextField(mau.name == null ? "" : mau.name, 40);
+        JTextField fTu1 = new JTextField(String.valueOf(mau.paramFrom1), 6);
+        JTextField fDen1 = new JTextField(String.valueOf(mau.paramTo1), 6);
+        JTextField fTu2 = new JTextField(String.valueOf(mau.paramFrom2), 6);
+        JTextField fDen2 = new JTextField(String.valueOf(mau.paramTo2), 6);
+        JTextField fIcon = new JTextField(String.valueOf(mau.icon), 6);
+        JComboBox<String> fHt = new JComboBox<>(new String[]{
+            "Trái Đất", "Namếc", "Xayda", "Dùng chung"});
+        fHt.setSelectedItem(nro.repository.dao.NoiTaiDAO.tenHanhTinh(mau.gender));
+
+        JCheckBox apTen = new JCheckBox("áp", !nhieu);
+        JCheckBox apK1 = new JCheckBox("áp", !nhieu);
+        JCheckBox apK2 = new JCheckBox("áp", !nhieu);
+        JCheckBox apIcon = new JCheckBox("áp", !nhieu);
+        JCheckBox apHt = new JCheckBox("áp", !nhieu);
+        for (JCheckBox cb : new JCheckBox[]{apTen, apK1, apK2, apIcon, apHt}) {
+            cb.setOpaque(false);
+            cb.setVisible(nhieu);
+        }
+
+        JPanel form = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(4, 6, 4, 6);
+        c.anchor = GridBagConstraints.WEST;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        int y = 0;
+        hangVq(form, c, y++, apTen, "Tên (mẫu p0…p3):", fTen);
+
+        JPanel k1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        k1.setOpaque(false);
+        k1.add(new JLabel("từ"));
+        k1.add(fTu1);
+        k1.add(new JLabel("đến"));
+        k1.add(fDen1);
+        hangVq(form, c, y++, apK1, "Khoảng trị số 1 (p0…p1):", k1);
+
+        JPanel k2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        k2.setOpaque(false);
+        k2.add(new JLabel("từ"));
+        k2.add(fTu2);
+        k2.add(new JLabel("đến"));
+        k2.add(fDen2);
+        hangVq(form, c, y++, apK2, "Khoảng trị số 2 (p2…p3):", k2);
+
+        hangVq(form, c, y++, apIcon, "Icon:", fIcon);
+        hangVq(form, c, y++, apHt, "Hành tinh:", fHt);
+
+        c.gridx = 0;
+        c.gridy = y;
+        c.gridwidth = 3;
+        StringBuilder dsId = new StringBuilder();
+        for (nro.entity.intrinsic.Intrinsic it : chon) {
+            if (dsId.length() > 0) {
+                dsId.append(", ");
+            }
+            dsId.append(it.id);
+        }
+        form.add(nhan(nhieu
+                ? "Đang sửa <b>" + chon.size() + " nội tại</b> (id " + dsId
+                + "). Chỉ những ô bạn tích <b>áp</b> mới ghi đè."
+                : "Đang sửa nội tại <b>id " + mau.id + "</b>. Id không đổi được — "
+                + "tác dụng gắn cứng theo id."), c);
+
+        if (JOptionPane.showConfirmDialog(this, form,
+                nhieu ? "Sửa " + chon.size() + " nội tại" : "Sửa nội tại",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        short tu1;
+        short den1;
+        short tu2;
+        short den2;
+        short icon;
+        try {
+            tu1 = Short.parseShort(fTu1.getText().trim());
+            den1 = Short.parseShort(fDen1.getText().trim());
+            tu2 = Short.parseShort(fTu2.getText().trim());
+            den2 = Short.parseShort(fDen2.getText().trim());
+            icon = Short.parseShort(fIcon.getText().trim());
+        } catch (NumberFormatException ex) {
+            note(WARN_RED, "Các ô trị số và icon phải là số nguyên.");
+            return;
+        }
+
+        int hong = 0;
+        String hongDau = null;
+        for (nro.entity.intrinsic.Intrinsic it : chon) {
+            if (apTen.isSelected()) {
+                it.name = fTen.getText();
+            }
+            if (apK1.isSelected()) {
+                it.paramFrom1 = tu1;
+                it.paramTo1 = den1;
+            }
+            if (apK2.isSelected()) {
+                it.paramFrom2 = tu2;
+                it.paramTo2 = den2;
+            }
+            if (apIcon.isSelected()) {
+                it.icon = icon;
+            }
+            if (apHt.isSelected()) {
+                it.gender = genderTuTen(fHt.getSelectedItem());
+            }
+            String loi = nro.repository.dao.NoiTaiDAO.luu(it);
+            if (loi != null) {
+                hong++;
+                if (hongDau == null) {
+                    hongDau = "Nội tại id " + it.id + ": " + loi;
+                }
+            }
+        }
+        napBangNoiTai();
+        note(hong == 0 ? OK_GREEN : WARN_RED, hong == 0
+                ? "Đã lưu " + chon.size() + " nội tại — có hiệu lực ngay."
+                : hongDau + " (" + hong + " dòng không lưu được)");
     }
 
     private void themDongNoiTai() {

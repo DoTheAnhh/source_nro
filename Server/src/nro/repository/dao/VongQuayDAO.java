@@ -70,6 +70,8 @@ public final class VongQuayDAO {
         public String vatPham = "";
         public String chiSo = "";
         public int trongSo = 1;
+        public int soLuongMin = 1;
+        public int soLuongMax = 1;
         public String maRieng = "";
         public boolean bat = true;
         public String ghiChu = "";
@@ -82,6 +84,8 @@ public final class VongQuayDAO {
             + " `vat_pham` varchar(255) NOT NULL DEFAULT '',"
             + " `chi_so` varchar(255) NOT NULL DEFAULT '',"
             + " `trong_so` int(11) NOT NULL DEFAULT 1,"
+            + " `sl_min` int(11) NOT NULL DEFAULT 1,"
+            + " `sl_max` int(11) NOT NULL DEFAULT 1,"
             + " `ma_rieng` varchar(40) NOT NULL DEFAULT '',"
             + " `bat` tinyint(1) NOT NULL DEFAULT 1,"
             + " `ghi_chu` varchar(255) NOT NULL DEFAULT '',"
@@ -100,11 +104,26 @@ public final class VongQuayDAO {
             }
             try {
                 ConnectDB.executeUpdate(LUOC_DO);
+                // Hai cot them sau — bang da co tu ban truoc thi va them vao.
+                themCot("ALTER TABLE vong_quay_qua ADD COLUMN IF NOT EXISTS"
+                        + " sl_min int(11) NOT NULL DEFAULT 1");
+                themCot("ALTER TABLE vong_quay_qua ADD COLUMN IF NOT EXISTS"
+                        + " sl_max int(11) NOT NULL DEFAULT 1");
                 daTao = true;
             } catch (Exception ex) {
                 Logger.logException(VongQuayDAO.class, ex,
                         "Không tạo được bảng vong_quay_qua");
             }
+        }
+    }
+
+
+    /** Chạy một câu ALTER, bỏ qua nếu cột đã có. */
+    private static void themCot(String sql) {
+        try {
+            ConnectDB.executeUpdate(sql);
+        } catch (Exception boQua) {
+            // Cot da co roi -> bo qua.
         }
     }
 
@@ -134,7 +153,7 @@ public final class VongQuayDAO {
         CrisResultSet rs = null;
         try {
             rs = ConnectDB.executeQuery("SELECT id, nhom, vat_pham, chi_so,"
-                    + " trong_so, ma_rieng, bat, ghi_chu FROM vong_quay_qua"
+                    + " trong_so, sl_min, sl_max, ma_rieng, bat, ghi_chu FROM vong_quay_qua"
                     + " ORDER BY nhom, id");
             while (rs.next()) {
                 Qua q = new Qua();
@@ -143,6 +162,8 @@ public final class VongQuayDAO {
                 q.vatPham = rs.getString("vat_pham");
                 q.chiSo = rs.getString("chi_so");
                 q.trongSo = rs.getInt("trong_so");
+                q.soLuongMin = rs.getInt("sl_min");
+                q.soLuongMax = rs.getInt("sl_max");
                 q.maRieng = rs.getString("ma_rieng");
                 q.bat = rs.getBoolean("bat");
                 q.ghiChu = rs.getString("ghi_chu");
@@ -173,17 +194,19 @@ public final class VongQuayDAO {
         try {
             if (q.id > 0) {
                 ConnectDB.executeUpdate("UPDATE vong_quay_qua SET nhom = ?,"
-                        + " vat_pham = ?, chi_so = ?, trong_so = ?, ma_rieng = ?,"
-                        + " bat = ?, ghi_chu = ? WHERE id = ?",
+                        + " vat_pham = ?, chi_so = ?, trong_so = ?, sl_min = ?,"
+                        + " sl_max = ?, ma_rieng = ?, bat = ?, ghi_chu = ? WHERE id = ?",
                         q.nhom, q.vatPham.trim(), q.chiSo == null ? "" : q.chiSo.trim(),
-                        q.trongSo, q.maRieng == null ? "" : q.maRieng.trim(),
+                        q.trongSo, q.soLuongMin, q.soLuongMax,
+                        q.maRieng == null ? "" : q.maRieng.trim(),
                         q.bat ? 1 : 0, q.ghiChu == null ? "" : q.ghiChu, q.id);
             } else {
                 ConnectDB.executeUpdate("INSERT INTO vong_quay_qua (nhom,"
-                        + " vat_pham, chi_so, trong_so, ma_rieng, bat, ghi_chu)"
-                        + " VALUES (?,?,?,?,?,?,?)",
+                        + " vat_pham, chi_so, trong_so, sl_min, sl_max, ma_rieng,"
+                        + " bat, ghi_chu) VALUES (?,?,?,?,?,?,?,?,?)",
                         q.nhom, q.vatPham.trim(), q.chiSo == null ? "" : q.chiSo.trim(),
-                        q.trongSo, q.maRieng == null ? "" : q.maRieng.trim(),
+                        q.trongSo, q.soLuongMin, q.soLuongMax,
+                        q.maRieng == null ? "" : q.maRieng.trim(),
                         q.bat ? 1 : 0, q.ghiChu == null ? "" : q.ghiChu);
             }
             return null;
