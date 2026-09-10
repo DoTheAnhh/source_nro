@@ -45,6 +45,9 @@ public final class Collector implements Runnable {
      * <p>Moi phien mot bo dem, va chi luong doc cua phien do dung toi, nen
      * khong can dong bo gi ca.</p>
      */
+    /** Ngu bao lau khi mot phien DA DANG NHAP gui nhanh qua nguong. */
+    private static final long NGU_KHI_NHANH_MS = 40L;
+
     private final nro.server.ChongDdos.NhipGoi nhipGoi
             = new nro.server.ChongDdos.NhipGoi();
 
@@ -118,11 +121,34 @@ public final class Collector implements Runnable {
                 // vao duoc roi thi no bom bao nhieu goi cung duoc: moi goi
                 // la mot muc trong hang doi va mot luot xu ly. Mot khach
                 // sua doi chi can MOT ket noi la du lam nghen may chu.
+                //
+                // NHUNG: nguoi da dang nhap thi KHONG duoc da ra.
+                //
+                // Mua mot lan chin muoi chin mon, nhat mot bai do roi, hay
+                // bam danh lien tuc deu vuot nguong nay de dang — va ban cu
+                // cat thang ket noi, client hien "May chu tat hoac mat song".
+                // Dung la loi "mua nhieu thi vang game": khong phai may chu
+                // qua tai, ma la chinh van chong lu tu da nguoi choi that.
+                //
+                // Nguoi da vao game thi HAM lai thay vi cat: ngu mot nhip
+                // ngan ngay tren luong doc. Doc cham lai la TCP tu don goi
+                // ben gui — day moi la cach ep nhip dung, va goi khong mat.
+                // Chi phien CHUA dang nhap moi bi cat, vi do moi la lu that.
                 if (!nhipGoi.them()) {
-                    nro.server.ChongDdos.viPham(this.ipGhiNho,
-                            "gui goi qua nhanh");
-                    msg.cleanup();
-                    break;
+                    boolean daVaoGame = this.session != null
+                            && ((nro.net.session.MySession) this.session).player != null;
+                    if (daVaoGame) {
+                        try {
+                            Thread.sleep(NGU_KHI_NHANH_MS);
+                        } catch (InterruptedException boQua) {
+                            Thread.currentThread().interrupt();
+                        }
+                    } else {
+                        nro.server.ChongDdos.viPham(this.ipGhiNho,
+                                "gui goi qua nhanh");
+                        msg.cleanup();
+                        break;
+                    }
                 }
                 if (msg.command == CommandMessage.GET_SESSION_ID) {
                     if (session.getSocketType() == SocketType.SERVER) {

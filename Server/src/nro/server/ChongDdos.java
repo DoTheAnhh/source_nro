@@ -74,7 +74,14 @@ public final class ChongDdos {
     private static final int KET_NOI_MOI_CA_MAY_CHU = 60;
 
     /** Số gói tin tối đa một phiên gửi lên trong một giây. */
-    private static final int GOI_MOI_GIAY = 120;
+    /**
+     * So goi tin toi da mot phien gui len trong mot giay.
+     *
+     * <p>120 la qua chat cho thao tac hang loat binh thuong — mua chin muoi
+     * chin mon, nhat mot bai do roi. Nay 400, va nguoi DA DANG NHAP vuot
+     * nguong thi bi ham nhip chu khong bi cat ket noi; xem { Collector}.</p>
+     */
+    private static final int GOI_MOI_GIAY = 400;
 
     /** Thời gian chặn lần đầu, mili giây. Tái phạm thì nhân đôi. */
     private static final long CHAN_LAN_DAU = 60_000L;
