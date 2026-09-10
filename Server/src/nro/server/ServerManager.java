@@ -930,6 +930,9 @@ public class ServerManager {
         ScheduledExecutorService autoTop = Executors.newScheduledThreadPool(1);
         autoTop.scheduleWithFixedDelay(() -> {
             try {
+                // Kiem tra moi 30 giay chu khong hen gio nua dem: xem chu thich
+                // cua xoaTheoNgayNeuCan de biet vi sao.
+                nro.repository.dao.TopMayDamDAO.xoaTheoNgayNeuCan();
                 TopServer.LoadingTop();
 
                 TopDestronGas.getInstance().load();

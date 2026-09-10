@@ -82,6 +82,7 @@ public class SystemPanel extends JPanel {
         tabs.addTab("Hào quang", buildAuraTab());
         tabs.addTab("Danh hiệu", buildDanhHieuTab());
         tabs.addTab("Nhiệm vụ danh hiệu", buildNhiemVuTab());
+        tabs.addTab("Top máy đấm", buildTopMayDamTab());
         tabs.addTab("Điểm đến capsule", buildCapsuleTab());
         tabs.addTab("Bản đồ nhanh", buildMapNhanhTab());
         tabs.addTab("Sách tuyệt kỹ", buildSachTuyetKyTab());
@@ -151,6 +152,9 @@ public class SystemPanel extends JPanel {
                     break;
                 case "Nội tại":
                     napBangNoiTai();
+                    break;
+                case "Top máy đấm":
+                    napBangTop();
                     break;
                 case "Nhiệm vụ chính tuyến":
                     napBangNhiemVuChinh();
@@ -5368,6 +5372,193 @@ public class SystemPanel extends JPanel {
      * dựng lại máy chủ. Tab này đọc và ghi thẳng vào chính bảng đó, và nạp lại
      * vào bộ nhớ ngay sau khi lưu.</p>
      */
+    // ---------------------------------------------------------------- top máy đấm
+    private final DefaultTableModel topModel = new DefaultTableModel(
+            new Object[]{"#", "Id", "Tên nhân vật", "Đòn mạnh nhất",
+                "Sát thương 30 giây", "Đang online"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return c == 3 || c == 4;
+        }
+    };
+    private final JTable topTable = new JTable(topModel);
+    private JComboBox<String> topXepTheo;
+
+    /**
+     * Tab <b>Top máy đấm</b> — hai bảng xếp hạng của máy đo sức mạnh.
+     *
+     * <h2>Dữ liệu nằm trên từng nhân vật</h2>
+     *
+     * <p>Không có bảng xếp hạng riêng: kỷ lục nằm ở cột
+     * {@code player.data_may_dam}, bảng xếp hạng chỉ là một câu sắp xếp trên cột
+     * ấy. Nên sửa một dòng ở đây là sửa thẳng kỷ lục của nhân vật đó, và xoá
+     * bảng là đặt lại kỷ lục của <b>mọi</b> nhân vật.</p>
+     */
+    private JComponent buildTopMayDamTab() {
+        JPanel root = new JPanel(new BorderLayout(0, 8));
+        root.setOpaque(false);
+        root.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        topTable.setRowHeight(24);
+        topTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        int[] w = {40, 70, 220, 150, 170, 90};
+        for (int i = 0; i < topTable.getColumnCount() && i < w.length; i++) {
+            topTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
+        }
+
+        topXepTheo = new JComboBox<>(new String[]{
+            "Đòn mạnh nhất", "Sát thương 30 giây"});
+        topXepTheo.addActionListener(e -> napBangTop());
+
+        JPanel tren = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        tren.setOpaque(false);
+        tren.add(new JLabel("Xếp theo:"));
+        tren.add(topXepTheo);
+
+        JCheckBox oResetNgay = new JCheckBox("Tự xoá bảng mỗi ngày",
+                ConfigDAO.on(nro.repository.dao.TopMayDamDAO.KHOA_RESET_NGAY));
+        oResetNgay.setOpaque(false);
+        oResetNgay.addActionListener(e -> {
+            ConfigDAO.set(nro.repository.dao.TopMayDamDAO.KHOA_RESET_NGAY,
+                    oResetNgay.isSelected() ? "1" : "0");
+            ConfigDAO.reload();
+            note(OK_GREEN, oResetNgay.isSelected()
+                    ? "Đã bật tự xoá bảng xếp hạng mỗi ngày."
+                    : "Đã tắt tự xoá theo ngày.");
+        });
+        tren.add(oResetNgay);
+
+        JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        nut.setOpaque(false);
+        nut.add(button("Lưu các dòng đã sửa", OK_GREEN, e -> luuBangTop()));
+        nut.add(button("Tải lại", GREY, e -> napBangTop()));
+        nut.add(button("Xoá kỷ lục dòng đang chọn", new Color(120, 90, 160),
+                e -> xoaMotDongTop()));
+        nut.add(button("XOÁ TOÀN BỘ BẢNG", WARN_RED, e -> xoaToanBoTop()));
+
+        JPanel dau = new JPanel(new BorderLayout(0, 4));
+        dau.setOpaque(false);
+        dau.add(nhan("Bảng xếp hạng máy đo sức mạnh ở NPC Ghi Danh. "
+                + "<b>Đòn mạnh nhất</b> là sát thương của một cú đấm lớn nhất từng "
+                + "gây ra; <b>Sát thương 30 giây</b> là tổng của lượt đấm 30 giây "
+                + "cao nhất."
+                + "<br><br>"
+                + "Kỷ lục <b>nằm trên từng nhân vật</b> chứ không có bảng riêng, nên "
+                + "sửa một dòng ở đây là sửa thẳng kỷ lục của người đó, và xoá bảng "
+                + "là đặt lại kỷ lục của mọi nhân vật. Người đang online cũng được "
+                + "sửa luôn trong bộ nhớ — không thì vài phút sau họ ghi đè lại con "
+                + "số cũ xuống và trông như không lưu được."
+                + "<br><br>"
+                + "Bật \"tự xoá mỗi ngày\" thì bảng được làm sạch ở lần chạy đầu tiên "
+                + "của mỗi ngày. Không dùng hẹn giờ nửa đêm: máy chủ tắt lúc 23h50 "
+                + "bật lại lúc 0h10 thì cái hẹn không bao giờ nổ."), BorderLayout.NORTH);
+        dau.add(tren, BorderLayout.SOUTH);
+
+        root.add(dau, BorderLayout.NORTH);
+        root.add(ServerGuiUtils.cuon(topTable), BorderLayout.CENTER);
+        root.add(nut, BorderLayout.SOUTH);
+        napBangTop();
+        return root;
+    }
+
+    private void napBangTop() {
+        if (topTable.isEditing()) {
+            topTable.getCellEditor().stopCellEditing();
+        }
+        topModel.setRowCount(0);
+        boolean theoDonManh = topXepTheo == null
+                || topXepTheo.getSelectedIndex() == 0;
+        int i = 1;
+        for (nro.repository.dao.TopMayDamDAO.Dong d
+                : nro.repository.dao.TopMayDamDAO.danhSach(theoDonManh, 200)) {
+            topModel.addRow(new Object[]{i++, d.id, d.ten,
+                nro.core.util.Util.soCham(d.donManh),
+                nro.core.util.Util.soCham(d.dame30s),
+                d.online ? "có" : ""});
+        }
+    }
+
+    private void luuBangTop() {
+        if (topTable.isEditing()) {
+            topTable.getCellEditor().stopCellEditing();
+        }
+        int hong = 0;
+        String hongDau = null;
+        for (int r = 0; r < topModel.getRowCount(); r++) {
+            long id;
+            long a;
+            long b;
+            try {
+                id = Long.parseLong(String.valueOf(topModel.getValueAt(r, 1)).trim());
+                a = docSo(String.valueOf(topModel.getValueAt(r, 3)));
+                b = docSo(String.valueOf(topModel.getValueAt(r, 4)));
+            } catch (NumberFormatException ex) {
+                hong++;
+                if (hongDau == null) {
+                    hongDau = "Dòng " + (r + 1) + " có ô không phải số.";
+                }
+                continue;
+            }
+            String loi = nro.repository.dao.TopMayDamDAO.sua(id, a, b);
+            if (loi != null) {
+                hong++;
+                if (hongDau == null) {
+                    hongDau = loi;
+                }
+            }
+        }
+        napBangTop();
+        note(hong == 0 ? OK_GREEN : WARN_RED, hong == 0
+                ? "Đã lưu bảng xếp hạng."
+                : hongDau + " (" + hong + " dòng không lưu được)");
+    }
+
+    /** Đọc một ô số có thể đang mang dấu chấm ngăn nghìn. */
+    private static long docSo(String s) {
+        String t = s == null ? "" : s.replace(".", "").replace(",", "").trim();
+        if (t.isEmpty()) {
+            return 0;
+        }
+        return Long.parseLong(t);
+    }
+
+    private void xoaMotDongTop() {
+        int r = topTable.getSelectedRow();
+        if (r < 0) {
+            note(WARN_RED, "Chưa chọn dòng nào.");
+            return;
+        }
+        r = topTable.convertRowIndexToModel(r);
+        long id = Long.parseLong(String.valueOf(topModel.getValueAt(r, 1)).trim());
+        String ten = String.valueOf(topModel.getValueAt(r, 2));
+        if (JOptionPane.showConfirmDialog(this,
+                "Xoá kỷ lục máy đấm của \"" + ten + "\"?",
+                "Xoá kỷ lục", JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+            return;
+        }
+        String loi = nro.repository.dao.TopMayDamDAO.sua(id, 0, 0);
+        napBangTop();
+        note(loi == null ? OK_GREEN : WARN_RED,
+                loi == null ? "Đã xoá kỷ lục của " + ten + "." : loi);
+    }
+
+    private void xoaToanBoTop() {
+        if (JOptionPane.showConfirmDialog(this,
+                "XOÁ TOÀN BỘ bảng xếp hạng máy đấm?\n\n"
+                + "Kỷ lục của MỌI nhân vật về 0, kể cả người đang online.\n"
+                + "Không lấy lại được.",
+                "Xoá toàn bộ bảng", JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+            return;
+        }
+        int n = nro.repository.dao.TopMayDamDAO.resetTatCa();
+        napBangTop();
+        note(n >= 0 ? OK_GREEN : WARN_RED, n >= 0
+                ? "Đã xoá bảng xếp hạng — " + n + " nhân vật về 0."
+                : "Không xoá được — xem log máy chủ.");
+    }
+
     // ---------------------------------------------------------------- nhiệm vụ
     private static final int COT_B_STT = 0;
     private static final int COT_B_TEN = 1;
