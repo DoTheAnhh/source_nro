@@ -285,7 +285,92 @@ public class UseItem {
         }
     }
 
+    /**
+     * Cửa vào của mọi lần bấm dùng đồ, có <b>chờ hết hiệu lực</b>.
+     *
+     * <h2>Vấn đề</h2>
+     *
+     * <p>"Dùng nhiều" ở hành trang gửi lên mỗi phần tư giây một lần. Với món ăn
+     * liền (đậu thần, ngọc) thì đúng. Với món mở ra một <b>khoảng hiệu lực</b> —
+     * bổ huyết, bổ khí, cuồng nộ, bùa x2 tiềm năng đệ — thì bốn tám cái bay hết
+     * trong mười hai giây mà người chơi chỉ hưởng đúng một lượt: lần dùng sau đè
+     * lên lần trước, hoặc bị từ chối rồi mất luôn.</p>
+     *
+     * <h2>Cách chờ mà không cần bảng liệt kê</h2>
+     *
+     * <p>Không đi liệt kê "món nào có thời hạn" — hiệu ứng có thời hạn nằm rải ở
+     * hàng chục chỗ và bảng ấy chắc chắn thiếu. Thay vào đó xoá
+     * {@code mocHieuUngVuaDat} trước khi dùng rồi xem sau khi dùng nó có được
+     * đặt không: {@code ItemTimeService.sendItemTime} là cửa chung mà <b>mọi</b>
+     * hiệu ứng có thời hạn đều đi qua để báo cho client.</p>
+     *
+     * <p>Có thời hạn thì những lần bấm tiếp theo <b>xếp hàng</b> chứ không tiêu
+     * món: {@code Player.update} sẽ tự dùng tiếp khi hết giờ. Không có thời hạn
+     * thì chạy y như trước, không chậm đi một nhịp nào.</p>
+     */
     private void useItem(Player pl, Item item, int indexBag) {
+        if (pl != null && item != null && item.isNotNullItem()
+                && pl.choDungSoLan > 0 && pl.choDungTemplate == item.template.id
+                && System.currentTimeMillis() < pl.choDungToi) {
+            // Dang cho luot truoc het hieu luc: xep hang, dung tieu mon.
+            pl.choDungSoLan++;
+            long con = (pl.choDungToi - System.currentTimeMillis() + 999) / 1000;
+            Service.gI().sendThongBao(pl, "Đang còn hiệu lực " + con
+                    + " giây — sẽ tự dùng tiếp, xếp hàng " + pl.choDungSoLan + " lượt.");
+            return;
+        }
+        long truoc = pl == null ? 0 : pl.mocHieuUngVuaDat;
+        if (pl != null) {
+            pl.mocHieuUngVuaDat = 0;
+        }
+        dungMonThat(pl, item, indexBag);
+        if (pl == null || item == null || item.template == null) {
+            return;
+        }
+        if (pl.mocHieuUngVuaDat > System.currentTimeMillis()) {
+            pl.choDungTemplate = item.template.id;
+            pl.choDungToi = pl.mocHieuUngVuaDat;
+            if (pl.choDungSoLan > 0) {
+                pl.choDungSoLan--;
+            }
+        } else {
+            pl.mocHieuUngVuaDat = truoc;
+            pl.choDungTemplate = -1;
+            pl.choDungSoLan = 0;
+            pl.choDungToi = 0;
+        }
+    }
+
+    /**
+     * Dùng tiếp một lượt đang xếp hàng — gọi từ {@code Player.update}.
+     *
+     * <p>Tìm lại món <b>theo mã mẫu</b> chứ không nhớ chỉ số ô: hành trang xê
+     * dịch sau mỗi lần dùng, nên nhớ ô cũ là có lúc dùng nhầm sang món khác.</p>
+     */
+    public void chayChoDung(Player pl) {
+        if (pl == null || pl.choDungSoLan <= 0 || pl.choDungTemplate < 0) {
+            return;
+        }
+        if (System.currentTimeMillis() < pl.choDungToi) {
+            return;
+        }
+        Item mon = InventoryService.gI().findItemBag(pl, pl.choDungTemplate);
+        if (mon == null || !mon.isNotNullItem() || mon.quantity < 1) {
+            pl.choDungSoLan = 0;
+            pl.choDungTemplate = -1;
+            return;
+        }
+        int o = pl.inventory.itemsBag.indexOf(mon);
+        if (o < 0) {
+            pl.choDungSoLan = 0;
+            pl.choDungTemplate = -1;
+            return;
+        }
+        useItem(pl, mon, o);
+    }
+
+    private void dungMonThat(Player pl, Item item, int indexBag) {
+
         if (pl.baovetaikhoan) {
             Service.gI().sendThongBao(pl, "Chức năng bảo vệ đã được bật. Bạn vui lòng kiểm tra lại");
             return;

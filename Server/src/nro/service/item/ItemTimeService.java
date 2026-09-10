@@ -719,6 +719,14 @@ public class ItemTimeService {
     }
 
     public void sendItemTime(Player player, int itemId, int time) {
+        // Ghi lai moc ket thuc cua hieu ung vua dat. Xem Player.mocHieuUngVuaDat
+        // de biet vi sao lai ghi o day chu khong liet ke tung mon.
+        if (player != null && time > 0) {
+            long het = System.currentTimeMillis() + time * 1000L;
+            if (het > player.mocHieuUngVuaDat) {
+                player.mocHieuUngVuaDat = het;
+            }
+        }
         Message msg;
         try {
             msg = new Message(-106);

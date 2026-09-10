@@ -358,6 +358,27 @@ public class Player implements Runnable {
      */
     public nro.service.fun.ChangeMapService.YeuCauDoiMap yeuCauDoiMapDangCho;
 
+    /**
+     * Mốc kết thúc của hiệu ứng có thời hạn <b>vừa được đặt</b>, mili giây.
+     *
+     * <p>{@code ItemTimeService.sendItemTime} ghi vào đây mỗi lần nó báo cho
+     * client một hiệu ứng còn bao lâu. Nhờ thế {@code UseItem} biết được món vừa
+     * dùng có mở ra một khoảng hiệu lực hay không mà <b>không cần một bảng liệt
+     * kê từng món</b> — thứ chắc chắn sẽ thiếu, vì hiệu ứng có thời hạn nằm rải
+     * ở hàng chục chỗ khác nhau.</p>
+     */
+    public long mocHieuUngVuaDat;
+
+    /** Món đang được dùng nhiều và phải chờ hết hiệu lực. {@code -1} là không. */
+    public int choDungTemplate = -1;
+
+    /** Còn bao nhiêu lần chờ dùng tiếp. */
+    public int choDungSoLan;
+
+    /** Sớm nhất lúc nào được dùng lần kế tiếp. */
+    public long choDungToi;
+
+
     // ------------------------------------------------------------------
     //  Gộp gói tin cho những việc làm HÀNG LOẠT
     // ------------------------------------------------------------------
@@ -1257,6 +1278,8 @@ public class Player implements Runnable {
                 capNhatHaoQuangNeuDoi();
                 // Tu phat no: gong du gio thi no, khong cho cu bam thu hai.
                 nro.service.skill.SkillService.gI().kiemTraGongTuSat(this);
+                // Dung nhieu: luot dang xep hang cho het hieu luc.
+                nro.service.fun.UseItem.gI().chayChoDung(this);
                 if (this.zone != null || (!this.isPl() && this.zone == null)) {
                     if (itemTime != null) {
                         itemTime.update();
