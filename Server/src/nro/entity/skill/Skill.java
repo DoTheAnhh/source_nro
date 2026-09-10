@@ -48,7 +48,20 @@ public class Skill {
     public int coolDown;
 
     public long lastTimeUseThisSkill;
-    
+
+    /**
+     * Mốc sớm nhất được dùng lại chiêu này — <b>đồng hồ ảo</b> của thùng nhịp.
+     *
+     * <p>Khác {@link #lastTimeUseThisSkill} ở chỗ nó không phải "lần cuối đã
+     * đánh" mà là "lần tới được phép đánh". Mỗi đòn ăn được đẩy nó lên đúng một
+     * vòng hồi chiêu tính từ <b>mốc cũ</b>, chứ không phải từ lúc gói tới. Nhờ
+     * thế một chùm gói dồn (mạng vấp rồi thông) vẫn ăn đủ, mà nhịp đánh trung
+     * bình dài hạn vẫn đúng bằng hồi chiêu.</p>
+     *
+     * <p>Chỉ dùng cho chiêu đánh liên tục — xem {@code SkillService}.</p>
+     */
+    public long mocSanSang;
+
     public long lastTimeUseThisSkillbot;
 
     public int dx;

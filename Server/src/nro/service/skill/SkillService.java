@@ -1697,12 +1697,63 @@ public class SkillService {
         }
     }
 
+    /**
+     * Chiêu <b>đánh liên tục</b> — giữ nút là đánh mãi, không phải bấm từng lần.
+     *
+     * <p>Chỉ những chiêu này chạy theo thùng nhịp. Chiêu bấm từng lần vẫn dùng
+     * cổng cũ: chúng không có nhịp đều để mà dồn, và nới tay cho chúng là nới
+     * luôn cho choáng, trói, thôi miên — những thứ đáng bị siết chặt.</p>
+     */
+    private static boolean laChieuDanhLienTuc(int idChieu) {
+        switch (idChieu) {
+            case Skill.DRAGON:
+            case Skill.KAMEJOKO:
+            case Skill.DEMON:
+            case Skill.MASENKO:
+            case Skill.GALICK:
+            case Skill.ANTOMIC:
+            case Skill.LIEN_HOAN:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Cổng hồi chiêu.
+     *
+     * <h2>Vì sao chiêu đánh liên tục phải đi đường khác</h2>
+     *
+     * <p>Cổng cũ hỏi "lần đánh trước cách đây đã đủ lâu chưa". Câu hỏi đó
+     * <b>không có trí nhớ</b>: gói nào tới sớm hơn mốc là mất hẳn, và mốc thì
+     * vẫn đứng nguyên ở lần đánh cuối <i>ăn được</i>. Mạng vấp một nhịp rồi
+     * thông lại là hai gói tới sát nhau — gói sau chết, dù tính cả quãng dừng
+     * thì người chơi vẫn đang đánh chậm hơn hồi chiêu. Client đã chạy hoạt ảnh
+     * đấm rồi, nên nhìn ra đúng cảnh "đấm mà không mất máu", và chỉ thỉnh
+     * thoảng, không tài nào tả lại được.</p>
+     *
+     * <p>Tàn sát không dính vì nó gọi thẳng {@code mob.injured}, không qua cổng
+     * này — đó là lý do "bật tàn sát thì đòn nào cũng tính".</p>
+     *
+     * <p>Thùng nhịp thì có trí nhớ. {@code mocSanSang} là "lần tới được phép
+     * đánh"; mỗi đòn ăn được đẩy nó lên một vòng hồi chiêu tính từ <b>mốc
+     * cũ</b>. Gói tới sớm vẫn ăn, chỉ là nó tiêu trước phần của lượt sau. Nhịp
+     * trung bình vì thế đúng bằng hồi chiêu — chặt hơn cổng cũ, vốn cho đánh
+     * đều đặn nhanh hơn {@link #NOI_HOI_CHIEU_MS} mili giây mỗi đòn.</p>
+     */
     public boolean canUseSkillWithCooldown(Player player) {
-        int cho = player.playerSkill.skillSelect.coolDown - NOI_HOI_CHIEU_MS;
+        Skill sk = player.playerSkill.skillSelect;
+        if (sk == null) {
+            return false;
+        }
+        if (sk.template != null && laChieuDanhLienTuc(sk.template.id)) {
+            return System.currentTimeMillis() >= sk.mocSanSang - NOI_HOI_CHIEU_MS;
+        }
+        int cho = sk.coolDown - NOI_HOI_CHIEU_MS;
         if (cho < 0) {
             cho = 0;
         }
-        return Util.canDoWithTime(player.playerSkill.skillSelect.lastTimeUseThisSkill, cho);
+        return Util.canDoWithTime(sk.lastTimeUseThisSkill, cho);
     }
 
     public void affterUseSkill(Player player, int skillId) {
@@ -1863,6 +1914,52 @@ public class SkillService {
         if (subTimeParamVip != 0) {
             EffectSkillService.gI().setIntrinsicVip(player, skillId, coolDown, lastTimeUseSkill);
         }
+        dayThungNhip(player.playerSkill.skillSelect, coolDown,
+                subTimeParam + subTimeParamVip, daLamMoi);
+    }
+
+    /**
+     * Đẩy đồng hồ ảo của thùng nhịp lên một vòng, sau một đòn ăn được.
+     *
+     * <h2>Hồi chiêu thật, không phải hồi chiêu ghi trong bảng</h2>
+     *
+     * <p>Nội tại và set kích hoạt giảm hồi chiêu theo phần trăm. Bản cũ chỉ
+     * <b>báo cho client</b> phần giảm đó (bằng cách lùi mốc gửi đi), còn mốc
+     * chặn ở máy chủ vẫn để nguyên {@code now - 1} — tức là máy chủ vẫn bắt chờ
+     * đủ hồi chiêu gốc. Người chơi có nội tại giảm hồi chiêu vì thế đấm theo
+     * nhịp client cho phép và <b>bị máy chủ bỏ đều đặn</b>, không phải thỉnh
+     * thoảng nữa. Thùng nhịp tính theo hồi chiêu đã trừ, nên hai bên khớp
+     * nhau.</p>
+     *
+     * <p>Mốc bị kéo lùi không quá một vòng ({@code bayGio - hoiThat}): nghỉ tay
+     * cả phút cũng chỉ dành dụm được đúng một đòn, không tích thành một tràng.</p>
+     *
+     * @param giam    tổng phần trăm giảm hồi chiêu, đã cộng cả nội tại lẫn set
+     * @param lamMoi  set vừa "làm mới" — hồi chiêu coi như xong ngay
+     */
+    private void dayThungNhip(Skill sk, int coolDown, int giam, boolean lamMoi) {
+        if (sk == null || sk.template == null || !laChieuDanhLienTuc(sk.template.id)) {
+            return;
+        }
+        long bayGio = System.currentTimeMillis();
+        if (lamMoi) {
+            sk.mocSanSang = bayGio;
+            return;
+        }
+        if (giam < 0) {
+            giam = 0;
+        } else if (giam > 100) {
+            giam = 100;
+        }
+        long hoiThat = coolDown - (long) coolDown * giam / 100;
+        if (hoiThat < 0) {
+            hoiThat = 0;
+        }
+        long sanNo = bayGio - hoiThat;
+        if (sk.mocSanSang < sanNo) {
+            sk.mocSanSang = sanNo;
+        }
+        sk.mocSanSang += hoiThat;
     }
 
     private boolean canHsPlayer(Player player, Player plTarget) {
