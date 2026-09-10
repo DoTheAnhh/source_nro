@@ -233,8 +233,17 @@ public class EpSaoTrangBi {
         );
     }
 
+    /**
+     * Ép một viên sao pha lê vào ô sao của trang bị.
+     *
+     * <p>Mọi đường từ chối đều nói ra lý do. Trước đây ba chỗ dưới đây
+     * {@code return;} trong im lặng, và người chơi bấm nút thì không có gì xảy
+     * ra — nhìn ra là nút hỏng chứ không phải điều kiện chưa đủ.</p>
+     */
     public static void epSaoTrangBi(Player player) {
         if (player.combine.itemsCombine.size() != 2) {
+            Service.gI().sendThongBao(player,
+                    "Cần đúng 1 trang bị có lỗ sao và 1 viên sao pha lê trong ô.");
             return;
         }
 
@@ -253,14 +262,27 @@ public class EpSaoTrangBi {
         }
 
         if (trangBi == null || !trangBi.isNotNullItem() || daPhaLe == null || !daPhaLe.isNotNullItem()) {
+            Service.gI().sendThongBao(player,
+                    "Trang bị hoặc viên sao pha lê không hợp lệ.");
             return;
         }
 
         int star = trangBi.getOptionParam(102);
         int starEmpty = trangBi.getOptionParam(107);
 
-        if (star >= TOI_DA_SAO || star >= starEmpty
-                || player.inventory.getGemAndRuby() < getGem(star)) {
+        if (star >= TOI_DA_SAO) {
+            Service.gI().sendThongBao(player, "Trang bị đã đủ " + TOI_DA_SAO
+                    + " sao pha lê, không ép thêm được.");
+            return;
+        }
+        if (star >= starEmpty) {
+            Service.gI().sendThongBao(player, "Trang bị chỉ có " + starEmpty
+                    + " lỗ sao, đã ép đủ. Cường hoá thêm lỗ rồi hãy ép tiếp.");
+            return;
+        }
+        if (player.inventory.getGemAndRuby() < getGem(star)) {
+            Service.gI().sendThongBao(player, "Không đủ ngọc, còn thiếu "
+                    + (getGem(star) - player.inventory.getGemAndRuby()) + " ngọc.");
             return;
         }
 

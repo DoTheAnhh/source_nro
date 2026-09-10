@@ -127,8 +127,23 @@ public class NangCapVatPham {
                 text.toString(), "Nâng cấp", "Đóng");
     }
 
+    /**
+     * Nâng cấp trang bị bằng đá nâng cấp.
+     *
+     * <h2>Mọi đường từ chối đều nói ra lý do</h2>
+     *
+     * <p>Trước đây bảy chỗ ở đầu hàm này {@code return;} <b>trong im lặng</b>.
+     * Người chơi bấm "Nâng cấp" và không có gì xảy ra: không hiệu ứng, không
+     * chữ, không tiếng. Nhìn ra là nút hỏng.</p>
+     *
+     * <p>Những chỗ ấy không phải không bao giờ xảy ra — {@code showInfoCombine}
+     * kiểm trước rồi mới hiện nút, nhưng giữa lúc xem và lúc bấm thì mọi thứ
+     * đều đổi được: dùng mất viên đá, tiêu mất vàng, kéo món đồ ra khỏi ô.</p>
+     */
     public static void nangCapVatPham(Player player, boolean useDBV) {
         if (player.combine.itemsCombine.size() != 2) {
+            Service.gI().sendThongBao(player,
+                    "Cần đúng 1 trang bị và 1 loại đá nâng cấp trong ô.");
             return;
         }
 
@@ -142,6 +157,8 @@ public class NangCapVatPham {
             }
         }
         if (trangBi == null || daNangCap == null || !trangBi.canNangCapWithNDC(daNangCap)) {
+            Service.gI().sendThongBao(player,
+                    "Trang bị và đá nâng cấp không khớp nhau.");
             return;
         }
         Item daBaoVe = InventoryService.gI().findItemBag(player, 987);
@@ -151,10 +168,24 @@ public class NangCapVatPham {
         int da = getDa(trangBi);
 
         boolean canUseDBV = level == 2 || level == 4 || level == 6 || level == 7;
-        if (daNangCap.quantity < da || player.inventory.gold < gold || level >= CombineService.MAX_LEVEL_ITEM) {
+        if (level >= CombineService.MAX_LEVEL_ITEM) {
+            Service.gI().sendThongBao(player, "Món này đã đạt cấp tối đa (+"
+                    + CombineService.MAX_LEVEL_ITEM + ").");
+            return;
+        }
+        if (daNangCap.quantity < da) {
+            Service.gI().sendThongBao(player, "Không đủ " + daNangCap.template.name
+                    + " — cần " + da + ", đang có " + daNangCap.quantity + ".");
+            return;
+        }
+        if (player.inventory.gold < gold) {
+            Service.gI().sendThongBao(player, "Không đủ vàng, còn thiếu "
+                    + Util.soCham(gold - player.inventory.gold) + " vàng.");
             return;
         }
         if (canUseDBV && useDBV && daBaoVe == null && daBaoVeKhoa == null) {
+            Service.gI().sendThongBao(player,
+                    "Không có Đá Bảo Vệ trong hành trang.");
             return;
         }
         if (Util.isTrue(getRatio(level), 100)) {
