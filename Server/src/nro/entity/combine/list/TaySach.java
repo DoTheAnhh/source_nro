@@ -71,6 +71,35 @@ public class TaySach {
                 "Đồng ý", "Từ chối");
     }
 
+    /**
+     * Những dòng <b>không phải chỉ số giám định</b> — tẩy không được đụng vào.
+     *
+     * <h2>Vì sao đổi từ danh sách trắng sang danh sách đen</h2>
+     *
+     * <p>Bản trước lấy tập tẩy được từ <b>kho chỉ số trên panel</b>. Nghe hợp
+     * lý, nhưng kho ấy <i>trôi</i>: quản trị viên đổi một chỉ số, bỏ một dòng,
+     * hay gieo lại kho bằng bộ khác — thì những cuốn sách đã giám định từ trước
+     * mang chỉ số <b>không còn nằm trong kho</b>. Tẩy nhìn vào kho, không nhận
+     * ra dòng nào, và cuốn sách thành không tẩy được.</p>
+     *
+     * <p>Nay lật ngược: giữ lại đúng mấy dòng <b>thuộc về cấu trúc cuốn sách</b>
+     * và tẩy tất cả phần còn lại. Một cuốn sách chỉ gồm hai thứ — mấy dòng cấu
+     * trúc này, và các chỉ số do giám định gắn vào — nên tẩy sạch phần còn lại
+     * luôn đúng, bất kể kho hôm nay ra sao.</p>
+     */
+    private static final Set<Integer> DONG_GIU_LAI = new HashSet<>(
+            java.util.Arrays.asList(
+                    SachTuyetKyDAO.OPTION_CHUA_GIAM_DINH, // 217 — chính nó
+                    219,   // số lượt tẩy còn lại
+                    21,    // yêu cầu sức mạnh
+                    30,    // không thể giao dịch
+                    31,    // số lượng
+                    72,    // cấp
+                    93,    // hạn sử dụng
+                    218,   // dòng riêng của sách, không phải chỉ số giám định
+                    220,   // hoàn thành %
+                    221));
+
     public static void taySach(Player player) {
         if (player.combine.itemsCombine.size() != 1) {
             Service.gI().sendServerMessage(player, "Cần đúng một Sách Tuyệt Kỹ để tẩy.");
@@ -85,20 +114,14 @@ public class TaySach {
             Service.gI().sendServerMessage(player, "Cuốn này đã hết lượt tẩy.");
             return;
         }
-        if (sachTuyetKy.isHaveOption(SachTuyetKyDAO.OPTION_CHUA_GIAM_DINH)) {
-            Service.gI().sendServerMessage(player,
-                    "Giám định hết các dòng rồi hãy tẩy.");
-            return;
-        }
 
-        Set<Integer> kho = idChiSoTayDuoc();
         int daTay = 0;
         for (int i = 0; i < sachTuyetKy.itemOptions.size(); i++) {
             ItemOption io = sachTuyetKy.itemOptions.get(i);
             if (io == null || io.optionTemplate == null) {
                 continue;
             }
-            if (kho.contains(io.optionTemplate.id)) {
+            if (!DONG_GIU_LAI.contains(io.optionTemplate.id)) {
                 sachTuyetKy.itemOptions.set(i,
                         new ItemOption(SachTuyetKyDAO.OPTION_CHUA_GIAM_DINH, 0));
                 daTay++;
@@ -110,7 +133,7 @@ public class TaySach {
         // Day chinh la loi cu: no tru truoc, xet sau — hoac khong xet gi ca.
         if (daTay == 0) {
             Service.gI().sendServerMessage(player,
-                    "Cuốn này không có dòng nào tẩy được, chưa trừ lượt tẩy.");
+                    "Cuốn này chưa có dòng nào đã giám định, chưa trừ lượt tẩy.");
             return;
         }
 
@@ -123,32 +146,15 @@ public class TaySach {
         CombineService.gI().reOpenItemCombine(player);
     }
 
-    /**
-     * Tập id chỉ số mà giám định có thể bốc ra — tức tập tẩy được.
-     *
-     * <p>Đọc từ kho trên panel, kể cả dòng đang tắt: một chỉ số vừa bị tắt vẫn
-     * còn nằm trên những cuốn sách giám định từ trước, và người chơi phải tẩy
-     * được nó.</p>
-     */
-    private static Set<Integer> idChiSoTayDuoc() {
-        Set<Integer> ids = new HashSet<>();
-        for (SachTuyetKyDAO.ChiSo cs : SachTuyetKyDAO.danhSachChiSo()) {
-            if (cs != null) {
-                ids.add(cs.optionId);
-            }
-        }
-        return ids;
-    }
 
     private static int demDongTayDuoc(Item sach) {
         if (sach == null || sach.itemOptions == null) {
             return 0;
         }
-        Set<Integer> kho = idChiSoTayDuoc();
         int n = 0;
         for (ItemOption io : sach.itemOptions) {
             if (io != null && io.optionTemplate != null
-                    && kho.contains(io.optionTemplate.id)) {
+                    && !DONG_GIU_LAI.contains(io.optionTemplate.id)) {
                 n++;
             }
         }
