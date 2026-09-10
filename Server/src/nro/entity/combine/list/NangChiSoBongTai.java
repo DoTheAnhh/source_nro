@@ -252,8 +252,7 @@ public class NangChiSoBongTai {
         if (it == null || !it.isNotNullItem()) {
             return 0;
         }
-        int ao = it.getOptionParam(31);
-        return ao > 0 ? ao : it.quantity;
+        return InventoryService.soLuongThat(it);
     }
 
     /** Trừ nguyên liệu, vào đúng chỗ món đó đang giữ số lượng. */
@@ -261,10 +260,8 @@ public class NangChiSoBongTai {
         if (it == null || !it.isNotNullItem() || so <= 0) {
             return;
         }
-        if (it.getOptionParam(31) > 0) {
-            it.subOptionParam(31, so);
-        } else {
-            InventoryService.gI().subQuantityItemsBag(player, it, so);
-        }
+        // subQuantityItemsBag da tu biet mon nay giu so luong o dau — o dong
+        // chi so "So luong #" hay o quantity.
+        InventoryService.gI().subQuantityItemsBag(player, it, so);
     }
 }

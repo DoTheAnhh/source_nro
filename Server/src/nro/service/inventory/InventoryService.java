@@ -452,16 +452,66 @@ public class InventoryService {
         subQuantityItem(player.clan.itemsBoxClan, item, quantity);
     }
 
+    /**
+     * Chỉ số giữ <b>số lượng thật</b> của những món gộp cả chồng vào một ô.
+     *
+     * <p>Tên của nó trong bảng là {@code "Số lượng #"}.</p>
+     */
+    public static final int OPTION_SO_LUONG = 31;
+
+    /**
+     * Số lượng thật của một món.
+     *
+     * <h2>Vì sao không đọc thẳng {@code quantity}</h2>
+     *
+     * <p>Có những món gộp cả chồng vào <b>một ô</b> hành trang và ghi số lượng
+     * vào dòng chỉ số {@code "Số lượng #"} thay vì vào {@code quantity} — đá
+     * xanh lam, mảnh hồn bông tai, mảnh vỡ bông tai đều thế. Với chúng
+     * {@code quantity} luôn bằng <b>1</b>, nên đọc thẳng con số ấy là thấy "còn
+     * 1" trong khi trong ô đang có một nghìn.</p>
+     */
+    public static int soLuongThat(Item item) {
+        if (item == null || !item.isNotNullItem()) {
+            return 0;
+        }
+        int trong = item.getOptionParam(OPTION_SO_LUONG);
+        return trong > 0 ? trong : item.quantity;
+    }
+
+    /**
+     * Trừ số lượng, <b>vào đúng chỗ món đó đang giữ số lượng</b>.
+     *
+     * <h2>Lỗi đã sửa</h2>
+     *
+     * <p>Bản cũ luôn trừ vào {@code quantity}. Với món gộp chồng vào một ô thì
+     * {@code quantity} bằng 1, nên trừ bao nhiêu cũng về 0 và <b>cả ô biến
+     * mất</b>: tiêu 99 mảnh mà mất sạch một nghìn. Đúng cảnh "trừ một phát hết
+     * luôn" — và nó dính mọi món có dòng "Số lượng #", không riêng bông tai.</p>
+     *
+     * <p>Nay xét dòng chỉ số trước: có thì trừ trong đó, hết mới xoá ô. Món
+     * thường vẫn đi đúng đường cũ.</p>
+     */
     public void subQuantityItem(List<Item> items, Item item, int quantity) {
-        if (item != null) {
-            for (Item it : items) {
-                if (item.equals(it)) {
+        if (item == null || quantity <= 0) {
+            return;
+        }
+        for (Item it : items) {
+            if (item.equals(it)) {
+                int trong = it.getOptionParam(OPTION_SO_LUONG);
+                if (trong > 0) {
+                    int con = trong - quantity;
+                    if (con > 0) {
+                        it.subOptionParam(OPTION_SO_LUONG, quantity);
+                    } else {
+                        this.removeItem(items, item);
+                    }
+                } else {
                     it.quantity -= quantity;
                     if (it.quantity <= 0) {
                         this.removeItem(items, item);
                     }
-                    break;
                 }
+                break;
             }
         }
     }

@@ -82,8 +82,7 @@ public class NangCapBongTai {
             return;
         }
 
-        int opSoLuong = manhVo.getOptionParam(31);
-        int quantityManhVo = (opSoLuong > 0) ? opSoLuong : manhVo.quantity;
+        int quantityManhVo = InventoryService.soLuongThat(manhVo);
 
         StringBuilder text = new StringBuilder();
 
@@ -191,8 +190,7 @@ public class NangCapBongTai {
             return;
         }
 
-        int opSoLuong = manhVo.getOptionParam(31);
-        int quantityManhVo = (opSoLuong > 0) ? opSoLuong : manhVo.quantity;
+        int quantityManhVo = InventoryService.soLuongThat(manhVo);
 
         if (type == 1) {
             // BT1 -> BT2
@@ -218,11 +216,8 @@ public class NangCapBongTai {
                 Item btc2 = ItemService.gI().createNewItem((short) BT2);
                 btc2.itemOptions.add(new ItemOption(72, 2));
                 InventoryService.gI().subQuantityItemsBag(player, bongTai, 1);
-                if (opSoLuong > 0) {
-                    manhVo.subOptionParam(31, 99);
-                } else {
-                    InventoryService.gI().subQuantityItemsBag(player, manhVo, 99);
-                }
+                // subQuantityItemsBag da tu biet mon nay giu so luong o dau.
+                InventoryService.gI().subQuantityItemsBag(player, manhVo, 99);
                 InventoryService.gI().addItemBag(player, btc2);
                 nro.service.badges.BadgesTaskService.tangTheoLoai(player,
                         nro.entity.badges.BadgesTaskTemplate.NANG_BONG_TAI, -1, 1);
@@ -231,11 +226,8 @@ public class NangCapBongTai {
                         "Nâng thành công! Bông tai Porata [+2].");
             } else {
                 CombineService.gI().sendEffectFailCombine(player);
-                if (opSoLuong > 0) {
-                    manhVo.subOptionParam(31, 99);
-                } else {
-                    InventoryService.gI().subQuantityItemsBag(player, manhVo, 99);
-                }
+                // subQuantityItemsBag da tu biet mon nay giu so luong o dau.
+                InventoryService.gI().subQuantityItemsBag(player, manhVo, 99);
                 Service.gI().sendThongBao(player,
                         "Nâng thất bại, mất 99 Mảnh vỡ bông tai.");
             }
@@ -264,11 +256,7 @@ public class NangCapBongTai {
             if (Util.isTrue(10, 100)) {
                 // ✅ Nâng cấp tại chỗ: chỉ đổi id template từ BT2 sang BT3, giữ nguyên option
                 bongTai.template = ItemService.gI().getTemplate((short) BT3);
-                if (opSoLuong > 0) {
-                    manhVo.subOptionParam(31, 999);
-                } else {
-                    InventoryService.gI().subQuantityItemsBag(player, manhVo, 999);
-                }
+                InventoryService.gI().subQuantityItemsBag(player, manhVo, 999);
                 nro.service.badges.BadgesTaskService.tangTheoLoai(player,
                         nro.entity.badges.BadgesTaskTemplate.NANG_BONG_TAI, -1, 1);
                 CombineService.gI().sendEffectSuccessCombine(player);
@@ -276,11 +264,7 @@ public class NangCapBongTai {
                         "Nâng thành công! Bông tai Porata [+3].");
             } else {
                 CombineService.gI().sendEffectFailCombine(player);
-                if (opSoLuong > 0) {
-                    manhVo.subOptionParam(31, 999);
-                } else {
-                    InventoryService.gI().subQuantityItemsBag(player, manhVo, 999);
-                }
+                InventoryService.gI().subQuantityItemsBag(player, manhVo, 999);
                 Service.gI().sendThongBao(player,
                         "Nâng thất bại, mất 999 Mảnh bông tai cấp 3.");
             }
