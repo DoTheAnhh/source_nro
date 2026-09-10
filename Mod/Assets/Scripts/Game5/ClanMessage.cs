@@ -74,10 +74,8 @@ namespace Game5
     		{
     			mFont2 = mFont.tahoma_7b_green;
     		}
-    		else if (role == 2)
-    		{
-    			mFont2 = mFont.tahoma_7b_green2;
-    		}
+    		// Thanh vien thuong: giu mau den mac dinh. Chi bang chu do
+    		// va pho bang xanh la, de nhin mot cai la biet ai la ai.
     		if (type == 0)
     		{
     			mFont2.drawString(g, playerName, x + 3, y + 1, 0);

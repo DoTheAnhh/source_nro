@@ -5867,10 +5867,7 @@ namespace Game1
                     {
                         mFont2 = mFont.tahoma_7b_green;
                     }
-                    else if (member.role == 2)
-                    {
-                        mFont2 = mFont.tahoma_7b_green2;
-                    }
+                    // Thanh vien thuong: giu mau den mac dinh.
                     mFont2.drawString(g, member.name, num6 + 5, num7, 0);
                     mFont.tahoma_7_blue.drawString(g, mResources.power + ": " + member.powerPoint, num6 + 5, num7 + 11, 0);
                     SmallImage.drawSmallImage(g, 7223, num6 + num8 - 7, num7 + 12, 0, 3);
