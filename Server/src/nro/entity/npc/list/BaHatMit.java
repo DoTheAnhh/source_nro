@@ -298,15 +298,23 @@ public class BaHatMit extends Npc {
                         case ConstNpc.MENU_START_COMBINE: {
                             switch (player.combine.typeCombine) {
                                 case CombineService.PHA_LE_HOA_TRANG_BI: {
+                                    // Bon muc, khop dung thu tu nhan nut trong
+                                    // PhaLeHoaTrangBi.showInfoCombine:
+                                    // x100, x50, x10, x1, Tu choi.
                                     switch (select) {
                                         case 0:
                                             CombineService.gI().startCombine(player, 100);
                                             break;
                                         case 1:
-                                            CombineService.gI().startCombine(player, 10);
+                                            CombineService.gI().startCombine(player, 50);
                                             break;
                                         case 2:
-                                            CombineService.gI().startCombine(player);
+                                            CombineService.gI().startCombine(player, 10);
+                                            break;
+                                        case 3:
+                                            CombineService.gI().startCombine(player, 1);
+                                            break;
+                                        default:
                                             break;
                                     }
                                     break;

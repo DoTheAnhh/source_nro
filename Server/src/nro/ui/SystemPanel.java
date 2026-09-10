@@ -72,6 +72,7 @@ public class SystemPanel extends JPanel {
         tabs.addTab("Boss", buildBossTongHop());
         tabs.addTab("Đồ rơi từ quái", buildDoRoiTongHop());
         tabs.addTab("Tỉ lệ", buildTiLeTab());
+        tabs.addTab("Tỉ lệ nâng sao", buildTiLeSaoTab());
         tabs.addTab("Set kích hoạt", buildSetTab());
         tabs.addTab("Kỹ năng", buildKyNangTab());
         tabs.addTab("Hào quang", buildAuraTab());
@@ -3388,6 +3389,27 @@ public class SystemPanel extends JPanel {
     };
     private final JTable capsuleTable = new JTable(capsuleModel);
 
+    /**
+     * Bảng tỉ lệ nâng sao pha lê — sửa thẳng trong ô.
+     *
+     * <p>Tám dòng cố định, không thêm không xoá, nên không cần hộp thoại riêng
+     * như các tab khác: gõ thẳng vào ô rồi bấm Lưu là nhanh nhất.</p>
+     */
+    private final DefaultTableModel saoModel = new DefaultTableModel(
+            new Object[]{"Bậc", "Tỉ lệ %", "Vàng mỗi lần", "Ngọc mỗi lần",
+                "Bật", "Ghi chú"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return c > 0;   // cot "Bac" la nhan, khong sua
+        }
+
+        @Override
+        public Class<?> getColumnClass(int c) {
+            return c == 4 ? Boolean.class : String.class;
+        }
+    };
+    private final JTable saoTable = new JTable(saoModel);
+
     // Chi so cot cua bang "Ban do nhanh". Dat ten thay vi go so: chen them mot
     // cot vao giua la moi con so dich di, ma loi kieu do khong bao gi ca.
     private static final int COT_MN_ID = 0;
@@ -5038,6 +5060,110 @@ public class SystemPanel extends JPanel {
      * <p>Bảng rỗng thì DAO tự gieo lại đúng danh sách cũ, nên mở tab lần đầu
      * đã thấy sẵn 15 địa điểm gốc để sửa dần, không phải nhập tay từ đầu.</p>
      */
+    /**
+     * Tab "Tỉ lệ nâng sao" — tỉ lệ, vàng và ngọc của từng bậc pha lê hoá.
+     */
+    private JComponent buildTiLeSaoTab() {
+        JPanel root = new JPanel(new BorderLayout(0, 8));
+        root.setOpaque(false);
+        root.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        saoTable.setRowHeight(26);
+        saoTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        int[] w = {110, 90, 160, 110, 60, 400};
+        for (int i = 0; i < saoTable.getColumnCount() && i < w.length; i++) {
+            saoTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
+        }
+
+        JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        nut.setOpaque(false);
+        nut.add(button("Lưu bảng", OK_GREEN, e -> luuBangSao()));
+        nut.add(button("Tải lại", GREY, e -> napBangSao()));
+        nut.add(button("Về mặc định", new Color(120, 90, 160), e -> {
+            String loi = nro.repository.dao.TiLeSaoDAO.datLaiMacDinh();
+            napBangSao();
+            note(loi == null ? OK_GREEN : WARN_RED,
+                    loi == null ? "Đã trả bảng về mặc định." : loi);
+        }));
+
+        root.add(nhan("Tỉ lệ đập sao pha lê lên trang bị, mỗi bậc một dòng. "
+                + "<b>Tỉ lệ là phần trăm THẬT</b> — gõ <code>70</code> là bảy mươi "
+                + "phần trăm, gõ <code>0.25</code> là một phần bốn trăm. "
+                + "<br><br>"
+                + "<b>Trước bản này con số chạy chỉ bằng một phần mười con số hiện ra:</b> "
+                + "bảng chọn trong game in \"Tỉ lệ thành công: 70%\" nhưng phép bốc "
+                + "lại tính trên một nghìn, nên thật ra là 7%. Bậc ★7 → ★8 ghi 0.25 "
+                + "hoá ra <b>0,025%</b> — trung bình bốn nghìn lần mới lên một cái, "
+                + "đúng như đã gặp. Nay hai con số ấy là một."
+                + "<br><br>"
+                + "Tắt một bậc thì bậc đó <b>không nâng được nữa</b>, và người chơi "
+                + "nhận được câu báo rõ chứ không phải bấm mãi không lên. "
+                + "Sửa xong bấm Lưu là có hiệu lực ngay."), BorderLayout.NORTH);
+        root.add(ServerGuiUtils.cuon(saoTable), BorderLayout.CENTER);
+        root.add(nut, BorderLayout.SOUTH);
+        napBangSao();
+        return root;
+    }
+
+    private void napBangSao() {
+        // Dung sua o dang go do di khi nguoi dung vua bam Tai lai.
+        if (saoTable.isEditing()) {
+            saoTable.getCellEditor().stopCellEditing();
+        }
+        saoModel.setRowCount(0);
+        for (nro.repository.dao.TiLeSaoDAO.Bac b
+                : nro.repository.dao.TiLeSaoDAO.napLai()) {
+            saoModel.addRow(new Object[]{b.moTa(),
+                String.valueOf(b.tiLe), String.valueOf(b.vang),
+                String.valueOf(b.ngoc), b.bat, b.ghiChu});
+        }
+    }
+
+    private void luuBangSao() {
+        if (saoTable.isEditing()) {
+            saoTable.getCellEditor().stopCellEditing();
+        }
+        int loi = 0;
+        String loiDau = null;
+        for (int r = 0; r < saoModel.getRowCount(); r++) {
+            nro.repository.dao.TiLeSaoDAO.Bac b
+                    = new nro.repository.dao.TiLeSaoDAO.Bac();
+            b.sao = r;
+            try {
+                b.tiLe = Double.parseDouble(
+                        String.valueOf(saoModel.getValueAt(r, 1)).trim().replace(',', '.'));
+                b.vang = Long.parseLong(
+                        String.valueOf(saoModel.getValueAt(r, 2)).trim().replace(".", ""));
+                b.ngoc = Integer.parseInt(
+                        String.valueOf(saoModel.getValueAt(r, 3)).trim().replace(".", ""));
+            } catch (NumberFormatException ex) {
+                loi++;
+                if (loiDau == null) {
+                    loiDau = "Dòng ★" + r + " có ô không phải số.";
+                }
+                continue;
+            }
+            Object bat = saoModel.getValueAt(r, 4);
+            b.bat = (bat instanceof Boolean) ? (Boolean) bat : true;
+            Object gc = saoModel.getValueAt(r, 5);
+            b.ghiChu = gc == null ? "" : String.valueOf(gc);
+
+            String kq = nro.repository.dao.TiLeSaoDAO.luu(b);
+            if (kq != null) {
+                loi++;
+                if (loiDau == null) {
+                    loiDau = "Dòng ★" + r + ": " + kq;
+                }
+            }
+        }
+        napBangSao();
+        if (loi == 0) {
+            note(OK_GREEN, "Đã lưu bảng tỉ lệ nâng sao — có hiệu lực ngay.");
+        } else {
+            note(WARN_RED, loiDau + " (" + loi + " dòng không lưu được)");
+        }
+    }
+
     private JComponent buildCapsuleTab() {
         JPanel root = new JPanel(new BorderLayout(0, 8));
         root.setOpaque(false);
