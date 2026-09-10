@@ -5400,7 +5400,7 @@ namespace Game2
                     mob.xSd = mob.x;
                     mob.ySd = mob.y;
                     mob.isBoss = msg.reader().readBoolean();
-                    if (Mob.arrMobTemplate[mob.templateId].type != 0)
+                    if (mob.coMauQuai() && Mob.arrMobTemplate[mob.templateId].type != 0)
                     {
                         if (b % 3 == 0)
                         {

@@ -1235,11 +1235,49 @@ namespace Game1
     			}
     			Session_ME.gI().close();
     			Session_ME2.gI().close();
-    			screen.switchToMe();
     		}
     		catch (Exception ex)
     		{
     			Cout.println("Loi tai doResetToLoginScr " + ex.ToString());
+    		}
+    		// Doi man hinh nam RIENG mot khoi try, va la viec CUOI CUNG.
+    		//
+    		// Truoc day no la cau lenh cuoi cua khoi try o tren. Moi dong truoc
+    		// no deu pha trang thai di — xoa nhan vat, dong ket noi — nen chi
+    		// can mot dong nao do trong so ay nem loi la khong bao gio toi luot
+    		// doi man hinh, va loi bi nuot ngay tai cho.
+    		//
+    		// Nguoi choi ket lai trong GameScr voi mot nhan vat rong: mau 0/0,
+    		// nen den, nhan vat khong hien, dia hinh thi van con. Dung canh anh
+    		// chup gui ve. Va vi khong co bao loi nao, khong ai biet vi sao.
+    		try
+    		{
+    			if (screen != null)
+    			{
+    				screen.switchToMe();
+    			}
+    			else if (serverScreen != null)
+    			{
+    				serverScreen.switchToMe();
+    			}
+    			else if (loginScr != null)
+    			{
+    				loginScr.switchToMe();
+    			}
+    		}
+    		catch (Exception ex)
+    		{
+    			Cout.println("Loi khi doi man hinh o doResetToLoginScr " + ex.ToString());
+    			try
+    			{
+    				if (loginScr != null && currentScreen != loginScr)
+    				{
+    					loginScr.switchToMe();
+    				}
+    			}
+    			catch (Exception)
+    			{
+    			}
     		}
     		ServerListScreen.isAutoConect = true;
     		ServerListScreen.countDieConnect = 0;

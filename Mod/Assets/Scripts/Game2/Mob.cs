@@ -375,8 +375,40 @@ namespace Game2
     		return this is BachTuoc || this is BigBoss2 || this is BigBoss || this is NewBoss;
     	}
     
+    	/// <summary>
+    	/// May co biet con quai mang so hieu nay khong.
+    	///
+    	/// Bang mau quai duoc gui xuong luc dang nhap va giu lai theo so
+    	/// phien ban du lieu. Them quai moi tren may chu ma nguoi choi con
+    	/// giu ban bang cu la so hieu vuot qua chieu dai mang — doc thang
+    	/// vao la IndexOutOfRange.
+    	///
+    	/// Loi ay nem ra giua luc loadInfoMap dang doc goi ban do, nen ca
+    	/// luot nap ban do chet theo: thanh mau 0/0, nen den, nhan vat
+    	/// khong hien. Mot con quai la khong biet thi chi nen mat con quai
+    	/// do thoi.
+    	/// </summary>
+    	public bool coMauQuai()
+    	{
+    		return arrMobTemplate != null && templateId >= 0
+    				&& templateId < arrMobTemplate.Length
+    				&& arrMobTemplate[templateId] != null;
+    	}
+
     	public void getData()
     	{
+    		if (!coMauQuai())
+    		{
+    			// Xin lai mau tu may chu, roi thoi. Lan nap sau se co.
+    			try
+    			{
+    				Service.gI().requestModTemplate(templateId);
+    			}
+    			catch (Exception)
+    			{
+    			}
+    			return;
+    		}
     		if (arrMobTemplate[templateId].data == null)
     		{
     			arrMobTemplate[templateId].data = new EffectData();
@@ -431,6 +463,10 @@ namespace Game2
     
     	public void checkData()
     	{
+    		if (arrMobTemplate == null)
+    		{
+    			return;
+    		}
     		int num = 0;
     		for (int i = 0; i < arrMobTemplate.Length; i++)
     		{
@@ -537,6 +573,12 @@ namespace Game2
     
     	public virtual void update()
     	{
+    		// Quai khong co mau thi bo qua han: doc arrMobTemplate cua no la
+    		// nem loi moi khung hinh, va loi ay giet luon ca vong ve.
+    		if (!coMauQuai())
+    		{
+    			return;
+    		}
     		if (isMafuba)
     		{
     			return;
@@ -1432,6 +1474,12 @@ namespace Game2
     
     	public virtual void paint(mGraphics g)
     	{
+    		// Quai khong co mau thi bo qua han: doc arrMobTemplate cua no la
+    		// nem loi moi khung hinh, va loi ay giet luon ca vong ve.
+    		if (!coMauQuai())
+    		{
+    			return;
+    		}
     		if (isHide)
     		{
     			return;
