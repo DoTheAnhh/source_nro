@@ -179,6 +179,52 @@ public final class NhiemVuDAO {
         }
     }
 
+
+    /**
+     * Đổi chỗ hai bước cho nhau.
+     *
+     * <h2>Đổi NỘI DUNG chứ không đổi số thứ tự</h2>
+     *
+     * <p>Thứ tự các bước là thứ tự {@code idmain}, mà {@code idmain} là khoá
+     * chính tự tăng — đổi nó là đụng vào khoá, và mọi thứ trỏ tới nó lệch theo.
+     * Nên ở đây hoán <b>nội dung</b> của hai dòng: tên, số lượng cần, thông báo,
+     * NPC, bản đồ. Nhìn từ ngoài đúng là hai bước đã đổi chỗ, còn khoá thì đứng
+     * yên.</p>
+     *
+     * <p>Nhắc lại điều quan trọng: việc gì làm một bước tiến lên được viết cứng
+     * theo <b>số thứ tự bước</b>. Đổi chỗ hai bước là đổi luôn việc phải làm ở
+     * mỗi vị trí — dùng khi đang dựng một nhiệm vụ mới, đừng dùng trên nhiệm vụ
+     * người chơi đang chạy dở.</p>
+     */
+    public static String doiCho(int idmainA, int idmainB) {
+        if (idmainA == idmainB) {
+            return null;
+        }
+        Buoc a = null;
+        Buoc b = null;
+        for (NhiemVu nv : danhSach()) {
+            for (Buoc x : nv.buoc) {
+                if (x.idmain == idmainA) {
+                    a = x;
+                }
+                if (x.idmain == idmainB) {
+                    b = x;
+                }
+            }
+        }
+        if (a == null || b == null) {
+            return "Không tìm thấy một trong hai bước.";
+        }
+        int giuId = a.idmain;
+        a.idmain = b.idmain;
+        b.idmain = giuId;
+        String loi = luuBuoc(a);
+        if (loi != null) {
+            return loi;
+        }
+        return luuBuoc(b);
+    }
+
     /** Thêm một bước vào <b>cuối</b> một nhiệm vụ. */
     public static String themBuoc(int nhiemVuId, String ten) {
         try {

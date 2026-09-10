@@ -5467,6 +5467,8 @@ public class SystemPanel extends JPanel {
         nut.add(button("Thêm nhiệm vụ", ACCENT, e -> themNhiemVu()));
         nut.add(button("Thêm bước vào cuối", new Color(120, 90, 160),
                 e -> themBuocCuoi()));
+        nut.add(button("▲ Lên", new Color(90, 120, 170), e -> doiChoBuoc(-1)));
+        nut.add(button("▼ Xuống", new Color(90, 120, 170), e -> doiChoBuoc(1)));
         nut.add(button("Xoá bước đang chọn", WARN_RED, e -> xoaBuocDangChon()));
 
         root.add(nhan("Nhiệm vụ chính tuyến: mỗi nhiệm vụ là một dãy <b>bước</b> "
@@ -5663,6 +5665,54 @@ public class SystemPanel extends JPanel {
         napBangNhiemVuChinh();
         note(loi == null ? OK_GREEN : WARN_RED,
                 loi == null ? "Đã thêm bước vào cuối nhiệm vụ " + nv.id + "." : loi);
+    }
+
+
+    /**
+     * Đẩy bước đang chọn lên trên hoặc xuống dưới một nấc.
+     *
+     * <p>Giữ nguyên dòng đang chọn sau khi đổi, để bấm liên tục đẩy được một
+     * bước đi xa mà không phải chọn lại mỗi lần.</p>
+     *
+     * @param huong {@code -1} lên, {@code 1} xuống
+     */
+    private void doiChoBuoc(int huong) {
+        if (buocTable.isEditing()) {
+            buocTable.getCellEditor().stopCellEditing();
+        }
+        int r = buocTable.getSelectedRow();
+        if (r < 0) {
+            note(WARN_RED, "Chưa chọn bước nào.");
+            return;
+        }
+        r = buocTable.convertRowIndexToModel(r);
+        int k = r + huong;
+        if (k < 0 || k >= buocModel.getRowCount()) {
+            note(WARN_RED, huong < 0
+                    ? "Bước này đã ở trên cùng." : "Bước này đã ở dưới cùng.");
+            return;
+        }
+        int a;
+        int b;
+        try {
+            a = Integer.parseInt(oB(r, COT_B_STT));
+            b = Integer.parseInt(oB(k, COT_B_STT));
+        } catch (NumberFormatException ex) {
+            note(WARN_RED, "Dòng không có số thứ tự hợp lệ.");
+            return;
+        }
+        String loi = nro.repository.dao.NhiemVuDAO.doiCho(a, b);
+        if (loi != null) {
+            note(WARN_RED, loi);
+            return;
+        }
+        nro.repository.dao.NhiemVuDAO.napLaiVaoBoNho();
+        hienNhiemVuDangChon();
+        if (k < buocTable.getRowCount()) {
+            buocTable.setRowSelectionInterval(k, k);
+        }
+        note(OK_GREEN, "Đã đổi chỗ hai bước. Nhớ là việc phải làm ở mỗi bước "
+                + "viết cứng theo VỊ TRÍ, nên đổi chỗ là đổi luôn việc.");
     }
 
     private void xoaBuocDangChon() {
