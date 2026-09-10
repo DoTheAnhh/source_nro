@@ -6025,7 +6025,10 @@ public class SystemPanel extends JPanel {
             return;
         }
         nro.repository.dao.NhiemVuDAO.napLaiVaoBoNho();
-        hienNhiemVuDangChon();
+        // Doc lai TU CSDL chu khong ve lai tu ban nho: dsNhiemVu la ban chup
+        // luc nap bang, doi cho xong ma khong doc lai thi bang van hien thu tu
+        // cu — nhin nhu nut khong an.
+        napBangNhiemVuChinh();
         if (k < buocTable.getRowCount()) {
             buocTable.setRowSelectionInterval(k, k);
         }

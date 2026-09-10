@@ -289,8 +289,60 @@ public final class NhiemVuDAO {
         }
         Manager.TASKS.clear();
         Manager.TASKS.addAll(moi);
+        capNhatNguoiDangOnline();
         Logger.success("CONFIG", "Đã nạp lại " + moi.size() + " nhiệm vụ chính");
         return null;
+    }
+
+    /**
+     * Dựng lại mạch nhiệm vụ cho <b>người đang online</b>, giữ nguyên tiến độ.
+     *
+     * <h2>Vì sao cần</h2>
+     *
+     * <p>{@code Manager.TASKS} chỉ là bảng mẫu. Mỗi người chơi giữ một <b>bản
+     * riêng</b> dựng lúc đăng nhập, và bản ấy không đổi khi bảng mẫu đổi. Nên
+     * sửa thứ tự các bước trên panel xong, người đang online vẫn chạy theo thứ
+     * tự cũ — panel một đằng, trong game một nẻo, và không có gì nói vì sao.</p>
+     *
+     * <p>Ở đây dựng lại bản riêng ấy từ mẫu mới, rồi <b>chép lại chỉ số bước và
+     * số đếm</b> — người chơi đứng nguyên chỗ họ đang đứng, chỉ nội dung các
+     * bước là mới. Chỉ số được kẹp vào trong dãy phòng khi mẫu mới ít bước
+     * hơn.</p>
+     */
+    private static void capNhatNguoiDangOnline() {
+        for (nro.entity.player.Player pl : nro.server.Client.gI().getPlayersSnapshot()) {
+            try {
+                if (pl == null || !pl.isPl() || pl.playerTask == null
+                        || pl.playerTask.taskMain == null) {
+                    continue;
+                }
+                TaskMain cu = pl.playerTask.taskMain;
+                TaskMain moiCuaPl = nro.service.TaskService.gI()
+                        .getTaskMainById(pl, cu.id);
+                if (moiCuaPl == null || moiCuaPl.subTasks == null
+                        || moiCuaPl.subTasks.isEmpty()) {
+                    continue;
+                }
+                int buoc = cu.index;
+                if (buoc < 0) {
+                    buoc = 0;
+                } else if (buoc >= moiCuaPl.subTasks.size()) {
+                    buoc = moiCuaPl.subTasks.size() - 1;
+                }
+                short dem = 0;
+                if (cu.subTasks != null && cu.index >= 0
+                        && cu.index < cu.subTasks.size()) {
+                    dem = cu.subTasks.get(cu.index).count;
+                }
+                moiCuaPl.index = buoc;
+                moiCuaPl.lastTime = cu.lastTime;
+                moiCuaPl.subTasks.get(buoc).count = dem;
+                pl.playerTask.taskMain = moiCuaPl;
+                nro.service.TaskService.gI().sendTaskMain(pl);
+            } catch (Exception boQua) {
+                // Mot nguoi hong khong duoc chan nhung nguoi con lai.
+            }
+        }
     }
 
     private static void dong(CrisResultSet rs) {
