@@ -303,6 +303,17 @@ public class ServerManager {
             System.setErr(new PrintStream(caLoi, true, "UTF-8"));
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 try {
+                    // Luu truoc, xa log sau: luu con ghi them nhat ky, xa
+                    // truoc thi phan nhat ky cua chinh luot luu bi mat.
+                    //
+                    // Hook nay bat MOI duong tat: Ctrl+C, dong cua so dong
+                    // lenh, may tat may, va ca System.exit cua close(). Lan
+                    // thu hai thi luuTatCa() tu thoat ngay nen khong ton gi.
+                    gI().luuTatCa();
+                } catch (Exception boQua) {
+                    // Dang tat may chu, khong con cho nao de bao loi.
+                }
+                try {
                     tep.flush();
                     tep.close();
                 } catch (Exception boQua) {
@@ -823,6 +834,48 @@ public class ServerManager {
      * mất trạng thái đó.</p>
      */
     public void close() {
+        luuTatCa();
+
+        if (AutoMaintenance.isRunning) {
+            AutoMaintenance.isRunning = false;
+            try {
+                String batchFilePath = "run.bat";
+                Logger.system("AUTO_MAINT", "Đang gọi lại file " + batchFilePath);
+                FileRunner.runBatchFile(batchFilePath);
+            } catch (IOException e) {
+                Logger.logException(ServerManager.class, e, "Lỗi chạy lại run.bat");
+            }
+        }
+
+        System.exit(0);
+    }
+
+    /** Lượt lưu cuối đã chạy chưa — để không lưu hai lần. */
+    private static final java.util.concurrent.atomic.AtomicBoolean DA_LUU_CUOI
+            = new java.util.concurrent.atomic.AtomicBoolean();
+
+    /**
+     * Lưu <b>toàn bộ</b> dữ liệu đang sống trong bộ nhớ xuống CSDL.
+     *
+     * <h3>Vì sao tách khỏi {@link #close()}</h3>
+     *
+     * <p>{@code close()} kết thúc bằng {@code System.exit(0)}, mà gọi
+     * {@code System.exit} từ bên trong một shutdown hook thì treo vĩnh viễn —
+     * máy ảo đang đợi hook chạy xong, còn hook lại đợi máy ảo tắt. Nên phần lưu
+     * phải đứng riêng để cả hai đường — bấm tắt trên bảng điều khiển và tắt
+     * ngang bằng Ctrl+C hay đóng cửa sổ dòng lệnh — đều dùng được.</p>
+     *
+     * <p>Chạy <b>đúng một lần</b>: bấm tắt trên bảng điều khiển sẽ chạy nó, rồi
+     * {@code System.exit} lại kích hoạt shutdown hook; lưu lần hai vừa thừa vừa
+     * kéo dài lúc tắt.</p>
+     *
+     * <p>Mỗi bước một khối {@code try} để một bước hỏng không chặn các bước sau —
+     * đúng, vì đây là lần cuối dữ liệu được lưu.</p>
+     */
+    public void luuTatCa() {
+        if (!DA_LUU_CUOI.compareAndSet(false, true)) {
+            return;
+        }
         isRunning = false;
 
         Logger.title("SERVER CLOSE");
@@ -883,20 +936,7 @@ public class ServerManager {
             Logger.logException(ServerManager.class, e, "Lỗi xả nhật ký nhận vật phẩm");
         }
 
-        Logger.success("SERVER", "BẢO TRÌ THÀNH CÔNG");
-
-        if (AutoMaintenance.isRunning) {
-            AutoMaintenance.isRunning = false;
-            try {
-                String batchFilePath = "run.bat";
-                Logger.system("AUTO_MAINT", "Đang gọi lại file " + batchFilePath);
-                FileRunner.runBatchFile(batchFilePath);
-            } catch (IOException e) {
-                Logger.logException(ServerManager.class, e, "Lỗi chạy lại run.bat");
-            }
-        }
-
-        System.exit(0);
+        Logger.success("SERVER", "ĐÃ LƯU XONG TOÀN BỘ DỮ LIỆU");
     }
 
     /**

@@ -1048,9 +1048,18 @@ public class ServerManagerUI extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                int soNguoi = 0;
+                try {
+                    soNguoi = nro.server.Client.gI().getPlayers().size();
+                } catch (Exception boQua) {
+                    // Chua khoi dong xong thi coi nhu khong co ai.
+                }
                 int confirm = JOptionPane.showConfirmDialog(
                         ServerManagerUI.this,
-                        "Bạn có chắc muốn dừng Server và thoát chương trình?",
+                        "Bạn có chắc muốn dừng Server và thoát chương trình?\n\n"
+                        + "Dữ liệu sẽ được lưu trước khi tắt"
+                        + (soNguoi > 0 ? " — đang có " + soNguoi + " người chơi." : ".")
+                        + "\nCửa sổ sẽ đứng yên vài giây trong lúc lưu.",
                         "Xác nhận tắt Server",
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.WARNING_MESSAGE
@@ -1077,6 +1086,29 @@ public class ServerManagerUI extends JFrame {
     }, "Thread Start Server Engine").start();
 }
 
+    /**
+     * Tắt máy chủ — <b>lưu hết dữ liệu</b> rồi mới thoát.
+     *
+     * <h3>Vì sao phải gọi {@code ServerManager.close()}</h3>
+     *
+     * <p>Bản cũ in ra dòng "Đang lưu dữ liệu và đóng kết nối..." nhưng thật ra
+     * <b>không lưu gì cả</b>: nó chỉ dừng proxy, dừng luồng tự lưu, rồi
+     * {@code System.exit(0)}. Mà luồng tự lưu chạy <b>90 phút một lần</b> — nên
+     * tắt máy chủ đúng lúc xấu là mọi người đang chơi mất tới chừng ấy thời gian
+     * cày, không báo trước, không dấu vết.</p>
+     *
+     * <p>{@code ServerManager.close()} mới là chỗ lưu thật: clan, shop ký gửi,
+     * chỉ số máy chủ, nhật ký vật phẩm, rồi đá từng người ra — mỗi người được
+     * ghi lại trong {@code Client.close()}. Nó tự kết thúc bằng
+     * {@code System.exit(0)} nên không cần gọi thêm.</p>
+     *
+     * <h3>Vì sao vẫn dừng proxy và luồng tự lưu trước</h3>
+     *
+     * <p>Dừng proxy để không ai kịp đăng nhập vào giữa lúc đang lưu — người vào
+     * lúc ấy sẽ được nạp từ CSDL rồi ghi đè lên chính bản vừa lưu xong. Dừng
+     * luồng tự lưu để nó không chạy song song với lượt lưu cuối, hai luồng cùng
+     * ghi một người chơi thì bản nào thắng là chuyện may rủi.</p>
+     */
     private void shutdownServer() {
         try {
             System.out.println(">> Đang lưu dữ liệu và đóng kết nối...");
@@ -1089,6 +1121,14 @@ public class ServerManagerUI extends JFrame {
         } catch (Exception e) {
             System.err.println("Lỗi khi đóng tài nguyên: " + e.getMessage());
         }
+        try {
+            // Day moi la cho luu that. Ham nay tu ket thuc bang System.exit(0).
+            nro.server.ServerManager.gI().close();
+        } catch (Exception e) {
+            System.err.println("Lỗi khi lưu dữ liệu lúc tắt: " + e.getMessage());
+            e.printStackTrace();
+        }
+        // Chi toi day khi close() nem loi truoc luc no kip goi exit.
         System.out.println(">> Server shutting down... Bye!");
         System.exit(0);
     }
