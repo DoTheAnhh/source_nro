@@ -247,6 +247,19 @@ namespace Game3.God
             }
             // Hop cau hinh nuot cham truoc: bam xuyen qua hop ma nhan vat chay
             // di hoac menu khac mo len thi rat kho chiu.
+            // Hai bang nay xet TRUOC TuiUI vi chung nam TREN no.
+            //
+            // Bang Noi tai mo tu the Ky nang cua chinh TuiUI, nen neu TuiUI xet
+            // truoc thi no nuot sach cham va bang Noi tai khong bao gio nhan
+            // duoc gi — bam nut nao cung khong an.
+            if (NoiTaiUI.getInstance().capNhatCham())
+            {
+                return;
+            }
+            if (TanSatUI.getInstance().capNhatCham())
+            {
+                return;
+            }
             if (TuiUI.getInstance().capNhatCham())
             {
                 return;
@@ -279,14 +292,7 @@ namespace Game3.God
             {
                 return;
             }
-            if (NoiTaiUI.getInstance().capNhatCham())
-            {
-                return;
-            }
-            if (TanSatUI.getInstance().capNhatCham())
-            {
-                return;
-            }
+
             if (VoiceConfigUI.getInstance().capNhatCham())
             {
                 return;
@@ -789,8 +795,6 @@ namespace Game3.God
             veNutHud(g);
             // Ve sau cung: hai man nay phai nam tren moi thu khac.
             VoiceConfigUI.getInstance().ve(g);
-            TanSatUI.getInstance().ve(g);
-            NoiTaiUI.getInstance().ve(g);
             PhucLoiUI.getInstance().ve(g);
             // Ve SAU ba man kia de popup menu nam tren cung khi vua bam mo.
             MenuTongUI.getInstance().ve(g);
@@ -800,6 +804,13 @@ namespace Game3.God
             SuKienUI.getInstance().ve(g);
             BossUI.getInstance().ve(g);
             TuiUI.getInstance().ve(g);
+            // Hai bang nay ve SAU CUNG, sau ca TuiUI.
+            //
+            // Bang Noi tai mo TU BEN TRONG TuiUI (the Ky nang). Ve truoc TuiUI
+            // thi TuiUI phu kin len no — bam vao o "Noi tai" thi bang co mo
+            // that, nhung khong ai nhin thay gi ca.
+            TanSatUI.getInstance().ve(g);
+            NoiTaiUI.getInstance().ve(g);
             // Khung chat va hai hop nhap KHONG ve o day nua.
             //
             // Chuoi nay chay ben trong GameScr.paint, tuc TRUOC khi GameCanvas

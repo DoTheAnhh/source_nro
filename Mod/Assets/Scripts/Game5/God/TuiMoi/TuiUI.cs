@@ -2191,8 +2191,14 @@ namespace Game5.God
         /// Cấp đã học tra từ <c>vSkill</c> theo <c>template.id</c>; không tìm thấy
         /// nghĩa là chưa học.
         /// </remarks>
-        /// <summary>Cao của ô "Nội tại" nằm trên đầu cột Skill.</summary>
-        private const int CAO_O_NOI_TAI = 22;
+        /// <summary>Cao của ô "Nội tại" — <b>đúng bằng một dòng kỹ năng</b>.</summary>
+        /// <remarks>
+        /// Lấy thẳng <c>CAO_DONG_KN</c> chứ không gõ một con số riêng: ô này
+        /// nằm ngay trên danh sách kỹ năng và phải đọc ra như cùng một danh
+        /// sách. Gõ số riêng thì đổi chiều cao dòng kỹ năng là hai bên lệch
+        /// nhau, mà không có gì báo.
+        /// </remarks>
+        private const int CAO_O_NOI_TAI = CAO_DONG_KN;
 
         /// <summary>
         /// Ô mở bảng Nội tại, đặt trên đầu cột "Skill".
@@ -2208,25 +2214,51 @@ namespace Game5.God
         /// </remarks>
         private int veNutNoiTai(mGraphics g, int x, int w, int yDau)
         {
-            int y = yDau + 2;
+            // Ve Y HET mot dong ky nang: cung nen MAU_O, cung o anh co vien,
+            // cung vi tri chu, cung phong chu.
+            //
+            // Truoc do o nay dung nen MAU_O_DO — mot mau KEM SANG — roi viet
+            // dong thu hai bang chu TRANG len tren. Chu trang tren nen kem thi
+            // gan nhu khong doc duoc gi, va nhin ra la mot dong bi mo.
+            int y = yDau + 3;
             yDauNoiTai = y;
-            veKhungBo(g, x + 4, y, w - 8, CAO_O_NOI_TAI, MAU_O_DO, 0.95f,
-                    MAU_VIEN_O, 0.9f, 1);
-            mFont.tahoma_7b_yellow.drawString(g, "Nội tại", x + 10, y + 2,
+            int caoDong = CAO_O_NOI_TAI;
+            veKhungBo(g, x + 4, y, w - 8, caoDong - 3,
+                    MAU_O, 0.9f, MAU_VIEN, 0.45f, 1);
+
+            // Icon noi tai — dung dung anh may chu van gui.
+            //
+            // `Panel.spearcialImage` la ma anh di kem goi 112 ma viec 0, tuc
+            // chinh icon ma bang noi tai cu cua game van ve. Dung lai thi doi
+            // noi tai la icon doi theo, khong phai dung mot bang anh thu hai
+            // roi lo hai ben lech nhau.
+            int oAnh = caoDong - 9;
+            veKhungBo(g, x + 8, y + 3, oAnh, oAnh, MAU_O_DO, 1f,
+                    MAU_VIEN_O, 0.85f, 1);
+            if (Panel.spearcialImage > 0)
+            {
+                SmallImage.drawSmallImage(g, Panel.spearcialImage,
+                        x + 8 + oAnh / 2, y + 3 + oAnh / 2, 0,
+                        mGraphics.VCENTER | mGraphics.HCENTER);
+            }
+
+            int xChu = x + 12 + oAnh;
+            mFont.tahoma_7b_blue.drawString(g, "Nội tại", xChu, y + 5,
                     mFont.LEFT);
             string s = Panel.specialInfo;
-            if (s == null || s.Length == 0)
+            bool coNoiTai = (s != null && s.Length > 0);
+            if (!coNoiTai)
             {
-                s = "chạm để mở";
+                s = "Chạm để mở";
             }
             int k = s.IndexOf('[');
             if (k > 0)
             {
                 s = s.Substring(0, k).Trim();
             }
-            mFont.tahoma_7_white.drawString(g, catBot(s, 26), x + 10, y + 12,
-                    mFont.LEFT);
-            return y + CAO_O_NOI_TAI + 2;
+            (coNoiTai ? mFont.tahoma_7b_dark : mFont.tahoma_7b_green)
+                    .drawString(g, catBot(s, 26), xChu, y + 18, mFont.LEFT);
+            return y + caoDong;
         }
 
         /// <summary>Vùng bấm của ô Nội tại — cùng công thức với lúc vẽ.</summary>
