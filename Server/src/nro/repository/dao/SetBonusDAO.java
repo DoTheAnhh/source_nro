@@ -104,6 +104,31 @@ public class SetBonusDAO {
         LOAI.put("ne_don_pct", "Né đòn + % (bằng ne_don, tên rõ hơn)");
     }
 
+    // =====================================================================
+    //  Cách tính mốc
+    // =====================================================================
+
+    /** Chỉ mốc cao nhất đạt được có tác dụng — cách chạy từ trước tới nay. */
+    public static final int MOC_CAO_NHAT = 0;
+
+    /** Mọi mốc đã đạt đều cộng dồn. */
+    public static final int MOC_CONG_DON = 1;
+
+    /** Chỉ mốc 5 món có tác dụng; 2, 3, 4 món không cho gì. */
+    public static final int MOC_CHI_5 = 2;
+
+    /** Nhãn cho panel, theo đúng thứ tự mã số. */
+    public static final String[] CACH_TINH_MOC = {
+        "Chỉ mốc cao nhất đạt được",
+        "Cộng dồn mọi mốc đã đạt",
+        "Chỉ mốc 5 món"
+    };
+
+    public static String tenCachTinhMoc(int ma) {
+        return (ma >= 0 && ma < CACH_TINH_MOC.length)
+                ? CACH_TINH_MOC[ma] : CACH_TINH_MOC[MOC_CHI_5];
+    }
+
     /**
      * Diễn một dòng chỉ số thành câu đọc được.
      *
@@ -541,6 +566,15 @@ public class SetBonusDAO {
          * chữ theo, không phải phát lại đồ.</p>
          */
         public String moTaDong;
+
+        /**
+         * Cách gộp các mốc số món. Xem { SetBonusDAO#CACH_TINH_MOC}.
+         *
+         * <p>Mặc định { SetBonusDAO#MOC_CHI_5} — chỉ mốc 5 món mới có tác
+         * dụng. Đây là mức các set hiện có đang được đặt; muốn cộng dồn hay lấy
+         * mốc cao nhất thì đổi trên panel.</p>
+         */
+        public int cachTinhMoc = MOC_CHI_5;
     }
 
     /**
@@ -565,6 +599,10 @@ public class SetBonusDAO {
             // chua duoc nhieu dong "so mon:id". MODIFY chay lai khong sao.
             ConnectDB.executeUpdate("ALTER TABLE set_kich_hoat"
                     + " MODIFY option_mo_ta VARCHAR(255) NULL");
+            // Mac dinh 2 = chi moc 5 mon: do la muc cac set hien co dang duoc
+            // dat, va cung la muc de hieu nhat khi moi nhin vao mot set.
+            ConnectDB.executeUpdate("ALTER TABLE set_kich_hoat ADD COLUMN IF NOT EXISTS"
+                    + " cach_tinh_moc TINYINT NOT NULL DEFAULT 2");
         } catch (Exception ex) {
             Logger.logException(SetBonusDAO.class, ex,
                     "Không thêm được cột hanh_tinh — set tự tạo sẽ nằm ở mục Khác");
@@ -595,6 +633,7 @@ public class SetBonusDAO {
                 d.active = rs.getBoolean("active");
                 d.ghiChu = rs.getStringOrNull("ghi_chu");
                 d.hanhTinh = rs.getStringOrNull("hanh_tinh");
+                d.cachTinhMoc = rs.getInt("cach_tinh_moc");
                 d.moTaDong = rs.getStringOrNull("option_mo_ta");
                 m.put(d.setKey, d);
             }
@@ -629,13 +668,14 @@ public class SetBonusDAO {
             vaCotHanhTinh();
             ConnectDB.executeUpdate(
                     "INSERT INTO set_kich_hoat (set_key, ten, option_ids, active, ghi_chu,"
-                    + " hanh_tinh, option_mo_ta) VALUES (?, ?, ?, ?, ?, ?, ?)"
+                    + " hanh_tinh, option_mo_ta, cach_tinh_moc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
                     + " ON DUPLICATE KEY UPDATE ten = VALUES(ten),"
                     + " option_ids = VALUES(option_ids), active = VALUES(active),"
                     + " ghi_chu = VALUES(ghi_chu), hanh_tinh = VALUES(hanh_tinh),"
-                    + " option_mo_ta = VALUES(option_mo_ta)",
+                    + " option_mo_ta = VALUES(option_mo_ta),"
+                    + " cach_tinh_moc = VALUES(cach_tinh_moc)",
                     d.setKey, d.ten, d.optionIds, d.active ? 1 : 0, d.ghiChu, d.hanhTinh,
-                    d.moTaDong);
+                    d.moTaDong, d.cachTinhMoc);
             reload();
             return null;
         } catch (Exception ex) {
@@ -714,6 +754,32 @@ public class SetBonusDAO {
         int soMon = soMonDangMac(sc, setKey);
         if (soMon <= 0) {
             return java.util.Collections.emptyList();
+        }
+        DinhNghia dn = dinhNghia().get(setKey);
+        int cach = dn == null ? MOC_CHI_5 : dn.cachTinhMoc;
+        if (cach == MOC_CHI_5) {
+            // Chi moc 5: mac 2, 3, 4 mon khong cho gi ca.
+            List<Bonus> ra = new ArrayList<>();
+            if (soMon >= 5) {
+                for (Bonus b : bonusCua(setKey)) {
+                    if (b != null && b.loai != null && b.soMon == 5) {
+                        ra.add(b);
+                    }
+                }
+            }
+            return ra;
+        }
+        if (cach == MOC_CONG_DON) {
+            // Cong don: moi moc da dat deu tinh. Dong phan tram vi the NHAN
+            // CHONG len nhau o apDungMotDong — do la y cua nguoi dat set, nen
+            // khong gop lai o day.
+            List<Bonus> ra = new ArrayList<>();
+            for (Bonus b : bonusCua(setKey)) {
+                if (b != null && b.loai != null && b.soMon <= soMon) {
+                    ra.add(b);
+                }
+            }
+            return ra;
         }
         Map<String, Bonus> cao = new LinkedHashMap<>();
         for (Bonus b : bonusCua(setKey)) {

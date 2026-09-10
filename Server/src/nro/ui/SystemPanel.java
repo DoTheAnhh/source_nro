@@ -2930,6 +2930,13 @@ public class SystemPanel extends JPanel {
 
         addRowC(form, c, y++, "Chỉ số nhận diện:", pNhanDien);
 
+        JComboBox<String> cbMoc = new JComboBox<>(
+                nro.repository.dao.SetBonusDAO.CACH_TINH_MOC);
+        int mocCu = them ? nro.repository.dao.SetBonusDAO.MOC_CHI_5 : cu.cachTinhMoc;
+        cbMoc.setSelectedIndex(Math.max(0, Math.min(mocCu,
+                nro.repository.dao.SetBonusDAO.CACH_TINH_MOC.length - 1)));
+        addRowC(form, c, y++, "Cách tính mốc:", cbMoc);
+
         c.gridx = 0;
         c.gridy = y++;
         c.gridwidth = 2;
@@ -3109,6 +3116,7 @@ public class SystemPanel extends JPanel {
         }
         d.moTaDong = nro.repository.dao.SetBonusDAO.ghiMoTaDong(dongMoi);
         d.hanhTinh = String.valueOf(cbHt.getSelectedItem());
+        d.cachTinhMoc = cbMoc.getSelectedIndex();
         if (d.setKey == null || d.setKey.isEmpty()) {
             lblLoi.setText("Tên set không sinh được mã hợp lệ — thử tên khác.");
             continue;
