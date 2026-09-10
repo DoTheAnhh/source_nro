@@ -88,6 +88,23 @@ public class GokuSSJBaoCat extends Boss {
         // biet duong toi.
         this.location.x = X_DUNG;
         this.location.y = Y_DUNG;
+        // Danh duoc NGAY khi vua hien ra, khong doi vong CHAT_S -> ACTIVE.
+        this.changeToTypePK();
+    }
+
+    /**
+     * <b>Luôn đánh được.</b>
+     *
+     * <p>Boss thật lui về "không đánh được" giữa hai lần hồi sinh, và
+     * {@code setDie()} cũng hạ cờ ấy xuống ngay lúc ngã. Với bao cát thì mỗi
+     * quãng như thế là một quãng người chơi tới nơi, thấy Gôku SSJ đứng đó, đánh
+     * mãi không ăn gì — đúng cảnh "nó là NPC, không đánh được".</p>
+     *
+     * <p>Nó một máu và không đánh trả, nên để cờ PK bật suốt không mất gì.</p>
+     */
+    @Override
+    public void changeToTypeNonPK() {
+        this.changeToTypePK();
     }
 
     /**
@@ -124,17 +141,47 @@ public class GokuSSJBaoCat extends Boss {
     public void moveTo(int x, int y) {
     }
 
+    /**
+     * Ngã xuống, đếm nhiệm vụ, rồi <b>rời bản đồ theo đúng đường của boss</b>.
+     *
+     * <h2>Vì sao không được tự nhảy thẳng sang REST</h2>
+     *
+     * <p>Bản trước gọi {@code super.die()} rồi đặt luôn trạng thái REST. Nhìn
+     * thì gọn, nhưng nó <b>nhảy qua LEAVE_MAP</b> — mà {@code exitMap()} chỉ
+     * được gọi ở đó. Xác con bao cát vì thế ở lại khu vĩnh viễn: máu 0, cờ PK
+     * đã bị {@code setDie()} hạ về 0, và ba giây sau nó "hồi sinh" bằng cách
+     * vào lại đúng cái khu nó chưa từng rời. Kết quả là một Gôku SSJ đứng chết
+     * dí ở Đảo Kame mà đánh thế nào cũng không ăn — đúng thứ đã gặp.</p>
+     *
+     * <p>Nay đi thẳng tới LEAVE_MAP: {@code leaveMap()} gọi {@code exitMap()},
+     * chuyển sang REST, và {@code rest()} cho hồi sinh sau
+     * {@link #GIAY_HOI_SINH} giây. Bỏ qua CHAT_E vì bao cát không có lời thoại
+     * nào để chào.</p>
+     *
+     * <h2>Và tự đếm nhiệm vụ</h2>
+     *
+     * <p>{@code Player.setDie()} <b>không</b> gọi {@code setDieLV()}, mà chỗ đếm
+     * "đánh bại 10 người chơi" lại nằm trong {@code setDieLV()}. Nghĩa là hạ bao
+     * cát cũng không cộng gì — chính là việc con này sinh ra để làm. Gọi thẳng
+     * ở đây.</p>
+     */
     @Override
     public void die(Player plAtt) {
-        super.die(plAtt);
-        if (plAtt != null && plAtt.isPl()) {
-            Service.gI().sendThongBao(plAtt,
+        this.lastTimeRest = System.currentTimeMillis();
+        Player nguoiHa = plAtt == null ? null
+                : (plAtt.getMaster() != null ? plAtt.getMaster() : plAtt);
+        if (nguoiHa != null && nguoiHa.isPl() && !nguoiHa.getBot()) {
+            try {
+                nro.service.TaskService.gI().checkDoneTaskKillPlayer(nguoiHa);
+            } catch (Exception boQua) {
+                // Nhiem vu hong thi thoi, khong duoc chan cai chet.
+            }
+            Service.gI().sendThongBao(nguoiHa,
                     "Hạ được Gôku SSJ — tính vào nhiệm vụ đánh bại người chơi.");
         }
-        // Ngã xong đứng dậy luôn, không đợi hết vòng "chào tạm biệt" như boss
-        // thật: bao cát không có lời thoại nào để chào.
-        this.changeStatus(BossStatus.REST);
-        this.lastTimeRest = System.currentTimeMillis();
+        // Khong loa toan may chu, khong roi do, khong loi thoai — di thang toi
+        // duong roi ban do de xac duoc don di han.
+        this.changeStatus(BossStatus.LEAVE_MAP);
     }
 
     /** Không rơi đồ — đây là bao cát, không phải nguồn thu. */
