@@ -527,6 +527,10 @@ public final class KyNangDAO {
                     + " icon = VALUES(icon), gender = VALUES(gender)",
                     t.id, t.ten.trim(), t.from1, t.to1, t.from2, t.to2,
                     t.icon, t.gender);
+            // Nap lai vao bo nho ngay: bang intrinsic von chi duoc doc mot lan
+            // luc khoi dong, nen sua o day ma khong nap lai thi phai dung lai
+            // may chu moi thay — va khong co gi bao vi sao.
+            nro.repository.dao.NoiTaiDAO.napLaiVaoBoNho();
             return null;
         } catch (Exception ex) {
             Logger.logException(KyNangDAO.class, ex, "Lỗi lưu nội tại " + t.id);
@@ -538,6 +542,7 @@ public final class KyNangDAO {
         try {
             int n = ConnectDB.executeUpdate("DELETE FROM intrinsic WHERE id = ?",
                     id);
+            nro.repository.dao.NoiTaiDAO.napLaiVaoBoNho();
             return n == 0 ? "Không có nội tại id " + id + "." : null;
         } catch (Exception ex) {
             Logger.logException(KyNangDAO.class, ex, "Lỗi xoá nội tại " + id);

@@ -75,6 +75,7 @@ public class SystemPanel extends JPanel {
         tabs.addTab("Tỉ lệ nâng sao", buildTiLeSaoTab());
         tabs.addTab("Set kích hoạt", buildSetTab());
         tabs.addTab("Tỉ lệ set kích hoạt", buildTiLeKichHoatTab());
+        tabs.addTab("Nội tại", buildNoiTaiTab());
         tabs.addTab("Kỹ năng", buildKyNangTab());
         tabs.addTab("Hào quang", buildAuraTab());
         tabs.addTab("Danh hiệu", buildDanhHieuTab());
@@ -145,6 +146,9 @@ public class SystemPanel extends JPanel {
                     break;
                 case "Công thức đổi":
                     loadCongThuc();
+                    break;
+                case "Nội tại":
+                    napBangNoiTai();
                     break;
                 default:
                     // Nhung tab con lai doc du lieu tinh, khong can nap lai.
@@ -3426,6 +3430,33 @@ public class SystemPanel extends JPanel {
     };
     private final JTable khTable = new JTable(khModel);
 
+    /** Cột của bảng "Nội tại" — đặt tên thay vì gõ số. */
+    private static final int COT_NOI_ID = 0;
+    private static final int COT_NOI_TEN = 1;
+    private static final int COT_NOI_TU1 = 2;
+    private static final int COT_NOI_DEN1 = 3;
+    private static final int COT_NOI_TU2 = 4;
+    private static final int COT_NOI_DEN2 = 5;
+    private static final int COT_NOI_ICON = 6;
+    private static final int COT_NOI_HT = 7;
+    private static final int COT_NOI_TD = 8;
+
+    /**
+     * Bảng nội tại — chính là bảng {@code intrinsic} mà máy chủ đọc.
+     *
+     * <p>Cột "Id" và "Tác dụng" chỉ để xem: id là <b>khoá gắn tác dụng</b>, đổi
+     * nó bằng cách gõ đè lên ô sẽ lặng lẽ hoán đổi tác dụng giữa hai dòng.</p>
+     */
+    private final DefaultTableModel noiModel = new DefaultTableModel(
+            new Object[]{"Id", "Tên (mẫu)", "Từ 1", "Đến 1", "Từ 2", "Đến 2",
+                "Icon", "Hành tinh", "Tác dụng"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return c != COT_NOI_ID && c != COT_NOI_TD;
+        }
+    };
+    private final JTable noiTable = new JTable(noiModel);
+
     // Chi so cot cua bang "Ban do nhanh". Dat ten thay vi go so: chen them mot
     // cot vao giua la moi con so dich di, ma loi kieu do khong bao gi ca.
     private static final int COT_MN_ID = 0;
@@ -5079,6 +5110,208 @@ public class SystemPanel extends JPanel {
     /**
      * Tab "Tỉ lệ nâng sao" — tỉ lệ, vàng và ngọc của từng bậc pha lê hoá.
      */
+    /**
+     * Tab <b>Nội tại</b> — bảng {@code intrinsic}, thứ máy chủ thật sự đọc.
+     *
+     * <p>Trước bản này bảng ấy chỉ được đọc <b>một lần lúc khởi động</b> và
+     * không có đường nào xem hay sửa: muốn đổi một con số thì phải gõ SQL rồi
+     * dựng lại máy chủ. Tab này đọc và ghi thẳng vào chính bảng đó, và nạp lại
+     * vào bộ nhớ ngay sau khi lưu.</p>
+     */
+    private JComponent buildNoiTaiTab() {
+        JPanel root = new JPanel(new BorderLayout(0, 8));
+        root.setOpaque(false);
+        root.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        noiTable.setRowHeight(26);
+        noiTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        int[] w = {50, 430, 60, 60, 60, 60, 60, 110, 150};
+        for (int i = 0; i < noiTable.getColumnCount() && i < w.length; i++) {
+            noiTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
+        }
+        JComboBox<String> oHanhTinh = new JComboBox<>(new String[]{
+            "Trái Đất", "Namếc", "Xayda", "Dùng chung"});
+        noiTable.getColumnModel().getColumn(COT_NOI_HT)
+                .setCellEditor(new javax.swing.DefaultCellEditor(oHanhTinh));
+
+        JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        nut.setOpaque(false);
+        nut.add(button("Lưu bảng", OK_GREEN, e -> luuBangNoiTai()));
+        nut.add(button("Tải lại", GREY, e -> napBangNoiTai()));
+        nut.add(button("Thêm nội tại", ACCENT, e -> themDongNoiTai()));
+        nut.add(button("Xoá dòng đang chọn", WARN_RED, e -> xoaDongNoiTai()));
+
+        root.add(nhan("Mỗi dòng là một nội tại người chơi có thể mở ra. "
+                + "<b>Tên là một mẫu câu</b>: <code>p0</code> và <code>p1</code> "
+                + "được thay bằng khoảng trị số thứ nhất, <code>p2</code> và "
+                + "<code>p3</code> bằng khoảng thứ hai. Ví dụ "
+                + "<code>Tăng p0% đến p1% sát thương Kamejoko</code>."
+                + "<br><br>"
+                + "<b>Id là khoá gắn tác dụng, không phải số thứ tự.</b> Tác dụng "
+                + "của từng nội tại viết cứng theo id trong mã (id 1 là Kamejoko "
+                + "của Songoku, id 16 là Galick…). Vì thế ô Id không sửa được: đổi "
+                + "nó là hoán tác dụng sang chiêu khác mà không có gì báo. Cột "
+                + "\"Tác dụng\" cho biết id đó đã có tác dụng viết sẵn hay chưa — "
+                + "dòng ghi <b>chưa có</b> vẫn hiện tên và vẫn bốc ra được, chỉ là "
+                + "không cộng gì cho người chơi."
+                + "<br><br>"
+                + "\"Hành tinh\" lọc ai bốc được dòng này; <b>Dùng chung</b> là cả "
+                + "ba hành tinh. Sửa xong bấm Lưu — bảng được nạp lại vào bộ nhớ "
+                + "ngay, không cần dựng lại máy chủ."), BorderLayout.NORTH);
+        root.add(ServerGuiUtils.cuon(noiTable), BorderLayout.CENTER);
+        root.add(nut, BorderLayout.SOUTH);
+        napBangNoiTai();
+        return root;
+    }
+
+    private void napBangNoiTai() {
+        if (noiTable.isEditing()) {
+            noiTable.getCellEditor().stopCellEditing();
+        }
+        noiModel.setRowCount(0);
+        for (nro.entity.intrinsic.Intrinsic it
+                : nro.repository.dao.NoiTaiDAO.danhSach()) {
+            noiModel.addRow(new Object[]{
+                String.valueOf(it.id), it.name,
+                String.valueOf(it.paramFrom1), String.valueOf(it.paramTo1),
+                String.valueOf(it.paramFrom2), String.valueOf(it.paramTo2),
+                String.valueOf(it.icon),
+                nro.repository.dao.NoiTaiDAO.tenHanhTinh(it.gender),
+                it.id == 0 ? "— (dòng trống)"
+                        : (nro.repository.dao.NoiTaiDAO.coTacDung(it.id)
+                                ? "Có" : "CHƯA có trong mã")});
+        }
+    }
+
+    /** Đọc chuỗi hành tinh ở ô về lại mã {@code gender}. */
+    private static byte genderTuTen(Object o) {
+        String s = o == null ? "" : String.valueOf(o).trim();
+        if (s.equalsIgnoreCase("Trái Đất")) {
+            return 0;
+        }
+        if (s.equalsIgnoreCase("Namếc")) {
+            return 1;
+        }
+        if (s.equalsIgnoreCase("Xayda")) {
+            return 2;
+        }
+        return 3;
+    }
+
+    private void luuBangNoiTai() {
+        if (noiTable.isEditing()) {
+            noiTable.getCellEditor().stopCellEditing();
+        }
+        int loi = 0;
+        String loiDau = null;
+        for (int r = 0; r < noiModel.getRowCount(); r++) {
+            nro.entity.intrinsic.Intrinsic it = new nro.entity.intrinsic.Intrinsic();
+            String nhan = "Dòng " + (r + 1);
+            try {
+                it.id = Integer.parseInt(oNoi(r, COT_NOI_ID));
+                nhan = "Nội tại id " + it.id;
+                it.name = oNoi(r, COT_NOI_TEN);
+                it.paramFrom1 = Short.parseShort(oNoi(r, COT_NOI_TU1));
+                it.paramTo1 = Short.parseShort(oNoi(r, COT_NOI_DEN1));
+                it.paramFrom2 = Short.parseShort(oNoi(r, COT_NOI_TU2));
+                it.paramTo2 = Short.parseShort(oNoi(r, COT_NOI_DEN2));
+                it.icon = Short.parseShort(oNoi(r, COT_NOI_ICON));
+            } catch (NumberFormatException ex) {
+                loi++;
+                if (loiDau == null) {
+                    loiDau = nhan + " có ô không phải số.";
+                }
+                continue;
+            }
+            it.gender = genderTuTen(noiModel.getValueAt(r, COT_NOI_HT));
+            String kq = nro.repository.dao.NoiTaiDAO.luu(it);
+            if (kq != null) {
+                loi++;
+                if (loiDau == null) {
+                    loiDau = nhan + ": " + kq;
+                }
+            }
+        }
+        napBangNoiTai();
+        if (loi == 0) {
+            note(OK_GREEN, "Đã lưu bảng nội tại — có hiệu lực ngay.");
+        } else {
+            note(WARN_RED, loiDau + " (" + loi + " dòng không lưu được)");
+        }
+    }
+
+    /** Đọc một ô của bảng nội tại về chuỗi đã cắt khoảng trắng. */
+    private String oNoi(int r, int c) {
+        Object v = noiModel.getValueAt(r, c);
+        return v == null ? "" : String.valueOf(v).trim();
+    }
+
+    private void themDongNoiTai() {
+        String s = JOptionPane.showInputDialog(this,
+                "Id của nội tại mới?\n\n"
+                + "Id quyết định TÁC DỤNG, không phải thứ tự hiện ra.\n"
+                + "Dùng lại một id đã có là ghi đè dòng đó.\n"
+                + "Id chưa có tác dụng viết trong mã thì dòng mới sẽ hiện tên\n"
+                + "và bốc ra được, nhưng không cộng gì cho người chơi.",
+                "Thêm nội tại", JOptionPane.QUESTION_MESSAGE);
+        if (s == null) {
+            return;
+        }
+        int id;
+        try {
+            id = Integer.parseInt(s.trim());
+        } catch (NumberFormatException ex) {
+            note(WARN_RED, "\"" + s + "\" không phải là số.");
+            return;
+        }
+        nro.entity.intrinsic.Intrinsic it = new nro.entity.intrinsic.Intrinsic();
+        it.id = id;
+        it.name = "Nội tại mới p0% đến p1%";
+        it.paramFrom1 = 1;
+        it.paramTo1 = 10;
+        it.paramFrom2 = 0;
+        it.paramTo2 = 0;
+        it.icon = -1;
+        it.gender = 3;
+        String kq = nro.repository.dao.NoiTaiDAO.luu(it);
+        napBangNoiTai();
+        if (kq == null) {
+            note(OK_GREEN, "Đã thêm nội tại id " + id
+                    + (nro.repository.dao.NoiTaiDAO.coTacDung(id) ? "."
+                            : " — id này CHƯA có tác dụng viết trong mã."));
+        } else {
+            note(WARN_RED, kq);
+        }
+    }
+
+    private void xoaDongNoiTai() {
+        int r = noiTable.getSelectedRow();
+        if (r < 0) {
+            note(WARN_RED, "Chưa chọn dòng nào.");
+            return;
+        }
+        r = noiTable.convertRowIndexToModel(r);
+        int id;
+        try {
+            id = Integer.parseInt(oNoi(r, COT_NOI_ID));
+        } catch (NumberFormatException ex) {
+            note(WARN_RED, "Dòng này không có id hợp lệ.");
+            return;
+        }
+        int chon = JOptionPane.showConfirmDialog(this,
+                "Xoá nội tại id " + id + " — \"" + oNoi(r, COT_NOI_TEN) + "\"?\n\n"
+                + "Người chơi đang mang nội tại này sẽ mất tác dụng của nó.",
+                "Xoá nội tại", JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (chon != JOptionPane.YES_OPTION) {
+            return;
+        }
+        String kq = nro.repository.dao.NoiTaiDAO.xoa(id);
+        napBangNoiTai();
+        note(kq == null ? OK_GREEN : WARN_RED,
+                kq == null ? "Đã xoá nội tại id " + id + "." : kq);
+    }
+
     private JComponent buildTiLeSaoTab() {
         JPanel root = new JPanel(new BorderLayout(0, 8));
         root.setOpaque(false);
