@@ -2867,10 +2867,21 @@ public class SystemPanel extends JPanel {
         // Sua set: do lai cac dong tac dung dang co, xep theo moc so mon.
         java.util.Map<Integer, nro.repository.dao.SetBonusDAO.Bonus> bonusCu =
                 new java.util.TreeMap<>();
+        // Cac dong CHI SO PHU cua moc 5 mon.
+        //
+        // bonusCu chi giu duoc MOT dong moi moc (no la Map moc -> dong), nen
+        // dong thu hai tro di cua moc 5 khong co cho nao trong bang moc. Chung
+        // di vao danh sach rieng nay va co khung sua rieng ben duoi.
+        java.util.List<nro.repository.dao.SetBonusDAO.Bonus> phuCu =
+                new java.util.ArrayList<>();
         if (!them) {
             for (nro.repository.dao.SetBonusDAO.Bonus b
                     : nro.repository.dao.SetBonusDAO.bonusCua(key)) {
-                bonusCu.put(b.soMon, b);
+                if (b.soMon == 5 && bonusCu.containsKey(5)) {
+                    phuCu.add(b);
+                } else {
+                    bonusCu.put(b.soMon, b);
+                }
             }
         }
 
@@ -2977,6 +2988,66 @@ public class SystemPanel extends JPanel {
         }
         c.gridy = y++;
         form.add(bang, c);
+        c.gridwidth = 1;
+
+        // ---------- chỉ số phụ khi đủ 5 món ----------
+        //
+        // Bang moc o tren chi cho MOT dong moi moc. Set thuong can them vai
+        // chi so nua khi mac du bo — khung nay la cho de them bao nhieu tuy y.
+        // Chung duoc luu y nhu moc 5 mon, chi khac la khong co dong chu rieng
+        // in tren mon do.
+        DefaultTableModel mPhu = new DefaultTableModel(
+                new Object[]{"Chỉ số", "Giá trị"}, 0);
+        JTable bPhu = new JTable(mPhu);
+        bPhu.setRowHeight(24);
+        JComboBox<String> oPhuLoai = new JComboBox<>();
+        for (String[] t : tacDung) {
+            oPhuLoai.addItem(t[2]);
+        }
+        bPhu.getColumnModel().getColumn(0)
+                .setCellEditor(new javax.swing.DefaultCellEditor(oPhuLoai));
+        for (nro.repository.dao.SetBonusDAO.Bonus b : phuCu) {
+            String nhan = null;
+            for (String[] t : tacDung) {
+                if (t[0].equals(b.loai) && Integer.parseInt(t[1]) == b.thamSo) {
+                    nhan = t[2];
+                    break;
+                }
+            }
+            mPhu.addRow(new Object[]{nhan == null ? b.loai : nhan,
+                String.valueOf(b.giaTri)});
+        }
+
+        c.gridx = 0;
+        c.gridy = y++;
+        c.gridwidth = 2;
+        JLabel nhomPhu = new JLabel("Chỉ số phụ khi đủ 5 món (thêm bao nhiêu dòng tuỳ ý)");
+        nhomPhu.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        nhomPhu.setForeground(ACCENT);
+        nhomPhu.setBorder(new EmptyBorder(10, 0, 2, 0));
+        form.add(nhomPhu, c);
+
+        c.gridy = y++;
+        JScrollPane spPhu = ServerGuiUtils.cuon(bPhu);
+        spPhu.setPreferredSize(new Dimension(760, 96));
+        form.add(spPhu, c);
+
+        c.gridy = y++;
+        JPanel nutPhu = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 2));
+        nutPhu.setOpaque(false);
+        nutPhu.add(button("Thêm chỉ số phụ", OK_GREEN, ev -> {
+            mPhu.addRow(new Object[]{tacDung.get(0)[2], "0"});
+        }));
+        nutPhu.add(button("Xoá dòng đang chọn", WARN_RED, ev -> {
+            int r = bPhu.getSelectedRow();
+            if (r >= 0) {
+                if (bPhu.isEditing()) {
+                    bPhu.getCellEditor().stopCellEditing();
+                }
+                mPhu.removeRow(bPhu.convertRowIndexToModel(r));
+            }
+        }));
+        form.add(nutPhu, c);
         c.gridwidth = 1;
 
         javax.swing.JCheckBox cbOn = new javax.swing.JCheckBox("Bật", them || cu.active);
@@ -3152,6 +3223,54 @@ public class SystemPanel extends JPanel {
             String e = nro.repository.dao.SetBonusDAO.luu(b);
             if (e != null && loi2 == null) {
                 loi2 = "Mốc " + mon + " món: " + e;
+            }
+        }
+
+        // Chi so phu cua moc 5 mon: xoa het dong cu roi ghi lai dong moi.
+        //
+        // Xoa het roi ghi lai chu khong doi tung dong: so dong thay doi tuy y
+        // (them ba, bo mot), nen ghep dong cu voi dong moi theo thu tu la co
+        // luc ghep nham va sua trung len dong khac.
+        if (bPhu.isEditing()) {
+            bPhu.getCellEditor().stopCellEditing();
+        }
+        for (nro.repository.dao.SetBonusDAO.Bonus b : phuCu) {
+            nro.repository.dao.SetBonusDAO.xoa(b.id);
+        }
+        for (int r = 0; r < mPhu.getRowCount(); r++) {
+            String nhan = String.valueOf(mPhu.getValueAt(r, 0));
+            String[] loaiPhu = null;
+            for (String[] t : tacDung) {
+                if (t[2].equals(nhan)) {
+                    loaiPhu = t;
+                    break;
+                }
+            }
+            if (loaiPhu == null) {
+                continue;
+            }
+            long v;
+            try {
+                v = Long.parseLong(String.valueOf(mPhu.getValueAt(r, 1))
+                        .replace(".", "").replace(",", "").trim());
+            } catch (NumberFormatException ex) {
+                if (loi2 == null) {
+                    loi2 = "Chỉ số phụ dòng " + (r + 1) + " không phải số.";
+                }
+                continue;
+            }
+            nro.repository.dao.SetBonusDAO.Bonus bp =
+                    new nro.repository.dao.SetBonusDAO.Bonus();
+            bp.id = 0;
+            bp.setKey = d.setKey;
+            bp.soMon = 5;
+            bp.loai = loaiPhu[0];
+            bp.thamSo = Integer.parseInt(loaiPhu[1]);
+            bp.giaTri = v;
+            bp.active = true;
+            String e = nro.repository.dao.SetBonusDAO.luu(bp);
+            if (e != null && loi2 == null) {
+                loi2 = "Chỉ số phụ dòng " + (r + 1) + ": " + e;
             }
         }
 
