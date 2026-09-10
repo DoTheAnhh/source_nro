@@ -335,6 +335,49 @@ public class ConfigDAO {
     public static final String LOI_CHAO = "loi_chao_vao_game";
 
     /**
+     * Rồng thần đứng chờ điều ước bao nhiêu phút rồi đi ngủ.
+     *
+     * <p>Hết chừng này mà chưa ước thì rồng tự rời đi — đó là <b>một trong hai</b>
+     * đường kết thúc, đường kia là chọn điều ước. Đặt quá dài thì một người quên
+     * bấm là cả khu tối om và không ai gọi rồng được suốt thời gian ấy.</p>
+     */
+    public static final String RONG_CHO_PHUT = "rong_cho_phut";
+
+    /** Gọi rồng xong phải đợi bao nhiêu phút mới có người gọi được lần nữa. */
+    public static final String RONG_GOI_LAI_PHUT = "rong_goi_lai_phut";
+
+    /**
+     * Quãng nghỉ tối thiểu giữa hai lần đi qua cổng dịch chuyển, tính bằng giây.
+     *
+     * <p>Chặn kiểu chạy đi chạy lại qua cổng liên tục: lượt trước vừa xong là
+     * lượt sau đã bắt đầu, client chưa kịp dựng xong cảnh cũ. Để {@code 0} là
+     * bỏ hẳn quãng nghỉ này.</p>
+     */
+    public static final String DOI_MAP_CHO_GIAY = "doi_map_cho_giay";
+
+    /**
+     * Một lượt đổi bản đồ treo quá bao nhiêu giây thì tự mở khoá.
+     *
+     * <p>Client bình thường báo nạp xong trong dưới một giây. Con số này là để
+     * dành cho máy yếu và mạng kém. Đặt quá nhỏ thì khoá nhả sớm và hai bộ dữ
+     * liệu bản đồ có thể đan nhau; đặt quá lớn thì một gói báo bị mất là người
+     * chơi đứng chôn chân chừng ấy giây.</p>
+     */
+    public static final String DOI_MAP_HET_HAN_GIAY = "doi_map_het_han_giay";
+
+    /**
+     * Số gói tin tối đa một phiên được gửi lên trong một giây.
+     *
+     * <p>Người <b>đã đăng nhập</b> vượt ngưỡng thì bị hãm nhịp chứ không bị cắt
+     * kết nối. Đặt thấp quá thì thao tác hàng loạt — mua chín mươi chín món,
+     * nhặt một bãi đồ rơi — bị hãm thấy rõ.</p>
+     */
+    public static final String GOI_MOI_GIAY = "goi_moi_giay";
+
+    /** Hãm nhịp bao nhiêu mili giây mỗi gói khi một phiên gửi quá nhanh. */
+    public static final String GOI_HAM_NHIP_MS = "goi_ham_nhip_ms";
+
+    /**
      * Giá trị dùng khi CSDL chưa có khoá đó.
      *
      * <p>Đúng bằng các con số vốn được viết cứng trong {@code OngGohan} trước
@@ -382,6 +425,14 @@ public class ConfigDAO {
         DEFAULTS.put(NOI_TAI_GIA_NGOC, 50L);
         DEFAULTS.put(GHI_LICH_SU_VP, 1L);
         DEFAULTS.put(GIU_LICH_SU_VP_NGAY, 30L);
+        // Dung bang cac con so von viet cung trong ma truoc khi tach ra day,
+        // nen may chu chay y nhu cu neu khong ai dong toi.
+        DEFAULTS.put(RONG_CHO_PHUT, 5L);
+        DEFAULTS.put(RONG_GOI_LAI_PHUT, 5L);
+        DEFAULTS.put(DOI_MAP_CHO_GIAY, 1L);
+        DEFAULTS.put(DOI_MAP_HET_HAN_GIAY, 5L);
+        DEFAULTS.put(GOI_MOI_GIAY, 400L);
+        DEFAULTS.put(GOI_HAM_NHIP_MS, 40L);
     }
 
     private static final Map<String, String> CACHE = new LinkedHashMap<>();
@@ -453,6 +504,18 @@ public class ConfigDAO {
                 + "nút \"Lịch sử vật phẩm\" trong tab Quản Lý Người Chơi");
         NOTES.put(GIU_LICH_SU_VP_NGAY,
                 "Số ngày giữ nhật ký nhận vật phẩm — 0 là giữ mãi");
+        NOTES.put(RONG_CHO_PHUT,
+                "Rồng thần đứng chờ điều ước bao nhiêu phút rồi đi ngủ");
+        NOTES.put(RONG_GOI_LAI_PHUT,
+                "Gọi rồng xong phải đợi bao nhiêu phút mới gọi được lần nữa");
+        NOTES.put(DOI_MAP_CHO_GIAY,
+                "Quãng nghỉ giữa hai lần qua cổng dịch chuyển, tính bằng giây — 0 là bỏ");
+        NOTES.put(DOI_MAP_HET_HAN_GIAY,
+                "Đổi bản đồ treo quá bao nhiêu giây thì tự mở khoá cho đi tiếp");
+        NOTES.put(GOI_MOI_GIAY,
+                "Số gói tin tối đa một phiên gửi lên trong một giây");
+        NOTES.put(GOI_HAM_NHIP_MS,
+                "Hãm nhịp bao nhiêu mili giây mỗi gói khi một phiên gửi quá nhanh");
     }
 
     /**

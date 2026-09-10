@@ -46,7 +46,10 @@ public final class Collector implements Runnable {
      * khong can dong bo gi ca.</p>
      */
     /** Ngu bao lau khi mot phien DA DANG NHAP gui nhanh qua nguong. */
-    private static final long NGU_KHI_NHANH_MS = 40L;
+    private static long nguKhiNhanhMs() {
+        return nro.repository.dao.ConfigDAO.num(
+                nro.repository.dao.ConfigDAO.GOI_HAM_NHIP_MS, 40L);
+    }
 
     private final nro.server.ChongDdos.NhipGoi nhipGoi
             = new nro.server.ChongDdos.NhipGoi();
@@ -139,7 +142,7 @@ public final class Collector implements Runnable {
                             && ((nro.net.session.MySession) this.session).player != null;
                     if (daVaoGame) {
                         try {
-                            Thread.sleep(NGU_KHI_NHANH_MS);
+                            Thread.sleep(nguKhiNhanhMs());
                         } catch (InterruptedException boQua) {
                             Thread.currentThread().interrupt();
                         }

@@ -81,7 +81,10 @@ public final class ChongDdos {
      * chin mon, nhat mot bai do roi. Nay 400, va nguoi DA DANG NHAP vuot
      * nguong thi bi ham nhip chu khong bi cat ket noi; xem { Collector}.</p>
      */
-    private static final int GOI_MOI_GIAY = 400;
+    private static int goiMoiGiay() {
+        return (int) nro.repository.dao.ConfigDAO.num(
+                nro.repository.dao.ConfigDAO.GOI_MOI_GIAY, 400L);
+    }
 
     /** Thời gian chặn lần đầu, mili giây. Tái phạm thì nhân đôi. */
     private static final long CHAN_LAN_DAU = 60_000L;
@@ -151,7 +154,7 @@ public final class ChongDdos {
                 + " | ket noi moi: " + KET_NOI_MOI_TOI_DA + "/"
                 + (CUA_SO / 1000) + "s moi IP"
                 + " | " + KET_NOI_MOI_CA_MAY_CHU + "/s toan may chu"
-                + " | goi: " + GOI_MOI_GIAY + "/s moi phien");
+                + " | goi: " + goiMoiGiay() + "/s moi phien");
     }
 
     /**
@@ -319,7 +322,7 @@ public final class ChongDdos {
                 giay = g;
                 dem = 0;
             }
-            return ++dem <= GOI_MOI_GIAY;
+            return ++dem <= goiMoiGiay();
         }
     }
 

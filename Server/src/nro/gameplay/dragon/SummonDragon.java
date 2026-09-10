@@ -73,9 +73,17 @@ public class SummonDragon {
     private final Map pl_dragonStar;
     private long lastTimeShenronAppeared;
     private long lastTimeShenronWait;
-    private final int timeResummonShenron = 300000;
+    /** Doc tu quy uoc rong_goi_lai_phut, sua tren panel la an ngay. */
+    private int timeResummonShenron() {
+        return (int) (nro.repository.dao.ConfigDAO.num(
+                nro.repository.dao.ConfigDAO.RONG_GOI_LAI_PHUT, 5L) * 60_000L);
+    }
     private boolean isShenronAppear;
-    private final int timeShenronWait = 300000;
+    /** Doc tu quy uoc rong_cho_phut, sua tren panel la an ngay. */
+    private int timeShenronWait() {
+        return (int) (nro.repository.dao.ConfigDAO.num(
+                nro.repository.dao.ConfigDAO.RONG_CHO_PHUT, 5L) * 60_000L);
+    }
 
     private final Thread update;
     private boolean active;
@@ -97,7 +105,7 @@ public class SummonDragon {
                     // phut. Nhanh "cho nguoi ay quay lai" da bo — thoat game la
                     // huy luon, xem SummonDragon.huyKhiThoatGame.
                     if (isShenronAppear
-                            && Util.canDoWithTime(lastTimeShenronWait, timeShenronWait)) {
+                            && Util.canDoWithTime(lastTimeShenronWait, timeShenronWait())) {
                         shenronLeave(playerSummonShenron, TIME_UP);
                     }
                     Functions.sleep(1000);
@@ -137,7 +145,7 @@ public class SummonDragon {
                     return;
                 }
 
-                if (Util.canDoWithTime(lastTimeShenronAppeared, timeResummonShenron)) {
+                if (Util.canDoWithTime(lastTimeShenronAppeared, timeResummonShenron())) {
                     //gọi rồng
                     playerSummonShenron = pl;
                     playerSummonShenronId = (int) pl.id;
@@ -163,7 +171,7 @@ public class SummonDragon {
                     activeShenron(pl, true, SummonDragon.DRAGON_SHENRON);
                     sendWhishesShenron(pl);
                 } else {
-                    int timeLeft = (int) ((timeResummonShenron - (System.currentTimeMillis() - lastTimeShenronAppeared)) / 1000);
+                    int timeLeft = (int) ((timeResummonShenron() - (System.currentTimeMillis() - lastTimeShenronAppeared)) / 1000);
                     Service.gI().sendThongBao(pl, "Vui lòng đợi " + (timeLeft < 7200 ? timeLeft + " giây" : timeLeft / 60 + " phút") + " nữa");
                 }
             }

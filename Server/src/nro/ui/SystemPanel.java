@@ -72,7 +72,7 @@ public class SystemPanel extends JPanel {
         JTabbedPane tabs = new JTabbedPane();
         tabs.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
         tabs.addTab("Quy ước", buildConfigTab());
-        tabs.addTab("Lời chào", buildLoiChaoTab());
+        tabs.addTab("Thông báo", buildLoiChaoTab());
         tabs.addTab("Boss", buildBossTongHop());
         tabs.addTab("Đồ rơi từ quái", buildDoRoiTongHop());
         tabs.addTab("Tỉ lệ", buildTiLeTab());
@@ -165,7 +165,7 @@ public class SystemPanel extends JPanel {
                 case "Nhiệm vụ chính tuyến":
                     napBangNhiemVuChinh();
                     break;
-                case "Lời chào":
+                case "Thông báo":
                     napLoiChao();
                     break;
                 default:
@@ -220,65 +220,241 @@ public class SystemPanel extends JPanel {
         }
     }
 
-    private final JTextArea oLoiChao = new JTextArea(8, 60);
+    private static final int COT_TB_STT = 0;
+    private static final int COT_TB_BAT = 1;
+    private static final int COT_TB_ND = 2;
+
+    private final DefaultTableModel tbModel = new DefaultTableModel(
+            new Object[]{"Lượt", "Bật", "Nội dung"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return false;
+        }
+
+        @Override
+        public Class<?> getColumnClass(int c) {
+            return c == COT_TB_BAT ? Boolean.class : String.class;
+        }
+    };
+    private final JTable tbTable = new JTable(tbModel);
+
+    /** Id thật của từng dòng đang hiện, tra theo chỉ số dòng. */
+    private final java.util.List<Integer> tbId = new ArrayList<>();
 
     /**
-     * Tab <b>Lời chào</b> — dòng chữ hiện ra khi người chơi vừa vào game.
+     * Tab <b>Thông báo</b> — những câu hiện ra khi người chơi vừa vào game.
      *
-     * <h2>Vì sao tách khỏi tab Quy ước</h2>
+     * <h2>Vì sao nhiều dòng chạy theo lượt</h2>
      *
-     * <p>Tab Quy ước là một cột ô nhập <b>một dòng</b>, hợp với những con số. Lời
-     * chào thì là câu chữ, có thể dài và nhiều dòng — nhét vào một ô hẹp thì
-     * không đọc được hết, không xuống dòng được, và nằm lẫn giữa mấy chục con số
-     * nên chẳng ai nghĩ tới việc sửa nó.</p>
+     * <p>Trước đây chỉ có <b>một</b> câu duy nhất. Muốn báo hai việc cùng lúc —
+     * sự kiện cuối tuần và lịch bảo trì chẳng hạn — thì phải nhét cả hai vào một
+     * đoạn dài, và ai vào game cũng đọc đúng đoạn ấy cho tới lúc có người sửa.</p>
+     *
+     * <p>Nay mỗi việc một dòng, và người vào game nhận <b>dòng kế tiếp</b> trong
+     * danh sách, xoay vòng. Không bốc ngẫu nhiên: bốc ngẫu nhiên thì một dòng có
+     * thể xui xẻo không ai thấy, còn xoay vòng thì mọi dòng được đọc đều nhau.</p>
+     *
+     * <p>Câu cũ trong quy ước {@code loi_chao_vao_game} được chuyển thành dòng
+     * đầu tiên ở lần chạy đầu, nên nâng cấp xong máy chủ không im lặng.</p>
      */
     private JComponent buildLoiChaoTab() {
         JPanel root = new JPanel(new BorderLayout(0, 8));
         root.setOpaque(false);
         root.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        oLoiChao.setLineWrap(true);
-        oLoiChao.setWrapStyleWord(true);
-        oLoiChao.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tbTable.setRowHeight(24);
+        tbTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tbTable.getColumnModel().getColumn(COT_TB_STT).setPreferredWidth(50);
+        tbTable.getColumnModel().getColumn(COT_TB_BAT).setPreferredWidth(45);
+        tbTable.getColumnModel().getColumn(COT_TB_ND).setPreferredWidth(640);
+        tbTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    suaThongBao(false);
+                }
+            }
+        });
 
         JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
         nut.setOpaque(false);
-        nut.add(button("Lưu", OK_GREEN, e -> luuLoiChao()));
+        nut.add(button("Thêm thông báo", OK_GREEN, e -> suaThongBao(true)));
+        nut.add(button("Sửa", ACCENT, e -> suaThongBao(false)));
+        nut.add(button("Bật / tắt", new Color(120, 90, 160), e -> batTatThongBao()));
+        nut.add(button("Lên", GREY, e -> doiChoThongBao(-1)));
+        nut.add(button("Xuống", GREY, e -> doiChoThongBao(1)));
+        nut.add(button("Xoá", WARN_RED, e -> xoaThongBao()));
         nut.add(button("Đọc lại", GREY, e -> napLoiChao()));
-        nut.add(button("Tắt lời chào", WARN_RED, e -> {
-            oLoiChao.setText("");
-            luuLoiChao();
-        }));
 
-        root.add(nhan("Dòng chữ hiện ra ngay khi người chơi vào game, dưới dạng "
-                + "thông báo của quản trị viên. <b>Để trống là không hiện gì</b> — "
-                + "đó cũng là việc của nút \"Tắt lời chào\"."
+        root.add(nhan("Những câu hiện ra ngay khi người chơi vào game, dưới dạng "
+                + "thông báo của quản trị viên."
                 + "<br><br>"
-                + "Xuống dòng cứ bấm Enter, hiện ra trong game đúng như gõ ở đây. "
-                + "Có hiệu lực <b>ngay</b> với người đăng nhập sau khi lưu, không "
-                + "cần khởi động lại máy chủ."), BorderLayout.NORTH);
-        root.add(ServerGuiUtils.cuon(oLoiChao), BorderLayout.CENTER);
+                + "Danh sách chạy <b>theo lượt</b>: người vào game nhận dòng kế "
+                + "tiếp, hết danh sách thì quay lại đầu — nên mỗi dòng đều được "
+                + "đọc đều nhau. Dùng <b>Lên</b> / <b>Xuống</b> để đổi thứ tự."
+                + "<br>"
+                + "Dòng đang <b>tắt</b> thì bị bỏ qua. Tắt hết mọi dòng, hoặc xoá "
+                + "sạch danh sách, là vào game không hiện gì cả."
+                + "<br><br>"
+                + "Nội dung xuống dòng được — bấm Enter trong ô sửa, hiện ra trong "
+                + "game đúng như đã gõ. Có hiệu lực <b>ngay</b> với người đăng nhập "
+                + "sau khi lưu, không cần khởi động lại máy chủ."), BorderLayout.NORTH);
+        root.add(ServerGuiUtils.cuon(tbTable), BorderLayout.CENTER);
         root.add(nut, BorderLayout.SOUTH);
         napLoiChao();
         return root;
     }
 
     private void napLoiChao() {
-        oLoiChao.setText(ConfigDAO.chuoi(ConfigDAO.LOI_CHAO));
-        oLoiChao.setCaretPosition(0);
+        tbModel.setRowCount(0);
+        tbId.clear();
+        int stt = 0;
+        for (nro.repository.dao.ThongBaoVaoGameDAO.Dong d
+                : nro.repository.dao.ThongBaoVaoGameDAO.danhSach()) {
+            tbId.add(d.id);
+            // So luot chi dem cac dong DANG BAT: dong tat khong bao gio toi
+            // luot no, ghi so cho no la noi doi.
+            String nhan = d.bat ? String.valueOf(++stt) : "—";
+            tbModel.addRow(new Object[]{nhan, d.bat, motDong(d.noiDung)});
+        }
     }
 
-    private void luuLoiChao() {
-        String v = oLoiChao.getText() == null ? "" : oLoiChao.getText();
-        if (!ConfigDAO.set(ConfigDAO.LOI_CHAO, v)) {
-            note(WARN_RED, "Không lưu được lời chào — xem log máy chủ.");
+    /** Gộp nội dung nhiều dòng thành một dòng để hiện trong bảng. */
+    private static String motDong(String s) {
+        if (s == null) {
+            return "";
+        }
+        String v = s.replace("\r", "").replace("\n", " ⏎ ").trim();
+        return v.length() > 200 ? v.substring(0, 200) + "…" : v;
+    }
+
+    /** Dòng thông báo đang chọn, hoặc {@code null}. */
+    private nro.repository.dao.ThongBaoVaoGameDAO.Dong tbDangChon() {
+        int r = tbTable.getSelectedRow();
+        if (r < 0 || r >= tbId.size()) {
+            return null;
+        }
+        int id = tbId.get(r);
+        for (nro.repository.dao.ThongBaoVaoGameDAO.Dong d
+                : nro.repository.dao.ThongBaoVaoGameDAO.danhSach()) {
+            if (d.id == id) {
+                return d;
+            }
+        }
+        return null;
+    }
+
+    private void suaThongBao(boolean them) {
+        nro.repository.dao.ThongBaoVaoGameDAO.Dong d
+                = them ? new nro.repository.dao.ThongBaoVaoGameDAO.Dong() : tbDangChon();
+        if (d == null) {
+            note(WARN_RED, "Chọn một thông báo đã.");
             return;
         }
-        ConfigDAO.reload();
+        JTextArea o = new JTextArea(8, 60);
+        o.setLineWrap(true);
+        o.setWrapStyleWord(true);
+        o.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        o.setText(d.noiDung == null ? "" : d.noiDung);
+        o.setCaretPosition(0);
+        int ok = JOptionPane.showConfirmDialog(this, ServerGuiUtils.cuon(o),
+                them ? "Thêm thông báo" : "Sửa thông báo",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (ok != JOptionPane.OK_OPTION) {
+            return;
+        }
+        d.noiDung = o.getText();
+        if (them) {
+            // Xep xuong cuoi: them mot thong bao khong nen chen ngang thu tu
+            // dang co.
+            int lonNhat = 0;
+            for (nro.repository.dao.ThongBaoVaoGameDAO.Dong x
+                    : nro.repository.dao.ThongBaoVaoGameDAO.danhSach()) {
+                lonNhat = Math.max(lonNhat, x.thuTu);
+            }
+            d.thuTu = lonNhat + 10;
+            d.bat = true;
+        }
+        String loi = nro.repository.dao.ThongBaoVaoGameDAO.luu(d);
         napLoiChao();
-        note(OK_GREEN, v.trim().isEmpty()
-                ? "Đã tắt lời chào — vào game sẽ không hiện gì."
-                : "Đã lưu lời chào — có hiệu lực ngay.");
+        note(loi == null ? OK_GREEN : WARN_RED,
+                loi == null ? "Đã lưu thông báo — có hiệu lực ngay." : loi);
+    }
+
+    private void batTatThongBao() {
+        nro.repository.dao.ThongBaoVaoGameDAO.Dong d = tbDangChon();
+        if (d == null) {
+            note(WARN_RED, "Chọn một thông báo đã.");
+            return;
+        }
+        d.bat = !d.bat;
+        String loi = nro.repository.dao.ThongBaoVaoGameDAO.luu(d);
+        int r = tbTable.getSelectedRow();
+        napLoiChao();
+        if (r >= 0 && r < tbModel.getRowCount()) {
+            tbTable.setRowSelectionInterval(r, r);
+        }
+        note(loi == null ? OK_GREEN : WARN_RED, loi != null ? loi
+                : (d.bat ? "Đã bật thông báo này." : "Đã tắt thông báo này."));
+    }
+
+    /**
+     * Đổi chỗ thông báo đang chọn với dòng liền kề.
+     *
+     * <p>Đổi hẳn hai số thứ tự cho nhau chứ không cộng trừ một: hai dòng có thể
+     * đang cách nhau mười đơn vị, cộng một thì nhìn bảng không thấy gì đổi.</p>
+     */
+    private void doiChoThongBao(int huong) {
+        int r = tbTable.getSelectedRow();
+        if (r < 0) {
+            note(WARN_RED, "Chọn một thông báo đã.");
+            return;
+        }
+        java.util.List<nro.repository.dao.ThongBaoVaoGameDAO.Dong> ds
+                = new ArrayList<>(nro.repository.dao.ThongBaoVaoGameDAO.danhSach());
+        int r2 = r + huong;
+        if (r2 < 0 || r2 >= ds.size()) {
+            return;
+        }
+        nro.repository.dao.ThongBaoVaoGameDAO.Dong a = ds.get(r);
+        nro.repository.dao.ThongBaoVaoGameDAO.Dong b = ds.get(r2);
+        int t = a.thuTu;
+        a.thuTu = b.thuTu;
+        b.thuTu = t;
+        if (a.thuTu == b.thuTu) {
+            // Hai dong cung so thu tu thi doi cho khong ra ket qua nao ca —
+            // tach chung ra truoc.
+            a.thuTu += huong * 5;
+        }
+        String loi = nro.repository.dao.ThongBaoVaoGameDAO.luu(a);
+        if (loi == null) {
+            loi = nro.repository.dao.ThongBaoVaoGameDAO.luu(b);
+        }
+        napLoiChao();
+        if (r2 < tbModel.getRowCount()) {
+            tbTable.setRowSelectionInterval(r2, r2);
+        }
+        if (loi != null) {
+            note(WARN_RED, loi);
+        }
+    }
+
+    private void xoaThongBao() {
+        nro.repository.dao.ThongBaoVaoGameDAO.Dong d = tbDangChon();
+        if (d == null) {
+            note(WARN_RED, "Chọn một thông báo đã.");
+            return;
+        }
+        if (JOptionPane.showConfirmDialog(this,
+                "Xoá hẳn thông báo này?\n\n" + motDong(d.noiDung),
+                "Xoá thông báo", JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+            return;
+        }
+        String loi = nro.repository.dao.ThongBaoVaoGameDAO.xoa(d.id);
+        napLoiChao();
+        note(loi == null ? OK_GREEN : WARN_RED,
+                loi == null ? "Đã xoá thông báo." : loi);
     }
 
     /**

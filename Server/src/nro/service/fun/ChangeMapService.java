@@ -607,7 +607,10 @@ public class ChangeMapService {
      * khoá mãi nghĩa là người chơi <b>không đổi bản đồ được nữa</b> cho tới khi
      * thoát game — tệ hơn hẳn lỗi ban đầu.</p>
      */
-    private static final long KHOA_DOI_MAP_HET_HAN_MS = 5000;
+    private static long khoaDoiMapHetHanMs() {
+        return nro.repository.dao.ConfigDAO.num(
+                nro.repository.dao.ConfigDAO.DOI_MAP_HET_HAN_GIAY, 5L) * 1000L;
+    }
 
     /**
      * Quãng nghỉ tối thiểu giữa hai lần đi qua cổng dịch chuyển, mili giây.
@@ -617,14 +620,17 @@ public class ChangeMapService {
      * lại qua cổng liên tục — lượt trước vừa xong là lượt sau đã bắt đầu, và
      * client chưa kịp dựng xong cảnh cũ.</p>
      */
-    private static final long CHO_QUA_CONG_MS = 1000;
+    private static long choQuaCongMs() {
+        return nro.repository.dao.ConfigDAO.num(
+                nro.repository.dao.ConfigDAO.DOI_MAP_CHO_GIAY, 1L) * 1000L;
+    }
 
     /** Đang có một lượt đổi bản đồ chưa xong hay không. */
     public static boolean dangDoiMap(Player pl) {
         if (pl == null || !pl.dangDoiMap) {
             return false;
         }
-        if (System.currentTimeMillis() - pl.mocBatDauDoiMap > KHOA_DOI_MAP_HET_HAN_MS) {
+        if (System.currentTimeMillis() - pl.mocBatDauDoiMap > khoaDoiMapHetHanMs()) {
             // Het han: coi nhu xong, khong giu nguoi choi lai mai mai.
             pl.dangDoiMap = false;
             return false;
@@ -1094,12 +1100,12 @@ public class ChangeMapService {
             //
             // Ba thay doi:
             //  1. Con so cu la 0 — tuc khong gioi han gi ca, dieu kien luon
-            //     dung. Nay lay CHO_QUA_CONG_MS.
+            //     dung. Nay lay choQuaCongMs().
             //  2. Bo mien tru cho ban do NHA: nha khong khac gi cac ban do
             //     khac ve mat nay, ma dung la cho de kich lien tuc nhat.
             //  3. Doi cau bao. Cau cu chui nguoi choi vi mot viec ho khong lam
             //     sai — bam nhanh khong phai loi cua ho.
-            if (!Util.canDoWithTime(player.MapTransitionTime, CHO_QUA_CONG_MS)) {
+            if (!Util.canDoWithTime(player.MapTransitionTime, choQuaCongMs())) {
                 resetPoint(player);
                 Service.gI().sendThongBao(player, "Chờ một chút rồi hãy qua tiếp.");
                 return;
@@ -1268,10 +1274,10 @@ public class ChangeMapService {
         YeuCauDoiMap yc = player.yeuCauDoiMapDangCho;
         player.yeuCauDoiMapDangCho = null;
         // Qua cu thi thoi. Goi -39 co the mat han; luc do khoa tu het han sau
-        // KHOA_DOI_MAP_HET_HAN_MS va cac luot sau chay binh thuong, nhung yeu
+        // khoaDoiMapHetHanMs() va cac luot sau chay binh thuong, nhung yeu
         // cau hoan nay thi nam lai. No ma no ra o mot lan nap ban do nao do rat
         // lau sau se keo nguoi choi di dau do khong duyen co gi.
-        if (System.currentTimeMillis() - yc.moc > KHOA_DOI_MAP_HET_HAN_MS * 2) {
+        if (System.currentTimeMillis() - yc.moc > khoaDoiMapHetHanMs() * 2) {
             return;
         }
         try {

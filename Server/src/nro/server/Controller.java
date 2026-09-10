@@ -1696,13 +1696,12 @@ public class Controller implements IMessageHandler {
      * file cấu hình thay vì nhúng vào code.</p>
      */
     private void sendThongBaoServer(Player player) {
-        // Loi chao doc tu panel (khoa loi_chao_vao_game, tab Quy uoc). Truoc
-        // day go cung ngay day nen doi mot chu la phai sua ma roi bien dich lai.
-        // De trong o do thi khong hien gi ca.
-        String loiChao = nro.repository.dao.ConfigDAO.chuoi(
-                nro.repository.dao.ConfigDAO.LOI_CHAO);
-        if (loiChao != null && !loiChao.trim().isEmpty()) {
-            Service.gI().sendThongBaoFromAdmin(player, loiChao.trim() + "\n");
+        // Thong bao doc tu tab "Thong bao" tren panel. Danh sach chay THEO
+        // LUOT: nguoi vao sau nhan dong ke tiep, het danh sach thi quay lai
+        // dau. Khong co dong nao dang bat thi khong hien gi ca.
+        String thongBao = nro.repository.dao.ThongBaoVaoGameDAO.choNguoiVuaVao();
+        if (thongBao != null && !thongBao.isEmpty()) {
+            Service.gI().sendThongBaoFromAdmin(player, thongBao + "\n");
         }
     }
 }
