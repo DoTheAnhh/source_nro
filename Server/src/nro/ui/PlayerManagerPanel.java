@@ -1810,20 +1810,44 @@ public class PlayerManagerPanel extends JPanel {
      * gốc, % trên đồ, thẻ, bùa, bổ huyết, huýt sáo, set, phần đệ tử khi hợp
      * thể… Bước nào không làm đổi con số thì không có dòng.
      */
+    /**
+     * Tính lại trần máu của người đang chọn và bày <b>từng bước</b> ra bảng:
+     * gốc, % trên đồ, thẻ, bùa, bổ huyết, huýt sáo, set, phần đệ tử khi hợp
+     * thể… Bước nào không làm đổi con số thì không có dòng.
+     *
+     * <p>Có đệ tử thì thêm tab <b>Đệ tử</b>, tính ở đúng trạng thái hiện tại —
+     * đang hợp thể thì không có khỉ, huýt sáo của đệ. Con số cuối của tab ấy là
+     * phần HP đệ góp vào sư phụ (loại đệ 1 thêm 20%, loại 5 thêm 40%).</p>
+     */
     private void doChiTietHp() {
         final Player p = selected;
         if (p == null || p.nPoint == null) {
             warn("Chỉ xem được người đang online.");
             return;
         }
-        java.util.List<String[]> ds;
+        java.util.List<String[]> dsSp;
+        java.util.List<String[]> dsDe = null;
         try {
-            ds = p.nPoint.giaiThichHp();
+            dsSp = p.nPoint.giaiThichHp();
+            if (p.Detu != null && p.Detu.nPoint != null) {
+                dsDe = p.Detu.nPoint.giaiThichHp();
+            }
         } catch (Exception ex) {
             Logger.logException(PlayerManagerPanel.class, ex, "Lỗi tính chi tiết HP");
             warn("Không tính được: " + ex.getMessage());
             return;
         }
+        javax.swing.JTabbedPane tabs = new javax.swing.JTabbedPane();
+        tabs.addTab("Sư phụ — HP tối đa " + fmt(p.nPoint.hpMax), bangChiTietHp(dsSp));
+        if (dsDe != null) {
+            tabs.addTab("Đệ tử — HP tối đa " + fmt(p.Detu.nPoint.hpMax), bangChiTietHp(dsDe));
+        }
+        JOptionPane.showMessageDialog(this, tabs, "Chi tiết HP — " + p.name,
+                JOptionPane.PLAIN_MESSAGE);
+    }
+
+    /** Bảng từng bước của một lần tính trần máu. */
+    private javax.swing.JComponent bangChiTietHp(java.util.List<String[]> ds) {
         javax.swing.table.DefaultTableModel m = new javax.swing.table.DefaultTableModel(
                 new Object[]{"#", "Bước", "Thay đổi", "Tương đương", "HP tối đa sau bước"}, 0) {
             @Override
@@ -1859,8 +1883,7 @@ public class PlayerManagerPanel extends JPanel {
         }
         javax.swing.JScrollPane sc = new javax.swing.JScrollPane(t);
         sc.setPreferredSize(new java.awt.Dimension(840, 460));
-        JOptionPane.showMessageDialog(this, sc, "Chi tiết HP — " + p.name
-                + " — HP tối đa " + fmt(p.nPoint.hpMax), JOptionPane.PLAIN_MESSAGE);
+        return sc;
     }
 
     private void doResetChieu() {
