@@ -480,10 +480,15 @@ public class Mob {
         //
         // Tra ve 0 nghia la nhom ay khoa nguoi choi thuong (Ngu Hanh Son: chi de
         // tu danh moi duoc tiem nang).
+        // Ghi lai cu danh nay de panel so uoc tinh voi so thuc nhan: gia tri
+        // ngay truoc he so ban do chinh la thu panel goi la "gia tri goc".
+        pl.tnGocCuoi = tiemNang;
+        pl.tnMapCuoi = this.zone != null && this.zone.map != null ? this.zone.map.mapId : -1;
         if (this.zone != null && this.zone.map != null) {
             double heSoMap = nro.repository.dao.HeSoTnsmDAO.heSo(
                     this.zone.map.mapId, pl.isDeTu);
             if (heSoMap <= 0) {
+                pl.tnNhanCuoi = 0;
                 return 0;
             }
             if (heSoMap != 1) {

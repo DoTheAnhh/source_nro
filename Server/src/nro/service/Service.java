@@ -1141,6 +1141,8 @@ public class Service {
                     param = Math.round(param * heSoSp);
                 }
             }
+            // Ghi lai cho panel so uoc tinh voi so thuc nhan.
+            master.tnTuDeCuoi = param;
             long endCal = System.currentTimeMillis();
             if (endCal - start > 50) {
                 System.out.println("[SLOW] CALCULATOR POINT : " + (endCal - start) + " : " + (endCal - start2));
@@ -1382,6 +1384,12 @@ public class Service {
 
             Send_Info_NV(pl);
             PlayerService.gI().sendInfoHpMp(pl);
+            // De tu vua song lai: bao lai cho su phu ngay. Khong thi o de tu
+            // tren client cua su phu — ca khung "Thong tin de tu" — van hien
+            // mau cu cho toi lan hoi ke tiep.
+            if (pl.isDeTu && pl instanceof Detu && ((Detu) pl).master != null) {
+                showInfoPet(((Detu) pl).master);
+            }
             AchievementService.gI().checkDoneTask(pl, ConstAchievement.THANH_HOI_SINH);
         } catch (Exception e) {
             Logger.logException(Service.class, e);
