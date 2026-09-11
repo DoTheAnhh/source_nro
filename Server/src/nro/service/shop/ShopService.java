@@ -52,6 +52,8 @@ public class ShopService {
      * vật phẩm đó chứ không phải trừ một biến.</p>
      */
     private static final byte COST_THOI_VANG = 5;
+    /** Điểm săn boss — cộng khi hạ boss lớn, lưu ở PlayerEvent (cột điểm chiến trường Namếc cũ). */
+    private static final byte COST_SAN_BOSS = 6;
 
     /** Id mẫu vật phẩm Thỏi vàng. */
     private static final short ID_THOI_VANG = 457;
@@ -282,7 +284,7 @@ public class ShopService {
                 msg.writer().writeByte(NORMAL_SHOP);
                 msg.writer().writeByte(shop.tabShops.size());
                 for (TabShop tab : shop.tabShops) {
-                    msg.writer().writeUTF(tab.name);
+                    msg.writer().writeUTF(tenTab(player, tab));
                     msg.writer().writeByte(tab.itemShops.size());
                     for (ItemShop itemShop : tab.itemShops) {
                         msg.writer().writeShort(itemShop.temp.id);
@@ -296,7 +298,8 @@ public class ShopService {
                             msg.writer().writeInt(0);
                             msg.writer().writeInt(itemShop.cost);
                         } else if (itemShop.typeSell == COST_EVENT
-                                || itemShop.typeSell == COST_THOI_VANG) {
+                                || itemShop.typeSell == COST_THOI_VANG
+                                || itemShop.typeSell == COST_SAN_BOSS) {
                             // Goi tin chi co hai o gia: vang va ngoc. Thoi vang
                             // khong co o rieng nen gui 0/0 giong COST_EVENT —
                             // client hien gia 0, may chu van tru dung.
@@ -344,7 +347,7 @@ public class ShopService {
                 msg.writer().writeByte(LEARN_SKILL);
                 msg.writer().writeByte(shop.tabShops.size());
                 for (TabShop tab : shop.tabShops) {
-                    msg.writer().writeUTF(tab.name);
+                    msg.writer().writeUTF(tenTab(player, tab));
                     msg.writer().writeByte(tab.itemShops.size());
                     for (ItemShop itemShop : tab.itemShops) {
                         msg.writer().writeShort(itemShop.temp.id);
@@ -390,7 +393,7 @@ public class ShopService {
                 msg.writer().writeByte(POINT_SHOP);
                 msg.writer().writeByte(shop.tabShops.size());
                 for (TabShop tab : shop.tabShops) {
-                    msg.writer().writeUTF(tab.name);
+                    msg.writer().writeUTF(tenTab(player, tab));
                     msg.writer().writeByte(1); // max page
                     msg.writer().writeByte(tab.itemShops.size());
                     for (ItemShop itemShop : tab.itemShops) {
@@ -442,7 +445,7 @@ public class ShopService {
                 msg.writer().writeByte(SPEC_SHOP);
                 msg.writer().writeByte(shop.tabShops.size());
                 for (TabShop tab : shop.tabShops) {
-                    msg.writer().writeUTF(tab.name);
+                    msg.writer().writeUTF(tenTab(player, tab));
                     msg.writer().writeByte(tab.itemShops.size());
                     for (ItemShop itemShop : tab.itemShops) {
                         msg.writer().writeShort(itemShop.temp.id);
@@ -733,6 +736,8 @@ public class ShopService {
                 break;
             case COST_THOI_VANG:
                 return truThoiVang(player, is.cost);
+            case COST_SAN_BOSS:
+                return truDiemSanBoss(player, is.cost);
             default:
                 break;
         }
@@ -828,6 +833,9 @@ public class ShopService {
     
     private boolean subIemByItemShopByUpdate(Player pl, ItemShop itemShop) {
         boolean isBuy = false;
+        if (itemShop.typeSell == COST_SAN_BOSS) {
+            return truDiemSanBoss(pl, itemShop.cost);
+        }
         short itSpec = ItemService.gI().getItemIdByIcon((short) itemShop.iconSpec);
         int buySpec = itemShop.cost;
         Item itS = ItemService.gI().createNewItem(itSpec);
@@ -1075,6 +1083,9 @@ public class ShopService {
 
     private boolean subIemByItemShop(Player pl, ItemShop itemShop) {
         boolean isBuy = false;
+        if (itemShop.typeSell == COST_SAN_BOSS) {
+            return truDiemSanBoss(pl, itemShop.cost);
+        }
         short itSpec = ItemService.gI().getItemIdByIcon((short) itemShop.iconSpec);
         int buySpec = itemShop.cost;
         Item itS = ItemService.gI().createNewItem(itSpec);
@@ -1816,11 +1827,16 @@ public class ShopService {
         }
     }
     
+    /**
+     * Cửa hàng ở NPC Tranh Ngọc Namếc — đổi bằng <b>điểm săn boss</b>.
+     *
+     * <p>Món khai "Bán theo: Điểm săn boss" trừ đúng giá. Dòng "Cần # điểm để
+     * đổi" (chỉ số 76) kiểu cũ nếu còn sót thì vẫn hiểu. Món khai loại tiền
+     * khác (ngọc, vàng...) thì trừ đúng loại đó.</p>
+     */
     private void buyItemChienTruongNamec(Player player, int itemTempId) {
         Shop shop = player.iDMark.getShopOpen();
-        ItemShop is = shop.getItemShop(itemTempId);
-        int pointExchange = 0;
-        int evPoint = player.event.getNamekWarPoint();
+        ItemShop is = shop == null ? null : shop.getItemShop(itemTempId);
         if (is == null) {
             Service.gI().sendThongBao(player, "Không thể thực hiện");
             return;
@@ -1829,24 +1845,67 @@ public class ShopService {
             Service.gI().sendThongBao(player, "Hàng trang đã đầy, cần một ô trống trong hành trang");
             return;
         }
-        for (ItemOption io : is.options) {
-            if (io.optionTemplate.id == 76) {
-                pointExchange = io.param;
+        int canDiem = 0;
+        if (is.typeSell == COST_SAN_BOSS) {
+            canDiem = is.cost;
+        } else {
+            for (ItemOption io : is.options) {
+                if (io.optionTemplate.id == 76) {
+                    canDiem = io.param;
+                }
             }
         }
-        if (pointExchange > 0) {
-            if (evPoint >= pointExchange) {
-                player.event.subNamekWarPoint(pointExchange);
-                InventoryService.gI().addItemBag(player, ItemService.gI().createItemFromItemShop(is));
-                InventoryService.gI().sendItemBag(player);
-                Service.gI().sendThongBao(player, "Bạn đã đổi thành công " + ItemService.gI().createItemFromItemShop(is).template.name);
-                opendShop(player, shop.tagName, true);
-            } else {
-                Service.gI().sendThongBao(player, "Bạn còn thiếu " + (pointExchange - evPoint) + " điểm chiến trường namek");
-            }
+        boolean daTra;
+        if (canDiem > 0) {
+            daTra = truDiemSanBoss(player, canDiem);
+        } else if (shop.typeShop == SPEC_SHOP) {
+            daTra = subIemByItemShop(player, is);
+        } else {
+            daTra = subMoneyByItemShop(player, is);
         }
+        if (!daTra) {
+            return;
+        }
+        Item mon = ItemService.gI().createItemFromItemShop(is);
+        InventoryService.gI().addItemBag(player, mon);
+        InventoryService.gI().sendItemBag(player);
+        Service.gI().sendMoney(player);
+        Service.gI().sendThongBao(player, "Bạn đã đổi thành công " + mon.template.name
+                + (canDiem > 0 ? " — còn " + Util.soCham(player.event.getNamekWarPoint())
+                + " điểm săn boss" : ""));
+        opendShop(player, shop.tagName, true);
     }
-    
+
+    /** Trừ điểm săn boss; thiếu thì báo và trả về {@code false}. */
+    private boolean truDiemSanBoss(Player player, int cost) {
+        int co = player.event.getNamekWarPoint();
+        if (co < cost) {
+            Service.gI().sendThongBao(player, "Bạn còn thiếu " + Util.soCham(cost - co)
+                    + " điểm săn boss");
+            return false;
+        }
+        player.event.subNamekWarPoint(cost);
+        return true;
+    }
+
+    /**
+     * Tên tab gửi xuống client. Tab có món bán bằng <b>điểm săn boss</b> thì thêm
+     * một dòng số điểm đang có — nhìn là biết đổi được món nào.
+     */
+    private String tenTab(Player player, TabShop tab) {
+        String ten = tab.name == null ? "" : tab.name;
+        if (player == null || player.event == null || tab.itemShops == null) {
+            return ten;
+        }
+        for (ItemShop is : tab.itemShops) {
+            if (is != null && is.typeSell == COST_SAN_BOSS) {
+                return ten.replace("\n", " ") + "\n"
+                        + Util.soCham(player.event.getNamekWarPoint()) + " điểm";
+            }
+        }
+        return ten;
+    }
+
     private void buyItemLunaNewYearEvent(Player player, int itemTempId) {
         Shop shop = player.iDMark.getShopOpen();
         ItemShop is = shop.getItemShop(itemTempId);

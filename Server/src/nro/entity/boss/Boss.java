@@ -472,8 +472,39 @@ public class Boss extends Player implements IBoss {
         // gan nhu khong boss nao chay. changeStatus() khong bi lop nao ghi de.
         if (status == BossStatus.DIE && this.bossStatus != BossStatus.DIE) {
             thaVatPhamTheoCauHinh();
+            congDiemSanBoss();
         }
         this.bossStatus = status;
+    }
+
+    /**
+     * Điểm săn boss: hạ boss có máu tối đa từ ngưỡng quy ước trở lên (mặc định
+     * 500 triệu) thì người kết liễu được cộng điểm, đổi quà ở NPC Tranh Ngọc
+     * Namếc. Thay cho sự kiện Tranh Ngọc Namếc đã bỏ.
+     *
+     * <p>Người nhận là {@code playerReward} — {@link #die(Player)} đã đổi đệ tử /
+     * phân thân thành sư phụ. Gọi từ {@link #changeStatus} như phần thả đồ, vì
+     * đó là chỗ duy nhất mọi lớp boss đều đi qua.</p>
+     */
+    private void congDiemSanBoss() {
+        try {
+            Player nguoi = this.playerReward;
+            if (nguoi == null || !nguoi.isPl() || nguoi.event == null || this.nPoint == null) {
+                return;
+            }
+            long nguong = nro.repository.dao.ConfigDAO.num(
+                    nro.repository.dao.ConfigDAO.SAN_BOSS_HP_TOI_THIEU, 500_000_000L);
+            long diem = nro.repository.dao.ConfigDAO.num(
+                    nro.repository.dao.ConfigDAO.SAN_BOSS_DIEM, 1L);
+            if (diem <= 0 || this.nPoint.hpMax < nguong) {
+                return;
+            }
+            nguoi.event.addNamekWarPoint((int) Math.min(diem, 1_000_000L));
+            Service.gI().sendThongBao(nguoi, "+" + diem + " điểm săn boss (" + this.name
+                    + ") — đang có " + nro.core.util.Util.soCham(nguoi.event.getNamekWarPoint()) + " điểm");
+        } catch (Exception ex) {
+            Logger.logException(Boss.class, ex, "Lỗi cộng điểm săn boss");
+        }
     }
 
     /**

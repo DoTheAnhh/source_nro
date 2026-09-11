@@ -749,7 +749,8 @@ public class OngGohan extends Npc {
                 this.createOtherMenu(player, ConstNpc.ONG_GIA_MENU_3,
                         "|0|Menu Skip Nhiệm Vụ\n\n|2|Mời Quý Khách Lựa Chọn!\n",
                         "Skip Nhiệm Vụ Heo Rừng", "Skip Nhiệm Vụ Bulon", "Skip Nhiệm Vụ\n Thách đấu",
-                        "Skip Nhiệm Vụ Đại Hội Võ Thuật", "Skip Nhiệm Vụ Trung Uý Trắng", "Đóng");
+                        "Skip Nhiệm Vụ Đại Hội Võ Thuật", "Skip Nhiệm Vụ Trung Uý Trắng",
+                        "Skip Nhiệm Vụ\nMabu", "Đóng");
                 break;
 
             case 7:
@@ -859,6 +860,14 @@ public class OngGohan extends Npc {
                     break;
 
                 case 5:
+                    // Nhiem vu 30: Drabura, Bui Bui, Yacon, Mabu 12h.
+                    if (taskId == 30 && taskIndex < player.playerTask.taskMain.subTasks.size() - 1) {
+                        canSkip = true;
+                        taskName = "Mabu";
+                    }
+                    break;
+
+                case 6:
                     Service.gI().sendThongBao(player, "Đã đóng menu Skip Nhiệm Vụ.");
                     return;
 

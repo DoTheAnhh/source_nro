@@ -122,9 +122,39 @@ public class TaskService {
         }
     }
 
+    /**
+     * Mỗi nhiệm vụ chính hoàn thành thưởng thỏi vàng — số lượng theo quy ước
+     * {@code thuong_nv_thoi_vang} (mặc định 20, 0 là tắt). Skip nhiệm vụ ở Ông
+     * Gohan cũng đi qua {@link #sendNextTaskMain} nên cũng được thưởng.
+     */
+    private void thuongThoiVangHoanThanh(Player player) {
+        try {
+            if (player == null || !player.isPl()) {
+                return;
+            }
+            long so = nro.repository.dao.ConfigDAO.num(
+                    nro.repository.dao.ConfigDAO.THUONG_NV_THOI_VANG, 20L);
+            if (so <= 0) {
+                return;
+            }
+            nro.entity.item.Item tv = nro.service.item.ItemService.gI()
+                    .createNewItem((short) 457, (int) Math.min(so, 1_000_000L));
+            if (nro.service.inventory.InventoryService.gI().addItemBag(player, tv)) {
+                nro.service.inventory.InventoryService.gI().sendItemBag(player);
+                Service.gI().sendThongBao(player, "Hoàn thành nhiệm vụ: nhận " + so + " thỏi vàng");
+            } else {
+                Service.gI().sendThongBao(player, "Hành trang đầy — không nhận được " + so
+                        + " thỏi vàng thưởng nhiệm vụ");
+            }
+        } catch (Exception ex) {
+            nro.core.log.Logger.logException(TaskService.class, ex, "Lỗi thưởng thỏi vàng nhiệm vụ");
+        }
+    }
+
     //chuyển sang task mới
     public void sendNextTaskMain(Player player) {
         rewardDoneTask(player);
+        thuongThoiVangHoanThanh(player);
         // Nhiem vu danh hieu loai "xong nhiem vu chinh tuyen" — dem ID CU,
         // tuc cai vua lam xong, chu khong phai cai sap nhan.
         try {

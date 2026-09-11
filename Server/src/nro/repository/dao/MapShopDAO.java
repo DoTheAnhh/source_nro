@@ -750,13 +750,68 @@ public class MapShopDAO {
                 return "Điểm sự kiện";
             case 5:
                 return "Thỏi vàng";
+            case 6:
+                return "Điểm săn boss";
             default:
                 return "Loại " + typeSell;
         }
     }
 
+    /**
+     * Một lần, lúc khởi động: cửa hàng Tranh Ngọc Namếc chuyển sang bán bằng
+     * <b>điểm săn boss</b> (loại tiền 6).
+     *
+     * <p>Món còn dòng "Cần # điểm để đổi" (chỉ số 76) lớn hơn 0 thì giá lấy
+     * đúng con số đó, loại tiền thành điểm săn boss; rồi xoá dòng 76 khỏi mọi
+     * món của cửa hàng — giá giờ hiện ở ngoài, cạnh ảnh điểm. Ảnh giá
+     * ({@code icon_spec}) giữ nguyên. Chạy lại không đổi gì thêm.</p>
+     */
+    public static void chuyenShopNamekSangDiemSanBoss() {
+        try {
+            int doi = ConnectDB.executeUpdate("UPDATE item_shop i"
+                    + " JOIN tab_shop t ON t.id = i.tab_id"
+                    + " JOIN shop s ON s.id = t.shop_id"
+                    + " JOIN item_shop_option o ON o.item_shop_id = i.id AND o.option_id = 76"
+                    + " SET i.cost = o.param, i.type_sell = 6"
+                    + " WHERE s.tag_name = 'SHOP_NAMEK_WAR' AND o.param > 0");
+            int xoa = ConnectDB.executeUpdate("DELETE o FROM item_shop_option o"
+                    + " JOIN item_shop i ON i.id = o.item_shop_id"
+                    + " JOIN tab_shop t ON t.id = i.tab_id"
+                    + " JOIN shop s ON s.id = t.shop_id"
+                    + " WHERE s.tag_name = 'SHOP_NAMEK_WAR' AND o.option_id = 76");
+            if (doi > 0 || xoa > 0) {
+                Logger.success("Cửa hàng Tranh Ngọc Namếc: " + doi
+                        + " món chuyển sang điểm săn boss, bỏ " + xoa + " dòng \"Cần # điểm\"\n");
+            }
+        } catch (Exception ex) {
+            Logger.logException(MapShopDAO.class, ex, "Lỗi chuyển cửa hàng Namếc sang điểm săn boss");
+        }
+    }
+
+    /**
+     * Ảnh của điểm săn boss: đúng ảnh cửa hàng Tranh Ngọc Namếc đang dùng — ảnh
+     * gặp nhiều nhất trong các món bán bằng điểm săn boss — để người chơi không
+     * phải làm quen với một biểu tượng mới.
+     */
+    private static int anhDiemSanBoss() {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT icon_spec, COUNT(*) AS so FROM item_shop"
+                    + " WHERE type_sell = 6 AND icon_spec > 0"
+                    + " GROUP BY icon_spec ORDER BY so DESC LIMIT 1");
+            if (rs.next()) {
+                return rs.getInt("icon_spec");
+            }
+        } catch (Exception ex) {
+            Logger.logException(MapShopDAO.class, ex, "Lỗi đọc ảnh điểm săn boss");
+        } finally {
+            dispose(rs);
+        }
+        return -1;
+    }
+
     /** Các mã loại tiền hợp lệ, theo đúng thứ tự muốn hiện trên ô chọn. */
-    public static final int[] LOAI_TIEN = {0, 1, 3, 4, 5};
+    public static final int[] LOAI_TIEN = {0, 1, 3, 4, 5, 6};
 
     /**
      * Ảnh của loại tiền — dùng cho cột {@code icon_spec}.
@@ -784,6 +839,8 @@ public class MapShopDAO {
             case 5:
                 itemId = 457;
                 break;
+            case 6:
+                return anhDiemSanBoss();
             default:
                 return -1;
         }

@@ -300,6 +300,8 @@ public final class Manager {
     // ShopDAO doc cot nay ngay trong do. Goi o giua loadDatabase thi treo —
     // ho ket noi chi co mot, ma loadDatabase giu suot.
     nro.repository.dao.MapShopDAO.damBaoCotParamMax();
+    // Cua hang Tranh Ngoc Namec ban bang diem san boss — mot lan, truoc loadDatabase.
+    nro.repository.dao.MapShopDAO.chuyenShopNamekSangDiemSanBoss();
 
     this.loadDatabase();
 

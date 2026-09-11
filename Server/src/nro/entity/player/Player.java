@@ -1505,7 +1505,7 @@ public class Player implements Runnable {
                         autoSendBadges();
                         BadgesTaskService.updateDoneTask(this);
                         sendTextTimeDaiLyGift();
-                        TranhNgoc.gI().update(this);
+                        // Su kien Tranh Ngoc Namec da bo han: NPC chi con doi diem san boss.
                         UpdateOptionClan();
                         if (this.clan != null) {
                             ClanService.gI().checkDoneTaskJoinClan(this.clan);

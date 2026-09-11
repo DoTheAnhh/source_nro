@@ -392,6 +392,13 @@ public class ConfigDAO {
     /** Số bí kiếp đổi một bộ võ phục Yardrat ở Goku SSJ. */
     public static final String YARDRAT_BI_KIEP_DOI = "yardrat_bi_kiep_doi";
 
+    /** Boss có máu tối đa từ mức này trở lên thì hạ được nhận điểm săn boss. */
+    public static final String SAN_BOSS_HP_TOI_THIEU = "san_boss_hp_toi_thieu";
+    /** Số điểm săn boss mỗi con boss đủ ngưỡng. */
+    public static final String SAN_BOSS_DIEM = "san_boss_diem";
+    /** Thỏi vàng thưởng mỗi lần hoàn thành một nhiệm vụ chính; 0 là tắt. */
+    public static final String THUONG_NV_THOI_VANG = "thuong_nv_thoi_vang";
+
     /** Hồi sinh tại chỗ ở bản đồ thường trả bằng gì — số thứ tự trong {@link #HOI_SINH_CAC_LOAI}. */
     public static final String HOI_SINH_LOAI = "hoi_sinh_loai";
     /** Hồi sinh tại chỗ ở bản đồ thường trừ bao nhiêu; 0 là miễn phí. */
@@ -471,6 +478,9 @@ public class ConfigDAO {
         DEFAULTS.put(YARDRAT_TRAN_SAT_THUONG, 50_000L);
         DEFAULTS.put(YARDRAT_HOI_SINH_GIAY, 10L);
         DEFAULTS.put(YARDRAT_BI_KIEP_DOI, 999L);
+        DEFAULTS.put(SAN_BOSS_HP_TOI_THIEU, 500_000_000L);
+        DEFAULTS.put(SAN_BOSS_DIEM, 1L);
+        DEFAULTS.put(THUONG_NV_THOI_VANG, 20L);
         DEFAULTS.put(HOI_SINH_LOAI, 0L);
         DEFAULTS.put(HOI_SINH_GIA, 1L);
         DEFAULTS.put(TN_GOC_GIAM_MOI_CAP, 10L);
@@ -570,6 +580,9 @@ public class ConfigDAO {
         NOTES.put(TN_GOC_DAO_DONG, "Mỗi con quái lúc hồi sinh lệch ngẫu nhiên ± ngần này % tiềm năng");
         NOTES.put(HOI_SINH_LOAI, "Hồi sinh tại chỗ trả bằng (bản đồ thường; NRSĐ và PVP vẫn trả vàng riêng)");
         NOTES.put(HOI_SINH_GIA, "Hồi sinh tại chỗ trừ bao nhiêu — 0 là miễn phí");
+        NOTES.put(SAN_BOSS_HP_TOI_THIEU, "Hạ boss có máu tối đa từ mức này trở lên thì được điểm săn boss");
+        NOTES.put(SAN_BOSS_DIEM, "Điểm săn boss mỗi con — đổi quà ở NPC Tranh Ngọc Namếc (Đảo Kamê)");
+        NOTES.put(THUONG_NV_THOI_VANG, "Thỏi vàng thưởng mỗi lần hoàn thành một nhiệm vụ chính — 0 là tắt");
         NOTES.put(YARDRAT_BI_KIEP_DOI, "Đổi võ phục Yardrat ở Goku SSJ cần bao nhiêu bí kiếp");
         NOTES.put(YARDRAT_HOI_SINH_GIAY,
                 "Lính Yardrat chết bao nhiêu giây thì sống lại tại chỗ cũ");
