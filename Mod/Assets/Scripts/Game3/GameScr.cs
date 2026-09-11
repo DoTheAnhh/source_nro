@@ -711,7 +711,7 @@ namespace Game3
     
     	public bool isInjureMp;
     
-    	public int dHP;
+    	public double dHP;
     
     	public int twHp;
     
@@ -5146,7 +5146,7 @@ namespace Game3
     			}
     			else if (dHP > Char.myCharz().cHP)
     			{
-    				int num = dHP - Char.myCharz().cHP >> 1;
+    				double num = (dHP - Char.myCharz().cHP) / 2;
     				if (num < 1)
     				{
     					num = 1;
@@ -7830,9 +7830,9 @@ namespace Game3
     		veChanDung(g, x0 + d / 2, y0 + d / 2, d, maAnhDau(c));
 
     		veTenDay(g, c.cName, xB + 2, yTen, mFont.LEFT);
-    		veThanhCoKhung(g, xB, yThanh1, wB, caoThanh, c.cHP, c.cHPFull,
+    		veThanhCoKhung(g, xB, yThanh1, wB, caoThanh, (long)c.cHP, (long)c.cHPFull,
     				MAU_HP_DAM, MAU_HP_SANG,
-    				NinjaUtil.getMoneys(c.cHP) + "/" + NinjaUtil.getMoneys(c.cHPFull));
+    				NinjaUtil.getMoneys((long)(c.cHP)) + "/" + NinjaUtil.getMoneys((long)(c.cHPFull)));
     		veThanhCoKhung(g, xB, yThanh2, wB, caoThanh, c.cMP, c.cMPFull,
     				MAU_KI_DAM, MAU_KI_SANG,
     				NinjaUtil.getMoneys(c.cMP) + "/" + NinjaUtil.getMoneys(c.cMPFull));
@@ -7914,7 +7914,7 @@ namespace Game3
     			// Nguoi choi khac cung dung DAU that, giong khung cua minh: avatar
     			// la chan dung co dinh theo hanh tinh nen ai cung nhu ai.
     			veBangMuc(g, toi.charFocus.cName, null, maAnhDau(toi.charFocus),
-    					toi.charFocus.cHP, toi.charFocus.cHPFull);
+    					(long)toi.charFocus.cHP, (long)toi.charFocus.cHPFull);
     			return;
     		}
     		veBangMuc(g, toi.cName, NinjaUtil.getMoneys(toi.cPower) + "", -1, 0L, 0L);
@@ -7978,8 +7978,8 @@ namespace Game3
     			ten = "Đệ tử";
     		}
     		int d = D_CHAN_DUNG;
-    		string chuMau = NinjaUtil.getMoneys(pet.cHP) + "/"
-    				+ NinjaUtil.getMoneys(pet.cHPFull);
+    		string chuMau = NinjaUtil.getMoneys((long)(pet.cHP)) + "/"
+    				+ NinjaUtil.getMoneys((long)(pet.cHPFull));
     		int wB = rongThanhMuc(chuMau, d);
     		int y0 = 3 + mGraphics.addYWhenOpenKeyBoard;
     		int cao = d;
@@ -8047,7 +8047,7 @@ namespace Game3
 
     		int xB = x0 + d + 7;
     		veTenChay(g, ten, xB, y0 + 3, wB);
-    		veThanhCoKhung(g, xB, y0 + 18, wB, 10, pet.cHP, pet.cHPFull,
+    		veThanhCoKhung(g, xB, y0 + 18, wB, 10, (long)pet.cHP, (long)pet.cHPFull,
     				MAU_HP_DAM, MAU_HP_SANG, chuMau);
     	}
 
@@ -8271,7 +8271,7 @@ namespace Game3
 			// vua tao, hoac goi chi so chua toi), va phep chia o duoi nem
 			// DivideByZeroException GIUA luc ve => ca phan con lai cua khung
 			// hinh khong kip ve, map hien ra vo tung manh.
-			int hpFull = (c.cHPFull > 0) ? c.cHPFull : 1;
+			double hpFull = (c.cHPFull > 0) ? c.cHPFull : 1.0;
 			int mpFull = (c.cMPFull > 0) ? c.cMPFull : 1;
     			if (c.charID == Char.myCharz().charID)
     			{
@@ -9871,7 +9871,7 @@ namespace Game3
     		int num4 = imgHP_NEW.getHeight() / 2;
     		// Cung ly do voi paintImageBar: cHPFull = 0 la nem ngoai le giua luc
     		// ve, ca khung hinh con lai mat trang.
-    		num2 = c.cHP * width / ((c.cHPFull > 0) ? c.cHPFull : 1);
+    		num2 = (int)(c.cHP * width / ((c.cHPFull > 0) ? c.cHPFull : 1));
     		if (num2 <= 0)
     		{
     			num2 = 1;
@@ -10196,7 +10196,7 @@ namespace Game3
     		int num4 = imgHP_NEW.getHeight() / 2;
     		// Cung ly do voi paintImageBar: cHPFull = 0 la nem ngoai le giua luc
     		// ve, ca khung hinh con lai mat trang.
-    		num2 = c.cHP * width / ((c.cHPFull > 0) ? c.cHPFull : 1);
+    		num2 = (int)(c.cHP * width / ((c.cHPFull > 0) ? c.cHPFull : 1));
     		if (num2 <= 0)
     		{
     			num2 = 1;

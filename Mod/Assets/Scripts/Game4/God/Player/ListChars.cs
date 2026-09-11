@@ -43,9 +43,9 @@ namespace Game4.God
                     // Tien to cho biet ngay day la ai, khong phai doan theo mau.
                     string text = flag
                             ? "[BOSS] " + @char.cName
-                                    + " [" + NinjaUtil.getMoneys(@char.cHP) + "]"
+                                    + " [" + NinjaUtil.getMoneys((long)(@char.cHP)) + "]"
                             : @char.cName
-                                    + " [" + NinjaUtil.getMoneys(@char.cHP)
+                                    + " [" + NinjaUtil.getMoneys((long)(@char.cHP))
                                     + " - " + @char.getGenderName() + "]";
                     // Ba mau, ba nghia RO RANG:
                     //   do    — muc tieu dang chon

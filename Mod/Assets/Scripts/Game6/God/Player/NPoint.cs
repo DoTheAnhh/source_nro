@@ -27,7 +27,7 @@ namespace Game6.God
         private long getHPPotential()
         {
             long tn = type == TypePoint.Master ? Char.myCharz().cTiemNang : Char.myPetz().cTiemNang;
-            long hp = type == TypePoint.Master ? Char.myCharz().cHPGoc : Char.myPetz().cHPGoc;
+            long hp = (long)(type == TypePoint.Master ? Char.myCharz().cHPGoc : Char.myPetz().cHPGoc);
             long cTiemNang = tn;
             long cHPGoc = hp;
             long num = 10L * (long)(2 * (cHPGoc + 1000) + 180) / 2L;
@@ -117,9 +117,9 @@ namespace Game6.God
             switch (type)
             {
                 case TypePoint.Master:
-                    return Char.myCharz().cHPGoc;
+                    return (long)Char.myCharz().cHPGoc;
                 case TypePoint.Pet:
-                    return Char.myPetz().cHPGoc;
+                    return (long)Char.myPetz().cHPGoc;
                 default: return 0;
             }
         }

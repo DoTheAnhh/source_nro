@@ -18,7 +18,7 @@ namespace Game5.God
                     Service.gI().petInfo();
                 }
                 var p = Char.myPetz();
-                if(GameCanvas.gameTick % 20 == 0 && !p.meDead && (p.cHP < p.cHPFull >> 2 || p.cMP < p.cMPFull >> 2 || p.cStamina < 150))
+                if(GameCanvas.gameTick % 20 == 0 && !p.meDead && (p.cHP < p.cHPFull / 4 || p.cMP < p.cMPFull >> 2 || p.cStamina < 150))
                 {
                     GameScr.gI().doUseHP();
                 }

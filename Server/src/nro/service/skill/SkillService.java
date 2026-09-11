@@ -1255,7 +1255,7 @@ public class SkillService {
                         }
                     }
                     damePST = plAtt.injured(plAtt, damePST, true, false);
-                    msg.writeCris(Util.CrisGH(plAtt.nPoint.hp), Manager.readInt);
+                    msg.writeHp(Util.CrisGH(plAtt.nPoint.hp));
                     msg.writeCris(Util.CrisGH(damePST), Manager.readInt);
                     msg.writer().writeBoolean(false);
                     msg.writer().writeByte(36);

@@ -114,7 +114,7 @@ public class PlayerService {
         Message msg;
         try {
             msg = Service.getInstance().messageSubCommand((byte) 5);
-            msg.writeCris(Util.CrisGH(player.nPoint.hp), Manager.readInt);
+            msg.writeHp(Util.CrisGH(player.nPoint.hp));
             player.sendMessage(msg);
             msg.cleanup();
         } catch (Exception e) {
@@ -191,7 +191,7 @@ public class PlayerService {
                 msg.writer().writeInt((int) player.inventory.gold);
             }
             msg.writer().writeInt(player.inventory.gem);//luong
-            msg.writeCris(Util.CrisGH(player.nPoint.hp), Manager.readInt);//chp
+            msg.writeHp(Util.CrisGH(player.nPoint.hp));//chp
             msg.writeCris(Util.CrisGH(player.nPoint.mp), Manager.readInt);//cmp
             msg.writer().writeInt(player.inventory.ruby);//ruby
             player.sendMessage(msg);

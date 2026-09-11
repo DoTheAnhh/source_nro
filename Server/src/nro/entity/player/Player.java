@@ -2652,11 +2652,13 @@ public byte getAura() {
         Message msg = null;
         try {
             msg = Service.gI().messageSubCommand((byte) 5);
-            msg.writer().writeLong(this.nPoint.hp);
+            msg.writeHp(this.nPoint.hp);
             this.sendMessage(msg);
             msg.cleanup();
             msg = Service.gI().messageSubCommand((byte) 6);
-            msg.writer().writeLong(this.nPoint.mp);
+            // Ki van 4 byte: client doc goi phu 6 bang readInt3Byte. Ban cu viet 8
+            // byte nen client lay nham nua tren — ki hien 0.
+            msg.writeCris(this.nPoint.mp, nro.server.Manager.readInt);
             this.sendMessage(msg);
         } catch (Exception e) {
             Logger.logException(Player.class, e);

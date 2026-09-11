@@ -1822,12 +1822,12 @@ namespace Game5
                             break;
                         }
                     case -42:
-                        Char.myCharz().cHPGoc = msg.readInt3Byte();
+                        Char.myCharz().cHPGoc = msg.readHp();
                         Char.myCharz().cMPGoc = msg.readInt3Byte();
                         Char.myCharz().cDamGoc = msg.reader().readInt();
-                        Char.myCharz().cHPFull = msg.readInt3Byte();
+                        Char.myCharz().cHPFull = msg.readHp();
                         Char.myCharz().cMPFull = msg.readInt3Byte();
-                        Char.myCharz().cHP = msg.readInt3Byte();
+                        Char.myCharz().cHP = msg.readHp();
                         Char.myCharz().cMP = msg.readInt3Byte();
                         Char.myCharz().cspeed = msg.reader().readByte();
                         Char.myCharz().hpFrom1000TiemNang = msg.reader().readByte();
@@ -1931,8 +1931,8 @@ namespace Game5
                                         break;
                                 }
                             }
-                            Char.myPetz().cHP = msg.readInt3Byte();
-                            Char.myPetz().cHPFull = msg.readInt3Byte();
+                            Char.myPetz().cHP = msg.readHp();
+                            Char.myPetz().cHPFull = msg.readHp();
                             Char.myPetz().cMP = msg.readInt3Byte();
                             Char.myPetz().cMPFull = msg.readInt3Byte();
                             Char.myPetz().cDamFull = msg.readInt3Byte();
@@ -2963,7 +2963,7 @@ namespace Game5
                             {
                                 bool flag4 = false;
                                 @char = Char.myCharz();
-                                @char.cHP = msg.readInt3Byte();
+                                @char.cHP = msg.readHp();
                                 int num41 = msg.readInt3Byte();
                                 Res.outz("dame hit = " + num41);
                                 if (num41 != 0)
@@ -3003,7 +3003,7 @@ namespace Game5
                             {
                                 return;
                             }
-                            @char.cHP = msg.readInt3Byte();
+                            @char.cHP = msg.readHp();
                             bool flag5 = false;
                             int num43 = msg.readInt3Byte();
                             if (num43 != 0)
@@ -4868,8 +4868,8 @@ namespace Game5
                                     return;
                                 }
                                 GameCanvas.debug("SA87x3", 2);
-                                int num185 = msg.readInt3Byte();
-                                mob9.dame = @char.cHP - num185;
+                                double num185 = msg.readHp();
+                                mob9.dame = (int)(@char.cHP - num185);
                                 @char.cHPNew = num185;
                                 GameCanvas.debug("SA87x4", 2);
                                 try
@@ -6462,7 +6462,7 @@ namespace Game5
                         GameCanvas.debug("SA23", 2);
                         Char.myCharz().xu = msg.reader().readLong();
                         Char.myCharz().luong = msg.reader().readInt();
-                        Char.myCharz().cHP = msg.readInt3Byte();
+                        Char.myCharz().cHP = msg.readHp();
                         Char.myCharz().cMP = msg.readInt3Byte();
                         Char.myCharz().luongKhoa = msg.reader().readInt();
                         Char.myCharz().xuStr = Res.formatNumber2(Char.myCharz().xu);
@@ -6472,8 +6472,8 @@ namespace Game5
                     case 5:
                         {
                             GameCanvas.debug("SA24", 2);
-                            int cHP = Char.myCharz().cHP;
-                            Char.myCharz().cHP = msg.readInt3Byte();
+                            double cHP = Char.myCharz().cHP;
+                            Char.myCharz().cHP = msg.readHp();
                             if (Char.myCharz().cHP > cHP && Char.myCharz().cTypePk != 4)
                             {
                                 GameScr.startFlyText("+" + (Char.myCharz().cHP - cHP) + " " + mResources.HP, Char.myCharz().cx, Char.myCharz().cy - Char.myCharz().ch - 20, 0, -1, mFont.HP);
@@ -6573,8 +6573,8 @@ namespace Game5
                             Char @char = GameScr.findCharInMap(msg.reader().readInt());
                             if (@char != null)
                             {
-                                @char.cHP = msg.readInt3Byte();
-                                @char.cHPFull = msg.readInt3Byte();
+                                @char.cHP = msg.readHp();
+                                @char.cHPFull = msg.readHp();
                             }
                             break;
                         }
@@ -6654,7 +6654,7 @@ namespace Game5
                             {
                                 break;
                             }
-                            @char.cHP = msg.readInt3Byte();
+                            @char.cHP = msg.readHp();
                             sbyte b4 = msg.reader().readByte();
                             Res.outz("player load hp type= " + b4);
                             if (b4 == 1)
@@ -6668,7 +6668,7 @@ namespace Game5
                             }
                             try
                             {
-                                @char.cHPFull = msg.readInt3Byte();
+                                @char.cHPFull = msg.readHp();
                                 break;
                             }
                             catch (Exception)
@@ -6682,8 +6682,8 @@ namespace Game5
                             Char @char = GameScr.findCharInMap(msg.reader().readInt());
                             if (@char != null)
                             {
-                                @char.cHP = msg.readInt3Byte();
-                                @char.cHPFull = msg.readInt3Byte();
+                                @char.cHP = msg.readHp();
+                                @char.cHPFull = msg.readHp();
                                 @char.cx = msg.reader().readShort();
                                 @char.cy = msg.reader().readShort();
                                 @char.statusMe = 1;
@@ -6832,13 +6832,13 @@ namespace Game5
                 c.cgender = msg.reader().readByte();
                 c.head = msg.reader().readShort();
                 c.cName = msg.reader().readUTF();
-                c.cHP = msg.readInt3Byte();
+                c.cHP = msg.readHp();
                 c.dHP = c.cHP;
                 if (c.cHP == 0)
                 {
                     c.statusMe = 14;
                 }
-                c.cHPFull = msg.readInt3Byte();
+                c.cHPFull = msg.readHp();
                 if (c.cy >= TileMap.pxh - 100)
                 {
                     c.isFlyUp = true;

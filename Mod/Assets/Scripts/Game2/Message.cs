@@ -51,6 +51,14 @@ namespace Game2
     	{
     		return dis.readInt();
     	}
+
+    	/// <summary>Máu (HP) người chơi / đệ tử: 8 byte, giữ dạng số thực nhưng luôn là số nguyên.</summary>
+    	/// <remarks>Trước đây máu đi 4 byte nên chặn ở khoảng 2,1 tỉ. Chỉ gọi ở gói máy chủ
+    	/// đã ghi bằng writeHp — đọc lệch một bên là lệch cả gói.</remarks>
+    	public double readHp()
+    	{
+    		return (double)dis.readLong();
+    	}
     
     	public void cleanup()
     	{

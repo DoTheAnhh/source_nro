@@ -114,13 +114,13 @@ namespace Game1
     
     	public int cMP;
     
-    	public int cHP;
+    	public double cHP;
     
-    	public int cHPNew;
+    	public double cHPNew;
     
     	public int cMaxEXP;
     
-    	public int cHPShow;
+    	public double cHPShow;
     
     	public int xReload;
     
@@ -134,7 +134,7 @@ namespace Game1
     
     	public int eff5BuffMp;
     
-    	public int cHPFull;
+    	public double cHPFull;
     
     	public int cMPFull;
     
@@ -1050,7 +1050,7 @@ namespace Game1
     
     	public int cDamGoc;
     
-    	public int cHPGoc;
+    	public double cHPGoc;
     
     	public int cMPGoc;
     
@@ -1118,7 +1118,7 @@ namespace Game1
     
     	public int perCentMp = 100;
     
-    	public int dHP;
+    	public double dHP;
     
     	public int headTemp = -1;
     
@@ -1886,7 +1886,7 @@ namespace Game1
     		}
     		else if (dHP > cHP)
     		{
-    			int num = dHP - cHP >> 1;
+    			double num = (dHP - cHP) / 2;
     			if (num < 1)
     			{
     				num = 1;
@@ -2991,7 +2991,7 @@ namespace Game1
     							cMP += cMPFull * myskill.damage / 100;
     							if (cHP < cHPFull)
     							{
-    								GameScr.startFlyText("+" + cHPFull * myskill.damage / 100 + " " + mResources.HP, cx, cy - ch - 20, 0, -1, mFont.HP);
+    								GameScr.startFlyText("+" + (long)(cHPFull * myskill.damage / 100) + " " + mResources.HP, cx, cy - ch - 20, 0, -1, mFont.HP);
     							}
     							if (cMP < cMPFull)
     							{
@@ -5899,7 +5899,7 @@ namespace Game1
     		// Chia cho 0 nem ngoai le GIUA Char.paint => ca phan ve nhan vat bi
     		// bo do: hao quang khong duoc ve, va khung hinh mat phan con lai nen
     		// map hien ra vo tung manh.
-    		int num = cHP * 100 / ((cHPFull > 0) ? cHPFull : 1) / 10 - 1;
+    		int num = (int)(cHP * 100 / ((cHPFull > 0) ? cHPFull : 1) / 10) - 1;
     		if (num < 0)
     		{
     			num = 0;
@@ -5917,7 +5917,7 @@ namespace Game1
     			return;
     		}
     		// Cung ly do voi cho tren: chan chia cho 0 de Char.paint khong bo do.
-    		long mauHp = (cHPFull > 0) ? cHPFull : 1L;
+    		double mauHp = (cHPFull > 0) ? cHPFull : 1.0;
     		len = (int)((long)cHP * 100L / mauHp * w_hp_bar) / 100;
     		num = (int)((long)cHP * 100L / mauHp);
     		if (num < 30)

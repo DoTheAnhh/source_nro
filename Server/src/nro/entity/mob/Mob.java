@@ -760,7 +760,7 @@ public class Mob {
             msg = new Message(-10);
             msg.writer().writeByte(this.id);
             msg.writer().writeInt((int) player.id);
-            msg.writeCris(Util.CrisGH(player.nPoint.hp), Manager.readInt);
+            msg.writeHp(Util.CrisGH(player.nPoint.hp));
             Service.getInstance().sendMessAnotherNotMeInMap(player, msg);
             msg.cleanup();
         } catch (Exception e) {

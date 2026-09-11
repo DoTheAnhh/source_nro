@@ -621,9 +621,9 @@ public class Service {
         try {
             msg = Service.getInstance().messageSubCommand((byte) 14);
             msg.writer().writeInt((int) pl.id);
-            msg.writeCris(Util.CrisGH(pl.nPoint.hp), Manager.readInt);
+            msg.writeHp(Util.CrisGH(pl.nPoint.hp));
             msg.writer().writeByte(0);
-            msg.writeCris(Util.CrisGH(pl.nPoint.hpMax), Manager.readInt);
+            msg.writeHp(Util.CrisGH(pl.nPoint.hpMax));
             sendMessAnotherNotMeInMap(pl, msg);
             msg.cleanup();
         } catch (Exception e) {
@@ -636,9 +636,9 @@ public class Service {
         try {
             msg = Service.gI().messageSubCommand((byte) 14);
             msg.writer().writeInt((int) pl.id);
-            msg.writeCris(Util.CrisGH(pl.nPoint.hp), Manager.readInt);
+            msg.writeHp(Util.CrisGH(pl.nPoint.hp));
             msg.writer().writeByte(2);
-            msg.writeCris(Util.CrisGH(pl.nPoint.hpMax), Manager.readInt);
+            msg.writeHp(Util.CrisGH(pl.nPoint.hpMax));
             sendMessAnotherNotMeInMap(pl, msg);
             msg.cleanup();
         } catch (Exception e) {
@@ -651,9 +651,9 @@ public class Service {
         try {
             msg = Service.getInstance().messageSubCommand((byte) 14);
             msg.writer().writeInt((int) pl.id);
-            msg.writeCris(Util.CrisGH(pl.nPoint.hp), Manager.readInt);
+            msg.writeHp(Util.CrisGH(pl.nPoint.hp));
             msg.writer().writeByte(1);
-            msg.writeCris(Util.CrisGH(pl.nPoint.hpMax), Manager.readInt);
+            msg.writeHp(Util.CrisGH(pl.nPoint.hpMax));
             sendMessAnotherNotMeInMap(pl, msg);
             msg.cleanup();
         } catch (Exception e) {
@@ -881,12 +881,12 @@ public class Service {
             Message msg;
             try {
                 msg = new Message(-42);
-                msg.writeCris(Util.CrisGH(player.nPoint.hpg), Manager.readInt);
+                msg.writeHp(Util.CrisGH(player.nPoint.hpg));
                 msg.writeCris(Util.CrisGH(player.nPoint.mpg), Manager.readInt);
                 msg.writeCris(Util.CrisGH(player.nPoint.dameg), Manager.readInt);
-                msg.writeCris(Util.CrisGH(player.nPoint.hpMax), Manager.readInt);
+                msg.writeHp(Util.CrisGH(player.nPoint.hpMax));
                 msg.writeCris(Util.CrisGH(player.nPoint.mpMax), Manager.readInt);
-                msg.writeCris(Util.CrisGH(player.nPoint.hp), Manager.readInt);
+                msg.writeHp(Util.CrisGH(player.nPoint.hp));
                 msg.writeCris(Util.CrisGH(player.nPoint.mp), Manager.readInt);
                 msg.writer().writeByte(player.nPoint.speed);
                 msg.writer().writeByte(20);
@@ -1373,8 +1373,10 @@ public class Service {
             }
             msg = messageSubCommand((byte) 15);
             msg.writer().writeInt((int) pl.id);
-            msg.writeCris(Util.CrisGH(hp), Manager.readInt);
-            msg.writeCris(Util.CrisGH(mp), Manager.readInt);
+            // Client doc hai so nay la MAU va MAU TOI DA. Ban cu gui mp vao cho
+            // mau toi da, nen vua hoi sinh thanh mau hien sai toi luc goi khac ve.
+            msg.writeHp(Util.CrisGH(hp));
+            msg.writeHp(Util.CrisGH(pl.nPoint.hpMax));
             msg.writer().writeShort(pl.location.x);
             msg.writer().writeShort(pl.location.y);
             sendMessAllPlayerInMap(pl, msg);
@@ -1448,8 +1450,8 @@ public class Service {
             msg.writer().writeByte(pl.gender);
             msg.writer().writeShort(plHead);
             msg.writer().writeUTF(plName);
-            msg.writeCris(Util.CrisGH(pl.nPoint.hp), Manager.readInt);
-            msg.writeCris(Util.CrisGH(pl.nPoint.hpMax), Manager.readInt);
+            msg.writeHp(Util.CrisGH(pl.nPoint.hp));
+            msg.writeHp(Util.CrisGH(pl.nPoint.hpMax));
             msg.writer().writeShort(plBody);
             msg.writer().writeShort(plLeg);
             msg.writer().writeByte(pl.getFlagBag());
@@ -2067,8 +2069,8 @@ public class Service {
                     }
                 }
 
-                msg.writeCris(Util.CrisGH(pl.Detu.nPoint.hp), Manager.readInt); //hp
-                msg.writeCris(Util.CrisGH(pl.Detu.nPoint.hpMax), Manager.readInt); //hpfull
+                msg.writeHp(Util.CrisGH(pl.Detu.nPoint.hp)); //hp
+                msg.writeHp(Util.CrisGH(pl.Detu.nPoint.hpMax)); //hpfull
                 msg.writeCris(Util.CrisGH(pl.Detu.nPoint.mp), Manager.readInt); //mp
                 msg.writeCris(Util.CrisGH(pl.Detu.nPoint.mpMax), Manager.readInt); //mpfull
                 msg.writeCris(Util.CrisGH(pl.Detu.nPoint.dame), Manager.readInt); //damefull
@@ -2651,8 +2653,8 @@ public class Service {
         try {
             msg = messageSubCommand((byte) 9);
             msg.writeCris(Util.CrisGH(pl.id), Manager.readInt);
-            msg.writeCris(Util.CrisGH(pl.nPoint.hp), Manager.readInt);
-            msg.writeCris(Util.CrisGH(pl.nPoint.hpMax), Manager.readInt);
+            msg.writeHp(Util.CrisGH(pl.nPoint.hp));
+            msg.writeHp(Util.CrisGH(pl.nPoint.hpMax));
             sendMessAnotherNotMeInMap(pl, msg);
         } catch (Exception e) {
             Logger.logException(Service.class, e);
@@ -3467,8 +3469,8 @@ public class Service {
             msg.writer().writeByte(player.gender);
             msg.writer().writeShort(player.getHead());
             msg.writer().writeUTF(player.name);
-            msg.writeCris(Util.CrisGH(player.nPoint.hp), Manager.readInt);
-            msg.writeCris(Util.CrisGH(player.nPoint.hpMax), Manager.readInt);
+            msg.writeHp(Util.CrisGH(player.nPoint.hp));
+            msg.writeHp(Util.CrisGH(player.nPoint.hpMax));
             msg.writer().writeShort(player.getBody());
             msg.writer().writeShort(player.getLeg());
             msg.writer().writeByte(player.getFlagBag());

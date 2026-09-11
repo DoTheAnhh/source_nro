@@ -2166,8 +2166,8 @@ namespace Game4
                 sb.Append(c.cName).Append("\n");
                 sb.Append("------------------------\n");
                 sb.Append(mResources.HP).Append(": ")
-                        .Append(NinjaUtil.getMoneys(c.cHP)).Append(" / ")
-                        .Append(NinjaUtil.getMoneys(c.cHPFull)).Append("\n");
+                        .Append(NinjaUtil.getMoneys((long)(c.cHP))).Append(" / ")
+                        .Append(NinjaUtil.getMoneys((long)(c.cHPFull))).Append("\n");
                 sb.Append(mResources.KI).Append(": ")
                         .Append(NinjaUtil.getMoneys(c.cMP)).Append(" / ")
                         .Append(NinjaUtil.getMoneys(c.cMPFull)).Append("\n");
@@ -5105,9 +5105,9 @@ namespace Game4
                 if (i == 0)
                 {
                     SmallImage.drawSmallImage(g, 567, num5 + 4, num6 + 4, 0, 0);
-                    string st = mResources.HP + " " + mResources.root + ": " + NinjaUtil.getMoneys(Char.myCharz().cHPGoc);
+                    string st = mResources.HP + " " + mResources.root + ": " + NinjaUtil.getMoneys((long)(Char.myCharz().cHPGoc));
                     mFont.tahoma_7b_blue.drawString(g, st, num2 + 5, num3 + 3, 0);
-                    mFont.tahoma_7_green2.drawString(g, NinjaUtil.getMoneys(Char.myCharz().cHPGoc + 1000) + " " + mResources.potential + ": " + mResources.increase + " " + Char.myCharz().hpFrom1000TiemNang, num2 + 5, num3 + 15, 0);
+                    mFont.tahoma_7_green2.drawString(g, NinjaUtil.getMoneys((long)(Char.myCharz().cHPGoc + 1000)) + " " + mResources.potential + ": " + mResources.increase + " " + Char.myCharz().hpFrom1000TiemNang, num2 + 5, num3 + 15, 0);
                 }
                 if (i == 1)
                 {
@@ -9552,7 +9552,7 @@ namespace Game4
             if (selected == 0 || selected == 1 || selected == 2 || selected == 3 || selected == 4 || selected == 5)
             {
                 long cTiemNang = Char.myCharz().cTiemNang;
-                long cHPGoc = Char.myCharz().cHPGoc;
+                long cHPGoc = (long)Char.myCharz().cHPGoc;
                 long cMPGoc = Char.myCharz().cMPGoc;
                 long cDamGoc = Char.myCharz().cDamGoc;
                 int cDefGoc = Char.myCharz().cDefGoc;
@@ -9741,7 +9741,7 @@ namespace Game4
             int num = 0;
             if (selected == 0)
             {
-                num = Char.myCharz().cHPGoc + 1000;
+                num = (int)(Char.myCharz().cHPGoc + 1000);
             }
             if (selected == 1)
             {

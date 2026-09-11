@@ -123,10 +123,27 @@ public class Message implements IMessage {
      */
     public void writeCris(long v, boolean is) throws IOException {
         if (is) {
-            this.writeInt((int) v);
+            // Chan o bien thay vi ep (int) cho tran: 3 ti thanh -1,29 ti
+            // la client hien so am, con chan thi it nhat van dung chieu.
+            this.writeInt((int) Math.max(Integer.MIN_VALUE,
+                    Math.min(Integer.MAX_VALUE, v)));
             return;
         }
         this.writeLong(v);
+    }
+
+    /**
+     * Ghi mau (HP) cua nguoi choi / de tu: luon 8 byte.
+     *
+     * <p>Truoc day mau di qua {@link #writeCris} 4 byte nen chan o khoang
+     * 2,1 ti — mau cao hon la client thay so am. Client doc bang
+     * {@code Message.readHp()} va giu dang so thuc, luon la so nguyen.</p>
+     *
+     * <p>Chi dung o nhung goi ma client DA doc bang readHp — doi mot ben ma
+     * khong doi ben kia la lech ca goi.</p>
+     */
+    public void writeHp(long v) throws IOException {
+        this.writeLong(Math.max(0L, v));
     }
 
     /** Như {@link #writeCris} nhưng nhánh hẹp là 2 byte ({@code short}), giới hạn ±32.767. */

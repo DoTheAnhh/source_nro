@@ -106,8 +106,8 @@ namespace Game3.God
                 return;
             }
 
-            long hp = pet.cHP;
-            long hpFull = pet.cHPFull;
+            long hp = (long)pet.cHP;
+            long hpFull = (long)pet.cHPFull;
             Char deTrenMap = null;
             try
             {
@@ -118,8 +118,8 @@ namespace Game3.God
             }
             if (deTrenMap != null && deTrenMap.cHPFull > 0)
             {
-                hp = deTrenMap.cHP;
-                hpFull = deTrenMap.cHPFull;
+                hp = (long)deTrenMap.cHP;
+                hpFull = (long)deTrenMap.cHPFull;
             }
 
             int x = GameCanvas.w - LE_PHAI - RONG;

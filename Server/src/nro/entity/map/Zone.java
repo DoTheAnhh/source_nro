@@ -778,8 +778,8 @@ public class Zone {
                 hp = plInfo.nPoint.hp;
                 hpMax = plInfo.nPoint.hpMax;
             }
-            msg.writeCris(Util.CrisGH(hp), Manager.readInt);
-            msg.writeCris(Util.CrisGH(hpMax), Manager.readInt);
+            msg.writeHp(Util.CrisGH(hp));
+            msg.writeHp(Util.CrisGH(hpMax));
 
             msg.writer().writeShort(plInfo.getBody());
             msg.writer().writeShort(plInfo.getLeg());

@@ -1547,7 +1547,7 @@ namespace Game2.God
             int xCot2 = giua + 4;
             int y = yKhoi + 15;
             veCapChiSo(g, xCot1, xCot2, y,
-                    "Hp: " + NinjaUtil.getMoneys(c.cHPFull),
+                    "Hp: " + NinjaUtil.getMoneys((long)(c.cHPFull)),
                     "Ki: " + NinjaUtil.getMoneys(c.cMPFull));
             y += 12;
             veCapChiSo(g, xCot1, xCot2, y,
@@ -1660,7 +1660,7 @@ namespace Game2.God
             y = veDong(g, y, "Tên", c.cName, MAU_TRANG);
             y = veDong(g, y, "Sức mạnh", NinjaUtil.getMoneys(c.cPower), MAU_VIEN);
             y = veDong(g, y, "HP",
-                    NinjaUtil.getMoneys(c.cHP) + " / " + NinjaUtil.getMoneys(c.cHPFull),
+                    NinjaUtil.getMoneys((long)(c.cHP)) + " / " + NinjaUtil.getMoneys((long)(c.cHPFull)),
                     MAU_DO);
             y = veDong(g, y, "KI",
                     NinjaUtil.getMoneys(c.cMP) + " / " + NinjaUtil.getMoneys(c.cMPFull),
@@ -2097,7 +2097,7 @@ namespace Game2.God
             var c = Char.myCharz();
             if (i == 0)
             {
-                return NinjaUtil.getMoneys(c.cHPGoc);
+                return NinjaUtil.getMoneys((long)(c.cHPGoc));
             }
             if (i == 1)
             {
@@ -2127,7 +2127,7 @@ namespace Game2.God
             var c = Char.myCharz();
             if (i == 0)
             {
-                return c.cHPGoc;
+                return (long)c.cHPGoc;
             }
             if (i == 1)
             {
@@ -2152,7 +2152,7 @@ namespace Game2.God
             int tang = -1;
             if (i == 0)
             {
-                gia = c.cHPGoc + 1000;
+                gia = (long)c.cHPGoc + 1000;
                 tang = c.hpFrom1000TiemNang;
             }
             else if (i == 1)
@@ -4481,7 +4481,7 @@ namespace Game2.God
             y = veDongDe(g, x, w, y, "Tiềm năng",
                     NinjaUtil.getMoneys(de.cTiemNang));
             y = veDongDe(g, x, w, y, "HP",
-                    NinjaUtil.getMoneys(de.cHP) + " / " + NinjaUtil.getMoneys(de.cHPFull));
+                    NinjaUtil.getMoneys((long)(de.cHP)) + " / " + NinjaUtil.getMoneys((long)(de.cHPFull)));
             y = veDongDe(g, x, w, y, "KI",
                     NinjaUtil.getMoneys(de.cMP) + " / " + NinjaUtil.getMoneys(de.cMPFull));
             y = veDongDe(g, x, w, y, "Sức đánh",
