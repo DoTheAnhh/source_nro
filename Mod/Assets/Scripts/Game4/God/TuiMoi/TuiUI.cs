@@ -4632,7 +4632,7 @@ namespace Game4.God
         private static readonly int[][] MA_CHUC_NANG = {
             new int[] { 2, 3, 12 },
             new int[] { 1, 7, 4, 9 },
-            new int[] { 5, 6, 8 },
+            new int[] { 19, 6, 8 },
             new int[] { 100001, 100002, 16, 17 }
         };
 
@@ -4640,7 +4640,7 @@ namespace Game4.God
             new string[] { "Tự Đánh", "Tàn Sát", "Tàn Sát Người" },
             new string[] { "Tự Động Hồi Sinh", "Auto Nhặt", "Auto Up Đệ",
                 "Auto Login" },
-            new string[] { "Thông Báo BOSS", "D.s Nhân Vật", "Giảm Đồ Họa" },
+            new string[] { "Thông tin đệ tử", "D.s Nhân Vật", "Giảm Đồ Họa" },
             new string[] { "Đổi cờ", "Đăng xuất", "Cấu hình Voice", "Âm thanh" }
         };
 

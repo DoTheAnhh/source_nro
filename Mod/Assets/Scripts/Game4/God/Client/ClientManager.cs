@@ -728,7 +728,8 @@ namespace Game4.God
         public void GUI(mGraphics g)
         {
             PlayerInfo.getInstance().paintInfoPlayer(g);
-            Boss.getInstance().PaintBossInfo(g);
+            // Khung thong bao boss tam bo. Cho ay nay la khung thong tin de tu.
+            ThongTinDeTu.getInstance().paint(g);
             veDemNguocMayDam(g);
             ListChars.getInstance().paintPlayerMap(g);
             if (GameScr.isAnalog == 1)
@@ -928,7 +929,7 @@ namespace Game4.God
                 "Tàn Sát",
                 "Tàn Sát Người",
                 "Auto Up Đệ",
-                "Thông Báo BOSS",
+                "Thông tin đệ tử",
                 "D.s Nhân Vật",
                 "Auto Nhặt",
                 "Giảm Đồ Họa",
@@ -946,7 +947,7 @@ namespace Game4.God
             //
             // 18 chu khong phai 17: 17 da la nut bat/tat am thanh trong cung
             // switch cua perform().
-            int[] maHanhDong = { 11, 1, 2, 18, 12, 4, 5, 6, 7, 8, 9, 10, 16 };
+            int[] maHanhDong = { 11, 1, 2, 18, 12, 4, 19, 6, 7, 8, 9, 10, 16 };
             MyVector myVector = new MyVector();
             for(int i = 0; i < listIndex.Length && i < maHanhDong.Length; i++)
             {
@@ -1140,6 +1141,8 @@ namespace Game4.God
                     return PlayerInfo.getInstance().canLogin;
                 case 12:
                     return Mobs.tsPlayer;
+                case 19:
+                    return ThongTinDeTu.getInstance().isShow;
                 case 17:
                     // Am thanh cua ca game. Doc thang co cua game chu khong giu
                     // mot ban rieng: giu ban rieng thi tat/bat o cho khac (menu
@@ -1203,6 +1206,10 @@ namespace Game4.God
                 case 4:
                     PetService.getInstance().setUp();
                     Utils.addInfo1("Auto Up Đệ", PetService.getInstance().getUp());
+                    break;
+                case 19:
+                    ThongTinDeTu.getInstance().isShow = !ThongTinDeTu.getInstance().isShow;
+                    Utils.addInfo1("Thông tin đệ tử", ThongTinDeTu.getInstance().isShow);
                     break;
                 case 5:
                     Boss.getInstance().isShow =! Boss.getInstance().isShow;

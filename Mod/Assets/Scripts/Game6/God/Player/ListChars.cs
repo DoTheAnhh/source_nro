@@ -101,7 +101,7 @@ namespace Game6.God
         private int mocDongDau()
         {
             int y = TabControll.mepDuoiHangNut() + 6;
-            if (Boss.getInstance().isShow && y < 96)
+            if (ThongTinDeTu.getInstance().isShow && y < 96)
             {
                 y = 96;
             }

@@ -140,9 +140,9 @@ namespace Game3.God
             {
                 veChip(g, "Up đệ");
             }
-            if (Boss.getInstance().isShow)
+            if (ThongTinDeTu.getInstance().isShow)
             {
-                veChip(g, "BOSS");
+                veChip(g, "Đệ");
             }
             if (ListChars.getInstance().isShow)
             {
