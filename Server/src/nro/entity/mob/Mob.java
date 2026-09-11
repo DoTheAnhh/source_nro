@@ -727,9 +727,11 @@ public class Mob {
         if (this.lvMob > 0 && player.charms.tdOaiHung > System.currentTimeMillis()) {
             dameMob = 0;
         }
-        if (MapService.gI().isMapNguHanhSon(player.zone.map.mapId)) {
-            dameMob = player.nPoint.hpMax / 10;
-        }
+        // Ngu Hanh Son tung co mot dong o day: dameMob = hpMax / 10, tuc moi cu
+        // danh tru muoi phan tram mau TOI DA cua muc tieu, bat ke suc danh cua
+        // quai. Dong ay nam cuoi nen de luon ca bua da trau, bua de tu, ve tinh
+        // phong thu o tren — de tu mau cang cao cang mat nhieu. Nay quai o do
+        // danh bang dung suc danh cua no, nhu moi ban do khac.
         double dame = player.injured(null, Util.CrisGH(dameMob), false, true);
         this.sendMobAttackMe(player, dame);
         this.sendMobAttackPlayer(player);

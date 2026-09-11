@@ -1345,6 +1345,20 @@ public class Service {
     public void hsChar(Player pl, long hp, long mp) {
         Message msg;
         try {
+            // De tu SONG LAI tu cho chet thi luon day mau, day khi.
+            //
+            // Duong tu hoi sinh cua de tu von da truyen hpMax, nhung con it nhat
+            // bon duong khac hoi sinh voi so nho hon: ba cho trong
+            // ChangeMapService hoi sinh voi 1 mau, va ky nang hoi sinh dung mau
+            // dang co. Chan ngay o day thi duong nao cung dung — ke ca duong
+            // viet sau nay.
+            //
+            // Chi khi dang CHET: hsChar con duoc goi de dong bo mau cho nguoi
+            // dang song, luc ay de nguyen con so duoc truyen vao.
+            if (pl.isDeTu && pl.nPoint != null && pl.isDie()) {
+                hp = pl.nPoint.hpMax;
+                mp = pl.nPoint.mpMax;
+            }
             pl.setJustRevivaled();
             if (pl.isPl() && pl.effectSkill != null && pl.effectSkill.isBodyChangeTechnique) {
                 PlayerService.gI().changeAndSendTypePK(pl, 5);

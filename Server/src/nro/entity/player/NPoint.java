@@ -2833,6 +2833,378 @@ if (hasFull5NhatAn()) {
         }
     }
 
+    // =====================================================================
+    //  Tiềm năng một cú đánh — MỘT hàm thuần, máy chủ và panel cùng dùng
+    // =====================================================================
+
+    /**
+     * Mọi thứ trong game làm tiềm năng một cú đánh to lên hay nhỏ đi.
+     *
+     * <h3>Vì sao tách ra</h3>
+     *
+     * <p>Panel cần cho xem trước "đánh ở đây, với điều kiện này, thì nhận bao
+     * nhiêu" — và con số ấy phải <b>bằng đúng</b> con số hiện trên đầu nhân vật
+     * trong game. Cách duy nhất để chắc chắn là panel không tự viết lại công
+     * thức mà gọi <b>đúng đoạn mã máy chủ đang chạy</b>. Nên phần tính được
+     * tách thành {@link #tinhTiemNang} nhận vào một bộ điều kiện: máy chủ dựng
+     * bộ ấy từ nhân vật thật ({@link #dieuKienTnHienTai}), panel dựng từ các ô
+     * người dùng tích. Cùng một hàm thì không thể lệch nhau.</p>
+     *
+     * <p>Thứ tự các bước và cách làm tròn giữ nguyên xi bản cũ, kể cả những chỗ
+     * trông lạ — ví dụ bùa tiềm năng cho đệ tử được cộng hai lần (hai lẫn mười
+     * lần giá trị gốc). Đổi những chỗ ấy là đổi cân bằng game, việc riêng.</p>
+     */
+    public static final class DieuKienTn {
+
+        // --- Của chính người đánh ---
+        public long sucManh;
+        /** Giới hạn sức mạnh; chạm tới thì mỗi cú đánh chỉ còn 10. */
+        public long gioiHanSucManh = Long.MAX_VALUE;
+        /** Các dòng "+#% tiềm năng" trên trang bị, mỗi dòng nhân dồn. */
+        public java.util.List<Integer> tlTnsm = new java.util.ArrayList<>();
+        /** Mã cờ đang cắm: 0 không cờ, 8 cờ đặc biệt (+10%), khác (+5%). */
+        public int co;
+        /** Phần trăm sự kiện tiềm năng toàn máy chủ đang chạy. */
+        public int thuocTinhMayChu;
+        /** Thẻ tuần/tháng/năm: 0 không có, 1 loại thường, 2 loại cao. */
+        public int theTuan;
+        public int theThang;
+        public int theNam;
+        public boolean theChiTon;
+        public boolean khauTrang;
+        public boolean buaTriTue;
+        public boolean buaTriTue3;
+        public boolean buaTriTue4;
+        public boolean buaTriTue5;
+        public boolean buaTriTue7;
+        public boolean buaTriTue10;
+        public boolean buaTriTue20;
+        /** Phần trăm của nội tại tiềm năng (nội tại số 24), 0 là không có. */
+        public int noiTaiTn;
+        public boolean chibiTn;
+        /** Số lần cộng của buff tiềm năng toàn bang đang chạy, 0 là không có. */
+        public long bangCongTn;
+        /** Cấp bang khi bang đang bật bùa trí tuệ, -1 là không bật. */
+        public int bangBuaTriTue = -1;
+        public boolean veTinhTriLuc;
+        public boolean vip;
+        public boolean rongXuong3;
+        public boolean duoiKhiTn;
+        public boolean cong20KhiDanhQuai;
+        /** Phần trăm tiềm năng cộng thêm từ set kích hoạt. */
+        public int setTnPct;
+
+        // --- Chỉ khi người đánh là đệ tử: những thứ lấy từ sư phụ ---
+        public boolean laDeTu;
+        /** Loại đệ: 0-1 chia 1, 2-4 chia 2, 5 chia 4. */
+        public int loaiDeTu;
+        public boolean coSuPhu;
+        public boolean spBuaTnsmDeTu;
+        public boolean spBuaDeTu;
+        public boolean spBuaDeTu2;
+        public boolean spBuaDeTu3;
+        public boolean spBuaDeTu4;
+        public boolean spBuaDeTu5;
+        public boolean spBuaDeTu7;
+        public boolean spBuaDeTu10;
+        public boolean spBuaDeTu20;
+        public boolean spRongXuong;
+        public int spTheTuan;
+        public int spTheThang;
+        public int spTheNam;
+        public boolean spTheChiTon;
+        public boolean spCoNPoint = true;
+        /** Phần trăm tiềm năng cho đệ trên đồ của sư phụ. */
+        public long spTlTnsmPet;
+
+        public boolean laBo;
+        public boolean laMe;
+        /** Hệ số exp của máy chủ ({@code Manager.RATE_EXP_SERVER}). */
+        public int heSoMayChu = Manager.RATE_EXP_SERVER;
+    }
+
+    /** {@code calPercent} bản tĩnh — giống hệt, kể cả làm tròn xuống. */
+    private static long pt(long param, long percent) {
+        return param * percent / 100;
+    }
+
+    /**
+     * Tiềm năng của một cú đánh sau mọi điều kiện, trước hệ số chung.
+     *
+     * @param tiemNang giá trị ngay sau hệ số bản đồ
+     */
+    public static long tinhTiemNang(long tiemNang, DieuKienTn dk) {
+        if (dk.sucManh >= dk.gioiHanSucManh) {
+            return 10;
+        }
+        long goc = tiemNang;
+
+        if (dk.tlTnsm != null) {
+            for (Integer tl : dk.tlTnsm) {
+                if (tl != null) {
+                    tiemNang += pt(tiemNang, tl);
+                }
+            }
+        }
+        if (dk.co != 0) {
+            tiemNang += pt(tiemNang, dk.co == 8 ? 10 : 5);
+        }
+        if (dk.thuocTinhMayChu != 0) {
+            tiemNang += pt(tiemNang, dk.thuocTinhMayChu);
+        }
+        if (dk.theTuan != 0) {
+            tiemNang += pt(tiemNang, dk.theTuan == 1 ? 20 : 50);
+        }
+        if (dk.theThang != 0) {
+            tiemNang += pt(tiemNang, dk.theThang == 1 ? 100 : 150);
+        }
+        if (dk.theNam != 0) {
+            tiemNang += pt(tiemNang, dk.theNam == 1 ? 200 : 300);
+        }
+        if (dk.theChiTon) {
+            tiemNang += pt(tiemNang, 500);
+        }
+        if (dk.khauTrang) {
+            tiemNang += pt(tiemNang, 20);
+        }
+
+        long bua = 0;
+        if (dk.buaTriTue) {
+            bua += 1;
+        }
+        if (dk.buaTriTue3) {
+            bua += 2;
+        }
+        if (dk.buaTriTue4) {
+            bua += 3;
+        }
+        if (dk.buaTriTue5) {
+            bua += 4;
+        }
+        if (dk.buaTriTue7) {
+            bua += 6;
+        }
+        if (dk.buaTriTue10) {
+            bua += 9;
+        }
+        if (dk.buaTriTue20) {
+            bua += 19;
+        }
+        tiemNang += goc * bua;
+
+        if (dk.noiTaiTn != 0) {
+            tiemNang += pt(tiemNang, dk.noiTaiTn);
+        }
+        if (dk.chibiTn) {
+            tiemNang += goc * 2;
+        }
+        if (dk.bangCongTn != 0) {
+            tiemNang += goc * dk.bangCongTn;
+        }
+        if (dk.bangBuaTriTue >= 0) {
+            tiemNang += pt(goc, Math.min(dk.bangBuaTriTue * 20, 200));
+        }
+        if (dk.veTinhTriLuc) {
+            tiemNang += pt(goc, 20);
+        }
+        if (dk.vip) {
+            tiemNang += goc * 2;
+        }
+        if (dk.rongXuong3) {
+            tiemNang += goc * 3;
+        }
+        if (dk.duoiKhiTn) {
+            tiemNang += goc * 10;
+        }
+        if (dk.cong20KhiDanhQuai) {
+            tiemNang += pt(tiemNang, 20);
+        }
+        if (dk.setTnPct != 0) {
+            tiemNang += goc * dk.setTnPct / 100;
+        }
+
+        if (dk.laDeTu && dk.coSuPhu) {
+            if (dk.spBuaTnsmDeTu) {
+                // Hai lan cong nhu ban goc — xem javadoc cua DieuKienTn.
+                tiemNang += goc * 2;
+                tiemNang += goc * 10;
+            }
+            if (dk.spBuaDeTu) {
+                tiemNang += goc * 2;
+            }
+            if (dk.spBuaDeTu2) {
+                tiemNang += goc * 3;
+            }
+            if (dk.spBuaDeTu3) {
+                tiemNang += goc * 4;
+            }
+            if (dk.spBuaDeTu4) {
+                tiemNang += goc * 5;
+            }
+            if (dk.spBuaDeTu5) {
+                tiemNang += goc * 6;
+            }
+            if (dk.spBuaDeTu7) {
+                tiemNang += goc * 8;
+            }
+            if (dk.spBuaDeTu10) {
+                tiemNang += goc * 10;
+            }
+            if (dk.spBuaDeTu20) {
+                tiemNang += goc * 20;
+            }
+            if (dk.spRongXuong) {
+                tiemNang += goc * 3;
+            }
+            if (dk.spTheTuan != 0) {
+                tiemNang += pt(tiemNang, dk.spTheTuan == 1 ? 20 : 50);
+            }
+            if (dk.spTheThang != 0) {
+                tiemNang += pt(tiemNang, dk.spTheThang == 1 ? 100 : 150);
+            }
+            if (dk.spTheNam != 0) {
+                tiemNang += pt(tiemNang, dk.spTheNam == 1 ? 200 : 300);
+            }
+            if (dk.spTheChiTon) {
+                tiemNang += pt(tiemNang, 500);
+            }
+            if (dk.spCoNPoint) {
+                tiemNang += goc / 100 * (dk.spTlTnsmPet + 100);
+            }
+        }
+
+        if (dk.laBo) {
+            tiemNang += goc * 2;
+        }
+        if (dk.laMe) {
+            tiemNang += goc * 2;
+        }
+
+        // He so theo BAN DO khong o day: no nam o bang he_so_tnsm, ap trong Mob
+        // truoc khi goi ham nay.
+        if (dk.laDeTu) {
+            double factor = 1.0;
+            switch (dk.loaiDeTu) {
+                case 2, 3, 4 ->
+                    factor = 2.0;
+                case 5 ->
+                    factor = 4.0;
+                default ->
+                    factor = 1.0;
+            }
+            tiemNang = (long) (tiemNang / factor);
+        }
+
+        tiemNang *= dk.heSoMayChu;
+        tiemNang = giamTheoSucManh(tiemNang, dk.sucManh, dk.gioiHanSucManh);
+        if (tiemNang <= 0) {
+            tiemNang = 1;
+        }
+        return tiemNang;
+    }
+
+    /** Bộ điều kiện của chính nhân vật này, đọc từ trạng thái thật lúc này. */
+    public DieuKienTn dieuKienTnHienTai() {
+        long now = System.currentTimeMillis();
+        DieuKienTn dk = new DieuKienTn();
+        dk.sucManh = this.power;
+        dk.gioiHanSucManh = getPowerLimit();
+        if (this.tlTNSM != null) {
+            dk.tlTnsm = new java.util.ArrayList<>(this.tlTNSM);
+        }
+        if (this.player == null) {
+            return dk;
+        }
+        dk.co = this.player.cFlag;
+        if (this.player.isPl()) {
+            Attribute at = ServerManager.gI().getAttributeManager().find(ConstAttribute.TNSM);
+            if (at != null && !at.isExpired()) {
+                dk.thuocTinhMayChu = at.getValue();
+            }
+        }
+        if (this.player.THE_TUAN != 0 && this.player.LASTTIME_THE_TUAN > now) {
+            dk.theTuan = this.player.THE_TUAN;
+        }
+        if (this.player.THE_THANG != 0 && this.player.LASTTIME_THE_THANG > now) {
+            dk.theThang = this.player.THE_THANG;
+        }
+        if (this.player.THE_NAM != 0 && this.player.LASTTIME_THE_NAM > now) {
+            dk.theNam = this.player.THE_NAM;
+        }
+        dk.theChiTon = this.player.THE_CHI_TON != 0 && this.player.LASTTIME_THE_CHI_TON > now;
+        dk.khauTrang = this.player.itemTime != null && this.player.itemTime.IsKhauTrang;
+        if (this.player.charms != null) {
+            dk.buaTriTue = this.player.charms.tdTriTue > now;
+            dk.buaTriTue3 = this.player.charms.tdTriTue3 > now;
+            dk.buaTriTue4 = this.player.charms.tdTriTue4 > now;
+            dk.buaTriTue5 = this.player.charms.tdTriTue5 > now;
+            dk.buaTriTue7 = this.player.charms.tdTriTue7 > now;
+            dk.buaTriTue10 = this.player.charms.tdTriTue10 > now;
+            dk.buaTriTue20 = this.player.charms.tdTriTue20 > now;
+        }
+        if (this.intrinsic != null && this.intrinsic.id == 24) {
+            dk.noiTaiTn = this.intrinsic.param1;
+        }
+        dk.chibiTn = this.player.effectSkill != null && this.player.effectSkill.isChibi
+                && this.player.typeChibi == 2;
+        if (this.player.clan != null) {
+            if (now <= this.player.clan.LasttimeBuffExp + this.player.clan.TimeStarBuffExp) {
+                dk.bangCongTn = this.player.clan.CongTiemNangSucManhToanBangHoi;
+            }
+            if (now <= this.player.clan.BuaTriTue) {
+                dk.bangBuaTriTue = this.player.clan.level;
+            }
+        }
+        dk.veTinhTriLuc = this.player.satellite != null && this.player.satellite.isIntelligent;
+        dk.vip = this.player.getSession() != null && this.player.getSession().Vip_Point > 0;
+        if (this.player.itemTime != null) {
+            dk.rongXuong3 = this.player.itemTime.isRongXuong_3;
+            dk.duoiKhiTn = this.player.itemTime.isUseDuoiKhiTNSM;
+        }
+        dk.cong20KhiDanhQuai = this.Cong20ExpKhiAttackMob;
+        dk.setTnPct = phanTramSetTheoLoai("tiem_nang_pct");
+
+        if (this.player.isDeTu) {
+            dk.laDeTu = true;
+            Detu pet = (Detu) this.player;
+            dk.loaiDeTu = pet.typeDeTu;
+            Player master = pet.master;
+            if (master != null) {
+                dk.coSuPhu = true;
+                dk.spBuaTnsmDeTu = master.itemTime != null && master.itemTime.isUseBuaTNSMDetu;
+                if (master.charms != null) {
+                    dk.spBuaDeTu = master.charms.tdDeTu > now;
+                    dk.spBuaDeTu2 = master.charms.tdDeTu2 > now;
+                    dk.spBuaDeTu3 = master.charms.tdDeTu3 > now;
+                    dk.spBuaDeTu4 = master.charms.tdDeTu4 > now;
+                    dk.spBuaDeTu5 = master.charms.tdDeTu5 > now;
+                    dk.spBuaDeTu7 = master.charms.tdDeTu7 > now;
+                    dk.spBuaDeTu10 = master.charms.tdDeTu10 > now;
+                    dk.spBuaDeTu20 = master.charms.tdDeTu20 > now;
+                }
+                dk.spRongXuong = master.itemTime != null && master.itemTime.isRongXuong;
+                if (master.THE_TUAN != 0 && master.LASTTIME_THE_TUAN > now) {
+                    dk.spTheTuan = master.THE_TUAN;
+                }
+                if (master.THE_THANG != 0 && master.LASTTIME_THE_THANG > now) {
+                    dk.spTheThang = master.THE_THANG;
+                }
+                if (master.THE_NAM != 0 && master.LASTTIME_THE_NAM > now) {
+                    dk.spTheNam = master.THE_NAM;
+                }
+                dk.spTheChiTon = master.THE_CHI_TON != 0 && master.LASTTIME_THE_CHI_TON > now;
+                dk.spCoNPoint = master.nPoint != null;
+                if (master.nPoint != null) {
+                    dk.spTlTnsmPet = master.nPoint.tlTNSMPet;
+                }
+            }
+        }
+        dk.laBo = this.player.isBo;
+        dk.laMe = this.player.isMe;
+        dk.heSoMayChu = Manager.RATE_EXP_SERVER;
+        return dk;
+    }
+
     public long calSucManhTiemNang(long tiemNang) {
         if (player == null || player.zone == null) {
             return 0;
@@ -2840,243 +3212,9 @@ if (hasFull5NhatAn()) {
         if (player.zone.map.type == 3) {
             return 0;
         }
-
-        if (power >= getPowerLimit()) {
-            return 10;
-        }
-
-        long now = System.currentTimeMillis();
-        long originalTiemNang = tiemNang;
-
-        // Buff % từ tlTNSM
-        if (this.tlTNSM != null) {
-            for (Integer tl : this.tlTNSM) {
-                if (tl != null) {
-                    tiemNang += calPercent(tiemNang, tl);
-                }
-            }
-        }
-
-        // Cờ
-        if (this.player.cFlag != 0) {
-            int percent = this.player.cFlag == 8 ? 10 : 5;
-            tiemNang += calPercent(tiemNang, percent);
-        }
-
-        // Attribute server
-        if (this.player.isPl()) {
-            Attribute at = ServerManager.gI().getAttributeManager().find(ConstAttribute.TNSM);
-            if (at != null && !at.isExpired()) {
-                tiemNang += calPercent(tiemNang, at.getValue());
-            }
-        }
-
-        // Thẻ tuần / tháng / năm / chí tôn
-        if (this.player.THE_TUAN != 0 && this.player.LASTTIME_THE_TUAN > now) {
-            tiemNang += calPercent(tiemNang, this.player.THE_TUAN == 1 ? 20 : 50);
-        }
-        if (this.player.THE_THANG != 0 && this.player.LASTTIME_THE_THANG > now) {
-            tiemNang += calPercent(tiemNang, this.player.THE_THANG == 1 ? 100 : 150);
-        }
-        if (this.player.THE_NAM != 0 && this.player.LASTTIME_THE_NAM > now) {
-            tiemNang += calPercent(tiemNang, this.player.THE_NAM == 1 ? 200 : 300);
-        }
-        if (this.player.THE_CHI_TON != 0 && this.player.LASTTIME_THE_CHI_TON > now) {
-            tiemNang += calPercent(tiemNang, 500);
-        }
-
-        // Khẩu trang
-        if (this.player.itemTime != null && this.player.itemTime.IsKhauTrang) {
-            tiemNang += calPercent(tiemNang, 20);
-        }
-
-        // Charm trí tuệ
-        long charmBonusMultiplier = 0;
-        if (this.player.charms.tdTriTue > now) {
-            charmBonusMultiplier += 1;
-        }
-        if (this.player.charms.tdTriTue3 > now) {
-            charmBonusMultiplier += 2;
-        }
-        if (this.player.charms.tdTriTue4 > now) {
-            charmBonusMultiplier += 3;
-        }
-        if (this.player.charms.tdTriTue5 > now) {
-            charmBonusMultiplier += 4;
-        }
-        if (this.player.charms.tdTriTue7 > now) {
-            charmBonusMultiplier += 6;
-        }
-        if (this.player.charms.tdTriTue10 > now) {
-            charmBonusMultiplier += 9;
-        }
-        if (this.player.charms.tdTriTue20 > now) {
-            charmBonusMultiplier += 19;
-        }
-        tiemNang += originalTiemNang * charmBonusMultiplier;
-
-        // Nội tại
-        if (this.intrinsic != null && this.intrinsic.id == 24) {
-            tiemNang += calPercent(tiemNang, this.intrinsic.param1);
-        }
-
-        // Chibi
-        if (this.player.effectSkill.isChibi && this.player.typeChibi == 2) {
-            tiemNang += originalTiemNang * 2;
-        }
-
-        // Clan buff
-        if (this.player.clan != null) {
-            if (now <= this.player.clan.LasttimeBuffExp + this.player.clan.TimeStarBuffExp) {
-                tiemNang += originalTiemNang * this.player.clan.CongTiemNangSucManhToanBangHoi;
-            }
-            if (now <= this.player.clan.BuaTriTue) {
-                int bonusPercent = Math.min(this.player.clan.level * 20, 200);
-                tiemNang += calPercent(originalTiemNang, bonusPercent);
-            }
-        }
-
-        // Vệ tinh
-        if (this.player.satellite != null && this.player.satellite.isIntelligent) {
-            tiemNang += calPercent(originalTiemNang, 20);
-        }
-
-        // VIP
-        if (this.player.getSession() != null && this.player.getSession().Vip_Point > 0) {
-            tiemNang += originalTiemNang * 2;
-        }
-
-        // Item time
-        if (this.player.itemTime != null) {
-            if (this.player.itemTime.isRongXuong_3) {
-                tiemNang += originalTiemNang * 3;
-            }
-            if (this.player.itemTime.isUseDuoiKhiTNSM) {
-                tiemNang += originalTiemNang * 10;
-            }
-        }
-
-        // Cộng exp khi đánh mob
-        if (this.player.nPoint.Cong20ExpKhiAttackMob) {
-            tiemNang += calPercent(tiemNang, 20);
-        }
-
-        // Set goten
-        // Tiem nang cong them tu cau hinh set (loai tiem_nang_pct).
-        int tlTiemNangSet = phanTramSetTheoLoai("tiem_nang_pct");
-        if (tlTiemNangSet != 0) {
-            tiemNang += originalTiemNang * tlTiemNangSet / 100;
-        }
-
-        // Nếu là đệ tử
-        if (this.player.isDeTu) {
-            Player master = ((Detu) this.player).master;
-            if (master != null) {
-                if (master.itemTime.isUseBuaTNSMDetu) {
-                    tiemNang += originalTiemNang * 2;
-                }
-                 if (master.itemTime.isUseBuaTNSMDetu) {
-                tiemNang += originalTiemNang * 10;
-            }
-
-                long masterNow = now;
-                if (master.charms.tdDeTu > masterNow) {
-                    tiemNang += originalTiemNang * 2;
-                }
-                if (master.charms.tdDeTu2 > masterNow) {
-                    tiemNang += originalTiemNang * 3;
-                }
-                if (master.charms.tdDeTu3 > masterNow) {
-                    tiemNang += originalTiemNang * 4;
-                }
-                if (master.charms.tdDeTu4 > masterNow) {
-                    tiemNang += originalTiemNang * 5;
-                }
-                if (master.charms.tdDeTu5 > masterNow) {
-                    tiemNang += originalTiemNang * 6;
-                }
-                if (master.charms.tdDeTu7 > masterNow) {
-                    tiemNang += originalTiemNang * 8;
-                }
-                if (master.charms.tdDeTu10 > masterNow) {
-                    tiemNang += originalTiemNang * 10;
-                }
-                if (master.charms.tdDeTu20 > masterNow) {
-                    tiemNang += originalTiemNang * 20;
-                }
-
-                if (master.itemTime != null && master.itemTime.isRongXuong) {
-                    tiemNang += originalTiemNang * 3;
-                }
-
-                if (master.THE_TUAN != 0 && master.LASTTIME_THE_TUAN > masterNow) {
-                    tiemNang += calPercent(tiemNang, master.THE_TUAN == 1 ? 20 : 50);
-                }
-                if (master.THE_THANG != 0 && master.LASTTIME_THE_THANG > masterNow) {
-                    tiemNang += calPercent(tiemNang, master.THE_THANG == 1 ? 100 : 150);
-                }
-                if (master.THE_NAM != 0 && master.LASTTIME_THE_NAM > masterNow) {
-                    tiemNang += calPercent(tiemNang, master.THE_NAM == 1 ? 200 : 300);
-                }
-                if (master.THE_CHI_TON != 0 && master.LASTTIME_THE_CHI_TON > masterNow) {
-                    tiemNang += calPercent(tiemNang, 500);
-                }
-
-                if (master.nPoint != null) {
-                    tiemNang += originalTiemNang / 100 * (master.nPoint.tlTNSMPet + 100);
-                }
-            }
-        }
-
-        // Bo/Me
-        if (this.player.isBo) {
-            tiemNang += originalTiemNang * 2;
-        }
-        if (this.player.isMe) {
-            tiemNang += originalTiemNang * 2;
-        }
-
-        // He so theo BAN DO khong con o day.
-        //
-        // Chung da ve mot cho duy nhat: bang he_so_tnsm, ap trong Mob. Ly do la
-        // Mob biet BAN DO CUA CON QUAI, con o day chi biet ban do cua nguoi
-        // choi — de tu cay trong Ngu Hanh Son thi phan chia cho su phu cung
-        // phai theo he so cua Ngu Hanh Son, ma luc ay su phu co the dang dung o
-        // ban do khac. Xem HeSoTnsmDAO.
-        if (this.player.isDeTu) {
-            Detu pet = (Detu) this.player;
-            int type = pet.typeDeTu;
-
-            double factor = 1.0; // mặc định: đệ thường (type 0) = 1x
-
-            // Nhóm sau tăng chậm gấp đôi mỗi bậc
-            switch (type) {
-                case 0 ->
-                    factor = 1.0;       // Đệ thường
-                case 1 ->
-                    factor = 1.0;       // MaBư
-                case 2, 3,4 ->
-                    factor = 2.0;    // Sơn Tinh, Thủy Tinh
-                case 5->
-                    factor = 4.0; // Bư Nhí, Xên Nhí, Fide Đại Ka
-                
-            }
-
-            tiemNang = (long) (tiemNang / factor);
-        }
-
-        // Nhân hệ số server
-        tiemNang *= Manager.RATE_EXP_SERVER;
-
-        // Giảm EXP và giới hạn
-        tiemNang = calSubTNSM(tiemNang);
-
-        if (tiemNang <= 0) {
-            tiemNang = 1;
-        }
-
-        return tiemNang;
+        return tinhTiemNang(tiemNang, dieuKienTnHienTai());
     }
+
       private int countItemsHaveAn(int optionId) {
     if (this.player == null
             || this.player.inventory == null
@@ -3122,8 +3260,8 @@ private boolean hasFull5NhatAn() {
 }
 
 // Giảm exp theo mốc + giới hạn 20tr
-    public long calSubTNSM(long tiemNang) {
-        if (power >= getPowerLimit()) {
+    public static long giamTheoSucManh(long tiemNang, long sucManh, long gioiHanSucManh) {
+        if (sucManh >= gioiHanSucManh) {
             return 0;
         }
 
@@ -3142,9 +3280,9 @@ private boolean hasFull5NhatAn() {
         //
         // Các mốc nay nằm trong bảng bac_giam_tnsm, sửa được trên panel ở tab
         // Tỉ lệ. Chưa chạm bậc nào thì trả về 100, tức nhận nguyên vẹn.
-        int conLai = nro.repository.dao.BacGiamTnsmDAO.phanTram(this.power);
+        int conLai = nro.repository.dao.BacGiamTnsmDAO.phanTram(sucManh);
         if (conLai != 100) {
-            tiemNang = calPercent(tiemNang, conLai);
+            tiemNang = pt(tiemNang, conLai);
         }
 
         // Tỉ lệ đệ tử chia cho sư phụ, chỉnh được trên panel.
@@ -3167,6 +3305,10 @@ private boolean hasFull5NhatAn() {
         }
 
         return tiemNang;
+    }
+
+    public long calSubTNSM(long tiemNang) {
+        return giamTheoSucManh(tiemNang, this.power, getPowerLimit());
     }
 
     public int getTileHutHp(boolean isMob) {
