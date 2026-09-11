@@ -209,7 +209,11 @@ public class OngGohan extends Npc {
                     if (!player.getSession().actived) {
                         boolean quaNhiemVu = (player.playerTask != null
                                 && player.playerTask.taskMain != null
-                                && player.playerTask.taskMain.id >= 25);
+                                // Xong nhiem vu Tieu doi sat thu (nhiem vu 22): da giet
+                                // du bon ten — toi buoc bao cao (buoc 4) — hoac da qua han.
+                                && (player.playerTask.taskMain.id > 22
+                                    || (player.playerTask.taskMain.id == 22
+                                        && player.playerTask.taskMain.index >= 4)));
 
                         final int CAN_VND = 20_000;
                         boolean duVnd = player.getSession().tongnap >= CAN_VND;
@@ -220,7 +224,7 @@ public class OngGohan extends Npc {
                             Service.gI().sendMoney(player);
                             npcChat(player, "Mở thành viên FREE thành công!");
                         } else {
-                            npcChat(player, "Chưa đủ điều kiện! Cần hoàn thành nhiệm vụ hoặc Nạp lần đầu 20K VND.");
+                            npcChat(player, "Chưa đủ điều kiện! Cần hoàn thành nhiệm vụ Tiểu đội sát thủ hoặc nạp lần đầu 20K VND.");
                         }
                     } else {
                         npcChat(player, "Bạn đã mở rồi!");
@@ -728,7 +732,7 @@ public class OngGohan extends Npc {
             case 3:
                 this.createOtherMenu(player, ConstNpc.MTVFREE,
                         "|7|Mở thành viên FREE"
-                        + "\n|6|Yêu cầu hoàn thành nhiệm vụ ADR 19"
+                        + "\n|6|Yêu cầu hoàn thành nhiệm vụ Tiểu đội sát thủ"
                         + "\n|1|OR NẠP lần đầu sẽ được mở FREE",
                         "Đồng ý", "Từ chối");
                 break;

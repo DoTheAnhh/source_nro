@@ -639,7 +639,8 @@ public class Boss extends Player implements IBoss {
         for (int i = 0; i < soMon; i++) {
             short itemId = bo[Util.nextInt(bo.length)];
             nro.entity.map.ItemMap im = new nro.entity.map.ItemMap(this.zone,
-                    itemId, 1, x + Util.nextInt(-40, 40), y, -1);
+                    itemId, 1, x + Util.nextInt(-40, 40), y, chuDoRoi());
+            im.chiNguoiGiet = true;
             java.util.List<nro.entity.item.ItemOption> ops =
                     nro.service.item.ItemService.gI().getDefaultOptionTL(itemId);
             if (ops != null && !ops.isEmpty()) {
@@ -728,6 +729,16 @@ public class Boss extends Player implements IBoss {
         }
     }
 
+    /**
+     * Chủ của đồ boss rơi: người đánh đòn cuối. Người khác nhặt thì báo "Không
+     * thể nhặt vật phẩm của người khác". Không rõ ai giết thì -1 (ai cũng nhặt).
+     * Đệ tử đánh đòn cuối: id âm của đệ, ItemMap lấy trị tuyệt đối — thành id
+     * sư phụ, nên sư phụ nhặt được.
+     */
+    private long chuDoRoi() {
+        return this.playerReward != null ? this.playerReward.id : -1;
+    }
+
     private void thaVatPhamTheoCauHinh() {
         try {
             java.util.List<nro.repository.dao.BossDAO.Drop> ds =
@@ -763,7 +774,8 @@ public class Boss extends Player implements IBoss {
                     continue;
                 }
                 nro.entity.map.ItemMap im = new nro.entity.map.ItemMap(this.zone,
-                        (short) d.itemId, sl, x + Util.nextInt(-15, 15), y, -1);
+                        (short) d.itemId, sl, x + Util.nextInt(-15, 15), y, chuDoRoi());
+                im.chiNguoiGiet = true;
                 apChiSoNgauNhien(im, d.options);
                 apHanSuDung(im, d.hsdMin, d.hsdMax, d.hsdVinhVien);
                 Service.gI().dropItemMap(this.zone, im);

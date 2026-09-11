@@ -485,6 +485,8 @@ public class SystemPanel extends JPanel {
         {"Rơi đồ và phần thưởng",
             ConfigDAO.VANG_ROI_MIN, ConfigDAO.VANG_ROI_MAX,
             ConfigDAO.BOSS_GIAY_HOI_SINH, ConfigDAO.TL_DE_TU_CHO_SU_PHU},
+        {"Hồi sinh tại chỗ",
+            ConfigDAO.HOI_SINH_LOAI, ConfigDAO.HOI_SINH_GIA},
         {"Quãng chờ",
             ConfigDAO.DOI_KHU_GIAY, ConfigDAO.GIAO_DICH_CHO_GIAY},
         {"Quái Yardrat",
@@ -500,6 +502,16 @@ public class SystemPanel extends JPanel {
      * <p>Một ô chữ chờ đúng chữ "0" hoặc "1" thì vừa dễ gõ nhầm, vừa bắt người
      * dùng nhớ số nào là bật. Ô tích thì nhìn là biết.</p>
      */
+    /**
+     * Khoá chọn một trong vài thứ — vẽ thành ô chọn, lưu số thứ tự (0, 1, 2…).
+     */
+    private static final java.util.Map<String, String[]> QUY_UOC_LUA_CHON
+            = new java.util.HashMap<>();
+
+    static {
+        QUY_UOC_LUA_CHON.put(ConfigDAO.HOI_SINH_LOAI, ConfigDAO.HOI_SINH_CAC_LOAI);
+    }
+
     private static final java.util.Set<String> QUY_UOC_BAT_TAT
             = new java.util.HashSet<>(java.util.Arrays.asList(
                     ConfigDAO.BAO_TRI, ConfigDAO.DANG_KY_TU_DONG,
@@ -706,7 +718,27 @@ public class SystemPanel extends JPanel {
         c.gridy = y;
         c.weightx = 0;
         c.fill = GridBagConstraints.NONE;
-        if (QUY_UOC_BAT_TAT.contains(key)) {
+        if (QUY_UOC_LUA_CHON.containsKey(key)) {
+            String[] cacLoai = QUY_UOC_LUA_CHON.get(key);
+            JComboBox<String> cb = new JComboBox<>(cacLoai);
+            // O chu van la nguon duy nhat luc luu, giong o tich ben duoi.
+            Runnable veLaiCb = () -> {
+                int v;
+                try {
+                    v = Integer.parseInt(f.getText().trim());
+                } catch (NumberFormatException ex) {
+                    v = 0;
+                }
+                if (v >= 0 && v < cacLoai.length && cb.getSelectedIndex() != v) {
+                    cb.setSelectedIndex(v);
+                }
+            };
+            dongBoQuyUoc.add(veLaiCb);
+            cb.addActionListener(e -> f.setText(String.valueOf(Math.max(0, cb.getSelectedIndex()))));
+            veLaiCb.run();
+            cb.setPreferredSize(new Dimension(RONG_O_QUY_UOC, 26));
+            than.add(cb, c);
+        } else if (QUY_UOC_BAT_TAT.contains(key)) {
             JCheckBox o = new JCheckBox();
             o.setOpaque(false);
             o.setFont(o.getFont().deriveFont(Font.BOLD));

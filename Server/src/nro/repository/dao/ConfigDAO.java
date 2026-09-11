@@ -389,6 +389,13 @@ public class ConfigDAO {
      */
     public static final String YARDRAT_HOI_SINH_GIAY = "yardrat_hoi_sinh_giay";
 
+    /** Hồi sinh tại chỗ ở bản đồ thường trả bằng gì — số thứ tự trong {@link #HOI_SINH_CAC_LOAI}. */
+    public static final String HOI_SINH_LOAI = "hoi_sinh_loai";
+    /** Hồi sinh tại chỗ ở bản đồ thường trừ bao nhiêu; 0 là miễn phí. */
+    public static final String HOI_SINH_GIA = "hoi_sinh_gia";
+    /** Các loại tiền hồi sinh, đúng thứ tự số lưu trong {@link #HOI_SINH_LOAI}. */
+    public static final String[] HOI_SINH_CAC_LOAI = {"Ngọc xanh", "Hồng ngọc", "Vàng", "Thỏi vàng"};
+
     // Cac con so cua cong thuc tiem nang goc (tab Ti le -> 1. Tiem nang goc).
     // Mac dinh dung nhu game goc.
     /** % bớt đi cho mỗi cấp người chơi cao hơn quái. */
@@ -460,6 +467,8 @@ public class ConfigDAO {
         DEFAULTS.put(GOI_HAM_NHIP_MS, 40L);
         DEFAULTS.put(YARDRAT_TRAN_SAT_THUONG, 50_000L);
         DEFAULTS.put(YARDRAT_HOI_SINH_GIAY, 10L);
+        DEFAULTS.put(HOI_SINH_LOAI, 0L);
+        DEFAULTS.put(HOI_SINH_GIA, 1L);
         DEFAULTS.put(TN_GOC_GIAM_MOI_CAP, 10L);
         DEFAULTS.put(TN_GOC_TANG_MOI_CAP, 10L);
         DEFAULTS.put(TN_GOC_NGUONG_MAU_LON, 100_000_000L);
@@ -555,6 +564,8 @@ public class ConfigDAO {
         NOTES.put(TN_GOC_NGUONG_MAU_LON, "Máu quái từ mức này trở lên là quái máu lớn");
         NOTES.put(TN_GOC_NHAN_MAU_LON, "Quái máu lớn: phần trăm máu mỗi đòn được nhân thêm ngần này lần");
         NOTES.put(TN_GOC_DAO_DONG, "Mỗi con quái lúc hồi sinh lệch ngẫu nhiên ± ngần này % tiềm năng");
+        NOTES.put(HOI_SINH_LOAI, "Hồi sinh tại chỗ trả bằng (bản đồ thường; NRSĐ và PVP vẫn trả vàng riêng)");
+        NOTES.put(HOI_SINH_GIA, "Hồi sinh tại chỗ trừ bao nhiêu — 0 là miễn phí");
         NOTES.put(YARDRAT_HOI_SINH_GIAY,
                 "Lính Yardrat chết bao nhiêu giây thì sống lại tại chỗ cũ");
     }

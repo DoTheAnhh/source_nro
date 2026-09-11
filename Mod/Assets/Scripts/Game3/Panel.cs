@@ -6366,6 +6366,12 @@ namespace Game3
         }
 
         /// <summary>Vật phẩm ở ô đang chọn của tab đang xem, hoặc null.</summary>
+        /// <summary>Món vừa bấm "Giao dịch", chờ nhập số lượng.</summary>
+        /// <remarks>Xác nhận số lượng bằng chính món này. Bản cũ đọc lại
+        /// <c>currItem</c> — biến ấy đổi theo ô đang chọn, nên một lần chạm lọt
+        /// xuống túi đồ trong lúc gõ số là xác nhận nhầm sang món khác.</remarks>
+        private Item itemChoGiaoDich;
+
         private Item oDangChon(int chiSo)
         {
             Item[] ds = (newSelected == 0)
@@ -10081,6 +10087,7 @@ namespace Game3
                 }
                 if (item4.quantity > 1)
                 {
+                    itemChoGiaoDich = item4;
                     putQuantily();
                     return;
                 }
@@ -10729,19 +10736,27 @@ namespace Game3
                     chatTField.tfChat.setIputType(TField.INPUT_TYPE_ANY);
                     return;
                 }
-                if (num <= 0 || num > currItem.quantity)
+                Item mon = itemChoGiaoDich ?? currItem;
+                itemChoGiaoDich = null;
+                if (mon == null)
+                {
+                    chatTField.isShow = false;
+                    chatTField.tfChat.setIputType(TField.INPUT_TYPE_ANY);
+                    return;
+                }
+                if (num <= 0 || num > mon.quantity)
                 {
                     GameCanvas.startOKDlg(mResources.input_quantity_wrong);
                     chatTField.isShow = false;
                     chatTField.tfChat.setIputType(TField.INPUT_TYPE_ANY);
                     return;
                 }
-                currItem.isSelect = true;
+                mon.isSelect = true;
                 Item item = new Item();
-                item.template = currItem.template;
+                item.template = mon.template;
                 item.quantity = num;
-                item.indexUI = currItem.indexUI;
-                item.itemOption = currItem.itemOption;
+                item.indexUI = mon.indexUI;
+                item.itemOption = mon.itemOption;
                 GameCanvas.panel.vMyGD.addElement(item);
                 Service.gI().giaodich(2, -1, (sbyte)item.indexUI, item.quantity);
                 chatTField.isShow = false;

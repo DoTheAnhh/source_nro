@@ -533,13 +533,11 @@ public class PlayerService {
                         return;
                     }
                 } else {
-                    if (player.inventory.gem >= COST_GEM_HOI_SINH) {
-                        player.inventory.gem -= COST_GEM_HOI_SINH;
-                        canHs = true;
-                    } else {
-                        Service.gI().sendThongBao(player, "Bạn không đủ hồng ngọc để thực hiện");
+                    // Ban do thuong: loai tien va gia dat o tab Quy uoc.
+                    if (!truPhiHoiSinh(player)) {
                         return;
                     }
+                    canHs = true;
                 }
                 if (canHs) {
                     Service.gI().sendMoney(player);
@@ -552,6 +550,67 @@ public class PlayerService {
         }
     }
     
+    /**
+     * Trừ phí hồi sinh tại chỗ ở bản đồ thường — loại tiền và giá đặt ở tab Quy
+     * ước ({@code hoi_sinh_loai}, {@code hoi_sinh_gia}).
+     *
+     * <p>Bản cũ trừ 1 <b>ngọc xanh</b> mà câu báo lại nói "không đủ hồng ngọc".
+     * Thỏi vàng đếm và trừ theo số lượng thật (dòng "Số lượng" bên trong trước),
+     * dồn qua mọi ô.</p>
+     *
+     * @return {@code false} nếu không đủ — đã báo cho người chơi
+     */
+    private boolean truPhiHoiSinh(Player player) {
+        long gia = Math.max(0L, nro.repository.dao.ConfigDAO.num(
+                nro.repository.dao.ConfigDAO.HOI_SINH_GIA, 1L));
+        if (gia == 0) {
+            return true;
+        }
+        int loai = (int) nro.repository.dao.ConfigDAO.num(
+                nro.repository.dao.ConfigDAO.HOI_SINH_LOAI, 0L);
+        switch (loai) {
+            case 1: {
+                if (player.inventory.ruby < gia) {
+                    baoThieuHoiSinh(player, gia - player.inventory.ruby, "hồng ngọc");
+                    return false;
+                }
+                player.inventory.ruby -= (int) gia;
+                return true;
+            }
+            case 2: {
+                if (player.inventory.gold < gia) {
+                    baoThieuHoiSinh(player, gia - player.inventory.gold, "vàng");
+                    return false;
+                }
+                player.inventory.gold -= gia;
+                return true;
+            }
+            case 3: {
+                int co = InventoryService.gI().demTongTrongTui(player, 457);
+                if (co < gia) {
+                    baoThieuHoiSinh(player, gia - co, "thỏi vàng");
+                    return false;
+                }
+                InventoryService.gI().truTongTrongTui(player, 457, (int) gia);
+                InventoryService.gI().sendItemBag(player);
+                return true;
+            }
+            default: {
+                if (player.inventory.gem < gia) {
+                    baoThieuHoiSinh(player, gia - player.inventory.gem, "ngọc xanh");
+                    return false;
+                }
+                player.inventory.gem -= (int) gia;
+                return true;
+            }
+        }
+    }
+
+    private static void baoThieuHoiSinh(Player player, long thieu, String ten) {
+        Service.gI().sendThongBao(player, "Không đủ " + ten + " để hồi sinh, còn thiếu "
+                + Util.formatNumber(thieu, FormatStyle.VIETNAMESE) + " " + ten);
+    }
+
     private void ReceiveGiftsEveryday(Player player) {
         if (InventoryService.gI().getCountEmptyBag(player) == 0) {
             return;

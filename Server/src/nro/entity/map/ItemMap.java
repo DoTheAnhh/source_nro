@@ -37,6 +37,12 @@ public class ItemMap {
     public byte typeHaveBallTranhDoat = -1;
     
     public boolean isPickedUp;
+
+    /**
+     * Đồ boss rơi: <b>chỉ chủ</b> (người đánh đòn cuối) nhặt được, suốt đời
+     * của món — không mở cho mọi người sau 45 giây như đồ thường.
+     */
+    public boolean chiNguoiGiet;
     
     public ItemMap(Zone zone, int tempId, int quantity, List<ItemOption> itemOptions, int x, int y, long playerId) {
         this.zone = zone;
@@ -103,6 +109,7 @@ public class ItemMap {
         this.x = itemMap.x;
         this.y = itemMap.y;
         this.playerId = itemMap.playerId;
+        this.chiNguoiGiet = itemMap.chiNguoiGiet;
         this.options = itemMap.options;
         this.isBlackBall = itemMap.isBlackBall;
         this.isNamecBall = itemMap.isNamecBall;
@@ -133,7 +140,8 @@ public class ItemMap {
                 satelliteUpdate();
             }
             if (Util.canDoWithTime(createTime, 45000)) {
-                if (this.itemTemplate.type != 22 && this.itemTemplate.id != 726 && this.itemTemplate.id != 992) {
+                if (this.itemTemplate.type != 22 && this.itemTemplate.id != 726 && this.itemTemplate.id != 992
+                        && !this.chiNguoiGiet) {
                     this.playerId = -1;
                 }
             }
