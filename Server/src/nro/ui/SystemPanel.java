@@ -513,33 +513,25 @@ public class SystemPanel extends JPanel {
     /**
      * Tab Quy ước — mọi con số dùng chung của máy chủ.
      *
-     * <h3>Vì sao xếp nhóm và đặt tên tiếng Việt lên trước</h3>
+     * <h3>Bố cục</h3>
      *
-     * <p>Bản cũ đổ thẳng bốn chục khoá ra thành một cột phẳng, tên khoá thô của
-     * CSDL đứng đầu dòng: <code>ve_thang_ngay</code>, <code>vs_item</code>,
-     * <code>skh_mota_type</code>… Muốn sửa một con số thì phải đọc gần hết cột
-     * mới thấy, vì thứ tự các khoá là thứ tự chúng được khai trong mã chứ không
-     * theo nghĩa nào cả.</p>
+     * <p>Mỗi nhóm một thẻ có tiêu đề. Trong thẻ, mỗi dòng là <b>ô nhập ở bên
+     * trái</b>, câu tiếng Việt ở bên phải: mắt đọc từ trái sang gặp ngay con số
+     * — đúng thứ người ta vào đây để sửa — rồi mới tới lời giải thích.</p>
      *
-     * <p>Nay mỗi dòng bắt đầu bằng <b>câu tiếng Việt</b> nói nó là gì, tên khoá
-     * lùi ra sau dưới dạng chữ xám nhỏ — vẫn tra được khi cần đối chiếu CSDL,
-     * nhưng không còn chắn đường. Các khoá cùng chủ đề đứng chung một nhóm có
-     * tiêu đề.</p>
+     * <p>Tên khoá thô trong CSDL ({@code ve_thang_ngay}, {@code vs_item}…) không
+     * còn hiện ra chắn chỗ. Ai cần đối chiếu CSDL thì rê chuột lên dòng là thấy.</p>
      */
     private JComponent buildConfigTab() {
         dangMo = this;
         dongBoQuyUoc.clear();
-        JPanel form = new JPanel(new GridBagLayout());
-        form.setOpaque(false);
-        form.setBorder(new EmptyBorder(12, 12, 12, 12));
-
-        GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(4, 8, 4, 8);
-        c.anchor = GridBagConstraints.WEST;
+        JPanel cot = new JPanel();
+        cot.setLayout(new javax.swing.BoxLayout(cot, javax.swing.BoxLayout.Y_AXIS));
+        cot.setOpaque(false);
+        cot.setBorder(new EmptyBorder(12, 14, 12, 14));
 
         java.util.List<String> conLai
                 = new ArrayList<>(java.util.Arrays.asList(ConfigDAO.keys()));
-        int row = 0;
         for (String[] nhom : NHOM_QUY_UOC) {
             java.util.List<String> khoa = new ArrayList<>();
             for (int i = 1; i < nhom.length; i++) {
@@ -547,57 +539,38 @@ public class SystemPanel extends JPanel {
                     khoa.add(nhom[i]);
                 }
             }
-            if (khoa.isEmpty()) {
-                continue;
-            }
-            row = tieuDeQuyUoc(form, c, row, nhom[0]);
-            for (String k : khoa) {
-                row = hangQuyUoc(form, c, row, k);
+            if (!khoa.isEmpty()) {
+                themTheQuyUoc(cot, nhom[0], khoa);
             }
         }
         if (!conLai.isEmpty()) {
-            row = tieuDeQuyUoc(form, c, row, "Khác");
-            for (String k : conLai) {
-                row = hangQuyUoc(form, c, row, k);
-            }
+            themTheQuyUoc(cot, "Khác", conLai);
         }
 
-        // Cot don day o ben phai: GridBagLayout mac dinh dua noi dung ra GIUA
-        // khung. Mot o rong an weightx=1 keo phan con lai ve sat trai.
-        c.gridx = 3;
-        c.gridy = 0;
-        c.weightx = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        form.add(javax.swing.Box.createHorizontalGlue(), c);
-        c.weightx = 0;
-        c.fill = GridBagConstraints.NONE;
+        JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        nut.setOpaque(false);
+        nut.setAlignmentX(LEFT_ALIGNMENT);
+        nut.add(button("Lưu", OK_GREEN, e -> saveConfig()));
+        nut.add(button("Đọc lại", GREY, e -> loadConfig()));
+        // Hai nut "Bat bao tri" va "Khoi dong lai may chu" nam o thanh ben trai
+        // (NutMayChu): chung ngat ket noi nguoi dang choi, khac han moi thu o
+        // day von chi luu mot con so.
+        nut.setMaximumSize(new Dimension(Integer.MAX_VALUE, nut.getPreferredSize().height));
+        cot.add(nut);
 
-        c.gridx = 0;
-        c.gridy = row;
-        c.gridwidth = 3;
-        JPanel btn = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 8));
-        btn.setOpaque(false);
-        btn.add(button("Lưu", OK_GREEN, e -> saveConfig()));
-        btn.add(button("Đọc lại", GREY, e -> loadConfig()));
-        // Hai nut "Bat bao tri" va "Khoi dong lai may chu" da chuyen sang
-        // thanh ben trai (NutMayChu): chung ngat ket noi cua nguoi dang choi,
-        // khac han moi thu khac o day von chi luu mot con so — de lan giua
-        // "Luu" va "Doc lai" o cuoi mot bieu mau dai la vua kho tim luc can
-        // gap, vua de bam nham luc dang sua con so khac.
-        form.add(btn, c);
-
-        c.gridy = row + 1;
         JLabel hint = new JLabel("<html>Lưu xong có hiệu lực <b>ngay</b>, không cần "
-                + "khởi động lại máy chủ.<br>Người chơi mua vé ở NPC và admin cấp vé ở "
-                + "tab Nạp tiền đều đọc cùng bộ số này.</html>");
+                + "khởi động lại máy chủ. Rê chuột lên một dòng để xem tên khoá "
+                + "trong CSDL.</html>");
         hint.setForeground(GREY);
-        form.add(hint, c);
+        hint.setBorder(new EmptyBorder(2, 8, 0, 0));
+        hint.setAlignmentX(LEFT_ALIGNMENT);
+        cot.add(hint);
 
         loadConfig();
 
         JPanel wrap = new JPanel(new BorderLayout());
         wrap.setOpaque(false);
-        wrap.add(form, BorderLayout.NORTH);
+        wrap.add(cot, BorderLayout.NORTH);
         return ServerGuiUtils.cuon(wrap);
     }
 
@@ -605,6 +578,11 @@ public class SystemPanel extends JPanel {
         ConfigDAO.reload();
         for (Map.Entry<String, JTextField> e : fields.entrySet()) {
             e.getValue().setText(giaTri(e.getKey()));
+        }
+        // O tich doc tu o chu — nap chu xong ma khong ve lai thi o tich van
+        // hien trang thai cu.
+        for (Runnable r : dongBoQuyUoc) {
+            r.run();
         }
         note(GREY, "Đã đọc lại quy ước từ CSDL.");
     }
@@ -665,30 +643,59 @@ public class SystemPanel extends JPanel {
         }
     }
 
-    /** Tiêu đề một nhóm quy ước. */
-    private int tieuDeQuyUoc(JPanel form, GridBagConstraints c, int y, String ten) {
-        c.gridx = 0;
-        c.gridy = y;
-        c.gridwidth = 3;
-        JLabel l = new JLabel(ten);
-        l.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        l.setForeground(ACCENT);
-        l.setBorder(new EmptyBorder(y == 0 ? 0 : 12, 0, 2, 0));
-        form.add(l, c);
-        c.gridwidth = 1;
-        return y + 1;
+    /** Chiều rộng cột ô nhập — cố định để mọi dòng thẳng hàng. */
+    private static final int RONG_O_QUY_UOC = 150;
+
+    /**
+     * Một thẻ nhóm quy ước: tiêu đề, rồi các dòng ô-nhập-trước-chữ-sau.
+     *
+     * <p>Thẻ nền trắng, viền mảnh, bo góc, cách nhau một khoảng — tách nhóm bằng
+     * khối chứ không bằng một dòng chữ xanh giữa bức tường chữ.</p>
+     */
+    private void themTheQuyUoc(JPanel cot, String ten, java.util.List<String> khoa) {
+        JPanel the = new JPanel(new BorderLayout(0, 6));
+        the.setBackground(Color.WHITE);
+        the.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(222, 227, 234), 1, true),
+                new EmptyBorder(10, 14, 12, 14)));
+        the.setAlignmentX(LEFT_ALIGNMENT);
+
+        JLabel tieuDe = new JLabel(ten);
+        tieuDe.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        tieuDe.setForeground(ACCENT);
+        tieuDe.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(236, 239, 243)),
+                new EmptyBorder(0, 0, 6, 0)));
+        the.add(tieuDe, BorderLayout.NORTH);
+
+        JPanel than = new JPanel(new GridBagLayout());
+        than.setOpaque(false);
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(4, 0, 4, 12);
+        c.anchor = GridBagConstraints.WEST;
+        int y = 0;
+        for (String k : khoa) {
+            y = hangQuyUoc(than, c, y, k);
+        }
+        the.add(than, BorderLayout.CENTER);
+
+        // BoxLayout keo gian chieu cao neu khong chan tran — the se phinh ra lap
+        // day khung. Chot chieu cao bang dung phan noi dung.
+        the.setMaximumSize(new Dimension(Integer.MAX_VALUE, the.getPreferredSize().height));
+        cot.add(the);
+        cot.add(javax.swing.Box.createVerticalStrut(10));
     }
 
     /**
-     * Một dòng quy ước: câu tiếng Việt, ô nhập, rồi tên khoá bằng chữ xám nhỏ.
+     * Một dòng quy ước: <b>ô nhập bên trái</b>, câu tiếng Việt bên phải.
      *
-     * <p>Khoá hai trạng thái được vẽ thành ô tích. Ô chữ của nó vẫn tồn tại và
-     * vẫn nằm trong {@code fields} — chỉ là không hiện ra — nên phần đọc và ghi
-     * không phải biết đến chuyện này.</p>
+     * <p>Khoá hai trạng thái vẽ thành ô tích ghi rõ "Đang bật" / "Đang tắt". Ô
+     * chữ của nó vẫn nằm trong {@code fields} — chỉ là không hiện — nên phần đọc
+     * và ghi không phải biết chuyện này.</p>
      */
-    private int hangQuyUoc(JPanel form, GridBagConstraints c, int y, String key) {
-        String moTa = ConfigDAO.note(key);
-        if (moTa == null || moTa.trim().isEmpty()) {
+    private int hangQuyUoc(JPanel than, GridBagConstraints c, int y, String key) {
+        String moTa = moTaGon(ConfigDAO.note(key));
+        if (moTa.isEmpty()) {
             moTa = key;
         }
         JTextField f = new JTextField(12);
@@ -697,29 +704,53 @@ public class SystemPanel extends JPanel {
 
         c.gridx = 0;
         c.gridy = y;
-        JLabel nhanMoTa = new JLabel(moTa);
-        form.add(nhanMoTa, c);
-
-        c.gridx = 1;
+        c.weightx = 0;
+        c.fill = GridBagConstraints.NONE;
         if (QUY_UOC_BAT_TAT.contains(key)) {
-            JCheckBox o = new JCheckBox("Bật");
+            JCheckBox o = new JCheckBox();
             o.setOpaque(false);
-            // Doc mot chieu tu o chu sang o tich, va nguoc lai khi bam. O chu
-            // van la nguon duy nhat luc luu — khong co hai duong ghi song song.
-            dongBoQuyUoc.add(() -> o.setSelected("1".equals(f.getText().trim())));
-            o.addActionListener(e -> f.setText(o.isSelected() ? "1" : "0"));
-            o.setSelected("1".equals(f.getText().trim()));
-            form.add(o, c);
+            o.setFont(o.getFont().deriveFont(Font.BOLD));
+            Runnable veLai = () -> {
+                boolean bat = "1".equals(f.getText().trim());
+                o.setSelected(bat);
+                o.setText(bat ? "Đang bật" : "Đang tắt");
+                o.setForeground(bat ? OK_GREEN : GREY);
+            };
+            // O chu van la nguon duy nhat luc luu: o tich chi doc tu no va ghi
+            // nguoc vao no, khong co hai duong ghi song song.
+            dongBoQuyUoc.add(veLai);
+            o.addActionListener(e -> {
+                f.setText(o.isSelected() ? "1" : "0");
+                veLai.run();
+            });
+            veLai.run();
+            o.setPreferredSize(new Dimension(RONG_O_QUY_UOC, 26));
+            than.add(o, c);
         } else {
-            form.add(f, c);
+            f.setPreferredSize(new Dimension(RONG_O_QUY_UOC, 26));
+            than.add(f, c);
         }
 
-        c.gridx = 2;
-        JLabel tenKhoa = new JLabel(key);
-        tenKhoa.setFont(new Font("Consolas", Font.PLAIN, 11));
-        tenKhoa.setForeground(GREY);
-        form.add(tenKhoa, c);
+        c.gridx = 1;
+        c.weightx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        JLabel nhan = new JLabel(moTa);
+        nhan.setToolTipText("Khoá trong CSDL: " + key);
+        than.add(nhan, c);
         return y + 1;
+    }
+
+    /**
+     * Câu mô tả gọn cho panel: bỏ đuôi "(1 = bật, 0 = tắt)".
+     *
+     * <p>Đuôi ấy viết cho thời còn gõ tay 0/1. Nay khoá bật/tắt là ô tích ghi rõ
+     * "Đang bật", nên đuôi ấy chỉ còn làm dài dòng.</p>
+     */
+    private static String moTaGon(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.replaceAll("\\s*\\(1\\s*=?\\s*bật,\\s*0\\s*=?\\s*tắt\\)", "").trim();
     }
 
     /** Giá trị hiện tại của một quy ước, đúng kiểu của nó. */

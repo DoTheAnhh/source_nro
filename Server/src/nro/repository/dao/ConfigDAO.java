@@ -474,8 +474,8 @@ public class ConfigDAO {
         NOTES.put(VE_TUAN_NGAY, "Số ngày hiệu lực của vé tuần");
         NOTES.put(VE_THANG_GIA, "Giá vé tháng (VND)");
         NOTES.put(VE_THANG_NGAY, "Số ngày hiệu lực của vé tháng");
-        NOTES.put(VS_DATA, "Phiên bản gói dữ liệu (part, hiệu ứng, ảnh) — TĂNG khi thêm cải trang / phụ kiện");
-        NOTES.put(VS_ITEM, "Phiên bản bảng vật phẩm — TĂNG khi thêm/sửa item_template");
+        NOTES.put(VS_DATA, "Phiên bản gói dữ liệu (part, hiệu ứng, ảnh) — máy chủ tự tăng khi dữ liệu đổi");
+        NOTES.put(VS_ITEM, "Phiên bản bảng vật phẩm — máy chủ tự tăng khi sửa vật phẩm");
         NOTES.put(HIEN_TEN_MAP, "MẶC ĐỊNH TẮT — dòng này dùng slot 8 của gói 65 mà client chỉ biết slot 0..7, bật lên là client hỏng (không đánh được quái bằng phím Enter / nháy đúp). Chỉ bật nếu đã vá client.");
         NOTES.put(VS_MAP, "Phiên bản bản đồ");
         NOTES.put(VS_SKILL, "Phiên bản kỹ năng");
