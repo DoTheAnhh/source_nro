@@ -2249,15 +2249,16 @@ public class SystemPanel extends JPanel {
     private static final int COT_HS_MAP = 2;
     private static final int COT_HS_HS = 3;
     private static final int COT_HS_HSDT = 4;
-    private static final int COT_HS_CHIDT = 5;
-    private static final int COT_HS_GAP = 6;
-    private static final int COT_HS_BAT = 7;
-    private static final int COT_HS_GC = 8;
+    private static final int COT_HS_HSSP = 5;
+    private static final int COT_HS_CHIDT = 6;
+    private static final int COT_HS_GAP = 7;
+    private static final int COT_HS_BAT = 8;
+    private static final int COT_HS_GC = 9;
 
     private final DefaultTableModel hsModel = new DefaultTableModel(
             new Object[]{"Id", "Nhóm bản đồ", "Các bản đồ trong nhóm",
-                "Hệ số", "Hệ số đệ tử", "Chỉ đệ tử", "Một con quái cho",
-                "Bật", "Ghi chú"}, 0) {
+                "Hệ số", "Hệ số đệ tử", "Hệ số sư phụ", "Chỉ đệ tử",
+                "Một con quái cho", "Bật", "Ghi chú"}, 0) {
         @Override
         public boolean isCellEditable(int r, int c) {
             return c != COT_HS_ID && c != COT_HS_GAP;
@@ -2310,7 +2311,7 @@ public class SystemPanel extends JPanel {
         root.setBorder(new EmptyBorder(10, 10, 10, 10));
         hsTable.setRowHeight(24);
         hsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        int[] w = {36, 160, 210, 62, 82, 62, 190, 40, 240};
+        int[] w = {36, 150, 195, 62, 82, 82, 62, 210, 40, 220};
         for (int i = 0; i < hsTable.getColumnCount() && i < w.length; i++) {
             hsTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
         }
@@ -2327,6 +2328,12 @@ public class SystemPanel extends JPanel {
                 + "đệ tử dùng chung hệ số bên trái.<br>"
                 + "Ví dụ đặt hệ số 1, hệ số đệ tử 2: trong nhóm ấy đệ tử đánh được "
                 + "gấp đôi, còn sư phụ tự đánh vẫn như bản đồ thường.<br><br>"
+                + "<b>Hệ số sư phụ</b> là phần <b>sư phụ nhận khi đệ tử đánh</b> — "
+                + "khác hẳn hai ô trên. Hai ô trên nhân vào con số gốc của con quái "
+                + "nên hạ hệ số đệ tử là hạ cả hai bên; ô này nhân vào phần chia cho "
+                + "sư phụ <i>sau khi</i> đệ tử đã nhận đủ, nên chỉnh riêng được. "
+                + "Để trống là 1, tức giữ nguyên như cũ; đặt 0,5 thì sư phụ chỉ còn "
+                + "một nửa mà đệ tử không mất gì.<br><br>"
                 + "<b>Chỉ đệ tử</b> chỉ làm đúng một việc: bật lên thì <b>người thường "
                 + "đánh không được tiềm năng</b>, chỉ đệ tử mới có. Nó không đụng gì "
                 + "tới hai ô hệ số — hai ô ấy vẫn sửa được như thường.<br><br>"
@@ -2391,9 +2398,14 @@ public class SystemPanel extends JPanel {
         }
     }
 
-    /** Một con quái trong nhóm này cho bao nhiêu tiềm năng, tính cả hệ số chung. */
-    private String motConQuaiCho(double heSo, double heSoDeTu, boolean chiDeTu,
-            boolean bat) {
+    /**
+     * Một con quái trong nhóm này cho bao nhiêu tiềm năng, tính cả hệ số chung.
+     *
+     * <p>Phần "sư phụ" là con số sư phụ nhận <b>khi đệ tử đánh</b>, tính từ
+     * chính phần của đệ tử — không phải lúc sư phụ tự đánh.</p>
+     */
+    private String motConQuaiCho(double heSo, double heSoDeTu, double heSoSuPhu,
+            boolean chiDeTu, boolean bat) {
         if (!bat) {
             return "— đang tắt, tính như bản đồ thường";
         }
@@ -2403,10 +2415,12 @@ public class SystemPanel extends JPanel {
             chung = 1;
         }
         double dt = heSoDeTu > 0 ? heSoDeTu : heSo;
+        double sp = heSoSuPhu > 0 ? heSoSuPhu : 1;
         String thuong = chiDeTu ? "0 (bị khoá)"
                 : PlayerManagerPanel.fmt(Math.round(goc * heSo * chung));
-        return "thường " + thuong + " · đệ tử "
-                + PlayerManagerPanel.fmt(Math.round(goc * dt * chung));
+        long phanDe = Math.round(goc * dt * chung);
+        return "thường " + thuong + " · đệ tử " + PlayerManagerPanel.fmt(phanDe)
+                + " · sư phụ " + PlayerManagerPanel.fmt(Math.round(phanDe * sp));
     }
 
     /**
@@ -2434,8 +2448,10 @@ public class SystemPanel extends JPanel {
                 hsModel.addRow(new Object[]{String.valueOf(d.id), d.ten,
                     d.dsMap == null ? "" : d.dsMap,
                     soGonHs(d.heSo), d.heSoDeTu <= 0 ? "" : soGonHs(d.heSoDeTu),
+                    d.heSoSuPhu <= 0 ? "" : soGonHs(d.heSoSuPhu),
                     d.chiDeTu,
-                    motConQuaiCho(d.heSo, d.heSoDeTu, d.chiDeTu, d.bat),
+                    motConQuaiCho(d.heSo, d.heSoDeTu, d.heSoSuPhu, d.chiDeTu,
+                            d.bat),
                     d.bat, d.ghiChu == null ? "" : d.ghiChu});
             }
         } finally {
@@ -2453,17 +2469,20 @@ public class SystemPanel extends JPanel {
         for (int r = 0; r < hsModel.getRowCount(); r++) {
             double hs;
             double hsdt;
+            double hssp;
             try {
                 hs = Double.parseDouble(oHs(r, COT_HS_HS).replace(',', '.'));
                 String dt = oHs(r, COT_HS_HSDT).replace(',', '.');
                 hsdt = dt.isEmpty() ? 0 : Double.parseDouble(dt);
+                String sp = oHs(r, COT_HS_HSSP).replace(',', '.');
+                hssp = sp.isEmpty() ? 0 : Double.parseDouble(sp);
             } catch (NumberFormatException ex) {
                 hsModel.setValueAt("hệ số không phải số", r, COT_HS_GAP);
                 continue;
             }
             Object cdt = hsModel.getValueAt(r, COT_HS_CHIDT);
             Object bat = hsModel.getValueAt(r, COT_HS_BAT);
-            hsModel.setValueAt(motConQuaiCho(hs, hsdt,
+            hsModel.setValueAt(motConQuaiCho(hs, hsdt, hssp,
                     (cdt instanceof Boolean) && (Boolean) cdt,
                     !(bat instanceof Boolean) || (Boolean) bat), r, COT_HS_GAP);
         }
@@ -2497,6 +2516,8 @@ public class SystemPanel extends JPanel {
                 d.heSo = Double.parseDouble(oHs(r, COT_HS_HS).replace(',', '.'));
                 String dt = oHs(r, COT_HS_HSDT).replace(',', '.');
                 d.heSoDeTu = dt.isEmpty() ? 0 : Double.parseDouble(dt);
+                String sp = oHs(r, COT_HS_HSSP).replace(',', '.');
+                d.heSoSuPhu = sp.isEmpty() ? 0 : Double.parseDouble(sp);
             } catch (NumberFormatException ex) {
                 hong++;
                 if (hongDau == null) {

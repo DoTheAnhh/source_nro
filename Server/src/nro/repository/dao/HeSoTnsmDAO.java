@@ -56,6 +56,19 @@ public final class HeSoTnsmDAO {
         public double heSo = 1;
         /** Hệ số riêng cho đệ tử. {@code <= 0} nghĩa là dùng chung {@link #heSo}. */
         public double heSoDeTu;
+
+        /**
+         * Hệ số cho phần <b>sư phụ</b> nhận khi đệ tử đánh trong nhóm này.
+         *
+         * <p>{@code <= 0} là {@code 1}, tức không đổi gì so với cách tính cũ.
+         * Đặt {@code 0.5} thì sư phụ chỉ nhận một nửa, {@code 2} thì gấp đôi.</p>
+         *
+         * <p>Khác với hai hệ số trên ở một chỗ quan trọng: hai cái kia nhân vào
+         * <b>con số gốc của con quái</b>, còn cái này nhân vào <b>phần chia cho
+         * sư phụ</b> sau khi đệ tử đã nhận đủ phần mình. Nên sửa nó không làm
+         * đệ tử được ít hay nhiều đi.</p>
+         */
+        public double heSoSuPhu;
         /** Bật thì <b>người chơi thường đánh không được gì</b>, chỉ đệ tử mới có. */
         public boolean chiDeTu;
         public int thuTu;
@@ -71,6 +84,7 @@ public final class HeSoTnsmDAO {
             + " `ds_map` varchar(255) NOT NULL DEFAULT '',"
             + " `he_so` double NOT NULL DEFAULT 1,"
             + " `he_so_de_tu` double NOT NULL DEFAULT 0,"
+            + " `he_so_su_phu` double NOT NULL DEFAULT 0,"
             + " `chi_de_tu` tinyint(1) NOT NULL DEFAULT 0,"
             + " `thu_tu` int(11) NOT NULL DEFAULT 0,"
             + " `bat` tinyint(1) NOT NULL DEFAULT 1,"
@@ -92,6 +106,13 @@ public final class HeSoTnsmDAO {
             }
             try {
                 ConnectDB.executeUpdate(LUOC_DO);
+                // Bang da co tu ban truoc thi CREATE TABLE IF NOT EXISTS khong
+                // them cot moi — phai xin rieng. May chu dang chay ban cu cu
+                // "git pull" roi khoi dong lai la co cot nay, khong phai go
+                // cau lenh SQL nao bang tay.
+                ConnectDB.executeUpdate("ALTER TABLE `he_so_tnsm`"
+                        + " ADD COLUMN IF NOT EXISTS `he_so_su_phu`"
+                        + " double NOT NULL DEFAULT 0 AFTER `he_so_de_tu`");
                 daTao = true;
             } catch (Exception ex) {
                 Logger.logException(HeSoTnsmDAO.class, ex,
@@ -130,7 +151,7 @@ public final class HeSoTnsmDAO {
         CrisResultSet rs = null;
         try {
             rs = ConnectDB.executeQuery("SELECT id, khoa, ten, ds_map, he_so, he_so_de_tu,"
-                    + " chi_de_tu, thu_tu, bat, ghi_chu FROM he_so_tnsm"
+                    + " he_so_su_phu, chi_de_tu, thu_tu, bat, ghi_chu FROM he_so_tnsm"
                     + " ORDER BY thu_tu, id");
             while (rs.next()) {
                 Dong d = new Dong();
@@ -140,6 +161,7 @@ public final class HeSoTnsmDAO {
                 d.dsMap = rs.getString("ds_map");
                 d.heSo = rs.getDouble("he_so");
                 d.heSoDeTu = rs.getDouble("he_so_de_tu");
+                d.heSoSuPhu = rs.getDouble("he_so_su_phu");
                 d.chiDeTu = rs.getBoolean("chi_de_tu");
                 d.thuTu = rs.getInt("thu_tu");
                 d.bat = rs.getBoolean("bat");
@@ -159,21 +181,23 @@ public final class HeSoTnsmDAO {
         if (d == null || d.khoa == null || d.khoa.trim().isEmpty()) {
             return "Thiếu khoá nhóm bản đồ.";
         }
-        if (d.heSo < 0 || d.heSoDeTu < 0) {
+        if (d.heSo < 0 || d.heSoDeTu < 0 || d.heSoSuPhu < 0) {
             return "Hệ số không được âm.";
         }
         try {
             ConnectDB.executeUpdate(
                     "INSERT INTO he_so_tnsm (khoa, ten, ds_map, he_so, he_so_de_tu,"
-                    + " chi_de_tu, thu_tu, bat, ghi_chu) VALUES (?,?,?,?,?,?,?,?,?)"
+                    + " he_so_su_phu, chi_de_tu, thu_tu, bat, ghi_chu)"
+                    + " VALUES (?,?,?,?,?,?,?,?,?,?)"
                     + " ON DUPLICATE KEY UPDATE ten = VALUES(ten),"
                     + " ds_map = VALUES(ds_map),"
                     + " he_so = VALUES(he_so), he_so_de_tu = VALUES(he_so_de_tu),"
+                    + " he_so_su_phu = VALUES(he_so_su_phu),"
                     + " chi_de_tu = VALUES(chi_de_tu), thu_tu = VALUES(thu_tu),"
                     + " bat = VALUES(bat), ghi_chu = VALUES(ghi_chu)",
                     d.khoa.trim(), d.ten == null ? "" : d.ten,
                     d.dsMap == null ? "" : d.dsMap.trim(), d.heSo, d.heSoDeTu,
-                    d.chiDeTu ? 1 : 0, d.thuTu, d.bat ? 1 : 0,
+                    d.heSoSuPhu, d.chiDeTu ? 1 : 0, d.thuTu, d.bat ? 1 : 0,
                     d.ghiChu == null ? "" : d.ghiChu);
             reload();
             return null;
@@ -263,6 +287,28 @@ public final class HeSoTnsmDAO {
             return d.heSoDeTu;
         }
         return d.heSo;
+    }
+
+    /**
+     * Hệ số cho phần <b>sư phụ</b> nhận khi đệ tử đánh trong bản đồ này.
+     *
+     * <h3>Vì sao tách khỏi hai hệ số kia</h3>
+     *
+     * <p>Hai hệ số kia nhân vào <b>con số gốc của con quái</b>, nên sửa chúng là
+     * đổi luôn phần của người đang đánh. Muốn cho sư phụ ít đi mà đệ tử vẫn
+     * nguyên thì không có cách nào — hạ hệ số đệ tử là hạ cả hai bên.</p>
+     *
+     * <p>Hệ số này nhân vào <b>phần chia cho sư phụ</b> sau khi đệ tử đã nhận
+     * đủ, nên hai bên chỉnh được độc lập.</p>
+     *
+     * @return {@code 1} nếu bản đồ thường hoặc nhóm chưa đặt gì
+     */
+    public static double heSoSuPhu(int mapId) {
+        Dong d = dongCua(mapId);
+        if (d == null || d.heSoSuPhu <= 0) {
+            return 1;
+        }
+        return d.heSoSuPhu;
     }
 
     // =====================================================================

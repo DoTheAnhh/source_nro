@@ -1126,6 +1126,21 @@ public class Service {
             player.nPoint.tiemNangUp(Util.CrisGH(param));
             Player master = ((Detu) player).master;
             param = master.nPoint.calSubTNSM(param);
+            // He so rieng cho phan SU PHU nhan, dat theo nhom ban do tren panel.
+            //
+            // Hoi ban do cua NGUOI DANG DANH chu khong phai cua su phu: de tu
+            // dang cay o Ngu Hanh Son thi phan chia cho su phu cung phai theo
+            // Ngu Hanh Son, ma luc ay su phu co the dang dung o dau khong biet.
+            //
+            // Nhan o day, tuc la sau khi de tu da nhan du phan minh, nen ha he
+            // so nay khong lam de tu duoc it di.
+            if (player.zone != null && player.zone.map != null) {
+                double heSoSp = nro.repository.dao.HeSoTnsmDAO.heSoSuPhu(
+                        player.zone.map.mapId);
+                if (heSoSp != 1) {
+                    param = Math.round(param * heSoSp);
+                }
+            }
             long endCal = System.currentTimeMillis();
             if (endCal - start > 50) {
                 System.out.println("[SLOW] CALCULATOR POINT : " + (endCal - start) + " : " + (endCal - start2));
