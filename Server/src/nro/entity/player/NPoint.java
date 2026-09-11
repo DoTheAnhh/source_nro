@@ -2850,9 +2850,9 @@ if (hasFull5NhatAn()) {
      * bộ ấy từ nhân vật thật ({@link #dieuKienTnHienTai}), panel dựng từ các ô
      * người dùng tích. Cùng một hàm thì không thể lệch nhau.</p>
      *
-     * <p>Thứ tự các bước và cách làm tròn giữ nguyên xi bản cũ, kể cả những chỗ
-     * trông lạ — ví dụ bùa tiềm năng cho đệ tử được cộng hai lần (hai lẫn mười
-     * lần giá trị gốc). Đổi những chỗ ấy là đổi cân bằng game, việc riêng.</p>
+     * <p>Thứ tự các bước và cách làm tròn giữ nguyên xi bản cũ. Riêng bùa tiềm
+     * năng cho đệ tử nay chỉ cộng một lần — bản cũ cộng hai lần (hai lẫn mười
+     * lần giá trị gốc) do một đoạn bị dán trùng.</p>
      */
     public static final class DieuKienTn {
 
@@ -3035,9 +3035,12 @@ if (hasFull5NhatAn()) {
 
         if (dk.laDeTu && dk.coSuPhu) {
             if (dk.spBuaTnsmDeTu) {
-                // Hai lan cong nhu ban goc — xem javadoc cua DieuKienTn.
+                // Bua TN cho de (vat pham 1628): cong MOT lan, +2 lan gia tri goc.
+                //
+                // Ban goc cong hai lan: +2 roi ngay duoi mot dong +10 thut le lech
+                // han ra ngoai — dau hieu cua mot doan dan them vao sau. Tong la
+                // +12, gap sau lan cai ten "bua x2" hua hen.
                 tiemNang += goc * 2;
-                tiemNang += goc * 10;
             }
             if (dk.spBuaDeTu) {
                 tiemNang += goc * 2;
