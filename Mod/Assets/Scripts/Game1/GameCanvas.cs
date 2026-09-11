@@ -3493,6 +3493,9 @@ namespace Game1
     			}
     			loginScr.backToRegister();
     			break;
+    		case 100003:
+    			God.SoSuuTamUI.getInstance().mo();
+    			break;
     		case 100005:
     			if (Char.myCharz().statusMe == 14)
     			{

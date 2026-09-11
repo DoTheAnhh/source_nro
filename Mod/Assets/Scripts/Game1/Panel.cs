@@ -8768,15 +8768,7 @@ namespace Game1
         private void doRada()
         {
             hide();
-            if (RadarScr.list == null || RadarScr.list.size() == 0)
-            {
-                Service.gI().SendRada(0, -1);
-                RadarScr.gI().switchToMe();
-            }
-            else
-            {
-                RadarScr.gI().switchToMe();
-            }
+            God.SoSuuTamUI.getInstance().mo();
         }
     
         private void doFireTool()

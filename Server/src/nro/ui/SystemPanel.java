@@ -59,6 +59,9 @@ public class SystemPanel extends JPanel {
 
     private final JLabel lblStatus = new JLabel(" ");
 
+    /** Tab "Sổ sưu tầm" — giữ lại để nạp khi mở tab. */
+    private final SoSuuTamTab soSuuTam = new SoSuuTamTab();
+
     public SystemPanel() {
         setLayout(new BorderLayout(8, 8));
         setBackground(Color.WHITE);
@@ -83,6 +86,7 @@ public class SystemPanel extends JPanel {
         tabs.addTab("Nhiệm vụ chính tuyến", buildNhiemVuChinhTab());
         tabs.addTab("Kỹ năng", buildKyNangTab());
         tabs.addTab("Hào quang", buildAuraTab());
+        tabs.addTab("Sổ sưu tầm", soSuuTam);
         tabs.addTab("Danh hiệu", buildDanhHieuTab());
         tabs.addTab("Top máy đấm", buildTopMayDamTab());
         tabs.addTab("Vòng quay Thượng Đế", buildVongQuayTab());
@@ -125,6 +129,9 @@ public class SystemPanel extends JPanel {
             switch (ten) {
                 case "Quy ước":
                     loadConfigQuiet();
+                    break;
+                case "Sổ sưu tầm":
+                    soSuuTam.nap();
                     break;
                 case "Boss":
                     veLaiBoss();

@@ -4633,7 +4633,7 @@ namespace Game3.God
             new int[] { 2, 3, 12 },
             new int[] { 1, 7, 4, 9 },
             new int[] { 19, 6, 8 },
-            new int[] { 100001, 100002, 16, 17 }
+            new int[] { 100003, 100001, 100002, 16, 17 }
         };
 
         private static readonly string[][] TEN_MUC_CN = {
@@ -4641,7 +4641,7 @@ namespace Game3.God
             new string[] { "Tự Động Hồi Sinh", "Auto Nhặt", "Auto Up Đệ",
                 "Auto Login" },
             new string[] { "Thông tin đệ tử", "D.s Nhân Vật", "Giảm Đồ Họa" },
-            new string[] { "Đổi cờ", "Đăng xuất", "Cấu hình Voice", "Âm thanh" }
+            new string[] { "Sổ sưu tầm", "Đổi cờ", "Đăng xuất", "Cấu hình Voice", "Âm thanh" }
         };
 
         // Thẻ con thứ tư đổi từ "Màn khác" sang "Hệ thống".

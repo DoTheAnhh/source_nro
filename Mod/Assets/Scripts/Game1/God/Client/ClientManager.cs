@@ -229,7 +229,8 @@ namespace Game1.God
                     || TuiUI.getInstance().dangMo
                     || VoiceConfigUI.getInstance().dangMo
                     || TanSatUI.getInstance().dangMo
-                    || NoiTaiUI.getInstance().dangMo;
+                    || NoiTaiUI.getInstance().dangMo
+                    || SoSuuTamUI.getInstance().dangMo;
         }
 
         public void UpdateTouch()
@@ -242,6 +243,11 @@ namespace Game1.God
                 return;
             }
             if (HopNhapChu.getInstance().capNhatCham())
+            {
+                return;
+            }
+            // So suu tam nam tren moi man khac (mo tu the He thong cua TuiUI).
+            if (SoSuuTamUI.getInstance().capNhatCham())
             {
                 return;
             }
@@ -813,6 +819,8 @@ namespace Game1.God
             // that, nhung khong ai nhin thay gi ca.
             TanSatUI.getInstance().ve(g);
             NoiTaiUI.getInstance().ve(g);
+            // So suu tam ve sau cung: no nam tren moi thu.
+            SoSuuTamUI.getInstance().ve(g);
             // Khung chat va hai hop nhap KHONG ve o day nua.
             //
             // Chuoi nay chay ben trong GameScr.paint, tuc TRUOC khi GameCanvas
@@ -832,6 +840,7 @@ namespace Game1.God
         public void PhimManPhu()
         {
             TuiUI.getInstance().nhanPhim();
+            SoSuuTamUI.getInstance().nhanPhim();
         }
 
         public void KeyPressed(int keyCode)

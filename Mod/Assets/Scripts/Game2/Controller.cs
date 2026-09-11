@@ -3859,6 +3859,10 @@ namespace Game2
                             God.PhucLoiUI.getInstance().nhanDuLieu(dsNhomPL);
                         }
                         break;
+                    case 127:
+                        // So suu tam (the ra-da): may chu RadarService.
+                        God.SoSuuTamUI.getInstance().nhanGoi(msg);
+                        break;
                     case -71:
 
                         {

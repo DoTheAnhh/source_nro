@@ -749,7 +749,7 @@ public class GodGK {
             dataArray = docCot(rs, "data_card");
             for (int i = 0; i < dataArray.size(); i++) {
                 JSONObject obj = (JSONObject) dataArray.get(i);
-                player.Cards.add(new Card(Short.parseShort(obj.get("id").toString()), Byte.parseByte(obj.get("amount").toString()), Byte.parseByte(obj.get("max").toString()), Byte.parseByte(obj.get("level").toString()), loadOptionCard((JSONArray) JSONValue.parse(obj.get("option").toString())), Byte.parseByte(obj.get("used").toString())));
+                player.Cards.add(new Card(Short.parseShort(obj.get("id").toString()), Integer.parseInt(obj.get("amount").toString()), Integer.parseInt(obj.get("max").toString()), Byte.parseByte(obj.get("level").toString()), loadOptionCard((JSONArray) JSONValue.parse(obj.get("option").toString())), Byte.parseByte(obj.get("used").toString())));
             }
             dataArray.clear();
 

@@ -1130,40 +1130,9 @@ public final class Manager {
             }
             Logger.success("Loaded notify (" + NOTIFY.size() + ") successfully\n");
 
-            ps = con.prepareStatement("select * from radar");
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                RadarCard rd = new RadarCard();
-                rd.Id = rs.getShort("id");
-                rd.IconId = rs.getShort("iconId");
-                rd.Rank = rs.getByte("rank");
-                rd.Max = rs.getByte("max");
-                rd.Type = rs.getByte("type");
-                rd.Template = rs.getShort("mob_id");
-                rd.Name = rs.getString("name");
-                rd.Info = rs.getString("info");
-                JSONArray arr = (JSONArray) JSONValue.parse(rs.getString("body"));
-                for (int j = 0; j < arr.size(); j++) {
-                    JSONObject ob = (JSONObject) arr.get(j);
-                    if (ob != null) {
-                        rd.Head = Short.parseShort(ob.get("head").toString());
-                        rd.Body = Short.parseShort(ob.get("body").toString());
-                        rd.Leg = Short.parseShort(ob.get("leg").toString());
-                        rd.Bag = Short.parseShort(ob.get("bag").toString());
-                    }
-                }
-                rd.Options.clear();
-                arr = (JSONArray) JSONValue.parse(rs.getString("options"));
-                for (int j = 0; j < arr.size(); j++) {
-                    JSONObject ob = (JSONObject) arr.get(j);
-                    if (ob != null) {
-                        rd.Options.add(new OptionCard(Integer.parseInt(ob.get("id").toString()), Short.parseShort(ob.get("param").toString()), Byte.parseByte(ob.get("activeCard").toString())));
-                    }
-                }
-                rd.AuraId = rs.getShort("aura_id");
-                RadarService.gI().RADAR_TEMPLATE.add(rd);
-            }
-            Logger.success("Successfully loaded radar template (" + RadarService.gI().RADAR_TEMPLATE.size() + ")\n");
+            // So suu tam (bang radar) doc qua SoSuuTamDAO: tu tao bang va cot moi,
+            // sua duoc tren panel, tab "So suu tam".
+            nro.repository.dao.SoSuuTamDAO.napLai();
             
             //TOP
             TopServer.Topserver_data(con);

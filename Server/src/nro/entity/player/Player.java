@@ -2496,7 +2496,8 @@ public byte getAura() {
                     .filter(r -> r.Id == card.Id)
                     .findFirst()
                     .orElse(null);
-            if (the != null && the.AuraId > 0) {
+            if (the != null && the.AuraId > 0
+                    && RadarCard.bac(card) >= the.AuraTuCap) {
                 aura = (byte) the.AuraId;
                 break;
             }

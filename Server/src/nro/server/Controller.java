@@ -315,15 +315,12 @@ public class Controller implements IMessageHandler {
                                         return;
                                     }
                                     if (card.Used == 0) {
-                                        if (player.Cards.stream().anyMatch(c -> c != null && c.Used == 1)) {
-                                            Service.gI().sendThongBao(player, "Số thẻ sử dụng đã đạt tối đa");
-                                            return;
-                                        }
                                         card.Used = 1;
                                     } else {
                                         card.Used = 0;
                                     }
                                     RadarService.gI().Radar1(player, idC, card.Used);
+                                    player.nPoint.calPoint();
                                     Service.gI().point(player);
                                 }
                                 break;
