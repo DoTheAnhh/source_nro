@@ -1211,10 +1211,23 @@ public class Mob {
      * vẫn chỉnh được độ hào phóng chung mà không phải sửa từng dòng.</p>
      */
     private List<ItemMap> roiTheoBangCauHinh(Player player, int x, int yEnd, int mapid) {
+        return roiTheoBangCauHinh(this.zone, player, x, yEnd, mapid);
+    }
+
+    /**
+     * Bản dùng chung của phần thả đồ theo bảng {@code quai_do_roi}.
+     *
+     * <p>Tĩnh và nhận khu làm tham số, để những con <b>boss đội lốt quái</b> —
+     * lính Yardrat — rơi đồ đúng theo thẻ "Đồ rơi từ quái" như một con quái
+     * thật. Trước đây chúng là boss nên bảng này không bao giờ được hỏi khi
+     * giết chúng: khai bí kiếp 100% trên panel mà đánh cả buổi không rơi.</p>
+     */
+    public static List<ItemMap> roiTheoBangCauHinh(Zone zone, Player player,
+            int x, int yEnd, int mapid) {
         List<ItemMap> ra = new ArrayList<>();
         List<nro.repository.dao.QuaiDoRoiDAO.Dong> ds
                 = nro.repository.dao.QuaiDoRoiDAO.dangBat();
-        if (ds.isEmpty() || this.zone == null) {
+        if (ds.isEmpty() || zone == null) {
             return ra;
         }
         int hanhTinh = -1;
@@ -1254,7 +1267,7 @@ public class Mob {
             // mot bo chi so.
             if (d.skh) {
                 for (int i = 0; i < sl; i++) {
-                    ItemMap mon = taoDoSetKichHoat(player,
+                    ItemMap mon = taoDoSetKichHoat(zone, player,
                             x + Util.nextInt(-10, 10), yEnd, d);
                     if (mon != null) {
                         apHanSuDungQuai(mon, d.hsdMin, d.hsdMax, d.hsdVinhVien);
@@ -1264,7 +1277,7 @@ public class Mob {
                 continue;
             }
 
-            ItemMap im = new ItemMap(this.zone, (short) d.itemId, sl,
+            ItemMap im = new ItemMap(zone, (short) d.itemId, sl,
                     x + Util.nextInt(-10, 10), yEnd, player.id);
             apChiSoNgauNhienQuai(im, d.chiSo);
             apHanSuDungQuai(im, d.hsdMin, d.hsdMax, d.hsdVinhVien);
@@ -1294,7 +1307,7 @@ public class Mob {
     }
 
     /** Gắn chỉ số ngẫu nhiên dạng {@code id:min:max,...} cho món vừa thả. */
-    private void apChiSoNgauNhienQuai(ItemMap im, String cauHinh) {
+    private static void apChiSoNgauNhienQuai(ItemMap im, String cauHinh) {
         if (im == null || cauHinh == null) {
             return;
         }
@@ -1325,7 +1338,7 @@ public class Mob {
      * viễn. Khi đã bật, mỗi món còn tung thêm một lần theo {@code ptVinhVien}
      * phần trăm để được miễn hạn.</p>
      */
-    private void apHanSuDungQuai(ItemMap im, int min, int max, int ptVinhVien) {
+    private static void apHanSuDungQuai(ItemMap im, int min, int max, int ptVinhVien) {
         if (im == null || min <= 0 || max <= 0) {
             return;
         }
@@ -1516,14 +1529,14 @@ public class Mob {
      *
      * @return món đã dựng, hoặc {@code null} nếu chưa có set nào dùng được
      */
-    private ItemMap taoDoSetKichHoat(Player player, int x, int yEnd,
+    private static ItemMap taoDoSetKichHoat(Zone zone, Player player, int x, int yEnd,
             nro.repository.dao.QuaiDoRoiDAO.Dong d) {
         short itTemp = (short) ItemService.gI()
                 .randTempItemKichHoatVaiTho(player.gender);
         if (itTemp < 0) {
             return null;
         }
-        ItemMap it = new ItemMap(this.zone, itTemp, 1, x, yEnd, player.id);
+        ItemMap it = new ItemMap(zone, itTemp, 1, x, yEnd, player.id);
         List<ItemOption> ops = ItemService.gI().getListOptionItemShop(itTemp);
         if (!ops.isEmpty()) {
             it.options = ops;
@@ -1576,7 +1589,7 @@ public class Mob {
      * Không đụng tới nếu món đã sẵn có chỉ số 107: hai dòng sao trên một món
      * làm client hiện hai dòng, người chơi tưởng lỗi.</p>
      */
-    private void ganSaoPhaLe(List<ItemOption> ops, int min, int max) {
+    private static void ganSaoPhaLe(List<ItemOption> ops, int min, int max) {
         if (ops == null || max <= 0) {
             return;
         }
@@ -1944,7 +1957,7 @@ public class Mob {
      * hiểu vì sao; chặn lại thì im lặng nhưng đúng, và panel đã cảnh báo ngay
      * lúc chọn.</p>
      */
-    private boolean thoaDieuKien(Player player, String dieuKien) {
+    private static boolean thoaDieuKien(Player player, String dieuKien) {
         String dk = dieuKien == null ? "" : dieuKien.trim();
         if (dk.isEmpty()) {
             return true;
@@ -1967,7 +1980,7 @@ public class Mob {
     }
 
     /** Đếm số món Thần Linh (hoặc Huỷ Diệt) người chơi đang mặc. */
-    private int demDoTrenNguoi(Player player, boolean thanLinh) {
+    private static int demDoTrenNguoi(Player player, boolean thanLinh) {
         if (player.inventory == null || player.inventory.itemsBody == null) {
             return 0;
         }

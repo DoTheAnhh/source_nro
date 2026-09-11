@@ -2868,8 +2868,7 @@ public class BossesData {
             new int[]{131}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -2885,8 +2884,7 @@ public class BossesData {
             new int[]{131}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -2902,8 +2900,7 @@ public class BossesData {
             new int[]{131}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -2919,8 +2916,7 @@ public class BossesData {
             new int[]{131}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -2936,8 +2932,7 @@ public class BossesData {
             new int[]{131}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -2953,8 +2948,7 @@ public class BossesData {
             new int[]{131}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -2971,8 +2965,7 @@ public class BossesData {
             new int[]{132}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -2988,8 +2981,7 @@ public class BossesData {
             new int[]{132}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -3005,8 +2997,7 @@ public class BossesData {
             new int[]{132}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -3022,8 +3013,7 @@ public class BossesData {
             new int[]{132}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -3039,8 +3029,7 @@ public class BossesData {
             new int[]{132}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -3056,8 +3045,7 @@ public class BossesData {
             new int[]{132}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -3074,8 +3062,7 @@ public class BossesData {
             new int[]{133}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -3091,8 +3078,7 @@ public class BossesData {
             new int[]{133}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -3108,8 +3094,7 @@ public class BossesData {
             new int[]{133}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -3125,8 +3110,7 @@ public class BossesData {
             new int[]{133}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -3142,8 +3126,7 @@ public class BossesData {
             new int[]{133}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3
@@ -3159,8 +3142,7 @@ public class BossesData {
             new int[]{133}, //map join
             new int[][]{
                 {Skill.DRAGON, 1, 2000},
-                {Skill.MASENKO, 1, 1000},
-                {Skill.DICH_CHUYEN_TUC_THOI, 7, 30000},},//skill
+                {Skill.DICH_CHUYEN_TUC_THOI, 7, 10000},},//skill
             new String[]{}, //text chat 1
             new String[]{"|-1|Khí công pháo"}, //text chat 2
             new String[]{}, //text chat 3

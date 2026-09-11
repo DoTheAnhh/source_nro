@@ -378,6 +378,18 @@ public class ConfigDAO {
     public static final String GOI_HAM_NHIP_MS = "goi_ham_nhip_ms";
 
     /**
+     * Sát thương tối đa một đòn gây lên lính Yardrat (tập sự, tân binh, chiến
+     * binh, đội trưởng). {@code 0} là không chặn.
+     */
+    public static final String YARDRAT_TRAN_SAT_THUONG = "yardrat_tran_sat_thuong";
+
+    /**
+     * Lính Yardrat chết bao nhiêu giây thì sống lại tại chỗ cũ — như quái
+     * thường, không đợi con đầu đàn.
+     */
+    public static final String YARDRAT_HOI_SINH_GIAY = "yardrat_hoi_sinh_giay";
+
+    /**
      * Giá trị dùng khi CSDL chưa có khoá đó.
      *
      * <p>Đúng bằng các con số vốn được viết cứng trong {@code OngGohan} trước
@@ -433,6 +445,8 @@ public class ConfigDAO {
         DEFAULTS.put(DOI_MAP_HET_HAN_GIAY, 5L);
         DEFAULTS.put(GOI_MOI_GIAY, 400L);
         DEFAULTS.put(GOI_HAM_NHIP_MS, 40L);
+        DEFAULTS.put(YARDRAT_TRAN_SAT_THUONG, 50_000L);
+        DEFAULTS.put(YARDRAT_HOI_SINH_GIAY, 10L);
     }
 
     private static final Map<String, String> CACHE = new LinkedHashMap<>();
@@ -516,6 +530,10 @@ public class ConfigDAO {
                 "Số gói tin tối đa một phiên gửi lên trong một giây");
         NOTES.put(GOI_HAM_NHIP_MS,
                 "Hãm nhịp bao nhiêu mili giây mỗi gói khi một phiên gửi quá nhanh");
+        NOTES.put(YARDRAT_TRAN_SAT_THUONG,
+                "Sát thương tối đa một đòn lên lính Yardrat — 0 là không chặn");
+        NOTES.put(YARDRAT_HOI_SINH_GIAY,
+                "Lính Yardrat chết bao nhiêu giây thì sống lại tại chỗ cũ");
     }
 
     /**

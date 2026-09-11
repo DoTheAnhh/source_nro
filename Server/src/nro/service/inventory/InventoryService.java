@@ -516,6 +516,67 @@ public class InventoryService {
         }
     }
 
+    /**
+     * Tổng số lượng thật của một loại vật phẩm trong hành trang, <b>cộng mọi
+     * ô</b>.
+     *
+     * <h2>Vì sao không dùng {@code getParam}</h2>
+     *
+     * <p>{@code getParam} dừng ở <b>ô đầu tiên</b> tìm thấy và chỉ đọc đúng một
+     * dòng chỉ số. Túi có hai ô bí kiếp, hoặc ô đầu giữ số lượng ở
+     * {@code quantity} thay vì dòng "Số lượng #" — chẳng hạn bí kiếp phát tay
+     * từ panel — là đếm ra thiếu, có khi bằng 0. Người chơi thấy đủ chín nghìn
+     * chín trăm chín mươi chín mà NPC vẫn bảo không đủ.</p>
+     */
+    public int demTongTrongTui(Player player, int itemId) {
+        long tong = 0;
+        for (Item it : player.inventory.itemsBag) {
+            if (it != null && it.isNotNullItem() && it.template.id == itemId) {
+                tong += soLuongThat(it);
+            }
+        }
+        return (int) Math.min(tong, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Trừ {@code soLuong} của một loại vật phẩm, <b>rút dần qua từng ô</b> cho
+     * tới khi đủ.
+     *
+     * <p>Mỗi ô trừ đúng vào chỗ nó giữ số lượng — dòng "Số lượng #" hay
+     * {@code quantity} — qua {@link #subQuantityItem}. Gọi sau khi đã kiểm tra
+     * bằng {@link #demTongTrongTui}, nên không bao giờ trừ quá số đang có.</p>
+     *
+     * @return số đã trừ được thật
+     */
+    public int truTongTrongTui(Player player, int itemId, int soLuong) {
+        int conPhaiTru = soLuong;
+        // Chep ra danh sach rieng: subQuantityItem co the xoa o, sua danh sach
+        // trong luc dang duyet la loi.
+        List<Item> cacO = new ArrayList<>();
+        for (Item it : player.inventory.itemsBag) {
+            if (it != null && it.isNotNullItem() && it.template.id == itemId) {
+                cacO.add(it);
+            }
+        }
+        // O giu so o dong "So luong #" rut TRUOC, o giu o quantity rut sau —
+        // dung thu tu uu tien cua quy uoc so luong.
+        cacO.sort((a, b) -> Boolean.compare(
+                b.getOptionParam(OPTION_SO_LUONG) > 0,
+                a.getOptionParam(OPTION_SO_LUONG) > 0));
+        for (Item it : cacO) {
+            if (conPhaiTru <= 0) {
+                break;
+            }
+            int trongO = soLuongThat(it);
+            int tru = Math.min(trongO, conPhaiTru);
+            if (tru > 0) {
+                subQuantityItem(player.inventory.itemsBag, it, tru);
+                conPhaiTru -= tru;
+            }
+        }
+        return soLuong - conPhaiTru;
+    }
+
     private void __________________Sắp_xếp_danh_sách_item___________________() {
         //**********************************************************************
     }
@@ -1744,13 +1805,56 @@ public class InventoryService {
         if (idParam[0] != -1) {
             for (Item it : items) {
                 if (it.isNotNullItem() && it.template.id == itemAdd.template.id) {
+                    boolean daCong = false;
                     for (ItemOption io : it.itemOptions) {
                         if (io.optionTemplate.id == idParam[0]) {
                             io.param += idParam[1];
+                            daCong = true;
+                            break;
+                        }
+                    }
+                    // O san co khong co dong chi so ay — vi du bi kiep phat tay
+                    // tu panel, giu so luong o quantity. Ban cu khong cong vao
+                    // dau ca nhung van dat quantity = 0 va bao xong: mon vua nhat
+                    // BIEN MAT, khong dau vet. Nay tao dong ay, gop luon so dang
+                    // nam o quantity vao, de o nay tu gio dem mot cach.
+                    if (!daCong) {
+                        int coSan = idParam[0] == OPTION_SO_LUONG ? it.quantity : 0;
+                        it.itemOptions.add(new ItemOption(idParam[0],
+                                coSan + idParam[1]));
+                        if (idParam[0] == OPTION_SO_LUONG) {
+                            it.quantity = 1;
                         }
                     }
                     itemAdd.quantity = 0;
                     return true;
+                }
+            }
+        }
+
+        // --- Món mà túi đang giữ số lượng ở dòng "Số lượng #".
+        //
+        // Quy ước: món nào có dòng ấy thì mọi phần nhận thêm cộng VÀO DÒNG ẤY
+        // trước; chỉ món không có dòng ấy mới dùng số lượng bên ngoài.
+        //
+        // Nhánh cộng dồn thường ở dưới cộng thẳng vào quantity. Với ô giữ số ở
+        // dòng "Số lượng #" thì quantity luôn là 1 và không ai đọc tới — bí kiếp
+        // rơi từ bảng đồ rơi quái (không mang dòng ấy) gộp vào đó là mất trắng:
+        // ô vẫn hiện số cũ. Đồ khoá và đồ không khoá không gộp lẫn nhau, giống
+        // thỏi vàng bên dưới.
+        if (idParam[0] == -1) {
+            boolean khoaMoi = hasOptionTemplateId(itemAdd, 30);
+            for (Item it : items) {
+                if (!it.isNotNullItem() || it.template.id != itemAdd.template.id
+                        || hasOptionTemplateId(it, 30) != khoaMoi) {
+                    continue;
+                }
+                for (ItemOption io : it.itemOptions) {
+                    if (io.optionTemplate.id == OPTION_SO_LUONG && io.param > 0) {
+                        io.param += Math.max(1, itemAdd.quantity);
+                        itemAdd.quantity = 0;
+                        return true;
+                    }
                 }
             }
         }

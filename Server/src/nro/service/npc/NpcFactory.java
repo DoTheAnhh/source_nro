@@ -1034,9 +1034,12 @@ public class NpcFactory {
             public void confirmMenu(Player player, int select) {
                 if (canOpenNpc(player)) {
                     if (select == 0) {
-                        int soluong = InventoryService.gI().getParam(player, 31, 590);
+                        // Dem TONG moi o bi kiep trong tui, ca o giu so luong o
+                        // dong "So luong #" lan o giu o quantity. Ban cu chi doc
+                        // dong 31 cua O DAU TIEN nen co khi du ma van bao thieu.
+                        int soluong = InventoryService.gI().demTongTrongTui(player, 590);
                         if (soluong >= 9999) {
-                            InventoryService.gI().subParamItemsBag(player, 590, 31, 9999);
+                            InventoryService.gI().truTongTrongTui(player, 590, 9999);
                             Item yardart = ItemService.gI().createNewItem((short) (player.gender + 592));
                             yardart.itemOptions.add(new ItemOption(47, 400));
                             yardart.itemOptions.add(new ItemOption(97, 10));
