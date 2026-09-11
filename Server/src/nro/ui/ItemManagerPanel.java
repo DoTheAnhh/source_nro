@@ -2332,6 +2332,112 @@ public class ItemManagerPanel extends JPanel {
      * <p>Cột "Cộng gì" đọc thẳng từ bảng tra của game để khỏi phải đoán viên nào
      * cho chỉ số nào.</p>
      */
+    /** Tổng số viên đang chọn ở hộp chọn sao. */
+    private static int tongDem(java.util.Map<Integer, Integer> dem) {
+        int t = 0;
+        for (int v : dem.values()) {
+            t += v;
+        }
+        return t;
+    }
+
+    /** Nút nhỏ − / + / Đầy của thẻ viên sao. */
+    private static JButton nutNho(String chu) {
+        JButton b = new JButton(chu);
+        b.setFocusPainted(false);
+        b.setMargin(new java.awt.Insets(2, 8, 2, 8));
+        b.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        return b;
+    }
+
+    /**
+     * Một thẻ viên sao: ảnh, tên, cộng gì, và nút − / số / + / Đầy.
+     *
+     * <p>Viền luôn dày hai điểm, chỉ đổi màu: đổi độ dày theo trạng thái thì cả
+     * lưới nhảy lệch một điểm mỗi lần bấm.</p>
+     */
+    private JPanel theSao(ItemTemplate t, java.util.Map<Integer, Integer> dem, int oToiDa,
+            Runnable capNhat, java.util.List<Runnable> veLai) {
+        final int id = t.id;
+        ItemOption o = chiSoCuaSao(t.id);
+        JPanel the = new JPanel(new BorderLayout(8, 0));
+        the.setOpaque(true);
+
+        JLabel anh = new JLabel(PlayerManagerPanel.iconOf(t.iconID));
+        anh.setPreferredSize(new Dimension(34, 34));
+        anh.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        the.add(anh, BorderLayout.WEST);
+
+        String congGi = o == null ? ""
+                : "+" + o.param + " " + OptionPicker.tenChiSo(o.optionTemplate.id);
+        the.add(new JLabel("<html><b>" + t.name + "</b><br><span style='color:#666'>"
+                + congGi + "</span></html>"), BorderLayout.CENTER);
+
+        JPanel buoc = new JPanel(new FlowLayout(FlowLayout.RIGHT, 3, 6));
+        buoc.setOpaque(false);
+        JButton bot = nutNho("−");
+        JLabel so = new JLabel("0", javax.swing.SwingConstants.CENTER);
+        so.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        so.setPreferredSize(new Dimension(28, 24));
+        JButton them = nutNho("+");
+        JButton day = nutNho("Đầy");
+        buoc.add(bot);
+        buoc.add(so);
+        buoc.add(them);
+        buoc.add(day);
+        the.add(buoc, BorderLayout.EAST);
+
+        bot.addActionListener(e -> {
+            int n = dem.get(id);
+            if (n > 0) {
+                dem.put(id, n - 1);
+                capNhat.run();
+            }
+        });
+        them.addActionListener(e -> {
+            if (tongDem(dem) < oToiDa) {
+                dem.put(id, dem.get(id) + 1);
+                capNhat.run();
+            }
+        });
+        day.addActionListener(e -> {
+            int con = oToiDa - tongDem(dem);
+            if (con > 0) {
+                dem.put(id, dem.get(id) + con);
+                capNhat.run();
+            }
+        });
+
+        veLai.add(() -> {
+            int n = dem.get(id);
+            boolean conCho = tongDem(dem) < oToiDa;
+            so.setText(String.valueOf(n));
+            bot.setEnabled(n > 0);
+            them.setEnabled(conCho);
+            day.setEnabled(conCho);
+            the.setBackground(n > 0 ? new Color(255, 248, 225) : Color.WHITE);
+            the.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                    javax.swing.BorderFactory.createLineBorder(
+                            n > 0 ? new Color(230, 160, 40) : new Color(222, 227, 234), 2, true),
+                    new EmptyBorder(4, 6, 4, 6)));
+        });
+        return the;
+    }
+
+    /**
+     * Hộp chọn sao pha lê — mỗi loại một thẻ có ảnh, bấm + / − để chọn.
+     *
+     * <h3>Vì sao bỏ bảng gõ số</h3>
+     *
+     * <p>Bản cũ là một bảng hai chục dòng, cột đầu là ô chữ "0" phải bấm vào rồi
+     * gõ số: không có ảnh viên sao, không thấy loại nào đang được chọn, còn bao
+     * nhiêu ô trống thì chỉ hiện ở một dòng nhỏ tít dưới đáy. Chọn ba viên là
+     * bấm, gõ, rồi tự cộng nhẩm.</p>
+     *
+     * <p>Nay mỗi loại một thẻ: ảnh, tên, cộng gì, và nút − / + / "Đầy". Thẻ nào
+     * đang có số thì sáng viền cam. Dòng đầu hộp luôn đếm "đã chọn / số ô / còn
+     * lại", và nút + tự khoá khi đã đủ ô — không thể chọn quá.</p>
+     */
     private void chonSaoDialog() {
         java.util.List<ItemTemplate> ds = new ArrayList<>();
         for (ItemTemplate t : Manager.ITEM_TEMPLATES) {
@@ -2343,82 +2449,105 @@ public class ItemManagerPanel extends JPanel {
             note(WARN_RED, "Chưa nạp được bảng mẫu vật phẩm — thử lại sau vài giây.");
             return;
         }
-
-        DefaultTableModel m = new DefaultTableModel(
-                new Object[]{"Số lượng", "Viên sao", "Cộng gì", "__id"}, 0) {
-            @Override
-            public boolean isCellEditable(int r, int c) {
-                return c == 0;
-            }
-        };
-        for (ItemTemplate t : ds) {
-            ItemOption o = chiSoCuaSao(t.id);
-            m.addRow(new Object[]{
-                String.valueOf(saoGan.getOrDefault((int) t.id, 0)), t.name,
-                "+" + o.param + " " + OptionPicker.tenChiSo(o.optionTemplate.id),
-                (int) t.id});
-        }
-        JTable bang = new JTable(m);
-        bang.setRowHeight(24);
-        // Chot o dang sua khi mat tieu diem. Khong dat co nay thi go so vao o
-        // roi bam OK ngay la con so VAN nam trong bo soan thao, chua vao model —
-        // doc ra 0, tong van la "0 / 8 o", va khong gan duoc vien sao nao.
-        bang.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
-        int[] w = {70, 220, 260};
-        for (int i = 0; i < w.length && i < bang.getColumnCount(); i++) {
-            bang.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
-        }
-        bang.removeColumn(bang.getColumnModel().getColumn(3));
-
         int soO;
         try {
             soO = Integer.parseInt(fSoOSao.getText().trim());
         } catch (NumberFormatException ex) {
             soO = 0;
         }
-        final int oToiDa = soO;
-        JLabel lblTong = new JLabel();
-        Runnable demLai = () -> {
-            int t = 0;
-            for (int r = 0; r < m.getRowCount(); r++) {
-                t += soAnToan(m.getValueAt(r, 0));
-            }
-            lblTong.setText("  Tổng: " + t + " / " + oToiDa + " ô");
-            lblTong.setForeground(t > oToiDa ? WARN_RED : OK_GREEN);
-        };
-        demLai.run();
-        m.addTableModelListener(e -> demLai.run());
+        final int oToiDa = Math.max(0, soO);
 
-        JPanel wrap = new JPanel(new BorderLayout(0, 6));
-        JLabel note = new JLabel("<html><span style='color:#777'>"
-                + "Điền số lượng cho từng loại. Gắn bao nhiêu loại cũng được, miễn "
-                + "<b>tổng</b> không vượt số ô sao.</span></html>");
-        note.setBorder(new EmptyBorder(8, 8, 4, 8));
-        wrap.add(note, BorderLayout.NORTH);
-        wrap.add(ServerGuiUtils.cuon(bang), BorderLayout.CENTER);
-        wrap.add(lblTong, BorderLayout.SOUTH);
-        wrap.setPreferredSize(new Dimension(620, 420));
+        // So vien dang chon cua tung loai, theo dung thu tu hien.
+        final java.util.Map<Integer, Integer> dem = new java.util.LinkedHashMap<>();
+        for (ItemTemplate t : ds) {
+            dem.put((int) t.id, saoGan.getOrDefault((int) t.id, 0));
+        }
+        final java.util.List<Runnable> veLai = new ArrayList<>();
+        final JLabel lblTong = new JLabel();
+        lblTong.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        final Runnable capNhat = () -> {
+            int t = tongDem(dem);
+            if (oToiDa == 0) {
+                lblTong.setText("Chưa có ô sao nào — điền \"số ô\" ở ngoài trước.");
+                lblTong.setForeground(WARN_RED);
+            } else if (t > oToiDa) {
+                lblTong.setText("Đã chọn " + t + " / " + oToiDa + " ô — vượt " + (t - oToiDa));
+                lblTong.setForeground(WARN_RED);
+            } else {
+                lblTong.setText("Đã chọn " + t + " / " + oToiDa + " ô"
+                        + (t == oToiDa ? " — đủ" : " — còn " + (oToiDa - t) + " ô trống"));
+                lblTong.setForeground(t == oToiDa ? OK_GREEN : new Color(40, 60, 90));
+            }
+            for (Runnable r : veLai) {
+                r.run();
+            }
+        };
+
+        JPanel cot = new JPanel();
+        cot.setLayout(new javax.swing.BoxLayout(cot, javax.swing.BoxLayout.Y_AXIS));
+        cot.setBackground(Color.WHITE);
+        cot.setBorder(new EmptyBorder(6, 8, 8, 8));
+        // Xep theo nhom cho de tim: Ngoc Rong, Sao pha le, con lai.
+        String[][] nhom = {{"Ngọc Rồng", "Ngọc Rồng"}, {"Sao pha lê", "Sao pha lê"}, {"Khác", null}};
+        for (String[] n : nhom) {
+            JPanel luoi = new JPanel(new GridLayout(0, 2, 8, 8));
+            luoi.setOpaque(false);
+            for (ItemTemplate t : ds) {
+                boolean thuoc = n[1] == null
+                        ? !t.name.startsWith("Ngọc Rồng") && !t.name.startsWith("Sao pha lê")
+                        : t.name.startsWith(n[1]);
+                if (thuoc) {
+                    luoi.add(theSao(t, dem, oToiDa, capNhat, veLai));
+                }
+            }
+            if (luoi.getComponentCount() == 0) {
+                continue;
+            }
+            JLabel tieuDe = new JLabel(n[0]);
+            tieuDe.setFont(new Font("Segoe UI", Font.BOLD, 13));
+            tieuDe.setForeground(new Color(0, 120, 215));
+            tieuDe.setBorder(new EmptyBorder(8, 2, 4, 0));
+            tieuDe.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
+            luoi.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
+            cot.add(tieuDe);
+            cot.add(luoi);
+        }
+
+        JPanel dau = new JPanel(new BorderLayout(8, 0));
+        dau.setBorder(new EmptyBorder(8, 8, 6, 8));
+        dau.add(new JLabel("<html><span style='color:#777'>Bấm <b>+</b> / <b>−</b> để "
+                + "chọn, <b>Đầy</b> để lấp hết ô còn trống bằng loại đó. Tổng không vượt "
+                + "số ô sao.</span></html>"), BorderLayout.NORTH);
+        JPanel hangTong = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 4));
+        hangTong.add(lblTong);
+        dau.add(hangTong, BorderLayout.CENTER);
+        dau.add(button("Bỏ hết", GREY, e -> {
+            for (Integer k : new ArrayList<>(dem.keySet())) {
+                dem.put(k, 0);
+            }
+            capNhat.run();
+        }), BorderLayout.EAST);
+
+        javax.swing.JScrollPane khung = ServerGuiUtils.cuon(cot);
+        khung.getVerticalScrollBar().setUnitIncrement(16);
+        JPanel wrap = new JPanel(new BorderLayout());
+        wrap.add(dau, BorderLayout.NORTH);
+        wrap.add(khung, BorderLayout.CENTER);
+        wrap.setPreferredSize(new Dimension(760, 520));
+        capNhat.run();
 
         if (JOptionPane.showConfirmDialog(this, wrap, "Chọn sao pha lê",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE)
                 != JOptionPane.OK_OPTION) {
             return;
         }
-        // Chot lai lan nua cho chac: co terminateEditOnFocusLost o tren chi an
-        // khi tieu diem chuyen di, ma bam Enter roi bam OK bang chuot thi tieu
-        // diem khong roi khoi o.
-        if (bang.isEditing()) {
-            bang.getCellEditor().stopCellEditing();
-        }
         java.util.Map<Integer, Integer> moi = new java.util.LinkedHashMap<>();
         int tong = 0;
-        for (int r = 0; r < m.getRowCount(); r++) {
-            int n = soAnToan(m.getValueAt(r, 0));
-            if (n <= 0) {
-                continue;
+        for (java.util.Map.Entry<Integer, Integer> e : dem.entrySet()) {
+            if (e.getValue() > 0) {
+                moi.put(e.getKey(), e.getValue());
+                tong += e.getValue();
             }
-            moi.put(soAnToan(m.getValueAt(r, 3)), n);
-            tong += n;
         }
         if (tong > oToiDa) {
             note(WARN_RED, "Chọn " + tong + " sao mà chỉ có " + oToiDa
