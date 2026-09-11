@@ -629,7 +629,7 @@ public class NPoint {
             apDungSetTuCauHinh();
             ghiHp("Set kích hoạt (bảng set_bonus)", this.hpMax);
             congHpDeTuKhiHopThe();
-            ghiHp("HP đệ tử cộng vào khi hợp thể", this.hpMax);
+            ghiHp("HP đệ tử khi hợp thể (đã nhân huýt sáo, bổ huyết)", this.hpMax);
         } finally {
             this.dangDungLaiDayDu = false;
         }
@@ -659,8 +659,9 @@ public class NPoint {
      *
      * <h3>Các mức</h3>
      *
-     * <p>Giữ nguyên như cũ: đệ tử loại 1 cho 120% máu của nó, loại 5 cho 140%,
-     * còn lại 100%.</p>
+     * <p>Đệ tử loại 1 cho 120% máu của nó, loại 5 cho 140%, còn lại 100%. Phần
+     * ấy <b>chỉ</b> nhân cùng huýt sáo và bổ huyết của sư phụ — bông tai, thẻ,
+     * top Whis, set, % trên đồ của sư phụ không nhân vào phần của đệ.</p>
      */
     /**
      * Đệ tử đang nhập vào sư phụ — mọi kiểu hợp thể, kể cả hợp thể vĩnh viễn.
@@ -723,12 +724,24 @@ public class NPoint {
         if (hpDe <= 0) {
             return;
         }
+        long phan = hpDe;
         if (this.player.Detu.typeDeTu == 1) {
-            this.hpMax += hpDe * 20 / 100L;
+            phan += hpDe * 20 / 100L;
         } else if (this.player.Detu.typeDeTu == 5) {
-            this.hpMax += hpDe * 40 / 100L;
+            phan += hpDe * 40 / 100L;
         }
-        this.hpMax += hpDe;
+        // Chi nhan cung huyt sao va bo huyet cua su phu. Bong tai, the, top
+        // Whis, set, % tren do cua su phu KHONG nhan vao phan cua de.
+        if (this.player.effectSkill != null && this.player.effectSkill.tiLeHPHuytSao != 0) {
+            phan += phan * this.player.effectSkill.tiLeHPHuytSao / 100L;
+        }
+        if (this.player.itemTime != null && this.player.itemTime.isUseBoHuyet) {
+            phan *= 2;
+        }
+        if (this.player.itemTime != null && this.player.itemTime.isUseBoHuyet2) {
+            phan = (long) (phan * 2.2);
+        }
+        this.hpMax += phan;
     }
 
     /**
