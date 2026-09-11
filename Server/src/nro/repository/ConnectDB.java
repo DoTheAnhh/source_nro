@@ -55,6 +55,10 @@ public class ConnectDB {
     private static String DB_PASSWORD;
     private static int MIN_CONN;
     private static int MAX_CONN;
+    /** San be ket noi: toi da it nhat bay nhieu, du tep cau hinh ghi thap hon. */
+    private static final int SAN_KET_NOI_TOI_DA = 20;
+    /** So ket noi luon giu san, cung khong duoi bay nhieu. */
+    private static final int SAN_KET_NOI_RANH = 5;
     private static long MAX_LIFE_TIME;
     /**
      * Bật ghi log <b>mọi</b> câu lệnh SQL đã chạy.
@@ -324,13 +328,31 @@ public class ConnectDB {
         // Ghi ra URL that su dung. Loi "Connection refused" chi noi khong ai
         // nghe o dia chi do, khong noi dia chi do la gi - ma URL duoc ghep tu
         // ba gia tri doc tu file, nen khong nhin thay chuoi nay thi phai doan.
+        // San cua be ket noi — tep cau hinh ghi thap hon thi van dung san nay.
+        //
+        // Tep data_base.properties tung ghi database.min=1, database.max=1: CA
+        // may chu game chi co MOT ket noi. Luu nguoi choi, boss, panel, su kien
+        // deu xep hang cho no; mot viec giu lau mot chut la moi viec khac cho,
+        // qua 30 giay thi bao "Connection is not available ... total=1,
+        // active=1, waiting=1". Te hon: cho nao dang cam mot ket noi ma xin
+        // them ket noi thu hai thi tu khoa chinh no cho toi het 30 giay.
+        //
+        // Dat san o day chu khong sua tep, vi tep tren VPS co the da bi sua tay
+        // (mat khau...) — sua ca hai ben la "git pull" dung do.
+        int maxThat = Math.max(MAX_CONN, SAN_KET_NOI_TOI_DA);
+        int minThat = Math.min(Math.max(MIN_CONN, SAN_KET_NOI_RANH), maxThat);
+        if (maxThat != MAX_CONN || minThat != MIN_CONN) {
+            Logger.info("DB", "CANH BAO: " + "database.min/max trong tep la " + MIN_CONN + ".."
+                    + MAX_CONN + " — qua thap cho mot may chu game, dung "
+                    + minThat + ".." + maxThat);
+        }
         Logger.info("DB", "Ket noi: " + url + " | user=" + DB_USER
-                + " | pool=" + MIN_CONN + ".." + MAX_CONN);
+                + " | pool=" + minThat + ".." + maxThat);
         config.setJdbcUrl(url);
         config.setUsername(DB_USER);
         config.setPassword(DB_PASSWORD);
-        config.setMinimumIdle(MIN_CONN);
-        config.setMaximumPoolSize(MAX_CONN);
+        config.setMinimumIdle(minThat);
+        config.setMaximumPoolSize(maxThat);
         config.setMaxLifetime(MAX_LIFE_TIME);
         config.setPoolName(poolName);
         config.setConnectionTestQuery("SELECT 1");

@@ -43,9 +43,9 @@ public final class NhiemVuDanhHieuDAO {
             return;
         }
         daThemCot = true;
-        them("ALTER TABLE `task_badges_template` ADD COLUMN `loai`"
+        them("ALTER TABLE `task_badges_template` ADD COLUMN IF NOT EXISTS `loai`"
                 + " varchar(20) NOT NULL DEFAULT ''");
-        them("ALTER TABLE `task_badges_template` ADD COLUMN `tham_so`"
+        them("ALTER TABLE `task_badges_template` ADD COLUMN IF NOT EXISTS `tham_so`"
                 + " int(11) NOT NULL DEFAULT -1");
     }
 
