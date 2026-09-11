@@ -198,7 +198,13 @@ public class SkillService {
                 return false;
             }
 
-            if (player.effectSkill != null && player.effectSkill.useTroi) {
+            // Dang troi ma dung Tai tao, Huyt sao, Tu phat no, Bien khi thi GIU
+            // troi: bon chieu nay tu buff / tu gong, khong danh ai. Chieu danh
+            // thi van tha troi nhu cu (useSkillAttack).
+            int idSapDung = (status == 20 && skillId != -1)
+                    ? skillId : player.playerSkill.skillSelect.template.id;
+            if (player.effectSkill != null && player.effectSkill.useTroi
+                    && !giuTroiKhiDung(idSapDung)) {
                 EffectSkillService.gI().removeUseTroi(player);
             }
             if (player.effectSkill != null && player.effectSkill.isCharging) {
@@ -970,9 +976,8 @@ public class SkillService {
                         if (!player.isBoss) {
                             List<Player> playersMap = player.zone.getHumanoids();
                             for (Player pl : playersMap) {
-                                if (pl.effectSkill != null && pl.effectSkill.useTroi) {
-                                    EffectSkillService.gI().removeUseTroi(pl);
-                                }
+                                // Huyt sao khong tha troi cua ai — ke ca nguoi
+                                // huyt: Xayda dang troi van huyt duoc.
                                 if (!pl.isBoss && pl.gender != ConstPlayer.NAMEC
                                         && player.cFlag == pl.cFlag) {
                                     EffectSkillService.gI().setStartHuytSao(pl, tileHP);
@@ -992,9 +997,6 @@ public class SkillService {
                         } else {
                             List<Player> playersMap = player.zone.getBosses();
                             for (Player pl : playersMap) {
-                                if (pl.effectSkill.useTroi) {
-                                    EffectSkillService.gI().removeUseTroi(pl);
-                                }
                                 EffectSkillService.gI().setStartHuytSao(pl, tileHP);
                                 EffectSkillService.gI().sendEffectPlayer(pl, pl, EffectSkillService.TURN_ON_EFFECT, EffectSkillService.HUYT_SAO_EFFECT);
                                 pl.nPoint.calPoint();
@@ -1703,6 +1705,28 @@ public class SkillService {
      * đánh — báo ra thì khung chat thành một dòng chảy vô nghĩa.</p>
      */
     private static boolean laChieuBamTungLan(int idChieu) {
+        return laChieuBamTungLanGoc(idChieu);
+    }
+
+    /**
+     * Chiêu dùng được trong lúc đang trói mà <b>không</b> thả trói: Tái tạo
+     * năng lượng, Huýt sáo, Tự phát nổ, Biến khỉ. Cả bốn tự buff hoặc tự gồng
+     * trên chính mình, không đánh ai, nên không có lý do gì bắt Xayda nhả con
+     * mồi đang giữ.
+     */
+    private static boolean giuTroiKhiDung(int idChieu) {
+        switch (idChieu) {
+            case Skill.TAI_TAO_NANG_LUONG:
+            case Skill.HUYT_SAO:
+            case Skill.TU_SAT:
+            case Skill.BIEN_KHI:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static boolean laChieuBamTungLanGoc(int idChieu) {
         switch (idChieu) {
             case Skill.TROI:
             case Skill.THOI_MIEN:

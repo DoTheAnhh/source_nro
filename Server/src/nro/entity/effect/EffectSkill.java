@@ -355,7 +355,7 @@ public class EffectSkill {
         if (isSUcManhBocPha && (Util.canDoWithTime(lastTimeSUcManhBocPhaUp, timeSUcManhBocPha))) {
             EffectSkillService.gI().removeSucManhBocPha(player);
         }
-        if (useTroi && Util.canDoWithTime(lastTimeTroi, timeTroi) || plAnTroi != null && plAnTroi.isDie() || useTroi && isHaveEffectSkill()) {
+        if (useTroi && Util.canDoWithTime(lastTimeTroi, timeTroi) || plAnTroi != null && plAnTroi.isDie() || useTroi && biKhongChe()) {
             EffectSkillService.gI().removeUseTroi(this.player);
         }
         // Ben BI TROI tu het gio, khong doi ben troi go ho.
@@ -406,6 +406,15 @@ public class EffectSkill {
     
     public boolean isHaveEffectSkill() {
         return (isStun || isBlindDCTT || anTroi || isThoiMien || isStone || isMabuHold || isUseSkillMonkey) && !player.isDie();
+    }
+
+    /**
+     * Đang bị <b>người khác</b> khống chế — như {@link #isHaveEffectSkill()}
+     * nhưng bỏ lúc tự biến khỉ. Dùng để thả trói: Xayda đang trói mà biến khỉ
+     * thì vẫn giữ trói; bị choáng, thôi miên, hoá đá... mới phải nhả.
+     */
+    public boolean biKhongChe() {
+        return (isStun || isBlindDCTT || anTroi || isThoiMien || isStone || isMabuHold) && !player.isDie();
     }
 
     public void dispose() {
