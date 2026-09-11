@@ -2923,16 +2923,6 @@ if (hasFull5NhatAn()) {
         public int heSoMayChu = Manager.RATE_EXP_SERVER;
     }
 
-    /** Phần trăm sự kiện tiềm năng toàn máy chủ đang chạy lúc này, 0 nếu không có. */
-    public static int phanTramSuKienTnMayChu() {
-        try {
-            Attribute at = ServerManager.gI().getAttributeManager().find(ConstAttribute.TNSM);
-            return at != null && !at.isExpired() ? at.getValue() : 0;
-        } catch (Exception ex) {
-            return 0;
-        }
-    }
-
     /** {@code calPercent} bản tĩnh — giống hệt, kể cả làm tròn xuống. */
     private static long pt(long param, long percent) {
         return param * percent / 100;

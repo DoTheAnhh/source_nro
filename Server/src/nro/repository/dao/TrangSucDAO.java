@@ -571,19 +571,21 @@ public class TrangSucDAO {
         if (item.itemOptions == null) {
             item.itemOptions = new ArrayList<>();
         }
+        // Xoa MOI dong cung id chi so roi ghi lai dung mot lan.
+        //
+        // Ban cu chi de len dong DAU TIEN cung id. Ma luc nap nhan vat,
+        // GodGK tao mon bang createNewItem (da gan chi so panel) roi CONG
+        // THEM cac dong luu trong CSDL — moi lan dang nhap la mot bo chi so
+        // nua, nen chan menh cap 1 hien bon, nam lan "Suc danh +1%".
+        // Goi lai ham nay sau khi nap la don sach ca do da bi nhan doi.
+        java.util.Set<Integer> idPanel = new java.util.HashSet<>();
         for (ChiSo cs : ds) {
-            boolean daCo = false;
-            for (nro.entity.item.ItemOption io : item.itemOptions) {
-                if (io != null && io.optionTemplate != null
-                        && io.optionTemplate.id == cs.optionId) {
-                    io.param = cs.min;
-                    daCo = true;
-                    break;
-                }
-            }
-            if (!daCo) {
-                item.itemOptions.add(new nro.entity.item.ItemOption(cs.optionId, cs.min));
-            }
+            idPanel.add(cs.optionId);
+        }
+        item.itemOptions.removeIf(io -> io == null || (io.optionTemplate != null
+                && idPanel.contains(io.optionTemplate.id)));
+        for (ChiSo cs : ds) {
+            item.itemOptions.add(new nro.entity.item.ItemOption(cs.optionId, cs.min));
         }
     }
 

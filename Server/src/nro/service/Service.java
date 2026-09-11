@@ -1141,8 +1141,6 @@ public class Service {
                     param = Math.round(param * heSoSp);
                 }
             }
-            // Ghi lai cho panel so uoc tinh voi so thuc nhan.
-            master.tnTuDeCuoi = param;
             long endCal = System.currentTimeMillis();
             if (endCal - start > 50) {
                 System.out.println("[SLOW] CALCULATOR POINT : " + (endCal - start) + " : " + (endCal - start2));

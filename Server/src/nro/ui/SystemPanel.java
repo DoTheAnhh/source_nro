@@ -2267,9 +2267,11 @@ public class SystemPanel extends JPanel {
         napTiLe();
 
         JTabbedPane trong = new JTabbedPane();
-        trong.addTab("1. Hệ số chung", ServerGuiUtils.cuon(wrap));
-        trong.addTab("2. Theo bản đồ", tabHeSo = new HeSoTnsmTab());
+        // Xep theo dung duong di cua con so: goc -> ban do -> bac giam -> chung.
+        trong.addTab("1. Tiềm năng gốc", new TnGocTab());
+        trong.addTab("2. Theo bản đồ", new HeSoTnsmTab());
         trong.addTab("3. Càng mạnh càng giảm", buildBacGiam());
+        trong.addTab("4. Hệ số chung", ServerGuiUtils.cuon(wrap));
         return trong;
     }
 
@@ -2277,13 +2279,7 @@ public class SystemPanel extends JPanel {
     //  Tỉ lệ — 2. Hệ số tiềm năng theo bản đồ
     // =====================================================================
 
-    /** Tab "2. Theo bản đồ" — nay là lớp riêng, xem {@link HeSoTnsmTab}. */
-    private HeSoTnsmTab tabHeSo;
-
-    /** Giá trị gốc đang gõ ở tab "Theo bản đồ" — tab "Càng mạnh càng giảm" xem trước bằng số này. */
-    private double tnGoc() {
-        return tabHeSo == null ? 1000 : tabHeSo.giaTriGoc();
-    }
+    // Tab "1. Tiềm năng gốc" và "2. Theo bản đồ" là lớp riêng: TnGocTab, HeSoTnsmTab.
 
     // =====================================================================
     //  Tỉ lệ — 3. Sức mạnh càng cao, tiềm năng càng ít
@@ -2292,15 +2288,13 @@ public class SystemPanel extends JPanel {
     private static final int COT_BG_MOC = 0;
     private static final int COT_BG_CON = 1;
     private static final int COT_BG_BAT = 2;
-    private static final int COT_BG_XEM = 3;
-    private static final int COT_BG_GC = 4;
+    private static final int COT_BG_GC = 3;
 
     private final DefaultTableModel bgModel = new DefaultTableModel(
-            new Object[]{"Từ mốc sức mạnh", "Còn nhận (%)", "Bật",
-                "Một con quái cho", "Ghi chú"}, 0) {
+            new Object[]{"Từ mốc sức mạnh", "Còn nhận (%)", "Bật", "Ghi chú"}, 0) {
         @Override
         public boolean isCellEditable(int r, int c) {
-            return c != COT_BG_XEM;
+            return true;
         }
 
         @Override
@@ -2321,8 +2315,7 @@ public class SystemPanel extends JPanel {
      * {@code NPoint}, muốn nới một bậc phải sửa mã rồi dịch lại.</p>
      *
      * <p>Đổi <b>mốc</b> của một dòng là xoá dòng cũ rồi ghi dòng mới, vì mốc chính
-     * là khoá của bảng. Cột "Một con quái cho" dùng chung ô "giá trị đúng ra nhận
-     * được" ở tab bên cạnh, để hai bảng nói cùng một con số.</p>
+     * là khoá của bảng.</p>
      */
     private JComponent buildBacGiam() {
         JPanel root = new JPanel(new BorderLayout(0, 6));
@@ -2330,7 +2323,7 @@ public class SystemPanel extends JPanel {
         root.setBorder(new EmptyBorder(10, 10, 10, 10));
         bgTable.setRowHeight(24);
         bgTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        int[] w = {150, 100, 45, 170, 300};
+        int[] w = {150, 100, 45, 300};
         for (int i = 0; i < bgTable.getColumnCount() && i < w.length; i++) {
             bgTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
         }
@@ -2375,19 +2368,6 @@ public class SystemPanel extends JPanel {
         return root;
     }
 
-    /** Một con quái cho bao nhiêu tiềm năng ở bậc này — bản đồ thường. */
-    private String bacGiamCho(int conLai, boolean bat) {
-        if (!bat) {
-            return "— đang tắt";
-        }
-        double chung = ConfigDAO.phanTram(ConfigDAO.TL_EXP);
-        if (chung <= 0) {
-            chung = 1;
-        }
-        return PlayerManagerPanel.fmt(
-                Math.round(tnGoc() * chung * conLai / 100.0));
-    }
-
     private void napBacGiam() {
         if (bgTable.isEditing()) {
             bgTable.getCellEditor().stopCellEditing();
@@ -2397,8 +2377,7 @@ public class SystemPanel extends JPanel {
         for (BacGiamTnsmDAO.Dong d : BacGiamTnsmDAO.danhSach()) {
             bgMocCu.add(d.moc);
             bgModel.addRow(new Object[]{PlayerManagerPanel.fmt(d.moc),
-                String.valueOf(d.conLai), d.bat,
-                bacGiamCho(d.conLai, d.bat), d.ghiChu == null ? "" : d.ghiChu});
+                String.valueOf(d.conLai), d.bat, d.ghiChu == null ? "" : d.ghiChu});
         }
     }
 

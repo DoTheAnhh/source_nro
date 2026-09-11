@@ -389,6 +389,19 @@ public class ConfigDAO {
      */
     public static final String YARDRAT_HOI_SINH_GIAY = "yardrat_hoi_sinh_giay";
 
+    // Cac con so cua cong thuc tiem nang goc (tab Ti le -> 1. Tiem nang goc).
+    // Mac dinh dung nhu game goc.
+    /** % bớt đi cho mỗi cấp người chơi cao hơn quái. */
+    public static final String TN_GOC_GIAM_MOI_CAP = "tn_goc_giam_moi_cap";
+    /** % thêm vào cho mỗi cấp người chơi thấp hơn quái. */
+    public static final String TN_GOC_TANG_MOI_CAP = "tn_goc_tang_moi_cap";
+    /** Máu quái từ mức này trở lên là quái máu lớn. */
+    public static final String TN_GOC_NGUONG_MAU_LON = "tn_goc_nguong_mau_lon";
+    /** Quái máu lớn: phần trăm máu mỗi đòn lấy đi được nhân thêm ngần này lần. */
+    public static final String TN_GOC_NHAN_MAU_LON = "tn_goc_nhan_mau_lon";
+    /** Mỗi con quái lúc hồi sinh lệch ngẫu nhiên ± ngần này phần trăm tiềm năng. */
+    public static final String TN_GOC_DAO_DONG = "tn_goc_dao_dong";
+
     /**
      * Giá trị dùng khi CSDL chưa có khoá đó.
      *
@@ -447,6 +460,11 @@ public class ConfigDAO {
         DEFAULTS.put(GOI_HAM_NHIP_MS, 40L);
         DEFAULTS.put(YARDRAT_TRAN_SAT_THUONG, 50_000L);
         DEFAULTS.put(YARDRAT_HOI_SINH_GIAY, 10L);
+        DEFAULTS.put(TN_GOC_GIAM_MOI_CAP, 10L);
+        DEFAULTS.put(TN_GOC_TANG_MOI_CAP, 10L);
+        DEFAULTS.put(TN_GOC_NGUONG_MAU_LON, 100_000_000L);
+        DEFAULTS.put(TN_GOC_NHAN_MAU_LON, 5L);
+        DEFAULTS.put(TN_GOC_DAO_DONG, 2L);
     }
 
     private static final Map<String, String> CACHE = new LinkedHashMap<>();
@@ -532,6 +550,11 @@ public class ConfigDAO {
                 "Hãm nhịp bao nhiêu mili giây mỗi gói khi một phiên gửi quá nhanh");
         NOTES.put(YARDRAT_TRAN_SAT_THUONG,
                 "Sát thương tối đa một đòn lên lính Yardrat — 0 là không chặn");
+        NOTES.put(TN_GOC_GIAM_MOI_CAP, "% tiềm năng bớt đi cho mỗi cấp người chơi cao hơn quái");
+        NOTES.put(TN_GOC_TANG_MOI_CAP, "% tiềm năng thêm vào cho mỗi cấp người chơi thấp hơn quái");
+        NOTES.put(TN_GOC_NGUONG_MAU_LON, "Máu quái từ mức này trở lên là quái máu lớn");
+        NOTES.put(TN_GOC_NHAN_MAU_LON, "Quái máu lớn: phần trăm máu mỗi đòn được nhân thêm ngần này lần");
+        NOTES.put(TN_GOC_DAO_DONG, "Mỗi con quái lúc hồi sinh lệch ngẫu nhiên ± ngần này % tiềm năng");
         NOTES.put(YARDRAT_HOI_SINH_GIAY,
                 "Lính Yardrat chết bao nhiêu giây thì sống lại tại chỗ cũ");
     }
@@ -567,7 +590,8 @@ public class ConfigDAO {
             new java.util.HashSet<>(java.util.Arrays.asList(
                     TL_EXP, TL_VANG, SKH_BAT, SKH_TILE, SKH_MAP, SKH_SO_NGAY,
                     SKH_SAO_BAT, SKH_SAO_TILE, SKH_SAO_MIN, SKH_SAO_MAX,
-                    LOI_CHAO));
+                    LOI_CHAO, TN_GOC_GIAM_MOI_CAP, TN_GOC_TANG_MOI_CAP,
+                    TN_GOC_NGUONG_MAU_LON, TN_GOC_NHAN_MAU_LON, TN_GOC_DAO_DONG));
 
     // =====================================================================
     //  Tự đẩy dữ liệu cho client

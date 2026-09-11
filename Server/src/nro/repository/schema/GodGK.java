@@ -1081,6 +1081,7 @@ public class GodGK {
                         JSONArray opt = (JSONArray) JSONValue.parse(String.valueOf(options.get(j)));
                         item.itemOptions.add(new ItemOption(Integer.parseInt(String.valueOf(opt.get(0))), Integer.parseInt(String.valueOf(opt.get(1)))));
                     }
+                    nro.repository.dao.TrangSucDAO.apDungChiSoChanMenh(item);
                     if ((item.template.id >= 386 && item.template.id <= 394) || item.template.id == 1464 || item.template.id == 533) {
                         System.out.println("Thu hồi vật phẩm sự kiện noel.");
                         item = ItemService.gI().createItemNull();
@@ -1121,6 +1122,7 @@ public class GodGK {
                         JSONArray opt = (JSONArray) JSONValue.parse(String.valueOf(options.get(j)));
                         item.itemOptions.add(new ItemOption(Integer.parseInt(String.valueOf(opt.get(0))), Integer.parseInt(String.valueOf(opt.get(1)))));
                     }
+                    nro.repository.dao.TrangSucDAO.apDungChiSoChanMenh(item);
                     if ((item.template.id >= 386 && item.template.id <= 394) || item.template.id == 1464 || item.template.id == 533) {
                         System.out.println("Thu hồi vật phẩm sự kiện noel.");
                         item = ItemService.gI().createItemNull();
@@ -1151,6 +1153,7 @@ public class GodGK {
                         JSONArray opt = (JSONArray) JSONValue.parse(String.valueOf(options.get(j)));
                         item.itemOptions.add(new ItemOption(Integer.parseInt(String.valueOf(opt.get(0))), Integer.parseInt(String.valueOf(opt.get(1)))));
                     }
+                    nro.repository.dao.TrangSucDAO.apDungChiSoChanMenh(item);
                     if ((item.template.id >= 386 && item.template.id <= 394) || item.template.id == 1464 || item.template.id == 533) {
                         System.out.println("Thu hồi vật phẩm sự kiện noel.");
                         item = ItemService.gI().createItemNull();
@@ -1181,6 +1184,7 @@ public class GodGK {
                         JSONArray opt = (JSONArray) JSONValue.parse(String.valueOf(options.get(j)));
                         item.itemOptions.add(new ItemOption(Integer.parseInt(String.valueOf(opt.get(0))), Integer.parseInt(String.valueOf(opt.get(1)))));
                     }
+                    nro.repository.dao.TrangSucDAO.apDungChiSoChanMenh(item);
                     item.createTime = Long.parseLong(String.valueOf(dataItem.get(3)));
                     if (ItemService.gI().isOutOfDateTime(item)) {
                         item = ItemService.gI().createItemNull();
@@ -1205,6 +1209,7 @@ public class GodGK {
                         JSONArray opt = (JSONArray) JSONValue.parse(String.valueOf(options.get(j)));
                         item.itemOptions.add(new ItemOption(Integer.parseInt(String.valueOf(opt.get(0))), Integer.parseInt(String.valueOf(opt.get(1)))));
                     }
+                    nro.repository.dao.TrangSucDAO.apDungChiSoChanMenh(item);
                     player.inventory.itemsMailBox.add(item);
                 }
             }
@@ -1224,6 +1229,7 @@ public class GodGK {
                         item.itemOptions.add(new ItemOption(Integer.parseInt(String.valueOf(opt.get(0))),
                                 Integer.parseInt(String.valueOf(opt.get(1)))));
                     }
+                    nro.repository.dao.TrangSucDAO.apDungChiSoChanMenh(item);
                     player.inventory.itemsBoxCrackBall.add(item);
                 }
             }
@@ -2174,6 +2180,7 @@ public class GodGK {
                             item.itemOptions.add(new ItemOption(Integer.parseInt(String.valueOf(opt.get(0))),
                                     Integer.parseInt(String.valueOf(opt.get(1)))));
                         }
+                        nro.repository.dao.TrangSucDAO.apDungChiSoChanMenh(item);
                         item.createTime = Long.parseLong(String.valueOf(dataItem.get(3)));
                         if (ItemService.gI().isOutOfDateTime(item)) {
                             item = ItemService.gI().createItemNull();
@@ -2353,6 +2360,7 @@ public class GodGK {
                         item.itemOptions.add(new ItemOption(Integer.parseInt(String.valueOf(opt.get(0))),
                                 Integer.parseInt(String.valueOf(opt.get(1)))));
                     }
+                    nro.repository.dao.TrangSucDAO.apDungChiSoChanMenh(item);
                     // 26/06/2023 - Giảm Ngày Trong Shop
                     item.createTime = Long.parseLong(String.valueOf(dataItem.get(3)));
                     if ((item.template.id >= 386 && item.template.id <= 394) || item.template.id == 1464 || item.template.id == 533) {
@@ -2488,6 +2496,7 @@ public class GodGK {
                                 item.itemOptions.add(new ItemOption(Integer.parseInt(String.valueOf(opt.get(0))),
                                         Integer.parseInt(String.valueOf(opt.get(1)))));
                             }
+                            nro.repository.dao.TrangSucDAO.apDungChiSoChanMenh(item);
                             item.createTime = Long.parseLong(String.valueOf(dataItem.get(3)));
                             if (ItemService.gI().isOutOfDateTime(item)) {
                                 item = ItemService.gI().createItemNull();
@@ -2557,6 +2566,7 @@ public class GodGK {
                             item.itemOptions.add(new ItemOption(Integer.parseInt(String.valueOf(opt.get(0))),
                                     Integer.parseInt(String.valueOf(opt.get(1)))));
                         }
+                        nro.repository.dao.TrangSucDAO.apDungChiSoChanMenh(item);
                         item.createTime = Long.parseLong(String.valueOf(dataItem.get(3)));
                         if (ItemService.gI().isOutOfDateTime(item)) {
                             item = ItemService.gI().createItemNull();
@@ -2645,6 +2655,7 @@ public class GodGK {
                             item.itemOptions.add(new ItemOption(Integer.parseInt(String.valueOf(opt.get(0))),
                                     Integer.parseInt(String.valueOf(opt.get(1)))));
                         }
+                        nro.repository.dao.TrangSucDAO.apDungChiSoChanMenh(item);
                         item.createTime = Long.parseLong(String.valueOf(dataItem.get(3)));
                         if (ItemService.gI().isOutOfDateTime(item)) {
                             item = ItemService.gI().createItemNull();

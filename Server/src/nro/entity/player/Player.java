@@ -683,19 +683,6 @@ public class Player implements Runnable {
     public int timeNotAttack = 1800000;
     public List<Player> temporaryEnemies = new ArrayList<>();
     public boolean justRevived;
-
-    /**
-     * Cú đánh quái gần nhất của nhân vật này — để panel so ước tính với số
-     * thực nhận trong game.
-     *
-     * <p>{@code tnGocCuoi} là giá trị ngay trước hệ số bản đồ, đúng thứ panel
-     * gọi là "giá trị gốc"; {@code tnNhanCuoi} là con số hiện trên đầu nhân vật.
-     * {@code tnTuDeCuoi} là phần sư phụ nhận từ cú đánh gần nhất của đệ tử.</p>
-     */
-    public volatile long tnGocCuoi;
-    public volatile long tnNhanCuoi;
-    public volatile int tnMapCuoi = -1;
-    public volatile long tnTuDeCuoi;
     public long lastTimeRevived;
 
     //-----------------------------GIA ĐÌNH-------------------------------------

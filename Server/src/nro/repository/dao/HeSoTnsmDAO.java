@@ -9,28 +9,32 @@ import nro.repository.CrisResultSet;
 /**
  * Hệ số tiềm năng <b>theo bản đồ</b> — bảng {@code he_so_tnsm}.
  *
- * <h2>Vì sao gom về một chỗ</h2>
+ * <h2>Một đòn đánh quái nhận bao nhiêu</h2>
  *
- * <p>Trước đây mấy con số này nằm rải ba nơi khác nhau: {@code NPoint} có khối
- * nhân 6 cho Bản đồ kho báu, nhân 3 cho Doanh trại, nhân 2 cho Khu vực thám
- * hiểm và chia 10 cho sáu bản đồ; {@code Mob} có phép chia riêng cho Ngũ Hành
- * Sơn đọc từ một quy ước khác. Muốn biết một bản đồ cho tiềm năng gấp mấy lần
- * bản đồ thường thì phải đọc cả ba chỗ và tự nhân tay.</p>
+ * <p><b>tiềm năng gốc</b> (theo sát thương và cấp — {@link TnGocDAO}) × <b>hệ số
+ * của nhóm bản đồ</b>, rồi mới tới bùa, thẻ, vật phẩm trong game, rồi hệ số
+ * chung.</p>
  *
- * <p>Nay tất cả ở đây, và panel hiện thẳng ra "gấp mấy lần bản đồ thường".</p>
+ * <p>Mọi nhóm luôn bật — cột {@code bat} chỉ còn để tương thích dữ liệu cũ.</p>
+ *
+ * <p>Ba hệ số của một nhóm là ba số thật, độc lập nhau:</p>
+ * <ul>
+ * <li>{@code heSo} — sư phụ (người chơi) tự đánh;</li>
+ * <li>{@code heSoDeTu} — đệ tử tự đánh, phần đệ nhận;</li>
+ * <li>{@code heSoSuPhu} — đệ tử đánh, phần chia lại cho sư phụ.</li>
+ * </ul>
+ * <p>Không có kiểu "để trống thì lấy bên trái": trống là 0. "Chỉ đệ" bật thì
+ * hệ số sư phụ tự đánh luôn là 0.</p>
  *
  * <h2>Áp ở đâu</h2>
  *
- * <p>Áp trong {@code Mob}, nơi biết <b>bản đồ của con quái</b>. Đó là chỗ đúng:
- * đệ tử cày trong Ngũ Hành Sơn thì phần chia cho sư phụ cũng phải theo hệ số của
- * Ngũ Hành Sơn, mà lúc ấy sư phụ có thể đang đứng ở bản đồ khác — hỏi bản đồ của
- * sư phụ là hỏi nhầm người.</p>
+ * <p>Trong {@code Mob}, nơi biết <b>bản đồ của con quái</b>: đệ tử cày trong Ngũ
+ * Hành Sơn thì phần chia cho sư phụ cũng phải theo Ngũ Hành Sơn, mà lúc ấy sư
+ * phụ có thể đang đứng ở bản đồ khác.</p>
  *
- * <h2>Một bản đồ khớp nhiều dòng thì sao</h2>
+ * <h2>Một bản đồ khớp nhiều dòng</h2>
  *
- * <p>Lấy <b>dòng đầu tiên</b> theo thứ tự, rồi dừng. Không nhân dồn: hai dòng
- * cùng khớp mà nhân cả hai thì con số nhảy theo cách không ai đoán được, và sửa
- * một dòng lại đổi luôn kết quả của dòng kia.</p>
+ * <p>Lấy <b>dòng đầu tiên</b> theo thứ tự rồi dừng, không nhân dồn.</p>
  */
 public final class HeSoTnsmDAO {
 
@@ -44,37 +48,30 @@ public final class HeSoTnsmDAO {
         /** Khoá riêng của nhóm, chỉ để không tạo trùng. */
         public String khoa = "";
         public String ten = "";
-
-        /**
-         * Các bản đồ trong nhóm — dạng {@code "68-72,102,103"}.
-         *
-         * <p>Thêm hay bớt một bản đồ khỏi nhóm chỉ là sửa ô chữ này, không phải
-         * sửa mã.</p>
-         */
+        /** Các bản đồ trong nhóm — dạng {@code "68-72,102,103"}. */
         public String dsMap = "";
-        /** Hệ số cho người chơi thường. {@code 1} là y như bản đồ thường. */
+        /** Sư phụ tự đánh. */
         public double heSo = 1;
-        /** Hệ số riêng cho đệ tử. {@code <= 0} nghĩa là dùng chung {@link #heSo}. */
-        public double heSoDeTu;
-
-        /**
-         * Hệ số cho phần <b>sư phụ</b> nhận khi đệ tử đánh trong nhóm này.
-         *
-         * <p>{@code <= 0} là {@code 1}, tức không đổi gì so với cách tính cũ.
-         * Đặt {@code 0.5} thì sư phụ chỉ nhận một nửa, {@code 2} thì gấp đôi.</p>
-         *
-         * <p>Khác với hai hệ số trên ở một chỗ quan trọng: hai cái kia nhân vào
-         * <b>con số gốc của con quái</b>, còn cái này nhân vào <b>phần chia cho
-         * sư phụ</b> sau khi đệ tử đã nhận đủ phần mình. Nên sửa nó không làm
-         * đệ tử được ít hay nhiều đi.</p>
-         */
-        public double heSoSuPhu;
-        /** Bật thì <b>người chơi thường đánh không được gì</b>, chỉ đệ tử mới có. */
+        /** Đệ tử tự đánh — phần đệ nhận. */
+        public double heSoDeTu = 1;
+        /** Đệ tử đánh — phần chia lại cho sư phụ. */
+        public double heSoSuPhu = 1;
+        /** Bật thì chỉ đệ tử đánh mới được tiềm năng; hệ số sư phụ luôn là 0. */
         public boolean chiDeTu;
         public int thuTu;
         public boolean bat = true;
         public String ghiChu = "";
     }
+
+    /**
+     * Phiên bản cách hiểu dữ liệu của bảng.
+     *
+     * <p>Bản 1: ô đệ tử để 0 nghĩa là "dùng hệ số sư phụ", ô sư phụ nhận để 0
+     * nghĩa là "1". Bản 2: mọi ô là số thật, 0 là 0. Dòng nào còn ở bản 1 thì
+     * được chuyển một lần lúc khởi động — không chuyển thì đệ tử và phần sư phụ
+     * nhận ở mọi nhóm tụt về 0 ngay khi cập nhật máy chủ.</p>
+     */
+    private static final int PHIEN_BAN = 3;
 
     private static final String LUOC_DO
             = "CREATE TABLE IF NOT EXISTS `he_so_tnsm` ("
@@ -89,12 +86,15 @@ public final class HeSoTnsmDAO {
             + " `thu_tu` int(11) NOT NULL DEFAULT 0,"
             + " `bat` tinyint(1) NOT NULL DEFAULT 1,"
             + " `ghi_chu` varchar(255) NOT NULL DEFAULT '',"
+            + " `phien_ban` int(11) NOT NULL DEFAULT 0,"
             + " PRIMARY KEY (`id`),"
             + " UNIQUE KEY `khoa` (`khoa`)"
             + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
     private static volatile boolean daTao;
     private static volatile List<Dong> CACHE;
+    /** Đã xét thêm hàng "Hành tinh ngục tù" cho bảng có từ trước chưa. */
+    private static volatile boolean daXetNgucTu;
 
     private static void damBaoBang() {
         if (daTao) {
@@ -107,12 +107,31 @@ public final class HeSoTnsmDAO {
             try {
                 ConnectDB.executeUpdate(LUOC_DO);
                 // Bang da co tu ban truoc thi CREATE TABLE IF NOT EXISTS khong
-                // them cot moi — phai xin rieng. May chu dang chay ban cu cu
-                // "git pull" roi khoi dong lai la co cot nay, khong phai go
-                // cau lenh SQL nao bang tay.
+                // them cot moi — phai xin rieng. Khong phai go SQL bang tay.
                 ConnectDB.executeUpdate("ALTER TABLE `he_so_tnsm`"
                         + " ADD COLUMN IF NOT EXISTS `he_so_su_phu`"
                         + " double NOT NULL DEFAULT 0 AFTER `he_so_de_tu`");
+                ConnectDB.executeUpdate("ALTER TABLE `he_so_tnsm`"
+                        + " ADD COLUMN IF NOT EXISTS `phien_ban` int(11) NOT NULL DEFAULT 0");
+                // Chuyen dong ban 1 sang ban 2, moi dong dung mot lan.
+                //
+                // MySQL gan SET tu trai sang phai: he_so_de_tu doc he_so CU,
+                // roi moi toi luot he_so bi dat ve 0 cho nhom "chi de" — dung
+                // thu tu can thiet.
+                int doi = ConnectDB.executeUpdate("UPDATE `he_so_tnsm` SET"
+                        + " he_so_de_tu = IF(he_so_de_tu <= 0, he_so, he_so_de_tu),"
+                        + " he_so_su_phu = IF(he_so_su_phu <= 0, 1, he_so_su_phu),"
+                        + " he_so = IF(chi_de_tu = 1, 0, he_so),"
+                        + " phien_ban = 2 WHERE phien_ban < 2");
+                // Ban 3: bo cot "Bat" tren panel — moi nhom luon bat. Nhom
+                // nao dang tat thi bat lai, khong thi no nam im ma khong con
+                // cho nao tren panel de bat.
+                doi += ConnectDB.executeUpdate("UPDATE `he_so_tnsm` SET bat = 1,"
+                        + " phien_ban = " + PHIEN_BAN + " WHERE phien_ban < " + PHIEN_BAN);
+                if (doi > 0) {
+                    Logger.success("CONFIG", "Đã chuyển " + doi
+                            + " dòng hệ số tiềm năng sang cách hiểu mới (ô trống = 0)");
+                }
                 daTao = true;
             } catch (Exception ex) {
                 Logger.logException(HeSoTnsmDAO.class, ex,
@@ -136,12 +155,25 @@ public final class HeSoTnsmDAO {
             ds = doc();
             Logger.success("CONFIG", "Đã gieo " + ds.size()
                     + " dòng hệ số tiềm năng theo bản đồ");
+        } else if (!daXetNgucTu) {
+            // Bang gieo tu truoc khi co hang "Hanh tinh nguc tu" thi them
+            // mot lan, khong phai go SQL hay bam "Ve mac dinh" (mat het so da
+            // sua).
+            daXetNgucTu = true;
+            boolean co = false;
+            for (Dong d : ds) {
+                co |= NGUC_TU.equals(d.khoa);
+            }
+            if (!co) {
+                luu(ngucTu());
+                ds = doc();
+            }
         }
         CACHE = ds;
         return ds;
     }
 
-    /** Đọc lại từ CSDL ở lần hỏi kế tiếp. Panel gọi sau khi lưu. */
+    /** Đọc lại từ CSDL ở lần hỏi kế tiếp. */
     public static void reload() {
         CACHE = null;
     }
@@ -184,17 +216,24 @@ public final class HeSoTnsmDAO {
         if (d.heSo < 0 || d.heSoDeTu < 0 || d.heSoSuPhu < 0) {
             return "Hệ số không được âm.";
         }
+        // "Chi de" thi su phu tu danh khong duoc gi — ghi han 0 xuong CSDL, de
+        // bang va may chu noi cung mot con so.
+        if (d.chiDeTu) {
+            d.heSo = 0;
+        }
+        d.bat = true;
         try {
             ConnectDB.executeUpdate(
                     "INSERT INTO he_so_tnsm (khoa, ten, ds_map, he_so, he_so_de_tu,"
-                    + " he_so_su_phu, chi_de_tu, thu_tu, bat, ghi_chu)"
-                    + " VALUES (?,?,?,?,?,?,?,?,?,?)"
+                    + " he_so_su_phu, chi_de_tu, thu_tu, bat, ghi_chu, phien_ban)"
+                    + " VALUES (?,?,?,?,?,?,?,?,?,?," + PHIEN_BAN + ")"
                     + " ON DUPLICATE KEY UPDATE ten = VALUES(ten),"
                     + " ds_map = VALUES(ds_map),"
                     + " he_so = VALUES(he_so), he_so_de_tu = VALUES(he_so_de_tu),"
                     + " he_so_su_phu = VALUES(he_so_su_phu),"
                     + " chi_de_tu = VALUES(chi_de_tu), thu_tu = VALUES(thu_tu),"
-                    + " bat = VALUES(bat), ghi_chu = VALUES(ghi_chu)",
+                    + " bat = VALUES(bat), ghi_chu = VALUES(ghi_chu),"
+                    + " phien_ban = " + PHIEN_BAN,
                     d.khoa.trim(), d.ten == null ? "" : d.ten,
                     d.dsMap == null ? "" : d.dsMap.trim(), d.heSo, d.heSoDeTu,
                     d.heSoSuPhu, d.chiDeTu ? 1 : 0, d.thuTu, d.bat ? 1 : 0,
@@ -261,7 +300,7 @@ public final class HeSoTnsmDAO {
     /** Dòng đang chi phối một bản đồ, hoặc {@code null} nếu bản đồ thường. */
     public static Dong dongCua(int mapId) {
         for (Dong d : danhSach()) {
-            if (d.bat && khop(d.dsMap, mapId)) {
+            if (khop(d.dsMap, mapId)) {
                 return d;
             }
         }
@@ -269,46 +308,31 @@ public final class HeSoTnsmDAO {
     }
 
     /**
-     * Hệ số tiềm năng của một bản đồ.
+     * Hệ số của người đang đánh ở một bản đồ.
      *
-     * @param laDeTu người đang đánh là đệ tử
-     * @return {@code 1} nếu bản đồ thường; {@code 0} nếu nhóm này khoá người
-     *         chơi thường và người đánh không phải đệ tử
+     * @param laDeTu người đánh là đệ tử
+     * @return {@code 1} nếu bản đồ thường; đệ tử lấy đúng ô đệ tử; người chơi
+     *         lấy ô sư phụ, và 0 nếu nhóm bật "chỉ đệ"
      */
     public static double heSo(int mapId, boolean laDeTu) {
         Dong d = dongCua(mapId);
         if (d == null) {
             return 1;
         }
-        if (d.chiDeTu && !laDeTu) {
-            return 0;
-        }
-        if (laDeTu && d.heSoDeTu > 0) {
+        if (laDeTu) {
             return d.heSoDeTu;
         }
-        return d.heSo;
+        return d.chiDeTu ? 0 : d.heSo;
     }
 
     /**
-     * Hệ số cho phần <b>sư phụ</b> nhận khi đệ tử đánh trong bản đồ này.
+     * Hệ số cho phần <b>sư phụ nhận</b> khi đệ tử đánh ở bản đồ này.
      *
-     * <h3>Vì sao tách khỏi hai hệ số kia</h3>
-     *
-     * <p>Hai hệ số kia nhân vào <b>con số gốc của con quái</b>, nên sửa chúng là
-     * đổi luôn phần của người đang đánh. Muốn cho sư phụ ít đi mà đệ tử vẫn
-     * nguyên thì không có cách nào — hạ hệ số đệ tử là hạ cả hai bên.</p>
-     *
-     * <p>Hệ số này nhân vào <b>phần chia cho sư phụ</b> sau khi đệ tử đã nhận
-     * đủ, nên hai bên chỉnh được độc lập.</p>
-     *
-     * @return {@code 1} nếu bản đồ thường hoặc nhóm chưa đặt gì
+     * @return {@code 1} nếu bản đồ thường, còn lại đúng ô "sư phụ nhận"
      */
     public static double heSoSuPhu(int mapId) {
         Dong d = dongCua(mapId);
-        if (d == null || d.heSoSuPhu <= 0) {
-            return 1;
-        }
-        return d.heSoSuPhu;
+        return d == null ? 1 : d.heSoSuPhu;
     }
 
     // =====================================================================
@@ -316,7 +340,8 @@ public final class HeSoTnsmDAO {
     // =====================================================================
 
     private static Dong d(int thuTu, String khoa, String ten, String dsMap,
-            double heSo, double heSoDeTu, boolean chiDeTu, String ghiChu) {
+            double heSo, double heSoDeTu, double heSoSuPhu, boolean chiDeTu,
+            String ghiChu) {
         Dong x = new Dong();
         x.thuTu = thuTu;
         x.khoa = khoa;
@@ -324,54 +349,56 @@ public final class HeSoTnsmDAO {
         x.dsMap = dsMap;
         x.heSo = heSo;
         x.heSoDeTu = heSoDeTu;
+        x.heSoSuPhu = heSoSuPhu;
         x.chiDeTu = chiDeTu;
         x.ghiChu = ghiChu;
         return x;
     }
 
     /**
-     * Đúng các con số đang chạy trước khi có bảng này.
+     * Các nhóm gốc — mọi ô điền số thật.
      *
-     * <p>Danh sách bản đồ của mỗi nhóm chép từ chính các phép kiểm tra trong
-     * {@code MapService} lúc viết bảng này. Từ giờ chúng là <b>dữ liệu</b>: thêm
-     * hay bớt một bản đồ khỏi nhóm chỉ là sửa ô chữ, không phải sửa mã.</p>
-     *
-     * <p>Ba nhóm cuối — Nappa, Tương lai, Cold — vốn <b>không có hệ số riêng</b>,
-     * tức bằng bản đồ thường. Gieo sẵn với hệ số 1 để chúng có mặt trên panel mà
-     * chỉnh, chứ không phải đi tra id rồi tự thêm.</p>
+     * <p>Danh sách bản đồ chép từ các phép kiểm tra trong {@code MapService} lúc
+     * viết bảng này; từ giờ chúng là dữ liệu, sửa trên panel.</p>
      */
     private static List<Dong> goc() {
         List<Dong> ds = new ArrayList<>();
         ds.add(d(10, "kho_bau", "Bản đồ kho báu", "135-138",
-                6, 0, false, "Trước ở NPoint: ×6"));
+                6, 6, 1, false, "Trước ở NPoint: ×6"));
         ds.add(d(20, "doanh_trai", "Doanh trại", "53-62",
-                3, 0, false, "Trước ở NPoint: ×3"));
+                3, 3, 1, false, "Trước ở NPoint: ×3"));
         ds.add(d(30, "kvth", "Khu vực thám hiểm", "179",
-                1, 2, false, "Trước ở NPoint: ×2 nhưng CHỈ cho đệ tử"));
-        // Chia 3 cho ca hai cot: do la muc von co cua Ngu Hanh Son. Co "chi de
-        // tu" lo phan chan nguoi thuong, nen he so ben trai khong can dat ve 0.
+                1, 2, 1, false, "Trước ở NPoint: ×2 nhưng chỉ cho đệ tử"));
         ds.add(d(40, "ngu_hanh_son", "Ngũ Hành Sơn", "122-124",
-                1.0 / 3, 1.0 / 3, true,
-                "Trước ở Mob: chia 3. Nay chỉ đệ tử đánh mới được tiềm năng."));
+                0, 1.0 / 3, 1, true, "Chỉ đệ tử đánh mới được tiềm năng"));
         ds.add(d(50, "binh_hut", "Bình hút năng lượng", "180",
-                0.1, 0, false, "Trước ở NPoint: chia 10"));
+                0.1, 0.1, 1, false, "Trước ở NPoint: chia 10"));
         ds.add(d(51, "dia_nguc", "Địa ngục", "167,168,172,173",
-                0.1, 0, false, "Trước ở NPoint: chia 10"));
+                0.1, 0.1, 1, false, "Trước ở NPoint: chia 10"));
         ds.add(d(52, "hirudegarn", "Hirudegarn", "126",
-                0.1, 0, false, "Trước ở NPoint: chia 10"));
+                0.1, 0.1, 1, false, "Trước ở NPoint: chia 10"));
         ds.add(d(53, "potara", "Potara", "189-192",
-                0.1, 0, false, "Trước ở NPoint: chia 10"));
+                0.1, 0.1, 1, false, "Trước ở NPoint: chia 10"));
         ds.add(d(54, "thanh_dia", "Thánh địa", "156-159",
-                0.1, 0, false, "Trước ở NPoint: chia 10"));
+                0.1, 0.1, 1, false, "Trước ở NPoint: chia 10"));
         ds.add(d(55, "hanh_tinh_thuc_vat", "Hành tinh thực vật", "160-163",
-                0.1, 0, false, "Trước ở NPoint: chia 10"));
+                0.1, 0.1, 1, false, "Trước ở NPoint: chia 10"));
         ds.add(d(60, "nappa", "Thung lũng Nappa", "68-72",
-                1, 0, false, "Vốn bằng bản đồ thường"));
+                1, 1, 1, false, "Vốn bằng bản đồ thường"));
         ds.add(d(61, "tuong_lai", "Tương lai", "92-94,96-100,102,103",
-                1, 0, false, "Vốn bằng bản đồ thường"));
+                1, 1, 1, false, "Vốn bằng bản đồ thường"));
         ds.add(d(62, "cold", "Cold", "105-110,152,158,159",
-                1, 0, false, "Vốn bằng bản đồ thường"));
+                1, 1, 1, false, "Vốn bằng bản đồ thường"));
+        ds.add(ngucTu());
         return ds;
+    }
+
+    private static final String NGUC_TU = "nguc_tu";
+
+    /** Hành tinh ngục tù — hàng riêng, bản đồ lấy từ {@code MapService.isMapHanhTinhNgucTu}. */
+    private static Dong ngucTu() {
+        return d(63, NGUC_TU, "Hành tinh ngục tù", "155,206",
+                1, 1, 1, false, "Hàng riêng — vốn bằng bản đồ thường");
     }
 
     private static void dong(CrisResultSet rs) {

@@ -59,7 +59,15 @@ public class Mob {
 
     public byte pDame;
     public int pTiemNang;
-    private long maxTiemNang;
+    /**
+     * Kho tiem nang ep cung, hoac -1 la tinh theo panel luc danh.
+     *
+     * <p>Chi quai tap o Karin ep ve 1. Con lai tinh luc danh de sua % tiem
+     * nang tren panel la co hieu luc ngay, khong doi quai hoi sinh.</p>
+     */
+    private long maxTiemNang = -1;
+    /** Lech ngau nhien +- % tiem nang, boc mot lan moi lan quai hoi sinh. */
+    private int tnDaoDong;
 
     public long lastTimeDie;
     public int lvMob = 0;
@@ -101,7 +109,64 @@ public class Mob {
     }
 
     public void setTiemNang() {
-        this.maxTiemNang = (long) this.point.getHpFull() * (this.pTiemNang + Util.nextInt(-2, 2)) / 100;
+        int dd = (int) Math.max(0L, nro.repository.dao.ConfigDAO.num(
+                nro.repository.dao.ConfigDAO.TN_GOC_DAO_DONG, 2L));
+        this.tnDaoDong = dd > 0 ? Util.nextInt(-dd, dd) : 0;
+        this.maxTiemNang = -1;
+    }
+
+    /** Kho tiem nang: mau toi da x % tiem nang cua loai quai (panel) +- dao dong. */
+    private long khoTiemNang() {
+        if (this.maxTiemNang >= 0) {
+            return this.maxTiemNang;
+        }
+        int pt = nro.repository.dao.TnGocDAO.phanTram(this.tempId, this.pTiemNang);
+        return Math.max(0L, (long) this.point.getHpFull() * (pt + this.tnDaoDong) / 100);
+    }
+
+    /**
+     * Tiem nang goc cua MOT don — cach tinh cua game goc, cac con so sua o tab
+     * Ti le -> 1. Tiem nang goc. Chua nhan he so ban do hay buff nao.
+     *
+     * <ol>
+     * <li>Don nay lay bao nhieu PHAN TRAM mau toi da (so nguyen). Quai mau
+     * lon thi phan tram ay nhan them (game goc: x5 tu 100 trieu mau).</li>
+     * <li>Nhan voi kho tiem nang cua con quai, chia 100.</li>
+     * <li>Moi cap nguoi choi cao hon quai bot mot phan, thap hon them mot
+     * phan (game goc: 10% moi cap). It nhat luon duoc 1.</li>
+     * </ol>
+     */
+    public long tiemNangGoc(Player pl, double dame) {
+        if (this.tempId == ConstMob.MAY_DO_SUC_MANH || this.tempId == ConstMob.HIRUDEGARN) {
+            return 1;
+        }
+        long hpFull = Math.max(1L, this.point.getHpFull());
+        long nguong = nro.repository.dao.ConfigDAO.num(
+                nro.repository.dao.ConfigDAO.TN_GOC_NGUONG_MAU_LON, 100_000_000L);
+        long nhan = nguong > 0 && hpFull >= nguong
+                ? Math.max(1L, nro.repository.dao.ConfigDAO.num(
+                        nro.repository.dao.ConfigDAO.TN_GOC_NHAN_MAU_LON, 5L))
+                : 1L;
+        long pDameHit = Util.CrisGH(dame) * 100L * nhan / hpFull;
+        long tiemNang = pDameHit * khoTiemNang() / 100;
+
+        int n = Service.getInstance().getCurrLevel(pl) - this.level;
+        long phan = n >= 0
+                ? nro.repository.dao.ConfigDAO.num(nro.repository.dao.ConfigDAO.TN_GOC_GIAM_MOI_CAP, 10L)
+                : nro.repository.dao.ConfigDAO.num(nro.repository.dao.ConfigDAO.TN_GOC_TANG_MOI_CAP, 10L);
+        if (phan > 0) {
+            for (int j = 0; j < Math.abs(n); j++) {
+                long buoc = tiemNang * phan / 100;
+                if (buoc <= 0) {
+                    buoc = 1;
+                }
+                tiemNang += n >= 0 ? -buoc : buoc;
+                if (tiemNang <= 0) {
+                    break;
+                }
+            }
+        }
+        return Math.max(1L, tiemNang);
     }
 
     public boolean isDie() {
@@ -396,75 +461,11 @@ public class Mob {
 
     public long getTiemNangForPlayer(Player pl, double dame) {
         long startTotal = System.currentTimeMillis();
+        long start;
 
-        int levelPlayer = Service.getInstance().getCurrLevel(pl);
-
-        long start = System.currentTimeMillis();
-        int n = levelPlayer - this.level;
-        long elapsed = System.currentTimeMillis() - start;
-        if (elapsed > 10) {
-            System.out.println("[SLOW] calculate level difference n: " + elapsed + "ms");
-        }
-
-        start = System.currentTimeMillis();
-        long pDameHit;
-        if (point.getHpFull() >= 100000000) {
-            pDameHit = Util.CrisGH(dame) * 500 / point.getHpFull();
-        } else {
-            pDameHit = Util.CrisGH(dame) * 100 / point.getHpFull();
-        }
-        elapsed = System.currentTimeMillis() - start;
-        if (elapsed > 10) {
-            System.out.println("[SLOW] calculate pDameHit: " + elapsed + "ms");
-        }
-
-        start = System.currentTimeMillis();
-        long tiemNang = pDameHit * maxTiemNang / 100;
-        elapsed = System.currentTimeMillis() - start;
-        if (elapsed > 10) {
-            System.out.println("[SLOW] initial tiemNang calculation: " + elapsed + "ms");
-        }
-
-        start = System.currentTimeMillis();
-        if (n >= 0) {
-            for (int j = 0; j < n; j++) {
-                long sub = tiemNang * 10 / 100;
-                if (sub <= 0) {
-                    sub = 1;
-                }
-                tiemNang -= sub;
-            }
-        } else {
-            for (int j = 0; j < -n; j++) {
-                long add = tiemNang * 10 / 100;
-                if (add <= 0) {
-                    add = 1;
-                }
-                tiemNang += add;
-            }
-        }
-        elapsed = System.currentTimeMillis() - start;
-        if (elapsed > 10) {
-            System.out.println("[SLOW] adjust tiemNang in loop by n: " + elapsed + "ms, n=" + n);
-        }
-
-        start = System.currentTimeMillis();
-        if (tiemNang <= 0) {
-            tiemNang = 1;
-        }
-        if (this.isSieuQuai()) {
-            tiemNang *= 1;
-        }
-        if (this.tempId == ConstMob.MAY_DO_SUC_MANH) {
-            tiemNang = 1;
-        }
-        if (this.tempId == ConstMob.HIRUDEGARN) {
-            tiemNang = 1;
-        }
-        elapsed = System.currentTimeMillis() - start;
-        if (elapsed > 10) {
-            System.out.println("[SLOW] apply special case adjustments: " + elapsed + "ms");
-        }
+        // Tiem nang goc: theo sat thuong va cap, dung cach tinh cua game — cac
+        // con so nay sua o tab Ti le -> 1. Tiem nang goc.
+        long tiemNang = tiemNangGoc(pl, dame);
 
         // He so tiem nang theo BAN DO — nhan NGAY VAO GIA TRI GOC.
         //
@@ -480,15 +481,10 @@ public class Mob {
         //
         // Tra ve 0 nghia la nhom ay khoa nguoi choi thuong (Ngu Hanh Son: chi de
         // tu danh moi duoc tiem nang).
-        // Ghi lai cu danh nay de panel so uoc tinh voi so thuc nhan: gia tri
-        // ngay truoc he so ban do chinh la thu panel goi la "gia tri goc".
-        pl.tnGocCuoi = tiemNang;
-        pl.tnMapCuoi = this.zone != null && this.zone.map != null ? this.zone.map.mapId : -1;
         if (this.zone != null && this.zone.map != null) {
             double heSoMap = nro.repository.dao.HeSoTnsmDAO.heSo(
                     this.zone.map.mapId, pl.isDeTu);
             if (heSoMap <= 0) {
-                pl.tnNhanCuoi = 0;
                 return 0;
             }
             if (heSoMap != 1) {
