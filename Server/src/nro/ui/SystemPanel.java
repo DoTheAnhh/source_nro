@@ -2251,17 +2251,42 @@ public class SystemPanel extends JPanel {
     private static final int COT_HS_HSDT = 4;
     private static final int COT_HS_HSSP = 5;
     private static final int COT_HS_CHIDT = 6;
-    private static final int COT_HS_GAP = 7;
-    private static final int COT_HS_BAT = 8;
-    private static final int COT_HS_GC = 9;
+    private static final int COT_HS_XEM_TH = 7;
+    private static final int COT_HS_XEM_DT = 8;
+    private static final int COT_HS_XEM_SP = 9;
+    private static final int COT_HS_BAT = 10;
+    private static final int COT_HS_GC = 11;
+
+    /**
+     * Giải thích từng cột, hiện ra khi rê chuột lên tiêu đề.
+     *
+     * <p>Tiêu đề phải ngắn thì bảng mới gọn, mà ngắn thì lại không nói hết được
+     * ý. Câu đầy đủ để ở đây, ai cần thì rê chuột lên là thấy — không phải đọc
+     * lại cả đoạn hướng dẫn phía trên bảng.</p>
+     */
+    private static final String[] CHU_GIAI_COT_HS = {
+        "Số thứ tự trong bảng, máy tự đặt",
+        "Tên gọi của nhóm, đặt sao cho dễ nhận ra",
+        "Id các bản đồ thuộc nhóm — id đơn hoặc khoảng, ví dụ 68-72,102,103",
+        "Số nhân khi NGƯỜI THƯỜNG hoặc SƯ PHỤ TỰ ĐÁNH. 1 là y như bản đồ thường",
+        "Số nhân khi ĐỆ TỬ ĐÁNH. Để trống thì dùng chung số bên trái",
+        "Số nhân cho phần SƯ PHỤ NHẬN KHI ĐỆ TỬ ĐÁNH. Để trống là 1, tức giữ nguyên",
+        "Bật thì người thường đánh trong nhóm này KHÔNG được tiềm năng, chỉ đệ tử mới có",
+        "Xem trước: người thường tự đánh một con quái thì được bao nhiêu",
+        "Xem trước: đệ tử đánh một con quái thì được bao nhiêu",
+        "Xem trước: sư phụ nhận bao nhiêu khi đệ tử đánh một con quái",
+        "Tắt thì cả nhóm coi như không tồn tại, các bản đồ trong đó tính như bản đồ thường",
+        "Ghi chú cho chính bạn, máy chủ không đọc tới"
+    };
 
     private final DefaultTableModel hsModel = new DefaultTableModel(
-            new Object[]{"Id", "Nhóm bản đồ", "Các bản đồ trong nhóm",
-                "Hệ số", "Hệ số đệ tử", "Hệ số sư phụ", "Chỉ đệ tử",
-                "Một con quái cho", "Bật", "Ghi chú"}, 0) {
+            new Object[]{"#", "Nhóm bản đồ", "Các bản đồ trong nhóm",
+                "Thường ×", "Đệ tử ×", "Sư phụ ×", "Chỉ đệ tử",
+                "Thường nhận", "Đệ tử nhận", "Sư phụ nhận", "Bật", "Ghi chú"}, 0) {
         @Override
         public boolean isCellEditable(int r, int c) {
-            return c != COT_HS_ID && c != COT_HS_GAP;
+            return c != COT_HS_ID && c != COT_HS_XEM_TH
+                    && c != COT_HS_XEM_DT && c != COT_HS_XEM_SP;
         }
 
         @Override
@@ -2270,7 +2295,30 @@ public class SystemPanel extends JPanel {
                     ? Boolean.class : String.class;
         }
     };
-    private final JTable hsTable = new JTable(hsModel);
+
+    /**
+     * Bảng hệ số, với chú giải hiện khi rê chuột lên tiêu đề cột.
+     *
+     * <p>Mười hai cột thì tiêu đề nào cũng phải ngắn, mà ngắn thì dễ hiểu nhầm
+     * "Sư phụ ×" là lúc sư phụ tự đánh. Chú giải dẹp hẳn chỗ nhầm ấy.</p>
+     */
+    private final JTable hsTable = new JTable(hsModel) {
+        @Override
+        protected javax.swing.table.JTableHeader createDefaultTableHeader() {
+            return new javax.swing.table.JTableHeader(columnModel) {
+                @Override
+                public String getToolTipText(java.awt.event.MouseEvent e) {
+                    int i = columnModel.getColumnIndexAtX(e.getPoint().x);
+                    if (i < 0) {
+                        return null;
+                    }
+                    int c = columnModel.getColumn(i).getModelIndex();
+                    return c >= 0 && c < CHU_GIAI_COT_HS.length
+                            ? CHU_GIAI_COT_HS[c] : null;
+                }
+            };
+        }
+    };
 
     /** Dòng này có đang bật "chỉ đệ tử" không. */
     private boolean hsChiDeTu(int r) {
@@ -2283,6 +2331,34 @@ public class SystemPanel extends JPanel {
 
     /** Đang tự sửa ô trong bảng — đừng để việc đó gọi lại chính mình. */
     private boolean hsDangTuSua;
+
+    /** Ô căn giữa, cho mấy cột số ngắn. */
+    private static javax.swing.table.DefaultTableCellRenderer oCanGiua() {
+        javax.swing.table.DefaultTableCellRenderer r
+                = new javax.swing.table.DefaultTableCellRenderer();
+        r.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        return r;
+    }
+
+    /** Ô chỉ để xem: căn phải, nền xám nhạt, chữ đậm. */
+    private static javax.swing.table.DefaultTableCellRenderer oXemTruoc() {
+        return new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(JTable bang,
+                    Object v, boolean chon, boolean tieuDiem, int r, int c) {
+                java.awt.Component o = super.getTableCellRendererComponent(
+                        bang, v, chon, tieuDiem, r, c);
+                setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+                if (!chon) {
+                    o.setBackground(new Color(245, 246, 248));
+                }
+                o.setForeground("khoá".equals(String.valueOf(v))
+                        ? WARN_RED : new Color(40, 60, 90));
+                o.setFont(o.getFont().deriveFont(java.awt.Font.BOLD));
+                return o;
+            }
+        };
+    }
 
     /** Ô "giá trị đúng ra nhận được" — tiềm năng gốc trước mọi hệ số. */
     private final JTextField hsOGoc = new JTextField("1000", 10);
@@ -2311,34 +2387,52 @@ public class SystemPanel extends JPanel {
         root.setBorder(new EmptyBorder(10, 10, 10, 10));
         hsTable.setRowHeight(24);
         hsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        int[] w = {36, 150, 195, 62, 82, 82, 62, 210, 40, 220};
+        int[] w = {28, 140, 180, 58, 58, 58, 58, 78, 78, 78, 34, 200};
         for (int i = 0; i < hsTable.getColumnCount() && i < w.length; i++) {
             hsTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
+        }
+        // Ba o he so can GIUA: chung la so ngan, dat sat trai thi nhin roi.
+        for (int c : new int[]{COT_HS_HS, COT_HS_HSDT, COT_HS_HSSP}) {
+            hsTable.getColumnModel().getColumn(c).setCellRenderer(oCanGiua());
+        }
+        // Ba cot xem truoc can PHAI va to nen xam: can phai thi hang nghin thang
+        // hang, liec doc la so duoc; nen xam thi nhin ra ngay day la o chi de
+        // xem, khong go vao duoc.
+        for (int c : new int[]{COT_HS_XEM_TH, COT_HS_XEM_DT, COT_HS_XEM_SP}) {
+            hsTable.getColumnModel().getColumn(c).setCellRenderer(oXemTruoc());
         }
 
         JPanel tren = new JPanel(new BorderLayout(0, 4));
         tren.setOpaque(false);
-        tren.add(nhan("Tiềm năng của <b>một nhóm bản đồ</b> so với bản đồ thường."
+        // Bang co ba cot he so, ma ba cot ay rat de hieu nham nhau. Bang nho
+        // duoi day noi thang moi cot la "luc nao" va "nhan vao cai gi" — ngan
+        // hon han mot doan van, va doc mot cai la ra.
+        tren.add(nhan("Một con quái trong nhóm này đáng giá gấp mấy lần bản đồ thường."
                 + "<br><br>"
-                + "<b>Các bản đồ trong nhóm</b>: id đơn hoặc khoảng, ngăn nhau bằng "
-                + "dấu phẩy — <code>68-72,102,103</code>. Thêm hay bớt một bản đồ khỏi "
-                + "nhóm chỉ là sửa ô ấy.<br><br>"
-                + "<b>Hệ số</b> là số nhân khi <b>người thường hoặc sư phụ tự đánh</b>. "
-                + "<b>Hệ số đệ tử</b> là số nhân khi <b>đệ tử đánh</b> — để trống thì "
-                + "đệ tử dùng chung hệ số bên trái.<br>"
-                + "Ví dụ đặt hệ số 1, hệ số đệ tử 2: trong nhóm ấy đệ tử đánh được "
-                + "gấp đôi, còn sư phụ tự đánh vẫn như bản đồ thường.<br><br>"
-                + "<b>Hệ số sư phụ</b> là phần <b>sư phụ nhận khi đệ tử đánh</b> — "
-                + "khác hẳn hai ô trên. Hai ô trên nhân vào con số gốc của con quái "
-                + "nên hạ hệ số đệ tử là hạ cả hai bên; ô này nhân vào phần chia cho "
-                + "sư phụ <i>sau khi</i> đệ tử đã nhận đủ, nên chỉnh riêng được. "
-                + "Để trống là 1, tức giữ nguyên như cũ; đặt 0,5 thì sư phụ chỉ còn "
-                + "một nửa mà đệ tử không mất gì.<br><br>"
-                + "<b>Chỉ đệ tử</b> chỉ làm đúng một việc: bật lên thì <b>người thường "
-                + "đánh không được tiềm năng</b>, chỉ đệ tử mới có. Nó không đụng gì "
-                + "tới hai ô hệ số — hai ô ấy vẫn sửa được như thường.<br><br>"
-                + "Một bản đồ khớp nhiều nhóm thì lấy <b>nhóm đầu tiên</b> rồi dừng, "
-                + "không nhân dồn."), BorderLayout.NORTH);
+                + "<table cellpadding='3' style='border-collapse:collapse'>"
+                + "<tr style='background:#eef1f5'>"
+                + "<td><b>Cột</b></td><td><b>Áp khi nào</b></td>"
+                + "<td><b>Nhân vào cái gì</b></td></tr>"
+                + "<tr><td><b>Thường ×</b></td>"
+                + "<td>người thường, hoặc sư phụ tự đánh</td>"
+                + "<td>con số gốc của con quái</td></tr>"
+                + "<tr><td><b>Đệ tử ×</b></td><td>đệ tử đánh</td>"
+                + "<td>con số gốc của con quái</td></tr>"
+                + "<tr><td><b>Sư phụ ×</b></td>"
+                + "<td>đệ tử đánh, phần chia lại cho sư phụ</td>"
+                + "<td>phần của đệ tử, sau khi đệ đã nhận đủ</td></tr>"
+                + "</table>"
+                + "<br>"
+                + "Nên hạ <b>Đệ tử ×</b> là hạ cả hai thầy trò, còn hạ <b>Sư phụ ×</b> "
+                + "thì chỉ sư phụ bớt, đệ tử không mất gì. Để trống: <b>Đệ tử ×</b> "
+                + "dùng chung số bên trái, <b>Sư phụ ×</b> coi như 1."
+                + "<br><br>"
+                + "<b>Chỉ đệ tử</b> làm đúng một việc — bật lên thì người thường đánh "
+                + "không được tiềm năng. Nó không đụng gì tới ba ô hệ số."
+                + "<br>"
+                + "<b>Các bản đồ trong nhóm</b>: id đơn hoặc khoảng, ngăn nhau bằng dấu "
+                + "phẩy — <code>68-72,102,103</code>. Một bản đồ khớp nhiều nhóm thì "
+                + "lấy <b>nhóm đầu tiên</b> rồi dừng, không nhân dồn."), BorderLayout.NORTH);
 
         JPanel oGoc = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
         oGoc.setOpaque(false);
@@ -2357,7 +2451,8 @@ public class SystemPanel extends JPanel {
                     || e.getType() != javax.swing.event.TableModelEvent.UPDATE) {
                 return;
             }
-            if (e.getColumn() != COT_HS_GAP) {
+            int c = e.getColumn();
+            if (c != COT_HS_XEM_TH && c != COT_HS_XEM_DT && c != COT_HS_XEM_SP) {
                 SwingUtilities.invokeLater(this::capNhatCotGap);
             }
         });
@@ -2399,15 +2494,19 @@ public class SystemPanel extends JPanel {
     }
 
     /**
-     * Một con quái trong nhóm này cho bao nhiêu tiềm năng, tính cả hệ số chung.
+     * Ba con số xem trước của một dòng: người thường, đệ tử, và sư phụ.
      *
-     * <p>Phần "sư phụ" là con số sư phụ nhận <b>khi đệ tử đánh</b>, tính từ
-     * chính phần của đệ tử — không phải lúc sư phụ tự đánh.</p>
+     * <p>Trả về ba ô riêng chứ không phải một câu dài. Một câu thì phải đọc
+     * từng chữ mới thấy con số, còn ba cột thì liếc dọc là so được cả bảng —
+     * mà so giữa các nhóm mới đúng là việc người ta cần làm ở đây.</p>
+     *
+     * <p>Cột sư phụ là con số sư phụ nhận <b>khi đệ tử đánh</b>, tính từ chính
+     * phần của đệ tử — không phải lúc sư phụ tự đánh.</p>
      */
-    private String motConQuaiCho(double heSo, double heSoDeTu, double heSoSuPhu,
-            boolean chiDeTu, boolean bat) {
+    private String[] baConSoXemTruoc(double heSo, double heSoDeTu,
+            double heSoSuPhu, boolean chiDeTu, boolean bat) {
         if (!bat) {
-            return "— đang tắt, tính như bản đồ thường";
+            return new String[]{"—", "—", "—"};
         }
         double goc = tnGoc();
         double chung = ConfigDAO.phanTram(ConfigDAO.TL_EXP);
@@ -2416,11 +2515,19 @@ public class SystemPanel extends JPanel {
         }
         double dt = heSoDeTu > 0 ? heSoDeTu : heSo;
         double sp = heSoSuPhu > 0 ? heSoSuPhu : 1;
-        String thuong = chiDeTu ? "0 (bị khoá)"
-                : PlayerManagerPanel.fmt(Math.round(goc * heSo * chung));
         long phanDe = Math.round(goc * dt * chung);
-        return "thường " + thuong + " · đệ tử " + PlayerManagerPanel.fmt(phanDe)
-                + " · sư phụ " + PlayerManagerPanel.fmt(Math.round(phanDe * sp));
+        return new String[]{
+            chiDeTu ? "khoá" : PlayerManagerPanel.fmt(Math.round(goc * heSo * chung)),
+            PlayerManagerPanel.fmt(phanDe),
+            PlayerManagerPanel.fmt(Math.round(phanDe * sp))
+        };
+    }
+
+    /** Đặt ba ô xem trước của một dòng. */
+    private void datXemTruoc(int r, String[] ba) {
+        hsModel.setValueAt(ba[0], r, COT_HS_XEM_TH);
+        hsModel.setValueAt(ba[1], r, COT_HS_XEM_DT);
+        hsModel.setValueAt(ba[2], r, COT_HS_XEM_SP);
     }
 
     /**
@@ -2445,13 +2552,13 @@ public class SystemPanel extends JPanel {
         hsDangTuSua = true;
         try {
             for (HeSoTnsmDAO.Dong d : HeSoTnsmDAO.danhSach()) {
+                String[] ba = baConSoXemTruoc(d.heSo, d.heSoDeTu, d.heSoSuPhu,
+                        d.chiDeTu, d.bat);
                 hsModel.addRow(new Object[]{String.valueOf(d.id), d.ten,
                     d.dsMap == null ? "" : d.dsMap,
                     soGonHs(d.heSo), d.heSoDeTu <= 0 ? "" : soGonHs(d.heSoDeTu),
                     d.heSoSuPhu <= 0 ? "" : soGonHs(d.heSoSuPhu),
-                    d.chiDeTu,
-                    motConQuaiCho(d.heSo, d.heSoDeTu, d.heSoSuPhu, d.chiDeTu,
-                            d.bat),
+                    d.chiDeTu, ba[0], ba[1], ba[2],
                     d.bat, d.ghiChu == null ? "" : d.ghiChu});
             }
         } finally {
@@ -2477,14 +2584,14 @@ public class SystemPanel extends JPanel {
                 String sp = oHs(r, COT_HS_HSSP).replace(',', '.');
                 hssp = sp.isEmpty() ? 0 : Double.parseDouble(sp);
             } catch (NumberFormatException ex) {
-                hsModel.setValueAt("hệ số không phải số", r, COT_HS_GAP);
+                datXemTruoc(r, new String[]{"?", "?", "?"});
                 continue;
             }
             Object cdt = hsModel.getValueAt(r, COT_HS_CHIDT);
             Object bat = hsModel.getValueAt(r, COT_HS_BAT);
-            hsModel.setValueAt(motConQuaiCho(hs, hsdt, hssp,
+            datXemTruoc(r, baConSoXemTruoc(hs, hsdt, hssp,
                     (cdt instanceof Boolean) && (Boolean) cdt,
-                    !(bat instanceof Boolean) || (Boolean) bat), r, COT_HS_GAP);
+                    !(bat instanceof Boolean) || (Boolean) bat));
         }
     }
 
