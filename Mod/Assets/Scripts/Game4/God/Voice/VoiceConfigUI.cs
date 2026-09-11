@@ -286,12 +286,21 @@ namespace Game4.God
             {
                 int kk = VoiceChat.chiMuc(VoiceChat.kenhXem);
                 VoiceChat.batLoa[kk] = !VoiceChat.batLoa[kk];
+                if (!VoiceChat.batLoa[kk])
+                {
+                    VoiceChat.dungLoa(kk);
+                }
                 return true;
             }
             if (cham(x0 + 122, y, 110, 15))
             {
                 int km = VoiceChat.chiMuc(VoiceChat.kenhXem);
                 VoiceChat.micTat[km] = !VoiceChat.micTat[km];
+                if (VoiceChat.micTat[km])
+                {
+                    // Tat mic la dung ca loa dang phat.
+                    VoiceChat.dungLoa(VoiceChat.KENH_TAT);
+                }
                 return true;
             }
             y += 21;

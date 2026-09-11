@@ -1551,6 +1551,7 @@ namespace Game4
                             {
                                 flag8 = true;
                                 Char.myCharz().clan = null;
+                                VoiceChat.daRoiBang();
                                 ClanMessage.vMessage.removeAllElements();
                                 // Xoa luon kenh Bang hoi trong khung chat.
                                 //
@@ -4000,6 +4001,8 @@ namespace Game4
                         // cua luot truoc va da qua tu doi nao.
                         GameCanvas.hanChotTaiBanDo = 0L;
                         GameCanvas.canGuiXongTaiBanDo = false;
+                        // Doi khu / ban do: dung mic va loa kenh Khu, Map cua cho cu.
+                        VoiceChat.daDoiCho();
                         Cout.println("GET MAP INFO");
                         GameScr.gI().magicTree = null;
                         GameCanvas.isLoading = true;

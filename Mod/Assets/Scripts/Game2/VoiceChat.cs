@@ -43,6 +43,26 @@ namespace Game2
         /// <summary>Dưới ngưỡng này coi như im lặng, không gửi gói.</summary>
         private const float NGUONG_IM = 0.012f;
 
+        /// <summary>Đệm lúc bắt đầu phát — 160 ms, đủ nuốt mạng giật mà chưa thấy trễ.</summary>
+        private const int DEM_BAT_DAU = MAU_MOI_GOI * 8;
+
+        /// <summary>Người nói im quá ngần này giây thì dừng loa của họ.</summary>
+        private const float IM_THI_DUNG = 0.35f;
+
+        /// <summary>
+        /// Vừa phát tiếng người khác trong ngần này giây thì không gửi mic của mình.
+        /// </summary>
+        /// <remarks>Không có khử vọng: mic thu lại tiếng từ loa của chính máy mình
+        /// rồi gửi ngược về, người nói nghe lại giọng mình một lần nữa.</remarks>
+        private const float CHAN_VONG = 0.3f;
+
+        private static float lanNhanTiengCuoi = -10f;
+
+        /// <summary>Một đoạn im lặng ghi đè phía trước đầu ghi.</summary>
+        private static readonly float[] IM = new float[MAU_MOI_GOI * 12];
+
+        private static float[] IM_CA_CLIP;
+
         private static VoiceChat instance;
 
         public static VoiceChat gI()
@@ -135,6 +155,10 @@ namespace Game2
             public AudioSource loa;
             public AudioClip clip;
             public int viTriGhi;
+            /// <summary>Kênh của gói gần nhất — để dừng loa theo kênh.</summary>
+            public int kenh;
+            /// <summary>Lúc nhận gói gần nhất (Time.time).</summary>
+            public float nhanLanCuoi;
         }
 
         // ---------- thiết bị ----------
@@ -179,6 +203,7 @@ namespace Game2
             {
                 v.tatMic();
                 kenhDangBat = KENH_TAT;
+                dungLoa(KENH_TAT);
                 Utils.addInfo1("Voice", false);
                 return;
             }
@@ -247,6 +272,7 @@ namespace Game2
         private void Update()
         {
             donNguoiNoi();
+            donLoaIm();
             if (kenhDangBat == KENH_TAT || clipMic == null)
             {
                 return;
@@ -283,7 +309,10 @@ namespace Game2
                 viTriDocMic = (viTriDocMic + MAU_MOI_GOI) % tong;
                 coSan -= MAU_MOI_GOI;
 
-                if (micTat[chiMuc(kenhDangBat)] || !coTieng(demDoc))
+                // Dang phat tieng nguoi khac thi khong gui: mic se thu lai tieng
+                // tu loa va gui nguoc ve — nguoi noi nghe vong giong minh.
+                if (micTat[chiMuc(kenhDangBat)] || !coTieng(demDoc)
+                        || Time.time - lanNhanTiengCuoi < CHAN_VONG)
                 {
                     continue;       // tat mic hoac im lang thi khong ton goi
                 }
@@ -379,14 +408,31 @@ namespace Game2
                 // AudioClip.SetData cắt phẳng y như mic nếu để tràn.
                 mau[i] = nenMem(MaHoa.raFloat(tieng[i]) * amLuongLoa);
             }
-            n.clip.SetData(mau, n.viTriGhi);
-            n.viTriGhi = (n.viTriGhi + soByte) % n.clip.samples;
+            n.kenh = kenhGoi;
+            n.nhanLanCuoi = Time.time;
+            lanNhanTiengCuoi = Time.time;
+            int tong = n.clip.samples;
+            if (n.loa.isPlaying)
+            {
+                // Dau ghi phai luon di TRUOC dau phat. Mang giat de dau phat
+                // vuot qua thi goi toi se ghi vao cho vua phat xong, het mot vong
+                // dem (2 giay) moi nghe thay — dung canh "noi mot lan nghe hai lan".
+                int truoc = (n.viTriGhi - n.loa.timeSamples + tong) % tong;
+                if (truoc < MAU_MOI_GOI || truoc > tong / 2)
+                {
+                    n.viTriGhi = (n.loa.timeSamples + DEM_BAT_DAU) % tong;
+                }
+            }
+            ghiVong(n.clip, mau, soByte, n.viTriGhi);
+            n.viTriGhi = (n.viTriGhi + soByte) % tong;
+            // Xoa sach doan phia truoc: goi sau den muon thi loa phat im lang,
+            // khong phat lai tieng cu con nam trong vong dem.
+            ghiVong(n.clip, IM, IM.Length, n.viTriGhi);
             if (!n.loa.isPlaying)
             {
-                // Bat dau phat cham lai mot chut so voi con tro ghi, de goi den
-                // muon mot nhip van con du du lieu ma phat, khong bi ngat quang.
-                n.loa.timeSamples = (n.viTriGhi + n.clip.samples - MAU_MOI_GOI * 4)
-                        % n.clip.samples;
+                // Bat dau phat cham lai DEM_BAT_DAU so voi dau ghi — doan truoc
+                // do la im lang (vong dem da xoa sach khi dung).
+                n.loa.timeSamples = (n.viTriGhi + tong - DEM_BAT_DAU) % tong;
                 n.loa.loop = true;
                 n.loa.Play();
             }
@@ -415,6 +461,124 @@ namespace Game2
             catch (Exception)
             {
                 return null;
+            }
+        }
+
+
+        // ---------- dừng loa ----------
+        /// <summary>Dừng một nguồn phát và xoá sạch vòng đệm của nó.</summary>
+        private static void dungNguon(NguonPhat n)
+        {
+            try
+            {
+                n.loa.Stop();
+            }
+            catch (Exception)
+            {
+            }
+            try
+            {
+                if (IM_CA_CLIP == null || IM_CA_CLIP.Length != n.clip.samples)
+                {
+                    IM_CA_CLIP = new float[n.clip.samples];
+                }
+                n.clip.SetData(IM_CA_CLIP, 0);
+            }
+            catch (Exception)
+            {
+            }
+            n.viTriGhi = 0;
+        }
+
+        /// <summary>Người nói im quá lâu thì dừng loa của họ — không để vòng đệm phát lại tiếng cũ.</summary>
+        private void donLoaIm()
+        {
+            foreach (NguonPhat n in nguon.Values)
+            {
+                if (n.loa != null && n.loa.isPlaying && Time.time - n.nhanLanCuoi > IM_THI_DUNG)
+                {
+                    dungNguon(n);
+                }
+            }
+        }
+
+        /// <summary>Dừng mọi tiếng đang phát của một kênh; <see cref="KENH_TAT"/> là mọi kênh.</summary>
+        public static void dungLoa(int kenh)
+        {
+            VoiceChat v = instance;
+            if (v == null)
+            {
+                return;
+            }
+            foreach (NguonPhat n in v.nguon.Values)
+            {
+                if (kenh == KENH_TAT || n.kenh == kenh)
+                {
+                    dungNguon(n);
+                }
+            }
+            dangNoi.Clear();
+            hetNoiLuc.Clear();
+        }
+
+        /// <summary>Đổi khu hoặc bản đồ: kênh Khu, Map của chỗ cũ không còn đúng nữa.</summary>
+        public static void daDoiCho()
+        {
+            if (kenhDangBat == KENH_KHU || kenhDangBat == KENH_MAP)
+            {
+                tatKenh("Voice đã tắt vì đổi khu / bản đồ");
+            }
+            dungLoa(KENH_KHU);
+            dungLoa(KENH_MAP);
+        }
+
+        /// <summary>Rời bang (rời, bị đuổi, bang giải tán): tắt kênh Bang.</summary>
+        public static void daRoiBang()
+        {
+            if (kenhDangBat == KENH_BANG)
+            {
+                tatKenh("Voice đã tắt vì rời bang");
+            }
+            dungLoa(KENH_BANG);
+        }
+
+        private static void tatKenh(string bao)
+        {
+            VoiceChat v = instance;
+            if (v != null)
+            {
+                v.tatMic();
+            }
+            kenhDangBat = KENH_TAT;
+            try
+            {
+                GameScr.info1.addInfo(bao, 0);
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        /// <summary>Ghi vào clip vòng, tự quấn qua cuối clip.</summary>
+        private static void ghiVong(AudioClip clip, float[] data, int soMau, int tu)
+        {
+            int tong = clip.samples;
+            tu = ((tu % tong) + tong) % tong;
+            int dau = Math.Min(soMau, tong - tu);
+            if (dau == soMau && soMau == data.Length)
+            {
+                clip.SetData(data, tu);
+                return;
+            }
+            float[] p1 = new float[dau];
+            Array.Copy(data, 0, p1, 0, dau);
+            clip.SetData(p1, tu);
+            int con = soMau - dau;
+            if (con > 0)
+            {
+                float[] p2 = new float[con];
+                Array.Copy(data, dau, p2, 0, con);
+                clip.SetData(p2, 0);
             }
         }
 
