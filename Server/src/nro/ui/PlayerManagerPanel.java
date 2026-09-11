@@ -443,7 +443,7 @@ public class PlayerManagerPanel extends JPanel {
         act.add(button("Đổi tên", ACCENT, e -> doDoiTen()));
         act.add(button("Kick", WARN_RED, e -> doKick()));
         act.add(button("Hồi hết chiêu", ACCENT, e -> doResetChieu()));
-        act.add(button("Chi tiết HP", ACCENT, e -> doChiTietHp()));
+        act.add(button("Chi tiết HP/KI/SĐ", ACCENT, e -> doChiTietHp()));
         act.add(button("Đặt nhiệm vụ", ACCENT, e -> doDatNhiemVu()));
         // KHÔNG dùng editButton: nút này chỉ đọc nhật ký trong CSDL nên xem
         // được cả người đang offline — mà đó mới là lúc hay cần xem nhất.
@@ -1825,31 +1825,35 @@ public class PlayerManagerPanel extends JPanel {
             warn("Chỉ xem được người đang online.");
             return;
         }
-        java.util.List<String[]> dsSp;
-        java.util.List<String[]> dsDe = null;
+        java.util.List<java.util.List<String[]>> sp;
+        java.util.List<java.util.List<String[]>> de = null;
         try {
-            dsSp = p.nPoint.giaiThichHp();
+            sp = p.nPoint.giaiThichChiSo();
             if (p.Detu != null && p.Detu.nPoint != null) {
-                dsDe = p.Detu.nPoint.giaiThichHp();
+                de = p.Detu.nPoint.giaiThichChiSo();
             }
         } catch (Exception ex) {
-            Logger.logException(PlayerManagerPanel.class, ex, "Lỗi tính chi tiết HP");
+            Logger.logException(PlayerManagerPanel.class, ex, "Lỗi tính chi tiết chỉ số");
             warn("Không tính được: " + ex.getMessage());
             return;
         }
         javax.swing.JTabbedPane tabs = new javax.swing.JTabbedPane();
-        tabs.addTab("Sư phụ — HP tối đa " + fmt(p.nPoint.hpMax), bangChiTietHp(dsSp));
-        if (dsDe != null) {
-            tabs.addTab("Đệ tử — HP tối đa " + fmt(p.Detu.nPoint.hpMax), bangChiTietHp(dsDe));
+        tabs.addTab("HP sư phụ: " + fmt(p.nPoint.hpMax), bangChiTietHp(sp.get(0), "HP tối đa sau bước"));
+        tabs.addTab("KI sư phụ: " + fmt(p.nPoint.mpMax), bangChiTietHp(sp.get(1), "KI tối đa sau bước"));
+        tabs.addTab("SĐ sư phụ: " + fmt(p.nPoint.dame), bangChiTietHp(sp.get(2), "Sức đánh sau bước"));
+        if (de != null) {
+            tabs.addTab("HP đệ: " + fmt(p.Detu.nPoint.hpMax), bangChiTietHp(de.get(0), "HP tối đa sau bước"));
+            tabs.addTab("KI đệ: " + fmt(p.Detu.nPoint.mpMax), bangChiTietHp(de.get(1), "KI tối đa sau bước"));
+            tabs.addTab("SĐ đệ: " + fmt(p.Detu.nPoint.dame), bangChiTietHp(de.get(2), "Sức đánh sau bước"));
         }
-        JOptionPane.showMessageDialog(this, tabs, "Chi tiết HP — " + p.name,
+        JOptionPane.showMessageDialog(this, tabs, "Chi tiết HP / KI / Sức đánh — " + p.name,
                 JOptionPane.PLAIN_MESSAGE);
     }
 
-    /** Bảng từng bước của một lần tính trần máu. */
-    private javax.swing.JComponent bangChiTietHp(java.util.List<String[]> ds) {
+    /** Bảng từng bước của một chỉ số (HP, KI hoặc sức đánh). */
+    private javax.swing.JComponent bangChiTietHp(java.util.List<String[]> ds, String cotSau) {
         javax.swing.table.DefaultTableModel m = new javax.swing.table.DefaultTableModel(
-                new Object[]{"#", "Bước", "Thay đổi", "Tương đương", "HP tối đa sau bước"}, 0) {
+                new Object[]{"#", "Bước", "Thay đổi", "Tương đương", cotSau}, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
                 return false;
