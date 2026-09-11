@@ -1825,7 +1825,7 @@ public class PlayerManagerPanel extends JPanel {
             return;
         }
         javax.swing.table.DefaultTableModel m = new javax.swing.table.DefaultTableModel(
-                new Object[]{"#", "Bước", "Thay đổi", "HP tối đa sau bước"}, 0) {
+                new Object[]{"#", "Bước", "Thay đổi", "Tương đương", "HP tối đa sau bước"}, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
                 return false;
@@ -1834,17 +1834,31 @@ public class PlayerManagerPanel extends JPanel {
         int i = 0;
         for (String[] r : ds) {
             long doi = Long.parseLong(r[1]);
+            long sau = Long.parseLong(r[2]);
+            long truoc = sau - doi;
+            // Bang bao nhieu phan tram so voi con so ngay truoc buoc — doc thang
+            // ra "+40%", "x2" ma khong phai tu chia.
+            String tuong = "";
+            if (truoc > 0) {
+                double pt = doi * 100.0 / truoc;
+                tuong = String.format(java.util.Locale.US, "%+.1f%%", pt).replace(".0%", "%");
+                double lan = (double) sau / truoc;
+                if (lan >= 1.95) {
+                    tuong += String.format(java.util.Locale.US, "  (×%.2f)", lan)
+                            .replace(".00)", ")");
+                }
+            }
             m.addRow(new Object[]{++i, r[0], (doi >= 0 ? "+" : "-") + fmt(Math.abs(doi)),
-                fmt(Long.parseLong(r[2]))});
+                tuong, fmt(sau)});
         }
         javax.swing.JTable t = new javax.swing.JTable(m);
         t.setRowHeight(22);
-        int[] w = {30, 430, 140, 150};
+        int[] w = {30, 380, 130, 120, 150};
         for (int c = 0; c < w.length; c++) {
             t.getColumnModel().getColumn(c).setPreferredWidth(w[c]);
         }
         javax.swing.JScrollPane sc = new javax.swing.JScrollPane(t);
-        sc.setPreferredSize(new java.awt.Dimension(780, 440));
+        sc.setPreferredSize(new java.awt.Dimension(840, 460));
         JOptionPane.showMessageDialog(this, sc, "Chi tiết HP — " + p.name
                 + " — HP tối đa " + fmt(p.nPoint.hpMax), JOptionPane.PLAIN_MESSAGE);
     }

@@ -1454,63 +1454,63 @@ public class NPoint {
         for (Integer tl : this.tlHp) {
             if (tl != null) {
                 hpMax += (hpMax * tl / 100L);
-                ghiHp("tl != null", hpMax);
+                ghiHp("Dòng % HP trên đồ (mỗi dòng nhân nối tiếp)", hpMax);
             }
         }
          // Tinh ấn
         if (hasFull5TinhAn()) {
             hpMax += calPercent(hpMax, 15);
-            ghiHp("Tinh ấn (hasFull5TinhAn())", hpMax);
+            ghiHp("Đủ 5 Tinh ấn (+15%)", hpMax);
         }
 
         if (this.player.isPl()) {
             if (InventoryService.gI().findItemRongNhi(this.player)) {
                 hpMax += calPercent(hpMax, 1);
-                ghiHp("InventoryService.gI().findItemRongNhi(player)", hpMax);
+                ghiHp("Rồng nhí trong hành trang (+1%)", hpMax);
             }
             hpMax += calPercent(hpMax, InventoryService.gI().HpItemsInBoxCollection(this.player));
-            ghiHp("InventoryService.gI().findItemRongNhi(player)", hpMax);
+            ghiHp("Bộ sưu tập (% HP)", hpMax);
         }
 
         if (this.player.tlHpClanAdd > 0) {
             hpMax += calPercent(hpMax, this.player.tlHpClanAdd);
-            ghiHp("tlHpClanAdd > 0", hpMax);
+            ghiHp("Bang hội cộng % HP", hpMax);
         }
         if (this.player.isPhanThan) {
             hpMax = calPercent(((PhanThan) this.player).master.nPoint.hpMax, SkillUtil.getPercentPhanThan(player));
-            ghiHp("isPhanThan", hpMax);
+            ghiHp("Phân thân (theo HP chủ)", hpMax);
         }
         if (this.player.THE_TUAN == 1 && this.player.LASTTIME_THE_TUAN > System.currentTimeMillis()) {
             hpMax += calPercent(hpMax, 3);
-            ghiHp("THE_TUAN == 1 && LASTTIME_THE_TUAN > bây giờ", hpMax);
+            ghiHp("Thẻ tuần (+3%)", hpMax);
         }
         if (this.player.THE_TUAN == 2 && this.player.LASTTIME_THE_TUAN > System.currentTimeMillis()) {
             hpMax += calPercent(hpMax, 5);
-            ghiHp("THE_TUAN == 2 && LASTTIME_THE_TUAN > bây giờ", hpMax);
+            ghiHp("Thẻ tuần cao cấp (+5%)", hpMax);
         }
         if (this.player.THE_THANG == 1 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
             hpMax += calPercent(hpMax, 7);
-            ghiHp("THE_THANG == 1 && LASTTIME_THE_THANG > bây giờ", hpMax);
+            ghiHp("Thẻ tháng (+7%)", hpMax);
         }
         if (this.player.THE_THANG == 2 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
             hpMax += calPercent(hpMax, 10);
-            ghiHp("THE_THANG == 2 && LASTTIME_THE_THANG > bây giờ", hpMax);
+            ghiHp("Thẻ tháng cao cấp (+10%)", hpMax);
         }
         if (this.player.THE_NAM == 1 && this.player.LASTTIME_THE_NAM > System.currentTimeMillis()) {
             hpMax += calPercent(hpMax, 15);
-            ghiHp("THE_NAM == 1 && LASTTIME_THE_NAM > bây giờ", hpMax);
+            ghiHp("Thẻ năm (+15%)", hpMax);
         }
         if (this.player.THE_NAM == 2 && this.player.LASTTIME_THE_NAM > System.currentTimeMillis()) {
             hpMax += calPercent(hpMax, 18);
-            ghiHp("THE_NAM == 2 && LASTTIME_THE_NAM > bây giờ", hpMax);
+            ghiHp("Thẻ năm cao cấp (+18%)", hpMax);
         }
         if (this.player.THE_CHI_TON == 1 && this.player.LASTTIME_THE_CHI_TON > System.currentTimeMillis()) {
             hpMax += calPercent(hpMax, 20);
-            ghiHp("THE_CHI_TON == 1 && LASTTIME_THE_CHI_TON > bây giờ", hpMax);
+            ghiHp("Thẻ chí tôn (+20%)", hpMax);
         }
         if (this.player.isPl() && this.player.isUseDanhHieu_ThienTu == true && this.player.LastTimeDanhHieu_ThienTu > 0) {
             hpMax += calPercent(hpMax, 5);
-            ghiHp("isPl() && isUseDanhHieu_ThienTu == true && LastTimeDanhHieu_ThienTu > 0", hpMax);
+            ghiHp("Danh hiệu Thiên Tử (+5%)", hpMax);
         }
 
 
@@ -1519,31 +1519,31 @@ public class NPoint {
 
         if (this.player.effectSkill != null && this.player.effectSkill.isVirus) {
             hpMax -= calPercent(hpMax, 10);
-            ghiHp("Xử lý set nappa (effectSkill.isVirus)", hpMax);
+            ghiHp("Nhiễm virus (−10%)", hpMax);
         }
 
         if (this.player.effectSkill != null && this.player.effectSkill.isBongTuyet) {
             hpMax -= calPercent(hpMax, 20);
-            ghiHp("effectSkill.isBongTuyet", hpMax);
+            ghiHp("Dính bông tuyết (−20%)", hpMax);
         }
 
         //set worldcup
 
         if (this.player.itemTime != null && this.player.itemTime.isUseRocket1h) {
             hpMax += calPercent(hpMax, 20);
-            ghiHp("set worldcup (itemTime.isUseRocket1h)", hpMax);
+            ghiHp("Tên lửa 1 giờ (+20%)", hpMax);
         }
 
         if (this.player.itemTime != null && this.player.itemTime.isRongXuong_2) {
             hpMax += calPercent(hpMax, 15);
-            ghiHp("itemTime.isRongXuong_2", hpMax);
+            ghiHp("Rồng xương 2 (+15%)", hpMax);
         }
 
         if (this.player.effectSkill.isMonkey) {
             if (!laDeDangHopThe()) {
                 int percent = SkillUtil.getPercentHpMonkey(player.effectSkill.levelMonkey);
                 hpMax += (hpMax * percent / 100);
-                ghiHp("!laDeDangHopThe()", hpMax);
+                ghiHp("Biến khỉ", hpMax);
             }
         }
 
@@ -1551,54 +1551,54 @@ public class NPoint {
             Attribute at = ServerManager.gI().getAttributeManager().find(ConstAttribute.HP);
             if (at != null && !at.isExpired()) {
                 hpMax += calPercent(hpMax, at.getValue());
-                ghiHp("!at.isExpired()", hpMax);
+                ghiHp("Sự kiện máy chủ: % HP", hpMax);
             }
         }
 
         //phù
         if (this.player.zone != null && MapService.gI().isMapBlackBallWar(this.player.zone.map.mapId)) {
             hpMax *= this.player.effectSkin.xHPKI;
-            ghiHp("phù (isMapBlackBallWar(zone.map.mapId))", hpMax);
+            ghiHp("Phù trong Ngọc rồng đen", hpMax);
         }
 
         // HP của đệ tử khi hợp thể KHÔNG cộng ở đây nữa — xem congHpDeTuKhiHopThe().
         if (this.player.fusion.typeFusion == ConstPlayer.HOP_THE_PORATA2) {
             hpMax += calPercent(hpMax, 5);
-            ghiHp("HP của đệ tử khi hợp thể KHÔNG cộng ở đây nữa — xem congHpDeTuKhiHopThe(). (fusion.typeFusion == ConstPlayer.HOP_THE_PORATA2)", hpMax);
+            ghiHp("Hợp thể bông tai cấp 2 (+5%)", hpMax);
         }
         if (this.player.fusion.typeFusion == ConstPlayer.HOP_THE_PORATA3) {
             hpMax += calPercent(hpMax, 10);
-            ghiHp("fusion.typeFusion == ConstPlayer.HOP_THE_PORATA3", hpMax);
+            ghiHp("Hợp thể bông tai cấp 3 (+10%)", hpMax);
         }
         if (this.player.fusion.typeFusion == ConstPlayer.HOP_THE_PORATA4) {
             hpMax += calPercent(hpMax, 15);
-            ghiHp("fusion.typeFusion == ConstPlayer.HOP_THE_PORATA4", hpMax);
+            ghiHp("Hợp thể bông tai cấp 4 (+15%)", hpMax);
         }
         if (this.player.fusion.typeFusion == ConstPlayer.HOP_THE_PORATA5) {
             hpMax += calPercent(hpMax, 20);
-            ghiHp("fusion.typeFusion == ConstPlayer.HOP_THE_PORATA5", hpMax);
+            ghiHp("Hợp thể bông tai cấp 5 (+20%)", hpMax);
         }
         //huýt sáo
         if (!laDeDangHopThe()) {
             if (this.player.effectSkill.tiLeHPHuytSao != 0) {
                 hpMax += (hpMax * this.player.effectSkill.tiLeHPHuytSao / 100L);
-                ghiHp("effectSkill.tiLeHPHuytSao != 0", hpMax);
+                ghiHp("Huýt sáo", hpMax);
             }
         }
         //bổ huyết
         if (this.player.itemTime != null && this.player.itemTime.isUseBoHuyet) {
             hpMax *= 2;
-            ghiHp("bổ huyết (itemTime.isUseBoHuyet)", hpMax);
+            ghiHp("Bổ huyết (×2)", hpMax);
         }
 
         // Xử lý chibi
         if (this.player.effectSkill != null && this.player.effectSkill.isChibi && this.player.typeChibi == 3) {
             hpMax *= 2;
-            ghiHp("Xử lý chibi (effectSkill.isChibi && typeChibi == 3)", hpMax);
+            ghiHp("Chibi loại 3 (×2)", hpMax);
         }
         if (player.getBuff() == Buff.BUFF_HP) {
             hpMax += calPercent(hpMax, 20);
-            ghiHp("getBuff() == Buff.BUFF_HP", hpMax);
+            ghiHp("Buff HP (+20%)", hpMax);
         }
         //TOP WHIS
         List<Player> list = TopKillWhisManager.getInstance().getList();
@@ -1607,19 +1607,19 @@ public class NPoint {
                 int playerRank = getPlayerRank(list, this.player);
                 if (playerRank == 1) {
                     hpMax += calPercent(hpMax, 30);
-                    ghiHp("playerRank == 1", hpMax);
+                    ghiHp("Top Whis hạng 1 (+30%)", hpMax);
                 } else if (playerRank == 2) {
                     hpMax += calPercent(hpMax, 20);
-                    ghiHp("playerRank == 2", hpMax);
+                    ghiHp("Top Whis hạng 2 (+20%)", hpMax);
                 } else if (playerRank == 3) {
                     hpMax += calPercent(hpMax, 10);
-                    ghiHp("playerRank == 3", hpMax);
+                    ghiHp("Top Whis hạng 3 (+10%)", hpMax);
                 } else if (playerRank >= 4 && playerRank <= 5) {
                     hpMax += calPercent(hpMax, 5);
-                    ghiHp("playerRank >= 4 && playerRank <= 5", hpMax);
+                    ghiHp("Top Whis hạng 4–5 (+5%)", hpMax);
                 } else if (playerRank >= 6 && playerRank <= 10) {
                     hpMax += calPercent(hpMax, 3);
-                    ghiHp("playerRank >= 6 && playerRank <= 10", hpMax);
+                    ghiHp("Top Whis hạng 6–10 (+3%)", hpMax);
                 }
             }
         }
@@ -1627,103 +1627,103 @@ public class NPoint {
         // Phù map mabu
         if (this.player.isPhuHoMapMabu) {
             hpMax += 1_000_000;
-            ghiHp("Phù map mabu (isPhuHoMapMabu)", hpMax);
+            ghiHp("Phù map Mabu (+1 triệu HP)", hpMax);
         }
         //giảm hp
         hpMax -= (hpMax * tlSubHP / 100);
-        ghiHp("Phù map mabu (isPhuHoMapMabu)", hpMax);
+        ghiHp("Giảm HP (dòng giảm HP trên đồ)", hpMax);
         //hồng đào
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao0) {
             hpMax -= calPercent(hpMax, 99);
-            ghiHp("hồng đào (itemTime.isUseHongDao0)", hpMax);
+            ghiHp("Hồng đào 0 (−99%)", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao) {
             hpMax += calPercent(hpMax, 1);
-            ghiHp("itemTime.isUseHongDao", hpMax);
+            ghiHp("Hồng đào (+1%)", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao1) {
             hpMax += calPercent(hpMax, 2);
-            ghiHp("itemTime.isUseHongDao1", hpMax);
+            ghiHp("Hồng đào 1 (+2%)", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao3) {
             hpMax += calPercent(hpMax, 3);
-            ghiHp("itemTime.isUseHongDao3", hpMax);
+            ghiHp("Hồng đào 3 (+3%)", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao5) {
             hpMax += calPercent(hpMax, 5);
-            ghiHp("itemTime.isUseHongDao5", hpMax);
+            ghiHp("Hồng đào 5 (+5%)", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao10) {
             hpMax += calPercent(hpMax, 8);
-            ghiHp("itemTime.isUseHongDao10", hpMax);
+            ghiHp("Hồng đào 10 (+8%)", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao25) {
             hpMax += calPercent(hpMax, 12);
-            ghiHp("itemTime.isUseHongDao25", hpMax);
+            ghiHp("Hồng đào 25 (+12%)", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao50) {
             hpMax += calPercent(hpMax, 15);
-            ghiHp("itemTime.isUseHongDao50", hpMax);
+            ghiHp("Hồng đào 50 (+15%)", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao99) {
             hpMax += calPercent(hpMax, 20);
-            ghiHp("itemTime.isUseHongDao99", hpMax);
+            ghiHp("Hồng đào 99 (+20%)", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao999) {
             hpMax += calPercent(hpMax, 100);
-            ghiHp("itemTime.isUseHongDao999", hpMax);
+            ghiHp("Hồng đào 999 (+100%)", hpMax);
         }
 
         if (this.player.itemTime != null && this.player.itemTime.istrbhp) {
             hpMax += calPercent(hpMax, 30);
-            ghiHp("itemTime.istrbhp", hpMax);
+            ghiHp("Vật phẩm tăng HP 1 giờ (+30%)", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.istrbhpxd) {
             hpMax += calPercent(hpMax, 15);
-            ghiHp("itemTime.istrbhpxd", hpMax);
+            ghiHp("Vật phẩm tăng HP 30 phút (+15%)", hpMax);
         }
 
         // Xử lý ngọc rồng đen 2 sao
         if (this.player.rewardBlackBall.timeOutOfDateReward[1] > System.currentTimeMillis()) {
             hpMax += (hpMax * RewardBlackBall.R2S_1 / 100);
-            ghiHp("Xử lý ngọc rồng đen 2 sao (rewardBlackBall.timeOutOfDateReward[1] > bây giờ)", hpMax);
+            ghiHp("Thưởng ngọc rồng đen 2 sao", hpMax);
         }
 
         // item sieu cawsp
         if (this.player.itemTime != null && this.player.itemTime.isUseBoHuyet2) {
             hpMax *= 2.2;
-            ghiHp("item sieu cawsp (itemTime.isUseBoHuyet2)", hpMax);
+            ghiHp("Bổ huyết 2 (×2,2)", hpMax);
         }
         if (!this.player.isBoss && !this.player.getBot() && this.player.zone != null && MapService.gI().isMapCold(this.player.zone.map) && !this.isKhongLanh) {
             hpMax /= 2;
-            ghiHp("!isBoss && !getBot() && isMapCold(zone.map) && !isKhongLanh", hpMax);
+            ghiHp("Hành tinh lạnh, không kháng lạnh (÷2)", hpMax);
         }
 
         if (!this.player.isBoss && !this.player.getBot() && this.player.zone != null && MapService.gI().isMapChristMasEvent(this.player.zone.map.mapId) && !this.isKhongLanh) {
             hpMax /= 2;
-            ghiHp("!isBoss && !getBot() && isMapChristMasEvent(zone.map.mapId) && !isKhongLanh", hpMax);
+            ghiHp("Bản đồ Giáng sinh, không kháng lạnh (÷2)", hpMax);
         }
 
         if (!this.player.isBoss && !this.player.getBot() && this.player.zone != null && MapService.gI().isMap5000NamTruoc(this.player.zone.map.mapId)) {
             hpMax -= calPercent(hpMax, 90);
-            ghiHp("!isBoss && !getBot() && isMap5000NamTruoc(zone.map.mapId)", hpMax);
+            ghiHp("Bản đồ 5000 năm trước (−90%)", hpMax);
         }
 
         if (player.gender == ConstPlayer.XAYDA) {
             if (!this.player.isBoss && !this.player.getBot() && this.player.zone != null && MapService.gI().isMapCereal(this.player.zone.map)) {
                 hpMax /= 2;
-                ghiHp("!isBoss && !getBot() && isMapCereal(zone.map)", hpMax);
+                ghiHp("Bản đồ Cereal, người Xayda (÷2)", hpMax);
             }
         }
 
         if (this.player.itemTime != null && this.player.itemTime.IsSupbihacam) {
             hpMax += calPercent(hpMax, 10);
-            ghiHp("itemTime.IsSupbihacam", hpMax);
+            ghiHp("Súp bí hắc ám (+10%)", hpMax);
         }
 
         if (this.player.itemTime != null && this.player.itemTime.istomtambot) {
             hpMax += calPercent(hpMax, 5);
-            ghiHp("itemTime.istomtambot", hpMax);
+            ghiHp("Tôm tẩm bột (+5%)", hpMax);
         }
         this.hpMax = hpMax;
     }
