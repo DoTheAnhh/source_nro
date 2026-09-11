@@ -443,6 +443,7 @@ public class PlayerManagerPanel extends JPanel {
         act.add(button("Đổi tên", ACCENT, e -> doDoiTen()));
         act.add(button("Kick", WARN_RED, e -> doKick()));
         act.add(button("Hồi hết chiêu", ACCENT, e -> doResetChieu()));
+        act.add(button("Chi tiết HP", ACCENT, e -> doChiTietHp()));
         act.add(button("Đặt nhiệm vụ", ACCENT, e -> doDatNhiemVu()));
         // KHÔNG dùng editButton: nút này chỉ đọc nhật ký trong CSDL nên xem
         // được cả người đang offline — mà đó mới là lúc hay cần xem nhất.
@@ -1804,6 +1805,50 @@ public class PlayerManagerPanel extends JPanel {
      * đặt về 0 là chiêu nào cũng dùng được ngay. Cả hiệu ứng gồng và biến hình
      * cũng gỡ luôn, vì chúng có chốt "đang có hiệu lực thì không bấm lại".</p>
      */
+    /**
+     * Tính lại trần máu của người đang chọn và bày <b>từng bước</b> ra một bảng:
+     * gốc, % trên đồ, thẻ, bùa, bổ huyết, huýt sáo, set, phần đệ tử khi hợp
+     * thể… Bước nào không làm đổi con số thì không có dòng.
+     */
+    private void doChiTietHp() {
+        final Player p = selected;
+        if (p == null || p.nPoint == null) {
+            warn("Chỉ xem được người đang online.");
+            return;
+        }
+        java.util.List<String[]> ds;
+        try {
+            ds = p.nPoint.giaiThichHp();
+        } catch (Exception ex) {
+            Logger.logException(PlayerManagerPanel.class, ex, "Lỗi tính chi tiết HP");
+            warn("Không tính được: " + ex.getMessage());
+            return;
+        }
+        javax.swing.table.DefaultTableModel m = new javax.swing.table.DefaultTableModel(
+                new Object[]{"#", "Bước", "Thay đổi", "HP tối đa sau bước"}, 0) {
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
+        };
+        int i = 0;
+        for (String[] r : ds) {
+            long doi = Long.parseLong(r[1]);
+            m.addRow(new Object[]{++i, r[0], (doi >= 0 ? "+" : "-") + fmt(Math.abs(doi)),
+                fmt(Long.parseLong(r[2]))});
+        }
+        javax.swing.JTable t = new javax.swing.JTable(m);
+        t.setRowHeight(22);
+        int[] w = {30, 430, 140, 150};
+        for (int c = 0; c < w.length; c++) {
+            t.getColumnModel().getColumn(c).setPreferredWidth(w[c]);
+        }
+        javax.swing.JScrollPane sc = new javax.swing.JScrollPane(t);
+        sc.setPreferredSize(new java.awt.Dimension(780, 440));
+        JOptionPane.showMessageDialog(this, sc, "Chi tiết HP — " + p.name
+                + " — HP tối đa " + fmt(p.nPoint.hpMax), JOptionPane.PLAIN_MESSAGE);
+    }
+
     private void doResetChieu() {
         final Player p = selected;
         applyAndPush(p, "hồi hết chiêu", () -> {

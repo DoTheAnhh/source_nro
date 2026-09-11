@@ -627,7 +627,9 @@ public class NPoint {
             setBasePoint();
             setOutfitFusion();
             apDungSetTuCauHinh();
+            ghiHp("Set kích hoạt (bảng set_bonus)", this.hpMax);
             congHpDeTuKhiHopThe();
+            ghiHp("HP đệ tử cộng vào khi hợp thể", this.hpMax);
         } finally {
             this.dangDungLaiDayDu = false;
         }
@@ -660,6 +662,58 @@ public class NPoint {
      * <p>Giữ nguyên như cũ: đệ tử loại 1 cho 120% máu của nó, loại 5 cho 140%,
      * còn lại 100%.</p>
      */
+    /**
+     * Đệ tử đang nhập vào sư phụ — mọi kiểu hợp thể, kể cả hợp thể vĩnh viễn.
+     *
+     * <p>Lúc ấy khỉ, huýt sáo… của <b>đệ</b> không được tính gì: phần của đệ
+     * cộng vào sư phụ là chỉ số thật của đệ, không kèm hiệu ứng đang dính trên
+     * người nó. Trước chỉ xét {@code status == FUSION}, bỏ sót hợp thể vĩnh
+     * viễn và lúc trạng thái chưa kịp đổi.</p>
+     */
+    private boolean laDeDangHopThe() {
+        if (this.player == null || !this.player.isDeTu) {
+            return false;
+        }
+        Detu de = (Detu) this.player;
+        if (de.status == Detu.FUSION || de.status == Detu.HTVV) {
+            return true;
+        }
+        return de.master != null && de.master.fusion != null
+                && de.master.fusion.typeFusion != ConstPlayer.NON_FUSION;
+    }
+
+    /** Nhật ký từng bước tính trần máu — chỉ bật khi panel xin "Chi tiết HP". */
+    private java.util.List<String[]> nhatKyHp;
+
+    private long hpTruocBuoc;
+
+    private void ghiHp(String buoc, long giaTri) {
+        if (nhatKyHp == null || giaTri == hpTruocBuoc) {
+            return;
+        }
+        nhatKyHp.add(new String[]{buoc, String.valueOf(giaTri - hpTruocBuoc),
+            String.valueOf(giaTri)});
+        hpTruocBuoc = giaTri;
+    }
+
+    /**
+     * Tính lại chỉ số và trả về từng bước làm nên trần máu.
+     *
+     * @return mỗi dòng {bước, thay đổi, trần máu sau bước}; chỉ bước nào
+     *         thật sự đổi con số mới có dòng
+     */
+    public java.util.List<String[]> giaiThichHp() {
+        java.util.List<String[]> ds = new java.util.ArrayList<>();
+        this.nhatKyHp = ds;
+        this.hpTruocBuoc = 0;
+        try {
+            calPoint();
+        } finally {
+            this.nhatKyHp = null;
+        }
+        return ds;
+    }
+
     private void congHpDeTuKhiHopThe() {
         if (this.player.Detu == null
                 || this.player.fusion.typeFusion == ConstPlayer.NON_FUSION) {
@@ -1385,8 +1439,14 @@ public class NPoint {
     }
 
     private void setHpMax() {
+        if (nhatKyHp != null) {
+            // setHpMax co the chay hai lan trong mot luot — chi giu luot cuoi.
+            nhatKyHp.clear();
+            hpTruocBuoc = 0;
+        }
         // Tính toán giới hạn hpMax
         long hpMax = this.hpg + this.hpAdd;
+        ghiHp("HP gốc + HP cộng thẳng từ đồ", hpMax);
 //
 //        for (int tl : new ArrayList<>(this.tlHp)) {
 //            hpMax += (hpMax * tl / 100L);
@@ -1394,49 +1454,63 @@ public class NPoint {
         for (Integer tl : this.tlHp) {
             if (tl != null) {
                 hpMax += (hpMax * tl / 100L);
+                ghiHp("tl != null", hpMax);
             }
         }
          // Tinh ấn
         if (hasFull5TinhAn()) {
             hpMax += calPercent(hpMax, 15);
+            ghiHp("Tinh ấn (hasFull5TinhAn())", hpMax);
         }
 
         if (this.player.isPl()) {
             if (InventoryService.gI().findItemRongNhi(this.player)) {
                 hpMax += calPercent(hpMax, 1);
+                ghiHp("InventoryService.gI().findItemRongNhi(player)", hpMax);
             }
             hpMax += calPercent(hpMax, InventoryService.gI().HpItemsInBoxCollection(this.player));
+            ghiHp("InventoryService.gI().findItemRongNhi(player)", hpMax);
         }
 
         if (this.player.tlHpClanAdd > 0) {
             hpMax += calPercent(hpMax, this.player.tlHpClanAdd);
+            ghiHp("tlHpClanAdd > 0", hpMax);
         }
         if (this.player.isPhanThan) {
             hpMax = calPercent(((PhanThan) this.player).master.nPoint.hpMax, SkillUtil.getPercentPhanThan(player));
+            ghiHp("isPhanThan", hpMax);
         }
         if (this.player.THE_TUAN == 1 && this.player.LASTTIME_THE_TUAN > System.currentTimeMillis()) {
             hpMax += calPercent(hpMax, 3);
+            ghiHp("THE_TUAN == 1 && LASTTIME_THE_TUAN > bây giờ", hpMax);
         }
         if (this.player.THE_TUAN == 2 && this.player.LASTTIME_THE_TUAN > System.currentTimeMillis()) {
             hpMax += calPercent(hpMax, 5);
+            ghiHp("THE_TUAN == 2 && LASTTIME_THE_TUAN > bây giờ", hpMax);
         }
         if (this.player.THE_THANG == 1 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
             hpMax += calPercent(hpMax, 7);
+            ghiHp("THE_THANG == 1 && LASTTIME_THE_THANG > bây giờ", hpMax);
         }
         if (this.player.THE_THANG == 2 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
             hpMax += calPercent(hpMax, 10);
+            ghiHp("THE_THANG == 2 && LASTTIME_THE_THANG > bây giờ", hpMax);
         }
         if (this.player.THE_NAM == 1 && this.player.LASTTIME_THE_NAM > System.currentTimeMillis()) {
             hpMax += calPercent(hpMax, 15);
+            ghiHp("THE_NAM == 1 && LASTTIME_THE_NAM > bây giờ", hpMax);
         }
         if (this.player.THE_NAM == 2 && this.player.LASTTIME_THE_NAM > System.currentTimeMillis()) {
             hpMax += calPercent(hpMax, 18);
+            ghiHp("THE_NAM == 2 && LASTTIME_THE_NAM > bây giờ", hpMax);
         }
         if (this.player.THE_CHI_TON == 1 && this.player.LASTTIME_THE_CHI_TON > System.currentTimeMillis()) {
             hpMax += calPercent(hpMax, 20);
+            ghiHp("THE_CHI_TON == 1 && LASTTIME_THE_CHI_TON > bây giờ", hpMax);
         }
         if (this.player.isPl() && this.player.isUseDanhHieu_ThienTu == true && this.player.LastTimeDanhHieu_ThienTu > 0) {
             hpMax += calPercent(hpMax, 5);
+            ghiHp("isPl() && isUseDanhHieu_ThienTu == true && LastTimeDanhHieu_ThienTu > 0", hpMax);
         }
 
 
@@ -1445,26 +1519,31 @@ public class NPoint {
 
         if (this.player.effectSkill != null && this.player.effectSkill.isVirus) {
             hpMax -= calPercent(hpMax, 10);
+            ghiHp("Xử lý set nappa (effectSkill.isVirus)", hpMax);
         }
 
         if (this.player.effectSkill != null && this.player.effectSkill.isBongTuyet) {
             hpMax -= calPercent(hpMax, 20);
+            ghiHp("effectSkill.isBongTuyet", hpMax);
         }
 
         //set worldcup
 
         if (this.player.itemTime != null && this.player.itemTime.isUseRocket1h) {
             hpMax += calPercent(hpMax, 20);
+            ghiHp("set worldcup (itemTime.isUseRocket1h)", hpMax);
         }
 
         if (this.player.itemTime != null && this.player.itemTime.isRongXuong_2) {
             hpMax += calPercent(hpMax, 15);
+            ghiHp("itemTime.isRongXuong_2", hpMax);
         }
 
         if (this.player.effectSkill.isMonkey) {
-            if (!this.player.isDeTu || (this.player.isDeTu && ((Detu) this.player).status != Detu.FUSION)) {
+            if (!laDeDangHopThe()) {
                 int percent = SkillUtil.getPercentHpMonkey(player.effectSkill.levelMonkey);
                 hpMax += (hpMax * percent / 100);
+                ghiHp("!laDeDangHopThe()", hpMax);
             }
         }
 
@@ -1472,44 +1551,54 @@ public class NPoint {
             Attribute at = ServerManager.gI().getAttributeManager().find(ConstAttribute.HP);
             if (at != null && !at.isExpired()) {
                 hpMax += calPercent(hpMax, at.getValue());
+                ghiHp("!at.isExpired()", hpMax);
             }
         }
 
         //phù
         if (this.player.zone != null && MapService.gI().isMapBlackBallWar(this.player.zone.map.mapId)) {
             hpMax *= this.player.effectSkin.xHPKI;
+            ghiHp("phù (isMapBlackBallWar(zone.map.mapId))", hpMax);
         }
 
         // HP của đệ tử khi hợp thể KHÔNG cộng ở đây nữa — xem congHpDeTuKhiHopThe().
         if (this.player.fusion.typeFusion == ConstPlayer.HOP_THE_PORATA2) {
             hpMax += calPercent(hpMax, 5);
+            ghiHp("HP của đệ tử khi hợp thể KHÔNG cộng ở đây nữa — xem congHpDeTuKhiHopThe(). (fusion.typeFusion == ConstPlayer.HOP_THE_PORATA2)", hpMax);
         }
         if (this.player.fusion.typeFusion == ConstPlayer.HOP_THE_PORATA3) {
             hpMax += calPercent(hpMax, 10);
+            ghiHp("fusion.typeFusion == ConstPlayer.HOP_THE_PORATA3", hpMax);
         }
         if (this.player.fusion.typeFusion == ConstPlayer.HOP_THE_PORATA4) {
             hpMax += calPercent(hpMax, 15);
+            ghiHp("fusion.typeFusion == ConstPlayer.HOP_THE_PORATA4", hpMax);
         }
         if (this.player.fusion.typeFusion == ConstPlayer.HOP_THE_PORATA5) {
             hpMax += calPercent(hpMax, 20);
+            ghiHp("fusion.typeFusion == ConstPlayer.HOP_THE_PORATA5", hpMax);
         }
         //huýt sáo
-        if (!this.player.isDeTu || (this.player.isDeTu && ((Detu) this.player).status != Detu.FUSION)) {
+        if (!laDeDangHopThe()) {
             if (this.player.effectSkill.tiLeHPHuytSao != 0) {
                 hpMax += (hpMax * this.player.effectSkill.tiLeHPHuytSao / 100L);
+                ghiHp("effectSkill.tiLeHPHuytSao != 0", hpMax);
             }
         }
         //bổ huyết
         if (this.player.itemTime != null && this.player.itemTime.isUseBoHuyet) {
             hpMax *= 2;
+            ghiHp("bổ huyết (itemTime.isUseBoHuyet)", hpMax);
         }
 
         // Xử lý chibi
         if (this.player.effectSkill != null && this.player.effectSkill.isChibi && this.player.typeChibi == 3) {
             hpMax *= 2;
+            ghiHp("Xử lý chibi (effectSkill.isChibi && typeChibi == 3)", hpMax);
         }
         if (player.getBuff() == Buff.BUFF_HP) {
             hpMax += calPercent(hpMax, 20);
+            ghiHp("getBuff() == Buff.BUFF_HP", hpMax);
         }
         //TOP WHIS
         List<Player> list = TopKillWhisManager.getInstance().getList();
@@ -1518,14 +1607,19 @@ public class NPoint {
                 int playerRank = getPlayerRank(list, this.player);
                 if (playerRank == 1) {
                     hpMax += calPercent(hpMax, 30);
+                    ghiHp("playerRank == 1", hpMax);
                 } else if (playerRank == 2) {
                     hpMax += calPercent(hpMax, 20);
+                    ghiHp("playerRank == 2", hpMax);
                 } else if (playerRank == 3) {
                     hpMax += calPercent(hpMax, 10);
+                    ghiHp("playerRank == 3", hpMax);
                 } else if (playerRank >= 4 && playerRank <= 5) {
                     hpMax += calPercent(hpMax, 5);
+                    ghiHp("playerRank >= 4 && playerRank <= 5", hpMax);
                 } else if (playerRank >= 6 && playerRank <= 10) {
                     hpMax += calPercent(hpMax, 3);
+                    ghiHp("playerRank >= 6 && playerRank <= 10", hpMax);
                 }
             }
         }
@@ -1533,81 +1627,103 @@ public class NPoint {
         // Phù map mabu
         if (this.player.isPhuHoMapMabu) {
             hpMax += 1_000_000;
+            ghiHp("Phù map mabu (isPhuHoMapMabu)", hpMax);
         }
         //giảm hp
         hpMax -= (hpMax * tlSubHP / 100);
+        ghiHp("Phù map mabu (isPhuHoMapMabu)", hpMax);
         //hồng đào
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao0) {
             hpMax -= calPercent(hpMax, 99);
+            ghiHp("hồng đào (itemTime.isUseHongDao0)", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao) {
             hpMax += calPercent(hpMax, 1);
+            ghiHp("itemTime.isUseHongDao", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao1) {
             hpMax += calPercent(hpMax, 2);
+            ghiHp("itemTime.isUseHongDao1", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao3) {
             hpMax += calPercent(hpMax, 3);
+            ghiHp("itemTime.isUseHongDao3", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao5) {
             hpMax += calPercent(hpMax, 5);
+            ghiHp("itemTime.isUseHongDao5", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao10) {
             hpMax += calPercent(hpMax, 8);
+            ghiHp("itemTime.isUseHongDao10", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao25) {
             hpMax += calPercent(hpMax, 12);
+            ghiHp("itemTime.isUseHongDao25", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao50) {
             hpMax += calPercent(hpMax, 15);
+            ghiHp("itemTime.isUseHongDao50", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao99) {
             hpMax += calPercent(hpMax, 20);
+            ghiHp("itemTime.isUseHongDao99", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao999) {
             hpMax += calPercent(hpMax, 100);
+            ghiHp("itemTime.isUseHongDao999", hpMax);
         }
 
         if (this.player.itemTime != null && this.player.itemTime.istrbhp) {
             hpMax += calPercent(hpMax, 30);
+            ghiHp("itemTime.istrbhp", hpMax);
         }
         if (this.player.itemTime != null && this.player.itemTime.istrbhpxd) {
             hpMax += calPercent(hpMax, 15);
+            ghiHp("itemTime.istrbhpxd", hpMax);
         }
 
         // Xử lý ngọc rồng đen 2 sao
         if (this.player.rewardBlackBall.timeOutOfDateReward[1] > System.currentTimeMillis()) {
             hpMax += (hpMax * RewardBlackBall.R2S_1 / 100);
+            ghiHp("Xử lý ngọc rồng đen 2 sao (rewardBlackBall.timeOutOfDateReward[1] > bây giờ)", hpMax);
         }
 
         // item sieu cawsp
         if (this.player.itemTime != null && this.player.itemTime.isUseBoHuyet2) {
             hpMax *= 2.2;
+            ghiHp("item sieu cawsp (itemTime.isUseBoHuyet2)", hpMax);
         }
         if (!this.player.isBoss && !this.player.getBot() && this.player.zone != null && MapService.gI().isMapCold(this.player.zone.map) && !this.isKhongLanh) {
             hpMax /= 2;
+            ghiHp("!isBoss && !getBot() && isMapCold(zone.map) && !isKhongLanh", hpMax);
         }
 
         if (!this.player.isBoss && !this.player.getBot() && this.player.zone != null && MapService.gI().isMapChristMasEvent(this.player.zone.map.mapId) && !this.isKhongLanh) {
             hpMax /= 2;
+            ghiHp("!isBoss && !getBot() && isMapChristMasEvent(zone.map.mapId) && !isKhongLanh", hpMax);
         }
 
         if (!this.player.isBoss && !this.player.getBot() && this.player.zone != null && MapService.gI().isMap5000NamTruoc(this.player.zone.map.mapId)) {
             hpMax -= calPercent(hpMax, 90);
+            ghiHp("!isBoss && !getBot() && isMap5000NamTruoc(zone.map.mapId)", hpMax);
         }
 
         if (player.gender == ConstPlayer.XAYDA) {
             if (!this.player.isBoss && !this.player.getBot() && this.player.zone != null && MapService.gI().isMapCereal(this.player.zone.map)) {
                 hpMax /= 2;
+                ghiHp("!isBoss && !getBot() && isMapCereal(zone.map)", hpMax);
             }
         }
 
         if (this.player.itemTime != null && this.player.itemTime.IsSupbihacam) {
             hpMax += calPercent(hpMax, 10);
+            ghiHp("itemTime.IsSupbihacam", hpMax);
         }
 
         if (this.player.itemTime != null && this.player.itemTime.istomtambot) {
             hpMax += calPercent(hpMax, 5);
+            ghiHp("itemTime.istomtambot", hpMax);
         }
         this.hpMax = hpMax;
     }
@@ -2181,7 +2297,7 @@ if (hasFull5NhatAn()) {
         }
 
         if (this.player.effectSkill.isMonkey) {
-            if (!this.player.isDeTu || (this.player.isDeTu && ((Detu) this.player).status != Detu.FUSION)) {
+            if (!laDeDangHopThe()) {
                 int percent = SkillUtil.getPercentDameMonkey(player.effectSkill.levelMonkey);
                 dame += (dame * percent / 100);
             }
@@ -2357,7 +2473,8 @@ if (hasFull5NhatAn()) {
             }
         }
         if (this.player.effectSkill != null) {
-            if (this.player.effectSkill.isMonkey) {
+            // De dang hop the: khi cua de khong tinh gi — xem laDeDangHopThe.
+            if (this.player.effectSkill.isMonkey && !laDeDangHopThe()) {
                 this.crit = 100;
             }
             if (this.player.effectSkill.iscumber) {
