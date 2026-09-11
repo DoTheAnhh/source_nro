@@ -149,7 +149,7 @@ namespace Game1.God
             veThanh(g, x + 6, y + 28, RONG - 12, 10, pet.cMP, pet.cMPFull, 0x2F7BD8,
                     "KI " + gon(pet.cMP) + " / " + gon(pet.cMPFull));
 
-            mFont.tahoma_7b_green.drawString(g, "SM " + gon(pet.cPower), x + 6, y + 40,
+            mFont.tahoma_7b_green.drawString(g, "Sức mạnh " + gon(pet.cPower), x + 6, y + 40,
                     mFont.LEFT);
         }
 
