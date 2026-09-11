@@ -15,7 +15,7 @@ namespace Game3.Assets.src.f
 					readInfoEffChar(msg);
 					break;
 				case sbyte.MaxValue:
-					readInfoRada(msg);
+					// So suu tam: goi 127 do God.SoSuuTamUI doc (Controller.onMessage, case 127). Doc o day la nuot mat goi va bat man radar cu de len.
 					break;
 				case 114:
 					try

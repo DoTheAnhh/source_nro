@@ -81,6 +81,8 @@ namespace Game1.God
         /// <summary>0 tất cả · 1 đã có · 2 chưa có · 3 đang bật.</summary>
         private int boLoc;
         private bool dangTai;
+        /// <summary>Gói sổ không đọc được theo khuôn nào — máy chủ lệch phiên bản.</summary>
+        private bool loiDuLieu;
         private long lucMo;
         /// <summary>Tăng mỗi lần dữ liệu hay lựa chọn đổi — dựng lại phần chữ.</summary>
         private int phienBan;
@@ -337,9 +339,21 @@ namespace Game1.God
                         }
                     case 3:
                         {
-                            int id = msg.reader().readShort();
-                            int gop = msg.reader().readInt();
-                            int can = msg.reader().readInt();
+                            myReader r = msg.reader();
+                            int id = r.readShort();
+                            int gop;
+                            int can;
+                            // Khuon cu (may chu chua cap nhat) gui hai byte.
+                            if (r.buffer.Length - r.posRead <= 2)
+                            {
+                                gop = r.readUnsignedByte();
+                                can = r.readUnsignedByte();
+                            }
+                            else
+                            {
+                                gop = r.readInt();
+                                can = r.readInt();
+                            }
                             The t = tim(id);
                             if (t != null)
                             {
@@ -369,44 +383,113 @@ namespace Game1.God
             }
         }
 
+        /// <summary>Đọc cả sổ — thử khuôn mới, lệch thì đọc lại theo khuôn cũ.</summary>
+        /// <remarks>
+        /// Client và máy chủ không phải lúc nào cũng cập nhật cùng lúc. Máy chủ
+        /// cũ gửi số lượng một byte và thiếu cấp tối đa / hào quang; đọc khuôn
+        /// mới trên gói ấy là đọc quá cuối gói ("loi doc sbyte eof"). Nên đọc
+        /// thử khuôn mới — ném lỗi hoặc còn thừa byte là sai khuôn — rồi quay về
+        /// đầu gói đọc khuôn cũ. Cả hai đều hỏng thì báo trên sổ, không quay
+        /// vòng tải mãi.
+        /// </remarks>
         private void docCaSo(Message msg)
         {
-            int n = msg.reader().readShort();
-            List<The> moi = new List<The>();
+            myReader r = msg.reader();
+            int batDau = r.posRead;
+            List<The> moi;
+            try
+            {
+                moi = docDanhSach(r, true);
+                if (r.posRead != r.buffer.Length)
+                {
+                    moi = null;
+                }
+            }
+            catch (System.Exception)
+            {
+                moi = null;
+            }
+            if (moi == null)
+            {
+                r.posRead = batDau;
+                try
+                {
+                    moi = docDanhSach(r, false);
+                }
+                catch (System.Exception ex)
+                {
+                    loiDuLieu = true;
+                    dangTai = false;
+                    UnityEngine.Debug.LogError("[SoSuuTam] khong doc duoc goi so: " + ex);
+                    return;
+                }
+            }
+            loiDuLieu = false;
+            ds.Clear();
+            ds.AddRange(moi);
+            dangTai = false;
+            phienBan++;
+            if (tim(idChon) == null)
+            {
+                idChon = chonMacDinh();
+                cuonChu = 0;
+            }
+        }
+
+        private static List<The> docDanhSach(myReader r, bool khuonMoi)
+        {
+            int n = r.readShort();
+            List<The> ra = new List<The>();
             for (int i = 0; i < n; i++)
             {
                 The t = new The();
-                t.id = msg.reader().readShort();
-                t.icon = msg.reader().readShort();
-                t.hang = msg.reader().readByte();
-                t.daGop = msg.reader().readInt();
-                t.canLen = msg.reader().readInt();
-                t.kieu = msg.reader().readByte();
-                if (t.kieu == 1)
+                t.id = r.readShort();
+                t.icon = r.readShort();
+                t.hang = r.readByte();
+                if (khuonMoi)
                 {
-                    t.head = msg.reader().readShort();
-                    t.body = msg.reader().readShort();
-                    t.leg = msg.reader().readShort();
-                    t.bag = msg.reader().readShort();
+                    t.daGop = r.readInt();
+                    t.canLen = r.readInt();
                 }
                 else
                 {
-                    t.quai = msg.reader().readShort();
+                    t.daGop = r.readUnsignedByte();
+                    t.canLen = r.readUnsignedByte();
                 }
-                t.ten = msg.reader().readUTF();
-                t.moTa = msg.reader().readUTF();
-                t.cap = msg.reader().readByte();
-                t.dangBat = msg.reader().readByte() == 1;
-                t.capToiDa = Math.max(1, (int)msg.reader().readByte());
-                t.aura = msg.reader().readShort();
-                t.auraTuCap = msg.reader().readByte();
-                int soDong = msg.reader().readShort();
+                t.kieu = r.readByte();
+                if (t.kieu == 1)
+                {
+                    t.head = r.readShort();
+                    t.body = r.readShort();
+                    t.leg = r.readShort();
+                    t.bag = r.readShort();
+                }
+                else
+                {
+                    t.quai = r.readShort();
+                }
+                t.ten = r.readUTF();
+                t.moTa = r.readUTF();
+                t.cap = r.readByte();
+                t.dangBat = r.readByte() == 1;
+                if (khuonMoi)
+                {
+                    t.capToiDa = Math.max(1, (int)r.readByte());
+                    t.aura = r.readShort();
+                    t.auraTuCap = r.readByte();
+                }
+                int soDong = khuonMoi ? r.readShort() : r.readUnsignedByte();
                 t.chiSo = new ItemOption[soDong];
+                int capCao = 1;
                 for (int j = 0; j < soDong; j++)
                 {
-                    int idCs = msg.reader().readShort();
-                    int giaTri = msg.reader().readInt();
-                    sbyte tuCap = msg.reader().readByte();
+                    int idCs = khuonMoi ? r.readShort() : r.readUnsignedByte();
+                    int giaTri = khuonMoi ? r.readInt() : r.readUnsignedShort();
+                    sbyte tuCap = r.readByte();
+                    if (tuCap > capCao)
+                    {
+                        capCao = tuCap;
+                    }
                     try
                     {
                         ItemOption o = new ItemOption(idCs, giaTri);
@@ -418,17 +501,14 @@ namespace Game1.God
                         t.chiSo[j] = null;
                     }
                 }
-                moi.Add(t);
+                if (!khuonMoi)
+                {
+                    // Khuon cu khong gui cap toi da: lay theo dong chi so cap cao nhat.
+                    t.capToiDa = capCao;
+                }
+                ra.Add(t);
             }
-            ds.Clear();
-            ds.AddRange(moi);
-            dangTai = false;
-            phienBan++;
-            if (tim(idChon) == null)
-            {
-                idChon = chonMacDinh();
-                cuonChu = 0;
-            }
+            return ra;
         }
 
         /// <summary>Thẻ đang bật, không có thì thẻ đầu tiên đã có, không có nữa thì thẻ đầu.</summary>
@@ -641,7 +721,14 @@ namespace Game1.God
 
             if (ds.Count == 0)
             {
-                if (dangTai)
+                if (loiDuLieu)
+                {
+                    mFont.tahoma_7b_red.drawString(g, "Máy chủ chưa cập nhật Sổ sưu tầm",
+                            xLuoi + rongLuoi / 2, yLuoi + caoLuoi / 2 - 12, mFont.CENTER);
+                    mFont.tahoma_7_white.drawString(g, "Báo quản trị cập nhật máy chủ",
+                            xLuoi + rongLuoi / 2, yLuoi + caoLuoi / 2 + 2, mFont.CENTER);
+                }
+                else if (dangTai)
                 {
                     veVongTai(g, xLuoi + rongLuoi / 2, yLuoi + caoLuoi / 2 - 6);
                     mFont.tahoma_7_white.drawString(g, "Đang mở sổ...", xLuoi + rongLuoi / 2,
