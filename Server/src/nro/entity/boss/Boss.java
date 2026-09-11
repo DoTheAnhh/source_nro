@@ -821,6 +821,31 @@ public class Boss extends Player implements IBoss {
         //
         // Ban cu de dieu kien nay o CA HAI khoi: khoi tren thoat truoc nen
         // khoi duoi thanh ma chet, client khong nhan duoc khung hinh nao.
+        // Ba trang thai "chua o tren ban do" chay TRUOC hai cong chan ben duoi.
+        //
+        // Hai cong ay dung cho con boss dang song va dang dung tren ban do: mot
+        // cai cho chieu dac biet chay het, mot cai cho hieu ung (troi, choang,
+        // hoa da) tan. Nhung con boss dang nghi thi khong dang danh chieu nao,
+        // va hieu ung dinh tu luc chet cung chang con nghia gi.
+        //
+        // De chung o tren thi chi can MOT co ket lai — vi du "an troi" von
+        // khong co dong ho rieng cho toi ban nay — la update() thoat som mai
+        // mai: rest() khong bao gio chay, con boss nam do khong bao gio tu len,
+        // va cach duy nhat la ep hoi sinh bang panel. Dung canh da gap.
+        switch (this.bossStatus) {
+            case REST:
+                this.rest();
+                return;
+            case RESPAWN:
+                this.respawn();
+                this.changeStatus(BossStatus.JOIN_MAP);
+                return;
+            case JOIN_MAP:
+                this.joinMap();
+                return;
+            default:
+                break;
+        }
         if (this.newSkill != null && this.newSkill.isStartSkillSpecial) {
             SkillService.gI().newSkillNotFocus(this, 20);
             return;
@@ -835,18 +860,8 @@ public class Boss extends Player implements IBoss {
                 this.autoLeaveMap();
                 break;
         }
+        // REST, RESPAWN va JOIN_MAP da duoc xu ly o tren, truoc hai cong chan.
         switch (this.bossStatus) {
-            case REST:
-                this.rest();
-                break;
-            case RESPAWN: {
-                this.respawn();
-                this.changeStatus(BossStatus.JOIN_MAP);
-                break;
-            }
-            case JOIN_MAP:
-                this.joinMap();
-                break;
             case CHAT_S: {
                 this.checkAutoResetBySecondsRest();
                 if (chatS()) {
@@ -925,6 +940,21 @@ public void respawn() {
         this.currentLevel = 0;
     }
     this.secondsRest = this.data[this.currentLevel].getSecondsRest();
+
+    // Vao doi moi thi sach hieu ung cua doi cu.
+    //
+    // Boss chet trong luc dang bi troi, choang hay hoa da thi may cai co ay con
+    // nguyen. Song lai voi mau day du va mot co "dang bi troi" la vua sai voi
+    // nguoi choi nhin vao, vua nguy hiem cho chinh no: initBase() ngay duoi keo
+    // mau len, luc do isHaveEffectSkill() bat dau tra ve dung va se chan moi
+    // buoc tiep theo cua no.
+    if (this.effectSkill != null) {
+        try {
+            this.effectSkill.removeSkillEffectWhenDie();
+        } catch (Exception boQua) {
+            // Go khong duoc thi thoi, con hon de ca ham dung lai o day.
+        }
+    }
 
     this.initBase();
     this.changeToTypeNonPK();

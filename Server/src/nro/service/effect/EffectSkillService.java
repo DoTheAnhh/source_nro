@@ -498,13 +498,27 @@ public class EffectSkillService {
         if (player != null && player.effectSkill != null) {
             player.effectSkill.anTroi = false;
             player.effectSkill.plTroi = null;
+            player.effectSkill.lastTimeAnTroi = 0;
+            player.effectSkill.timeAnTroi = 0;
             sendEffectPlayer(player, player, TURN_OFF_EFFECT, HOLD_EFFECT);
         }
     }
 
+    /**
+     * Đánh dấu một người đang <b>bị trói</b>.
+     *
+     * <p>Hai tham số thời gian trước đây bị <b>vứt đi</b>: hàm nhận chúng rồi
+     * chỉ bật cờ. Bên bị trói vì thế không có đồng hồ nào của riêng mình, và
+     * chỉ thoát khi chính người trói hết lượt. Người trói thoát game, đổi bản
+     * đồ hay chết giữa chừng thì cái cờ ấy ở lại vĩnh viễn.</p>
+     *
+     * <p>Nay ghi lại để {@code EffectSkill.update()} tự gỡ khi hết giờ.</p>
+     */
     public void setAnTroi(Player player, Player plTroi, long lastTimeAnTroi, int timeAnTroi) {
         player.effectSkill.anTroi = true;
         player.effectSkill.plTroi = plTroi;
+        player.effectSkill.lastTimeAnTroi = lastTimeAnTroi;
+        player.effectSkill.timeAnTroi = timeAnTroi;
     }
 
     public void setUseTroi(Player player, long lastTimeTroi, int timeTroi) {

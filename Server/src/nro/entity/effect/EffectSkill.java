@@ -142,6 +142,24 @@ public class EffectSkill {
     public int timeTroi;
     public Player plTroi;
     public Player plAnTroi;
+
+    /**
+     * Đồng hồ riêng của <b>người bị trói</b>.
+     *
+     * <p>Trước đây bên bị trói không có đồng hồ nào cả: {@code setAnTroi} nhận
+     * hai tham số thời gian rồi <b>vứt đi</b>, và cờ {@code anTroi} chỉ được gỡ
+     * khi chính người trói hết lượt trói. Người trói thoát game, đổi bản đồ hay
+     * chết giữa chừng thì lượt gỡ ấy không bao giờ chạy — bên bị trói mang cờ
+     * đó <b>vĩnh viễn</b>.</p>
+     *
+     * <p>Với người chơi thì đó là bị trói mãi. Với boss còn nặng hơn: cờ này
+     * làm {@code isHaveEffectSkill()} trả về đúng, mà {@code Boss.update()} lại
+     * thoát sớm khi đang có hiệu ứng — nên con boss nằm im, không hồi sinh,
+     * không lên bản đồ, cho tới lúc khởi động lại máy chủ.</p>
+     */
+    public long lastTimeAnTroi;
+
+    public int timeAnTroi;
     public Mob mobAnTroi;
     
     //dịch chuyển tức thời
@@ -235,6 +253,11 @@ public class EffectSkill {
         }
         if (useTroi) {
             EffectSkillService.gI().removeUseTroi(this.player);
+        }
+        // Chet thi thoi bi troi. Thieu dong nay thi co "an troi" theo nguoi
+        // choi sang tan doi sau, va voi boss thi no chan luon duong hoi sinh.
+        if (anTroi) {
+            EffectSkillService.gI().removeAnTroi(this.player);
         }
         if (isStun) {
             EffectSkillService.gI().removeStun(this.player);
@@ -334,6 +357,14 @@ public class EffectSkill {
         }
         if (useTroi && Util.canDoWithTime(lastTimeTroi, timeTroi) || plAnTroi != null && plAnTroi.isDie() || useTroi && isHaveEffectSkill()) {
             EffectSkillService.gI().removeUseTroi(this.player);
+        }
+        // Ben BI TROI tu het gio, khong doi ben troi go ho.
+        //
+        // Doi ben troi go la doi mot nguoi co the da thoat game, doi ban do hay
+        // chet — luc ay khong ai go, va cai co nay o lai mai mai.
+        if (anTroi && timeAnTroi > 0
+                && Util.canDoWithTime(lastTimeAnTroi, timeAnTroi)) {
+            EffectSkillService.gI().removeAnTroi(this.player);
         }
         if (isStun && Util.canDoWithTime(lastTimeStartStun, timeStun)) {
             EffectSkillService.gI().removeStun(this.player);
