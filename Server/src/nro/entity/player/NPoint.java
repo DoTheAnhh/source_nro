@@ -3218,6 +3218,42 @@ if (hasFull5NhatAn()) {
         return tinhTiemNang(tiemNang, dieuKienTnHienTai());
     }
 
+    /**
+     * Như {@link #calSucManhTiemNang} nhưng <b>bỏ những thứ chỉ tăng tiềm năng
+     * cho đệ tử</b> — gốc cho phần sư phụ nhận khi đệ tử đánh.
+     *
+     * <p>Bùa x2 TNSM đệ tử, bùa đệ tử của Bà Hạt Mít, rồng xương cho đệ, dòng
+     * "% TNSM đệ tử" trên đồ sư phụ: mua cho đệ thì chỉ đệ hưởng. Trước đây
+     * phần sư phụ chia từ đúng con số đệ vừa nhận — tức là sư phụ ăn ké cả mấy
+     * món ấy.</p>
+     */
+    public long calSucManhTiemNangChoSuPhu(long tiemNang) {
+        if (player == null || player.zone == null) {
+            return 0;
+        }
+        if (player.zone.map.type == 3) {
+            return 0;
+        }
+        DieuKienTn dk = dieuKienTnHienTai();
+        boDoChiChoDeTu(dk);
+        return tinhTiemNang(tiemNang, dk);
+    }
+
+    /** Tắt mọi thứ chỉ tăng tiềm năng cho đệ tử trong một bộ điều kiện. */
+    public static void boDoChiChoDeTu(DieuKienTn dk) {
+        dk.spBuaTnsmDeTu = false;
+        dk.spBuaDeTu = false;
+        dk.spBuaDeTu2 = false;
+        dk.spBuaDeTu3 = false;
+        dk.spBuaDeTu4 = false;
+        dk.spBuaDeTu5 = false;
+        dk.spBuaDeTu7 = false;
+        dk.spBuaDeTu10 = false;
+        dk.spBuaDeTu20 = false;
+        dk.spRongXuong = false;
+        dk.spTlTnsmPet = 0;
+    }
+
       private int countItemsHaveAn(int optionId) {
     if (this.player == null
             || this.player.inventory == null

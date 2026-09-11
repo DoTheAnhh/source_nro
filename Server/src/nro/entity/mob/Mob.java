@@ -454,12 +454,27 @@ public class Mob {
                 plAtt.satellite.isDefend = false;
             }
             long tiemNang = getTiemNangForPlayer(plAtt, damage);
-            Service.gI().addSMTN(plAtt, (byte) 2, tiemNang, true);
+            if (plAtt.isDeTu) {
+                // Phan su phu tinh tu con so KHONG co bua / do chi cho de —
+                // xem NPoint.calSucManhTiemNangChoSuPhu.
+                Service.gI().addSMTN(plAtt, (byte) 2, tiemNang, true,
+                        getTiemNangForPlayer(plAtt, damage, true));
+            } else {
+                Service.gI().addSMTN(plAtt, (byte) 2, tiemNang, true);
+            }
             TrainningService.gI().tangTnsmLuyenTap(plAtt, tiemNang);
         }
     }
 
     public long getTiemNangForPlayer(Player pl, double dame) {
+        return getTiemNangForPlayer(pl, dame, false);
+    }
+
+    /**
+     * @param choSuPhu tinh phan SU PHU nhan khi de tu danh: bo bua / do chi
+     *                 tang tiem nang cho de
+     */
+    public long getTiemNangForPlayer(Player pl, double dame, boolean choSuPhu) {
         long startTotal = System.currentTimeMillis();
         long start;
 
@@ -498,7 +513,9 @@ public class Mob {
         }
 
         start = System.currentTimeMillis();
-        tiemNang = Util.CrisGH(pl.nPoint.calSucManhTiemNang(tiemNang));
+        tiemNang = Util.CrisGH(choSuPhu
+                ? pl.nPoint.calSucManhTiemNangChoSuPhu(tiemNang)
+                : pl.nPoint.calSucManhTiemNang(tiemNang));
 
         // He so tiem nang CHUNG cho moi ban do, chinh tren panel.
         //

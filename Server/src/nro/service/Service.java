@@ -1116,6 +1116,17 @@ public class Service {
     }
 
     public void addSMTN(Player player, byte type, long param, boolean isOri) {
+        addSMTN(player, type, param, isOri, param);
+    }
+
+    /**
+     * @param phanSuPhu khi {@code player} là đệ tử: gốc cho phần sư phụ nhận.
+     *                  Đánh quái thì đây là con số KHÔNG có bùa / đồ chỉ tăng cho
+     *                  đệ, để sư phụ không ăn ké — xem
+     *                  {@code NPoint.calSucManhTiemNangChoSuPhu}. Đường khác thì
+     *                  bằng đúng {@code param}.
+     */
+    public void addSMTN(Player player, byte type, long param, boolean isOri, long phanSuPhu) {
         long start = System.currentTimeMillis();
         if (player.isDeTu || player.isBo || player.isMe || player.isNguoiYeu || player.isConOne || player.isConTwo || player.isConThree) {
             if (player.nPoint.power > player.nPoint.getPowerLimit()) {
@@ -1125,7 +1136,7 @@ public class Service {
             player.nPoint.powerUp(Util.CrisGH(param));
             player.nPoint.tiemNangUp(Util.CrisGH(param));
             Player master = ((Detu) player).master;
-            param = master.nPoint.calSubTNSM(param);
+            param = master.nPoint.calSubTNSM(phanSuPhu);
             // He so rieng cho phan SU PHU nhan, dat theo nhom ban do tren panel.
             //
             // Hoi ban do cua NGUOI DANG DANH chu khong phai cua su phu: de tu
