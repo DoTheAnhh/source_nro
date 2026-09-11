@@ -1419,21 +1419,6 @@ public class SkillService {
             }
 
             // ========================================================
-            // 🔹 9. HIỂN THỊ HP LỚN HƠN GIỚI HẠN
-            // ========================================================
-            if (!plInjure.isDie() && plInjure.nPoint.hp > Integer.MAX_VALUE && Manager.readInt) {
-                try {
-                    msg = new Message(44);
-                    msg.writer().writeInt((int) plInjure.id);
-                    msg.writer().writeUTF("|2|HP " + "\b|7| " + Util.format(plInjure.nPoint.hp));
-                    Service.getInstance().sendMessAllPlayerInMap(plInjure, msg);
-                    msg.cleanup();
-                } catch (IOException e) {
-                    Logger.logException(Service.class, e);
-                }
-            }
-
-            // ========================================================
             // 🔹 10. TEST DAME MODE
             // ========================================================
             if (dameHit < Integer.MAX_VALUE && plInjure instanceof TestDame) {

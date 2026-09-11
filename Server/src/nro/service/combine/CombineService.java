@@ -691,7 +691,7 @@ public class CombineService {
             case LAM_PHEP_NHAP_DA:
                 return "Ta sẽ phù phép\ncho 10 mảnh đá vụn\ntrở thành 1 đá nâng cấp";
             case NANG_CAP_KICH_HOAT:
-                return "Ta sẽ phù phép\nchế tạo trang bị Huỷ Diệt\nthành trang bị Kích Hoạt";
+                return "Ta sẽ phù phép\n3 trang bị Huỷ Diệt\nthành 1 trang bị Kích Hoạt";
             case NANG_CAP_KICH_HOAT_VIP:
                 return "Ta sẽ phù phép\ntrang bị Hủy Diệt\nthành trang bị Kích Hoạt VIP";
             case GIA_HAN_VAT_PHAM:
@@ -768,7 +768,7 @@ public class CombineService {
             case LAM_PHEP_NHAP_DA:
                 return "Vào hành trang\nChọn 10 mảnh đá vụn và 1 bình nước phép\nSau đó chọn 'Làm phép'";
             case NANG_CAP_KICH_HOAT:
-                return "Vào hành trang\nChọn 1 trang bị Huỷ Diệt \nSau đó chọn 'Nâng cấp'";
+                return "Vào hành trang\nChọn 3 trang bị Huỷ Diệt\nSau đó chọn 'Nâng cấp'";
             case NANG_CAP_KICH_HOAT_VIP:
                 // 🔥 FIXED: chỉ cần 1 món Thiên Sứ
                 return "Vào hành trang\nChọn 3 trang bị Hủy Diệt\nSau đó chọn 'Nâng cấp' để chế tạo trang bị Kích Hoạt VIP";

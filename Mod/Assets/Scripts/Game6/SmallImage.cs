@@ -124,7 +124,7 @@ namespace Game6
     		sbyte[] array = Rms.loadRMS(mGraphics.zoomLevel + "Small" + id);
     		if (array != null)
     		{
-    			if (newSmallVersion != null && array.Length % 127 != newSmallVersion[id])
+    			if (newSmallVersion != null && id >= 0 && id < newSmallVersion.Length && array.Length % 127 != newSmallVersion[id])
     			{
     				flag = true;
     			}

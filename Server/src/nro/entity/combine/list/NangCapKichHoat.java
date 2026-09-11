@@ -17,7 +17,7 @@ import nro.service.item.ItemService;
 import nro.service.reward.RewardService;
 
 /**
- * Nâng một món Huỷ Diệt thành một món <b>đồ Set Kích Hoạt</b> ngẫu nhiên.
+ * Nâng <b>ba</b> món Huỷ Diệt thành một món <b>đồ Set Kích Hoạt</b> ngẫu nhiên.
  *
  * <h2>Ba thứ đều bốc, và đều lấy từ panel</h2>
  *
@@ -45,6 +45,9 @@ public class NangCapKichHoat {
 
     private static final int GOLD_REQUIRE = 2_000_000_000; // 2 tỉ vàng
 
+    /** Số món Huỷ Diệt phải bỏ vào cho một lần nâng. */
+    private static final int SO_HUY_DIET = 3;
+
     public static boolean isDoHuyDiet(Item item) {
         return item != null && item.isNotNullItem()
                 && item.template.id >= 650 && item.template.id <= 662;
@@ -56,13 +59,14 @@ public class NangCapKichHoat {
 
     public static void showInfoCombine(Player player) {
         if (player.combine == null || player.combine.itemsCombine == null
-                || player.combine.itemsCombine.size() != 1) {
-            Service.gI().sendThongBaoOK(player, "Cần 1 món trang bị Huỷ Diệt để nâng cấp!");
+                || player.combine.itemsCombine.size() != SO_HUY_DIET) {
+            Service.gI().sendThongBaoOK(player, "Cần đúng " + SO_HUY_DIET
+                    + " món trang bị Huỷ Diệt để nâng cấp!");
             return;
         }
-        Item huyDiet = player.combine.itemsCombine.get(0);
-        if (!isDoHuyDiet(huyDiet)) {
-            Service.gI().sendThongBaoOK(player, "Vật phẩm không hợp lệ, cần Huỷ Diệt!");
+        if (!duHuyDiet(player.combine.itemsCombine)) {
+            Service.gI().sendThongBaoOK(player, "Cả " + SO_HUY_DIET
+                    + " món đều phải là trang bị Huỷ Diệt!");
             return;
         }
         if (InventoryService.gI().getCountEmptyBag(player) == 0) {
@@ -87,6 +91,7 @@ public class NangCapKichHoat {
         t.append("Nâng Huỷ Diệt thành đồ Set Kích Hoạt\n");
         t.append("Hành tinh: ").append(tenHanhTinh(player.gender)).append("\n");
         t.append("Ô trang bị, bậc đồ và set đều NGẪU NHIÊN\n");
+        t.append("Tiêu hao ").append(SO_HUY_DIET).append(" món Huỷ Diệt\n");
         t.append("Cần ").append(Util.soCham(GOLD_REQUIRE)).append(" vàng\n");
         t.append("Cơ hội ra từng bậc:\n");
         for (int b = TiLeKichHoatDAO.SO_BAC - 1; b >= 0; b--) {
@@ -108,15 +113,17 @@ public class NangCapKichHoat {
     // =====================================================================
 
     public static void startCombine(Player player) {
-        if (player.combine == null || player.combine.itemsCombine.size() != 1) {
-            Service.gI().sendThongBao(player, "Cần 1 Huỷ Diệt để nâng cấp");
+        if (player.combine == null || player.combine.itemsCombine == null
+                || player.combine.itemsCombine.size() != SO_HUY_DIET) {
+            Service.gI().sendThongBao(player, "Cần " + SO_HUY_DIET + " Huỷ Diệt để nâng cấp");
             return;
         }
-        Item huyDiet = player.combine.itemsCombine.get(0);
-        if (!isDoHuyDiet(huyDiet)) {
-            Service.gI().sendThongBao(player, "Đây không phải là trang bị Huỷ Diệt!");
+        if (!duHuyDiet(player.combine.itemsCombine)) {
+            Service.gI().sendThongBao(player, "Cả " + SO_HUY_DIET
+                    + " món đều phải là trang bị Huỷ Diệt!");
             return;
         }
+        List<Item> huyDiet = new ArrayList<>(player.combine.itemsCombine);
         if (InventoryService.gI().getCountEmptyBag(player) == 0) {
             Service.gI().sendThongBao(player, "Cần 1 ô trống trong hành trang.");
             return;
@@ -161,8 +168,21 @@ public class NangCapKichHoat {
         // SetClothes nhan dien set bang OPTION tren mon do, nen gan thieu mot
         // option la mon do khong tinh vao set nao.
         SetBonusDAO.DinhNghia set = setDuoc.get(Util.nextInt(setDuoc.size()));
+        // Gan option nhan dien KEM cac dong chi so set (moc 2/4/5 mon...) ma
+        // admin viet tren tab Set kich hoat — y nhu do set roi tu quai. Ban cu
+        // chi gan option nhan dien nen mon do chi hien "Set X 1", khong co
+        // dong chi so nao.
+        int[] opSet = SetBonusDAO.optionCuaSet(set.setKey);
+        if (opSet == null) {
+            List<Integer> nhanDien = tachOption(set.optionIds);
+            int[] mang = new int[nhanDien.size()];
+            for (int i = 0; i < mang.length; i++) {
+                mang[i] = nhanDien.get(i);
+            }
+            opSet = SetBonusDAO.kemMoTa(mang);
+        }
         int daGan = 0;
-        for (int optId : tachOption(set.optionIds)) {
+        for (int optId : opSet) {
             moi.itemOptions.add(new ItemOption(optId, 0));
             daGan++;
         }
@@ -176,7 +196,9 @@ public class NangCapKichHoat {
         }
         moi.itemOptions.add(new ItemOption(30, 0));   // khoá
 
-        InventoryService.gI().subQuantityItemsBag(player, huyDiet, 1);
+        for (Item hd : huyDiet) {
+            InventoryService.gI().subQuantityItemsBag(player, hd, 1);
+        }
         InventoryService.gI().addItemBag(player, moi);
         InventoryService.gI().sendItemBag(player);
         CombineService.gI().sendEffectSuccessCombine(player);
@@ -210,6 +232,24 @@ public class NangCapKichHoat {
         // ngan hon day ao quan.
         int i = Math.min(Math.max(bac, 0), day.length - 1);
         return day[i];
+    }
+
+    /**
+     * Đủ {@link #SO_HUY_DIET} món Huỷ Diệt, <b>khác nhau</b> — một món bỏ vào hai
+     * lần không tính là hai.
+     */
+    private static boolean duHuyDiet(List<Item> ds) {
+        if (ds == null || ds.size() != SO_HUY_DIET) {
+            return false;
+        }
+        java.util.Set<Item> khac = java.util.Collections.newSetFromMap(
+                new java.util.IdentityHashMap<>());
+        for (Item it : ds) {
+            if (!isDoHuyDiet(it) || !khac.add(it)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** Tên hành tinh, đúng cách viết mà {@code SetBonusDAO} dùng. */

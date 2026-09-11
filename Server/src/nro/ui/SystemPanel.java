@@ -490,7 +490,8 @@ public class SystemPanel extends JPanel {
         {"Quãng chờ",
             ConfigDAO.DOI_KHU_GIAY, ConfigDAO.GIAO_DICH_CHO_GIAY},
         {"Quái Yardrat",
-            ConfigDAO.YARDRAT_TRAN_SAT_THUONG, ConfigDAO.YARDRAT_HOI_SINH_GIAY},
+            ConfigDAO.YARDRAT_TRAN_SAT_THUONG, ConfigDAO.YARDRAT_HOI_SINH_GIAY,
+            ConfigDAO.YARDRAT_BI_KIEP_DOI},
         {"Nhật ký và hiển thị",
             ConfigDAO.GHI_LICH_SU_VP, ConfigDAO.GIU_LICH_SU_VP_NGAY,
             ConfigDAO.GIU_LICH_SU_GD_NGAY, ConfigDAO.HIEN_TEN_MAP}

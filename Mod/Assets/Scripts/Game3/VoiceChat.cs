@@ -564,7 +564,7 @@ namespace Game3
         {
             int tong = clip.samples;
             tu = ((tu % tong) + tong) % tong;
-            int dau = Math.Min(soMau, tong - tu);
+            int dau = System.Math.Min(soMau, tong - tu);
             if (dau == soMau && soMau == data.Length)
             {
                 clip.SetData(data, tu);

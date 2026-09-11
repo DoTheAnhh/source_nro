@@ -59,16 +59,12 @@ public abstract class Yardart extends Boss {
     protected int timeHoiHP;
     protected int rewardRatio;
 
-    /** Hồi chiêu dịch chuyển tức thời, mili giây. */
-    private static final long HOI_DICH_CHUYEN_MS = 10_000;
-
-    /** Tầm của cú đấm — gần hơn thế mới đấm, xa hơn thì đi tới hoặc dịch chuyển. */
+    /** Tầm của cú đấm — gần hơn thế mới đấm, xa hơn thì đi bộ tới — không dịch chuyển tức thời. */
     private static final int TAM_DAM = 60;
 
     /** Xa quá tầm này thì không đuổi theo nữa, quay về tuần tra. */
     private static final int TAM_DUOI = 400;
 
-    private long lastTimeDichChuyen;
     private long lastTimeDam;
 
     public Yardart(BossType DoTheAnh, int id, BossData... data) throws Exception {
@@ -201,7 +197,7 @@ public abstract class Yardart extends Boss {
     }
 
     // =====================================================================
-    //  Đánh nhau: chỉ đấm và dịch chuyển tức thời
+    //  Đánh nhau: chỉ đấm, không dịch chuyển tức thời
     // =====================================================================
 
     @Override
@@ -234,8 +230,8 @@ public abstract class Yardart extends Boss {
      * đúng yêu cầu "chỉ đấm và dịch chuyển" — là hai vòng ấy quay vô tận, và vì
      * mọi boss chung một luồng cập nhật, cả máy chủ đứng hình mọi boss.</p>
      *
-     * <p>Nay chọn chiêu theo khoảng cách, không bốc gì cả: xa mà dịch chuyển đã
-     * hồi thì dịch chuyển tới, trong tầm đấm thì đấm, còn lại thì đi tới.</p>
+     * <p>Nay chọn chiêu theo khoảng cách, không bốc gì cả: trong tầm đấm thì đấm,
+     * còn lại thì đi bộ tới. Không dịch chuyển tức thời.</p>
      */
     @Override
     public void attack() {
@@ -260,17 +256,6 @@ public abstract class Yardart extends Boss {
     private void danh(Player pl) {
         long bayGio = System.currentTimeMillis();
         int kc = Util.getDistance(this, pl);
-
-        Skill dichChuyen = getSkillById(Skill.DICH_CHUYEN_TUC_THOI);
-        if (dichChuyen != null && kc > TAM_DAM
-                && Util.canDoWithTime(this.lastTimeDichChuyen, HOI_DICH_CHUYEN_MS)) {
-            this.playerSkill.skillSelect = dichChuyen;
-            this.nPoint.dame = (int) ((long) pl.nPoint.hpMax * Util.nextInt(5, 10) / 100);
-            SkillService.gI().useSkill(this, pl, null, -1, null);
-            this.lastTimeDichChuyen = bayGio;
-            checkPlayerDie(pl);
-            return;
-        }
 
         if (kc > TAM_DAM) {
             moveToPlayer(pl);

@@ -1025,7 +1025,11 @@ public class NpcFactory {
             @Override
             public void openBaseMenu(Player player) {
                 if (canOpenNpc(player)) {
-                    this.createOtherMenu(player, ConstNpc.BASE_MENU, "Hãy cố gắng luyện tập\nThu thập 9.999 bí kiếp để đổi trang phục Yardrat nhé!",
+                    this.createOtherMenu(player, ConstNpc.BASE_MENU, "Hãy cố gắng luyện tập\nThu thập "
+                            + nro.core.util.Util.soCham(soBiKiepDoi())
+                            + " bí kiếp để đổi trang phục Yardrat nhé!\nBạn đang có "
+                            + nro.core.util.Util.soCham(InventoryService.gI().demTongTrongTui(player, 590))
+                            + " bí kiếp.",
                             "Nhận\nthưởng", "OK");
                 }
             }
@@ -1038,8 +1042,11 @@ public class NpcFactory {
                         // dong "So luong #" lan o giu o quantity. Ban cu chi doc
                         // dong 31 cua O DAU TIEN nen co khi du ma van bao thieu.
                         int soluong = InventoryService.gI().demTongTrongTui(player, 590);
-                        if (soluong >= 9999) {
-                            InventoryService.gI().truTongTrongTui(player, 590, 9999);
+                        int can = soBiKiepDoi();
+                        if (soluong >= can && InventoryService.gI().getCountEmptyBag(player) == 0) {
+                            Service.gI().sendThongBao(player, "Cần 1 ô trống trong hành trang");
+                        } else if (soluong >= can) {
+                            InventoryService.gI().truTongTrongTui(player, 590, can);
                             Item yardart = ItemService.gI().createNewItem((short) (player.gender + 592));
                             yardart.itemOptions.add(new ItemOption(47, 400));
                             yardart.itemOptions.add(new ItemOption(97, 10));
@@ -1050,10 +1057,19 @@ public class NpcFactory {
                             InventoryService.gI().sendItemBag(player);
                             Service.gI().sendThongBao(player, "Bạn nhận được võ phục của người Yardrat");
                         } else {
-                            Service.gI().sendThongBao(player, "Bạn không đủ 9.999 bí kiếp!");
+                            Service.gI().sendThongBao(player, "Bạn không đủ "
+                                    + nro.core.util.Util.soCham(can) + " bí kiếp (đang có "
+                                    + nro.core.util.Util.soCham(soluong) + ")!");
                         }
                     }
                 }
+            }
+
+            /** Số bí kiếp đổi một bộ — quy ước "yardrat_bi_kiep_doi" trên panel. */
+            private int soBiKiepDoi() {
+                return (int) Math.max(1L, Math.min(Integer.MAX_VALUE,
+                        nro.repository.dao.ConfigDAO.num(
+                                nro.repository.dao.ConfigDAO.YARDRAT_BI_KIEP_DOI, 999L)));
             }
         };
     }

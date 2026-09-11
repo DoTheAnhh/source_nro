@@ -5662,9 +5662,10 @@ namespace Game2
                                     sbyte[] array = Rms.loadRMS(mGraphics.zoomLevel + "bgItem" + bgItem.idImage);
                                     if (array != null)
                                     {
-                                        if (BgItem.newSmallVersion != null)
+                                        // Bang phien ban may chu gui co the ngan hon id anh: vuot bang thi coi nhu
+                                        // chua biet phien ban, dung ban da luu. Doc vuot bang la nem loi giua luc nap map.
+                                        if (BgItem.newSmallVersion != null && bgItem.idImage >= 0 && bgItem.idImage < BgItem.newSmallVersion.Length)
                                         {
-                                            Res.outz("Small  last= " + array.Length % 127 + "new Version= " + BgItem.newSmallVersion[bgItem.idImage]);
                                             if (array.Length % 127 != BgItem.newSmallVersion[bgItem.idImage])
                                             {
                                                 flag2 = true;

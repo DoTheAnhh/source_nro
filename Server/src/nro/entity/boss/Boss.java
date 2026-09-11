@@ -933,6 +933,17 @@ public class Boss extends Player implements IBoss {
         if (nextLevel >= this.data.length) {
             nextLevel = 0;
         }
+        // Dang NGHI ma cap ke tiep lai la "cap sau" (ANOTHER_LEVEL): chuoi cap
+        // da dut giua chung. Cap sau chi len khi cap truoc CHET TREN BAN DO
+        // (leaveMap -> RESPAWN), khong bao gio qua REST. Con boss ma ve REST o
+        // cap giua — tu rut vi khong ai san (checkAutoResetBySecondsRest), hoac
+        // vao map loi — thi dieu kien DEFAULT_APPEAR ben duoi sai mai mai: nam
+        // im vinh vien. Da gap: Xen bo hung o thi tran Ginger het gio van khong
+        // len. Nay quay ve cap mot.
+        if (this.data[nextLevel].getTypeAppear() == TypeAppear.ANOTHER_LEVEL) {
+            this.currentLevel = this.data.length - 1;
+            nextLevel = 0;
+        }
         if (this.data[nextLevel].getTypeAppear() == TypeAppear.DEFAULT_APPEAR
                 && nro.service.boss.NhomBossService.gI()
                         .denLuotHoiSinh(this, lastTimeRest, secondsRest)) {
@@ -952,6 +963,11 @@ public void respawn() {
         this.currentLevel = 0;
     }
     this.secondsRest = this.data[this.currentLevel].getSecondsRest();
+    // Cap sau (ANOTHER_LEVEL) thuong khong khai giay nghi -> 0: chet o cap cuoi
+    // la len lai ngay, panel dem 0. Lay giay nghi cua cap mot.
+    if (this.secondsRest <= 0 && this.currentLevel > 0) {
+        this.secondsRest = this.data[0].getSecondsRest();
+    }
 
     // Vao doi moi thi sach hieu ung cua doi cu.
     //
