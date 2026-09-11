@@ -60,6 +60,9 @@ namespace Game3
     	public static int tileID;
     
     	public static int lastTileID = -1;
+
+    	/// <summary>Bộ ô đang nằm trong imgTile là của tileID nào; -1 là chưa nạp được.</summary>
+    	private static int daNapTileID = -1;
     
     	public static int[] maps;
     
@@ -432,6 +435,7 @@ namespace Game3
     	/// </remarks>
     	public static void getTile()
     	{
+    		daNapTileID = -1;
     		if (mGraphics.zoomLevel == 1)
     		{
     			if (imgTile != null)
@@ -447,11 +451,21 @@ namespace Game3
     				mSystem.gcc();
     			}
     			imgTile = new Image[100];
+    			bool coAnh = false;
     			string empty = string.Empty;
     			for (int k = 0; k < imgTile.Length; k++)
     			{
     				empty = ((k >= 9) ? ("/t/" + tileID + "/t_" + (k + 1)) : ("/t/" + tileID + "/t_0" + (k + 1)));
     				imgTile[k] = GameCanvas.loadImage(empty);
+    				coAnh |= imgTile[k] != null;
+    			}
+    			if (coAnh)
+    			{
+    				daNapTileID = tileID;
+    			}
+    			else
+    			{
+    				imgTile = null;
     			}
     			return;
     		}
@@ -464,19 +478,89 @@ namespace Game3
     			{
     				imgTile[l] = GameCanvas.loadImageRMS("/t/" + tileID + "$" + (l + 1) + ".png");
     			}
+    			daNapTileID = tileID;
+    			return;
     		}
-    		else
+    		image = GameCanvas.loadImageRMS("/t/" + tileID + ".png");
+    		if (image != null)
     		{
-    			image = GameCanvas.loadImageRMS("/t/" + tileID + ".png");
-    			if (image != null)
+    			Rms.DeleteStorage("$");
+    			imgTile = new Image[1];
+    			imgTile[0] = image;
+    			daNapTileID = tileID;
+    			return;
+    		}
+    		// Ban phong to nay chi co bo o trong du lieu TAI VE — trong tai nguyen
+    		// cua du an chi co ban x1. May chua tai bo o cua hanh tinh nay thi lay
+    		// ban x1 phong to len, con hon ve ban do moi bang bo o cua ban do cu.
+    		if (napOTuBanX1())
+    		{
+    			daNapTileID = tileID;
+    			return;
+    		}
+    		// Khong co o dau ca: bo han bo o cu. Ban cu de nguyen — ban do moi ve
+    		// bang bo o cua hanh tinh truoc, dung canh "dung capsule xong map vo".
+    		imgTile = null;
+    	}
+
+    	/// <summary>Nạp bộ ô bản x1 trong tài nguyên rồi phóng to theo mức phóng hiện tại.</summary>
+    	private static bool napOTuBanX1()
+    	{
+    		try
+    		{
+    			Image[] moi = new Image[100];
+    			bool coAnh = false;
+    			for (int k = 0; k < moi.Length; k++)
     			{
-    				Rms.DeleteStorage("$");
-    				imgTile = new Image[1];
-    				imgTile[0] = image;
+    				string duong = Main.res + "/x1/t/" + tileID + ((k >= 9) ? "/t_" : "/t_0") + (k + 1);
+    				UnityEngine.Texture2D anhGoc = UnityEngine.Resources.Load(duong) as UnityEngine.Texture2D;
+    				if (anhGoc == null)
+    				{
+    					continue;
+    				}
+    				moi[k] = phongTo(anhGoc, mGraphics.zoomLevel);
+    				coAnh |= moi[k] != null;
     			}
+    			if (!coAnh)
+    			{
+    				return false;
+    			}
+    			imgTile = moi;
+    			return true;
+    		}
+    		catch (Exception ex)
+    		{
+    			Cout.LogError("Khong phong to duoc bo o x1: " + ex.Message);
+    			return false;
     		}
     	}
-    
+
+    	/// <summary>Phóng to một ảnh lên <paramref name="k"/> lần, giữ nét điểm ảnh.</summary>
+    	private static Image phongTo(UnityEngine.Texture2D anhGoc, int k)
+    	{
+    		int w = anhGoc.width * k;
+    		int h = anhGoc.height * k;
+    		UnityEngine.RenderTexture rt = UnityEngine.RenderTexture.GetTemporary(w, h, 0, UnityEngine.RenderTextureFormat.ARGB32);
+    		rt.filterMode = UnityEngine.FilterMode.Point;
+    		UnityEngine.FilterMode locCu = anhGoc.filterMode;
+    		anhGoc.filterMode = UnityEngine.FilterMode.Point;
+    		UnityEngine.RenderTexture truoc = UnityEngine.RenderTexture.active;
+    		UnityEngine.Graphics.Blit(anhGoc, rt);
+    		UnityEngine.RenderTexture.active = rt;
+    		UnityEngine.Texture2D t = new UnityEngine.Texture2D(w, h, UnityEngine.TextureFormat.ARGB32, false);
+    		t.ReadPixels(new UnityEngine.Rect(0, 0, w, h), 0, 0);
+    		t.Apply();
+    		UnityEngine.RenderTexture.active = truoc;
+    		UnityEngine.RenderTexture.ReleaseTemporary(rt);
+    		anhGoc.filterMode = locCu;
+    		Image anh = Image.createImage(w, h);
+    		anh.texture = t;
+    		anh.w = w;
+    		anh.h = h;
+    		Image.setTextureQuality(anh);
+    		return anh;
+    	}
+
     	public static void paintTile(mGraphics g, int frame, int indexX, int indexY)
         {
             if (ListChars.getInstance().HideMap) return;
@@ -830,10 +914,12 @@ namespace Game3
     
     	public static void loadMainTile()
     	{
-    		if (lastTileID != tileID)
-    		{
+    		if (lastTileID != tileID || imgTile == null)
+    		{
     			getTile();
-    			lastTileID = tileID;
+    			// Chi nho "da nap" khi nap duoc that. Ban cu nho ca khi khong co
+    			// tep nao, nen lan sau khong thu lai va bo o cu nam lai mai.
+    			lastTileID = (daNapTileID == tileID) ? tileID : -1;
     		}
     	}
     }

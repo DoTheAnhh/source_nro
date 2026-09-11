@@ -38,6 +38,13 @@ namespace Game6
 
         private int zoneIdCho;
 
+        // So goi mau ban do con phai BO khi toi.
+        //
+        // May chu tra mau dung thu tu xin. Mot goi -24 moi toi trong luc goi
+        // cu con cho mau thi goi cu bi bo — nhung mau cua no van se toi, va
+        // phai bo theo, khong thi no ghi de dia hinh cua ban do dang hien.
+        private int mauCanBo;
+
         /// <summary>
         /// Ap dinh danh ban do dang cho sang TileMap.
         ///
@@ -4006,6 +4013,13 @@ namespace Game6
                         // doi bang do hay doi khu khong — xem ChatUI.doiChoDung.
                         int mapCu = TileMap.mapID;
                         int khuCu = TileMap.zoneID;
+                        // Goi -24 moi toi khi goi cu con dang cho mau: bo goi cu, va
+                        // nho bo luon mau cua no khi toi — ban do moi hon luon thang.
+                        if (messWait != null)
+                        {
+                            messWait = null;
+                            mauCanBo++;
+                        }
                         mapIdCho = msg.reader().readUnsignedByte();
                         planetIdCho = msg.reader().readByte();
                         tileIdCho = msg.reader().readByte();
@@ -5965,33 +5979,62 @@ namespace Game6
                         createItemNew(msg.reader());
                         break;
                     case 10:
+                        // Doc mau vao bien tam truoc, CHUA dung vao TileMap.
+                        int tmwMau = 0;
+                        int tmhMau = 0;
+                        int[] mapsMau = null;
                         try
                         {
-                            Char.isLoadingMap = true;
                             Res.outz("REQUEST MAP TEMPLATE");
-                            GameCanvas.isLoading = true;
-                            TileMap.maps = null;
-                            TileMap.types = null;
-                            mSystem.gcc();
                             GameCanvas.debug("SA99", 2);
-                            TileMap.tmw = msg.reader().readByte();
-                            TileMap.tmh = msg.reader().readByte();
-                            TileMap.maps = new int[TileMap.tmw * TileMap.tmh];
-                            Res.err("   M apsize= " + TileMap.tmw * TileMap.tmh);
-                            for (int i = 0; i < TileMap.maps.Length; i++)
+                            tmwMau = msg.reader().readByte();
+                            tmhMau = msg.reader().readByte();
+                            mapsMau = new int[tmwMau * tmhMau];
+                            Res.err("   M apsize= " + tmwMau * tmhMau);
+                            for (int i = 0; i < mapsMau.Length; i++)
                             {
                                 int num = msg.reader().readByte();
                                 if (num < 0)
                                 {
                                     num += 256;
                                 }
-                                TileMap.maps[i] = (ushort)num;
+                                mapsMau[i] = (ushort)num;
                             }
-                            TileMap.types = new int[TileMap.maps.Length];
                         }
                         catch (Exception ex2)
                         {
+                            mapsMau = null;
                             Res.err("2 LOI TAI CASE REQUEST_MAPTEMPLATE " + ex2.ToString());
+                        }
+
+                        // Mau cua mot luot doi ban do DA BI THAY (co goi -24 moi hon
+                        // toi trong luc cho), hoac khong con goi -24 nao dang cho:
+                        // BO, khong dung vao ban do dang hien.
+                        //
+                        // Ban cu ghi thang vao TileMap.maps ngay dau nhanh nay. Mau cu
+                        // toi sau ban do moi la ban do dang dung bi thay dia hinh cua
+                        // ban do khac — dung canh "dung capsule xong map vo": ten ban
+                        // do moi, nen moi, ma dia hinh xep lung tung.
+                        if (mauCanBo > 0 || messWait == null)
+                        {
+                            if (mauCanBo > 0)
+                            {
+                                mauCanBo--;
+                            }
+                            Res.err("REQUEST_MAPTEMPLATE: bo mau cua luot doi ban do cu");
+                            break;
+                        }
+                        Char.isLoadingMap = true;
+                        GameCanvas.isLoading = true;
+                        if (mapsMau != null)
+                        {
+                            TileMap.maps = null;
+                            TileMap.types = null;
+                            mSystem.gcc();
+                            TileMap.tmw = tmwMau;
+                            TileMap.tmh = tmhMau;
+                            TileMap.maps = mapsMau;
+                            TileMap.types = new int[mapsMau.Length];
                         }
 
                         // Áp gói -24 đang chờ, rồi DÙ THẾ NÀO cũng phải vào màn.
