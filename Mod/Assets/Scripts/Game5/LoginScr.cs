@@ -819,6 +819,9 @@ namespace Game5
     			tfPass.y = yLog + 55;
     			tfUser.paint(g);
     			tfPass.paint(g);
+    			// TField.paint de lai vung cat (clip) dung bang khung chu cua o mat
+    			// khau — khong mo lai thi nut an / hien va nut Doi M.khau bi cat mat.
+    			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
     			if (!isRes)
     			{
     				veNutMatKhau(g);

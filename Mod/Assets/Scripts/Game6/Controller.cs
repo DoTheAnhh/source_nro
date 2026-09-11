@@ -4057,7 +4057,7 @@ namespace Game6
                         GameScr.cmx = GameScr.cmtoX;
                         GameScr.cmy = GameScr.cmtoY;
                         GameCanvas.isRequestMapID = 2;
-                        GameCanvas.waitingTimeChangeMap = mSystem.currentTimeMillis() + 1000;
+                        GameCanvas.waitingTimeChangeMap = mSystem.currentTimeMillis() + 150;
                         break;
                     case -31:
                         {
@@ -5363,12 +5363,39 @@ namespace Game6
             Hint.clickNpc();
             GameCanvas.debug("SA75x9", 2);
             GameCanvas.isRequestMapID = 2;
-            GameCanvas.waitingTimeChangeMap = mSystem.currentTimeMillis() + 1000;
+            GameCanvas.waitingTimeChangeMap = mSystem.currentTimeMillis() + 150;
             Res.outz("[CONTROLLER] loadMap DONE!!!!!!!!!");
         }
     
+        /// <summary>
+        /// Ghi một lỗi nạp bản đồ ra log Unity và tệp <c>loi_nap_map.txt</c> trong
+        /// thư mục dữ liệu của game — luôn ghi, không phụ thuộc chế độ thử.
+        /// </summary>
+        public static void ghiLoiNapMap(string buoc, Exception ex)
+        {
+            string dong = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " map " + TileMap.mapID
+                    + " [" + buoc + "] " + (ex == null ? "?" : ex.GetType().Name + ": " + ex.Message
+                    + "\n" + ex.StackTrace) + "\n";
+            try
+            {
+                UnityEngine.Debug.LogError("[NapMap] " + dong);
+            }
+            catch (Exception)
+            {
+            }
+            try
+            {
+                System.IO.File.AppendAllText(System.IO.Path.Combine(
+                        UnityEngine.Application.persistentDataPath, "loi_nap_map.txt"), dong);
+            }
+            catch (Exception)
+            {
+            }
+        }
+
         public void loadInfoMap(Message msg)
         {
+            bool daGoiLoadCurrMap = false;
             try
             {
                 if (mGraphics.zoomLevel == 1)
@@ -5410,10 +5437,29 @@ namespace Game6
                 Mob.newMob.removeAllElements();
                 for (sbyte b = 0; b < num; b++)
                 {
-                    Mob mob = new Mob(b, msg.reader().readBoolean(), msg.reader().readBoolean(), msg.reader().readBoolean(), msg.reader().readBoolean(), msg.reader().readBoolean(), msg.reader().readByte(), msg.reader().readByte(), msg.reader().readInt(), msg.reader().readByte(), msg.reader().readInt(), msg.reader().readShort(), msg.reader().readShort(), msg.reader().readByte(), msg.reader().readByte());
+                    // Doc HET cac truong cua con quai truoc roi moi dung doi tuong:
+                    // dung loi giua chung la cac byte sau bi doc lech, hong ca goi.
+                    bool mqTat = msg.reader().readBoolean();
+                    bool mqDungYen = msg.reader().readBoolean();
+                    bool mqLua = msg.reader().readBoolean();
+                    bool mqBang = msg.reader().readBoolean();
+                    bool mqGio = msg.reader().readBoolean();
+                    sbyte mqMau = msg.reader().readByte();
+                    sbyte mqHe = msg.reader().readByte();
+                    int mqHp = msg.reader().readInt();
+                    sbyte mqCap = msg.reader().readByte();
+                    int mqHpMax = msg.reader().readInt();
+                    short mqX = msg.reader().readShort();
+                    short mqY = msg.reader().readShort();
+                    sbyte mqTrangThai = msg.reader().readByte();
+                    sbyte mqCapBoss = msg.reader().readByte();
+                    bool mqLaBoss = msg.reader().readBoolean();
+                    try
+                    {
+                    Mob mob = new Mob(b, mqTat, mqDungYen, mqLua, mqBang, mqGio, mqMau, mqHe, mqHp, mqCap, mqHpMax, mqX, mqY, mqTrangThai, mqCapBoss);
                     mob.xSd = mob.x;
                     mob.ySd = mob.y;
-                    mob.isBoss = msg.reader().readBoolean();
+                    mob.isBoss = mqLaBoss;
                     if (mob.coMauQuai() && Mob.arrMobTemplate[mob.templateId].type != 0)
                     {
                         if (b % 3 == 0)
@@ -5467,6 +5513,11 @@ namespace Game6
                     {
                         GameScr.vMob.addElement(mob);
                     }
+                    }
+                    catch (Exception exQuai)
+                    {
+                        ghiLoiNapMap("quai mau " + mqMau, exQuai);
+                    }
                 }
                 if (Char.myCharz().mobMe != null && GameScr.findMobInMap(Char.myCharz().mobMe.mobId) == null)
                 {
@@ -5489,6 +5540,8 @@ namespace Game6
                     short num2 = msg.reader().readShort();
                     sbyte b4 = msg.reader().readByte();
                     short num3 = msg.reader().readShort();
+                    try
+                    {
                     if (b4 != 6 && ((Char.myCharz().taskMaint.taskId >= 7 && (Char.myCharz().taskMaint.taskId != 7 || Char.myCharz().taskMaint.index > 1)) || (b4 != 7 && b4 != 8 && b4 != 9)) && (Char.myCharz().taskMaint.taskId >= 6 || b4 != 16))
                     {
                         if (b4 == 4)
@@ -5502,6 +5555,11 @@ namespace Game6
                             Npc o = new Npc(j, b3, cx, num2 + 3, b4, num3);
                             GameScr.vNpc.addElement(o);
                         }
+                    }
+                    }
+                    catch (Exception exPt)
+                    {
+                        ghiLoiNapMap("npc mau " + b4, exPt);
                     }
                 }
                 GameCanvas.debug("SA75x7", 2);
@@ -5521,6 +5579,8 @@ namespace Game6
                     {
                         r = msg.reader().readShort();
                     }
+                    try
+                    {
                     ItemMap itemMap = new ItemMap(num5, itemMapID, num4, x, y, r);
                     bool flag = false;
                     for (int l = 0; l < GameScr.vItemMap.size(); l++)
@@ -5535,6 +5595,11 @@ namespace Game6
                     if (!flag)
                     {
                         GameScr.vItemMap.addElement(itemMap);
+                    }
+                    }
+                    catch (Exception exPt)
+                    {
+                        ghiLoiNapMap("vat pham " + num4, exPt);
                     }
                     empty = empty + num4 + ",";
                 }
@@ -5554,6 +5619,8 @@ namespace Game6
                         short num7 = msg.reader().readShort();
                         short num8 = msg.reader().readShort();
                         short num9 = msg.reader().readShort();
+                        try
+                        {
                         if (TileMap.getBIById(num7) != null)
                         {
                             BgItem bIById = TileMap.getBIById(num7);
@@ -5637,6 +5704,11 @@ namespace Game6
                             bgItem.changeColor();
                             TileMap.vCurrItem.addElement(bgItem);
                         }
+                        }
+                        catch (Exception exPt)
+                        {
+                            ghiLoiNapMap("do nen " + num7, exPt);
+                        }
                         empty = empty + num7 + ",";
                     }
                     Res.err("item High Graphics: " + empty);
@@ -5668,7 +5740,14 @@ namespace Game6
                     {
                         string key = msg.reader().readUTF();
                         string value = msg.reader().readUTF();
-                        keyValueAction(key, value);
+                        try
+                        {
+                            keyValueAction(key, value);
+                        }
+                        catch (Exception exKv)
+                        {
+                            ghiLoiNapMap("khoa " + key, exKv);
+                        }
                     }
                 }
                 else
@@ -5689,14 +5768,49 @@ namespace Game6
                 }
                 TileMap.bgType = msg.reader().readByte();
                 sbyte teleport = msg.reader().readByte();
+                daGoiLoadCurrMap = true;
                 loadCurrMap(teleport);
                 GameCanvas.debug("SA75x8", 2);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Res.err(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Loadmap khong thanh cong");
-                GameCanvas.instance.doResetToLoginScr(GameCanvas.serverScreen);
-                ServerListScreen.waitToLogin = true;
+                // KHONG da ve dang nhap nua. Ban cu goi doResetToLoginScr: xoa
+                // nhan vat (HP 0/0), xoa quai va nguoi, DONG KET NOI — ma man hinh
+                // van dung o ban do voi dia hinh da nap. Do chinh la "dung map".
+                //
+                // Nay ghi loi lai roi van dung xong ban do: nen, camera, bao may
+                // chu da nap xong (-39) de no gui nguoi va quai xung quanh.
+                ghiLoiNapMap("loadInfoMap", ex);
+                if (!daGoiLoadCurrMap)
+                {
+                    try
+                    {
+                        loadCurrMap(0);
+                    }
+                    catch (Exception ex2)
+                    {
+                        ghiLoiNapMap("loadCurrMap du phong", ex2);
+                    }
+                }
+                else
+                {
+                    // Loi nam trong chinh loadCurrMap: lam not hai viec cuoi cua no.
+                    try
+                    {
+                        GameCanvas.loadBG(TileMap.bgID);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                    try
+                    {
+                        GameScr.gI().switchToMe();
+                    }
+                    catch (Exception ex3)
+                    {
+                        ghiLoiNapMap("switchToMe du phong", ex3);
+                    }
+                }
                 GameCanvas.endDlg();
             }
             GameCanvas.isLoading = false;
