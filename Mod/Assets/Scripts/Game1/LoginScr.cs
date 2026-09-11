@@ -1061,7 +1061,7 @@ namespace Game1
     			actRegisterLeft();
     			break;
     		case 1003:
-    			GameCanvas.startOKDlg(mResources.goToWebForPassword);
+    			GameCanvas.startOKDlg("Hỏi admin đi cu !");
     			break;
     		case 1005:
     			try

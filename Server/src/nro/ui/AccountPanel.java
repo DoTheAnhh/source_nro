@@ -22,7 +22,8 @@ import nro.server.Client;
 import nro.server.ServerManager;
 
 /**
- * Tab <b>Quản Lý Tài Khoản</b> — xem, xoá một tài khoản, hoặc xoá sạch.
+ * Tab <b>Quản Lý Tài Khoản</b> — xem, sửa (cả mật khẩu), xoá một tài khoản,
+ * hoặc xoá sạch.
  *
  * <p>Khác tab Quản Lý Người Chơi: bên kia làm việc với <b>nhân vật</b>
  * ({@code player}), tab này với <b>tài khoản</b> ({@code account}). Một tài
@@ -42,13 +43,20 @@ public class AccountPanel extends JPanel {
     private static final Color DO_DAM = new Color(150, 30, 30);
 
     private final DefaultTableModel model = new DefaultTableModel(
-            new Object[]{"ID", "Tên đăng nhập", "Quyền", "Nhân vật", "Số dư (VNĐ)",
-                "Tổng nạp", "Số NV", "Đăng nhập lần cuối"}, 0) {
+            new Object[]{"ID", "Tên đăng nhập", "Mật khẩu", "Quyền", "Nhân vật",
+                "Số dư (VNĐ)", "Tổng nạp", "Số NV", "Đăng nhập lần cuối"}, 0) {
         @Override
         public boolean isCellEditable(int r, int c) {
-            return false;
+            // Chi o mat khau sua ngay trong bang; con lai qua hop "Sua tai khoan".
+            return c == C_MK;
         }
     };
+
+    /** Cột mật khẩu — hiện rõ chữ, sửa được ngay trong bảng. */
+    private static final int C_MK = 2;
+
+    /** Đang tự đổi ô trong bảng (nạp lại, trả số cũ) — không coi là người sửa. */
+    private boolean dangTuDoi;
     private final JTable table = new JTable(model);
     private final JTextField fTim = new JTextField(18);
     private final JLabel lblStatus = new JLabel(" ");
@@ -74,12 +82,25 @@ public class AccountPanel extends JPanel {
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
+                // Nhap dup vao o mat khau la de SUA o ay, khong mo hop.
+                int cot = table.columnAtPoint(e.getPoint());
+                if (cot >= 0 && table.convertColumnIndexToModel(cot) == C_MK) {
+                    return;
+                }
                 if (e.getClickCount() == 2 && table.getSelectedRow() >= 0) {
                     suaTaiKhoan();
                 }
             }
         });
-        int[] w = {55, 170, 80, 260, 120, 120, 60, 150};
+        int[] w = {55, 150, 130, 80, 240, 120, 120, 60, 150};
+        // Sua o mat khau xong (Enter / bam ra ngoai) la luu ngay.
+        model.addTableModelListener(e -> {
+            if (dangTuDoi || e.getType() != javax.swing.event.TableModelEvent.UPDATE
+                    || e.getColumn() != C_MK || e.getFirstRow() < 0) {
+                return;
+            }
+            luuMatKhauO(e.getFirstRow());
+        });
         for (int i = 0; i < w.length; i++) {
             table.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
         }
@@ -126,6 +147,7 @@ public class AccountPanel extends JPanel {
 
     private void loc() {
         String key = fTim.getText().trim().toLowerCase();
+        dangTuDoi = true;
         model.setRowCount(0);
         for (AccountDAO.Row r : tatCa) {
             // Tim theo ca ten dang nhap LAN ten nhan vat: nguoi bao loi thuong
@@ -136,11 +158,13 @@ public class AccountPanel extends JPanel {
                     && !String.valueOf(r.id).equals(key)) {
                 continue;
             }
-            model.addRow(new Object[]{r.id, r.username, r.quyen,
+            model.addRow(new Object[]{r.id, r.username,
+                r.matKhau == null ? "" : r.matKhau, r.quyen,
                 r.tenNhanVat == null ? "(chưa có nhân vật)" : r.tenNhanVat,
                 PlayerManagerPanel.fmt(r.vnd), PlayerManagerPanel.fmt(r.tongNap),
                 r.soNhanVat, r.lanCuoiDangNhap});
         }
+        dangTuDoi = false;
         lblDem.setText("  " + model.getRowCount() + " / " + tatCa.size());
     }
 
@@ -177,6 +201,8 @@ public class AccountPanel extends JPanel {
         javax.swing.JComboBox<String> cbQuyen =
                 new javax.swing.JComboBox<>(PlayerDAO.CAC_QUYEN);
         cbQuyen.setSelectedItem(quyenCu);
+        String mkCu = String.valueOf(model.getValueAt(idx, C_MK));
+        JTextField fMatKhau = new JTextField(mkCu, 14);
         JTextField fVnd = new JTextField(String.valueOf(m.vnd), 14);
         JTextField fTongNap = new JTextField(String.valueOf(m.tongNap), 14);
         JTextField fCoin = new JTextField(String.valueOf(m.coin), 14);
@@ -185,6 +211,8 @@ public class AccountPanel extends JPanel {
         p.setBorder(new EmptyBorder(8, 8, 8, 8));
         p.add(new JLabel("Tài khoản:"));
         p.add(new JLabel(user + "  (id " + accId + ")"));
+        p.add(new JLabel("Mật khẩu:"));
+        p.add(fMatKhau);
         p.add(new JLabel("Quyền:"));
         p.add(cbQuyen);
         p.add(new JLabel("Số dư (VNĐ):"));
@@ -221,6 +249,18 @@ public class AccountPanel extends JPanel {
         qm.founder = PlayerDAO.QUYEN_ADMIN.equals(quyenMoi);
         qm.quanTriVien = PlayerDAO.QUYEN_COLAB.equals(quyenMoi);
 
+        String mkMoi = fMatKhau.getText().trim();
+        if (mkMoi.isEmpty()) {
+            note(WARN_RED, "Mật khẩu không được để trống.");
+            return;
+        }
+        if (!mkMoi.equals(mkCu)) {
+            if (!AccountDAO.setMatKhau(accId, mkMoi)) {
+                note(WARN_RED, "Không lưu được mật khẩu — xem log máy chủ.");
+                return;
+            }
+            dongBoMatKhau(accId, mkMoi);
+        }
         boolean a = AccountDAO.saveQuyen(accId, qm);
         // Giu nguyen thoi vang: tab nay khong hien cot do nua nen khong duoc
         // im lang dat lai ve 0.
@@ -269,6 +309,65 @@ public class AccountPanel extends JPanel {
         }
     }
 
+    /** Lưu mật khẩu vừa sửa trong ô của bảng. */
+    private void luuMatKhauO(int dong) {
+        final int accId = intOf(model.getValueAt(dong, 0));
+        String user = String.valueOf(model.getValueAt(dong, 1));
+        Object v = model.getValueAt(dong, C_MK);
+        String moi = v == null ? "" : String.valueOf(v).trim();
+        AccountDAO.Row cu = null;
+        for (AccountDAO.Row r : tatCa) {
+            if (r.id == accId) {
+                cu = r;
+                break;
+            }
+        }
+        String mkCu = cu == null || cu.matKhau == null ? "" : cu.matKhau;
+        if (moi.equals(mkCu)) {
+            return;
+        }
+        if (moi.isEmpty()) {
+            // Tra lai so cu, khong de o trong nhu da luu.
+            dangTuDoi = true;
+            model.setValueAt(mkCu, dong, C_MK);
+            dangTuDoi = false;
+            note(WARN_RED, "Mật khẩu không được để trống — giữ mật khẩu cũ.");
+            return;
+        }
+        if (!AccountDAO.setMatKhau(accId, moi)) {
+            dangTuDoi = true;
+            model.setValueAt(mkCu, dong, C_MK);
+            dangTuDoi = false;
+            note(WARN_RED, "Không lưu được mật khẩu — xem log máy chủ.");
+            return;
+        }
+        if (cu != null) {
+            cu.matKhau = moi;
+        }
+        dongBoMatKhau(accId, moi);
+        note(OK_GREEN, "Đã đổi mật khẩu của \"" + user + "\".");
+    }
+
+    /**
+     * Người đang online bằng tài khoản này: đổi luôn mật khẩu trong phiên — vài
+     * chỗ còn đọc lại tài khoản bằng tên + mật khẩu của phiên.
+     */
+    private void dongBoMatKhau(int accId, String moi) {
+        if (!ServerManager.isRunning) {
+            return;
+        }
+        try {
+            for (nro.entity.player.Player pl : Client.gI().getPlayersSnapshot()) {
+                if (pl != null && pl.getSession() != null
+                        && pl.getSession().userId == accId) {
+                    pl.getSession().pp = moi;
+                }
+            }
+        } catch (Exception ignored) {
+            // Khong doc duoc danh sach online -> CSDL da dung, bo qua.
+        }
+    }
+
     /** Đọc số từ ô nhập, bỏ dấu ngăn nghìn. */
     private static long docSo(JTextField f) {
         return Long.parseLong(f.getText().trim().replace(".", "").replace(",", ""));
@@ -288,7 +387,7 @@ public class AccountPanel extends JPanel {
         for (int r : rs) {
             int idx = table.convertRowIndexToModel(r);
             int id = intOf(model.getValueAt(idx, 0));
-            int soNv = intOf(model.getValueAt(idx, 6));
+            int soNv = intOf(model.getValueAt(idx, 7));
             ds.add(new int[]{id, soNv});
             tongNv += soNv;
             if (ten.length() < 200) {

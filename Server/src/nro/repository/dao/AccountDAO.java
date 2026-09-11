@@ -436,6 +436,23 @@ public class AccountDAO {
         }
     }
 
+    /**
+     * Đặt mật khẩu mới cho tài khoản.
+     *
+     * <p>Thành công khi không lỗi: MySQL báo 0 dòng đổi nếu mật khẩu mới trùng
+     * mật khẩu cũ, và đó không phải thất bại.</p>
+     */
+    public static boolean setMatKhau(int accountId, String matKhau) {
+        try {
+            ConnectDB.executeUpdate("UPDATE account SET password = ? WHERE id = ?",
+                    matKhau, accountId);
+            return true;
+        } catch (Exception ex) {
+            Logger.logException(AccountDAO.class, ex, "Lỗi đặt mật khẩu tài khoản " + accountId);
+            return false;
+        }
+    }
+
     /** Số thỏi vàng chưa nhận của tài khoản. */
     public static int thoiVangOf(int accountId) {
         CrisResultSet rs = null;
@@ -461,6 +478,8 @@ public class AccountDAO {
 
         public int id;
         public String username;
+        /** Mật khẩu — lưu dạng chữ thường, đúng như lúc đăng nhập so. */
+        public String matKhau;
         public String quyen;
         public long vnd;
         public long tongNap;
@@ -477,7 +496,7 @@ public class AccountDAO {
         CrisResultSet rs = null;
         try {
             rs = ConnectDB.executeQuery(
-                    "SELECT a.id, a.username, a.is_admin, a.isFounder, a.isQuanTriVien,"
+                    "SELECT a.id, a.username, a.password, a.is_admin, a.isFounder, a.isQuanTriVien,"
                     + " a.vnd, a.tongnap, a.thoi_vang, a.last_time_login,"
                     + " (SELECT COUNT(*) FROM player p WHERE p.account_id = a.id) AS so_nv,"
                     // Noi thang ten nhan vat vao danh sach: nhin la biet tai
@@ -489,6 +508,7 @@ public class AccountDAO {
                 Row r = new Row();
                 r.id = rs.getInt("id");
                 r.username = rs.getString("username");
+                r.matKhau = rs.getStringOrNull("password");
                 r.quyen = PlayerDAO.tenQuyen(rs.getBoolean("is_admin"),
                         rs.getBoolean("isFounder"), rs.getBoolean("isQuanTriVien"));
                 r.vnd = rs.getLong("vnd");
