@@ -887,6 +887,16 @@ public class Player implements Runnable {
     public Badges badges;
     public int mapIdBeforeLogout;
     public PhanThan PhanThan;
+
+    /**
+     * Tên (đã chuẩn hoá) các boss đã giết LỆCH thứ tự trong nhiệm vụ chính đang
+     * làm — tới bước của nó thì tự hoàn thành. Xem {@code TaskService
+     * .chamBossTheoBang}. Không lưu CSDL.
+     */
+    public final java.util.Set<String> bossDaGietNv = new java.util.HashSet<>();
+
+    /** Nhiệm vụ mà {@link #bossDaGietNv} đang ghi cho; -1 là chưa ghi gì. */
+    public int nvBossDaGiet = -1;
     public List<Zone> mapBlackBall;
     public List<Zone> mapMaBu;
     public List<BadgesData> dataBadges = new ArrayList<>();

@@ -540,8 +540,21 @@ public class TaskService {
 
     //kiểm tra hoàn thành nhiệm vụ khi tiêu diệt được boss
     public void checkDoneTaskKillBoss(Player player, Boss boss) {
+        // De tu / phan than danh don ket lieu thi tinh cho su phu.
+        if (player instanceof nro.entity.player.Detu
+                && ((nro.entity.player.Detu) player).master != null) {
+            player = ((nro.entity.player.Detu) player).master;
+        } else if (player instanceof nro.entity.player.PhanThan
+                && ((nro.entity.player.PhanThan) player).master != null) {
+            player = ((nro.entity.player.PhanThan) player).master;
+        }
         if (player != null && !player.isBoss && !player.isDeTu && !player.isPhanThan && !player.isNguoiYeu && !player.isConOne && !player.isConTwo && !player.isConThree) {
             AchievementService.gI().checkDoneTask(player, ConstAchievement.TRUM_KET_LIEU_BOSS);
+            // Uu tien bang nhiem vu tren panel: buoc nao nhac ten boss nay thi
+            // cham buoc ay. Khong khop buoc nao moi roi xuong bang go cung.
+            if (chamBossTheoBang(player, boss)) {
+                return;
+            }
             switch ((int) boss.id) {
                 case BossID.THAN_MEO_KARIN:
                     doneTask(player, ConstTask.TASK_10_0);
@@ -661,6 +674,126 @@ public class TaskService {
                     break;
             }
         }
+    }
+
+    /**
+     * Chấm nhiệm vụ giết boss <b>theo bảng nhiệm vụ</b> (sửa được trên panel).
+     *
+     * <h2>Vì sao không dùng số bước gõ cứng</h2>
+     *
+     * <p>Bảng gõ cứng bên dưới gắn mỗi boss với một <b>số thứ tự bước</b>:
+     * Pic là bước 1, Póc bước 2, King Kong bước 3. Panel cho đổi thứ tự bước —
+     * đặt Póc lên trước Pic thì tên các bước đổi chỗ, còn số gõ cứng thì không.
+     * Giết Póc lúc đang ở bước "Tiêu diệt Póc" (nay là bước 1) là máy chủ đòi
+     * Pic: không tính. Người chơi làm đúng thứ tự trên panel vẫn kẹt.</p>
+     *
+     * <h2>Cách chấm</h2>
+     *
+     * <ol>
+     * <li>Tên <b>bước hiện tại</b> nhắc tới boss vừa chết → xong bước ấy.</li>
+     * <li>Boss vừa chết được nhắc ở <b>bước khác</b> của nhiệm vụ đang làm (giết
+     * lệch thứ tự) → ghi nhớ; tới bước ấy là tự xong.</li>
+     * <li>Sau đó tự hoàn thành liền các bước (loại giết một lần) mà boss đã
+     * được ghi nhớ.</li>
+     * </ol>
+     *
+     * <p>So tên không phân biệt hoa thường và dấu, theo <b>trọn từ</b>: "Póc"
+     * khớp boss "Poc" nhưng không khớp "Pôcôlô".</p>
+     *
+     * @return {@code true} nếu boss thuộc nhiệm vụ đang làm và đã được chấm /
+     *         ghi nhớ — bỏ qua bảng gõ cứng
+     */
+    private boolean chamBossTheoBang(Player player, Boss boss) {
+        if (player.playerTask == null || player.playerTask.taskMain == null
+                || player.playerTask.taskMain.subTasks == null || boss == null) {
+            return false;
+        }
+        nro.entity.task.TaskMain tm = player.playerTask.taskMain;
+        final int nv = tm.id;
+        if (player.nvBossDaGiet != nv) {
+            player.bossDaGietNv.clear();
+            player.nvBossDaGiet = nv;
+        }
+        String tenBoss = chuanHoaTen(boss.name);
+        if (tenBoss.isEmpty()) {
+            return false;
+        }
+        boolean daNhan = false;
+        nro.entity.task.SubTaskMain buoc = buocHienTai(player);
+        if (buoc != null && buocNhacTen(buoc.name, tenBoss)) {
+            doneTask(player, getIdTask(player));
+            daNhan = true;
+        } else {
+            for (int i = tm.index + 1; i < tm.subTasks.size(); i++) {
+                if (buocNhacTen(tm.subTasks.get(i).name, tenBoss)) {
+                    player.bossDaGietNv.add(tenBoss);
+                    daNhan = true;
+                    break;
+                }
+            }
+        }
+        if (!daNhan) {
+            return false;
+        }
+        // Tu xong cac buoc ke tiep ma boss da chet tu truoc. Chi buoc giet
+        // MOT lan: buoc can giet nhieu con thi mot lan giet cu khong du.
+        for (int lan = 0; lan < 20; lan++) {
+            if (player.playerTask == null || player.playerTask.taskMain == null
+                    || player.playerTask.taskMain.id != nv) {
+                break;
+            }
+            nro.entity.task.SubTaskMain b = buocHienTai(player);
+            if (b == null || b.maxCount > 1) {
+                break;
+            }
+            String khop = null;
+            for (String da : player.bossDaGietNv) {
+                if (buocNhacTen(b.name, da)) {
+                    khop = da;
+                    break;
+                }
+            }
+            if (khop == null) {
+                break;
+            }
+            player.bossDaGietNv.remove(khop);
+            int truoc = player.playerTask.taskMain.index;
+            doneTask(player, getIdTask(player));
+            if (player.playerTask.taskMain.id == nv
+                    && player.playerTask.taskMain.index == truoc) {
+                break;
+            }
+        }
+        return true;
+    }
+
+    /** Bước nhiệm vụ chính đang làm, hoặc {@code null}. */
+    private static nro.entity.task.SubTaskMain buocHienTai(Player player) {
+        if (player.playerTask == null || player.playerTask.taskMain == null
+                || player.playerTask.taskMain.subTasks == null) {
+            return null;
+        }
+        nro.entity.task.TaskMain tm = player.playerTask.taskMain;
+        return tm.index >= 0 && tm.index < tm.subTasks.size() ? tm.subTasks.get(tm.index) : null;
+    }
+
+    /** Chuẩn hoá tên để so: chữ thường, bỏ dấu, các từ cách nhau một dấu cách. */
+    private static String chuanHoaTen(String s) {
+        if (s == null) {
+            return "";
+        }
+        String t = java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "").replace('đ', 'd').replace('Đ', 'D')
+                .toLowerCase();
+        return t.replaceAll("[^a-z0-9]+", " ").trim();
+    }
+
+    /** Tên bước có nhắc trọn tên boss (đã chuẩn hoá) không. */
+    private static boolean buocNhacTen(String tenBuoc, String tenBossChuan) {
+        if (tenBossChuan == null || tenBossChuan.isEmpty()) {
+            return false;
+        }
+        return (" " + chuanHoaTen(tenBuoc) + " ").contains(" " + tenBossChuan + " ");
     }
 
     //kiểm tra hoàn thành nhiệm vụ khi giết được quái

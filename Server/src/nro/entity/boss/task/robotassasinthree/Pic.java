@@ -93,8 +93,6 @@ public class Pic extends Boss {
             Logger.logException(BlackGoku.class, e, "Lỗi drop nhẫn nhiệm vụ 31");
         }
 
-        // Check nhiệm vụ giết boss
-        TaskService.gI().checkDoneTaskKillBoss(plKill, this);
     }
 
 
