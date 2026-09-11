@@ -294,11 +294,11 @@ namespace Game1.God
             ghiO(x, y, rong, CAO);
         }
 
-        /// <summary>Khung đã thu: một chip "+ Đệ tử 45%", bấm vào là mở.</summary>
+        /// <summary>Khung đã thu: một chip "+ Đệ tử · HP 45%" (máu đệ còn lại), bấm vào là mở.</summary>
         private void veChip(mGraphics g, int y, long hp, long hpFull)
         {
             long phanTram = hpFull > 0 ? hp * 100 / hpFull : 0;
-            string chu = "Đệ tử " + phanTram + "%";
+            string chu = "Đệ tử · HP " + phanTram + "%";
             int rong = mFont.tahoma_7b_yellow.getWidth(chu) + O_NUT + 12;
             int x = GameCanvas.w - LE_PHAI - rong;
             g.setColor(0xC8933C, 0.9f);
