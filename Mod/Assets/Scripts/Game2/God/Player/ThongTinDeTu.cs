@@ -5,13 +5,15 @@ namespace Game2.God
     /// boss cũ.
     /// </summary>
     /// <remarks>
-    /// <para>Nhỏ gọn: tên và trạng thái, thanh HP, thanh KI, sức mạnh. Bật tắt ở
-    /// "Chức năng → Hiển thị" (mã 19), và nhớ lựa chọn qua các lần mở game.</para>
+    /// <para>Nhỏ gọn: tên và trạng thái, thanh HP, thanh KI, rồi ba hàng chỉ số
+    /// hai cột — sức mạnh / tiềm năng, sức đánh / giáp, chí mạng / thể lực. Bật
+    /// tắt ở "Chức năng → Hiển thị" (mã 19), và nhớ lựa chọn qua các lần mở
+    /// game.</para>
     ///
     /// <para>Máu đọc thẳng từ nhân vật đệ tử đang đứng trên bản đồ — thứ đó được
-    /// cập nhật theo từng đòn đánh nên luôn tươi. Tên, trạng thái, sức mạnh và
-    /// KI thì xin máy chủ năm giây một lần qua gói -107; gói ấy chỉ cập nhật dữ
-    /// liệu, không bật bảng đệ tử lên.</para>
+    /// cập nhật theo từng đòn đánh nên luôn tươi. Các chỉ số còn lại xin máy chủ
+    /// năm giây một lần qua gói -107; gói ấy chỉ cập nhật dữ liệu, không bật bảng
+    /// đệ tử lên.</para>
     /// </remarks>
     public class ThongTinDeTu
     {
@@ -66,9 +68,10 @@ namespace Game2.God
         /// <summary>Mép trên — dưới hàng nút góc phải, như khung boss cũ.</summary>
         private const int DONG_DAU = 160;
 
-        private const int RONG = 150;
+        private const int RONG = 176;
 
-        private const int CAO = 52;
+        /// <summary>Tên, hai thanh, rồi ba hàng chỉ số mỗi hàng 12 điểm.</summary>
+        private const int CAO = 78;
 
         private const long HOI_DU_LIEU_MS = 5000;
 
@@ -149,8 +152,21 @@ namespace Game2.God
             veThanh(g, x + 6, y + 28, RONG - 12, 10, pet.cMP, pet.cMPFull, 0x2F7BD8,
                     "KI " + gon(pet.cMP) + " / " + gon(pet.cMPFull));
 
-            mFont.tahoma_7b_green.drawString(g, "Sức mạnh " + gon(pet.cPower), x + 6, y + 40,
+            // Ba hang chi so, hai cot: cot trai can trai, cot phai can phai.
+            int trai = x + 6;
+            int phai = x + RONG - 6;
+            mFont.tahoma_7b_green.drawString(g, "Sức mạnh " + gon(pet.cPower), trai, y + 40,
                     mFont.LEFT);
+            mFont.tahoma_7_yellow.drawString(g, "Tiềm năng " + gon(pet.cTiemNang), phai, y + 40,
+                    mFont.RIGHT);
+            mFont.tahoma_7_yellow.drawString(g, "Sức đánh " + gon(pet.cDamFull), trai, y + 52,
+                    mFont.LEFT);
+            mFont.tahoma_7_yellow.drawString(g, "Giáp " + gon(pet.cDefull), phai, y + 52,
+                    mFont.RIGHT);
+            mFont.tahoma_7_yellow.drawString(g, "Chí mạng " + pet.cCriticalFull + "%", trai, y + 64,
+                    mFont.LEFT);
+            mFont.tahoma_7_yellow.drawString(g, "Thể lực " + gon(pet.cStamina) + " / "
+                    + gon(pet.cMaxStamina), phai, y + 64, mFont.RIGHT);
         }
 
         /// <summary>Một thanh máu/KI có chữ đè giữa.</summary>
