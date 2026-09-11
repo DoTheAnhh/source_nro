@@ -6,17 +6,22 @@ using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 
 /// <summary>
-/// Trước mỗi lần build Android: tắt các tiến trình Gradle <b>mồ côi</b>.
+/// Trước mỗi lần build Android: dọn hai thứ làm Gradle đứng chờ mãi.
 /// </summary>
 /// <remarks>
-/// <para>Tắt Unity (hay nó văng) giữa lúc đang build, hoặc bấm build lần nữa khi
-/// lần trước chưa xong, là để lại một tiến trình <c>java … gradle-launcher</c>
-/// không ai quản. Nó vẫn giữ khoá thư mục project Gradle, và lần build sau đứng
-/// chờ khoá mãi — đúng cảnh "build APK 15 phút không xong", ở bước Gradle, mà
-/// log Unity không ghi gì.</para>
+/// <para><b>1. Tiến trình Gradle mồ côi.</b> Tắt Unity (hay nó văng) giữa lúc
+/// build, hoặc bấm build lần nữa khi lần trước chưa xong, là để lại một tiến
+/// trình <c>java … gradle-launcher</c> không ai quản, vẫn giữ khoá project.
+/// "Mồ côi" là tiến trình mà tiến trình cha đã chết — Gradle của lần build đang
+/// chạy có cha là chính Unity này nên không bị đụng tới.</para>
 ///
-/// <para>"Mồ côi" là tiến trình Gradle mà tiến trình cha đã chết. Gradle của lần
-/// build đang chạy có cha là chính Unity này nên không bị đụng tới.</para>
+/// <para><b>2. Sổ đăng ký daemon cũ.</b> Gradle ghi các daemon đang sống vào
+/// <c>~/.gradle/daemon/&lt;bản&gt;/registry.bin</c>, kèm cổng mạng của chúng. Daemon
+/// chết mà sổ không được xoá thì lần build sau đọc sổ, nối vào cổng cũ — lúc ấy
+/// cổng có thể đã thuộc chương trình khác, nhận kết nối mà không bao giờ trả
+/// lời. Gradle chờ ở <c>DaemonClientConnection.receive</c> mãi mãi: đúng cảnh
+/// "build APK mười mấy phút không xong" mà không có lỗi nào. Không còn daemon
+/// nào sống thì sổ ấy chỉ còn là rác — xoá đi, Gradle tự mở daemon mới.</para>
 ///
 /// <para>Dọn tay: menu <b>Tools → Dọn Gradle treo</b>.</para>
 /// </remarks>
@@ -41,11 +46,12 @@ public class DonGradleTreo : IPreprocessBuildWithReport
     {
         int n = DonDep();
         EditorUtility.DisplayDialog("Dọn Gradle treo",
-            n > 0 ? "Đã tắt " + n + " tiến trình Gradle mồ côi." : "Không có tiến trình Gradle nào bị treo.",
+            n < 0 ? "Không chạy được lệnh dọn — xem Console."
+                : "Đã tắt " + n + " tiến trình Gradle mồ côi, và dọn sổ daemon cũ nếu có.",
             "OK");
     }
 
-    /// <returns>Số tiến trình đã tắt; -1 nếu không chạy được lệnh dọn.</returns>
+    /// <returns>Số tiến trình mồ côi đã tắt; -1 nếu không chạy được lệnh dọn.</returns>
     private static int DonDep()
     {
         const string lenh =
@@ -54,6 +60,11 @@ public class DonGradleTreo : IPreprocessBuildWithReport
             + "Where-Object { $_.CommandLine -like '*gradle-launcher*' -and "
             + "-not (Get-Process -Id $_.ParentProcessId -ErrorAction SilentlyContinue) } | "
             + "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue; $n++ }; "
+            // Khong con daemon nao song -> so dang ky chi con dia chi chet: xoa.
+            + "$daemon = Get-CimInstance Win32_Process -Filter \"Name='java.exe'\" | "
+            + "Where-Object { $_.CommandLine -like '*GradleDaemon*' }; "
+            + "if (-not $daemon) { Remove-Item \"$env:USERPROFILE\\.gradle\\daemon\\*\\registry.bin*\" "
+            + "-Force -ErrorAction SilentlyContinue }; "
             + "Write-Output $n";
         try
         {
