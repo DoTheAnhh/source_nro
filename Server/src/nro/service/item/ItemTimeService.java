@@ -283,7 +283,9 @@ public class ItemTimeService {
             sendItemTime(player, 10717, (int) ((TIME_ITEM_10M - (System.currentTimeMillis() - player.itemTime.lastTimeAnDanh2)) / 1000));
         }
         if (player.itemTime.isOpenPower) {
-            sendItemTime(player, 3783, (int) ((TIME_OPEN_POWER - (System.currentTimeMillis() - player.itemTime.lastTimeOpenPower)) / 1000));
+            // Dong ho mo gioi han da bo — con sot tu ban cu thi xoa luon bieu tuong.
+            player.itemTime.isOpenPower = false;
+            removeItemTime(player, 3783);
         }
         if (player.itemTime.isUseMayDo) {
             sendItemTime(player, 2758, (int) ((TIME_MAY_DO - (System.currentTimeMillis() - player.itemTime.lastTimeUseMayDo)) / 1000));
@@ -731,7 +733,17 @@ public class ItemTimeService {
         try {
             msg = new Message(-106);
             msg.writer().writeShort(itemId);
-            msg.writer().writeShort(time);
+            // Mot short chi chua toi 32.767 giay (~9 gio): tu dong luyen tap nhieu
+            // gio bi quay vong thanh so sai. Dai hon thi gui so PHUT duoi dang so
+            // AM — client doi ra giay. Het gio (so am cu) thi gui 0.
+            if (time < 0) {
+                time = 0;
+            }
+            if (time > Short.MAX_VALUE) {
+                msg.writer().writeShort(-Math.min(Short.MAX_VALUE, (time + 59) / 60));
+            } else {
+                msg.writer().writeShort(time);
+            }
             player.sendMessage(msg);
             msg.cleanup();
         } catch (Exception e) {

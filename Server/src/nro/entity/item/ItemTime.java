@@ -803,15 +803,9 @@ public class ItemTime {
             }
         }
         if (isOpenPower) {
-            if (Util.canDoWithTime(lastTimeOpenPower, TIME_OPEN_POWER)) {
-                player.nPoint.limitPower++;
-                if (player.nPoint.limitPower > NPoint.MAX_LIMIT) {
-                    player.nPoint.limitPower = NPoint.MAX_LIMIT;
-                }
-                player.nPoint.initPowerLimit();
-                Service.gI().sendThongBao(player, "Giới hạn sức mạnh của bạn đã được tăng lên 1 bậc");
-                isOpenPower = false;
-            }
+            // Mo gioi han nay tra vang va tang ngay, khong con dong ho. Dong ho sot
+            // tu ban cu (da +1 luc bam) chi tat di, KHONG cong lan hai.
+            isOpenPower = false;
         }
         if (isUseMayDo) {
             if (Util.canDoWithTime(lastTimeUseMayDo, TIME_MAY_DO)) {

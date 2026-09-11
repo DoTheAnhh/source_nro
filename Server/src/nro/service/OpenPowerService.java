@@ -1,6 +1,5 @@
 package nro.service;
 
-import nro.service.item.ItemTimeService;
 import nro.entity.player.NPoint;
 import nro.entity.player.Detu;
 import nro.entity.player.Player;
@@ -23,30 +22,9 @@ public class OpenPowerService {
         return i;
     }
 
-    public boolean openPowerBasic(Player player) {
-        byte curLimit = player.nPoint.limitPower;
-
-        if (curLimit < NPoint.MAX_LIMIT) {
-            if (!player.itemTime.isOpenPower && player.nPoint.canOpenPower()) {
-                player.itemTime.isOpenPower = true;
-                player.itemTime.lastTimeOpenPower = System.currentTimeMillis();
-                ItemTimeService.gI().sendAllItemTime(player);
-
-                // FIX: tăng limit và cập nhật powerLimit ngay
-                player.nPoint.limitPower++;
-                player.nPoint.powerLimit = PowerLimitManager.getInstance().get(player.nPoint.limitPower);
-
-                Service.gI().sendThongBao(player, "Giới hạn sức mạnh của bạn đã được tăng lên 1 bậc");
-                return true;
-            } else {
-                Service.gI().sendThongBao(player, "Sức mạnh của bạn không đủ để thực hiện");
-                return false;
-            }
-        } else {
-            Service.gI().sendThongBao(player, "Sức mạnh của bạn đã đạt tới mức tối đa");
-            return false;
-        }
-    }
+    // Cach mo "mien phi cho 24 gio" da bo: mo gioi han la tra vang o Quoc
+    // Vuong va tang ngay (openPowerSpeed). Ban cu vua +1 ngay vua bat dong ho,
+    // het gio lai +1 nua.
 
     public boolean openPowerSpeed(Player player) {
         if (player.nPoint.limitPower < NPoint.MAX_LIMIT) {

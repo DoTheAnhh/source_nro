@@ -88,7 +88,6 @@ public class ToSuKaio extends Npc {
                                         "Ta sẽ truyền năng lượng giúp con mở giới hạn sức mạnh \n"
                                         + "của bản thân lên " + Util.formatNumber(player.nPoint.getPowerNextLimit(), FormatStyle.VIETNAMESE) + ".\n"
                                         + "Lưu ý: từ 40 tỷ trở lên sức mạnh của con sẽ tăng chậm đáng kể",
-                                        "Nâng\ngiới hạn\nsức mạnh",
                                         "Nâng ngay\n" + 199 + " ngọc", "OK");
                             } else {
                                 this.createOtherMenu(player, ConstNpc.IGNORE_MENU,
@@ -122,7 +121,6 @@ public class ToSuKaio extends Npc {
                                         "Ta sẽ truyền năng lượng giúp con mở giới hạn sức mạnh \n"
                                         + "của bản thân lên " + Util.formatNumber(player.nPoint.getPowerNextLimit(), FormatStyle.VIETNAMESE) + ".\n"
                                         + "Lưu ý: từ 40 tỷ trở lên sức mạnh của con sẽ tăng chậm đáng kể",
-                                        "Nâng\ngiới hạn\nsức mạnh",
                                         "Nâng ngay\n" + 199 + " ngọc", "OK");
                             } else {
                                 this.createOtherMenu(player, ConstNpc.IGNORE_MENU,
@@ -138,10 +136,9 @@ public class ToSuKaio extends Npc {
                     return;
                 }
                 switch (select) {
+                    // Chi con nut tra ngoc, tang ngay mot bac. Nut "mien phi" cu vua
+                    // +1 ngay vua bat dong ho 24 gio, het gio lai +1 nua.
                     case 0:
-                        OpenPowerService.gI().openPowerBasic(player);
-                        break;
-                    case 1:
                         if (player.inventory.getGemAndRuby() >= 199) {
                             if (OpenPowerService.gI().openPowerSpeed(player)) {
                                 player.inventory.subGemAndRuby(199);

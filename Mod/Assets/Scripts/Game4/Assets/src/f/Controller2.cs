@@ -944,6 +944,11 @@ namespace Game4.Assets.src.f
 				{
 					short num32 = msg.reader().readShort();
 					int num33 = msg.reader().readShort();
+					// So am: may chu gui PHUT (dai hon 32.767 giay khong vua mot short).
+					if (num33 < 0)
+					{
+						num33 = -num33 * 60;
+					}
 					if (ItemTime.isExistItem(num32))
 					{
 						ItemTime.getItemById(num32).initTime(num33);

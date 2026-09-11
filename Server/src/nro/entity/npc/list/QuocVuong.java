@@ -198,7 +198,6 @@ public class QuocVuong extends Npc {
                                         "Ta sẽ truyền năng lượng giúp con mở giới hạn sức mạnh \n"
                                         + "của bản thân lên " + Util.formatNumber(player.nPoint.getPowerNextLimit(), FormatStyle.VIETNAMESE) + ".\n"
                                         + "Lưu ý: từ 40 tỷ trở lên sức mạnh của con sẽ tăng chậm đáng kể",
-                                        "Nâng\ngiới hạn\nsức mạnh",
                                         "Nâng ngay\n" + Util.formatNumber(GOLD_SPEED_OPEN_LIMIT_POWER, FormatStyle.VIETNAMESE) + " vàng",
                                         "OK");
                             } else {
@@ -235,7 +234,6 @@ public class QuocVuong extends Npc {
                                         "Ta sẽ truyền năng lượng giúp con mở giới hạn sức mạnh \n"
                                         + "của bản thân lên " + Util.formatNumber(player.nPoint.getPowerNextLimit(), FormatStyle.VIETNAMESE) + ".\n"
                                         + "Lưu ý: từ 40 tỷ trở lên sức mạnh của con sẽ tăng chậm đáng kể",
-                                        "Nâng\ngiới hạn\nsức mạnh",
                                         "Nâng ngay\n" + Util.formatNumber(GOLD_SPEED_OPEN_LIMIT_POWER, FormatStyle.VIETNAMESE) + " vàng",
                                         "OK");
                             } else {
@@ -253,11 +251,9 @@ public class QuocVuong extends Npc {
                 // if (player.nPoint.limitPower == 4 && !InventoryService.gI().findItemThanLinh(player)) { ... }
 
                 switch (select) {
+                    // Chi con MOT nut: tra vang, tang ngay mot bac. Nut "mien phi" cu vua
+                    // +1 ngay vua bat dong ho 24 gio, het gio lai +1 nua — mo mot lan duoc hai.
                     case 0:
-                        OpenPowerService.gI().openPowerBasic(player);
-                        break;
-
-                    case 1:
                         // ===== ĐỔI mở nhanh bằng 500.000.000 vàng =====
                         if (player.inventory.gold >= GOLD_SPEED_OPEN_LIMIT_POWER) {
                             if (OpenPowerService.gI().openPowerSpeed(player)) {
