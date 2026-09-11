@@ -882,6 +882,24 @@ namespace Game4
     		}
     	}
     
+    	/// <summary>Đổi mật khẩu ngay ở màn đăng nhập (lệnh 3, trước khi vào game).</summary>
+    	public void doiMatKhau(string username, string oldPass, string newPass)
+    	{
+    		try
+    		{
+    			Message message = messageNotLogin(3);
+    			message.writer().writeUTF(username);
+    			message.writer().writeUTF(oldPass);
+    			message.writer().writeUTF(newPass);
+    			session.sendMessage(message);
+    			message.cleanup();
+    		}
+    		catch (Exception ex)
+    		{
+    			Cout.println(ex.Message + ex.StackTrace);
+    		}
+    	}
+
     	public void requestRegister(string username, string pass, string usernameAo, string passAo, string version)
     	{
     		try

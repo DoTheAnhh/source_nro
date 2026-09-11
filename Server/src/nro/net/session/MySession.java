@@ -309,6 +309,71 @@ public class MySession extends Session {
      * @param username tên đăng nhập người chơi gõ
      * @param password mật khẩu người chơi gõ
      */
+    /**
+     * Đổi mật khẩu ngay ở màn đăng nhập, chưa vào game (lệnh 3 của messageNotLogin).
+     *
+     * <p>Chặn dò mật khẩu cùng một bộ đếm với đăng nhập ({@link #ANTILOGIN}): gõ
+     * sai mật khẩu hiện tại cũng tính là một lần đăng nhập sai. Người đang online
+     * bằng tài khoản ấy thì cập nhật luôn mật khẩu trong phiên.</p>
+     */
+    public void doiMatKhau(String tk, String cu, String moi) {
+        AntiLogin al = ANTILOGIN.get(this.ipAddress);
+        if (al == null) {
+            al = new AntiLogin();
+            ANTILOGIN.put(this.ipAddress, al);
+        }
+        if (!al.canLogin()) {
+            Service.gI().sendThongBaoOK(this, al.getNotifyCannotLogin());
+            return;
+        }
+        tk = tk == null ? "" : tk.trim();
+        cu = cu == null ? "" : cu.trim();
+        moi = moi == null ? "" : moi.trim();
+        if (tk.isEmpty() || cu.isEmpty()) {
+            Service.gI().sendThongBaoOK(this, "Nhập tài khoản và mật khẩu hiện tại vào hai ô trước.");
+            return;
+        }
+        if (moi.length() < 5) {
+            Service.gI().sendThongBaoOK(this, "Mật khẩu mới phải có ít nhất 5 ký tự.");
+            return;
+        }
+        if (moi.equals(cu)) {
+            Service.gI().sendThongBaoOK(this, "Mật khẩu mới phải khác mật khẩu cũ.");
+            return;
+        }
+        nro.repository.CrisResultSet rs = null;
+        try {
+            rs = nro.repository.ConnectDB.executeQuery(
+                    "SELECT id FROM account WHERE username = ? AND password = ?", tk, cu);
+            if (!rs.next()) {
+                al.wrong();
+                Service.gI().sendThongBaoOK(this, "Tài khoản hoặc mật khẩu hiện tại không đúng.");
+                return;
+            }
+            int id = rs.getInt("id");
+            nro.repository.ConnectDB.executeUpdate(
+                    "UPDATE account SET password = ? WHERE id = ?", moi, id);
+            al.reset();
+            for (Player p : Client.gI().getPlayers()) {
+                MySession ss = p == null ? null : p.getSession();
+                if (ss != null && tk.equals(ss.uu)) {
+                    ss.pp = moi;
+                }
+            }
+            Service.gI().sendThongBaoOK(this, "Đổi mật khẩu thành công!\nHãy đăng nhập bằng mật khẩu mới.");
+        } catch (Exception e) {
+            Logger.logException(MySession.class, e, "Lỗi đổi mật khẩu");
+            Service.gI().sendThongBaoOK(this, "Máy chủ lỗi, chưa đổi được mật khẩu. Thử lại sau.");
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.dispose();
+                } catch (Exception ignored) {
+                }
+            }
+        }
+    }
+
     public void login(String username, String password) {
         if (username == null || password == null) {
             Service.gI().sendThongBaoOK(this, "Thông tin tài khoản hoặc mật khẩu không chính xác");

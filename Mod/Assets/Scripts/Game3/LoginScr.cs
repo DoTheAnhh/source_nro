@@ -132,6 +132,24 @@ namespace Game3
     	private int dir = 1;
     
     	private Command cmdCallHotline;
+
+    	/// <summary>Nút "Đổi M.khẩu" — tự vẽ, không dùng ô nút phải.</summary>
+    	/// <remarks>Ô nút phải còn ăn phím Enter trên máy tính (xem updateKey): đặt nút
+    	/// này vào đó thì Enter mở đổi mật khẩu thay vì đăng nhập.</remarks>
+    	private Command cmdDoiMatKhau;
+
+    	/// <summary>Mật khẩu mới vừa gõ ở bước một, chờ gõ lại ở bước hai.</summary>
+    	private string mkMoiTam = string.Empty;
+
+    	/// <summary>Đang hiện mật khẩu dạng chữ thường.</summary>
+    	private bool hienMatKhau;
+
+    	// O nut an / hien mat khau, ghi lai luc ve de phan bat cham dung cung so.
+    	private int xNutMat;
+
+    	private int yNutMat;
+
+    	private int wNutMat;
     
     	public static bool isLoggingIn;
     
@@ -172,7 +190,7 @@ namespace Game3
     		tfPass = new TField();
     		tfPass.y = GameCanvas.hh - 4;
     		tfPass.setIputType(TField.INPUT_TYPE_PASSWORD);
-    		tfPass.width = wC;
+    		tfPass.width = wC - (mScreen.ITEM_HEIGHT + 2) - 22;
     		tfPass.height = mScreen.ITEM_HEIGHT + 2;
     		yt += 35;
     		isCheck = true;
@@ -244,6 +262,17 @@ namespace Game3
     		cmdFogetPass = new Command(mResources.forgetPass, this, 1003, null);
     		cmdFogetPass.x = GameCanvas.w / 2 + 3;
     		cmdFogetPass.y = cmdLogin.y;
+    		// Ba nut mot hang: OK — Doi M.khau — Quen M.khau. Them hang duoi thi
+    		// man dien thoai thap bi tran hoac de len logo.
+    		cmdDoiMatKhau = new Command("Đổi M.khẩu", this, 2101, null);
+    		cmdDoiMatKhau.y = cmdLogin.y;
+    		if (cmdLogin.y > 0)
+    		{
+    			int rongNut = mScreen.cmdW;
+    			cmdOK.x = GameCanvas.w / 2 - rongNut / 2 - 6 - rongNut;
+    			cmdDoiMatKhau.x = GameCanvas.w / 2 - rongNut / 2;
+    			cmdFogetPass.x = GameCanvas.w / 2 + rongNut / 2 + 6;
+    		}
     		center = cmdOK;
     		left = cmdFogetPass;
     	}
@@ -790,6 +819,14 @@ namespace Game3
     			tfPass.y = yLog + 55;
     			tfUser.paint(g);
     			tfPass.paint(g);
+    			if (!isRes)
+    			{
+    				veNutMatKhau(g);
+    				if (cmdDoiMatKhau != null && cmdDoiMatKhau.y > 0)
+    				{
+    					cmdDoiMatKhau.paint(g);
+    				}
+    			}
     			int num4 = 0;
     			if (GameCanvas.w >= 176)
     			{
@@ -912,6 +949,20 @@ namespace Game3
     			center = cmdOK;
     			left = cmdFogetPass;
     		}
+    		// Nut nho cuoi o mat khau: an / hien. Nam NGOAI vung 40 diem quanh mep
+    		// phai o nhap — vung ay la nut xoa het chu cua TField.
+    		if (!isRes && wNutMat > 0 && GameCanvas.isPointerJustRelease
+    			&& GameCanvas.isPointerHoldIn(xNutMat, yNutMat, wNutMat, wNutMat))
+    		{
+    			hienMatKhau = !hienMatKhau;
+    			tfPass.setIputType(hienMatKhau ? TField.INPUT_TYPE_ANY : TField.INPUT_TYPE_PASSWORD);
+    			tfPass.setText(tfPass.getText());
+    			GameCanvas.clearAllPointerEvent();
+    		}
+    		if (!isRes && cmdDoiMatKhau != null && cmdDoiMatKhau.y > 0 && cmdDoiMatKhau.isPointerPressInside())
+    		{
+    			cmdDoiMatKhau.performAction();
+    		}
     		if (GameCanvas.isPointerJustRelease && (!isLogin2 || isRes))
     		{
     			if (GameCanvas.isPointerHoldIn(tfUser.x, tfUser.y, tfUser.width, tfUser.height))
@@ -931,6 +982,20 @@ namespace Game3
     		GameCanvas.clearKeyPressed();
     	}
     
+    	/// <summary>Nút nhỏ cuối ô mật khẩu: bấm để ẩn / hiện mật khẩu.</summary>
+    	private void veNutMatKhau(mGraphics g)
+    	{
+    		wNutMat = tfPass.height;
+    		xNutMat = tfPass.x + tfPass.width + 22;
+    		yNutMat = tfPass.y;
+    		g.setColor(0x8B5A2B);
+    		g.fillRect(xNutMat, yNutMat, wNutMat, wNutMat);
+    		g.setColor(0xF3D9A8);
+    		g.fillRect(xNutMat + 1, yNutMat + 1, wNutMat - 2, wNutMat - 2);
+    		mFont.tahoma_7b_dark.drawString(g, hienMatKhau ? "Ẩn" : "Hiện", xNutMat + wNutMat / 2,
+    			yNutMat + wNutMat / 2 - 6, mFont.CENTER);
+    	}
+
     	public void resetLogo()
     	{
     		yL = -50;
@@ -1048,6 +1113,41 @@ namespace Game3
     				GameCanvas.serverScreen.show2();
     			}
     			break;
+    		case 2101:
+    			// Doi mat khau: tai khoan va mat khau HIEN TAI lay tu hai o dang nhap,
+    			// roi hoi mat khau moi hai lan.
+    			if (tfUser.getText().Trim().Length == 0 || tfPass.getText().Trim().Length == 0)
+    			{
+    				GameCanvas.startOKDlg("Nhập tài khoản và mật khẩu HIỆN TẠI vào hai ô, rồi bấm Đổi M.khẩu.");
+    				break;
+    			}
+    			GameCanvas.inputDlg.show("Mật khẩu mới (ít nhất 5 ký tự)", new Command(mResources.OK, this, 2102, null), TField.INPUT_TYPE_PASSWORD);
+    			break;
+    		case 2102:
+    			mkMoiTam = GameCanvas.inputDlg.tfInput.getText().Trim();
+    			if (mkMoiTam.Length < 5)
+    			{
+    				GameCanvas.endDlg();
+    				GameCanvas.startOKDlg("Mật khẩu mới phải có ít nhất 5 ký tự.");
+    				break;
+    			}
+    			GameCanvas.inputDlg.show("Nhập lại mật khẩu mới", new Command(mResources.OK, this, 2103, null), TField.INPUT_TYPE_PASSWORD);
+    			break;
+    		case 2103:
+    		{
+    			string nhapLai = GameCanvas.inputDlg.tfInput.getText().Trim();
+    			GameCanvas.endDlg();
+    			if (!nhapLai.Equals(mkMoiTam))
+    			{
+    				GameCanvas.startOKDlg("Hai lần nhập mật khẩu mới không khớp.");
+    				break;
+    			}
+    			GameCanvas.startWaitDlg();
+    			GameCanvas.connect();
+    			Service.gI().setClientType();
+    			Service.gI().doiMatKhau(tfUser.getText().Trim(), tfPass.getText().Trim(), mkMoiTam);
+    			break;
+    		}
     		case 4000:
     			doRegister(tfUser.getText());
     			break;

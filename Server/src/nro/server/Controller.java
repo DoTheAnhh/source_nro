@@ -1192,6 +1192,11 @@ public class Controller implements IMessageHandler {
                     case 2:
                         Service.gI().setClientType(session, msg);
                         break;
+                    case 3:
+                        // Doi mat khau o man dang nhap: tai khoan, mat khau cu, mat khau moi.
+                        session.doiMatKhau(msg.reader().readUTF(), msg.reader().readUTF(),
+                                msg.reader().readUTF());
+                        break;
                     default:
                         // KHONG im lang o day.
                         //
