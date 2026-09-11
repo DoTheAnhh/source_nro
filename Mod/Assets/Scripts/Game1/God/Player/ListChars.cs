@@ -101,9 +101,10 @@ namespace Game1.God
         private int mocDongDau()
         {
             int y = TabControll.mepDuoiHangNut() + 6;
-            if (ThongTinDeTu.getInstance().isShow && y < 96)
+            int duoiDe = ThongTinDeTu.getInstance().mepDuoi();
+            if (duoiDe > 0 && y < duoiDe + 4)
             {
-                y = 96;
+                y = duoiDe + 4;
             }
             return y;
         }

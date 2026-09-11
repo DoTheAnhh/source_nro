@@ -308,6 +308,7 @@ namespace Game4.God
             {
                 return;
             }
+            ThongTinDeTu.getInstance().UpdateTouch();
             ListChars.getInstance().UpdateTouch();
             // Banh rang: bat cham NGOAI khoi isAnalog. Nam trong do thi ai tat
             // can dieu khien ao la khong bam duoc nut mo menu mod nua.
