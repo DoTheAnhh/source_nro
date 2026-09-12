@@ -6877,9 +6877,8 @@ namespace Game4
             // O che do nhieu cot, nhan vat da co cot xem truoc rieng.
             if (!nhieuCot || !coCotXem())
             {
-                Char.myCharz().paintCharBody(g,
-                        xVungTui() + rongVungTui() / 2,
-                        yOTui() + TB_SO_HANG * o * 4 / 5, 1, 0, true);
+                veNguoiVaPet(g, xVungTui() + rongVungTui() / 2,
+                        yOTui() + TB_SO_HANG * o * 4 / 5);
             }
 
             for (int m = 0; m < mac.Length; m++)
@@ -6892,6 +6891,40 @@ namespace Game4
                 veMotO(g, mac[m], xy[0], xy[1], o,
                         m == sellectInventory && newSelected == 0,
                         m < TEN_O_TRANG_BI.Length ? TEN_O_TRANG_BI[m] : "", m);
+            }
+        }
+
+        /// <summary>
+        /// Vẽ nhân vật kèm pet đứng cạnh, đúng như ngoài bản đồ.
+        /// </summary>
+        /// <remarks>
+        /// <para>Ván bay và các món khoác trên người vốn đã nằm trong hình nhân
+        /// vật, nên chỉ còn thiếu con pet — nó là một nhân vật riêng đi theo sau.
+        /// Thiếu nó thì khung xem trước không giống thứ người chơi thật sự thấy
+        /// ngoài bản đồ.</para>
+        ///
+        /// <para>Pet vẽ ở tư thế đứng yên hướng sang phải (cdir 1, cf 0): lấy
+        /// khung đang chạy thì nó nhấp nhổm theo từng bước chân, và lúc đánh nhau
+        /// thì tay chân vung ra khỏi khung.</para>
+        ///
+        /// <para>Bọc try/catch vì ảnh có thể chưa tải xong — một con pet thiếu
+        /// ảnh không được phép làm dừng phần vẽ của cả bảng.</para>
+        /// </remarks>
+        private void veNguoiVaPet(mGraphics g, int xGiua, int yChan)
+        {
+            Char pet = Char.myCharz().charFocus;
+            int lech = (pet != null) ? 14 : 0;
+            Char.myCharz().paintCharBody(g, xGiua - lech, yChan, 1, 0, true);
+            if (pet == null)
+            {
+                return;
+            }
+            try
+            {
+                pet.paintCharBody(g, xGiua + 26, yChan - 2, 1, 0, false);
+            }
+            catch (Exception)
+            {
             }
         }
 

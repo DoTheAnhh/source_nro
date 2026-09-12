@@ -38,6 +38,49 @@ import nro.entity.shop.tab.TabShop;
 
 public class ShopService {
 
+    /**
+     * Gửi bộ phận hình để client cho nhân vật <b>mặc thử</b> món trong cửa hàng.
+     *
+     * <h3>Mỗi loại một chỗ đứng trên người</h3>
+     *
+     * <ul>
+     *   <li><b>Cải trang</b> (loại 5) thay cả đầu, thân và chân.</li>
+     *   <li><b>Đeo lưng</b> (8) và <b>ván bay</b> (9) nằm ở phần lưng — một mã
+     *       hình duy nhất, lấy từ cột <code>part</code>.</li>
+     * </ul>
+     *
+     * <p>Trước đây chỉ cải trang được gửi, nên chọn đeo lưng hay ván bay trong
+     * cửa hàng thì nhân vật đứng y nguyên: không xem trước được thứ mình sắp
+     * mua.</p>
+     *
+     * <p>Khuôn gói giữ nguyên: một byte có/không, rồi bốn số đầu · thân · chân ·
+     * lưng, phần nào không đổi thì ghi -1.</p>
+     */
+    private void guiHinhMacThu(nro.net.io.Message msg,
+            nro.entity.template.ItemTemplate temp) throws java.io.IOException {
+        if (temp == null) {
+            msg.writer().writeByte(0);
+            return;
+        }
+        if (temp.type == 5) {
+            msg.writer().writeByte(1);
+            msg.writer().writeShort(temp.head);
+            msg.writer().writeShort(temp.body);
+            msg.writer().writeShort(temp.leg);
+            msg.writer().writeShort(-1);
+            return;
+        }
+        if (temp.type == 8 || temp.type == 9) {
+            msg.writer().writeByte(1);
+            msg.writer().writeShort(-1);
+            msg.writer().writeShort(-1);
+            msg.writer().writeShort(-1);
+            msg.writer().writeShort(temp.part);
+            return;
+        }
+        msg.writer().writeByte(0);
+    }
+
     private static final byte COST_GOLD = 0;
     private static final byte COST_GEM = 1;
     private static final byte COST_RUBY = 3;
@@ -315,15 +358,7 @@ public class ShopService {
                             msg.writer().writeInt(option.paramMax);
                         }
                         msg.writer().writeByte(itemShop.isNew ? 1 : 0);
-                        if (itemShop.temp.type == 5) {
-                            msg.writer().writeByte(1);
-                            msg.writer().writeShort(itemShop.temp.head);
-                            msg.writer().writeShort(itemShop.temp.body);
-                            msg.writer().writeShort(itemShop.temp.leg);
-                            msg.writer().writeShort(-1);
-                        } else {
-                            msg.writer().writeByte(0);
-                        }
+                        guiHinhMacThu(msg, itemShop.temp);
                     }
                 }
                 player.sendMessage(msg);
@@ -413,15 +448,7 @@ public class ShopService {
                             msg.writer().writeInt(option.paramMax);
                         }
                         msg.writer().writeByte(itemShop.isNew ? 1 : 0);
-                        if (itemShop.temp.type == 5) {
-                            msg.writer().writeByte(1);
-                            msg.writer().writeShort(itemShop.temp.head);
-                            msg.writer().writeShort(itemShop.temp.body);
-                            msg.writer().writeShort(itemShop.temp.leg);
-                            msg.writer().writeShort(-1);
-                        } else {
-                            msg.writer().writeByte(0);
-                        }
+                        guiHinhMacThu(msg, itemShop.temp);
                     }
                 }
                 player.sendMessage(msg);
@@ -460,15 +487,7 @@ public class ShopService {
                             msg.writer().writeInt(option.paramMax);
                         }
                         msg.writer().writeByte(itemShop.isNew ? 1 : 0);
-                        if (itemShop.temp.type == 5) {
-                            msg.writer().writeByte(1);
-                            msg.writer().writeShort(itemShop.temp.head);
-                            msg.writer().writeShort(itemShop.temp.body);
-                            msg.writer().writeShort(itemShop.temp.leg);
-                            msg.writer().writeShort(-1);
-                        } else {
-                            msg.writer().writeByte(0);
-                        }
+                        guiHinhMacThu(msg, itemShop.temp);
                     }
                 }
                 player.sendMessage(msg);
@@ -562,15 +581,7 @@ public class ShopService {
                 msg.writer().writeInt(-1);
                 //
                 msg.writer().writeByte(1);
-                if (item.template.type == 5) {
-                    msg.writer().writeByte(1);
-                    msg.writer().writeShort(item.template.head);
-                    msg.writer().writeShort(item.template.body);
-                    msg.writer().writeShort(item.template.leg);
-                    msg.writer().writeShort(-1);
-                } else {
-                    msg.writer().writeByte(0);
-                }
+                guiHinhMacThu(msg, item.template);
             }
             player.sendMessage(msg);
         } catch (Exception e) {
@@ -614,15 +625,7 @@ public class ShopService {
                     msg.writer().writeInt(io.paramMax);
                 }
                 msg.writer().writeByte(0);
-                if (item.template.type == 5) {
-                    msg.writer().writeByte(1);
-                    msg.writer().writeShort(item.template.head);
-                    msg.writer().writeShort(item.template.body);
-                    msg.writer().writeShort(item.template.leg);
-                    msg.writer().writeShort(-1);
-                } else {
-                    msg.writer().writeByte(0);
-                }
+                guiHinhMacThu(msg, item.template);
             }
             player.sendMessage(msg);
         } catch (Exception e) {
