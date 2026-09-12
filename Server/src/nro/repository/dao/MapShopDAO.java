@@ -199,6 +199,85 @@ public class MapShopDAO {
      * sang Mị Nương (77) chỉ để lấy hình — mất luôn menu và cửa hàng. Trả lại
      * NPC 85, mượn hình 77. Chỉ sửa khi bản đồ không còn NPC 85 nào.
      */
+    /**
+     * Chữa cột <code>npcs</code> của những bản đồ <b>không đọc được</b>.
+     *
+     * <p>Một bản trước ghi lại danh sách NPC của Đảo Kamê mà <b>quên dấu đóng
+     * <code>]</code></b>. Chuỗi cụt thì hàm đọc JSON trả về rỗng, còn chỗ nạp bản
+     * đồ lại gọi thẳng <code>size()</code> trên đó: máy chủ chết ngay giữa lượt
+     * nạp dữ liệu và không lên được. Hàm này chạy <b>trước</b> lượt nạp nên chữa
+     * được cả những bản ghi đã hỏng sẵn.
+     *
+     * <p>Cách chữa: bỏ dấu phẩy thừa ở cuối, thêm cho đủ dấu đóng còn thiếu.
+     * Chữa không nổi thì đặt về danh sách rỗng — bản đồ đó tạm không có NPC, còn
+     * hơn cả máy chủ không lên; log ghi rõ bản đồ nào.
+     */
+    public static void vaChuaNpcMap() {
+        java.util.Map<Integer, String> hong = new java.util.LinkedHashMap<>();
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id, npcs FROM map_template");
+            while (rs.next()) {
+                String json = rs.getString("npcs");
+                if (docDuocMang(json)) {
+                    continue;
+                }
+                hong.put(rs.getInt("id"), json);
+            }
+        } catch (Exception ex) {
+            Logger.logException(MapShopDAO.class, ex, "Lỗi đọc cột npcs của bản đồ");
+            return;
+        } finally {
+            dispose(rs);
+        }
+        for (java.util.Map.Entry<Integer, String> e : hong.entrySet()) {
+            String chua = chuaMangJson(e.getValue());
+            try {
+                ConnectDB.executeUpdate("UPDATE map_template SET npcs = ? WHERE id = ?",
+                        chua, e.getKey());
+                Logger.success("Bản đồ " + e.getKey() + ": cột npcs hỏng, đã chữa thành "
+                        + chua + "\n");
+            } catch (Exception ex) {
+                Logger.logException(MapShopDAO.class, ex,
+                        "Lỗi chữa cột npcs của bản đồ " + e.getKey());
+            }
+        }
+    }
+
+    /** Chuỗi này có đọc ra được một mảng JSON không — đọc y như lúc nạp bản đồ. */
+    private static boolean docDuocMang(String json) {
+        if (json == null) {
+            return false;
+        }
+        try {
+            return org.json.simple.JSONValue.parse(json.replaceAll("\\\"", ""))
+                    instanceof org.json.simple.JSONArray;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    /** Vá một chuỗi mảng JSON bị cụt: bỏ dấu phẩy thừa, thêm dấu đóng thiếu. */
+    private static String chuaMangJson(String json) {
+        if (json == null) {
+            return "[]";
+        }
+        String t = json.trim();
+        if (t.isEmpty()) {
+            return "[]";
+        }
+        for (int lan = 0; lan < 8; lan++) {
+            while (t.endsWith(",")) {
+                t = t.substring(0, t.length() - 1);
+            }
+            if (docDuocMang(t)) {
+                return t;
+            }
+            t = t + "]";
+        }
+        return "[]";
+    }
+
     public static void suaNpcDaoKame() {
         CrisResultSet rs = null;
         String json = null;
@@ -259,6 +338,7 @@ public class MapShopDAO {
             }
             sb.append(']');
         }
+        sb.append(']');
         try {
             ConnectDB.executeUpdate("UPDATE map_template SET npcs = ? WHERE id = 5", sb.toString());
             Logger.success("Đảo Kamê: trả lại NPC Tranh Ngọc Namếc, mượn hình Mị Nương\n");

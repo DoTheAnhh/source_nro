@@ -189,6 +189,10 @@ public class Map implements Runnable {
     public void initNpc(byte[] npcId, short[] npcX, short[] npcY, byte[] npcRes) {
         this.npcs = new ArrayList<>();
         for (int i = 0; i < npcId.length; i++) {
+            if (npcId[i] < 0) {
+                // Dong du lieu hong, da bi danh dau luc nap — bo qua NPC nay.
+                continue;
+            }
             Npc npc = NpcFactory.createNPC(this.mapId, 1, npcX[i], npcY[i], npcId[i]);
             if (npc != null && npcRes != null && i < npcRes.length) {
                 npc.muonHinh(npcRes[i]);
@@ -219,6 +223,10 @@ public class Map implements Runnable {
     public void initMob(byte[] mobTemp, byte[] mobLevel, int[] mobHp, short[] mobX, short[] mobY) {
         for (int i = 0; i < mobTemp.length; i++) {
             int mobTempId = mobTemp[i];
+            if (mobTempId < 0) {
+                // Dong du lieu hong, da bi danh dau luc nap — bo qua con nay.
+                continue;
+            }
             MobTemplate temp = Manager.getMobTemplateByTemp(mobTempId);
             if (temp != null) {
                 Mob mob = new Mob();

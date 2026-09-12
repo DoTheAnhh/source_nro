@@ -303,6 +303,8 @@ public final class Manager {
     // Cua hang Tranh Ngoc Namec ban bang diem san boss — mot lan, truoc loadDatabase.
     nro.repository.dao.MapShopDAO.chuyenShopNamekSangDiemSanBoss();
     // Dao Kame: tra lai NPC Tranh Ngoc Namec (muon hinh Mi Nuong) — mot lan.
+    // Cot npcs hong (chuoi JSON cut) lam dut ca luot nap du lieu — chua truoc.
+    nro.repository.dao.MapShopDAO.vaChuaNpcMap();
     nro.repository.dao.MapShopDAO.suaNpcDaoKame();
 
     this.loadDatabase();
@@ -494,6 +496,23 @@ public final class Manager {
      * ({@code loadItemTemplates()}, {@code loadMobs()}...) rồi cho phép nạp lại
      * từng phần lúc chạy. Vừa dễ đọc hơn, vừa bỏ được nhu cầu restart.</p>
      */
+    /**
+     * Đọc một cột JSON dạng mảng của bảng bản đồ.
+     *
+     * <p>Cột hỏng hoặc rỗng thì trả <b>mảng rỗng</b>, không trả rỗng tuyệt đối.
+     * Bản cũ ép kiểu thẳng kết quả đọc rồi gọi <code>size()</code>: một dòng dữ
+     * liệu hỏng là lỗi con trỏ rỗng ném ra giữa lượt nạp, máy chủ dừng ngay tại
+     * đó và không lên được.
+     */
+    private static JSONArray mangJson(String raw) {
+        try {
+            Object o = raw == null ? null : JSONValue.parse(raw.replaceAll("\\\"", ""));
+            return o instanceof JSONArray ? (JSONArray) o : new JSONArray();
+        } catch (Exception ex) {
+            return new JSONArray();
+        }
+    }
+
     private void loadDatabase() {
         long st = System.currentTimeMillis();
         JSONArray dataArray;
@@ -509,9 +528,9 @@ public final class Manager {
                 Part part = new Part();
                 part.id = rs.getShort("id");
                 part.type = rs.getByte("type");
-                dataArray = (JSONArray) JSONValue.parse(rs.getString("data").replaceAll("\\\"", ""));
+                dataArray = mangJson(rs.getString("data"));
                 for (int j = 0; j < dataArray.size(); j++) {
-                    JSONArray pd = (JSONArray) JSONValue.parse(String.valueOf(dataArray.get(j)));
+                    JSONArray pd = mangJson(String.valueOf(dataArray.get(j)));
                     part.partDetails.add(new PartDetail(Short.parseShort(String.valueOf(pd.get(0))),
                             Byte.parseByte(String.valueOf(pd.get(1))),
                             Byte.parseByte(String.valueOf(pd.get(2)))));
@@ -1050,7 +1069,10 @@ public final class Manager {
                     );
                     for (int j = 0; j < dataArray.size(); j++) {
                         WayPoint wp = new WayPoint();
-                        JSONArray dtwp = (JSONArray) JSONValue.parse(String.valueOf(dataArray.get(j)));
+                        JSONArray dtwp = mangJson(String.valueOf(dataArray.get(j)));
+                        if (dtwp.size() < 10) {
+                            continue;
+                        }
                         wp.name = String.valueOf(dtwp.get(0));
                         wp.minX = Short.parseShort(String.valueOf(dtwp.get(1)));
                         wp.minY = Short.parseShort(String.valueOf(dtwp.get(2)));
@@ -1066,14 +1088,18 @@ public final class Manager {
                     }
                     dataArray.clear();
                     //load mobs
-                    dataArray = (JSONArray) JSONValue.parse(rs.getString("mobs").replaceAll("\\\"", ""));
+                    dataArray = mangJson(rs.getString("mobs"));
                     mapTemplate.mobTemp = new byte[dataArray.size()];
                     mapTemplate.mobLevel = new byte[dataArray.size()];
                     mapTemplate.mobHp = new int[dataArray.size()];
                     mapTemplate.mobX = new short[dataArray.size()];
                     mapTemplate.mobY = new short[dataArray.size()];
                     for (int j = 0; j < dataArray.size(); j++) {
-                        JSONArray dtm = (JSONArray) JSONValue.parse(String.valueOf(dataArray.get(j)));
+                        JSONArray dtm = mangJson(String.valueOf(dataArray.get(j)));
+                        if (dtm.size() < 5) {
+                            mapTemplate.mobTemp[j] = -1;
+                            continue;
+                        }
                         mapTemplate.mobTemp[j] = Byte.parseByte(String.valueOf(dtm.get(0)));
                         mapTemplate.mobLevel[j] = Byte.parseByte(String.valueOf(dtm.get(1)));
                         mapTemplate.mobHp[j] = Integer.parseInt(String.valueOf(dtm.get(2)));
@@ -1083,13 +1109,17 @@ public final class Manager {
                     }
                     dataArray.clear();
                     //load npcs
-                    dataArray = (JSONArray) JSONValue.parse(rs.getString("npcs").replaceAll("\\\"", ""));
+                    dataArray = mangJson(rs.getString("npcs"));
                     mapTemplate.npcId = new byte[dataArray.size()];
                     mapTemplate.npcX = new short[dataArray.size()];
                     mapTemplate.npcY = new short[dataArray.size()];
                     mapTemplate.npcRes = new byte[dataArray.size()];
                     for (int j = 0; j < dataArray.size(); j++) {
-                        JSONArray dtn = (JSONArray) JSONValue.parse(String.valueOf(dataArray.get(j)));
+                        JSONArray dtn = mangJson(String.valueOf(dataArray.get(j)));
+                        if (dtn.size() < 3) {
+                            mapTemplate.npcId[j] = -1;
+                            continue;
+                        }
                         mapTemplate.npcId[j] = Byte.parseByte(String.valueOf(dtn.get(0)));
                         mapTemplate.npcX[j] = Short.parseShort(String.valueOf(dtn.get(1)));
                         mapTemplate.npcY[j] = Short.parseShort(String.valueOf(dtn.get(2)));
@@ -1241,7 +1271,10 @@ public final class Manager {
                     .replaceAll("\",\"", ","));
             for (int j = 0; j < dataArray.size(); j++) {
                 WayPoint wp = new WayPoint();
-                JSONArray dtwp = (JSONArray) JSONValue.parse(String.valueOf(dataArray.get(j)));
+                JSONArray dtwp = mangJson(String.valueOf(dataArray.get(j)));
+                if (dtwp.size() < 10) {
+                    continue;
+                }
                 wp.name = String.valueOf(dtwp.get(0));
                 wp.minX = Short.parseShort(String.valueOf(dtwp.get(1)));
                 wp.minY = Short.parseShort(String.valueOf(dtwp.get(2)));
@@ -1255,14 +1288,18 @@ public final class Manager {
                 mapTemplate.wayPoints.add(wp);
             }
 
-            dataArray = (JSONArray) JSONValue.parse(rs.getString("mobs").replaceAll("\\\"", ""));
+            dataArray = mangJson(rs.getString("mobs"));
             mapTemplate.mobTemp = new byte[dataArray.size()];
             mapTemplate.mobLevel = new byte[dataArray.size()];
             mapTemplate.mobHp = new int[dataArray.size()];
             mapTemplate.mobX = new short[dataArray.size()];
             mapTemplate.mobY = new short[dataArray.size()];
             for (int j = 0; j < dataArray.size(); j++) {
-                JSONArray dtm = (JSONArray) JSONValue.parse(String.valueOf(dataArray.get(j)));
+                JSONArray dtm = mangJson(String.valueOf(dataArray.get(j)));
+                if (dtm.size() < 5) {
+                    mapTemplate.mobTemp[j] = -1;
+                    continue;
+                }
                 mapTemplate.mobTemp[j] = Byte.parseByte(String.valueOf(dtm.get(0)));
                 mapTemplate.mobLevel[j] = Byte.parseByte(String.valueOf(dtm.get(1)));
                 mapTemplate.mobHp[j] = Integer.parseInt(String.valueOf(dtm.get(2)));
@@ -1270,13 +1307,17 @@ public final class Manager {
                 mapTemplate.mobY[j] = Short.parseShort(String.valueOf(dtm.get(4)));
             }
 
-            dataArray = (JSONArray) JSONValue.parse(rs.getString("npcs").replaceAll("\\\"", ""));
+            dataArray = mangJson(rs.getString("npcs"));
             mapTemplate.npcId = new byte[dataArray.size()];
             mapTemplate.npcX = new short[dataArray.size()];
             mapTemplate.npcY = new short[dataArray.size()];
             mapTemplate.npcRes = new byte[dataArray.size()];
             for (int j = 0; j < dataArray.size(); j++) {
-                JSONArray dtn = (JSONArray) JSONValue.parse(String.valueOf(dataArray.get(j)));
+                JSONArray dtn = mangJson(String.valueOf(dataArray.get(j)));
+                if (dtn.size() < 3) {
+                    mapTemplate.npcId[j] = -1;
+                    continue;
+                }
                 mapTemplate.npcId[j] = Byte.parseByte(String.valueOf(dtn.get(0)));
                 mapTemplate.npcX[j] = Short.parseShort(String.valueOf(dtn.get(1)));
                 mapTemplate.npcY[j] = Short.parseShort(String.valueOf(dtn.get(2)));
