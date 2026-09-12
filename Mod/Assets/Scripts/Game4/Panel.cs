@@ -588,7 +588,6 @@ namespace Game4
     
         private Effect eBanner;
     
-        private static FrameImage screenTab6;
     
         private bool isUp;
     
@@ -6374,14 +6373,17 @@ namespace Game4
         /// Tên từng ô trang bị, hiện khi ô còn trống.
         /// </summary>
         /// <remarks>
-        /// Năm ô đầu đã có ảnh mờ sẵn trong <c>screenTab6</c> nên để trống. Các ô
-        /// sau ảnh mờ khó đoán, nên ghi thẳng tên.
+        /// <para>Ô nào cũng có tên. Năm ô đầu trước đây để trống vì trông vào ảnh
+        /// mờ trong <c>screenTab6</c> — mà biến ấy <b>chưa bao giờ được gán</b>,
+        /// nên ô trống đầu tiên là một lần chạm vào null: cả phần vẽ còn lại của
+        /// bảng dừng giữa chừng. Đó đúng là cảnh cởi một món ra thì mọi ô khác
+        /// biến mất.</para>
         ///
-        /// Nếu một tên nằm sai ô thì chỉ cần đổi thứ tự trong mảng này — thứ tự ô
-        /// do máy chủ quyết định, không phải do đây.
+        /// <para>Nếu một tên nằm sai ô thì chỉ cần đổi thứ tự trong mảng này —
+        /// thứ tự ô do máy chủ quyết định, không phải do đây.</para>
         /// </remarks>
         private static readonly string[] TEN_O_TRANG_BI = {
-            "", "", "", "", "",
+            "Áo", "Quần", "Găng", "Giày", "Rađa",
             "Cải trang", "Giáp luyện tập", "Pet", "Đeo lưng",
             "Ván bay", "Sách", "Chân mệnh"
         };
@@ -6435,17 +6437,25 @@ namespace Game4
 
         private void veDaiTabTui(mGraphics g)
         {
+            // Cùng kiểu thanh gạt với hàng thẻ của bảng NPC: một rãnh lõm chạy
+            // suốt, thẻ đang xem là viên thuốc cam trượt trong rãnh.
             int rong = wScroll / TEN_TAB_TUI.Length;
+            g.setColor(MAU_VIEN_MO, 0.45f);
+            g.fillRect(xScroll, yScroll, rong * TEN_TAB_TUI.Length,
+                    CAO_DAI_TAB, 10);
+            g.setColor(0xEBD7B8, 1f);
+            g.fillRect(xScroll + 1, yScroll + 1,
+                    rong * TEN_TAB_TUI.Length - 2, CAO_DAI_TAB - 2, 9);
             for (int i = 0; i < TEN_TAB_TUI.Length; i++)
             {
                 int x = xScroll + i * rong;
                 bool dangXem = (i == newSelected);
-                g.setColor(dangXem ? 16383818 : 15723751);
-                g.fillRect(x, yScroll, rong - 1, CAO_DAI_TAB);
                 if (dangXem)
                 {
-                    g.setColor(13524492);
-                    g.fillRect(x, yScroll + CAO_DAI_TAB - 3, rong - 1, 3);
+                    g.setColor(MAU_VIEN_BANG, 0.9f);
+                    g.fillRect(x + 1, yScroll + 1, rong - 2, CAO_DAI_TAB - 2, 9);
+                    g.setColor(MAU_THE_CHON, 1f);
+                    g.fillRect(x + 2, yScroll + 2, rong - 4, CAO_DAI_TAB - 4, 8);
                 }
                 mFont mf = dangXem ? mFont.tahoma_7b_dark : mFont.tahoma_7_grey;
                 mf.drawString(g, TEN_TAB_TUI[i], x + rong / 2,
@@ -6661,19 +6671,24 @@ namespace Game4
         private void veMotO(mGraphics g, Item it, int x, int y, int o,
                 bool dangChon, string ten, int oMac)
         {
-            g.setColor(15196114);
-            g.drawRect(x, y, o, o);
-            g.setColor(dangChon ? 16383818 : 9993045);
-            g.fillRect(x + 2, y + 2, o - 3, o - 3);
+            // Ô bo góc, viền nâu, nền sẫm hơn nền bảng.
+            //
+            // Ảnh vật phẩm phần lớn màu sáng nên nền ô phải sẫm, không thì món
+            // nào cũng chìm vào nền kem. Ô đang chọn đổi sang nền cam và viền đậm
+            // thay vì chỉ sáng hơn một chút như bản cũ.
+            g.setColor(MAU_VIEN_BANG, dangChon ? 0.95f : 0.55f);
+            g.fillRect(x, y, o, o, 5);
+            g.setColor(dangChon ? MAU_THE_CHON : MAU_O_TUI, 1f);
+            g.fillRect(x + 1, y + 1, o - 2, o - 2, 4);
 
             if (it == null || it.template == null)
             {
-                if (oMac >= 0 && (ten == null || ten.Length == 0))
-                {
-                    screenTab6.drawFrame(oMac, x + o / 2 - 8, y + o / 2 - 8, 0,
-                            mGraphics.TOP | mGraphics.LEFT, g);
-                }
-                else if (ten != null && ten.Length > 0)
+                // Ô trống: ghi tên ô.
+                //
+                // KHÔNG gọi screenTab6 nữa — biến ấy chưa bao giờ được gán nên
+                // mỗi ô trống là một lần chạm vào null, và phần vẽ còn lại của cả
+                // bảng dừng ngay tại đó.
+                if (ten != null && ten.Length > 0)
                 {
                     veTenO(g, ten, x, y, o);
                 }
@@ -7415,6 +7430,9 @@ namespace Game4
         /// <summary>Cam sáng của thẻ tab đang chọn.</summary>
         private const int MAU_THE_CHON = 0xF0A164;
 
+        /// <summary>Nền một ô đồ — sẫm hơn nền bảng để ảnh vật phẩm nổi lên.</summary>
+        private const int MAU_O_TUI = 0xE8D2AE;
+
         /// <summary>
         /// Khung của cả bảng: viền nâu đôi, bo góc, nền kem.
         /// </summary>
@@ -7499,8 +7517,6 @@ namespace Game4
             g.fillRect(x - 4, 50, w, 30, 15);
             g.setColor(0xEBD7B8, 1f);
             g.fillRect(x - 3, 51, w - 2, 28, 14);
-            g.setColor(MAU_VIEN_MO, 0.18f);
-            g.fillRect(x - 3, 51, w - 2, 3, 2);
         }
 
         /// <summary>Viên thuốc của thẻ đang chọn; thẻ khác không vẽ nền.</summary>
@@ -7516,8 +7532,8 @@ namespace Game4
             g.fillRect(x, y, w, h, 12);
             g.setColor(MAU_THE_CHON, 1f);
             g.fillRect(x + 1, y + 1, w - 2, h - 2, 11);
-            g.setColor(0xFFE2B8, 0.75f);
-            g.fillRect(x + 4, y + 2, w - 8, 3, 2);
+            // Không vẽ vạch sáng ở đỉnh viên thuốc: chữ của thẻ có hai dòng, dòng
+            // trên nằm đúng chỗ vạch ấy nên nhìn như chữ bị gạch ngang.
         }
 
         /// <summary>Dải tiền ở đáy bảng: nền cam nhạt bo góc, hai nét ngăn trên.</summary>
