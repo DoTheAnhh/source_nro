@@ -1871,10 +1871,11 @@ public class Player implements Runnable {
 
     /** Xử lý hàng đợi chat của nhân vật. <b>Tên hàm sai quy ước.</b> */
     private void UpdateChat() {
-        if (isPl() && Util.canDoWithTime(TimeChatKhukhu, Util.nextInt(15000, 25000))) {
-            Service.getInstance().chat(this, "Khụ khụ...");
-            TimeChatKhukhu = System.currentTimeMillis();
-        }
+        // Khong tu chat "Khu khu..." nua.
+        //
+        // Cu 15 den 25 giay moi nhan vat lai tu buong mot cau, ke ca khi
+        // nguoi choi dang dung yen. Bong bong chat che mat NPC va nguoi ben
+        // canh, va khong ai doc no lan thu hai.
     }
 
     /** Cập nhật hiệu ứng thưởng khi hạ Whis. <b>Tên hàm sai quy ước.</b> */

@@ -442,7 +442,7 @@ namespace Game3
     		mResources.learn_with = "Học với";
     		mResources.buy_with = "Mua bằng";
     		mResources.can_not_do_when_die = "Không thể thực hiện khi đang kiệt sức";
-    		mResources.use_for_combine = "Sử dụng\nđể\nkết hợp";
+    		mResources.use_for_combine = "Sử dụng để\nnâng cấp";
     		mResources.use_for_trade = "Sử dụng\nđể\ngiao dịch";
     		mResources.not_enough_luong_world_channel = "Bạn không đủ ngọc để chat kênh thế giới";
     		mResources.world_channel_5_luong = "Chat kênh thế giới (5 ngọc)";

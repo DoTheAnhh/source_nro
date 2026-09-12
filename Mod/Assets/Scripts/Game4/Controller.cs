@@ -5252,6 +5252,15 @@ namespace Game4
                 {
                     clanMessage.recieve = msg.reader().readByte();
                     clanMessage.maxCap = msg.reader().readByte();
+                    // Loi xin dau cung vao khung chat nhu mot dong tin.
+                    //
+                    // The "Bang hoi" cua khung chat la noi nguoi choi that su
+                    // doc; loi xin chi nam o bang bang hoi thi phai mo bang moi
+                    // biet co ai vua xin.
+                    God.ChatUI.getInstance().nhanChatBang(clanMessage.id,
+                            clanMessage.playerName,
+                            "xin đậu (" + clanMessage.recieve + "/"
+                            + clanMessage.maxCap + ")");
                     flag = msg.reader().readByte() == 1;
                     if (flag)
                     {
@@ -5273,7 +5282,13 @@ namespace Game4
                         GameCanvas.panel.updateRequest(clanMessage.recieve, clanMessage.maxCap);
                     }
                 }
-                else if (b == 2 && Char.myCharz().role == 0)
+                else if (b == 2)
+                {
+                    // Loi xin vao bang hien nhu mot dong tin trong khung chat.
+                    God.ChatUI.getInstance().nhanChatBang(clanMessage.id,
+                            clanMessage.playerName, "xin vào bang");
+                }
+                if (b == 2 && Char.myCharz().role == 0)
                 {
                     GameScr.isNewClanMessage = true;
                     clanMessage.option = new string[2]
