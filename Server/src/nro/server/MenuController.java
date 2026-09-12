@@ -68,6 +68,15 @@ public class MenuController {
                 nro.service.item.DonDoHetHanService.gI().xacNhan(player, select);
                 return;
             }
+            // Hai bang doi manh lay trung rong nhi cung khong thuoc NPC nao.
+            if (mucDangMo == ConstNpc.DOI_TRUNG_RONG_NHI) {
+                nro.service.rongnhi.RongNhiService.gI().chonLoai(player, select);
+                return;
+            }
+            if (mucDangMo == ConstNpc.DOI_TRUNG_RONG_NHI_SO_LUONG) {
+                nro.service.rongnhi.RongNhiService.gI().chonSoLuong(player, select);
+                return;
+            }
         }
         switch (npcId) {
 

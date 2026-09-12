@@ -95,6 +95,7 @@ public class SystemPanel extends JPanel {
         tabs.addTab("Sách tuyệt kỹ", buildSachTuyetKyTab());
         tabs.addTab("Phúc lợi", buildPhucLoiTab());
         tabs.addTab("Bông tai", buildBongTaiTab());
+        tabs.addTab("Rồng nhí", buildRongNhiTab());
         tabs.addTab("Chân mệnh", buildChanMenhTab());
         tabs.addTab("Đệ tử", buildDeTuTab());
         tabs.addTab("Sự kiện", buildSuKienTab());
@@ -11670,6 +11671,442 @@ public class SystemPanel extends JPanel {
         root.add(chia, BorderLayout.CENTER);
         btLoadCap();
         return root;
+    }
+
+    // ==================================================================
+    //  Tab "Rồng nhí" — trứng nở ra con gì, chỉ số nào, hạn bao lâu
+    // ==================================================================
+
+    private final DefaultTableModel rnLoaiModel = new DefaultTableModel(
+            new Object[]{"ID", "Tên", "Vật phẩm", "Ra từ trứng", "Tỉ lệ %",
+                "Vĩnh viễn %", "Hạn (ngày)", "Khoá", "Bật"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return false;
+        }
+    };
+    private final JTable rnLoaiTable = new JTable(rnLoaiModel);
+
+    private final DefaultTableModel rnChiSoModel = new DefaultTableModel(
+            new Object[]{"ID", "Chỉ số", "Từ", "Đến", "Tỉ lệ ra %", "Bật"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return false;
+        }
+    };
+    private final JTable rnChiSoTable = new JTable(rnChiSoModel);
+
+    private final JTextField rnTrungThuong = new JTextField(7);
+    private final JTextField rnTrungVang = new JTextField(7);
+    private final JTextField rnManh = new JTextField(7);
+    private final JTextField rnGiaThuong = new JTextField(5);
+    private final JTextField rnGiaVang = new JTextField(5);
+
+    private JComponent buildRongNhiTab() {
+        JPanel root = new JPanel(new BorderLayout(0, 6));
+        root.setOpaque(false);
+        root.setBorder(new EmptyBorder(8, 8, 8, 8));
+        root.add(nhan("Trứng rồng nhí — dùng trứng thì game bốc <b>một</b> loại "
+                + "trong bảng trái theo tỉ lệ, rồi bốc <b>từng dòng</b> chỉ số "
+                + "trong bảng phải theo tỉ lệ riêng của dòng đó. Hạn dùng: trúng "
+                + "\"vĩnh viễn %\" thì vĩnh viễn, không thì bốc số ngày trong "
+                + "khoảng đã khai. Mảnh trứng dùng trong hành trang sẽ mở bảng "
+                + "đổi theo giá dưới đây. Không có gì viết cứng trong mã."),
+                BorderLayout.NORTH);
+
+        JPanel pCauHinh = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        pCauHinh.setOpaque(false);
+        pCauHinh.setBorder(titled("Vật phẩm và giá đổi"));
+        pCauHinh.add(new JLabel("Trứng thường:"));
+        pCauHinh.add(rnTrungThuong);
+        pCauHinh.add(button("Chọn", ACCENT, e -> chonVaoO(rnTrungThuong)));
+        pCauHinh.add(new JLabel("Trứng vàng:"));
+        pCauHinh.add(rnTrungVang);
+        pCauHinh.add(button("Chọn", ACCENT, e -> chonVaoO(rnTrungVang)));
+        pCauHinh.add(new JLabel("Mảnh:"));
+        pCauHinh.add(rnManh);
+        pCauHinh.add(button("Chọn", ACCENT, e -> chonVaoO(rnManh)));
+        pCauHinh.add(new JLabel("Mảnh đổi 1 trứng thường:"));
+        pCauHinh.add(rnGiaThuong);
+        pCauHinh.add(new JLabel("trứng vàng:"));
+        pCauHinh.add(rnGiaVang);
+        pCauHinh.add(button("Lưu cấu hình", OK_GREEN, e -> rnLuuCauHinh()));
+
+        rnLoaiTable.setRowHeight(24);
+        rnLoaiTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        rnLoaiTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        int[] wL = {40, 150, 200, 110, 70, 85, 90, 50, 40};
+        for (int i = 0; i < wL.length && i < rnLoaiTable.getColumnCount(); i++) {
+            rnLoaiTable.getColumnModel().getColumn(i).setPreferredWidth(wL[i]);
+        }
+        rnLoaiTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                rnLoadChiSo();
+            }
+        });
+        rnLoaiTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    rnSuaLoai(false);
+                }
+            }
+        });
+        JPanel pLoai = new JPanel(new BorderLayout(0, 4));
+        pLoai.setOpaque(false);
+        pLoai.setBorder(titled("Các loại rồng nhí nở ra được"));
+        pLoai.add(ServerGuiUtils.cuon(rnLoaiTable), BorderLayout.CENTER);
+        JPanel bLoai = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        bLoai.setOpaque(false);
+        bLoai.add(button("Thêm loại", OK_GREEN, e -> rnSuaLoai(true)));
+        bLoai.add(button("Sửa loại", ACCENT, e -> rnSuaLoai(false)));
+        bLoai.add(button("Xoá loại", WARN_RED, e -> rnXoaLoai()));
+        bLoai.add(button("Tải lại", GREY, e -> rnLoadLoai()));
+        pLoai.add(bLoai, BorderLayout.SOUTH);
+
+        rnChiSoTable.setRowHeight(24);
+        rnChiSoTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        rnChiSoTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        int[] wC = {40, 240, 60, 60, 80, 40};
+        for (int i = 0; i < wC.length && i < rnChiSoTable.getColumnCount(); i++) {
+            rnChiSoTable.getColumnModel().getColumn(i).setPreferredWidth(wC[i]);
+        }
+        rnChiSoTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    rnSuaChiSo(false);
+                }
+            }
+        });
+        JPanel pChiSo = new JPanel(new BorderLayout(0, 4));
+        pChiSo.setOpaque(false);
+        pChiSo.setBorder(titled("Chỉ số của loại đang chọn"));
+        pChiSo.add(ServerGuiUtils.cuon(rnChiSoTable), BorderLayout.CENTER);
+        JPanel bChiSo = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        bChiSo.setOpaque(false);
+        bChiSo.add(button("Thêm chỉ số", OK_GREEN, e -> rnSuaChiSo(true)));
+        bChiSo.add(button("Sửa chỉ số", ACCENT, e -> rnSuaChiSo(false)));
+        bChiSo.add(button("Xoá chỉ số", WARN_RED, e -> rnXoaChiSo()));
+        pChiSo.add(bChiSo, BorderLayout.SOUTH);
+
+        javax.swing.JSplitPane chia = new javax.swing.JSplitPane(
+                javax.swing.JSplitPane.HORIZONTAL_SPLIT, pLoai, pChiSo);
+        chia.setResizeWeight(0.6);
+        chia.setBorder(null);
+
+        JPanel giua = new JPanel(new BorderLayout(0, 6));
+        giua.setOpaque(false);
+        giua.add(pCauHinh, BorderLayout.NORTH);
+        giua.add(chia, BorderLayout.CENTER);
+        root.add(giua, BorderLayout.CENTER);
+        rnLoadCauHinh();
+        rnLoadLoai();
+        return root;
+    }
+
+    /** Mở bảng chọn vật phẩm rồi ghi id vào ô. */
+    private void chonVaoO(JTextField o) {
+        int id = nro.ui.OptionPicker.chonVatPham(this, laySoAnToan(o.getText()));
+        if (id > 0) {
+            o.setText(String.valueOf(id));
+        }
+    }
+
+    private void rnLoadCauHinh() {
+        rnTrungThuong.setText(String.valueOf(nro.repository.dao.RongNhiDAO.so(
+                nro.repository.dao.RongNhiDAO.K_TRUNG_THUONG, 1879)));
+        rnTrungVang.setText(String.valueOf(nro.repository.dao.RongNhiDAO.so(
+                nro.repository.dao.RongNhiDAO.K_TRUNG_VANG, 1880)));
+        rnManh.setText(String.valueOf(nro.repository.dao.RongNhiDAO.so(
+                nro.repository.dao.RongNhiDAO.K_MANH, 0)));
+        rnGiaThuong.setText(String.valueOf(nro.repository.dao.RongNhiDAO.so(
+                nro.repository.dao.RongNhiDAO.K_MANH_THUONG, 49)));
+        rnGiaVang.setText(String.valueOf(nro.repository.dao.RongNhiDAO.so(
+                nro.repository.dao.RongNhiDAO.K_MANH_VANG, 99)));
+    }
+
+    private void rnLuuCauHinh() {
+        nro.repository.dao.RongNhiDAO.datSo(
+                nro.repository.dao.RongNhiDAO.K_TRUNG_THUONG,
+                laySoAnToan(rnTrungThuong.getText()));
+        nro.repository.dao.RongNhiDAO.datSo(
+                nro.repository.dao.RongNhiDAO.K_TRUNG_VANG,
+                laySoAnToan(rnTrungVang.getText()));
+        nro.repository.dao.RongNhiDAO.datSo(
+                nro.repository.dao.RongNhiDAO.K_MANH,
+                laySoAnToan(rnManh.getText()));
+        nro.repository.dao.RongNhiDAO.datSo(
+                nro.repository.dao.RongNhiDAO.K_MANH_THUONG,
+                laySoAnToan(rnGiaThuong.getText()));
+        nro.repository.dao.RongNhiDAO.datSo(
+                nro.repository.dao.RongNhiDAO.K_MANH_VANG,
+                laySoAnToan(rnGiaVang.getText()));
+        rnLoadCauHinh();
+        note(OK_GREEN, "Đã lưu cấu hình trứng rồng nhí.");
+    }
+
+    private void rnLoadLoai() {
+        rnLoaiModel.setRowCount(0);
+        for (nro.repository.dao.RongNhiDAO.Loai x
+                : nro.repository.dao.RongNhiDAO.dsLoai(false)) {
+            rnLoaiModel.addRow(new Object[]{x.id, x.ten,
+                x.itemId + " — " + tenVatPham(x.itemId), tenLoaiTrung(x.tuTrung),
+                soGon(x.tiLe), soGon(x.tiLeVinhVien),
+                x.ngayMin == x.ngayMax ? String.valueOf(x.ngayMin)
+                        : (x.ngayMin + " – " + x.ngayMax),
+                x.khoa ? "có" : "", x.bat ? "có" : ""});
+        }
+        rnChiSoModel.setRowCount(0);
+    }
+
+    private static String tenLoaiTrung(int t) {
+        if (t == nro.repository.dao.RongNhiDAO.TU_TRUNG_THUONG) {
+            return "Trứng thường";
+        }
+        if (t == nro.repository.dao.RongNhiDAO.TU_TRUNG_VANG) {
+            return "Trứng vàng";
+        }
+        return "Cả hai";
+    }
+
+    /** Id loại đang chọn trong bảng trái, hoặc -1. */
+    private int rnLoaiDangChon() {
+        int r = rnLoaiTable.getSelectedRow();
+        if (r < 0) {
+            return -1;
+        }
+        return intOf(rnLoaiModel.getValueAt(
+                rnLoaiTable.convertRowIndexToModel(r), 0));
+    }
+
+    private void rnLoadChiSo() {
+        rnChiSoModel.setRowCount(0);
+        int loai = rnLoaiDangChon();
+        if (loai < 0) {
+            return;
+        }
+        for (nro.repository.dao.RongNhiDAO.ChiSo cs
+                : nro.repository.dao.RongNhiDAO.dsChiSo(loai, false)) {
+            rnChiSoModel.addRow(new Object[]{cs.id,
+                cs.optionId + " — " + nro.ui.OptionPicker.tenChiSo(cs.optionId),
+                cs.min, cs.max, soGon(cs.tiLe), cs.bat ? "có" : ""});
+        }
+    }
+
+    private void rnSuaLoai(boolean them) {
+        int idCu = them ? -1 : rnLoaiDangChon();
+        if (!them && idCu < 0) {
+            note(WARN_RED, "Chọn một loại trước.");
+            return;
+        }
+        nro.repository.dao.RongNhiDAO.Loai cu = null;
+        if (idCu > 0) {
+            for (nro.repository.dao.RongNhiDAO.Loai x
+                    : nro.repository.dao.RongNhiDAO.dsLoai(false)) {
+                if (x.id == idCu) {
+                    cu = x;
+                    break;
+                }
+            }
+        }
+        JTextField fTen = new JTextField(cu == null ? "" : cu.ten, 18);
+        JTextField fItem = new JTextField(cu == null ? "0"
+                : String.valueOf(cu.itemId), 8);
+        JLabel xemItem = new JLabel();
+        Runnable veLai = () -> xemItem.setText(
+                tenVatPham(laySoAnToan(fItem.getText())));
+        veLai.run();
+        javax.swing.JComboBox<String> cbTrung = new javax.swing.JComboBox<>(
+                new String[]{"Cả hai", "Trứng thường", "Trứng vàng"});
+        cbTrung.setSelectedIndex(cu == null ? 0 : cu.tuTrung);
+        JTextField fTiLe = new JTextField(cu == null ? "10" : soGon(cu.tiLe), 8);
+        JTextField fVV = new JTextField(cu == null ? "0"
+                : soGon(cu.tiLeVinhVien), 8);
+        JTextField fNgayMin = new JTextField(cu == null ? "7"
+                : String.valueOf(cu.ngayMin), 6);
+        JTextField fNgayMax = new JTextField(cu == null ? "7"
+                : String.valueOf(cu.ngayMax), 6);
+        javax.swing.JCheckBox cbKhoa = new javax.swing.JCheckBox("Khoá (không giao dịch)",
+                cu == null || cu.khoa);
+        javax.swing.JCheckBox cbBat = new javax.swing.JCheckBox("Bật",
+                cu == null || cu.bat);
+
+        JPanel form = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(4, 6, 4, 6);
+        c.anchor = GridBagConstraints.WEST;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        int y = 0;
+        addRow(form, c, y++, "Tên (ghi chú):", fTen);
+        addRowC(form, c, y++, "Vật phẩm:", oChonSo(fItem, veLai,
+                () -> nro.ui.OptionPicker.chonVatPham(this,
+                        laySoAnToan(fItem.getText()))));
+        addRowC(form, c, y++, "", xemItem);
+        addRowC(form, c, y++, "Ra từ trứng:", cbTrung);
+        addRow(form, c, y++, "Tỉ lệ bốc trúng (%):", fTiLe);
+        addRow(form, c, y++, "Tỉ lệ vĩnh viễn (%):", fVV);
+        addRow(form, c, y++, "Hạn dùng từ (ngày):", fNgayMin);
+        addRow(form, c, y++, "Đến (ngày):", fNgayMax);
+        y = ghiChuHang(form, c, y,
+                "tỉ lệ bốc chia theo tổng thật của nhóm — khai 10/20/30 là 1/6, 2/6, 3/6");
+        form.add(cbKhoa, c);
+        c.gridy = y + 1;
+        form.add(cbBat, c);
+
+        if (JOptionPane.showConfirmDialog(this, form,
+                them ? "Thêm loại rồng nhí" : "Sửa loại rồng nhí",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
+            return;
+        }
+        nro.repository.dao.RongNhiDAO.Loai moi =
+                new nro.repository.dao.RongNhiDAO.Loai();
+        moi.id = idCu;
+        moi.ten = fTen.getText().trim();
+        moi.itemId = laySoAnToan(fItem.getText());
+        moi.tuTrung = cbTrung.getSelectedIndex();
+        try {
+            moi.tiLe = docSoThuc(fTiLe.getText(), "Tỉ lệ");
+            moi.tiLeVinhVien = docSoThuc(fVV.getText(), "Tỉ lệ vĩnh viễn");
+        } catch (IllegalArgumentException ex) {
+            note(WARN_RED, ex.getMessage());
+            return;
+        }
+        moi.ngayMin = laySoAnToan(fNgayMin.getText());
+        moi.ngayMax = laySoAnToan(fNgayMax.getText());
+        moi.khoa = cbKhoa.isSelected();
+        moi.bat = cbBat.isSelected();
+        String loi = nro.repository.dao.RongNhiDAO.luuLoai(moi);
+        if (loi != null) {
+            note(WARN_RED, loi);
+            return;
+        }
+        rnLoadLoai();
+        note(OK_GREEN, "Đã lưu loại rồng nhí.");
+    }
+
+    private void rnXoaLoai() {
+        int id = rnLoaiDangChon();
+        if (id < 0) {
+            note(WARN_RED, "Chọn một loại trước.");
+            return;
+        }
+        if (JOptionPane.showConfirmDialog(this,
+                "Xoá loại này và toàn bộ chỉ số của nó?", "Xác nhận",
+                JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
+            return;
+        }
+        String loi = nro.repository.dao.RongNhiDAO.xoaLoai(id);
+        if (loi != null) {
+            note(WARN_RED, loi);
+            return;
+        }
+        rnLoadLoai();
+        note(OK_GREEN, "Đã xoá loại rồng nhí.");
+    }
+
+    private void rnSuaChiSo(boolean them) {
+        int loai = rnLoaiDangChon();
+        if (loai < 0) {
+            note(WARN_RED, "Chọn một loại trước.");
+            return;
+        }
+        int idCu = -1;
+        int r = rnChiSoTable.getSelectedRow();
+        if (!them) {
+            if (r < 0) {
+                note(WARN_RED, "Chọn một dòng chỉ số trước.");
+                return;
+            }
+            idCu = intOf(rnChiSoModel.getValueAt(
+                    rnChiSoTable.convertRowIndexToModel(r), 0));
+        }
+        nro.repository.dao.RongNhiDAO.ChiSo cu = null;
+        if (idCu > 0) {
+            for (nro.repository.dao.RongNhiDAO.ChiSo x
+                    : nro.repository.dao.RongNhiDAO.dsChiSo(loai, false)) {
+                if (x.id == idCu) {
+                    cu = x;
+                    break;
+                }
+            }
+        }
+        JTextField fOpt = new JTextField(cu == null ? "0"
+                : String.valueOf(cu.optionId), 8);
+        JTextField fMin = new JTextField(cu == null ? "1"
+                : String.valueOf(cu.min), 8);
+        JTextField fMax = new JTextField(cu == null ? "1"
+                : String.valueOf(cu.max), 8);
+        JTextField fTiLe = new JTextField(cu == null ? "100" : soGon(cu.tiLe), 8);
+        javax.swing.JCheckBox cbBat = new javax.swing.JCheckBox("Bật",
+                cu == null || cu.bat);
+        JLabel xem = new JLabel();
+        Runnable veLai = () -> xem.setText(
+                nro.ui.OptionPicker.tenChiSo(laySoAnToan(fOpt.getText())));
+        veLai.run();
+
+        JPanel form = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(4, 6, 4, 6);
+        c.anchor = GridBagConstraints.WEST;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        int y = 0;
+        addRowC(form, c, y++, "Chỉ số:", oChonSo(fOpt, veLai,
+                () -> nro.ui.OptionPicker.chonChiSo(this,
+                        laySoAnToan(fOpt.getText()))));
+        addRowC(form, c, y++, "", xem);
+        addRow(form, c, y++, "Giá trị từ:", fMin);
+        addRow(form, c, y++, "Đến:", fMax);
+        addRow(form, c, y++, "Tỉ lệ dòng này ra (%):", fTiLe);
+        y = ghiChuHang(form, c, y,
+                "mỗi dòng gieo riêng — 100% là con nào cũng có, 30% là ba trên mười con");
+        form.add(cbBat, c);
+
+        if (JOptionPane.showConfirmDialog(this, form,
+                them ? "Thêm chỉ số rồng nhí" : "Sửa chỉ số rồng nhí",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
+            return;
+        }
+        nro.repository.dao.RongNhiDAO.ChiSo moi =
+                new nro.repository.dao.RongNhiDAO.ChiSo();
+        moi.id = idCu;
+        moi.loaiId = loai;
+        moi.optionId = laySoAnToan(fOpt.getText());
+        moi.min = laySoAnToan(fMin.getText());
+        moi.max = laySoAnToan(fMax.getText());
+        try {
+            moi.tiLe = docSoThuc(fTiLe.getText(), "Tỉ lệ");
+        } catch (IllegalArgumentException ex) {
+            note(WARN_RED, ex.getMessage());
+            return;
+        }
+        moi.bat = cbBat.isSelected();
+        String loi = nro.repository.dao.RongNhiDAO.luuChiSo(moi);
+        if (loi != null) {
+            note(WARN_RED, loi);
+            return;
+        }
+        rnLoadChiSo();
+        note(OK_GREEN, "Đã lưu chỉ số rồng nhí.");
+    }
+
+    private void rnXoaChiSo() {
+        int r = rnChiSoTable.getSelectedRow();
+        if (r < 0) {
+            note(WARN_RED, "Chọn một dòng chỉ số trước.");
+            return;
+        }
+        int id = intOf(rnChiSoModel.getValueAt(
+                rnChiSoTable.convertRowIndexToModel(r), 0));
+        String loi = nro.repository.dao.RongNhiDAO.xoaChiSo(id);
+        if (loi != null) {
+            note(WARN_RED, loi);
+            return;
+        }
+        rnLoadChiSo();
+        note(OK_GREEN, "Đã xoá chỉ số.");
     }
 
     private JComponent buildChanMenhTab() {

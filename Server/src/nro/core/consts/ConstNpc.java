@@ -591,6 +591,12 @@ public class ConstNpc {
 
     public static final int CAPSULE_KICH_HOAT_TU_CHON = 2147;
 
+    /** Bang chon loai trung khi dung manh trung rong nhi. */
+    public static final int DOI_TRUNG_RONG_NHI = 2148;
+
+    /** Bang chon so luong trung can doi. */
+    public static final int DOI_TRUNG_RONG_NHI_SO_LUONG = 2149;
+
     //----------------------BONUS------------------------------------------   
     public static final int MENU_3 = 10005;
     public static final int MENU_4 = 10006;

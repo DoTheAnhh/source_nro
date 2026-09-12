@@ -455,6 +455,12 @@ public class UseItem {
                         Service.getInstance().sendChanMenh(pl, item.template.id);
                         break;
                     default:
+                        // Trung rong nhi va manh trung: id khai tren panel nen
+                        // phai hoi truoc khi vao switch id viet cung.
+                        if (nro.service.rongnhi.RongNhiService.gI()
+                                .dungVatPham(pl, item)) {
+                            break;
+                        }
                         switch (item.template.id) {
                             case 992:
                                 if (TaskService.gI().getIdTask(pl) == ConstTask.TASK_31_1) {
