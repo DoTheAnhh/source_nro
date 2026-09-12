@@ -8663,7 +8663,7 @@ namespace Game1
                 }
                 currItem = null;
                 MyVector myVector = new MyVector();
-                if (isnewInventory && isnewInventory)
+                if (isnewInventory && isTabInven())
                 {
                     currItem = itemInvenNew;
                     if (newSelected == 0)
@@ -11940,13 +11940,42 @@ namespace Game1
             return num - arrItem.Length;
         }
     
+        /// <summary>
+        /// Bảng này đang vẽ LƯỚI TÚI kiểu mới hay không.
+        /// </summary>
+        /// <remarks>
+        /// Phải khớp đúng những nhánh gọi <c>paintInventory</c> trong <c>paint</c>:
+        /// túi thường, cửa hàng (thẻ bán đồ), rương, hộp đồ, ghép đồ, thú cưng và
+        /// bảng giao dịch.
+        ///
+        /// <para>Bản cũ chỉ nhận túi thường và hộp đồ. Nhưng lưới vẫn được VẼ ở các
+        /// bảng kia, trong khi phần bắt chạm của lưới lại bị tắt — nên cú chạm rơi
+        /// xuống nhánh danh sách kiểu cũ, và <c>itemInvenNew</c> không bao giờ đổi:
+        /// nó nằm nguyên ở ô đặt sẵn lúc mở bảng, tức ô trang bị đầu tiên. Đó là lỗi
+        /// "chọn đồ giao dịch cứ ra món bên thẻ Trang bị".</para>
+        /// </remarks>
         private bool isTabInven()
         {
-            if ((type == 0 && currentTabIndex == 1) || (type == 7 && currentTabIndex == 0))
+            switch (type)
             {
+            case 0:
+                return currentTabIndex == 1;
+            case 1:
+                return currentTabIndex == currentTabName.Length - 1
+                    && GameCanvas.panel2 == null && typeShop != 2;
+            case 2:
+                return currentTabIndex == 1;
+            case 7:
                 return true;
+            case 12:
+                return currentTabIndex == 1;
+            case 13:
+                return currentTabIndex == 0 && Equals(GameCanvas.panel);
+            case 21:
+                return currentTabIndex == 2;
+            default:
+                return false;
             }
-            return false;
         }
     
         private void updateKeyInvenTab()

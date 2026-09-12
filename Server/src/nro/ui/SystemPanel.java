@@ -17095,6 +17095,58 @@ public class SystemPanel extends JPanel {
         int i = cb.getSelectedIndex();
         return i < 0 ? null : ma.get(i);
     }
+    /** Chuỗi chỉ số đã có dòng <b>khoá</b> (chỉ số 30 — không giao dịch được) chưa. */
+    private static boolean coChiSoKhoa(String chiSo) {
+        if (chiSo == null) {
+            return false;
+        }
+        for (String phan : chiSo.replace("[", "").replace("]", "").split(",")) {
+            String q = phan.trim();
+            if (q.isEmpty()) {
+                continue;
+            }
+            int i = q.indexOf('=');
+            if ("30".equals((i < 0 ? q : q.substring(0, i)).trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Bật / tắt dòng khoá trong chuỗi chỉ số của món rơi.
+     *
+     * <p>Khoá chính là chỉ số 30 gắn lên món lúc rơi — cùng thứ đồ sự kiện vẫn
+     * dùng. Để thành một ô đánh dấu cho khỏi phải nhớ số; gõ tay ở "Chỉ số ngẫu
+     * nhiên" vẫn được, hai đường ghi vào cùng một chỗ.</p>
+     */
+    private static String datChiSoKhoa(String chiSo, boolean khoa) {
+        StringBuilder sb = new StringBuilder();
+        if (chiSo != null) {
+            for (String phan : chiSo.replace("[", "").replace("]", "").split(",")) {
+                String q = phan.trim();
+                if (q.isEmpty()) {
+                    continue;
+                }
+                int i = q.indexOf('=');
+                if ("30".equals((i < 0 ? q : q.substring(0, i)).trim())) {
+                    continue;
+                }
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
+                sb.append(q);
+            }
+        }
+        if (khoa) {
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+            sb.append("30=0");
+        }
+        return sb.toString();
+    }
+
     private void qdrSua(boolean them) {
         final nro.repository.dao.QuaiDoRoiDAO.Dong d;
         if (them) {
@@ -17144,6 +17196,8 @@ public class SystemPanel extends JPanel {
         JTextField fHsdVV = new JTextField(String.valueOf(d.hsdVinhVien), 5);
         JTextField fGhiChu = new JTextField(d.ghiChu, 26);
         JCheckBox cbBat = new JCheckBox("Bật", d.bat);
+        JCheckBox cbKhoa = new JCheckBox("Khoá — người nhặt không giao dịch được",
+                coChiSoKhoa(d.chiSo));
 
         final JLabel lblTrungBinh = new JLabel();
         Runnable veTb = () -> {
@@ -17314,6 +17368,9 @@ public class SystemPanel extends JPanel {
         bdHang(p, c, y++, "Sao pha lê:", hangSao, "để tối đa = 0 là không gắn sao");
         bdHang(p, c, y++, "Ghi chú:", fGhiChu, "");
         c.gridx = 1;
+        c.gridy = y++;
+        p.add(cbKhoa, c);
+        c.gridx = 1;
         c.gridy = y;
         p.add(cbBat, c);
 
@@ -17340,7 +17397,7 @@ public class SystemPanel extends JPanel {
         }
         d.kieuMap = kieuMap[0];
         d.dsMap = dsMap[0];
-        d.chiSo = chiSo[0];
+        d.chiSo = datChiSoKhoa(chiSo[0], cbKhoa.isSelected());
         d.bat = cbBat.isSelected();
         d.ghiChu = fGhiChu.getText().trim();
         d.skh = cbSkh.isSelected();
