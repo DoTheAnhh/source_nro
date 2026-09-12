@@ -3842,6 +3842,50 @@ namespace Game4.God
         /// chúng hiện thành dòng trống, trông y như một tin nhắn rỗng và không ai
         /// biết là bấm được, cũng không biết bấm vào thì xảy ra gì.
         /// </remarks>
+        /// <summary>Màu tên người nhắn trong chat bang, theo chức trong bang.</summary>
+        /// <remarks>
+        /// <para>Chủ bang đỏ, phó bang xanh lá, thành viên đen — nhìn một dòng là
+        /// biết ai đang nói. Trước đây tên nào cũng đỏ nên không phân biệt
+        /// được.</para>
+        ///
+        /// <para>Chưa nạp xong danh sách thành viên thì còn một đường nữa: so tên
+        /// với tên chủ bang trong phần thông tin bang.</para>
+        /// </remarks>
+        private mFont chuTenTheoChuc(ClanMessage cm)
+        {
+            if (cm == null)
+            {
+                return mFont.tahoma_7b_dark;
+            }
+            MyVector ds = myMemberCuaToi();
+            int so = (ds == null) ? 0 : ds.size();
+            for (int i = 0; i < so; i++)
+            {
+                Member m = (Member) ds.elementAt(i);
+                if (m == null)
+                {
+                    continue;
+                }
+                bool trungNguoi = (cm.playerId > 0 && m.ID == cm.playerId)
+                        || (m.name != null && m.name == cm.playerName);
+                if (!trungNguoi)
+                {
+                    continue;
+                }
+                if (m.role == 0)
+                {
+                    return mFont.tahoma_7b_red;
+                }
+                return (m.role == 1) ? mFont.tahoma_7b_green : mFont.tahoma_7b_dark;
+            }
+            Clan cl = Char.myCharz().clan;
+            if (cl != null && cl.leaderName != null && cl.leaderName == cm.playerName)
+            {
+                return mFont.tahoma_7b_red;
+            }
+            return mFont.tahoma_7b_dark;
+        }
+
         private void veMotDongChat(mGraphics g, ClanMessage cm, int y)
         {
             if (cm == null)
@@ -3850,7 +3894,7 @@ namespace Game4.God
             }
             veKhungBo(g, xPhai + 4, y, rongPhai - 12, CAO_DONG_CHAT - 3,
                     MAU_O_DO, 1f, MAU_VIEN_O, 0.6f, 1);
-            mFont.tahoma_7b_red.drawString(g, catBot(cm.playerName, 16),
+            chuTenTheoChuc(cm).drawString(g, catBot(cm.playerName, 16),
                     xPhai + 10, y + 2, mFont.LEFT);
 
             if (cm.type == LOAI_XIN_DAU)

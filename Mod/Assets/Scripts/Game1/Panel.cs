@@ -1723,6 +1723,17 @@ namespace Game1
             cmx = (cmtoX = 0);
         }
     
+        /// <summary>Chỉ số này là chỉ số nhận diện của một set kích hoạt.</summary>
+        /// <remarks>
+        /// Máy chủ đánh số set trong hai khoảng đó (xem SetBonusDAO). Các dòng
+        /// chữ mô tả set thì mang tên bắt đầu bằng "$" và đã gom sẵn ở nhánh
+        /// trên, nên chỉ còn dòng tên set cần nhận ra ở đây.
+        /// </remarks>
+        private static bool laChiSoSet(int id)
+        {
+            return (id >= 127 && id <= 135) || (id >= 250 && id <= 255);
+        }
+
         public void addItemDetail(Item item)
         {
             try
@@ -1730,6 +1741,10 @@ namespace Game1
                 cp = new ChatPopup();
                 string empty = string.Empty;
                 string text = string.Empty;
+                // Hai cum chi so gom rieng roi moi ghep vao, de con dong khung:
+                // chi so cua mon mot khung, chi so set kich hoat mot khung.
+                string nhomChiSo = string.Empty;
+                string nhomSet = string.Empty;
                 if (item.template.gender != Char.myCharz().cgender)
                 {
                     if (item.template.gender == 0)
@@ -1796,11 +1811,11 @@ namespace Game1
                             empty = item.itemOption[k].getOptiongColor();
                             if (item.itemOption[k].param == 1)
                             {
-                                text = text + "\n|1|1|" + empty;
+                                nhomSet = nhomSet + "\n|1|1|" + empty;
                             }
                             if (item.itemOption[k].param == 0)
                             {
-                                text = text + "\n|0|1|" + empty;
+                                nhomSet = nhomSet + "\n|0|1|" + empty;
                             }
                         }
                         else
@@ -1820,9 +1835,13 @@ namespace Game1
                                 {
                                     cp.maxStarSlot = (sbyte)item.itemOption[k].param;
                                 }
+                                else if (laChiSoSet(item.itemOption[k].optionTemplate.id))
+                                {
+                                    nhomSet = nhomSet + "\n|1|1|" + empty;
+                                }
                                 else
                                 {
-                                    text = text + "\n|1|1|" + empty;
+                                    nhomChiSo = nhomChiSo + "\n|1|1|" + empty;
                                 }
                             }
                         }
@@ -1839,6 +1858,14 @@ namespace Game1
                             }
                         }
                     }
+                }
+                if (!nhomChiSo.Equals(string.Empty))
+                {
+                    text = text + "\n[[" + nhomChiSo + "\n]]";
+                }
+                if (!nhomSet.Equals(string.Empty))
+                {
+                    text = text + "\n[[" + nhomSet + "\n]]";
                 }
                 if (currItem.template.strRequire > 1)
                 {

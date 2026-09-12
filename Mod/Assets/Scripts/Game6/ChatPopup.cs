@@ -351,8 +351,13 @@ namespace Game6
     			g.translate(0, -cmyText);
     		}
     		int num6 = -1;
+    		veKhungNhom(g, num, num3, cy);
     		for (int i = 0; i < says.Length; i++)
     		{
+    			if (says[i] == "[[" || says[i] == "]]")
+    			{
+    				continue;
+    			}
     			if (says[i].StartsWith("--"))
     			{
     				g.setColor(0);
@@ -524,6 +529,45 @@ namespace Game6
     		paintCmd(g);
     	}
     
+    	/// <summary>
+    	/// Vẽ nền khung cho những cụm dòng được đánh dấu bằng "[[" … "]]".
+    	/// </summary>
+    	/// <remarks>
+    	/// <para>Bảng thông tin vật phẩm liệt kê một mạch: tên, mô tả, sức mạnh yêu
+    	/// cầu, rồi tới cả chục dòng chỉ số. Đọc một cục như thế rất khó tìm, nhất
+    	/// là đồ set kích hoạt — chỉ số của món trộn lẫn với chỉ số của set.</para>
+    	///
+    	/// <para>Hai dòng đánh dấu vừa là mốc vừa là khoảng đệm trên dưới của
+    	/// khung, nên không tốn thêm chỗ nào ngoài phần lề vốn phải có.</para>
+    	/// </remarks>
+    	private void veKhungNhom(mGraphics g, int xKhung, int rongKhung, int yGoc)
+    	{
+    		if (says == null)
+    		{
+    			return;
+    		}
+    		int bd = -1;
+    		for (int i = 0; i < says.Length; i++)
+    		{
+    			if (says[i] == "[[")
+    			{
+    				bd = i;
+    			}
+    			else if (says[i] == "]]" && bd >= 0)
+    			{
+    				// Bam dung cong thuc ve chu ben duoi (sayRun, strY), khong thi
+    				// khung lech va cat mat dong cuoi.
+    				int yTren = yGoc + sayRun - strY + 12 + bd * 12 + 2;
+    				int yDuoi = yGoc + sayRun - strY + 12 + i * 12 + 10;
+    				g.setColor(0xB08A4E, 0.75f);
+    				g.fillRect(xKhung + 6, yTren, rongKhung - 12, yDuoi - yTren, 5);
+    				g.setColor(0xFFF3DC, 1f);
+    				g.fillRect(xKhung + 7, yTren + 1, rongKhung - 14, yDuoi - yTren - 2, 4);
+    				bd = -1;
+    			}
+    		}
+    	}
+
     	public void paintRada(mGraphics g, int cmyText)
     	{
     		int num = cx;
@@ -542,6 +586,10 @@ namespace Game6
     		int num7 = -1;
     		for (int i = 0; i < says.Length; i++)
     		{
+    			if (says[i] == "[[" || says[i] == "]]")
+    			{
+    				continue;
+    			}
     			if (says[i].StartsWith("--"))
     			{
     				g.setColor(16777215);
