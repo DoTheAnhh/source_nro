@@ -579,6 +579,24 @@ namespace Game1
     	/// thi menu tu dong ngay khi vua mo. Phim chon cung the: chinh phim vua mo
     	/// menu se lap tuc chon muc dau.
     	/// </remarks>
+    	/// <summary>Điểm chạm hiện tại có nằm trong một bảng đang mở không.</summary>
+    	/// <remarks>
+    	/// Xét cả hai bảng: màn cửa hàng và màn NPC nâng cấp mở hai bảng cạnh
+    	/// nhau, mà lưới đồ nằm ở bảng thứ hai.
+    	/// </remarks>
+    	private static bool chamTrongBang()
+    	{
+    		if (GameCanvas.panel != null && GameCanvas.panel.isShow
+    				&& GameCanvas.isPointer(GameCanvas.panel.X, GameCanvas.panel.Y,
+    						GameCanvas.panel.W, GameCanvas.panel.H))
+    		{
+    			return true;
+    		}
+    		return GameCanvas.panel2 != null && GameCanvas.panel2.isShow
+    				&& GameCanvas.isPointer(GameCanvas.panel2.X, GameCanvas.panel2.Y,
+    						GameCanvas.panel2.W, GameCanvas.panel2.H);
+    	}
+
     	public void updateMenuKey()
     	{
     		if ((GameScr.gI().activeRongThan && GameScr.gI().isUseFreez) || !showMenu)
@@ -823,7 +841,19 @@ namespace Game1
     			{
     				pointerDownTime = (pointerDownFirstX = 0);
     				pointerIsDowning = false;
-    				GameCanvas.clearAllPointerEvent();
+    				// Cham vao BANG thi de bang xu ly luon cu cham ay.
+    				//
+    				// Truoc day dong menu xong la xoa sach su kien cham, nen cu
+    				// cham do chi lam mot viec: dong menu. Nguoi choi bam mon thu
+    				// hai thi khong ra gi, phai bam them mot lan nua — dung canh
+    				// "cu cai hien cai khong".
+    				//
+    				// startAt da biet thay menu dang mo bang menu moi, nen de cu
+    				// cham di tiep la bang mo dung menu cua mon vua bam.
+    				if (!chamTrongBang())
+    				{
+    					GameCanvas.clearAllPointerEvent();
+    				}
     				Res.outz("menu select= " + menuSelectedItem);
     				isClose = true;
     				close = true;
