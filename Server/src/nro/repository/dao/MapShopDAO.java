@@ -91,6 +91,8 @@ public class MapShopDAO {
         public int npcId;
         public int x;
         public int y;
+        /** Mẫu NPC mượn hình; -1 là hình của chính NPC. */
+        public int res = -1;
         public String ten;
         /** {@code true} nếu NPC này có cửa hàng. */
         public boolean coShop;
@@ -116,7 +118,13 @@ public class MapShopDAO {
                 n.npcId = Integer.parseInt(String.valueOf(a.get(0)).trim());
                 n.x = Integer.parseInt(String.valueOf(a.get(1)).trim());
                 n.y = Integer.parseInt(String.valueOf(a.get(2)).trim());
-                n.ten = tenNpc(n.npcId);
+                if (a.size() > 3) {
+                    n.res = Integer.parseInt(String.valueOf(a.get(3)).trim());
+                    if (n.res == n.npcId) {
+                        n.res = -1;
+                    }
+                }
+                n.ten = tenNpc(n.npcId) + (n.res >= 0 ? " — hình " + tenNpc(n.res) : "");
                 n.coShop = coShop(n.npcId);
                 out.add(n);
             } catch (NumberFormatException ignored) {
@@ -134,16 +142,128 @@ public class MapShopDAO {
                 sb.append(',');
             }
             sb.append('[').append(n.npcId).append(',').append(n.x).append(',')
-                    .append(n.y).append(']');
+                    .append(n.y);
+            if (n.res >= 0 && n.res != n.npcId) {
+                sb.append(',').append(n.res);
+            }
+            sb.append(']');
         }
         sb.append(']');
         try {
             ConnectDB.executeUpdate("UPDATE map_template SET npcs = ? WHERE id = ?",
                     sb.toString(), mapId);
+            apDungHinhNpc(mapId, ds);
             return null;
         } catch (Exception ex) {
             Logger.logException(MapShopDAO.class, ex, "Lỗi lưu NPC của bản đồ " + mapId);
             return "Lỗi ghi CSDL: " + ex.getMessage();
+        }
+    }
+
+    /**
+     * Đổi hình NPC <b>ngay</b> trên máy chủ đang chạy — không cần khởi động lại,
+     * vì chỉ đổi hình, hành vi giữ nguyên. Người chơi vào lại bản đồ là thấy.
+     * Đổi hẳn NPC (id khác) thì vẫn phải khởi động lại như cũ.
+     */
+    public static void apDungHinhNpc(int mapId, List<NpcTren> ds) {
+        try {
+            nro.entity.map.Map map = nro.service.MapService.gI().getMapById(mapId);
+            if (map == null || map.npcs == null) {
+                return;
+            }
+            for (NpcTren n : ds) {
+                nro.entity.npc.Npc trung = null;
+                for (nro.entity.npc.Npc npc : map.npcs) {
+                    if (npc == null || npc.tempId != n.npcId) {
+                        continue;
+                    }
+                    if (npc.cx == n.x) {
+                        trung = npc;
+                        break;
+                    }
+                    if (trung == null) {
+                        trung = npc;
+                    }
+                }
+                if (trung != null) {
+                    trung.muonHinh(n.res);
+                }
+            }
+        } catch (Exception ex) {
+            // Luc khoi dong ban do chua dung — lan nap sau se doc tu CSDL.
+        }
+    }
+
+    /**
+     * Một lần: ở Đảo Kamê (bản đồ 5), NPC Tranh Ngọc Namếc (85) từng bị đổi hẳn
+     * sang Mị Nương (77) chỉ để lấy hình — mất luôn menu và cửa hàng. Trả lại
+     * NPC 85, mượn hình 77. Chỉ sửa khi bản đồ không còn NPC 85 nào.
+     */
+    public static void suaNpcDaoKame() {
+        CrisResultSet rs = null;
+        String json = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT npcs FROM map_template WHERE id = 5");
+            if (rs.next()) {
+                json = rs.getString("npcs");
+            }
+        } catch (Exception ex) {
+            Logger.logException(MapShopDAO.class, ex, "Lỗi đọc NPC Đảo Kamê");
+        } finally {
+            dispose(rs);
+        }
+        if (json == null) {
+            return;
+        }
+        Object o = org.json.simple.JSONValue.parse(json.replace("\"", ""));
+        if (!(o instanceof org.json.simple.JSONArray)) {
+            return;
+        }
+        List<int[]> ds = new ArrayList<>();
+        boolean co85 = false;
+        int viTri77 = -1;
+        for (Object p : (org.json.simple.JSONArray) o) {
+            if (!(p instanceof org.json.simple.JSONArray) || ((org.json.simple.JSONArray) p).size() < 3) {
+                continue;
+            }
+            org.json.simple.JSONArray a = (org.json.simple.JSONArray) p;
+            try {
+                int id = Integer.parseInt(String.valueOf(a.get(0)).trim());
+                int x = Integer.parseInt(String.valueOf(a.get(1)).trim());
+                int y = Integer.parseInt(String.valueOf(a.get(2)).trim());
+                int res = a.size() > 3 ? Integer.parseInt(String.valueOf(a.get(3)).trim()) : -1;
+                if (id == 85) {
+                    co85 = true;
+                }
+                if (id == 77 && viTri77 < 0) {
+                    viTri77 = ds.size();
+                }
+                ds.add(new int[]{id, x, y, res});
+            } catch (NumberFormatException boQua) {
+                return;
+            }
+        }
+        if (co85 || viTri77 < 0) {
+            return;
+        }
+        ds.get(viTri77)[0] = 85;
+        ds.get(viTri77)[3] = 77;
+        StringBuilder sb = new StringBuilder("[");
+        for (int[] n : ds) {
+            if (sb.length() > 1) {
+                sb.append(',');
+            }
+            sb.append('[').append(n[0]).append(',').append(n[1]).append(',').append(n[2]);
+            if (n[3] >= 0 && n[3] != n[0]) {
+                sb.append(',').append(n[3]);
+            }
+            sb.append(']');
+        }
+        try {
+            ConnectDB.executeUpdate("UPDATE map_template SET npcs = ? WHERE id = 5", sb.toString());
+            Logger.success("Đảo Kamê: trả lại NPC Tranh Ngọc Namếc, mượn hình Mị Nương\n");
+        } catch (Exception ex) {
+            Logger.logException(MapShopDAO.class, ex, "Lỗi sửa NPC Đảo Kamê");
         }
     }
 

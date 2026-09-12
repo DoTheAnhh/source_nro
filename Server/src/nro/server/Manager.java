@@ -302,6 +302,8 @@ public final class Manager {
     nro.repository.dao.MapShopDAO.damBaoCotParamMax();
     // Cua hang Tranh Ngoc Namec ban bang diem san boss — mot lan, truoc loadDatabase.
     nro.repository.dao.MapShopDAO.chuyenShopNamekSangDiemSanBoss();
+    // Dao Kame: tra lai NPC Tranh Ngoc Namec (muon hinh Mi Nuong) — mot lan.
+    nro.repository.dao.MapShopDAO.suaNpcDaoKame();
 
     this.loadDatabase();
 
@@ -348,7 +350,7 @@ public final class Manager {
 //                    mapTemp.maxPlayerPerZone, mapTemp.wayPoints, mapTemp.effectMaps, mapTemp.genderType);
 //            MAPS.add(map);
 //            map.initMob(mapTemp.mobTemp, mapTemp.mobLevel, mapTemp.mobHp, mapTemp.mobX, mapTemp.mobY);
-//            map.initNpc(mapTemp.npcId, mapTemp.npcX, mapTemp.npcY);
+//            map.initNpc(mapTemp.npcId, mapTemp.npcX, mapTemp.npcY, mapTemp.npcRes);
 //            new Thread(map, "Update map" + map.mapName).start();
 //        }
 ////        new Thread (()-> { //giảm thread scr
@@ -408,7 +410,7 @@ public final class Manager {
 
         MAPS.add(map);
         map.initMob(mapTemp.mobTemp, mapTemp.mobLevel, mapTemp.mobHp, mapTemp.mobX, mapTemp.mobY);
-        map.initNpc(mapTemp.npcId, mapTemp.npcX, mapTemp.npcY);
+        map.initNpc(mapTemp.npcId, mapTemp.npcX, mapTemp.npcY, mapTemp.npcRes);
     }
 
     new Thread(() -> {
@@ -1085,11 +1087,15 @@ public final class Manager {
                     mapTemplate.npcId = new byte[dataArray.size()];
                     mapTemplate.npcX = new short[dataArray.size()];
                     mapTemplate.npcY = new short[dataArray.size()];
+                    mapTemplate.npcRes = new byte[dataArray.size()];
                     for (int j = 0; j < dataArray.size(); j++) {
                         JSONArray dtn = (JSONArray) JSONValue.parse(String.valueOf(dataArray.get(j)));
                         mapTemplate.npcId[j] = Byte.parseByte(String.valueOf(dtn.get(0)));
                         mapTemplate.npcX[j] = Short.parseShort(String.valueOf(dtn.get(1)));
                         mapTemplate.npcY[j] = Short.parseShort(String.valueOf(dtn.get(2)));
+                        // Phan tu thu 4 (neu co): mau NPC muon hinh.
+                        mapTemplate.npcRes[j] = dtn.size() > 3
+                                ? Byte.parseByte(String.valueOf(dtn.get(3)).trim()) : mapTemplate.npcId[j];
                         dtn.clear();
                     }
                     dataArray.clear();                    
@@ -1268,11 +1274,15 @@ public final class Manager {
             mapTemplate.npcId = new byte[dataArray.size()];
             mapTemplate.npcX = new short[dataArray.size()];
             mapTemplate.npcY = new short[dataArray.size()];
+            mapTemplate.npcRes = new byte[dataArray.size()];
             for (int j = 0; j < dataArray.size(); j++) {
                 JSONArray dtn = (JSONArray) JSONValue.parse(String.valueOf(dataArray.get(j)));
                 mapTemplate.npcId[j] = Byte.parseByte(String.valueOf(dtn.get(0)));
                 mapTemplate.npcX[j] = Short.parseShort(String.valueOf(dtn.get(1)));
                 mapTemplate.npcY[j] = Short.parseShort(String.valueOf(dtn.get(2)));
+                // Phan tu thu 4 (neu co): mau NPC muon hinh.
+                mapTemplate.npcRes[j] = dtn.size() > 3
+                        ? Byte.parseByte(String.valueOf(dtn.get(3)).trim()) : mapTemplate.npcId[j];
             }
 
             MAP_TEMPLATES[y++] = mapTemplate;

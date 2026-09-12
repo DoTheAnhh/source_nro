@@ -912,7 +912,7 @@ public class Zone {
                     msg.writer().writeByte(npc.status);
                     msg.writer().writeShort(npc.cx);
                     msg.writer().writeShort(npc.cy);
-                    msg.writer().writeByte(npc.tempId);
+                    msg.writer().writeByte(npc.idHien());
                     msg.writer().writeShort(npc.avartar);
                 }
             } catch (Exception e) {

@@ -178,9 +178,22 @@ public class Map implements Runnable {
     }
 
     public void initNpc(byte[] npcId, short[] npcX, short[] npcY) {
+        initNpc(npcId, npcX, npcY, null);
+    }
+
+    /**
+     * Dựng NPC của bản đồ. {@code npcRes} là mẫu mượn hình của từng NPC — NPC
+     * giữ nguyên hành vi (menu, cửa hàng) theo id của nó, client vẽ theo hình
+     * mượn. Xem {@link Npc#muonHinh}.
+     */
+    public void initNpc(byte[] npcId, short[] npcX, short[] npcY, byte[] npcRes) {
         this.npcs = new ArrayList<>();
         for (int i = 0; i < npcId.length; i++) {
-            this.npcs.add(NpcFactory.createNPC(this.mapId, 1, npcX[i], npcY[i], npcId[i]));
+            Npc npc = NpcFactory.createNPC(this.mapId, 1, npcX[i], npcY[i], npcId[i]);
+            if (npc != null && npcRes != null && i < npcRes.length) {
+                npc.muonHinh(npcRes[i]);
+            }
+            this.npcs.add(npc);
         }
     }
 
@@ -393,13 +406,27 @@ public class Map implements Runnable {
         }
     }
 
+    /**
+     * NPC mà người chơi vừa bấm. Client chỉ biết <b>id hình</b> của NPC (xem
+     * {@link Npc#idHien}), nên xét id hình trước; rồi mới tới id thật — cho
+     * những chỗ trong máy chủ tự gọi bằng id thật.
+     */
     public Npc getNpc(Player player, int tempId) {
         for (Npc npc : npcs) {
-            if (npc.tempId == tempId && (MapService.gI().isMapBlackBallWar(mapId) || Util.getDistance(player, npc) <= 60)) {
+            if (npc != null && npc.idHien() == tempId && ganNpc(player, npc)) {
+                return npc;
+            }
+        }
+        for (Npc npc : npcs) {
+            if (npc != null && npc.tempId == tempId && ganNpc(player, npc)) {
                 return npc;
             }
         }
         return null;
+    }
+
+    private boolean ganNpc(Player player, Npc npc) {
+        return MapService.gI().isMapBlackBallWar(mapId) || Util.getDistance(player, npc) <= 60;
     }
 
     //--------------------------------------------------------------------------

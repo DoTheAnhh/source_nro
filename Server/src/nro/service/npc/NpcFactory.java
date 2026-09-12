@@ -3522,7 +3522,7 @@ public class NpcFactory {
                                     msgg.writer().writeByte(0);
                                     msgg.writer().writeUTF("MaiTienDung");
                                     msgg.writer().writeUTF("MaiTienDung");
-                                    msgg.writer().writeShort(tempId);
+                                    msgg.writer().writeShort(idHien());
                                     player.sendMessage(msgg);
                                     msgg.cleanup();
                                     msgg = new Message(-81);
@@ -3579,7 +3579,7 @@ public class NpcFactory {
                                     msgg.writer().writeByte(0);
                                     msgg.writer().writeUTF("MaiTienDung");
                                     msgg.writer().writeUTF("MaiTienDung");
-                                    msgg.writer().writeShort(tempId);
+                                    msgg.writer().writeShort(idHien());
                                     player.sendMessage(msgg);
                                     msgg.cleanup();
                                     msgg = new Message(-81);
@@ -3661,7 +3661,7 @@ public class NpcFactory {
                                     msgg.writer().writeByte(0);
                                     msgg.writer().writeUTF("MaiTienDung");
                                     msgg.writer().writeUTF("MaiTienDung");
-                                    msgg.writer().writeShort(tempId);
+                                    msgg.writer().writeShort(idHien());
                                     player.sendMessage(msgg);
                                     msgg.cleanup();
                                     msgg = new Message(-81);
@@ -3721,7 +3721,7 @@ public class NpcFactory {
                                     msgg.writer().writeByte(0);
                                     msgg.writer().writeUTF("MaiTienDung");
                                     msgg.writer().writeUTF("MaiTienDung");
-                                    msgg.writer().writeShort(tempId);
+                                    msgg.writer().writeShort(idHien());
                                     player.sendMessage(msgg);
                                     msgg.cleanup();
                                     msgg = new Message(-81);

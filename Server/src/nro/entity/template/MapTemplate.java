@@ -34,6 +34,8 @@ public class MapTemplate {
     public byte[] npcId;
     public short[] npcX;
     public short[] npcY;
+    /** Id mẫu NPC mượn hình cho từng NPC; trùng {@link #npcId} là không mượn. */
+    public byte[] npcRes;
     public List<EffectMap> effectMaps;
 
     public MapTemplate() {

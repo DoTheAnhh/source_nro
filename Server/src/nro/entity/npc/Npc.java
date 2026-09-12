@@ -33,6 +33,12 @@ public abstract class Npc implements IAtionNpc {
 
     public int avartar;
 
+    /** Mẫu NPC mượn hình; -1 là dùng hình của chính mình. */
+    public int resId = -1;
+
+    /** Avatar gốc của mẫu {@link #tempId}, để bỏ mượn hình thì trả lại. */
+    private int avatarGoc;
+
     public BaseMenu baseMenu;
 
     public int indexChat;
@@ -49,14 +55,41 @@ public abstract class Npc implements IAtionNpc {
         this.cy = cy;
         this.tempId = tempId;
         this.avartar = avartar;
+        this.avatarGoc = avartar;
         Manager.NPCS.add(this);
+    }
+
+    /**
+     * Id mẫu NPC mà client dùng để vẽ, và gửi lại khi bấm vào NPC. Mượn hình thì
+     * là mẫu mượn, không thì chính {@link #tempId}. Mọi gói gửi id NPC xuống
+     * client phải dùng id này — gửi id thật thì client không tìm thấy NPC nào
+     * mang id đó trên bản đồ.
+     */
+    public int idHien() {
+        return resId >= 0 ? resId : tempId;
+    }
+
+    /**
+     * Mượn hình (và avatar) của mẫu NPC khác, <b>giữ nguyên</b> hành vi của mình:
+     * menu, cửa hàng, nhiệm vụ vẫn theo {@link #tempId}. {@code -1} hoặc trùng id
+     * của chính mình là bỏ mượn.
+     */
+    public void muonHinh(int res) {
+        if (res < 0 || res == tempId || Manager.NPC_TEMPLATES == null
+                || res >= Manager.NPC_TEMPLATES.size() || Manager.NPC_TEMPLATES.get(res) == null) {
+            this.resId = -1;
+            this.avartar = this.avatarGoc;
+            return;
+        }
+        this.resId = res;
+        this.avartar = Manager.NPC_TEMPLATES.get(res).avatar;
     }
 
     public void initBaseMenu(String text) {
         text = text.substring(1);
         String[] data = text.split("\\|");
         baseMenu = new BaseMenu();
-        baseMenu.npcId = tempId;
+        baseMenu.npcId = idHien();
         baseMenu.npcSay = data[0].replaceAll("<>", "\n");
         baseMenu.menuSelect = new String[data.length - 1];
         for (int i = 0; i < baseMenu.menuSelect.length; i++) {
@@ -83,7 +116,7 @@ public abstract class Npc implements IAtionNpc {
             player.menuNutThem = nutThem;
 
             msg = new Message(32);
-            msg.writer().writeShort(tempId);
+            msg.writer().writeShort(idHien());
             msg.writer().writeUTF(npcSay);
             msg.writer().writeByte(menuSelect.length + nutThem.size());
             for (int i = 0; i < menuSelect.length; i++) {
@@ -109,7 +142,7 @@ public abstract class Npc implements IAtionNpc {
         try {
             player.iDMark.setIndexMenu(indexMenu);
             msg = new Message(32);
-            msg.writer().writeShort(tempId);
+            msg.writer().writeShort(idHien());
             msg.writer().writeUTF(npcSay);
             msg.writer().writeByte(menuSelect.length);
             for (int i = 0; i < menuSelect.length; i++) {
@@ -136,7 +169,7 @@ public abstract class Npc implements IAtionNpc {
                 } else {
                     Message msg;
                     msg = new Message(32);
-                    msg.writer().writeShort(tempId);
+                    msg.writer().writeShort(idHien());
                     msg.writer().writeUTF("Ta có thể giúp gì cho ngươi ?");
                     msg.writer().writeByte(1);
                     msg.writer().writeUTF("Từ chối");
@@ -153,7 +186,7 @@ public abstract class Npc implements IAtionNpc {
         Message msg;
         try {
             msg = new Message(124);
-            msg.writer().writeShort(tempId);
+            msg.writer().writeShort(idHien());
             msg.writer().writeUTF(text);
             player.sendMessage(msg);
             msg.cleanup();
@@ -166,7 +199,7 @@ public abstract class Npc implements IAtionNpc {
         Message msg;
         try {
             msg = new Message(124);
-            msg.writer().writeShort(tempId);
+            msg.writer().writeShort(idHien());
             msg.writer().writeUTF(text);
             Service.gI().sendMessAllPlayerInMap(zone, msg);
             msg.cleanup();
@@ -179,7 +212,7 @@ public abstract class Npc implements IAtionNpc {
         Message msg;
         try {
             msg = new Message(124);
-            msg.writer().writeShort(tempId);
+            msg.writer().writeShort(idHien());
             msg.writer().writeUTF(text);
             for (Zone zone : map.zones) {
                 Service.gI().sendMessAllPlayerInMap(zone, msg);

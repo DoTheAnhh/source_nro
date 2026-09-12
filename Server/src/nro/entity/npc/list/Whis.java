@@ -504,7 +504,7 @@ public class Whis extends Npc {
                                         msgg.writer().writeByte(0);
                                         msgg.writer().writeUTF("Skill 9");
                                         msgg.writer().writeUTF("MaiTienDung");
-                                        msgg.writer().writeShort(tempId);
+                                        msgg.writer().writeShort(idHien());
                                         player.sendMessage(msgg);
                                         msgg.cleanup();
                                         msgg = new Message(-81);
@@ -554,7 +554,7 @@ public class Whis extends Npc {
                                             msgg.writer().writeByte(0);
                                             msgg.writer().writeUTF("Skill 9");
                                             msgg.writer().writeUTF("MaiTienDung");
-                                            msgg.writer().writeShort(tempId);
+                                            msgg.writer().writeShort(idHien());
                                             player.sendMessage(msgg);
                                             msgg.cleanup();
                                             msgg = new Message(-81);

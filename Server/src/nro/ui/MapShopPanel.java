@@ -313,6 +313,16 @@ public class MapShopPanel extends JPanel {
         }
         JTextField fX = new JTextField(cu != null ? String.valueOf(cu.x) : "300", 8);
         JTextField fY = new JTextField(cu != null ? String.valueOf(cu.y) : "336", 8);
+        // Muon hinh: NPC giu nguyen hanh vi (menu, cua hang) cua o "NPC" o
+        // tren, chi mac hinh cua mau nay. Doi hinh ap dung ngay, khong reset.
+        JComboBox<Object> cbHinh = new JComboBox<>();
+        cbHinh.addItem("(hình của chính NPC)");
+        for (MapShopDAO.NpcMau n : MapShopDAO.npcMau()) {
+            cbHinh.addItem(n);
+            if (cu != null && cu.res == n.id) {
+                cbHinh.setSelectedItem(n);
+            }
+        }
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setBorder(new EmptyBorder(12, 12, 12, 12));
@@ -332,10 +342,20 @@ public class MapShopPanel extends JPanel {
         addRow(form, c, 2, "Y:", fY);
         c.gridx = 0;
         c.gridy = 3;
+        form.add(new JLabel("Mượn hình:"), c);
+        c.gridx = 1;
+        c.weightx = 1;
+        cbHinh.setPreferredSize(new Dimension(300, 26));
+        form.add(cbHinh, c);
+        c.weightx = 0;
+        c.gridx = 0;
+        c.gridy = 4;
         c.gridwidth = 2;
         int soHong = MapShopDAO.soNpcHong();
         form.add(new JLabel("<html><span style='color:#777'>"
                 + "Y mặt đất thường là <code>336</code>.<br>"
+                + "<b>Mượn hình</b>: NPC giữ nguyên menu, cửa hàng, nhiệm vụ — chỉ đổi "
+                + "hình. Có hiệu lực <b>ngay</b>, người chơi vào lại bản đồ là thấy.<br>"
                 + "Cuối danh sách là <b>" + dsCt.size() + " cải trang</b> — chọn "
                 + "một cái thì máy chủ tự dựng mẫu NPC mang hình cải trang đó "
                 + "(có mẫu trùng sẵn thì dùng lại).<br>"
@@ -378,16 +398,23 @@ public class MapShopPanel extends JPanel {
                 JOptionPane.showMessageDialog(dlg, "X và Y phải là số nguyên.");
                 return;
             }
+            Object hinh = cbHinh.getSelectedItem();
+            int res = hinh instanceof MapShopDAO.NpcMau ? ((MapShopDAO.NpcMau) hinh).id : -1;
+            if (res == npcId) {
+                res = -1;
+            }
             if (them) {
                 MapShopDAO.NpcTren n = new MapShopDAO.NpcTren();
                 n.npcId = npcId;
                 n.x = x;
                 n.y = y;
+                n.res = res;
                 dsNpc.add(n);
             } else {
                 cu.npcId = npcId;
                 cu.x = x;
                 cu.y = y;
+                cu.res = res;
             }
             dlg.dispose();
             luuNpc(m);
