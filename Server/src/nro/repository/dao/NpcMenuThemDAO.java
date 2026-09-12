@@ -34,6 +34,8 @@ public final class NpcMenuThemDAO {
 
     public static final String MO_SHOP = "mo_shop";
     public static final String THONG_BAO = "thong_bao";
+    /** Nút mở bảng dọn đồ có hạn sử dụng. */
+    public static final String DON_DO_HET_HAN = "don_do_het_han";
 
     /** Một nút thêm. */
     public static final class Nut {
@@ -47,6 +49,9 @@ public final class NpcMenuThemDAO {
         public boolean bat = true;
 
         public String moTaHanhDong() {
+            if (DON_DO_HET_HAN.equals(hanhDong)) {
+                return "Dọn đồ hết hạn";
+            }
             return THONG_BAO.equals(hanhDong)
                     ? "Hiện thông báo: " + thamSo
                     : "Mở cửa hàng: " + thamSo;
@@ -59,6 +64,7 @@ public final class NpcMenuThemDAO {
 
     public static void napLai() {
         LuocDoPanel.damBao();
+        gieoNutDonDoHetHan();
         Map<Integer, List<Nut>> moi = new LinkedHashMap<>();
         CrisResultSet rs = null;
         try {
@@ -108,6 +114,48 @@ public final class NpcMenuThemDAO {
     }
 
     /** Các nút đang bật của một NPC. Không bao giờ trả {@code null}. */
+    /**
+     * Lần đầu chạy thì gắn sẵn nút "Dọn đồ hết hạn" cho Goku SSJ (NPC 60).
+     *
+     * <p>Chỉ gieo <b>một lần</b>, có cờ trong bảng quy ước. Gỡ nút đi thì nó
+     * không mọc lại; muốn có lại thì thêm tay ở panel, mục "Đổi tên mục menu".
+     */
+    private static void gieoNutDonDoHetHan() {
+        try {
+            if (nro.repository.dao.ConfigDAO.num("da_gieo_nut_don_hsd", 0) == 1) {
+                return;
+            }
+            // Da co nut roi thi thoi — chan nut moc trung neu co go co.
+            CrisResultSet rs = null;
+            boolean daCo = false;
+            try {
+                rs = ConnectDB.executeQuery("SELECT id FROM npc_menu_them"
+                        + " WHERE npc_id = 60 AND hanh_dong = ?", DON_DO_HET_HAN);
+                daCo = rs.next();
+            } finally {
+                if (rs != null) {
+                    try {
+                        rs.dispose();
+                    } catch (Exception boQua) {
+                    }
+                }
+            }
+            if (daCo) {
+                nro.repository.dao.ConfigDAO.set("da_gieo_nut_don_hsd", "1");
+                return;
+            }
+            ConnectDB.executeUpdate(
+                    "INSERT INTO npc_menu_them (npc_id, thu_tu, ten, hanh_dong,"
+                    + " tham_so, bat) VALUES (?, ?, ?, ?, ?, ?)",
+                    60, 90, "Dọn đồ\\nhết hạn", DON_DO_HET_HAN, "", 1);
+            nro.repository.dao.ConfigDAO.set("da_gieo_nut_don_hsd", "1");
+            Logger.success("Da gan nut \"Don do het han\" cho NPC Goku SSJ\n");
+        } catch (Exception ex) {
+            Logger.logException(NpcMenuThemDAO.class, ex,
+                    "Loi gan nut don do het han cho Goku SSJ");
+        }
+    }
+
     public static List<Nut> dangBat(int npcId) {
         List<Nut> ra = new ArrayList<>();
         try {
@@ -143,6 +191,10 @@ public final class NpcMenuThemDAO {
             return false;
         }
         try {
+            if (DON_DO_HET_HAN.equals(n.hanhDong)) {
+                nro.service.item.DonDoHetHanService.gI().mo(player);
+                return true;
+            }
             if (THONG_BAO.equals(n.hanhDong)) {
                 nro.service.Service.gI().sendThongBao(player,
                         n.thamSo.replace("\\n", "\n"));
@@ -225,8 +277,9 @@ public final class NpcMenuThemDAO {
         if (n.hanhDong == null) {
             n.hanhDong = MO_SHOP;
         }
-        if (!MO_SHOP.equals(n.hanhDong) && !THONG_BAO.equals(n.hanhDong)) {
-            return "Hành động phải là mo_shop hoặc thong_bao.";
+        if (!MO_SHOP.equals(n.hanhDong) && !THONG_BAO.equals(n.hanhDong)
+                && !DON_DO_HET_HAN.equals(n.hanhDong)) {
+            return "Hành động phải là mo_shop, thong_bao hoặc don_do_het_han.";
         }
         if (MO_SHOP.equals(n.hanhDong)
                 && (n.thamSo == null || n.thamSo.trim().isEmpty())) {

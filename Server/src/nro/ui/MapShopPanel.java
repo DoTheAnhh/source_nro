@@ -1454,9 +1454,13 @@ public class MapShopPanel extends JPanel {
 
         JTextField fTen = new JTextField(n.ten, 22);
         JComboBox<String> cbHd = new JComboBox<>(new String[]{
-            "Mở cửa hàng", "Hiện thông báo"});
-        cbHd.setSelectedIndex(
-                nro.repository.dao.NpcMenuThemDAO.THONG_BAO.equals(n.hanhDong) ? 1 : 0);
+            "Mở cửa hàng", "Hiện thông báo", "Dọn đồ hết hạn"});
+        if (nro.repository.dao.NpcMenuThemDAO.DON_DO_HET_HAN.equals(n.hanhDong)) {
+            cbHd.setSelectedIndex(2);
+        } else {
+            cbHd.setSelectedIndex(
+                    nro.repository.dao.NpcMenuThemDAO.THONG_BAO.equals(n.hanhDong) ? 1 : 0);
+        }
 
         // Danh sách tag cửa hàng có thật, để khỏi gõ sai tên.
         java.util.List<String> tags = new java.util.ArrayList<>();
@@ -1528,11 +1532,16 @@ public class MapShopPanel extends JPanel {
         }
         n.ten = fTen.getText();
         n.bat = cbBat.isSelected();
-        n.hanhDong = cbHd.getSelectedIndex() == 1
-                ? nro.repository.dao.NpcMenuThemDAO.THONG_BAO
-                : nro.repository.dao.NpcMenuThemDAO.MO_SHOP;
-        n.thamSo = cbHd.getSelectedIndex() == 1 ? fChu.getText()
-                : String.valueOf(cbShop.getSelectedItem());
+        if (cbHd.getSelectedIndex() == 2) {
+            n.hanhDong = nro.repository.dao.NpcMenuThemDAO.DON_DO_HET_HAN;
+            n.thamSo = "";
+        } else if (cbHd.getSelectedIndex() == 1) {
+            n.hanhDong = nro.repository.dao.NpcMenuThemDAO.THONG_BAO;
+            n.thamSo = fChu.getText();
+        } else {
+            n.hanhDong = nro.repository.dao.NpcMenuThemDAO.MO_SHOP;
+            n.thamSo = String.valueOf(cbShop.getSelectedItem());
+        }
         try {
             n.thuTu = Integer.parseInt(fThuTu.getText().trim());
         } catch (NumberFormatException ex) {

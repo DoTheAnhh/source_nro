@@ -503,6 +503,22 @@ public class ShopService {
      * client đọc lệch và hỏng cả những gói sau nó.</p>
      */
     private void openShopType4(Player player, String tagName, List<Item> items) {
+        openShopType4(player, tagName, items, "Phần\nthưởng", "\n|2|LUCKY DRAGON BALL");
+    }
+
+    /**
+     * Mở bảng <b>chỉ để xem</b> một danh sách vật phẩm, có ảnh và chỉ số.
+     *
+     * <p>Dùng lại đúng bảng của rương phụ / hòm thư, gắn thẻ ITEMS_REWARD nên
+     * bấm vào món không làm gì cả — chỉ xem.</p>
+     */
+    public void moDanhSachChiXem(Player player, String tenThe, String moTaMon,
+            List<Item> items) {
+        openShopType4(player, "ITEMS_REWARD", items, tenThe, moTaMon);
+    }
+
+    private void openShopType4(Player player, String tagName, List<Item> items,
+            String tenThe, String moTaMon) {
         if (items == null) {
             return;
         }
@@ -522,11 +538,11 @@ public class ShopService {
             msg = new Message(-44);
             msg.writer().writeByte(4);
             msg.writer().writeByte(1);
-            msg.writer().writeUTF("Phần\nthưởng");
+            msg.writer().writeUTF(tenThe);
             msg.writer().writeByte(coThat.size());
             for (Item item : coThat) {
                 msg.writer().writeShort(item.template.id);
-                msg.writer().writeUTF("\n|2|LUCKY DRAGON BALL");
+                msg.writer().writeUTF(moTaMon);
                 msg.writer().writeByte(item.itemOptions.size() + 1);
                 // BA int moi dong chi so: id, tri so, va TRAN cua khoang.
                 //

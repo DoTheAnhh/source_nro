@@ -727,4 +727,9 @@ public class ConstNpc {
 
     /** Menu "Bản đồ" tầng hai — chọn bản đồ trong khu vực vừa chọn. */
     public static final int BAN_DO_DIEM = 52340;
+
+    /** Bảng dọn đồ có hạn sử dụng. */
+    public static final int DON_DO_HET_HAN = 52341;
+    /** Bảng hỏi lại trước khi xoá đồ có hạn sử dụng. */
+    public static final int DON_DO_HET_HAN_XAC_NHAN = 52342;
 }

@@ -56,6 +56,19 @@ public class MenuController {
                 return;
             }
         }
+        // Bang don do het han mo tu NUT THEM cua NPC, khong thuoc lop NPC nao,
+        // nen phai chan o day truoc khi dinh tuyen ve confirmMenu cua NPC.
+        if (player != null && player.iDMark != null) {
+            int mucDangMo = player.iDMark.getIndexMenu();
+            if (mucDangMo == ConstNpc.DON_DO_HET_HAN) {
+                nro.service.item.DonDoHetHanService.gI().chon(player, select);
+                return;
+            }
+            if (mucDangMo == ConstNpc.DON_DO_HET_HAN_XAC_NHAN) {
+                nro.service.item.DonDoHetHanService.gI().xacNhan(player, select);
+                return;
+            }
+        }
         switch (npcId) {
 
             case ConstNpc.RONG_THIENG:

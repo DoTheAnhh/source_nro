@@ -165,7 +165,12 @@ public abstract class Npc implements IAtionNpc {
             player.iDMark.setIndexMenu(ConstNpc.BASE_MENU);
             try {
                 if (baseMenu != null) {
-                    baseMenu.openMenu(player);
+                    // Di qua createOtherMenu chu khong goi thang baseMenu: chi
+                    // duong do moi co doi ten muc (NpcMenuDAO) va nut them
+                    // (NpcMenuThemDAO). Goi thang thi moi NPC dung menu trong
+                    // CSDL deu khong nhan duoc hai thu do.
+                    createOtherMenu(player, ConstNpc.BASE_MENU, baseMenu.npcSay,
+                            baseMenu.menuSelect);
                 } else {
                     Message msg;
                     msg = new Message(32);
