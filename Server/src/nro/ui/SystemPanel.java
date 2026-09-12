@@ -11787,8 +11787,10 @@ public class SystemPanel extends JPanel {
         root.add(nhan("Bông tai Porata — mỗi cấp một mẫu vật phẩm riêng, có tên "
                 + "và icon riêng. Game lấy <b>toàn bộ</b> từ hai bảng dưới: bốc "
                 + "chỉ số trong <b>bể chỉ số</b> của cấp, và bốc số dòng theo "
-                + "<b>bảng tỉ lệ</b> bên phải — tổng tỉ lệ luôn được panel cân "
-                + "về đúng 100%. Bể rỗng thì Bà Hạt Mít báo chưa khai chỉ số."),
+                + "<b>bảng tỉ lệ</b> bên phải. Mỗi mức ở bảng ấy là tỉ lệ của "
+                + "<b>riêng dòng đó</b>: dòng 1 luôn có (100%, khoá), khai "
+                + "\"2 dòng 50%\" là dòng thứ hai có 50% xuất hiện. Bể rỗng thì "
+                + "Bà Hạt Mít báo chưa khai chỉ số."),
                 BorderLayout.NORTH);
 
         btCapTable.setRowHeight(24);
@@ -12431,29 +12433,29 @@ public class SystemPanel extends JPanel {
                 cs.min, cs.max, cs.bat ? "có" : ""});
         }
         btSoDongModel.setRowCount(0);
+        // Dong 1 la mac dinh cua he thong; hien no ra de bang doc du nghia.
+        nro.repository.dao.TrangSucDAO.damBaoMucMotDong(cap);
         for (nro.repository.dao.TrangSucDAO.SoDong x
                 : nro.repository.dao.TrangSucDAO.dsSoDong(cap, false)) {
             btSoDongModel.addRow(new Object[]{x.id, x.soDong,
-                soGon(x.tiLe), x.bat ? "có" : ""});
+                soGon(x.tiLe) + (x.soDong <= 1 ? " (khoá)" : ""),
+                x.bat ? "có" : ""});
         }
     }
 
     /**
-     * Thêm hoặc sửa một mức "ra bao nhiêu dòng chỉ số".
+     * Thêm hoặc sửa một mức "dòng thứ N có bao nhiêu phần trăm".
      *
-     * <p>Tỉ lệ của cả cấp <b>luôn cộng đúng 100%</b>, panel tự chia:</p>
+     * <p>Mỗi mức là tỉ lệ của <b>riêng dòng đó</b>, không phải phần trăm của cả
+     * bảng — nên tổng không cần bằng 100 và sửa một mức không đụng gì tới các
+     * mức khác.</p>
      *
-     * <ul>
-     *   <li><b>Thêm mức</b> — mức mới lấy một nửa phần của mức thêm gần nhất,
-     *       các mức khác giữ nguyên. Khai "1 dòng 50 · 2 dòng 50" rồi thêm mức 3
-     *       dòng thì ra "50 · 25 · 25".</li>
-     *   <li><b>Sửa mức</b> — gõ phần trăm cho mức đang chọn, phần còn lại chia
-     *       cho những mức khác theo đúng tỉ lệ cũ giữa chúng.</li>
-     * </ul>
+     * <p>Mức <b>1 dòng</b> luôn 100% và bị khoá: dòng thứ nhất là mặc định của
+     * hệ thống, bông tai không bao giờ rỗng chỉ số. Nó vẫn hiện trên bảng để
+     * người khai đọc đủ nghĩa.</p>
      *
-     * <p>Máy chủ gieo <b>một</b> lần trên bảng này nên mức ghi 100% là ra chắc
-     * chắn. Bản trước gieo riêng từng mức và bỏ qua mức một dòng, nên bảng khai
-     * thế nào cũng không ra đúng như đọc.</p>
+     * <p>Máy chủ gieo theo thứ tự và dừng ở mức đầu tiên trượt: có dòng ba mà
+     * không có dòng hai là vô nghĩa.</p>
      */
     private void btSuaSoDong(boolean them) {
         int cap = btCapDangChon();
@@ -12481,9 +12483,13 @@ public class SystemPanel extends JPanel {
                 }
             }
         }
+        if (cu != null && cu.soDong <= 1) {
+            note(WARN_RED, "Mức 1 dòng luôn 100% — dòng thứ nhất lúc nào cũng có.");
+            return;
+        }
         JTextField fDong = new JTextField(cu == null ? "2"
                 : String.valueOf(cu.soDong), 6);
-        JTextField fTiLe = new JTextField(cu == null ? "" : soGon(cu.tiLe), 8);
+        JTextField fTiLe = new JTextField(cu == null ? "50" : soGon(cu.tiLe), 8);
         javax.swing.JCheckBox cbBat = new javax.swing.JCheckBox("Bật",
                 cu == null || cu.bat);
 
@@ -12493,13 +12499,10 @@ public class SystemPanel extends JPanel {
         c.anchor = GridBagConstraints.WEST;
         c.fill = GridBagConstraints.HORIZONTAL;
         int y = 0;
-        addRow(form, c, y++, "Số dòng chỉ số:", fDong);
-        if (!them) {
-            addRow(form, c, y++, "Tỉ lệ ra (%):", fTiLe);
-        }
-        y = ghiChuHang(form, c, y, them
-                ? "mức mới lấy một nửa phần của mức thêm gần nhất — tổng vẫn 100%"
-                : "phần còn lại tự chia cho các mức khác cho đủ 100%");
+        addRow(form, c, y++, "Dòng thứ:", fDong);
+        addRow(form, c, y++, "Tỉ lệ dòng này ra (%):", fTiLe);
+        y = ghiChuHang(form, c, y,
+                "tỉ lệ của riêng dòng đó — dòng 1 luôn có, tổng không cần bằng 100");
         form.add(cbBat, c);
 
         if (JOptionPane.showConfirmDialog(this, form,
@@ -12509,16 +12512,8 @@ public class SystemPanel extends JPanel {
             return;
         }
         int soDong = laySoAnToan(fDong.getText());
-        if (them) {
-            String loi = nro.repository.dao.TrangSucDAO.themMucSoDong(
-                    cap, soDong, cbBat.isSelected());
-            if (loi != null) {
-                note(WARN_RED, loi);
-                return;
-            }
-            btLoadChiSo();
-            note(OK_GREEN, "Đã thêm mức " + soDong
-                    + " dòng — tỉ lệ chia lại cho đủ 100%.");
+        if (soDong < 2) {
+            note(WARN_RED, "Dòng thứ nhất luôn có sẵn — khai từ dòng 2 trở đi.");
             return;
         }
         double tiLe;
@@ -12528,28 +12523,31 @@ public class SystemPanel extends JPanel {
             note(WARN_RED, ex.getMessage());
             return;
         }
+        if (them) {
+            for (nro.repository.dao.TrangSucDAO.SoDong x
+                    : nro.repository.dao.TrangSucDAO.dsSoDong(cap, false)) {
+                if (x.soDong == soDong) {
+                    note(WARN_RED, "Cấp này đã có mức " + soDong
+                            + " dòng — sửa mức đó thay vì thêm mới.");
+                    return;
+                }
+            }
+        }
         nro.repository.dao.TrangSucDAO.SoDong moi =
                 new nro.repository.dao.TrangSucDAO.SoDong();
         moi.id = idCu;
         moi.cap = cap;
         moi.soDong = soDong;
-        // Ghi so dong va trang thai truoc, TI LE de datTiLe lo: no con phai sua
-        // ca cac muc khac cho tong dung 100.
-        moi.tiLe = (cu == null) ? tiLe : cu.tiLe;
+        moi.tiLe = tiLe;
         moi.bat = cbBat.isSelected();
         String loi = nro.repository.dao.TrangSucDAO.luuSoDong(moi);
         if (loi != null) {
             note(WARN_RED, loi);
             return;
         }
-        loi = nro.repository.dao.TrangSucDAO.datTiLe(cap, idCu, tiLe);
-        if (loi != null) {
-            note(WARN_RED, loi);
-            return;
-        }
         btLoadChiSo();
-        note(OK_GREEN, "Đã lưu mức " + soDong
-                + " dòng — các mức khác chia lại cho đủ 100%.");
+        note(OK_GREEN, "Đã lưu: dòng thứ " + soDong + " ra với tỉ lệ "
+                + soGon(tiLe) + "%.");
     }
 
     private void btXoaSoDong() {
@@ -12567,7 +12565,7 @@ public class SystemPanel extends JPanel {
             return;
         }
         btLoadChiSo();
-        note(OK_GREEN, "Đã xoá mức — các mức còn lại chia lại cho đủ 100%.");
+        note(OK_GREEN, "Đã xoá mức.");
     }
 
     private void cmLoadCap() {
