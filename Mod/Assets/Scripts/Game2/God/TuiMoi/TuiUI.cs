@@ -421,6 +421,9 @@ namespace Game2.God
         private static readonly int MAU_DO = rgb(0xC0, 0x2E, 0x22);
 
         private static readonly int MAU_XANH = rgb(0x2E, 0x8B, 0x33);
+
+        /// <summary>Xanh dương đậm, dùng cho chữ cần nổi trên nền kem.</summary>
+        private static readonly int MAU_XANH_DUONG = rgb(0x1E, 0x5A, 0xA8);
         private static readonly int MAU_TIM = rgb(0x6B, 0x3F, 0xA8);
 
         /// <summary>Nền thẻ ĐANG chọn — nâu đậm, chữ trên nó phải sáng.</summary>
@@ -3844,7 +3847,7 @@ namespace Game2.God
         /// </remarks>
         /// <summary>Màu tên người nhắn trong chat bang, theo chức trong bang.</summary>
         /// <remarks>
-        /// <para>Chủ bang đỏ, phó bang xanh lá, thành viên đen — nhìn một dòng là
+        /// <para>Chủ bang đỏ, phó bang xanh dương, thành viên đen — nhìn một dòng là
         /// biết ai đang nói. Trước đây tên nào cũng đỏ nên không phân biệt
         /// được.</para>
         ///
@@ -3876,7 +3879,8 @@ namespace Game2.God
                 {
                     return mFont.tahoma_7b_red;
                 }
-                return (m.role == 1) ? mFont.tahoma_7b_green : mFont.tahoma_7b_dark;
+                return (m.role == 1)
+                        ? mFont.tahoma_7b_blue : mFont.tahoma_7b_dark;
             }
             Clan cl = Char.myCharz().clan;
             if (cl != null && cl.leaderName != null && cl.leaderName == cm.playerName)
@@ -5383,10 +5387,20 @@ namespace Game2.God
             /// <summary>0 thường · 1 tên set · 2 mốc đã đạt · 3 mốc chưa đạt.</summary>
             public int vai;
 
+            /// <summary>Nhóm được đóng khung chung: 0 không, 1 chỉ số, 2 set.</summary>
+            public int nhom;
+
             public DongMoTa(string chu, int vai)
             {
                 this.chu = chu;
                 this.vai = vai;
+            }
+
+            public DongMoTa(string chu, int vai, int nhom)
+            {
+                this.chu = chu;
+                this.vai = vai;
+                this.nhom = nhom;
             }
         }
 
@@ -5494,10 +5508,11 @@ namespace Game2.God
                 return;
             }
             DongMoTa[] dong = dongMoTa();
+            BoTriMoTa bt = boTriMoTa(dong);
             string[] tenNut = tenCacNut();
 
             int wHop = Math.min(rong - 30, 270);
-            int hHop = 30 + dong.Length * 12 + 8;
+            int hHop = 30 + bt.cao + 8;
             if (tenNut.Length > 0)
             {
                 hHop += CAO_NUT + 8;
@@ -5532,10 +5547,16 @@ namespace Game2.God
                         xHop + wHop / 2, y + 4, mFont.CENTER);
             }
             y += 24;
+            for (int i = 0; i < bt.khung.Count; i++)
+            {
+                int[] k = bt.khung[i];
+                veKhungNhomMoTa(g, xHop + 8, y + k[0], wHop - 16, k[1], k[2]);
+            }
             for (int i = 0; i < dong.Length; i++)
             {
-                veDongMoTa(g, dong[i], xHop + 10, y, wHop - 20);
-                y += 12;
+                int le = (dong[i].nhom == NHOM_KHONG) ? 10 : 14;
+                veDongMoTa(g, dong[i], xHop + le, y + bt.yDong[i],
+                        wHop - le * 2);
             }
 
             // Nut ve SAU khi da biet y, va vung bam ghi lai de phan cham doc dung
@@ -5553,6 +5574,107 @@ namespace Game2.God
                 veNut(g, xNut, yNut, wNut, CAO_NUT, tenNut[i], true);
                 nutHop[i] = new int[] { xNut, yNut, wNut, CAO_NUT, maNut(i) };
             }
+        }
+
+        /// <summary>Dòng không thuộc nhóm nào.</summary>
+        private const int NHOM_KHONG = 0;
+
+        /// <summary>Nhóm chỉ số riêng của món.</summary>
+        private const int NHOM_CHI_SO = 1;
+
+        /// <summary>Nhóm chỉ số của set kích hoạt.</summary>
+        private const int NHOM_SET = 2;
+
+        /// <summary>Bề cao dải tiêu đề của một khung nhóm.</summary>
+        private const int CAO_TD_NHOM = 13;
+
+        /// <summary>Khe trên và dưới mỗi khung nhóm.</summary>
+        private const int LE_NHOM = 3;
+
+        private static string tenNhom(int nhom)
+        {
+            return (nhom == NHOM_SET) ? "Set kích hoạt" : "Chỉ số";
+        }
+
+        /// <summary>
+        /// Khung của một nhóm chỉ số: nền lõm, viền nâu, dải tiêu đề trên đỉnh.
+        /// </summary>
+        /// <remarks>
+        /// Dải mỏng hơn dải của các khung lớn (13 thay vì 17): hộp này nằm giữa
+        /// màn, cao thêm bao nhiêu là bớt chỗ của chính phần chỉ số bấy nhiêu.
+        /// </remarks>
+        private void veKhungNhomMoTa(mGraphics g, int x, int y, int w, int h,
+                int nhom)
+        {
+            g.setColor(MAU_VIEN, 0.85f);
+            g.fillRect(x, y, w, h, 5);
+            g.setColor(MAU_O_MO, 1f);
+            g.fillRect(x + 1, y + 1, w - 2, h - 2, 4);
+            g.setColor((nhom == NHOM_SET) ? MAU_DAI_CAM : MAU_TIEU_DE, 0.98f);
+            g.fillRect(x + 1, y + 1, w - 2, CAO_TD_NHOM - 1, 4);
+            g.setColor(MAU_VIEN, 0.45f);
+            g.fillRect(x + 1, y + CAO_TD_NHOM, w - 2, 1);
+            mFont mf = (nhom == NHOM_SET)
+                    ? mFont.tahoma_7b_red : mFont.tahoma_7b_dark;
+            mf.drawString(g, tenNhom(nhom), x + w / 2, y + 2, mFont.CENTER);
+        }
+
+        /// <summary>Chỗ ngồi của từng dòng mô tả, và các khung nhóm bao quanh.</summary>
+        private class BoTriMoTa
+        {
+            /// <summary>Khoảng cách từ đỉnh vùng mô tả tới từng dòng.</summary>
+            public int[] yDong;
+
+            /// <summary>Mỗi khung một bộ ba: y, bề cao, số nhóm.</summary>
+            public System.Collections.Generic.List<int[]> khung =
+                    new System.Collections.Generic.List<int[]>();
+
+            /// <summary>Bề cao cả vùng mô tả, kể cả khung.</summary>
+            public int cao;
+        }
+
+        /// <summary>
+        /// Sắp chỗ cho phần mô tả: dòng nào nằm đâu, khung nhóm nào bao từ đâu
+        /// tới đâu.
+        /// </summary>
+        /// <remarks>
+        /// Tính một lần rồi dùng cho cả bề cao hộp lẫn lúc vẽ. Tách hai phép tính
+        /// ra hai chỗ là kiểu gì cũng có ngày lệch nhau, và lệch ở đây thì chữ
+        /// tràn ra ngoài khung.
+        /// </remarks>
+        private BoTriMoTa boTriMoTa(DongMoTa[] dong)
+        {
+            BoTriMoTa bt = new BoTriMoTa();
+            bt.yDong = new int[dong.Length];
+            int y = 0;
+            int i = 0;
+            while (i < dong.Length)
+            {
+                int nhom = dong[i].nhom;
+                if (nhom == NHOM_KHONG)
+                {
+                    bt.yDong[i] = y;
+                    y += 12;
+                    i++;
+                    continue;
+                }
+                int j = i;
+                while (j < dong.Length && dong[j].nhom == nhom)
+                {
+                    j++;
+                }
+                int yKhung = y + LE_NHOM;
+                for (int k = i; k < j; k++)
+                {
+                    bt.yDong[k] = yKhung + CAO_TD_NHOM + 4 + (k - i) * 12;
+                }
+                int caoKhung = CAO_TD_NHOM + (j - i) * 12 + 6;
+                bt.khung.Add(new int[] { yKhung, caoKhung, nhom });
+                y = yKhung + caoKhung + LE_NHOM;
+                i = j;
+            }
+            bt.cao = y;
+            return bt;
         }
 
         private void veDongMoTa(mGraphics g, DongMoTa d, int x, int y, int w)
@@ -5574,11 +5696,14 @@ namespace Game2.God
             }
             if (d.vai == VAI_MOC_DAT)
             {
-                // Moc DANG co hieu luc: to nen xanh, khac han mau ten set, de doc
-                // mot cai la biet minh dang huong moc nao.
-                g.setColor(MAU_XANH, 0.26f);
+                // Moc DANG co hieu luc: to nen, khac han mau ten set, de doc mot
+                // cai la biet minh dang huong moc nao.
+                //
+                // Xanh DUONG chu khong phai xanh la: nen hop mau kem, chu xanh la
+                // tren nen kem doc rat met mat.
+                g.setColor(MAU_XANH_DUONG, 0.22f);
                 g.fillRect(x - 3, y - 2, w + 6, 13, 4);
-                mFont.tahoma_7b_green.drawString(g, catBot(d.chu, 42), x, y,
+                mFont.tahoma_7b_blue.drawString(g, catBot(d.chu, 42), x, y,
                         mFont.LEFT);
                 return;
             }
@@ -5645,6 +5770,15 @@ namespace Game2.God
             int soMon = demMonCungSet(idOptionSet());
             int soSaoDaEp = 0;
             int soLoSao = 0;
+            // Hai cum gom rieng roi moi ghep vao, de con dong khung.
+            //
+            // May chu tra chi so ve theo thu tu cua no: dong set va dong chi so
+            // cua mon co the xen ke nhau. Dong khung theo dung thu tu ay thi ra
+            // nam sau khung, nen phai gom lai truoc.
+            System.Collections.Generic.List<DongMoTa> dsChiSo =
+                    new System.Collections.Generic.List<DongMoTa>();
+            System.Collections.Generic.List<DongMoTa> dsSet =
+                    new System.Collections.Generic.List<DongMoTa>();
             if (monXem.itemOption != null)
             {
                 for (int i = 0; i < monXem.itemOption.Length; i++)
@@ -5696,9 +5830,19 @@ namespace Game2.God
                     {
                         vai = VAI_SAO_CONG;
                     }
-                    ds.Add(new DongMoTa(s, vai));
+                    if (vai == VAI_TEN_SET || vai == VAI_MOC_DAT
+                            || vai == VAI_MOC_CHUA)
+                    {
+                        dsSet.Add(new DongMoTa(s, vai, NHOM_SET));
+                    }
+                    else
+                    {
+                        dsChiSo.Add(new DongMoTa(s, vai, NHOM_CHI_SO));
+                    }
                 }
             }
+            ds.AddRange(dsChiSo);
+            ds.AddRange(dsSet);
             // MOT dong sao duy nhat, dat len dau cac dong chi so.
             //
             // Tong so ngoi lay theo TRAN (chi so 107). Mon nao chi co 102 ma
@@ -5721,7 +5865,8 @@ namespace Game2.God
                 {
                     if (ds[i].vai == VAI_SAO_CONG)
                     {
-                        ds[i] = new DongMoTa(ds[i].chu, VAI_THUONG);
+                        ds[i] = new DongMoTa(ds[i].chu, VAI_THUONG,
+                                ds[i].nhom);
                     }
                 }
             }
