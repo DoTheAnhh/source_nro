@@ -3229,8 +3229,54 @@ namespace Game2
             updateKeyClansOption();
         }
     
+        /// <summary>
+        /// Mặc thử món đang chọn trong cửa hàng lên người, để xem trước.
+        /// </summary>
+        /// <remarks>
+        /// <para>Món cải trang, đeo lưng, ván bay… được máy chủ gửi kèm bộ phận
+        /// hình (đầu, thân, chân, lưng). Trước đây chỉ lúc bấm vào món để hiện
+        /// menu mua mới mặc thử, nên phải bấm từng món một mới biết nó ra sao.
+        /// Giờ chọn tới đâu là người mặc tới đó.</para>
+        ///
+        /// <para>Trả lại đồ thật TRƯỚC rồi mới nhớ và mặc bộ mới: thiếu bước trả
+        /// lại thì lần mặc thử thứ hai nhớ nhầm bộ đang mặc thử là đồ thật, và
+        /// đóng bảng xong người chơi vẫn mặc cải trang chưa mua.</para>
+        /// </remarks>
+        private void xemTruocMon(Item it)
+        {
+            if (!isTypeShop())
+            {
+                return;
+            }
+            Char.myCharz().resetPartTemp();
+            Char.myCharz().setPartOld();
+            if (it != null)
+            {
+                Char.myCharz().setPartTemp(it.headTemp, it.bodyTemp,
+                        it.legTemp, it.bagTemp);
+            }
+        }
+
+        /// <summary>Món đang chọn trong danh sách cửa hàng, hoặc null.</summary>
+        private Item monShopDangChon()
+        {
+            try
+            {
+                Item[] ds = Char.myCharz().arrItemShop[currentTabIndex];
+                if (selected >= 0 && selected < ds.Length)
+                {
+                    return ds[selected];
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return null;
+        }
+
         private void checkOptionSelect()
         {
+            xemTruocMon(monShopDangChon());
             try
             {
                 if (type != 0 || currentTabIndex != 3 || mainTabName.Length != 5 || selected == -1)
