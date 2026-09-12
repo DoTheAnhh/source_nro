@@ -1812,7 +1812,7 @@ namespace Game3
                             empty = item.itemOption[k].getOptiongColor();
                             if (item.itemOption[k].param == 1)
                             {
-                                nhomSet = nhomSet + "\n|1|1|" + empty;
+                                nhomSet = nhomSet + "\n|2|1|" + empty;
                             }
                             if (item.itemOption[k].param == 0)
                             {
@@ -1838,11 +1838,14 @@ namespace Game3
                                 }
                                 else if (laChiSoSet(item.itemOption[k].optionTemplate.id))
                                 {
-                                    nhomSet = nhomSet + "\n|1|1|" + empty;
+                                    nhomSet = nhomSet + "\n|7|1|" + empty;
                                 }
                                 else
                                 {
-                                    nhomChiSo = nhomChiSo + "\n|1|1|" + empty;
+                                    // Mau 0 la nau dam: dong chi so gio nhan ra
+                                    // bang vach mau ben trai, chu de mot mau cho
+                                    // de doc.
+                                    nhomChiSo = nhomChiSo + "\n|0|1|" + empty;
                                 }
                             }
                         }

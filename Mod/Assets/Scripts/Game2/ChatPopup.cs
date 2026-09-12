@@ -352,10 +352,12 @@ namespace Game2
     		}
     		int num6 = -1;
     		veKhungNhom(g, num, num3, cy);
+    		bool trongNhom = false;
     		for (int i = 0; i < says.Length; i++)
     		{
     			if (says[i] == "[[" || says[i] == "]]")
     			{
+    				trongNhom = (says[i] == "[[");
     				continue;
     			}
     			if (says[i].StartsWith("--"))
@@ -416,6 +418,23 @@ namespace Game2
     			case 8:
     				mFont2 = mFont.tahoma_7b_yellow;
     				break;
+    			}
+    			if (trongNhom)
+    			{
+    				// Moi loai chi so mot mau: vach mau ben trai va mot lop nen rat
+    				// nhat cung tong.
+    				//
+    				// Chu trong bang la anh bitmap dung san, chi co may mau co dinh
+    				// — khong to chu theo tung loai duoc.
+    				//
+    				// Dung CHUNG ham mau voi giao dien tui moi, khong thi hai bang
+    				// thong tin cua cung mot mon ra hai he mau khac nhau.
+    				int mauCS = God.TuiUI.mauLoaiChiSo(st);
+    				int yDong = cy + sayRun + i * 12 - strY + 12;
+    				g.setColor(mauCS, 0.16f);
+    				g.fillRect(cx + 9, yDong - 1, num3 - 18, 12, 3);
+    				g.setColor(mauCS, 0.95f);
+    				g.fillRect(cx + 9, yDong, 3, 10, 1);
     			}
     			if (says[i].StartsWith("<"))
     			{

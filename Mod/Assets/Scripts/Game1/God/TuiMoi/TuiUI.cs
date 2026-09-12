@@ -424,6 +424,45 @@ namespace Game1.God
 
         /// <summary>Xanh dương đậm, dùng cho chữ cần nổi trên nền kem.</summary>
         private static readonly int MAU_XANH_DUONG = rgb(0x1E, 0x5A, 0xA8);
+
+        // ------------------------------------------------------------------
+        //  Mau rieng cua tung loai chi so
+        //
+        //  Chu trong hop la anh bitmap dung san, chi co may mau co dinh — khong
+        //  to chu theo loai duoc. Nen moi dong mang mot VACH MAU ben trai va mot
+        //  lop nen rat nhat cung tong: mau tuy y, ma chu van la chu nau dam tren
+        //  nen kem nen doc khong met.
+        // ------------------------------------------------------------------
+
+        /// <summary>HP — đỏ máu.</summary>
+        private static readonly int MAU_CS_HP = rgb(0xC0, 0x39, 0x2B);
+
+        /// <summary>KI — xanh dương.</summary>
+        private static readonly int MAU_CS_KI = rgb(0x2E, 0x6F, 0xBF);
+
+        /// <summary>Sức đánh, sát thương — cam.</summary>
+        private static readonly int MAU_CS_DANH = rgb(0xE0, 0x7B, 0x20);
+
+        /// <summary>Giáp, phòng thủ — xám thép.</summary>
+        private static readonly int MAU_CS_GIAP = rgb(0x6B, 0x7C, 0x8C);
+
+        /// <summary>Chí mạng — tím.</summary>
+        private static readonly int MAU_CS_CHI_MANG = rgb(0x8E, 0x44, 0xAD);
+
+        /// <summary>Né đòn, chính xác, phản đòn — xanh ngọc.</summary>
+        private static readonly int MAU_CS_NE = rgb(0x17, 0x9B, 0x92);
+
+        /// <summary>Hút HP, hút KI — hồng sen.</summary>
+        private static readonly int MAU_CS_HUT = rgb(0xC2, 0x18, 0x5B);
+
+        /// <summary>Kinh nghiệm, tiềm năng — vàng.</summary>
+        private static readonly int MAU_CS_EXP = rgb(0xC9, 0xA2, 0x27);
+
+        /// <summary>Sức mạnh — nâu đỏ.</summary>
+        private static readonly int MAU_CS_SUC_MANH = rgb(0x9C, 0x5A, 0x2E);
+
+        /// <summary>Loại không xếp vào đâu — nâu của viền.</summary>
+        private static readonly int MAU_CS_KHAC = rgb(0xA8, 0x6E, 0x3C);
         private static readonly int MAU_TIM = rgb(0x6B, 0x3F, 0xA8);
 
         /// <summary>Nền thẻ ĐANG chọn — nâu đậm, chữ trên nó phải sáng.</summary>
@@ -5554,7 +5593,7 @@ namespace Game1.God
             }
             for (int i = 0; i < dong.Length; i++)
             {
-                int le = (dong[i].nhom == NHOM_KHONG) ? 10 : 14;
+                int le = (dong[i].nhom == NHOM_KHONG) ? 10 : 16;
                 veDongMoTa(g, dong[i], xHop + le, y + bt.yDong[i],
                         wHop - le * 2);
             }
@@ -5677,12 +5716,107 @@ namespace Game1.God
             return bt;
         }
 
+        /// <summary>Màu của một dòng chỉ số, đoán theo chữ của chính nó.</summary>
+        /// <remarks>Mở cho cả bảng thông tin cũ (ChatPopup) dùng chung một hệ màu.</remarks>
+        /// <remarks>
+        /// <para>Đoán theo chữ chứ không theo id: id chỉ số của máy chủ nhiều và
+        /// hay thêm mới, còn chữ hiện ra thì lúc nào cũng có. Đoán trượt thì dòng
+        /// đó mang màu nâu chung, không hỏng gì.</para>
+        ///
+        /// <para><b>Thứ tự xét là quan trọng.</b> "Hút 5% HP" phải ra màu hút chứ
+        /// không phải màu HP, "Phản 10% sát thương" phải ra màu phản chứ không
+        /// phải màu sức đánh — nên những chữ mang nghĩa riêng được xét trước.</para>
+        /// </remarks>
+        public static int mauLoaiChiSo(string chu)
+        {
+            if (chu == null)
+            {
+                return MAU_CS_KHAC;
+            }
+            string t = chu.ToLower();
+            if (t.Contains("hút"))
+            {
+                return MAU_CS_HUT;
+            }
+            if (t.Contains("phản") || t.Contains("né đòn")
+                    || t.Contains("chính xác") || t.Contains("né tránh"))
+            {
+                return MAU_CS_NE;
+            }
+            if (t.Contains("chí mạng"))
+            {
+                return MAU_CS_CHI_MANG;
+            }
+            if (t.Contains("giáp") || t.Contains("phòng thủ"))
+            {
+                return MAU_CS_GIAP;
+            }
+            if (t.Contains("sức đánh") || t.Contains("sát thương")
+                    || t.Contains("công kích"))
+            {
+                return MAU_CS_DANH;
+            }
+            if (t.Contains("kinh nghiệm") || t.Contains("tiềm năng")
+                    || coTu(t, "exp"))
+            {
+                return MAU_CS_EXP;
+            }
+            if (t.Contains("sức mạnh"))
+            {
+                return MAU_CS_SUC_MANH;
+            }
+            if (coTu(t, "hp") || t.Contains("máu") || t.Contains("hồi phục"))
+            {
+                return MAU_CS_HP;
+            }
+            if (coTu(t, "ki") || coTu(t, "mp") || t.Contains("năng lượng"))
+            {
+                return MAU_CS_KI;
+            }
+            return MAU_CS_KHAC;
+        }
+
+        /// <summary>Chuỗi có chứa <paramref name="tu"/> đứng riêng thành một từ không.</summary>
+        /// <remarks>
+        /// Cần cho những từ ngắn: tìm thẳng "ki" thì "kích hoạt", "kinh nghiệm"
+        /// hay "khi" cũng dính, và cả cụm bị tô nhầm màu KI.
+        /// </remarks>
+        private static bool coTu(string t, string tu)
+        {
+            int i = t.IndexOf(tu);
+            while (i >= 0)
+            {
+                bool trai = (i == 0) || !char.IsLetterOrDigit(t[i - 1]);
+                int sau = i + tu.Length;
+                bool phai = (sau >= t.Length) || !char.IsLetterOrDigit(t[sau]);
+                if (trai && phai)
+                {
+                    return true;
+                }
+                i = t.IndexOf(tu, i + 1);
+            }
+            return false;
+        }
+
         private void veDongMoTa(mGraphics g, DongMoTa d, int x, int y, int w)
         {
             if (d.vai == VAI_SAO)
             {
                 veDongSao(g, d.chu, x, y);
                 return;
+            }
+            if (d.nhom == NHOM_CHI_SO)
+            {
+                // Vach mau ve TRUOC nen cua dong, va nam ngoai vung nen do
+                // (x - 3 tro di) nen khong bi dong nao de len.
+                int mauCS = mauLoaiChiSo(d.chu);
+                if (d.vai != VAI_SAO_CONG)
+                {
+                    g.setColor(mauCS, 0.16f);
+                    g.fillRect(x - 3, y - 2, w + 6, 13, 4);
+                }
+                g.setColor(mauCS, 0.95f);
+                g.fillRect(x - 6, y - 1, 3, 11, 1);
             }
             if (d.vai == VAI_TEN_SET)
             {
