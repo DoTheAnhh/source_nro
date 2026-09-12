@@ -1221,6 +1221,7 @@ public class ChangeMapService {
         // Tach ra thi mot viec hong khong keo hai viec kia theo, va moi loi deu
         // duoc ghi lai chu khong bien mat.
         Service.gI().guiQuyenChatHeThong(player);
+        Service.gI().guiCheDoMocSet(player);
         try {
             TaskService.gI().sendUpdateCountSubTask(player);
         } catch (Exception ex) {

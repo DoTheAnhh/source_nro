@@ -779,6 +779,46 @@ public class Service {
     }
 
     /**
+     * Gửi bảng cách tính mốc của các set kích hoạt.
+     *
+     * <p>Client dùng để tô đúng những mốc đang hưởng trong khung thông tin vật
+     * phẩm: set "cộng dồn" thì tô mọi mốc đã đạt, set "chỉ mốc 5" thì chỉ tô
+     * dòng 5 món, còn lại tô một mốc cao nhất.</p>
+     *
+     * <h3>Khuôn gói</h3>
+     * <pre>
+     * short soDong
+     *   short optionId    dòng mô tả mốc
+     *   byte  soMon       mốc này cần mấy món
+     *   byte  cachTinh    0 cao nhất · 1 cộng dồn · 2 chỉ mốc 5
+     * </pre>
+     */
+    public void guiCheDoMocSet(Player player) {
+        if (player == null || !player.isPl()) {
+            return;
+        }
+        Message msg = null;
+        try {
+            java.util.List<int[]> ds =
+                    nro.repository.dao.SetBonusDAO.bangMocChoClient();
+            msg = new Message(123);
+            msg.writer().writeShort(ds.size());
+            for (int[] d : ds) {
+                msg.writer().writeShort(d[0]);
+                msg.writer().writeByte(d[1]);
+                msg.writer().writeByte(d[2]);
+            }
+            player.sendMessage(msg);
+        } catch (Exception e) {
+            Logger.logException(Service.class, e);
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
+    }
+
+    /**
      * Báo cho client biết tài khoản này có được gõ tin <b>hệ thống</b> không.
      *
      * <p>Khung chat chỉ mở ô nhập ở thẻ "H.thống" cho quản trị viên. Client

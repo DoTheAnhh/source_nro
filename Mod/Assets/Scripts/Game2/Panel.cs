@@ -1936,6 +1936,66 @@ namespace Game2
             cmx = (cmtoX = 0);
         }
     
+        /// <summary>Cách tính mốc của từng dòng mô tả set, máy chủ gửi xuống.</summary>
+        /// <remarks>
+        /// <para>Khoá là id chỉ số của dòng mô tả; giá trị là {số món của mốc,
+        /// cách tính}. Cách tính: 0 chỉ mốc cao nhất · 1 cộng dồn mọi mốc đã đạt
+        /// · 2 chỉ mốc 5 món.</para>
+        ///
+        /// <para>Không đoán từ chữ "3 món" ở đầu dòng: chữ ấy do người khai tự
+        /// viết trên panel và đổi lúc nào cũng được.</para>
+        /// </remarks>
+        private static readonly Dictionary<int, int[]> cheDoMocSet
+                = new Dictionary<int, int[]>();
+
+        public static void xoaCheDoMocSet()
+        {
+            cheDoMocSet.Clear();
+        }
+
+        public static void ghiCheDoMocSet(int optionId, int soMon, int cachTinh)
+        {
+            cheDoMocSet[optionId] = new int[] { soMon, cachTinh };
+        }
+
+        /// <summary>Dòng mô tả mốc này có đang được hưởng không.</summary>
+        /// <remarks>
+        /// <para>Set "cộng dồn" tô SÁNG MỌI mốc đã đạt — mặc bốn món thì cả bốn
+        /// dòng sáng, vì cả bốn đang thật sự cộng vào người. Set "chỉ mốc 5" chỉ
+        /// sáng dòng 5 món. Còn lại giữ nếp cũ: một mốc cao nhất.</para>
+        ///
+        /// <para>Chưa nhận được bảng từ máy chủ thì rơi về nếp cũ, không tô sai
+        /// còn hơn tô bừa.</para>
+        /// </remarks>
+        private static bool dangHuongMoc(int optionId, int mocTheoChu,
+                int soMonDangMac, int mocCaoNhat)
+        {
+            int moc = mocTheoChu;
+            int cach = 0;
+            int[] khai;
+            if (cheDoMocSet.TryGetValue(optionId, out khai))
+            {
+                if (khai[0] > 0)
+                {
+                    moc = khai[0];
+                }
+                cach = khai[1];
+            }
+            if (moc <= 0)
+            {
+                return false;
+            }
+            if (cach == 1)
+            {
+                return moc <= soMonDangMac;
+            }
+            if (cach == 2)
+            {
+                return moc == 5 && soMonDangMac >= 5;
+            }
+            return moc == mocCaoNhat;
+        }
+
         /// <summary>Dòng này là dòng TÊN của một set kích hoạt.</summary>
         private static bool laTenSet(string ten)
         {
@@ -1965,6 +2025,25 @@ namespace Game2
                 return 0;
             }
             return ten.Substring(i).TrimStart().StartsWith("món") ? so : 0;
+        }
+
+        /// <summary>Mã chỉ số nhận diện set của món này, hoặc -1.</summary>
+        private static int idSetCua(Item item)
+        {
+            if (item == null || item.itemOption == null)
+            {
+                return -1;
+            }
+            for (int i = 0; i < item.itemOption.Length; i++)
+            {
+                ItemOption op = item.itemOption[i];
+                if (op != null && op.optionTemplate != null
+                        && laTenSet(op.optionTemplate.name))
+                {
+                    return op.optionTemplate.id;
+                }
+            }
+            return -1;
         }
 
         /// <summary>Mốc set CAO NHẤT mà số món đang mặc còn đạt tới.</summary>
@@ -2070,8 +2149,9 @@ namespace Game2
                 // chi so cua mon mot khung, chi so set kich hoat mot khung.
                 string nhomChiSo = string.Empty;
                 string nhomSet = string.Empty;
-                // Moc set DANG huong, de to sang dung mot dong.
+                // Moc set DANG huong, de to sang dung dong.
                 int mocDat = mocDangHuongCua(item);
+                int soMonSetDangMac = demMonCungSet(idSetCua(item));
                 if (item.template.gender != Char.myCharz().cgender)
                 {
                     if (item.template.gender == 0)
@@ -2168,13 +2248,18 @@ namespace Game2
                                     nhomSet = nhomSet + "\n|7|1|" + empty;
                                 }
                                 else if (mocCuaDongSet(
-                                        item.itemOption[k].optionTemplate.name) > 0)
+                                        item.itemOption[k].optionTemplate.name) > 0
+                                        || cheDoMocSet.ContainsKey(
+                                                item.itemOption[k].optionTemplate.id))
                                 {
                                     // Moc set: moc DANG huong to xanh duong, cac
-                                    // moc chua toi de nau dam.
-                                    bool dangHuong = mocCuaDongSet(
-                                            item.itemOption[k].optionTemplate.name)
-                                            == mocDat;
+                                    // moc chua toi de nau dam. Set cong don thi
+                                    // moi moc da dat deu sang.
+                                    bool dangHuong = dangHuongMoc(
+                                            item.itemOption[k].optionTemplate.id,
+                                            mocCuaDongSet(
+                                                    item.itemOption[k].optionTemplate.name),
+                                            soMonSetDangMac, mocDat);
                                     nhomSet = nhomSet + (dangHuong ? "\n|2|1|" : "\n|0|1|")
                                             + empty;
                                 }

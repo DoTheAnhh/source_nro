@@ -3871,6 +3871,20 @@ namespace Game6
                             }
                         }
                         break;
+                    case 123:
+                        {
+                            // Bang cach tinh moc cua cac set kich hoat.
+                            int soDongSet = msg.reader().readUnsignedShort();
+                            Panel.xoaCheDoMocSet();
+                            for (int iSet = 0; iSet < soDongSet; iSet++)
+                            {
+                                int idOpt = msg.reader().readShort();
+                                int soMonMoc = msg.reader().readUnsignedByte();
+                                int cachTinh = msg.reader().readUnsignedByte();
+                                Panel.ghiCheDoMocSet(idOpt, soMonMoc, cachTinh);
+                            }
+                        }
+                        break;
                     case 127:
                         // So suu tam (the ra-da): may chu RadarService.
                         God.SoSuuTamUI.getInstance().nhanGoi(msg);

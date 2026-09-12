@@ -1030,6 +1030,37 @@ public class SetBonusDAO {
     }
 
     /**
+     * Bảng gửi xuống client để nó tô đúng mốc đang hưởng.
+     *
+     * <p>Mỗi phần tử là <code>{option id của dòng mô tả, số món của mốc ấy,
+     * cách tính mốc của set}</code>.</p>
+     *
+     * <h3>Vì sao client cần</h3>
+     *
+     * <p>Khung thông tin vật phẩm tô sáng mốc đang hưởng, nhưng cách tính mốc
+     * nằm trong bảng set trên máy chủ — client chỉ thấy một dãy dòng chữ. Trước
+     * đây nó đoán: luôn tô <b>một</b> mốc cao nhất. Set đặt "cộng dồn mọi mốc"
+     * vì thế hiện sai — người chơi mặc bốn món đang hưởng cả bốn mốc mà chỉ
+     * thấy một dòng sáng.</p>
+     *
+     * <p>Gửi cả số món của từng dòng luôn, để client khỏi phải đọc chữ "3 món"
+     * ở đầu dòng — chữ ấy do người khai tự viết, đổi lúc nào cũng được.</p>
+     */
+    public static java.util.List<int[]> bangMocChoClient() {
+        java.util.List<int[]> ra = new ArrayList<>();
+        for (DinhNghia d : dinhNghia().values()) {
+            if (d == null || !d.active) {
+                continue;
+            }
+            java.util.Map<Integer, Integer> dong = docMoTaDong(d.moTaDong);
+            for (java.util.Map.Entry<Integer, Integer> e : dong.entrySet()) {
+                ra.add(new int[] { e.getValue(), e.getKey(), d.cachTinhMoc });
+            }
+        }
+        return ra;
+    }
+
+    /**
      * Thêm dòng mô tả vào sau các chỉ số nhận diện vừa bốc.
      *
      * <p>Gọi ở mọi chỗ phát đồ set kích hoạt, để món đồ hiện đúng dòng chữ mà
