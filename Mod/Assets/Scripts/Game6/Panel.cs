@@ -4530,7 +4530,7 @@ namespace Game6
                 }
                 return;
             }
-            GameCanvas.paintz.paintFrameSimple(X, Y, W, H, g);
+            veKhungPanel(g);
             try
             {
                 paintTopInfo(g);
@@ -6864,135 +6864,116 @@ namespace Game6
            
             if (type == 23 || type == 24)
             {
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 mFont.tahoma_7b_dark.drawString(g, mResources.gameInfo, xScroll + wScroll / 2, 59, mFont.CENTER);
                 return;
             }
             if (type == 20)
             {
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 mFont.tahoma_7b_dark.drawString(g, mResources.account, xScroll + wScroll / 2, 59, mFont.CENTER);
                 return;
             }
             if (type == 22)
             {
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 mFont.tahoma_7b_dark.drawString(g, mResources.autoFunction, xScroll + wScroll / 2, 59, mFont.CENTER);
                 return;
             }
             if (type == 19)
             {
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 mFont.tahoma_7b_dark.drawString(g, mResources.option, xScroll + wScroll / 2, 59, mFont.CENTER);
                 return;
             }
             if (type == 18)
             {
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 mFont.tahoma_7b_dark.drawString(g, mResources.change_flag, xScroll + wScroll / 2, 59, mFont.CENTER);
                 return;
             }
             if (type == 13 && Equals(GameCanvas.panel2))
             {
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 mFont.tahoma_7b_dark.drawString(g, mResources.item_receive2, xScroll + wScroll / 2, 59, mFont.CENTER);
                 return;
             }
             if (type == 12 && GameCanvas.panel2 != null)
             {
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 mFont.tahoma_7b_dark.drawString(g, mResources.UPGRADE, xScroll + wScroll / 2, 59, mFont.CENTER);
                 return;
             }
             if (type == 11)
             {
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 mFont.tahoma_7b_dark.drawString(g, mResources.friend, xScroll + wScroll / 2, 59, mFont.CENTER);
                 return;
             }
             if (type == 16)
             {
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 mFont.tahoma_7b_dark.drawString(g, mResources.enemy, xScroll + wScroll / 2, 59, mFont.CENTER);
                 return;
             }
             if (type == 15)
             {
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 mFont.tahoma_7b_dark.drawString(g, topName, xScroll + wScroll / 2, 59, mFont.CENTER);
                 return;
             }
             if (type == 2 && GameCanvas.panel2 != null)
             {
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 mFont.tahoma_7b_dark.drawString(g, mResources.chest, xScroll + wScroll / 2, 59, mFont.CENTER);
                 return;
             }
             if (type == 9)
             {
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 mFont.tahoma_7b_dark.drawString(g, mResources.achievement_mission, xScroll + wScroll / 2, 59, mFont.CENTER);
                 return;
             }
             if (type == 3)
             {
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 mFont.tahoma_7b_dark.drawString(g, mResources.select_zone, startTabPos + TAB_W / 2, 59, mFont.CENTER);
                 return;
             }
             if (type == 14)
             {
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 mFont.tahoma_7b_dark.drawString(g, mResources.select_map, startTabPos + TAB_W / 2, 59, mFont.CENTER);
                 return;
             }
             if (type == 4)
             {
                 mFont.tahoma_7b_dark.drawString(g, mResources.map, startTabPos + TAB_W / 2, 59, mFont.CENTER);
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 return;
             }
             if (type == 7)
             {
                 mFont.tahoma_7b_dark.drawString(g, mResources.trangbi, startTabPos + TAB_W / 2, 59, mFont.CENTER);
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 return;
             }
             if (type == 17)
             {
                 mFont.tahoma_7b_dark.drawString(g, mResources.kigui, startTabPos + TAB_W / 2, 59, mFont.CENTER);
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 return;
             }
             if (type == 8)
             {
                 mFont.tahoma_7b_dark.drawString(g, mResources.msg, startTabPos + TAB_W / 2, 59, mFont.CENTER);
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 return;
             }
             if (type == 10)
             {
                 mFont.tahoma_7b_dark.drawString(g, mResources.wat_do_u_want, startTabPos + TAB_W / 2, 59, mFont.CENTER);
-                g.setColor(13524492);
-                g.fillRect(X + 1, 78, W - 2, 1);
+                veVachDuoiTab(g);
                 return;
             }
             if (currentTabIndex == 3 && mainTabName.Length != 4)
@@ -7001,13 +6982,15 @@ namespace Game6
             }
             for (int i = 0; i < currentTabName.Length; i++)
             {
-                g.setColor((i != currentTabIndex) ? 16773296 : 6805896);
-                PopUp.paintPopUp(g, startTabPos + i * TAB_W, 52, TAB_W - 1, 25, (i == currentTabIndex) ? 1 : 0, true);
+                veTheTab(g, startTabPos + i * TAB_W, TAB_W - 1,
+                        i == currentTabIndex);
                 if (i == keyTouchTab)
                 {
                     g.drawImage(ItemMap.imageFlare, startTabPos + i * TAB_W + TAB_W / 2, 62, 3);
                 }
-                mFont mFont2 = ((i != currentTabIndex) ? mFont.tahoma_7_grey : mFont.tahoma_7_green2);
+                // Chu nau dam tren nen cam cua the dang chon; the con lai chu xam.
+                mFont mFont2 = (i == currentTabIndex)
+                        ? mFont.tahoma_7b_dark : mFont.tahoma_7_grey;
                 if (!currentTabName[i][1].Equals(string.Empty))
                 {
                     mFont2.drawString(g, currentTabName[i][0], startTabPos + i * TAB_W + TAB_W / 2, 53, mFont.CENTER);
@@ -7022,8 +7005,7 @@ namespace Game6
                     g.drawImage(ItemMap.imageFlare, startTabPos + 3 * TAB_W + TAB_W / 2, 77, mGraphics.BOTTOM | mGraphics.HCENTER);
                 }
             }
-            g.setColor(13524492);
-            g.fillRect(1, 78, W - 2, 1);
+            veVachDuoiTab(g);
         }
     
         private void paintBottomMoneyInfo(mGraphics g)
@@ -7399,11 +7381,112 @@ namespace Game6
     		mFont.tahoma_7b_white.drawString(g, "?", X + wScroll - 14, 25, mFont.CENTER);
     	}
     
+        // ==============================================================
+        //  Khung bảng NPC — vẽ lại hẳn, không dùng khung cũ của game
+        // ==============================================================
+
+        /// <summary>Nền kem của cả bảng.</summary>
+        private const int MAU_NEN_BANG = 0xF6E7CC;
+
+        /// <summary>Kem sáng — vệt sáng, thẻ tab thường, nét ngăn dưới.</summary>
+        private const int MAU_NEN_SANG = 0xFDF0DC;
+
+        /// <summary>Nâu đậm của nét viền ngoài.</summary>
+        private const int MAU_VIEN_BANG = 0x6B4A24;
+
+        /// <summary>Nâu nhạt hơn, dùng cho nét viền phụ.</summary>
+        private const int MAU_VIEN_MO = 0x8B623A;
+
+        /// <summary>Cam của dải đầu bảng.</summary>
+        private const int MAU_DAI_DAU = 0xE0A56A;
+
+        /// <summary>Cam sáng của thẻ tab đang chọn.</summary>
+        private const int MAU_THE_CHON = 0xF0A164;
+
+        /// <summary>
+        /// Khung của cả bảng: viền nâu đôi, bo góc, nền kem.
+        /// </summary>
+        /// <remarks>
+        /// <para>Thay hẳn <c>paintFrameSimple</c> — khung cũ là hai hình chữ nhật
+        /// góc vuông, một nét viền nâu và một mảng kem phẳng lì, đúng kiểu bảng
+        /// của bản gốc.</para>
+        ///
+        /// <para>Ở đây là hai nét viền lồng nhau (đậm ngoài, nhạt trong) bo góc,
+        /// cộng một vệt sáng dọc cạnh trên để khung có độ dày thay vì nhìn như
+        /// một miếng giấy dán.</para>
+        /// </remarks>
+        private void veKhungPanel(mGraphics g)
+        {
+            g.setColor(MAU_VIEN_BANG, 1f);
+            g.fillRect(X, Y, W, H, 9);
+            g.setColor(MAU_VIEN_MO, 1f);
+            g.fillRect(X + 1, Y + 1, W - 2, H - 2, 8);
+            g.setColor(MAU_NEN_BANG, 1f);
+            g.fillRect(X + 3, Y + 3, W - 6, H - 6, 6);
+            g.setColor(MAU_NEN_SANG, 0.95f);
+            g.fillRect(X + 4, Y + 4, W - 8, 3, 2);
+        }
+
+        /// <summary>
+        /// Dải đầu bảng — chỗ đặt mặt NPC và lời thoại.
+        /// </summary>
+        /// <remarks>
+        /// Nền cam bo hai góc trên theo khung, đáy thẳng và có hai nét ngăn: một
+        /// nâu đậm, một vàng sáng. Bản cũ tô một mảng nâu vuông chằn chặn chạy
+        /// hết bề ngang, không có ranh giới nào với phần dưới.
+        /// </remarks>
+        private void veDaiDau(mGraphics g)
+        {
+            g.setColor(MAU_DAI_DAU, 1f);
+            g.fillRect(X + 3, Y + 3, W - 6, 44, 6);
+            // Nua duoi vuong goc: bo goc ca bon phia thi dai nhin nhu mot vien
+            // thuoc troi giua khung.
+            g.fillRect(X + 3, Y + 30, W - 6, 19);
+            g.setColor(0xFFE2B8, 0.55f);
+            g.fillRect(X + 4, Y + 4, W - 8, 2, 2);
+            g.setColor(MAU_VIEN_BANG, 0.85f);
+            g.fillRect(X + 3, Y + 49, W - 6, 1);
+            g.setColor(0xFFE9A3, 0.7f);
+            g.fillRect(X + 3, Y + 50, W - 6, 1);
+        }
+
+        /// <summary>
+        /// Một thẻ tab: bo góc, thẻ đang chọn nền cam và dính liền phần dưới.
+        /// </summary>
+        /// <remarks>
+        /// Thẻ đang chọn có một "lưỡi" thò xuống qua nét ngăn, nên nó nối liền
+        /// với vùng nội dung thay vì nằm rời phía trên một đường kẻ — đó là chỗ
+        /// mắt đọc ra "thẻ này đang mở".
+        /// </remarks>
+        private void veTheTab(mGraphics g, int x, int w, bool chon)
+        {
+            int y = 52;
+            int h = 26;
+            g.setColor(MAU_VIEN_BANG, chon ? 0.95f : 0.4f);
+            g.fillRect(x, y, w, h, 6);
+            g.setColor(chon ? MAU_THE_CHON : MAU_NEN_SANG, chon ? 1f : 0.8f);
+            g.fillRect(x + 1, y + 1, w - 2, h - 2, 5);
+            if (chon)
+            {
+                g.fillRect(x + 3, y + h - 4, w - 6, 8);
+                g.setColor(0xFFF3DC, 0.85f);
+                g.fillRect(x + 3, y + 2, w - 6, 2, 2);
+            }
+        }
+
+        /// <summary>Hai nét ngăn dưới hàng thẻ tab.</summary>
+        private void veVachDuoiTab(mGraphics g)
+        {
+            g.setColor(MAU_VIEN_MO, 0.7f);
+            g.fillRect(X + 3, 78, W - 6, 1);
+            g.setColor(MAU_NEN_SANG, 0.85f);
+            g.fillRect(X + 3, 79, W - 6, 1);
+        }
+
         private void paintTopInfo(mGraphics g)
         {
             g.setClip(X + 1, Y, W - 2, yScroll - 2);
-            g.setColor(9993045);
-            g.fillRect(X, Y, W - 2, 50);
+            veDaiDau(g);
             // Moi khung hinh coi nhu nut KHONG hien; ham ve nut se bat co len
             // neu tab hien tai that su ve no. paintTopInfo chay truoc cac
             // nhanh ve theo tab nen dat o day la dung thu tu.

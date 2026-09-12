@@ -289,7 +289,15 @@ namespace Game6.God
 
             lucXinCuoi = mSystem.currentTimeMillis();
             dangCho = false;
-            dangMo = true;
+            // KHONG tu mo man hinh khi du lieu ve.
+            //
+            // Danh sach duoc xin san ngay luc vao game cho lan mo dau khoi phai
+            // cho, nen goi tra loi toi luc nguoi choi dang dung ngoai ban do —
+            // bat dangMo o day la man boss tu bung ra giua man hinh.
+            if (!dangMo)
+            {
+                return;
+            }
             xinChiTiet();
         }
 
