@@ -1299,6 +1299,119 @@ namespace Game3
             setType(1);
             setTabInventory(true);
             currentTabIndex = 0;
+            batNhieuCot();
+        }
+
+        /// <summary>Bảng này đang trải thành nhiều cột cạnh nhau.</summary>
+        /// <remarks>
+        /// <para>Mở cạnh một bảng NPC thì hai thẻ "Trang bị" và "Hành trang"
+        /// không còn phải thay phiên nhau: màn hình rộng, trải cả hai ra cạnh
+        /// nhau là thấy hết một lượt, khỏi bấm qua bấm lại giữa lúc mua bán.</para>
+        ///
+        /// <para>Thứ tự từ trái sang phải: xem trước · hành trang · trang bị.
+        /// Cộng với bảng NPC nằm ngoài cùng bên trái là đủ bốn cột.</para>
+        /// </remarks>
+        public bool nhieuCot;
+
+        /// <summary>Bảng được cắt chỗ cho mấy cột: 2 hoặc 3.</summary>
+        private int soCotDat;
+
+        /// <summary>Có vẽ cột xem trước nhân vật hay không.</summary>
+        /// <remarks>
+        /// <para>Chỉ cửa hàng mới cần: xem người mình đang mặc gì trước khi mua.
+        /// NPC nâng cấp như Bà Hạt Mít thì ba cột là đủ — NPC, hành trang, trang
+        /// bị.</para>
+        ///
+        /// <para>Hỏi LÚC VẼ chứ không chốt lúc mở: bảng túi được dựng TRƯỚC khi
+        /// bảng NPC kịp đặt loại của nó, nên hỏi sớm là đọc phải trạng thái của
+        /// lần mở trước.</para>
+        /// </remarks>
+        private bool coCotXem()
+        {
+            return soCotDat >= 3 && GameCanvas.panel != null
+                    && !Equals(GameCanvas.panel)
+                    && GameCanvas.panel.typeShop == 2;
+        }
+
+        /// <summary>Lưới đang vẽ hoặc đang dò: 0 hành trang · 1 trang bị.</summary>
+        private int cotHienTai;
+
+        /// <summary>
+        /// Trải bảng ra nhiều cột nếu màn hình còn đủ chỗ.
+        /// </summary>
+        /// <remarks>
+        /// Không đủ chỗ thì giữ nguyên một cột như cũ — thà bấm qua lại còn hơn
+        /// bị bảng NPC và bảng túi chồng lên nhau.
+        /// </remarks>
+        private void batNhieuCot()
+        {
+            nhieuCot = false;
+            soCotDat = 1;
+            if (GameCanvas.panel == null || Equals(GameCanvas.panel))
+            {
+                return;
+            }
+            // Cat cho cho BA cot neu man hinh con du; cot xem truoc co ve hay
+            // khong thi luc ve moi biet.
+            int muon = 3;
+            int conLai = GameCanvas.w - GameCanvas.panel.W - 8;
+            int vua = conLai / WIDTH_PANEL;
+            if (vua < muon)
+            {
+                muon = vua;
+            }
+            if (muon < 2)
+            {
+                return;
+            }
+            soCotDat = muon;
+            nhieuCot = true;
+            W = WIDTH_PANEL * muon;
+            wScroll = W - 4;
+            xScroll = GameCanvas.w - wScroll;
+            X = xScroll - 2;
+            cmx = -(GameCanvas.w + W);
+            cmtoX = GameCanvas.w - W;
+            TAB_W = W / 5 - 1;
+            startTabPos = xScroll + wScroll / 2
+                    - currentTabName.Length * TAB_W / 2;
+        }
+
+        /// <summary>Số cột đang trải.</summary>
+        private int soCotTui()
+        {
+            if (!nhieuCot)
+            {
+                return 1;
+            }
+            return coCotXem() ? 3 : 2;
+        }
+
+        private int rongCotTui()
+        {
+            return wScroll / soCotTui();
+        }
+
+        /// <summary>Cột thứ mấy dành cho lưới nào: 0 hành trang · 1 trang bị.</summary>
+        private int chiSoCotTui(int loai)
+        {
+            return (coCotXem() ? 1 : 0) + loai;
+        }
+
+        /// <summary>Mép trái của vùng lưới đang vẽ.</summary>
+        private int xVungTui()
+        {
+            if (!nhieuCot)
+            {
+                return xScroll;
+            }
+            return xScroll + chiSoCotTui(cotHienTai) * rongCotTui();
+        }
+
+        /// <summary>Bề rộng vùng lưới đang vẽ.</summary>
+        private int rongVungTui()
+        {
+            return nhieuCot ? rongCotTui() : wScroll;
         }
     
         public void addChatMessage(InfoItem info)
@@ -6398,7 +6511,7 @@ namespace Game3
         /// </remarks>
         private int oTrangBi()
         {
-            int theoNgang = (wScroll - 6) / TB_HANG_DUOI.Length;
+            int theoNgang = (rongVungTui() - 6) / TB_HANG_DUOI.Length;
             int theoDoc = (hScroll - CAO_DAI_TAB - 4) / TB_SO_HANG_VE;
             int o = Math.min(theoNgang, theoDoc);
             if (o > TB_O_TOI_DA)
@@ -6411,7 +6524,7 @@ namespace Game3
         /// <summary>Bề rộng một ô của tab "Hành trang".</summary>
         private int oTui()
         {
-            int o = (wScroll - 2) / TUI_SO_COT;
+            int o = (rongVungTui() - 2) / TUI_SO_COT;
             return (o < 16) ? 16 : o;
         }
 
@@ -6424,6 +6537,11 @@ namespace Game3
         /// <summary>Vẽ cả hai tab.</summary>
         private void veTuiMoi(mGraphics g)
         {
+            if (nhieuCot)
+            {
+                veNhieuCot(g);
+                return;
+            }
             veDaiTabTui(g);
             if (newSelected == 0)
             {
@@ -6433,6 +6551,72 @@ namespace Game3
             {
                 veTabHanhTrang(g);
             }
+        }
+
+        /// <summary>Vẽ cả ba cột một lượt: xem trước · hành trang · trang bị.</summary>
+        private void veNhieuCot(mGraphics g)
+        {
+            if (coCotXem())
+            {
+                veCotXemTruoc(g);
+            }
+            cotHienTai = 0;
+            veNhanCot(g, "Hành trang", newSelected == 1);
+            veTabHanhTrang(g);
+            cotHienTai = 1;
+            veNhanCot(g, "Trang bị", newSelected == 0);
+            veTabTrangBi(g);
+            cotHienTai = 0;
+        }
+
+        /// <summary>Tên cột, và một nét cam dưới cột đang thao tác.</summary>
+        /// <remarks>
+        /// Vẫn phải cho biết cột nào đang thao tác: phím mũi tên và nút bấm đi
+        /// theo cột đó, còn ô đang chọn chỉ sáng ở một cột.
+        /// </remarks>
+        private void veNhanCot(mGraphics g, string ten, bool dangThaoTac)
+        {
+            int x = xVungTui();
+            int w = rongVungTui();
+            g.setColor(MAU_VIEN_MO, dangThaoTac ? 0.6f : 0.3f);
+            g.fillRect(x + 2, yScroll, w - 4, CAO_DAI_TAB, 8);
+            g.setColor(dangThaoTac ? MAU_THE_CHON : 0xEBD7B8, 1f);
+            g.fillRect(x + 3, yScroll + 1, w - 6, CAO_DAI_TAB - 2, 7);
+            mFont mf = dangThaoTac ? mFont.tahoma_7b_dark : mFont.tahoma_7_grey;
+            mf.drawString(g, ten, x + w / 2, yScroll + 5, mFont.CENTER);
+        }
+
+        /// <summary>Cột ngoài cùng: nhân vật đang mặc gì, cùng sức mạnh.</summary>
+        /// <remarks>
+        /// Đứng riêng một cột chứ không nằm giữa lưới trang bị như bản một cột:
+        /// người chơi đang mua đồ thì nhìn người mình là việc làm liên tục, không
+        /// phải liếc một cái rồi thôi.
+        /// </remarks>
+        private void veCotXemTruoc(mGraphics g)
+        {
+            int x = xScroll;
+            int w = rongCotTui();
+            g.setColor(MAU_VIEN_MO, 0.3f);
+            g.fillRect(x + 2, yScroll, w - 4, CAO_DAI_TAB, 8);
+            g.setColor(0xEBD7B8, 1f);
+            g.fillRect(x + 3, yScroll + 1, w - 6, CAO_DAI_TAB - 2, 7);
+            mFont.tahoma_7_grey.drawString(g, "Xem trước", x + w / 2,
+                    yScroll + 5, mFont.CENTER);
+
+            int yDay = yScroll + hScroll - 30;
+            g.setColor(MAU_VIEN_MO, 0.25f);
+            g.fillRect(x + 6, yScroll + CAO_DAI_TAB + 4, w - 12,
+                    yDay - yScroll - CAO_DAI_TAB - 8, 6);
+            g.setColor(MAU_O_TUI, 0.65f);
+            g.fillRect(x + 7, yScroll + CAO_DAI_TAB + 5, w - 14,
+                    yDay - yScroll - CAO_DAI_TAB - 10, 5);
+            Char.myCharz().paintCharBody(g, x + w / 2,
+                    (yScroll + CAO_DAI_TAB + yDay) / 2 + 20, 1, 0, true);
+            mFont.tahoma_7b_dark.drawString(g, Char.myCharz().cName,
+                    x + w / 2, yScroll + CAO_DAI_TAB + 10, mFont.CENTER);
+            mFont.tahoma_7_grey.drawString(g,
+                    "Sức mạnh: " + NinjaUtil.getMoneys(Char.myCharz().cPower),
+                    x + w / 2, yDay - 14, mFont.CENTER);
         }
 
         private void veDaiTabTui(mGraphics g)
@@ -6472,9 +6656,13 @@ namespace Game3
 
             // Nhan vat ve TRUOC cac o: ve sau thi anh nhan vat de len khung o hai
             // ben, o dang chon mat vien vang va nhin nhu khong chon duoc.
-            Char.myCharz().paintCharBody(g,
-                    xScroll + wScroll / 2,
-                    yOTui() + TB_SO_HANG * o * 4 / 5, 1, 0, true);
+            // O che do nhieu cot, nhan vat da co cot xem truoc rieng.
+            if (!nhieuCot || !coCotXem())
+            {
+                Char.myCharz().paintCharBody(g,
+                        xVungTui() + rongVungTui() / 2,
+                        yOTui() + TB_SO_HANG * o * 4 / 5, 1, 0, true);
+            }
 
             for (int m = 0; m < mac.Length; m++)
             {
@@ -6483,7 +6671,8 @@ namespace Game3
                 {
                     continue;
                 }
-                veMotO(g, mac[m], xy[0], xy[1], o, m == sellectInventory,
+                veMotO(g, mac[m], xy[0], xy[1], o,
+                        m == sellectInventory && newSelected == 0,
                         m < TEN_O_TRANG_BI.Length ? TEN_O_TRANG_BI[m] : "", m);
             }
         }
@@ -6502,14 +6691,14 @@ namespace Game3
             {
                 if (TB_COT_TRAI[i] == m)
                 {
-                    return new int[] { xScroll + 2, yOTui() + i * o };
+                    return new int[] { xVungTui() + 2, yOTui() + i * o };
                 }
             }
             for (int i = 0; i < TB_COT_PHAI.Length; i++)
             {
                 if (TB_COT_PHAI[i] == m)
                 {
-                    return new int[] { xScroll + wScroll - o - 2,
+                    return new int[] { xVungTui() + rongVungTui() - o - 2,
                         yOTui() + i * o };
                 }
             }
@@ -6517,8 +6706,8 @@ namespace Game3
             {
                 if (TB_HANG_DUOI[i] == m)
                 {
-                    int xDau = xScroll
-                            + (wScroll - TB_HANG_DUOI.Length * o) / 2;
+                    int xDau = xVungTui()
+                            + (rongVungTui() - TB_HANG_DUOI.Length * o) / 2;
                     return new int[] { xDau + i * o,
                         yOTui() + TB_SO_HANG * o };
                 }
@@ -6538,6 +6727,28 @@ namespace Game3
         /// </remarks>
         private bool chonOTaiDiem()
         {
+            if (nhieuCot)
+            {
+                // Cham vao cot nao thi cot do thanh cot dang thao tac. Dat
+                // newSelected o day de moi phan con lai — menu, phim mui ten,
+                // nut bam — chay y nhu che do mot cot, khong phai sua theo.
+                int xTui = xScroll + chiSoCotTui(0) * rongCotTui();
+                int xTb = xScroll + chiSoCotTui(1) * rongCotTui();
+                if (GameCanvas.px >= xTb)
+                {
+                    newSelected = 0;
+                }
+                else if (GameCanvas.px >= xTui)
+                {
+                    newSelected = 1;
+                }
+                else
+                {
+                    itemInvenNew = null;
+                    return false;
+                }
+            }
+            cotHienTai = (newSelected == 0) ? 1 : 0;
             int oChon = (newSelected == 0)
                     ? oTrangBiTaiDiem(GameCanvas.px, GameCanvas.py)
                     : oTuiTaiDiem(GameCanvas.px, GameCanvas.py);
@@ -6595,10 +6806,11 @@ namespace Game3
             int o = oTui();
             nTableItem = tui.Length;
 
-            g.setClip(xScroll, yOTui(), wScroll, yScroll + hScroll - yOTui());
+            g.setClip(xVungTui(), yOTui(), rongVungTui(),
+                    yScroll + hScroll - yOTui());
             for (int i = 0; i < tui.Length; i++)
             {
-                int x = xScroll + (i % TUI_SO_COT) * o;
+                int x = xVungTui() + (i % TUI_SO_COT) * o;
                 int y = yOTui() + (i / TUI_SO_COT) * o - cmy;
                 // Bo qua o nam ngoai vung thay: ve het ca ngan o moi khung hinh
                 // la tut khung hinh han.
@@ -6606,7 +6818,8 @@ namespace Game3
                 {
                     continue;
                 }
-                veMotO(g, tui[i], x, y, o, i == sellectInventory, "", -1);
+                veMotO(g, tui[i], x, y, o,
+                        i == sellectInventory && newSelected == 1, "", -1);
             }
             g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
         }
@@ -6615,7 +6828,7 @@ namespace Game3
         private int oTuiTaiDiem(int px, int py)
         {
             int o = oTui();
-            int cot = (px - xScroll) / o;
+            int cot = (px - xVungTui()) / o;
             int hang = (py + cmy - yOTui()) / o;
             if (cot < 0 || cot >= TUI_SO_COT || hang < 0 || py < yOTui())
             {
@@ -6648,13 +6861,18 @@ namespace Game3
         /// <summary>Bao nhiêu điểm cuộn được ở tab "Hành trang".</summary>
         private int gioiHanCuonTui()
         {
-            if (newSelected == 0)
+            if (newSelected == 0 && !nhieuCot)
             {
                 // Tab "Trang bi" xep vua khung, khong co gi de cuon. Tra ve so
                 // duong thi keo len duoc va ca bo o troi ra khoi vung ve.
                 return 0;
             }
+            // Nhieu cot: luoi trang bi van vua khung, con luoi tui thi cuon —
+            // nen cu tinh theo luoi tui.
+            int cotCu = cotHienTai;
+            cotHienTai = 0;
             int o = oTui();
+            cotHienTai = cotCu;
             int soHang = (Char.myCharz().arrItemBag.Length + TUI_SO_COT - 1)
                     / TUI_SO_COT;
             int caoNoiDung = soHang * o;
