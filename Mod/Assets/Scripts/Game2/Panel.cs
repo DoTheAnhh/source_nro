@@ -1387,9 +1387,45 @@ namespace Game2
             return coCotXem() ? 3 : 2;
         }
 
-        private int rongCotTui()
+        /// <summary>
+        /// Phần bề ngang của từng cột, tính theo phần mười.
+        /// </summary>
+        /// <remarks>
+        /// Cột trang bị HẸP hơn hai cột kia: lưới của nó chỉ có bốn ô mỗi hàng và
+        /// xếp dạt về hai mép, nên để rộng bằng cột túi là giữa cột trống hoác.
+        /// Chỗ dôi ra dồn cho hành trang — nơi thật sự cần nhiều ô.
+        /// </remarks>
+        private int phanCot(int cot)
         {
-            return wScroll / soCotTui();
+            if (coCotXem())
+            {
+                // xem trước · hành trang · trang bị
+                return (cot == 0) ? 33 : ((cot == 1) ? 39 : 28);
+            }
+            // hành trang · trang bị
+            return (cot == 0) ? 58 : 42;
+        }
+
+        /// <summary>Mép trái của cột thứ <paramref name="cot"/>.</summary>
+        private int xCotTui(int cot)
+        {
+            int x = xScroll;
+            for (int i = 0; i < cot; i++)
+            {
+                x += wScroll * phanCot(i) / 100;
+            }
+            return x;
+        }
+
+        /// <summary>Bề rộng cột thứ <paramref name="cot"/>.</summary>
+        private int rongCotTui(int cot)
+        {
+            if (cot == soCotTui() - 1)
+            {
+                // Cot cuoi an not phan du, de khong ho mot vach o mep phai.
+                return xScroll + wScroll - xCotTui(cot);
+            }
+            return wScroll * phanCot(cot) / 100;
         }
 
         /// <summary>Cột thứ mấy dành cho lưới nào: 0 hành trang · 1 trang bị.</summary>
@@ -1405,13 +1441,13 @@ namespace Game2
             {
                 return xScroll;
             }
-            return xScroll + chiSoCotTui(cotHienTai) * rongCotTui();
+            return xCotTui(chiSoCotTui(cotHienTai));
         }
 
         /// <summary>Bề rộng vùng lưới đang vẽ.</summary>
         private int rongVungTui()
         {
-            return nhieuCot ? rongCotTui() : wScroll;
+            return nhieuCot ? rongCotTui(chiSoCotTui(cotHienTai)) : wScroll;
         }
     
         public void addChatMessage(InfoItem info)
@@ -6640,8 +6676,8 @@ namespace Game2
         /// </remarks>
         private void veCotXemTruoc(mGraphics g)
         {
-            int x = xScroll;
-            int w = rongCotTui();
+            int x = xCotTui(0);
+            int w = rongCotTui(0);
             g.setColor(MAU_VIEN_MO, 0.3f);
             g.fillRect(x + 2, yScroll, w - 4, CAO_DAI_TAB, 8);
             g.setColor(0xEBD7B8, 1f);
@@ -6778,8 +6814,8 @@ namespace Game2
                 // Cham vao cot nao thi cot do thanh cot dang thao tac. Dat
                 // newSelected o day de moi phan con lai — menu, phim mui ten,
                 // nut bam — chay y nhu che do mot cot, khong phai sua theo.
-                int xTui = xScroll + chiSoCotTui(0) * rongCotTui();
-                int xTb = xScroll + chiSoCotTui(1) * rongCotTui();
+                int xTui = xCotTui(chiSoCotTui(0));
+                int xTb = xCotTui(chiSoCotTui(1));
                 if (GameCanvas.px >= xTb)
                 {
                     newSelected = 0;
@@ -7289,8 +7325,24 @@ namespace Game2
             // them mot duong nua la quay ve dung kieu bang cu.
         }
     
+        /// <summary>
+        /// Vàng, ngọc xanh và hồng ngọc — chỉ vẽ ở bảng của NGƯỜI CHƠI.
+        /// </summary>
+        /// <remarks>
+        /// Mở cửa hàng là hai bảng nằm cạnh nhau, mà số tiền thì chỉ có một.
+        /// Hiện ở cả hai đáy bảng thì cùng một con số đọc được hai lần, tưởng
+        /// như hai thứ tiền khác nhau.
+        /// </remarks>
         private void paintBottomMoneyInfo(mGraphics g)
         {
+            if (type != 13 && GameCanvas.panel2 != null && !Equals(GameCanvas.panel2))
+            {
+                // Dang co bang nguoi choi mo ben canh — de no lo phan tien.
+                //
+                // Tru man giao dich: o do hai bang la hai NGUOI, moi ben mot so
+                // tien rieng, nen ben nao cung phai hien.
+                return;
+            }
             if (type != 13 || (currentTabIndex != 2 && !Equals(GameCanvas.panel2)))
             {
                 g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
