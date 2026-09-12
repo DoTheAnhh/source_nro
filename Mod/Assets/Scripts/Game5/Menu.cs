@@ -844,17 +844,34 @@ namespace Game5
     				pointerIsDowning = false;
     				// Cham vao BANG thi de bang xu ly luon cu cham ay.
     				//
-    				// Truoc day dong menu xong la xoa sach su kien cham, nen cu
-    				// cham do chi lam mot viec: dong menu. Nguoi choi bam mon thu
-    				// hai thi khong ra gi, phai bam them mot lan nua — dung canh
-    				// "cu cai hien cai khong".
+    				// Day la nguyen nhan cua canh "cu cai hien cai khong" khi
+    				// chon do o ba Hat Mit. Hai thu cung chan cu cham do:
     				//
-    				// startAt da biet thay menu dang mo bang menu moi, nen de cu
-    				// cham di tiep la bang mo dung menu cua mon vua bam.
-    				if (!chamTrongBang())
+    				//  1. Dong menu xong thi xoa sach su kien cham, nen cu cham
+    				//     do chi lam duoc mot viec la dong menu.
+    				//  2. GameCanvas chi cho MOT trong menu / popup / bang chay
+    				//     moi khung hinh (mot chuoi else-if), ma menu con giu
+    				//     `showMenu` suot may khung truot xuong — tuc bang bi
+    				//     khoa dung luc nguoi choi vua bam sang mon khac. Roi
+    				//     truot xong, doCloseMenu voi close = true lai xoa
+    				//     `panel.cp`, tuc khung chi tiet vua kip hien cung mat.
+    				//
+    				// Nen o day dong NGAY chu khong truot: ngay trong khung nay
+    				// `showMenu` da tat, chuoi else-if chay tiep xuong nhanh cua
+    				// bang, va bang nhan duoc dung cu cham ay — mot lan cham ra
+    				// dung mot menu. close = false va touch = false de doCloseMenu
+    				// chi tat menu: khong xoa `cp`, khong chay lenh cua muc nao.
+    				//
+    				// startAt von da biet thay menu dang mo bang menu moi.
+    				if (chamTrongBang())
     				{
-    					GameCanvas.clearAllPointerEvent();
+    					close = false;
+    					touch = false;
+    					menuSelectedItem = -1;
+    					doCloseMenu();
+    					return;
     				}
+    				GameCanvas.clearAllPointerEvent();
     				Res.outz("menu select= " + menuSelectedItem);
     				isClose = true;
     				close = true;
