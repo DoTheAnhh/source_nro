@@ -838,103 +838,168 @@ public class Zone {
         }
     }
 
+    /**
+     * Gói {@code -24}: toàn bộ bản đồ gửi cho một người vừa vào.
+     *
+     * <h2>Vì sao gom dữ liệu trước rồi mới ghi</h2>
+     *
+     * <p>Mỗi mục — mốc đường, quái, NPC, vật phẩm — ghi <b>số lượng trước</b> rồi
+     * mới tới từng phần tử. Bản cũ vừa duyệt vừa ghi: một con quái hỏng (thiếu
+     * toạ độ, thiếu điểm) ném lỗi ở giữa là số lượng đã ghi không còn khớp với số
+     * phần tử ghi được, mà khối {@code catch} lại ghi thêm một byte 0 nữa. Gói
+     * lệch từ chỗ đó trở đi, client đọc ra rác.
+     *
+     * <p>Nặng hơn: lỗi ở phần đầu — {@code pl.location} rỗng chẳng hạn — rơi
+     * thẳng ra {@code catch} ngoài cùng, gói <b>không bao giờ được gửi</b>, client
+     * nằm chờ mãi ở màn vào map. Đó đúng là kiểu "đứng map".
+     *
+     * <p>Nay mỗi mục gom vào danh sách trước, phần tử nào hỏng thì bỏ riêng phần
+     * tử đó; phần ghi chỉ còn ghi số nên không hỏng nửa chừng được. Số lượng chặn
+     * ở 127 vì ô đếm chỉ có một byte.
+     */
     public void mapInfo(Player pl) {
-        Message msg;
+        if (pl == null || this.map == null) {
+            return;
+        }
+        Message msg = null;
         try {
-            
+            // --- gom truoc, chua ghi gi ---
+            int xNguoi = pl.location != null ? pl.location.x : 0;
+            int yNguoi = pl.location != null ? pl.location.y : 0;
+
+            List<int[]> dsMoc = new ArrayList<>();
+            List<String> dsMocTen = new ArrayList<>();
+            try {
+                for (WayPoint wp : this.map.wayPoints) {
+                    try {
+                        dsMoc.add(new int[]{wp.minX, wp.minY, wp.maxX, wp.maxY,
+                            wp.isEnter ? 1 : 0, wp.isOffline ? 1 : 0});
+                        dsMocTen.add(wp.name == null ? "" : wp.name);
+                    } catch (Exception boQua) {
+                        // Moc hong thi bo rieng moc do.
+                    }
+                }
+            } catch (Exception boQua) {
+            }
+
+            List<long[]> dsQuai = new ArrayList<>();
+            try {
+                for (Mob mob : this.mobs) {
+                    try {
+                        if (mob.isBigBoss() && mob.tempId != 70 && mob.isDie()) {
+                            continue;
+                        }
+                        boolean bigBoss = mob.tempId == ConstMob.GAU_TUONG_CUOP
+                                || mob.tempId >= ConstMob.VOI_CHIN_NGA && mob.tempId <= ConstMob.PIANO
+                                || mob.tempId == ConstMob.KONG || mob.tempId == ConstMob.GOZILLA;
+                        dsQuai.add(new long[]{mob.tempId,
+                            Util.CrisGH(mob.point.gethp()), mob.level,
+                            Util.CrisGH(mob.point.getHpFull()),
+                            mob.location.x, mob.location.y, mob.status, mob.lvMob,
+                            bigBoss ? 1 : 0});
+                    } catch (Exception boQua) {
+                        // Con quai hong thi bo con do, khong bo ca ban do.
+                    }
+                }
+            } catch (Exception boQua) {
+            }
+
+            List<int[]> dsNpc = new ArrayList<>();
+            try {
+                for (Npc npc : NpcManager.getNpcsByMapPlayer(pl)) {
+                    try {
+                        dsNpc.add(new int[]{npc.status, npc.cx, npc.cy,
+                            npc.idHien(), npc.avartar});
+                    } catch (Exception boQua) {
+                    }
+                }
+            } catch (Exception boQua) {
+            }
+
+            List<int[]> dsVatPham = new ArrayList<>();
+            try {
+                for (ItemMap it : this.getItemMapsForPlayer(pl)) {
+                    try {
+                        dsVatPham.add(new int[]{it.itemMapId, it.itemTemplate.id,
+                            it.x, it.y, (int) it.playerId});
+                    } catch (Exception boQua) {
+                    }
+                }
+            } catch (Exception boQua) {
+            }
+
+            // --- ghi ---
             msg = new Message(-24);
             msg.writer().writeByte(this.map.mapId);
             msg.writer().writeByte(this.map.planetId);
             msg.writer().writeByte(this.map.tileId);
             msg.writer().writeByte(this.map.bgId);
             msg.writer().writeByte(this.map.type);
-            msg.writer().writeUTF(this.map.mapName);
+            msg.writer().writeUTF(this.map.mapName == null ? "" : this.map.mapName);
             msg.writer().writeByte(this.zoneId);
 
-            msg.writer().writeShort(pl.location.x);
-            msg.writer().writeShort(pl.location.y);
+            msg.writer().writeShort(xNguoi);
+            msg.writer().writeShort(yNguoi);
 
-            // waypoint
-            try {
-                List<WayPoint> wayPoints = this.map.wayPoints;
-                msg.writer().writeByte(wayPoints.size());
-                for (WayPoint wp : wayPoints) {
-                    msg.writer().writeShort(wp.minX);
-                    msg.writer().writeShort(wp.minY);
-                    msg.writer().writeShort(wp.maxX);
-                    msg.writer().writeShort(wp.maxY);
-                    msg.writer().writeBoolean(wp.isEnter);
-                    msg.writer().writeBoolean(wp.isOffline);
-                    msg.writer().writeUTF(wp.name);
-                }
-            } catch (Exception e) {
-                msg.writer().writeByte(0);
+            int soMoc = Math.min(dsMoc.size(), 127);
+            msg.writer().writeByte(soMoc);
+            for (int i = 0; i < soMoc; i++) {
+                int[] w = dsMoc.get(i);
+                msg.writer().writeShort(w[0]);
+                msg.writer().writeShort(w[1]);
+                msg.writer().writeShort(w[2]);
+                msg.writer().writeShort(w[3]);
+                msg.writer().writeBoolean(w[4] == 1);
+                msg.writer().writeBoolean(w[5] == 1);
+                msg.writer().writeUTF(dsMocTen.get(i));
             }
 
-            // mob
-            try {
-                List<Mob> mobs = new ArrayList<>();
-                for (Mob mob : this.mobs) {
-                    if (mob.isBigBoss() && mob.tempId != 70 && mob.isDie()) {
-                        continue;
-                    }
-                    mobs.add(mob);
-                }
-                msg.writer().writeByte(mobs.size());
-                for (Mob mob : mobs) {
-                    msg.writer().writeBoolean(false); //is disable
-                    msg.writer().writeBoolean(false); //is dont move
-                    msg.writer().writeBoolean(false); //is fire
-                    msg.writer().writeBoolean(false); //is ice
-                    msg.writer().writeBoolean(false); //is wind
-                    msg.writer().writeByte(mob.tempId);
-                    msg.writer().writeByte(0); // sys
-                    msg.writeCris(Util.CrisGH(mob.point.gethp()), Manager.readInt);
-                    msg.writer().writeByte(mob.level);
-                    msg.writeCris(Util.CrisGH(mob.point.getHpFull()), Manager.readInt);
-                    msg.writer().writeShort(mob.location.x);
-                    msg.writer().writeShort(mob.location.y);
-                    msg.writer().writeByte(mob.status);
-                    msg.writer().writeByte(mob.lvMob);
-                    msg.writer().writeBoolean(mob.tempId == ConstMob.GAU_TUONG_CUOP || mob.tempId >= ConstMob.VOI_CHIN_NGA && mob.tempId <= ConstMob.PIANO || mob.tempId == ConstMob.KONG || mob.tempId == ConstMob.GOZILLA); //is bigboss
-                }
-            } catch (Exception e) {
-                msg.writer().writeByte(0);
+            int soQuai = Math.min(dsQuai.size(), 127);
+            msg.writer().writeByte(soQuai);
+            for (int i = 0; i < soQuai; i++) {
+                long[] q = dsQuai.get(i);
+                msg.writer().writeBoolean(false); //is disable
+                msg.writer().writeBoolean(false); //is dont move
+                msg.writer().writeBoolean(false); //is fire
+                msg.writer().writeBoolean(false); //is ice
+                msg.writer().writeBoolean(false); //is wind
+                msg.writer().writeByte((int) q[0]);
+                msg.writer().writeByte(0); // sys
+                msg.writeCris(q[1], Manager.readInt);
+                msg.writer().writeByte((int) q[2]);
+                msg.writeCris(q[3], Manager.readInt);
+                msg.writer().writeShort((int) q[4]);
+                msg.writer().writeShort((int) q[5]);
+                msg.writer().writeByte((int) q[6]);
+                msg.writer().writeByte((int) q[7]);
+                msg.writer().writeBoolean(q[8] == 1); //is bigboss
             }
 
             msg.writer().writeByte(0);
 
-            // npc
-            try {
-                List<Npc> npcs = NpcManager.getNpcsByMapPlayer(pl);
-                msg.writer().writeByte(npcs.size());
-                for (Npc npc : npcs) {
-                    msg.writer().writeByte(npc.status);
-                    msg.writer().writeShort(npc.cx);
-                    msg.writer().writeShort(npc.cy);
-                    msg.writer().writeByte(npc.idHien());
-                    msg.writer().writeShort(npc.avartar);
-                }
-            } catch (Exception e) {
-                msg.writer().writeByte(0);
+            int soNpc = Math.min(dsNpc.size(), 127);
+            msg.writer().writeByte(soNpc);
+            for (int i = 0; i < soNpc; i++) {
+                int[] n = dsNpc.get(i);
+                msg.writer().writeByte(n[0]);
+                msg.writer().writeShort(n[1]);
+                msg.writer().writeShort(n[2]);
+                msg.writer().writeByte(n[3]);
+                msg.writer().writeShort(n[4]);
             }
 
-            // item
-            try {
-                List<ItemMap> itemsMap = this.getItemMapsForPlayer(pl);
-                msg.writer().writeByte(itemsMap.size());
-                for (ItemMap it : itemsMap) {
-                    msg.writer().writeShort(it.itemMapId);
-                    msg.writer().writeShort(it.itemTemplate.id);
-                    msg.writer().writeShort(it.x);
-                    msg.writer().writeShort(it.y);
-                    msg.writer().writeInt((int) it.playerId);
-                }
-            } catch (Exception e) {
-                msg.writer().writeByte(0);
+            int soVp = Math.min(dsVatPham.size(), 127);
+            msg.writer().writeByte(soVp);
+            for (int i = 0; i < soVp; i++) {
+                int[] v = dsVatPham.get(i);
+                msg.writer().writeShort(v[0]);
+                msg.writer().writeShort(v[1]);
+                msg.writer().writeShort(v[2]);
+                msg.writer().writeShort(v[3]);
+                msg.writer().writeInt(v[4]);
             }
 
-            // bg item
+            // do nen
             try {
                 final byte[] bgItem = FileIO.readFile("data/map/item_bg_map_data/" + this.map.mapId);
                 msg.writer().write(bgItem);
@@ -942,27 +1007,26 @@ public class Zone {
                 msg.writer().writeShort(0);
             }
 
-            // eff map
+            // hieu ung ban do
             try {
-                final byte[] effItem;
-                effItem = FileIO.readFile("data/map/eff_map/" + this.map.mapId);
-            
-
+                final byte[] effItem = FileIO.readFile("data/map/eff_map/" + this.map.mapId);
                 msg.writer().write(effItem);
             } catch (Exception e) {
                 msg.writer().writeShort(0);
             }
 
             msg.writer().writeByte(this.map.bgType);
-            msg.writer().writeByte(pl.iDMark.getIdSpaceShip());
+            msg.writer().writeByte(pl.iDMark == null ? 0 : pl.iDMark.getIdSpaceShip());
             msg.writer().writeByte(this.map.mapId == 148 ? 1 : 0);
             pl.sendMessage(msg);
             hienTenBanDo(pl);
-
-            msg.cleanup();
-
         } catch (Exception e) {
-            Logger.logException(Service.class, e);
+            Logger.logException(Zone.class, e, "Lỗi gửi bản đồ " + this.map.mapId
+                    + " cho " + (pl.name == null ? "?" : pl.name));
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
         }
     }
 

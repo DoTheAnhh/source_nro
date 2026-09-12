@@ -745,7 +745,58 @@ public class ChangeMapService {
      * khoá chúng lại là khoá vĩnh viễn cho tới lúc hết hạn — chúng sẽ đứng đờ
      * năm giây mỗi lần đổi bản đồ.</p>
      */
+    /**
+     * Vỏ bọc an toàn cho một lượt đổi bản đồ.
+     *
+     * <p>Thân thật nằm ở {@link #doiBanDoThat}. Nó dài và đụng tới hàng chục hệ
+     * thống khác — ngọc rồng Namếc, tranh ngọc, tàu vũ trụ, sự kiện, bản đồ
+     * lạnh... — nên chỉ cần một chỗ ném lỗi, ví dụ {@code pl.zone} rỗng, là lượt
+     * đổi dừng giữa chừng: gói bản đồ không được gửi, hộp "Xin chờ" nằm nguyên
+     * trên màn hình, khoá đổi bản đồ còn đó. Người chơi gọi cảnh đó là
+     * <b>đứng map</b>.
+     *
+     * <p>Nay lỗi được ghi lại, khoá được mở, hộp chờ được đóng; ai đang không
+     * thuộc khu nào thì đẩy về nhà cho có chỗ đứng, thay vì kẹt vĩnh viễn.
+     */
     private void changeMap(Player pl, Zone zoneJoin, int mapId, int zoneId, int x, int y, byte typeSpace) {
+        try {
+            doiBanDoThat(pl, zoneJoin, mapId, zoneId, x, y, typeSpace);
+        } catch (Exception ex) {
+            Logger.logException(ChangeMapService.class, ex, "Lỗi đổi bản đồ của "
+                    + (pl == null || pl.name == null ? "?" : pl.name));
+            cuuNguoiKetMap(pl);
+        }
+    }
+
+    /** Gỡ người chơi ra khỏi một lượt đổi bản đồ hỏng giữa chừng. */
+    private void cuuNguoiKetMap(Player pl) {
+        if (pl == null) {
+            return;
+        }
+        try {
+            xongDoiMap(pl);
+            pl.yeuCauDoiMapDangCho = null;
+            Service.gI().hideWaitDialog(pl);
+            Service.gI().sendThongBao(pl, "Vào bản đồ không được, thử lại giúp.");
+        } catch (Exception boQua) {
+            // Nguoi choi vua thoat — khong con gi de go.
+        }
+        if (pl.zone != null) {
+            return;
+        }
+        // Khong con thuoc khu nao: dung yen la dung mai. Day ve nha.
+        try {
+            Zone nha = MapService.gI().getMapCanJoin(pl, 21 + pl.gender, -1);
+            if (nha != null) {
+                doiBanDoThat(pl, nha, -1, -1, -1, -1, NON_SPACE_SHIP);
+            }
+        } catch (Exception ex) {
+            Logger.logException(ChangeMapService.class, ex,
+                    "Lỗi đẩy người kẹt bản đồ về nhà");
+        }
+    }
+
+    private void doiBanDoThat(Player pl, Zone zoneJoin, int mapId, int zoneId, int x, int y, byte typeSpace) {
         if (pl != null && pl.isPl() && dangDoiMap(pl)) {
             pl.yeuCauDoiMapDangCho
                     = new YeuCauDoiMap(zoneJoin, mapId, zoneId, x, y, typeSpace);
