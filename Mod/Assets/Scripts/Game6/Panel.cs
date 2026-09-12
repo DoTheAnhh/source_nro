@@ -1724,6 +1724,118 @@ namespace Game6
             cmx = (cmtoX = 0);
         }
     
+        /// <summary>Dòng này là dòng TÊN của một set kích hoạt.</summary>
+        private static bool laTenSet(string ten)
+        {
+            return ten != null && ten.StartsWith("Set ");
+        }
+
+        /// <summary>Con số đứng đầu dòng mốc, ví dụ "3 món: …" cho 3.</summary>
+        /// <remarks>
+        /// Phải có chữ "món" ngay sau con số, không thì "8 Sao Pha Lê" cũng bị
+        /// nhận là một mốc set và bị tô nhầm.
+        /// </remarks>
+        private static int mocCuaDongSet(string ten)
+        {
+            if (ten == null)
+            {
+                return 0;
+            }
+            int i = 0;
+            int so = 0;
+            while (i < ten.Length && ten[i] >= 48 && ten[i] <= 57)
+            {
+                so = so * 10 + (ten[i] - 48);
+                i++;
+            }
+            if (so == 0 || i >= ten.Length)
+            {
+                return 0;
+            }
+            return ten.Substring(i).TrimStart().StartsWith("món") ? so : 0;
+        }
+
+        /// <summary>Mốc set CAO NHẤT mà số món đang mặc còn đạt tới.</summary>
+        /// <remarks>
+        /// <para>Bảng thông tin này trước đây để mọi dòng mốc cùng một màu, nên
+        /// nhìn vào không biết mình đang hưởng mốc nào — phải tự đếm số món trên
+        /// người. Giờ đếm hộ và tô sáng đúng một dòng.</para>
+        ///
+        /// <para>Tô mốc CAO NHẤT đạt được chứ không tô mọi mốc nhỏ hơn: tô hết
+        /// cũng đúng về nghĩa nhưng đọc rối, không thấy ngay mình đang ở đâu.</para>
+        /// </remarks>
+        private static int mocDangHuongCua(Item item)
+        {
+            if (item == null || item.itemOption == null)
+            {
+                return 0;
+            }
+            int idSet = -1;
+            for (int i = 0; i < item.itemOption.Length; i++)
+            {
+                ItemOption op = item.itemOption[i];
+                if (op != null && op.optionTemplate != null
+                        && laTenSet(op.optionTemplate.name))
+                {
+                    idSet = op.optionTemplate.id;
+                    break;
+                }
+            }
+            if (idSet < 0)
+            {
+                return 0;
+            }
+            int soMon = demMonCungSet(idSet);
+            int cao = 0;
+            for (int i = 0; i < item.itemOption.Length; i++)
+            {
+                ItemOption op = item.itemOption[i];
+                if (op == null || op.optionTemplate == null)
+                {
+                    continue;
+                }
+                int moc = mocCuaDongSet(op.optionTemplate.name);
+                if (moc > 0 && moc <= soMon && moc > cao)
+                {
+                    cao = moc;
+                }
+            }
+            return cao;
+        }
+
+        /// <summary>Số món ĐANG MẶC mang cùng mã chỉ số set này.</summary>
+        private static int demMonCungSet(int idSet)
+        {
+            if (idSet < 0 || Char.myCharz() == null)
+            {
+                return 0;
+            }
+            Item[] mac = Char.myCharz().arrItemBody;
+            if (mac == null)
+            {
+                return 0;
+            }
+            int dem = 0;
+            for (int i = 0; i < mac.Length; i++)
+            {
+                if (mac[i] == null || mac[i].itemOption == null)
+                {
+                    continue;
+                }
+                for (int j = 0; j < mac[i].itemOption.Length; j++)
+                {
+                    ItemOption op = mac[i].itemOption[j];
+                    if (op != null && op.optionTemplate != null
+                            && op.optionTemplate.id == idSet)
+                    {
+                        dem++;
+                        break;
+                    }
+                }
+            }
+            return dem;
+        }
+
         /// <summary>Chỉ số này là chỉ số nhận diện của một set kích hoạt.</summary>
         /// <remarks>
         /// Máy chủ đánh số set trong hai khoảng đó (xem SetBonusDAO). Các dòng
@@ -1746,6 +1858,8 @@ namespace Game6
                 // chi so cua mon mot khung, chi so set kich hoat mot khung.
                 string nhomChiSo = string.Empty;
                 string nhomSet = string.Empty;
+                // Moc set DANG huong, de to sang dung mot dong.
+                int mocDat = mocDangHuongCua(item);
                 if (item.template.gender != Char.myCharz().cgender)
                 {
                     if (item.template.gender == 0)
@@ -1835,6 +1949,22 @@ namespace Game6
                                 else if (item.itemOption[k].optionTemplate.id == 107)
                                 {
                                     cp.maxStarSlot = (sbyte)item.itemOption[k].param;
+                                }
+                                else if (laTenSet(item.itemOption[k].optionTemplate.name))
+                                {
+                                    // Ten set: do, giong ten set trong tui moi.
+                                    nhomSet = nhomSet + "\n|7|1|" + empty;
+                                }
+                                else if (mocCuaDongSet(
+                                        item.itemOption[k].optionTemplate.name) > 0)
+                                {
+                                    // Moc set: moc DANG huong to xanh duong, cac
+                                    // moc chua toi de nau dam.
+                                    bool dangHuong = mocCuaDongSet(
+                                            item.itemOption[k].optionTemplate.name)
+                                            == mocDat;
+                                    nhomSet = nhomSet + (dangHuong ? "\n|2|1|" : "\n|0|1|")
+                                            + empty;
                                 }
                                 else if (laChiSoSet(item.itemOption[k].optionTemplate.id))
                                 {
@@ -4636,10 +4766,28 @@ namespace Game6
                     {
                         continue;
                     }
-                    g.setColor((i != selected) ? 15196114 : 16383818);
-                    g.fillRect(num2, num3, num4, h);
-                    g.setColor((i != selected) ? 9993045 : 9541120);
-                    g.fillRect(num5, num6, num7, num8);
+                    // Moi dong la mot the bo goc, khong phai hai o vuong roi.
+                    //
+                    // Ban truoc ve hai hinh chu nhat sat nhau — o anh mot mau, phan
+                    // chu mot mau — nen danh sach nhin nhu bang ke chu khong phai
+                    // danh sach vat pham, va dong dang chon chi sang hon mot chut,
+                    // rat kho nhan ra dang dung o dau.
+                    //
+                    // Mau lay theo he mau cua man tui moi: nen kem, vien nau, dong
+                    // dang chon nen cam va vien dam.
+                    bool dangChon = (i == selected);
+                    int xThe = num5;
+                    int rongThe = num2 + num4 - num5;
+                    g.setColor(0x8B623A, dangChon ? 0.95f : 0.5f);
+                    g.fillRect(xThe, num6, rongThe, num8, 5);
+                    g.setColor(dangChon ? 0xF0A164
+                            : ((i % 2 == 0) ? 0xFDF0DC : 0xF6E7CC), 1f);
+                    g.fillRect(xThe + 1, num6 + 1, rongThe - 2, num8 - 2, 4);
+                    // O anh dam hon mot chut, de tach khoi phan chu.
+                    g.setColor(0xF0DCBE, dangChon ? 0.95f : 0.9f);
+                    g.fillRect(xThe + 1, num6 + 1, num7 - 1, num8 - 2, 4);
+                    g.setColor(0x8B623A, 0.45f);
+                    g.fillRect(xThe + num7, num6 + 2, 1, num8 - 4);
                     Item item = array[i];
                     if (item != null)
                     {
