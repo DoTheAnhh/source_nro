@@ -72,40 +72,52 @@ public class SystemPanel extends JPanel {
         title.setForeground(ACCENT);
         add(title, BorderLayout.NORTH);
 
+        // Hai tang the thay vi mot hang hai muoi bay the.
+        //
+        // Mot hang dai the nay bat buoc phai cuon ngang: muon sang "Cong thuc
+        // doi" thi bam mui ten bay lan, va khong nhin duoc mot luot xem may chu
+        // co nhung phan nao. Gom theo viec — boss, vat pham, nhan vat... — thi
+        // tang tren chi con bay muc, doc mot cai la thay het.
         JTabbedPane tabs = new JTabbedPane();
         tabs.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-        tabs.addTab("Quy ước", buildConfigTab());
-        tabs.addTab("Thông báo", buildLoiChaoTab());
-        tabs.addTab("Boss", buildBossTongHop());
-        tabs.addTab("Đồ rơi từ quái", buildDoRoiTongHop());
-        tabs.addTab("Tỉ lệ", buildTiLeTab());
-        tabs.addTab("Tỉ lệ nâng sao", buildTiLeSaoTab());
-        tabs.addTab("Set kích hoạt", buildSetTab());
-        tabs.addTab("Tỉ lệ set kích hoạt", buildTiLeKichHoatTab());
-        tabs.addTab("Nội tại", buildNoiTaiTab());
-        tabs.addTab("Nhiệm vụ chính tuyến", buildNhiemVuChinhTab());
-        tabs.addTab("Kỹ năng", buildKyNangTab());
-        tabs.addTab("Hào quang", buildAuraTab());
-        tabs.addTab("Sổ sưu tầm", soSuuTam);
-        tabs.addTab("Danh hiệu", buildDanhHieuTab());
-        tabs.addTab("Top máy đấm", buildTopMayDamTab());
-        tabs.addTab("Vòng quay Thượng Đế", buildVongQuayTab());
-        tabs.addTab("Điểm đến capsule", buildCapsuleTab());
-        tabs.addTab("Bản đồ nhanh", buildMapNhanhTab());
-        tabs.addTab("Sách tuyệt kỹ", buildSachTuyetKyTab());
-        tabs.addTab("Phúc lợi", buildPhucLoiTab());
-        tabs.addTab("Bông tai", buildBongTaiTab());
-        tabs.addTab("Rồng nhí", buildRongNhiTab());
-        tabs.addTab("Chân mệnh", buildChanMenhTab());
-        tabs.addTab("Đệ tử", buildDeTuTab());
-        tabs.addTab("Sự kiện", buildSuKienTab());
-        tabs.addTab("Công thức đổi", buildCongThucTab());
-        tabs.addTab("Kiểm tra dữ liệu", buildCheckTab());
-        // Nap lai tab vua mo, dua theo TEN tab chu khong theo so thu tu: chen
-        // them mot tab vao giua la moi con so dich di, va loi kieu do khong
-        // bao gi ca, chi lang le nap nham bang.
-        tabs.addChangeListener(e -> napTabTen(tabs.getTitleAt(
-                Math.max(0, tabs.getSelectedIndex()))));
+        tabs.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        tabs.addTab("Máy chủ", nhomThe(
+                the("Quy ước", buildConfigTab()),
+                the("Thông báo", buildLoiChaoTab()),
+                the("Kiểm tra dữ liệu", buildCheckTab())));
+        tabs.addTab("Boss & quái", nhomThe(
+                the("Boss", buildBossTongHop()),
+                the("Đồ rơi từ quái", buildDoRoiTongHop()),
+                the("Top máy đấm", buildTopMayDamTab())));
+        tabs.addTab("Vật phẩm", nhomThe(
+                the("Tỉ lệ", buildTiLeTab()),
+                the("Tỉ lệ nâng sao", buildTiLeSaoTab()),
+                the("Set kích hoạt", buildSetTab()),
+                the("Tỉ lệ set kích hoạt", buildTiLeKichHoatTab()),
+                the("Công thức đổi", buildCongThucTab()),
+                the("Vòng quay Thượng Đế", buildVongQuayTab())));
+        tabs.addTab("Nhân vật", nhomThe(
+                the("Kỹ năng", buildKyNangTab()),
+                the("Nội tại", buildNoiTaiTab()),
+                the("Hào quang", buildAuraTab()),
+                the("Danh hiệu", buildDanhHieuTab()),
+                the("Sổ sưu tầm", soSuuTam),
+                the("Đệ tử", buildDeTuTab()),
+                the("Sách tuyệt kỹ", buildSachTuyetKyTab())));
+        tabs.addTab("Trang sức & thú", nhomThe(
+                the("Bông tai", buildBongTaiTab()),
+                the("Chân mệnh", buildChanMenhTab()),
+                the("Rồng nhí", buildRongNhiTab())));
+        tabs.addTab("Nhiệm vụ & sự kiện", nhomThe(
+                the("Nhiệm vụ chính tuyến", buildNhiemVuChinhTab()),
+                the("Sự kiện", buildSuKienTab()),
+                the("Phúc lợi", buildPhucLoiTab())));
+        tabs.addTab("Bản đồ", nhomThe(
+                the("Bản đồ nhanh", buildMapNhanhTab()),
+                the("Điểm đến capsule", buildCapsuleTab())));
+        // Doi NHOM cung phai nap lai: bang cua the con dang chon trong nhom moi
+        // co the da cu tu lan mo truoc.
+        tabs.addChangeListener(e -> napTheDangXem(tabs));
         add(tabs, BorderLayout.CENTER);
 
         lblStatus.setForeground(GREY);
@@ -117,6 +129,50 @@ public class SystemPanel extends JPanel {
         LamMoi.nghe(this::veLaiTheoVatPham, LamMoi.VAT_PHAM, LamMoi.ANH, LamMoi.LOAI);
         LamMoi.nghe(LamMoi.BOSS, this::veLaiBoss);
         LamMoi.nghe(LamMoi.SU_KIEN, this::veLaiSuKien);
+    }
+
+    /** Một thẻ con: tên hiện trên thẻ và phần nội dung của nó. */
+    private static final class The {
+
+        final String ten;
+        final JComponent noiDung;
+
+        The(String ten, JComponent noiDung) {
+            this.ten = ten;
+            this.noiDung = noiDung;
+        }
+    }
+
+    private static The the(String ten, JComponent noiDung) {
+        return new The(ten, noiDung);
+    }
+
+    /**
+     * Gộp mấy thẻ con thành một nhóm.
+     *
+     * <p>Mỗi nhóm tự nghe sự kiện đổi thẻ của chính nó, nên bảng trong thẻ vẫn
+     * được nạp lại đúng lúc mở — {@link #napTabTen} tra theo <b>tên</b> thẻ nên
+     * chuyện thẻ nằm ở tầng nào không ảnh hưởng gì.</p>
+     */
+    private JComponent nhomThe(The... ds) {
+        JTabbedPane t = new JTabbedPane();
+        t.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+        t.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        for (The x : ds) {
+            t.addTab(x.ten, x.noiDung);
+        }
+        t.addChangeListener(e -> napTabTen(
+                t.getTitleAt(Math.max(0, t.getSelectedIndex()))));
+        return t;
+    }
+
+    /** Nạp lại bảng của thẻ con đang mở trong nhóm đang xem. */
+    private void napTheDangXem(JTabbedPane ngoai) {
+        java.awt.Component c = ngoai.getSelectedComponent();
+        if (c instanceof JTabbedPane) {
+            JTabbedPane trong = (JTabbedPane) c;
+            napTabTen(trong.getTitleAt(Math.max(0, trong.getSelectedIndex())));
+        }
     }
 
     /**
@@ -6277,8 +6333,9 @@ public class SystemPanel extends JPanel {
      * <i>sửa</i> giao cho hộp thoại có ô chọn đàng hoàng.</p>
      */
     private final DefaultTableModel vqModel = new DefaultTableModel(
-            new Object[]{"Id", "Vòng quay", "Ảnh", "Vật phẩm", "Số lượng",
-                "Chỉ số kèm theo", "Trọng số", "Cơ hội", "Bật", "Ghi chú"}, 0) {
+            new Object[]{"Id", "Vòng quay", "Ảnh", "Vật phẩm", "Loại",
+                "Số lượng", "Chỉ số kèm theo", "Hạn dùng", "Trọng số",
+                "Cơ hội", "Bật", "Ghi chú"}, 0) {
         @Override
         public boolean isCellEditable(int r, int c) {
             return false;
@@ -6310,7 +6367,7 @@ public class SystemPanel extends JPanel {
         vqTable.setRowHeight(30);
         vqTable.setSelectionMode(
                 ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        int[] w = {40, 80, 40, 300, 90, 300, 65, 65, 40, 180};
+        int[] w = {40, 70, 40, 260, 90, 80, 260, 130, 65, 65, 40, 150};
         for (int i = 0; i < vqTable.getColumnCount() && i < w.length; i++) {
             vqTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
         }
@@ -6348,6 +6405,8 @@ public class SystemPanel extends JPanel {
         nut.add(button("Tắt các dòng đã chọn", new Color(150, 120, 60),
                 e -> batTatVongQuay(false)));
         nut.add(button("Xoá các dòng đã chọn", WARN_RED, e -> xoaDongVongQuay()));
+        nut.add(button("Tách mỗi món một dòng", new Color(70, 120, 150),
+                e -> tachTungMonVongQuay()));
         nut.add(button("Gieo lại từ mã nguồn", new Color(120, 90, 160),
                 e -> gieoLaiVongQuay()));
         nut.add(button("Tải lại", GREY, e -> napBangVongQuay()));
@@ -6384,17 +6443,23 @@ public class SystemPanel extends JPanel {
                         + "chép nguyên id sang đây cho ra một danh sách quà khác hẳn "
                         + "thứ người chơi vẫn nhận. Soát lại từng dòng rồi hãy bật.")
                 + "<br><br>"
-                + "<b>Nháy đúp một dòng để sửa.</b> Chọn nhiều dòng (giữ Ctrl hoặc "
-                + "Shift) rồi bấm \"Sửa dòng đang chọn\" thì sửa được cả loạt — trong "
-                + "hộp thoại chỉ những ô bạn <i>tích chọn</i> mới được áp, phần còn "
-                + "lại của mỗi dòng giữ nguyên."
+                + "<b>Mỗi dòng là một phần quay.</b> Cột <i>Loại</i> cho biết món "
+                + "đó là pet, đeo lưng hay cải trang; <i>Chỉ số kèm theo</i> ghi "
+                + "rõ từng dòng chỉ số với khoảng <b>từ–đến</b>; <i>Hạn dùng</i> ghi "
+                + "\"vĩnh viễn\" hoặc khoảng ngày kèm tỉ lệ ra bản vĩnh viễn."
                 + "<br><br>"
-                + "Một dòng có thể chứa <b>nhiều vật phẩm</b>: quay trúng dòng đó thì "
-                + "bốc ngẫu nhiên một món trong danh sách, cơ hội đều nhau. "
-                + "<b>Trọng số</b> là trọng số, không phải phần trăm — cột \"Cơ hội\" "
-                + "là phần trăm tính ra từ chính các trọng số đang bật của cùng vòng "
-                + "quay. Mỗi dòng chỉ số có <b>khoảng trị số từ–tới</b>, và mỗi dòng "
-                + "quà có <b>hạn dùng từ–tới</b> cùng <b>tỉ lệ ra bản vĩnh viễn</b>."
+                + "<b>Trọng số</b> là trọng số chứ không phải phần trăm — cột "
+                + "<i>Cơ hội</i> mới là phần trăm, tính từ các trọng số đang bật của "
+                + "cùng vòng quay."
+                + "<br><br>"
+                + "<b>Nháy đúp để sửa một dòng.</b> Giữ Ctrl hoặc Shift chọn nhiều "
+                + "dòng rồi bấm \"Sửa dòng đang chọn\" để sửa cả loạt — chỉ những ô "
+                + "bạn <i>tích chọn</i> trong hộp thoại mới được áp."
+                + "<br><br>"
+                + "Dòng ghi \"1 trong N\" là một dòng gom nhiều món, quay trúng mới "
+                + "bốc tiếp một món — khó đoán phần trăm từng món. Bấm "
+                + "<b>\"Tách mỗi món một dòng\"</b> để rải chúng ra, cơ hội từng món "
+                + "giữ nguyên."
                 + "<br><br>"
                 + "Quay hụt thì rơi về vàng như cũ, nên tắt hết quà cũng không làm ai "
                 + "mất lượt mà chẳng nhận gì.</body></html>");
@@ -6488,6 +6553,158 @@ public class SystemPanel extends JPanel {
         return sb.length() == 0 ? "(không có)" : sb.toString();
     }
 
+    /**
+     * Loại của món trong dòng quà: pet, đeo lưng, cải trang…
+     *
+     * <p>Cột này trả lời câu hỏi đầu tiên người khai hay hỏi — "món này có chỉ
+     * số không" — mà không phải mở từng dòng ra xem. Dòng nhiều món cùng loại
+     * thì ghi một tên, khác loại thì ghi "nhiều loại".</p>
+     */
+    private static String loaiCuaQua(nro.repository.dao.VongQuayDAO.Qua q) {
+        java.util.List<Integer> ids
+                = nro.repository.dao.VongQuayDAO.docDanhSachSo(q.vatPham);
+        String chung = null;
+        for (int id : ids) {
+            String ten = loaiVatPham(id);
+            if (chung == null) {
+                chung = ten;
+            } else if (!chung.equals(ten)) {
+                return "nhiều loại";
+            }
+        }
+        return chung == null ? "" : chung;
+    }
+
+    private static String loaiVatPham(int id) {
+        try {
+            nro.entity.template.ItemTemplate t
+                    = nro.service.item.ItemService.gI().getTemplate(id);
+            if (t == null) {
+                return "";
+            }
+            String ten = nro.repository.dao.LoaiVatPhamDAO.ten(t.type);
+            return (ten == null || ten.isEmpty()) ? ("loại " + t.type) : ten;
+        } catch (Exception boQua) {
+            return "";
+        }
+    }
+
+    /** Chỉ các dòng chỉ số, KHÔNG kèm hạn dùng — hạn dùng có cột riêng. */
+    private static String moTaChiSoRieng(nro.repository.dao.VongQuayDAO.Qua q) {
+        java.util.List<int[]> ds = nro.repository.dao.VongQuayDAO.docChiSo(q.chiSo);
+        StringBuilder sb = new StringBuilder();
+        for (int[] cs : ds) {
+            if (sb.length() > 0) {
+                sb.append("; ");
+            }
+            String ten = OptionPicker.tenChiSo(cs[0]);
+            String tri = (cs[2] > cs[1]) ? (cs[1] + " đến " + cs[2])
+                    : String.valueOf(cs[1]);
+            sb.append(cs[1] > 0 || cs[2] > 0 ? ten.replace("#", tri) : ten);
+        }
+        return sb.length() == 0 ? "(không có)" : sb.toString();
+    }
+
+    /** Hạn dùng viết ra chữ: "vĩnh viễn", "7 ngày", "7 đến 30 ngày · 10% vĩnh viễn". */
+    private static String moTaHanDung(nro.repository.dao.VongQuayDAO.Qua q) {
+        if (q.hsdMax <= 0) {
+            return "vĩnh viễn";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(Math.max(1, q.hsdMin));
+        if (q.hsdMax > q.hsdMin) {
+            sb.append(" đến ").append(q.hsdMax);
+        }
+        sb.append(" ngày");
+        if (q.tiLeVinhVien > 0) {
+            sb.append(" · ").append(q.tiLeVinhVien).append("% vĩnh viễn");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Tách mỗi dòng nhiều món thành mỗi món một dòng.
+     *
+     * <p>Một dòng chứa nhiều món thì quay trúng dòng ấy mới bốc tiếp một món,
+     * cơ hội đều nhau — đọc bảng rất khó hình dung món nào bao nhiêu phần trăm.
+     * Tách ra thì mỗi món một dòng, một trọng số, một cơ hội, nhìn là biết.</p>
+     *
+     * <p><b>Cơ hội không đổi.</b> Trọng số cũ chia đều cho các món, phần dư dồn
+     * vào món đầu; tổng trọng số của cả nhóm giữ nguyên nên mọi dòng khác cũng
+     * giữ nguyên phần trăm của mình. Trọng số quá nhỏ để chia (ví dụ 2 chia cho
+     * 3 món) thì dừng lại và nói rõ, chứ không làm lệch tỉ lệ sau lưng.</p>
+     */
+    private void tachTungMonVongQuay() {
+        java.util.List<nro.repository.dao.VongQuayDAO.Qua> chon = vqDangChon();
+        if (chon.isEmpty()) {
+            chon = new java.util.ArrayList<>(dsVongQuay);
+        }
+        java.util.List<nro.repository.dao.VongQuayDAO.Qua> canTach
+                = new java.util.ArrayList<>();
+        for (nro.repository.dao.VongQuayDAO.Qua q : chon) {
+            if (nro.repository.dao.VongQuayDAO.docDanhSachSo(q.vatPham).size() > 1) {
+                canTach.add(q);
+            }
+        }
+        if (canTach.isEmpty()) {
+            note(OK_GREEN, "Không có dòng nào nhiều món — bảng đã là mỗi món một dòng.");
+            return;
+        }
+        for (nro.repository.dao.VongQuayDAO.Qua q : canTach) {
+            int so = nro.repository.dao.VongQuayDAO.docDanhSachSo(q.vatPham).size();
+            if (q.trongSo < so) {
+                note(WARN_RED, "Dòng " + q.id + " có " + so + " món nhưng trọng số chỉ "
+                        + q.trongSo + " — tăng trọng số lên ít nhất " + so
+                        + " rồi tách, không thì cơ hội sẽ lệch.");
+                return;
+            }
+        }
+        if (JOptionPane.showConfirmDialog(this,
+                "Tách " + canTach.size() + " dòng nhiều món thành mỗi món một dòng?\n\n"
+                + "Cơ hội của từng món giữ nguyên như hiện nay.",
+                "Tách từng món", JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+            return;
+        }
+        int themDong = 0;
+        for (nro.repository.dao.VongQuayDAO.Qua q : canTach) {
+            java.util.List<Integer> ids
+                    = nro.repository.dao.VongQuayDAO.docDanhSachSo(q.vatPham);
+            int chia = q.trongSo / ids.size();
+            int du = q.trongSo - chia * ids.size();
+            for (int i = 0; i < ids.size(); i++) {
+                nro.repository.dao.VongQuayDAO.Qua moi
+                        = new nro.repository.dao.VongQuayDAO.Qua();
+                // Mon dau GIU lai id cu, cac mon sau la dong moi: bang khong nhay
+                // sap xep lai het sau moi lan tach.
+                moi.id = (i == 0) ? q.id : 0;
+                moi.nhom = q.nhom;
+                moi.vatPham = String.valueOf(ids.get(i));
+                moi.chiSo = q.chiSo;
+                moi.trongSo = chia + (i == 0 ? du : 0);
+                moi.soLuongMin = q.soLuongMin;
+                moi.soLuongMax = q.soLuongMax;
+                moi.hsdMin = q.hsdMin;
+                moi.hsdMax = q.hsdMax;
+                moi.tiLeVinhVien = q.tiLeVinhVien;
+                moi.bat = q.bat;
+                moi.ghiChu = q.ghiChu;
+                String loi = nro.repository.dao.VongQuayDAO.luu(moi);
+                if (loi != null) {
+                    note(WARN_RED, loi);
+                    napBangVongQuay();
+                    return;
+                }
+                if (i > 0) {
+                    themDong++;
+                }
+            }
+        }
+        napBangVongQuay();
+        note(OK_GREEN, "Đã tách " + canTach.size() + " dòng, thêm " + themDong
+                + " dòng mới — cơ hội từng món giữ nguyên.");
+    }
+
     private void napBangVongQuay() {
         vqModel.setRowCount(0);
         dsVongQuay = nro.repository.dao.VongQuayDAO.danhSach();
@@ -6512,9 +6729,9 @@ public class SystemPanel extends JPanel {
             int max = Math.max(min, q.soLuongMax);
             vqModel.addRow(new Object[]{q.id,
                 q.nhom == nro.repository.dao.VongQuayDAO.NHOM_VIP ? "VIP" : "Thường",
-                anhVatPham(q), moTaVatPham(q),
+                anhVatPham(q), moTaVatPham(q), loaiCuaQua(q),
                 min == max ? String.valueOf(min) : (min + " – " + max),
-                moTaChiSoQua(q), q.trongSo, coHoi,
+                moTaChiSoRieng(q), moTaHanDung(q), q.trongSo, coHoi,
                 q.bat ? "✔" : "", q.ghiChu == null ? "" : q.ghiChu});
         }
     }
