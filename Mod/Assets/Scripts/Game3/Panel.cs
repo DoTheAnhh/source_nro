@@ -1175,6 +1175,32 @@ namespace Game3
                 currentTabIndex = currentTabName.Length - 1;
             }
             scroll = null;
+            theoBangKia(position);
+        }
+
+        /// <summary>
+        /// Bảng NPC nới ra một phần ba màn hình khi bảng người chơi đang mở cạnh.
+        /// </summary>
+        /// <remarks>
+        /// <para>Phải làm ở CUỐI <c>setType</c>. Bảng người chơi được dựng trước,
+        /// nó nới bảng NPC ra ngay lúc ấy, nhưng ngay sau đó bảng NPC mới được
+        /// gán kiểu — và <c>setType</c> đặt lại bề rộng về mặc định, xoá sạch
+        /// phần nới. Đó là lý do giữa màn hình vẫn hở một khoảng thấy bản đồ.</para>
+        /// </remarks>
+        private void theoBangKia(int position)
+        {
+            if (position != 0 || GameCanvas.panel2 == null
+                    || Equals(GameCanvas.panel2) || !GameCanvas.panel2.nhieuCot)
+            {
+                return;
+            }
+            int cot = GameCanvas.w / 3;
+            if (cot < WIDTH_PANEL)
+            {
+                cot = WIDTH_PANEL;
+            }
+            datBeRong(cot, 0);
+            GameCanvas.panel2.datBeRong(GameCanvas.w - cot, 1);
         }
     
         public void setTypeMapTrans()
@@ -1363,6 +1389,10 @@ namespace Game3
                 // Man qua hep cho ba cot — giu nguyen mot cot nhu cu.
                 return;
             }
+            if (cot < WIDTH_PANEL)
+            {
+                cot = WIDTH_PANEL;
+            }
             soCotDat = 2;
             nhieuCot = true;
             GameCanvas.panel.datBeRong(cot, 0);
@@ -1391,9 +1421,15 @@ namespace Game3
             }
             else
             {
-                xScroll = GameCanvas.w - wScroll;
-                X = xScroll - 2;
-                cmtoX = GameCanvas.w - W;
+                // Mep PHAI cua bang trung dung mep man hinh.
+                //
+                // Cong thuc cu tinh xScroll truoc roi lui X lai hai diem, nen ca
+                // bang bi day sang phai hai diem: mep phai tran ra ngoai man, con
+                // ben trai ho mot khe hai diem nhin thay ban do — dung cai vach
+                // sang nam giua hai bang.
+                X = GameCanvas.w - W;
+                xScroll = X + 2;
+                cmtoX = X;
             }
             cmx = cmtoX;
             TAB_W = W / 5 - 1;
