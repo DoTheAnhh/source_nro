@@ -1389,6 +1389,13 @@ namespace Game5.God
                 int x = x0 + LE + i * w;
                 veVienThuoc(g, x, yThe, w - 3, CAO_THE, sang);
                 mFont mf = sang ? mFont.tahoma_7b_white : mFont.tahoma_7b_dark;
+                // Cham bao tren the "Bang hoi" khi co nguoi xin vao.
+                if (TEN_THE[i] == "Bang hội" && GameScr.isNewClanMessage
+                        && GameCanvas.gameTick % 8 < 5)
+                {
+                    g.setColor(0xFF4A3C, 1f);
+                    g.fillRect(x + w - 12, yThe + 3, 6, 6, 3);
+                }
                 mf.drawString(g, TEN_THE[i], x + (w - 3) / 2, yThe + 5,
                         mFont.CENTER);
             }
@@ -1751,12 +1758,36 @@ namespace Game5.God
 
         private int veDong(mGraphics g, int y, string nhan, string so, int mau)
         {
-            mFont.tahoma_7.drawString(g, nhan, xPhai + 6, y, mFont.LEFT);
+            veNenDongChiSo(g, xPhai + 4, rongPhai - 8, y, nhan);
+            mFont.tahoma_7b_dark.drawString(g, nhan, xPhai + 10, y, mFont.LEFT);
             mFont fs = fontCua(mau);
-            int con = rongPhai - 16 - mFont.tahoma_7.getWidth(nhan);
-            fs.drawString(g, catTheoRong(fs, so, con), xPhai + rongPhai - 6, y,
+            int con = rongPhai - 24 - mFont.tahoma_7.getWidth(nhan);
+            fs.drawString(g, catTheoRong(fs, so, con), xPhai + rongPhai - 8, y,
                     mFont.RIGHT);
             return y + 13;
+        }
+
+        /// <summary>
+        /// Nền một dòng chỉ số: vạch màu bên trái và một lớp nền rất nhạt cùng
+        /// tông, màu lấy theo <b>tên</b> chỉ số.
+        /// </summary>
+        /// <remarks>
+        /// <para>Chữ trong game là ảnh bitmap dựng sẵn, chỉ có bốn năm màu cố
+        /// định — không đủ cho mỗi chỉ số một màu. Vạch màu thì tuỳ ý, mà chữ vẫn
+        /// là nâu đậm trên nền kem nên đọc không mệt.</para>
+        ///
+        /// <para>Dùng chung bảng màu với ô chi tiết vật phẩm: HP đỏ, KI xanh
+        /// dương, sức đánh cam, giáp xám thép… Cùng một chỉ số thì ở đâu cũng
+        /// một màu, mắt quen rất nhanh.</para>
+        /// </remarks>
+        private static void veNenDongChiSo(mGraphics g, int x, int w, int y,
+                string nhan)
+        {
+            int mau = mauLoaiChiSo(nhan);
+            g.setColor(mau, 0.14f);
+            g.fillRect(x, y - 2, w, 13, 4);
+            g.setColor(mau, 0.95f);
+            g.fillRect(x + 1, y - 1, 3, 11, 1);
         }
 
         /// <summary>Phông chữ theo màu — <c>drawString</c> không nhận màu rời.</summary>
@@ -4667,12 +4698,42 @@ namespace Game5.God
         private int veDongDe(mGraphics g, int x, int w, int y,
                 string nhan, string so)
         {
-            mFont.tahoma_7.drawString(g, nhan, x + 8, y, mFont.LEFT);
-            int con = w - 20 - mFont.tahoma_7.getWidth(nhan);
-            mFont.tahoma_7b_dark.drawString(g,
-                    catTheoRong(mFont.tahoma_7b_dark, so, con), x + w - 8, y,
+            // Cung mot kieu voi bang chi so cua nhan vat: vach mau theo ten chi
+            // so, chu nau dam tren nen nhat.
+            veNenDongChiSo(g, x + 6, w - 12, y, nhan);
+            mFont.tahoma_7b_dark.drawString(g, nhan, x + 12, y, mFont.LEFT);
+            mFont fs = fontChiSoDe(nhan);
+            int con = w - 28 - mFont.tahoma_7.getWidth(nhan);
+            fs.drawString(g, catTheoRong(fs, so, con), x + w - 8, y,
                     mFont.RIGHT);
             return y + 13;
+        }
+
+        /// <summary>Màu chữ của số liệu đệ tử, theo tên chỉ số.</summary>
+        /// <remarks>
+        /// Chỉ bốn màu chữ có sẵn nên gom lại: HP đỏ, KI xanh dương, sức mạnh và
+        /// tiềm năng xanh lá (hai con số lớn nhất, nhìn là thấy), còn lại nâu đậm.
+        /// Phần phân biệt từng chỉ số đã do vạch màu bên trái lo.
+        /// </remarks>
+        private static mFont fontChiSoDe(string nhan)
+        {
+            if (nhan == null)
+            {
+                return mFont.tahoma_7b_dark;
+            }
+            if (nhan.StartsWith("HP"))
+            {
+                return mFont.tahoma_7b_red;
+            }
+            if (nhan.StartsWith("KI"))
+            {
+                return mFont.tahoma_7b_blue;
+            }
+            if (nhan.StartsWith("Sức mạnh") || nhan.StartsWith("Tiềm năng"))
+            {
+                return mFont.tahoma_7b_green;
+            }
+            return mFont.tahoma_7b_dark;
         }
 
         /// <summary>Kỹ năng của đệ: icon, tên, cấp.</summary>

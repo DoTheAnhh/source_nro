@@ -5755,9 +5755,16 @@ namespace Game3
     				}
     			}
     			ChatTextField.gI().paint(g);
-    			if (isNewClanMessage && !GameCanvas.panel.isShow && GameCanvas.gameTick % 4 == 0)
+    			// Co nguoi xin vao bang: nhay o nut BA GACH.
+    			//
+    			// Duong di toi cho xu ly la ba gach -> Nhan vat -> the Bang hoi, nen
+    			// dau hieu phai bat dau tu ba gach. Ve mot cham do nho o goc nut,
+    			// cung kieu voi cham bao cua cac man khac, thay cho anh loe cu.
+    			if (isNewClanMessage && !GameCanvas.panel.isShow
+    					&& GameCanvas.gameTick % 8 < 5)
     			{
-    				g.drawImage(ItemMap.imageFlare, cmdMenu.x + 15, cmdMenu.y + 30, mGraphics.BOTTOM | mGraphics.HCENTER);
+    				g.setColor(0xFF4A3C, 1f);
+    				g.fillRect(cmdMenu.x + 20, cmdMenu.y - 2, 6, 6, 3);
     			}
     			if (isSuperPower)
     			{
@@ -6793,12 +6800,11 @@ namespace Game3
     			veKhungNutNhanh(g, xC, yVe, W_CHAT, H_CHAT, dangBam);
     			int yChu = yVe + H_CHAT / 2 - mFont.tahoma_7b_yellow.getHeight() / 2
     					+ (dangBam ? 1 : 0);
-    			// Cham do nhay khi co tin chat chua doc (The gioi / Map / Khu / Bang).
-    			if (God.ChatUI.coTinChuaDoc() && God.ChatUI.nhipNhay())
-    			{
-    			    g.setColor(0xFF4A3C, 1f);
-    			    g.fillRect(xC + W_CHAT - 9, yVe + 3, 5, 5, 3);
-    			}
+    			// Khong con cham do o nut Chat.
+    			//
+    			// Khung chat lon nam ngay canh nut nay va cac the trong no da tu
+    			// nhay bao tin moi roi; them mot cham nua o ngoai la bao hai lan
+    			// cho cung mot viec.
     			mFont.tahoma_7b_dark.drawString(g, "Chat", xC + W_CHAT / 2 + 1,
     					yChu + 1, mFont.CENTER);
     			mFont.tahoma_7b_yellow.drawString(g, "Chat", xC + W_CHAT / 2,

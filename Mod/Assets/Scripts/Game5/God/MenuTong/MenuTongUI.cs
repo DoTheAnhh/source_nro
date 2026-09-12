@@ -194,6 +194,17 @@ namespace Game5.God
 
                 veIconVaChu(g, ds[i].icon, ds[i].chu,
                         x + CANH_O / 2, y, CANH_O, sang);
+                // Cham bao tren muc "Nhan vat" khi co nguoi xin vao bang.
+                //
+                // Cho xu ly nam sau hai lop nua (Nhan vat -> the Bang hoi) nen
+                // dau hieu phai dat o dung muc dan toi do, khong thi nguoi choi
+                // mo menu ra van khong biet di dau.
+                if (ds[i].chu == "Nhân vật" && GameScr.isNewClanMessage
+                        && GameCanvas.gameTick % 8 < 5)
+                {
+                    g.setColor(0xFF4A3C, 1f);
+                    g.fillRect(x + CANH_O - 10, y + 4, 6, 6, 3);
+                }
             }
         }
 
