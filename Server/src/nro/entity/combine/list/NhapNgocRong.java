@@ -69,10 +69,11 @@ public class NhapNgocRong {
         // ===== NGỌC 2–7 SAO =====
         if (item.template.id > 14 && item.template.id <= 20) {
 
-            if (item.template.id <= 16) {
-                Service.gI().sendDialogMessage(player, "Không thể nhập Ngọc Rồng 3 sao hoặc thấp hơn!");
-                return;
-            }
+            // Moi muc ngoc 2 den 7 sao deu nhap xuong duoc mot bac.
+            //
+            // Ban truoc chan cung muc 2 va 3 sao, nen nguoi choi om mot dong
+            // ngoc 3 sao ma khong co duong nao dung toi: NPC bao "khong the
+            // nhap" ma khong noi phai lam gi khac.
 
             int toiDa = item.quantity / SO_NGOC_CAN;
             String text = ConstFont.BOLD_BLUE
@@ -190,11 +191,6 @@ public class NhapNgocRong {
 
         // ===== NGỌC THƯỜNG =====
         if (item.template.id > 14 && item.template.id <= 20) {
-
-            if (item.template.id <= 16) {
-                Service.gI().sendServerMessage(player, "Không thể nhập Ngọc Rồng 3 sao hoặc thấp hơn!");
-                return;
-            }
 
             Item nr = ItemService.gI().createNewItem((short) (item.template.id - 1));
             nr.quantity = soLan;

@@ -1566,7 +1566,7 @@ public void joinMap() {
      * <p>Đệ tử và phân thân tính cho sư phụ, giống <code>die</code> vẫn làm — người
      * chơi coi đó là công của mình chứ không phải của con đệ.</p>
      */
-    private void ghiNguoiTieuDiet(Player plKill) {
+    protected void ghiNguoiTieuDiet(Player plKill) {
         if (plKill == null) {
             return;
         }

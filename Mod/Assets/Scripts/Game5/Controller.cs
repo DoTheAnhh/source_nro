@@ -6384,6 +6384,12 @@ namespace Game5
                             RadarScr.list = new MyVector();
                             // Vao game lan moi: don tin cu cua Map / Khu / The gioi.
                             God.ChatUI.getInstance().donTinCuKhiVaoGame();
+                            // Xin san danh sach boss ngay luc vao game.
+                            //
+                            // Truoc day phai bam vao muc "List boss" moi bat dau
+                            // xin, nen lan mo dau tien nao cung dung mot nhip o
+                            // "Dang tai". Goi nay nho va chi mot lan.
+                            Service.gI().bossXin();
                             Teleport.vTeleport.removeAllElements();
                             GameScr.vCharInMap.removeAllElements();
                             GameScr.vItemMap.removeAllElements();

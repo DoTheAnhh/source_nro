@@ -452,7 +452,9 @@ namespace Game4.God
         public void moCho()
         {
             dangMo = true;
-            dangCho = true;
+            // Da co san danh sach (xin tu luc vao game) thi hien luon, khong
+            // bao "Dang tai" mot nhip roi moi ve.
+            dangCho = (ds.Count == 0);
             lucXinCuoi = mSystem.currentTimeMillis();
         }
 

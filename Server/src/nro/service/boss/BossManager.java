@@ -181,6 +181,8 @@ public class BossManager implements Runnable {
             Logger.success("Đã gieo " + ds.size()
                     + " dòng danh sách boss xuống bảng boss_spawn\n");
         }
+        boSungRongNhi(ds);
+        ds = nro.repository.dao.BossSpawnDAO.tatCa();
         ds = donDongCu(ds);
         int con = 0;
         int ban = 0;
@@ -292,6 +294,50 @@ public class BossManager implements Runnable {
         them(ds, BossID.VIRUS_NOMAL, "VIRUS_NOMAL", 100, 30);
         them(ds, BossID.XIN_BA_TO_NOMAL, "XIN_BA_TO_NOMAL", 100, 31);
         return ds;
+    }
+
+    /**
+     * Ghi bảy con rồng nhí xuống <code>boss_spawn</code> nếu chưa có.
+     *
+     * <p>Danh sách mặc định chỉ được gieo <b>một lần</b>, ở lần chạy đầu tiên
+     * của máy chủ. Máy đang chạy thì bảng đã gieo từ lâu, nên boss mới thêm vào
+     * mã sẽ không bao giờ có dòng của mình — thêm ở đây để không phải chạy SQL
+     * tay.</p>
+     *
+     * <p>Chỉ thêm dòng <b>còn thiếu</b>: quản trị tắt hay xoá con nào thì lần
+     * khởi động sau nó vẫn tắt, không mọc lại. Xoá hẳn thì có mọc lại — đó là
+     * cái giá của việc không cần SQL tay, và tắt là đủ để nó nằm im.</p>
+     */
+    private void boSungRongNhi(java.util.List<nro.repository.dao.BossSpawnDAO.Dong> dangCo) {
+        int[] ids = {BossID.Rong_1Sao, BossID.Rong_2Sao, BossID.Rong_3Sao,
+            BossID.Rong_4Sao, BossID.Rong_5Sao, BossID.Rong_6Sao,
+            BossID.Rong_7Sao};
+        int them = 0;
+        for (int i = 0; i < ids.length; i++) {
+            boolean coRoi = false;
+            for (nro.repository.dao.BossSpawnDAO.Dong d : dangCo) {
+                if (d.bossId == ids[i]) {
+                    coRoi = true;
+                    break;
+                }
+            }
+            if (coRoi) {
+                continue;
+            }
+            nro.repository.dao.BossSpawnDAO.Dong d
+                    = new nro.repository.dao.BossSpawnDAO.Dong();
+            d.bossId = ids[i];
+            d.ten = "RONG_NHI_" + (i + 1) + "S";
+            d.soBanSao = 1;
+            d.thuTu = 900 + i;
+            d.ghiChu = "Rồng nhí " + (i + 1) + " sao — 100 HP, mỗi đòn 1 HP";
+            if (nro.repository.dao.BossSpawnDAO.luu(d) == null) {
+                them++;
+            }
+        }
+        if (them > 0) {
+            Logger.success("Đã thêm " + them + " dòng rồng nhí vào boss_spawn\n");
+        }
     }
 
     private void them(java.util.List<nro.repository.dao.BossSpawnDAO.Dong> ds,
@@ -506,6 +552,27 @@ public class BossManager implements Runnable {
                     return new SuperBrolyNew();
                 case BossID.GOMAH:
                     return new Gomah();
+                case BossID.Rong_1Sao:
+                    return new nro.entity.boss.map.rongnhi.RongNhi(
+                            BossID.Rong_1Sao, nro.entity.boss.BossesData.RONG_NHI_1S);
+                case BossID.Rong_2Sao:
+                    return new nro.entity.boss.map.rongnhi.RongNhi(
+                            BossID.Rong_2Sao, nro.entity.boss.BossesData.RONG_NHI_2S);
+                case BossID.Rong_3Sao:
+                    return new nro.entity.boss.map.rongnhi.RongNhi(
+                            BossID.Rong_3Sao, nro.entity.boss.BossesData.RONG_NHI_3S);
+                case BossID.Rong_4Sao:
+                    return new nro.entity.boss.map.rongnhi.RongNhi(
+                            BossID.Rong_4Sao, nro.entity.boss.BossesData.RONG_NHI_4S);
+                case BossID.Rong_5Sao:
+                    return new nro.entity.boss.map.rongnhi.RongNhi(
+                            BossID.Rong_5Sao, nro.entity.boss.BossesData.RONG_NHI_5S);
+                case BossID.Rong_6Sao:
+                    return new nro.entity.boss.map.rongnhi.RongNhi(
+                            BossID.Rong_6Sao, nro.entity.boss.BossesData.RONG_NHI_6S);
+                case BossID.Rong_7Sao:
+                    return new nro.entity.boss.map.rongnhi.RongNhi(
+                            BossID.Rong_7Sao, nro.entity.boss.BossesData.RONG_NHI_7S);
                 default:
                     // Khong co lop rieng -> dung boss chung tu boss_data.
                     return bossChungTuCSDL(bossID);

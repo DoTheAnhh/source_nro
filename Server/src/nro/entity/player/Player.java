@@ -2826,6 +2826,17 @@ public byte getAura() {
             if (plAtt != null && !isMobAttack && plAtt.nPoint != null) {
                 tlNeDon -= plAtt.nPoint.tlchinhxac;
             }
+            // Tu phat no KHONG ne duoc.
+            //
+            // Do la don doi mang, no ngay tren dau minh chu khong phai mot cu
+            // danh co duong bay de tranh. Moi duong sat thuong con lai deu xet
+            // ne don va chinh xac.
+            if (plAtt != null && plAtt.playerSkill != null
+                    && plAtt.playerSkill.skillSelect != null
+                    && plAtt.playerSkill.skillSelect.template != null
+                    && plAtt.playerSkill.skillSelect.template.id == Skill.TU_SAT) {
+                tlNeDon = 0;
+            }
 
             if (piercing) {
                 tlGiap = 0;
