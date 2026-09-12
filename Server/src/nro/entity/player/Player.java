@@ -2815,25 +2815,16 @@ public byte getAura() {
                         break;
                 }
             }
-            if (plAtt != null && !isMobAttack && plAtt.playerSkill.skillSelect != null && plAtt.playerSkill.skillSelect.template != null) {
-                switch (plAtt.playerSkill.skillSelect.template.id) {
-                    case Skill.KAMEJOKO:
-                    case Skill.MASENKO:
-                    case Skill.ANTOMIC:
-                    case Skill.DRAGON:
-                    case Skill.DEMON:
-                    case Skill.GALICK:
-                    case Skill.LIEN_HOAN:
-                    case Skill.KAIOKEN:
-                    case Skill.QUA_CAU_KENH_KHI:
-                    case Skill.MAKANKOSAPPO:
-                    case Skill.DICH_CHUYEN_TUC_THOI:
-                        tlNeDon -= plAtt.nPoint.tlchinhxac;
-                        break;
-                    default:
-                        tlNeDon = 0;
-                        break;
-                }
+            // Ne don an cho MOI don danh, khong chi mot danh sach ky nang.
+            //
+            // Ban truoc: ky nang nao khong nam trong danh sach thi `tlNeDon = 0`
+            // — tuc danh thuong va phan lon duong sat thuong khac deu bo qua ne
+            // don. Nguoi choi gom ne don tu trang bi va bong tai ma gan nhu khong
+            // thay tac dung, dung canh "chi so ne don khong an".
+            //
+            // Chinh xac cua ben danh van tru thang vao ne, o moi duong danh.
+            if (plAtt != null && !isMobAttack && plAtt.nPoint != null) {
+                tlNeDon -= plAtt.nPoint.tlchinhxac;
             }
 
             if (piercing) {

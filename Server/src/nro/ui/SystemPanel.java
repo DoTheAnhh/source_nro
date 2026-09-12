@@ -11567,9 +11567,10 @@ public class SystemPanel extends JPanel {
         root.setOpaque(false);
         root.setBorder(new EmptyBorder(8, 8, 8, 8));
         root.add(nhan("Bông tai Porata — mỗi cấp một mẫu vật phẩm riêng, có tên "
-                + "và icon riêng. Bảng dưới là <b>bể chỉ số</b>: mỗi lần nâng chỉ "
-                + "số ở Bà Hạt Mít, game bốc ngẫu nhiên trong bể của cấp đó. "
-                + "Để bể rỗng thì cấp đó giữ nguyên bể viết cứng trong mã."),
+                + "và icon riêng. Game lấy <b>toàn bộ</b> từ hai bảng dưới: bốc "
+                + "chỉ số trong <b>bể chỉ số</b> của cấp, và bốc số dòng theo "
+                + "<b>bảng tỉ lệ</b> bên phải — tổng tỉ lệ luôn được panel cân "
+                + "về đúng 100%. Bể rỗng thì Bà Hạt Mít báo chưa khai chỉ số."),
                 BorderLayout.NORTH);
 
         btCapTable.setRowHeight(24);
@@ -11784,12 +11785,21 @@ public class SystemPanel extends JPanel {
     }
 
     /**
-     * Sửa một mức "ra bao nhiêu dòng chỉ số".
+     * Thêm hoặc sửa một mức "ra bao nhiêu dòng chỉ số".
      *
-     * <p>Máy chủ xét từ mức <b>nhiều dòng nhất</b> xuống, mức nào trúng tỉ lệ của
-     * nó thì lấy luôn. Nên khai "3 dòng 5%" và "2 dòng 30%" là ra đúng nghĩa
-     * thường: 5% ba dòng, 30% hai dòng, còn lại một dòng — không phải tự tính cho
-     * tổng khớp 100.</p>
+     * <p>Tỉ lệ của cả cấp <b>luôn cộng đúng 100%</b>, panel tự chia:</p>
+     *
+     * <ul>
+     *   <li><b>Thêm mức</b> — mức mới lấy một nửa phần của mức thêm gần nhất,
+     *       các mức khác giữ nguyên. Khai "1 dòng 50 · 2 dòng 50" rồi thêm mức 3
+     *       dòng thì ra "50 · 25 · 25".</li>
+     *   <li><b>Sửa mức</b> — gõ phần trăm cho mức đang chọn, phần còn lại chia
+     *       cho những mức khác theo đúng tỉ lệ cũ giữa chúng.</li>
+     * </ul>
+     *
+     * <p>Máy chủ gieo <b>một</b> lần trên bảng này nên mức ghi 100% là ra chắc
+     * chắn. Bản trước gieo riêng từng mức và bỏ qua mức một dòng, nên bảng khai
+     * thế nào cũng không ra đúng như đọc.</p>
      */
     private void btSuaSoDong(boolean them) {
         int cap = btCapDangChon();
@@ -11819,7 +11829,7 @@ public class SystemPanel extends JPanel {
         }
         JTextField fDong = new JTextField(cu == null ? "2"
                 : String.valueOf(cu.soDong), 6);
-        JTextField fTiLe = new JTextField(cu == null ? "30" : soGon(cu.tiLe), 8);
+        JTextField fTiLe = new JTextField(cu == null ? "" : soGon(cu.tiLe), 8);
         javax.swing.JCheckBox cbBat = new javax.swing.JCheckBox("Bật",
                 cu == null || cu.bat);
 
@@ -11830,9 +11840,12 @@ public class SystemPanel extends JPanel {
         c.fill = GridBagConstraints.HORIZONTAL;
         int y = 0;
         addRow(form, c, y++, "Số dòng chỉ số:", fDong);
-        addRow(form, c, y++, "Tỉ lệ ra (%):", fTiLe);
-        y = ghiChuHang(form, c, y,
-                "mức nhiều dòng được xét trước; không trúng mức nào thì ra 1 dòng");
+        if (!them) {
+            addRow(form, c, y++, "Tỉ lệ ra (%):", fTiLe);
+        }
+        y = ghiChuHang(form, c, y, them
+                ? "mức mới lấy một nửa phần của mức thêm gần nhất — tổng vẫn 100%"
+                : "phần còn lại tự chia cho các mức khác cho đủ 100%");
         form.add(cbBat, c);
 
         if (JOptionPane.showConfirmDialog(this, form,
@@ -11841,28 +11854,52 @@ public class SystemPanel extends JPanel {
                 JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
             return;
         }
-        nro.repository.dao.TrangSucDAO.SoDong moi =
-                new nro.repository.dao.TrangSucDAO.SoDong();
-        moi.id = idCu;
-        moi.cap = cap;
-        moi.soDong = laySoAnToan(fDong.getText());
+        int soDong = laySoAnToan(fDong.getText());
+        if (them) {
+            String loi = nro.repository.dao.TrangSucDAO.themMucSoDong(
+                    cap, soDong, cbBat.isSelected());
+            if (loi != null) {
+                note(WARN_RED, loi);
+                return;
+            }
+            btLoadChiSo();
+            note(OK_GREEN, "Đã thêm mức " + soDong
+                    + " dòng — tỉ lệ chia lại cho đủ 100%.");
+            return;
+        }
+        double tiLe;
         try {
-            moi.tiLe = docSoThuc(fTiLe.getText(), "Tỉ lệ");
+            tiLe = docSoThuc(fTiLe.getText(), "Tỉ lệ");
         } catch (IllegalArgumentException ex) {
             note(WARN_RED, ex.getMessage());
             return;
         }
+        nro.repository.dao.TrangSucDAO.SoDong moi =
+                new nro.repository.dao.TrangSucDAO.SoDong();
+        moi.id = idCu;
+        moi.cap = cap;
+        moi.soDong = soDong;
+        // Ghi so dong va trang thai truoc, TI LE de datTiLe lo: no con phai sua
+        // ca cac muc khac cho tong dung 100.
+        moi.tiLe = (cu == null) ? tiLe : cu.tiLe;
         moi.bat = cbBat.isSelected();
         String loi = nro.repository.dao.TrangSucDAO.luuSoDong(moi);
         if (loi != null) {
             note(WARN_RED, loi);
             return;
         }
+        loi = nro.repository.dao.TrangSucDAO.datTiLe(cap, idCu, tiLe);
+        if (loi != null) {
+            note(WARN_RED, loi);
+            return;
+        }
         btLoadChiSo();
-        note(OK_GREEN, "Đã lưu mức " + moi.soDong + " dòng.");
+        note(OK_GREEN, "Đã lưu mức " + soDong
+                + " dòng — các mức khác chia lại cho đủ 100%.");
     }
 
     private void btXoaSoDong() {
+        int cap = btCapDangChon();
         int r = btSoDongTable.getSelectedRow();
         if (r < 0) {
             note(WARN_RED, "Chọn một mức trước.");
@@ -11870,13 +11907,13 @@ public class SystemPanel extends JPanel {
         }
         int id = intOf(btSoDongModel.getValueAt(
                 btSoDongTable.convertRowIndexToModel(r), 0));
-        String loi = nro.repository.dao.TrangSucDAO.xoaSoDong(id);
+        String loi = nro.repository.dao.TrangSucDAO.xoaMucSoDong(cap, id);
         if (loi != null) {
             note(WARN_RED, loi);
             return;
         }
         btLoadChiSo();
-        note(OK_GREEN, "Đã xoá mức.");
+        note(OK_GREEN, "Đã xoá mức — các mức còn lại chia lại cho đủ 100%.");
     }
 
     private void cmLoadCap() {

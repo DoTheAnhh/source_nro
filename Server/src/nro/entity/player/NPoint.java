@@ -190,6 +190,19 @@ public class NPoint {
      */
     public int tlNeDon;
 
+    /**
+     * Giảm bao nhiêu phần trăm <b>thời gian bị mù</b> (choáng Thái dương hạ
+     * san, mù của Dịch chuyển tức thời).
+     *
+     * <p>Cộng từ chỉ số 175 của mọi món đang mặc và của bông tai. Trước đây chỉ
+     * số này có trong bể bông tai nhưng <b>không chỗ nào đọc</b>, nên bốc được
+     * dòng đó là mất trắng một dòng.</p>
+     *
+     * <p>Đủ 100 thì đòn mù không còn tác dụng — khác với <code>khangTDHS</code>
+     * ở chỗ đây là cộng dồn từ đồ chứ không phải một cờ bật/tắt.</p>
+     */
+    public int tlGiamMu;
+
     public int tlBom;
 
     public int tlGiap;
@@ -1041,6 +1054,9 @@ public class NPoint {
             case 173: //Phục hồi #% HP và KI cho đồng đội
                 this.tlHpHoiBanThanVaDongDoi += io.param;
                 this.tlMpHoiBanThanVaDongDoi += io.param;
+                break;
+            case 175: //Giảm #% thời gian bị mù
+                this.tlGiamMu += io.param;
                 break;
             case 176: //
                 setInfoOption176();
@@ -2673,6 +2689,7 @@ if (hasFull5NhatAn()) {
         this.tlDameAttMob.clear();
         this.tlGold = 0;
         this.tlNeDon = 0;
+        this.tlGiamMu = 0;
         this.tlMayman = 0;
         this.tlGiamSatThuongNamec = 0;
         this.tlGiamSatThuongTraiDat = 0;

@@ -382,32 +382,204 @@ public class TrangSucDAO {
     }
 
     /**
-     * Bốc số dòng chỉ số cho một cấp bông tai.
+     * Bốc số dòng chỉ số cho một cấp bông tai, theo đúng bảng tỉ lệ trên panel.
      *
      * <h3>Cách bốc</h3>
      *
-     * <p>Xét từ mức <b>nhiều dòng nhất</b> xuống: mức nào trúng tỉ lệ của nó thì
-     * lấy luôn. Nhờ vậy khai "3 dòng 5%" và "2 dòng 30%" cho ra đúng nghĩa thông
-     * thường — 5% ra ba dòng, 30% ra hai dòng, còn lại một dòng — mà không phải
-     * tự tính tỉ lệ cho khớp tổng 100.</p>
+     * <p><b>Một</b> lần gieo trên toàn bộ các mức đang bật: cộng dồn tỉ lệ rồi
+     * xem điểm gieo rơi vào khoảng của mức nào. Khai "2 dòng 100%" là ra hai
+     * dòng, không trượt lần nào.</p>
      *
-     * <p>Xét từ ít lên nhiều thì mức 2 dòng ăn trước và mức 3 dòng gần như không
-     * bao giờ tới, vì 30% lớn hơn 5%.</p>
+     * <p>Bản trước gieo <b>riêng</b> từng mức, xét từ nhiều dòng xuống ít, và bỏ
+     * qua mọi mức một dòng. Kiểu ấy không bao giờ khớp tổng 100: khai "2 dòng
+     * 100%" cùng "1 dòng 50%" là tổng thành 150, mà mức một dòng thì không có
+     * nghĩa gì cả — đúng cảnh khai 100% cho hai dòng mà vẫn ra một dòng.</p>
      *
-     * <p>Không mức nào trúng thì trả về <b>1</b>: bông tai luôn có ít nhất một
-     * dòng, không có chuyện nâng chỉ số xong mà chỉ số rỗng.</p>
+     * <p>Tổng khai lệch 100 vẫn chạy: tỉ lệ chia theo tổng thật, nên dữ liệu cũ
+     * không gãy. Panel thì luôn cân về đúng 100 sau mỗi lần sửa.</p>
      */
     public static int bocSoDong(int cap) {
         List<SoDong> ds = dsSoDong(cap, true);
+        double tong = 0d;
         for (SoDong x : ds) {
-            if (x.soDong <= 1 || x.tiLe <= 0) {
+            if (x.soDong >= 1 && x.tiLe > 0) {
+                tong += x.tiLe;
+            }
+        }
+        if (tong <= 0) {
+            return 1;
+        }
+        double diem = nro.core.util.Util.nextDouble(tong);
+        double cong = 0d;
+        SoDong cuoi = null;
+        for (SoDong x : ds) {
+            if (x.soDong < 1 || x.tiLe <= 0) {
                 continue;
             }
-            if (nro.core.util.Util.isTrue(x.tiLe, 100d)) {
+            cong += x.tiLe;
+            cuoi = x;
+            if (diem < cong) {
                 return x.soDong;
             }
         }
-        return 1;
+        // Sai so dau phay: tra ve muc cuoi chu khong roi ve 1. Roi ve 1 la mot
+        // phan van lan gieo cho ra so dong khong ai khai.
+        return cuoi == null ? 1 : cuoi.soDong;
+    }
+
+    /**
+     * Thêm một mức số dòng, tự chia tỉ lệ sao cho tổng vẫn đúng 100%.
+     *
+     * <p>Mức mới lấy <b>một nửa</b> phần của mức thêm gần nhất (id lớn nhất), các
+     * mức còn lại giữ nguyên. Lấy của mức đầu thì mỗi lần thêm một mức là mức đầu
+     * teo dần trong khi các mức giữa đứng im — người khai không đoán được kết
+     * quả. Lấy của mức vừa thêm thì "một dòng 50, hai dòng 50" rồi thêm ba dòng
+     * sẽ ra "50 / 25 / 25", đúng thứ tự người ta vừa khai.</p>
+     */
+    public static String themMucSoDong(int cap, int soDong, boolean bat) {
+        damBaoBang();
+        if (soDong < 1) {
+            return "Số dòng phải từ 1 trở lên.";
+        }
+        List<SoDong> ds = dsSoDong(cap, false);
+        for (SoDong x : ds) {
+            if (x.soDong == soDong) {
+                return "Cấp này đã có mức " + soDong + " dòng — sửa mức đó thay vì thêm mới.";
+            }
+        }
+        double phan = 100d;
+        SoDong choLay = null;
+        if (!ds.isEmpty()) {
+            for (SoDong x : ds) {
+                if (x.tiLe > 0 && (choLay == null || x.id > choLay.id)) {
+                    choLay = x;
+                }
+            }
+            phan = (choLay == null) ? lamTron2(100d / (ds.size() + 1))
+                    : lamTron2(choLay.tiLe / 2d);
+        }
+        SoDong moi = new SoDong();
+        moi.cap = cap;
+        moi.soDong = soDong;
+        moi.tiLe = phan;
+        moi.bat = bat;
+        String loi = luuSoDong(moi);
+        if (loi != null) {
+            return loi;
+        }
+        if (choLay != null) {
+            choLay.tiLe = lamTron2(choLay.tiLe - phan);
+            if (choLay.tiLe < 0) {
+                choLay.tiLe = 0;
+            }
+            luuSoDong(choLay);
+        }
+        canBang100(cap);
+        return null;
+    }
+
+    /**
+     * Đặt tỉ lệ cho một mức; phần còn lại chia cho các mức khác.
+     *
+     * <p>Chia theo đúng tỉ lệ cũ <i>giữa chúng với nhau</i>, nên sửa một mức
+     * không làm đảo lộn thứ tự hơn kém của những mức không đụng tới.</p>
+     */
+    public static String datTiLe(int cap, int id, double tiLe) {
+        damBaoBang();
+        if (tiLe < 0 || tiLe > 100) {
+            return "Tỉ lệ phải từ 0 đến 100.";
+        }
+        List<SoDong> ds = dsSoDong(cap, false);
+        List<SoDong> khac = new ArrayList<>();
+        SoDong nay = null;
+        for (SoDong x : ds) {
+            if (x.id == id) {
+                nay = x;
+            } else {
+                khac.add(x);
+            }
+        }
+        if (nay == null) {
+            return "Không thấy mức cần sửa.";
+        }
+        if (khac.isEmpty()) {
+            // Chi mot muc thi no phai an tron 100: de 30% nghia la 70% con lai
+            // khong thuoc ve dau ca.
+            nay.tiLe = 100d;
+            return luuSoDong(nay);
+        }
+        nay.tiLe = lamTron2(tiLe);
+        double conLai = 100d - nay.tiLe;
+        double tongKhac = 0d;
+        for (SoDong x : khac) {
+            tongKhac += x.tiLe;
+        }
+        for (SoDong x : khac) {
+            x.tiLe = (tongKhac > 0) ? lamTron2(x.tiLe / tongKhac * conLai)
+                    : lamTron2(conLai / khac.size());
+        }
+        buCho100(nay, khac);
+        luuSoDong(nay);
+        for (SoDong x : khac) {
+            luuSoDong(x);
+        }
+        return null;
+    }
+
+    /** Xoá một mức rồi chia lại 100% cho các mức còn lại. */
+    public static String xoaMucSoDong(int cap, int id) {
+        String loi = xoaSoDong(id);
+        if (loi != null) {
+            return loi;
+        }
+        canBang100(cap);
+        return null;
+    }
+
+    /**
+     * Cân lại cho tổng tỉ lệ của một cấp đúng 100%.
+     *
+     * <p>Gọi sau mọi lần thêm, sửa, xoá. Bảng khai xong mà tổng là 97 hay 150 thì
+     * người khai đọc con số phần trăm trên panel hiểu sai hẳn kết quả trong
+     * game.</p>
+     */
+    public static void canBang100(int cap) {
+        List<SoDong> ds = dsSoDong(cap, false);
+        if (ds.isEmpty()) {
+            return;
+        }
+        double tong = 0d;
+        for (SoDong x : ds) {
+            tong += x.tiLe;
+        }
+        for (SoDong x : ds) {
+            x.tiLe = (tong > 0) ? lamTron2(x.tiLe / tong * 100d)
+                    : lamTron2(100d / ds.size());
+        }
+        buCho100(null, ds);
+        for (SoDong x : ds) {
+            luuSoDong(x);
+        }
+    }
+
+    /** Dồn sai số làm tròn vào mức cuối, để tổng đúng 100 chứ không phải 99,99. */
+    private static void buCho100(SoDong giuNguyen, List<SoDong> ds) {
+        if (ds.isEmpty()) {
+            return;
+        }
+        double tong = (giuNguyen == null) ? 0d : giuNguyen.tiLe;
+        for (SoDong x : ds) {
+            tong += x.tiLe;
+        }
+        SoDong cuoi = ds.get(ds.size() - 1);
+        cuoi.tiLe = lamTron2(cuoi.tiLe + (100d - tong));
+        if (cuoi.tiLe < 0) {
+            cuoi.tiLe = 0;
+        }
+    }
+
+    private static double lamTron2(double v) {
+        return Math.round(v * 100d) / 100d;
     }
 
     public static String luuSoDong(SoDong x) {

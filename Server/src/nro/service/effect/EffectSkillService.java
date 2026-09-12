@@ -546,10 +546,38 @@ public class EffectSkillService {
     //Thái dương hạ san &&&&****************************************************
     //player ăn choáng thái dương hạ san
     public void startStun(Player player, long lastTimeStartBlind, int timeBlind) {
+        timeBlind = giamThoiGianMu(player, timeBlind);
+        if (timeBlind <= 0) {
+            return;
+        }
         player.effectSkill.lastTimeStartStun = lastTimeStartBlind;
         player.effectSkill.timeStun = timeBlind;
         player.effectSkill.isStun = true;
         sendEffectPlayer(player, player, TURN_ON_EFFECT, BLIND_EFFECT);
+    }
+
+    /**
+     * Bớt thời gian bị mù theo chỉ số 175 của người chịu đòn.
+     *
+     * <p>Đặt ở đây, một chỗ, chứ không rải vào từng kỹ năng gây mù: mọi đường
+     * gây choáng đều đi qua <code>startStun</code> hoặc
+     * <code>setBlindDCTT</code>.</p>
+     *
+     * <p>Đủ 100% thì trả về 0 và bên gọi bỏ luôn đòn mù — người chơi gom đủ chỉ
+     * số mà vẫn đứng im một nhịp thì con số trên đồ nói dối.</p>
+     */
+    private int giamThoiGianMu(Player player, int time) {
+        if (player == null || player.nPoint == null || time <= 0) {
+            return time;
+        }
+        int giam = player.nPoint.tlGiamMu;
+        if (giam <= 0) {
+            return time;
+        }
+        if (giam >= 100) {
+            return 0;
+        }
+        return time - (time * giam / 100);
     }
 
     //kết thúc choáng thái dương hạ san
@@ -594,6 +622,10 @@ public class EffectSkillService {
 
     //Dịch chuyển tức thời *****************************************************
     public void setBlindDCTT(Player player, long lastTimeDCTT, int timeBlindDCTT) {
+        timeBlindDCTT = giamThoiGianMu(player, timeBlindDCTT);
+        if (timeBlindDCTT <= 0) {
+            return;
+        }
         player.effectSkill.isBlindDCTT = true;
         player.effectSkill.lastTimeBlindDCTT = lastTimeDCTT;
         player.effectSkill.timeBlindDCTT = timeBlindDCTT;

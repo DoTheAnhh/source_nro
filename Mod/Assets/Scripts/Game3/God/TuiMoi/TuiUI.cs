@@ -1797,24 +1797,47 @@ namespace Game3.God
         /// <summary>"+#% sức đánh chí mạng" — cột "Sdcm" của bản tham chiếu.</summary>
         private const int CS_SUC_DANH_CM = 5;
 
-        /// <summary>Tổng một chỉ số cộng từ đồ đang mặc.</summary>
+        /// <summary>Id hai mẫu bông tai Porata: cấp 2 và cấp 3.</summary>
+        private static readonly int[] ID_BONG_TAI = { 921, 1943 };
+
+        /// <summary>Tổng một chỉ số, cộng từ đồ đang mặc VÀ từ bông tai.</summary>
+        /// <remarks>
+        /// Bông tai không nằm trong ô trang bị mà nằm trong hành trang, nên bản
+        /// trước bỏ sót hẳn nó: bảng chỉ số hiện né đòn 0 trong khi bông tai đang
+        /// cộng mười mấy phần trăm.
+        /// </remarks>
         private static int congChiSo(int idChiSo)
         {
-            int tong = 0;
-            Item[] mac = Char.myCharz().arrItemBody;
-            if (mac == null)
+            int tong = congTuMang(Char.myCharz().arrItemBody, idChiSo, false);
+            tong += congTuMang(Char.myCharz().arrItemBag, idChiSo, true);
+            return tong;
+        }
+
+        /// <summary>Cộng một chỉ số trong một mảng đồ.</summary>
+        /// <param name="chiBongTai">
+        /// Chỉ tính các mẫu bông tai — dùng cho hành trang, nơi còn cả đống món
+        /// khác không hề tác dụng lên nhân vật.
+        /// </param>
+        private static int congTuMang(Item[] ds, int idChiSo, bool chiBongTai)
+        {
+            if (ds == null)
             {
                 return 0;
             }
-            for (int i = 0; i < mac.Length; i++)
+            int tong = 0;
+            for (int i = 0; i < ds.Length; i++)
             {
-                if (mac[i] == null || mac[i].itemOption == null)
+                if (ds[i] == null || ds[i].itemOption == null)
                 {
                     continue;
                 }
-                for (int j = 0; j < mac[i].itemOption.Length; j++)
+                if (chiBongTai && !laBongTai(ds[i]))
                 {
-                    ItemOption op = mac[i].itemOption[j];
+                    continue;
+                }
+                for (int j = 0; j < ds[i].itemOption.Length; j++)
+                {
+                    ItemOption op = ds[i].itemOption[j];
                     if (op != null && op.optionTemplate != null
                             && op.optionTemplate.id == idChiSo)
                     {
@@ -1823,6 +1846,22 @@ namespace Game3.God
                 }
             }
             return tong;
+        }
+
+        private static bool laBongTai(Item it)
+        {
+            if (it == null || it.template == null)
+            {
+                return false;
+            }
+            for (int i = 0; i < ID_BONG_TAI.Length; i++)
+            {
+                if (it.template.id == ID_BONG_TAI[i])
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>Bề cao dải tiêu đề trên đỉnh mỗi khung.</summary>
