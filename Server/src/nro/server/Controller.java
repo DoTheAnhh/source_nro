@@ -299,6 +299,14 @@ public class Controller implements IMessageHandler {
                     }
                     break;
 
+                // [122] Nhip tim: client bao "toi con day" khi dang treo.
+                //
+                // Khong doc gi, khong tra loi gi. Viec duy nhat cua no la lam
+                // cho socket co byte di qua, de han doc cua may chu va cac bo
+                // dinh tuyen tren duong khong coi ket noi nay la da chet.
+                case 122:
+                    break;
+
                 // [121] Khung chat: quản trị viên gõ tin hệ thống.
                 case 121:
                     if (player != null) {

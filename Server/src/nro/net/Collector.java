@@ -58,6 +58,19 @@ public final class Collector implements Runnable {
     private DataInputStream dis;
 
     /**
+     * Chạy lại vòng đọc sau một lần hết giờ.
+     *
+     * <p>Gọi đệ quy ngay trong khối catch thì ngăn xếp dài thêm một nấc mỗi hai
+     * phút — treo mấy tiếng là tràn. Gọi từ đây, sau khi khối catch đã kết thúc,
+     * nên mỗi lần là một ngăn xếp mới.</p>
+     */
+    private void docTiep() {
+        if (session != null && session.isConnected()) {
+            run();
+        }
+    }
+
+    /**
      * Codec giải mã. Cùng một đối tượng với bên {@link Sender} — xem
      * {@code Session.setSendCollect}.
      */
@@ -164,6 +177,27 @@ public final class Collector implements Runnable {
                     this.session.getQueueHandler().addMessage(msg);
                 }
             }
+        } catch (java.net.SocketTimeoutException hetGio) {
+            // HET GIO DOC KHONG PHAI LA MAT KET NOI.
+            //
+            // Socket duoc dat han doc hai phut de chong slowloris. Nhung nguoi
+            // choi treo game thi client khong gui gi ca — dung im hai phut la
+            // chuyen binh thuong — va truoc day het gio roi thang xuong nhanh
+            // catch chung, phien bi dong: dung canh "treo mot luc la van game".
+            //
+            // Phien DA VAO GAME thi doc lai, cho toi khi thuc su dut duong
+            // truyen; luc do he dieu hanh bao bang EOF hoac SocketException,
+            // con TCP keepalive da bat san lo phan do hong am tham.
+            //
+            // Phien CHUA dang nhap thi van cat nhu cu — do moi la slowloris.
+            boolean daVaoGame = this.session != null
+                    && ((nro.net.session.MySession) this.session).player != null;
+            if (daVaoGame) {
+                docTiep();
+                return;
+            }
+            nro.core.log.Logger.log("[NET] " + ipGhiNho
+                    + " het gio doc khi chua dang nhap\n");
         } catch (java.io.EOFException | java.net.SocketException
                 | java.nio.channels.ClosedChannelException binhThuong) {
             // Ba dang NGAT KET NOI BINH THUONG, khong phai loi:

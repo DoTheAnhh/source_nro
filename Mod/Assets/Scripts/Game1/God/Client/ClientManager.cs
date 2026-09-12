@@ -46,6 +46,39 @@ namespace Game1.God
         {
             return (instance == null) ? (instance = new ClientManager()) : instance;
         }
+        /// <summary>Lần gửi nhịp tim gần nhất.</summary>
+        private static long lucNhipCuoi;
+
+        /// <summary>Khoảng cách giữa hai nhịp tim, tính bằng mili giây.</summary>
+        /// <remarks>
+        /// Bốn mươi lăm giây: thưa hơn thì hạn đọc hai phút của máy chủ và mấy bộ
+        /// định tuyến NAT có thể cắt trước, dày hơn thì tốn gói vô ích. Một gói
+        /// rỗng mỗi 45 giây gần như không tốn gì.
+        /// </remarks>
+        private const long NHIP_TIM_MS = 45000L;
+
+        /// <summary>Gửi nhịp tim khi đang ở trong game.</summary>
+        /// <remarks>
+        /// Người chơi treo game thì client không gửi gì cả, và kết nối im lặng
+        /// quá lâu sẽ bị máy chủ hoặc đường truyền cắt — đúng cảnh treo một lúc
+        /// là văng.
+        /// </remarks>
+        private static void dapNhipTim()
+        {
+            if (GameScr.gI() == null || Char.myCharz() == null
+                    || !GameCanvas.gameScreen())
+            {
+                return;
+            }
+            long gio = mSystem.currentTimeMillis();
+            if (gio - lucNhipCuoi < NHIP_TIM_MS)
+            {
+                return;
+            }
+            lucNhipCuoi = gio;
+            Service.gI().nhipTim();
+        }
+
         public void Update()
         {
             NPoint.getInstance().Update();
@@ -59,6 +92,7 @@ namespace Game1.God
             // khong dung yen khi dang mo.
             PhucLoiUI.getInstance().capNhat();
             BossUI.getInstance().capNhat();
+            dapNhipTim();
             // Man nhan vat kieu moi: no can nhip nay de gui tiep tung lan "dung
             // nhieu". Khong goi thi bam Dung o hop so luong xong khong co gi xay
             // ra, vi viec do chia thanh nhieu goi gui theo nhip chu khong gui hết

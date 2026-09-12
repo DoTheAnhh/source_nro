@@ -2136,6 +2136,34 @@ namespace Game3
     		}
     	}
 
+    	/// <summary>Nhịp tim: báo cho máy chủ biết mình còn đây.</summary>
+    	/// <remarks>
+    	/// <para>Gói rỗng, máy chủ nhận rồi bỏ qua. Việc duy nhất của nó là làm cho
+    	/// socket có byte đi qua khi người chơi treo game: hạn đọc của máy chủ và
+    	/// các bộ định tuyến trên đường đều coi một kết nối im lặng quá lâu là đã
+    	/// chết và cắt đi.</para>
+    	/// </remarks>
+    	public void nhipTim()
+    	{
+    		Message message = null;
+    		try
+    		{
+    			message = new Message((sbyte)122);
+    			session.sendMessage(message);
+    		}
+    		catch (Exception)
+    		{
+    			// Mat ket noi thi phan khac lo, o day im lang.
+    		}
+    		finally
+    		{
+    			if (message != null)
+    			{
+    				message.cleanup();
+    			}
+    		}
+    	}
+
     	/// <summary>Quản trị viên gõ tin hệ thống từ thẻ "H.thống".</summary>
     	public void chatHeThong(string text)
     	{
