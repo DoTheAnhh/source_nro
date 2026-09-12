@@ -65,8 +65,10 @@ namespace Game1.God
         /// </remarks>
         private static void dapNhipTim()
         {
-            if (GameScr.gI() == null || Char.myCharz() == null
-                    || !GameCanvas.gameScreen())
+            // Chi dap khi dang o trong man choi: man dang nhap hay man chon
+            // nhan vat thi chua co ket noi game de giu.
+            if (Char.myCharz() == null
+                    || GameCanvas.currentScreen != GameScr.gI())
             {
                 return;
             }
