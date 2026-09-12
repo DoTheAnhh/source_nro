@@ -104,28 +104,44 @@ public class ClanService {
         }
     }
 
+    /** Số bang nhiều nhất trả về một lần, cho gói không phình. */
+    private static final int TOI_DA_BANG_TRA_VE = 60;
+
+    /**
+     * Danh sách bang khớp tên; tên rỗng nghĩa là <b>lấy tất cả</b>.
+     *
+     * <h3>Vì sao viết lại</h3>
+     *
+     * <p>Bản trước, khi máy chủ có hơn hai mươi bang, bắt đầu duyệt từ một vị
+     * trí <b>ngẫu nhiên</b> rồi lấy tối đa hai mươi bang kể từ đó. Hệ quả: tìm
+     * đúng tên một bang có thật vẫn thường không ra, và danh sách hiện lên mỗi
+     * lần mỗi khác mà không ai hiểu vì sao.</p>
+     *
+     * <p>Nay duyệt từ đầu, so tên <b>không phân biệt hoa thường</b>, và bỏ qua
+     * bang rỗng — bang không còn thành viên nào thì vào cũng không được, hiện ra
+     * chỉ tổ làm người chơi mất công bấm.</p>
+     */
     public List<Clan> getClans(String name) {
         List<Clan> listClan = new ArrayList();
-        if (Manager.CLANS.size() <= 20) {
-            for (Clan clan : Manager.CLANS) {
-                if (clan.name.contains(name)) {
-                    listClan.add(clan);
-                }
+        String loc = (name == null) ? "" : name.trim().toLowerCase();
+        for (Clan clan : Manager.CLANS) {
+            if (clan == null || clan.name == null || bangRong(clan)) {
+                continue;
             }
-        } else {
-            int n = Util.nextInt(0, Manager.CLANS.size() - 20);
-            for (int i = n; i < Manager.CLANS.size(); i++) {
-                Clan clan = Manager.CLANS.get(i);
-                if (clan.name.contains(name)) {
-                    listClan.add(clan);
-                }
-                if (listClan.size() >= 20) {
-                    break;
-                }
+            if (!loc.isEmpty() && !clan.name.toLowerCase().contains(loc)) {
+                continue;
+            }
+            listClan.add(clan);
+            if (listClan.size() >= TOI_DA_BANG_TRA_VE) {
+                break;
             }
         }
-
         return listClan;
+    }
+
+    /** Bang không còn thành viên nào. */
+    private static boolean bangRong(Clan clan) {
+        return clan.members == null || clan.members.isEmpty();
     }
 
     public void getClan(Player player, Message msg) {

@@ -634,6 +634,8 @@ public final class Manager {
             Logger.success("Successfully loaded map item option template (" + ITEM_OPTION_TEMPLATES.size() + ")\n");
             
             //load clan
+            // Dem so bang bi bo qua vi khong con thanh vien nao.
+            int soBangMa = 0;
             ps = con.prepareStatement("select * from clan");
             rs = ps.executeQuery();
             while (rs.next()) {
@@ -692,6 +694,20 @@ public final class Manager {
                     clan.BuaDaTrau = Long.parseLong(String.valueOf(dataArray.get(2)));
                 }
                 dataArray.clear();
+                // Bang MA: khong con thanh vien nao.
+                //
+                // Sinh ra tu nhung lan xoa tai khoan, doi ten bang hong giua
+                // chung, hay lap bang roi thoat ngay. Chung van nam trong bang
+                // du lieu va van hien ra o danh sach "Bang hoi khac", ma bam vao
+                // thi khong co gi — nguoi choi tuong may chu loi.
+                //
+                // Bo ngay luc nap: khong nap vao bo nho thi moi duong di trong
+                // game deu khong thay chung nua. Dong trong CSDL van con, khong
+                // xoa gi ca — muon doi y thi chi viec them lai thanh vien.
+                if (clan.members == null || clan.members.isEmpty()) {
+                    soBangMa++;
+                    continue;
+                }
                 CLANS.add(clan);
             }
 
@@ -701,6 +717,10 @@ public final class Manager {
                 Clan.NEXT_ID = rs.getInt("id") + 1;
             }
             Logger.success("Loaded clan (" + CLANS.size() + ") successfully, clan next id : " + Clan.NEXT_ID + " successfully\n");
+            if (soBangMa > 0) {
+                Logger.warning("Bỏ qua " + soBangMa
+                        + " bang không còn thành viên nào\n");
+            }
             
             //load skill
             ps = con.prepareStatement("select * from skill_template order by nclass_id, slot");

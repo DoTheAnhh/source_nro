@@ -3205,8 +3205,18 @@ namespace Game4.God
             // ("Tim bang" gui thang chuoi cu, "Loc ten..." go chuoi moi) — nguoi
             // choi khong doan duoc nen bam cai nao, va bam "Tim bang" luc dau chi
             // gui chuoi rong. Gio mot nut: bam la go ten, go xong la tim.
-            veNutMotDong(g, oNutBang(0), locBang.Length > 0
-                    ? "Tìm: " + catBot(locBang, 9) : "Tìm bang");
+            if (locBang.Length > 0)
+            {
+                // Dang loc: nut tim hep lai mot chut de chua nut X ben canh.
+                int[] oTim = oNutBang(0);
+                veNutMotDong(g, new int[] { oTim[0], oTim[1], oTim[2] - 20,
+                    oTim[3] }, "Tìm: " + catBot(locBang, 7));
+                veNutMotDong(g, oNutXoaLoc(), "X");
+            }
+            else
+            {
+                veNutMotDong(g, oNutBang(0), "Tìm bang");
+            }
             veNutMotDong(g, oNutBang(1), "Tạo bang");
 
             if (dangChonCo)
@@ -3322,6 +3332,17 @@ namespace Game4.God
         /// HAI nút trên một hàng: "Tìm bang" và "Tạo bang". Chỉ dùng ở thẻ con
         /// "Tìm bang", tức chỉ khi chưa có bang.
         /// </remarks>
+        /// <summary>Nút X xoá ô tìm, nằm nép bên phải nút "Tìm".</summary>
+        /// <remarks>
+        /// Chỉ hiện khi đang lọc. Không có nó thì muốn xem lại toàn bộ danh sách
+        /// phải bấm tìm rồi xoá sạch chữ — ba thao tác cho một việc.
+        /// </remarks>
+        private int[] oNutXoaLoc()
+        {
+            int[] o = oNutBang(0);
+            return new int[] { o[0] + o[2] - 18, o[1], 18, o[3] };
+        }
+
         private int[] oNutBang(int i)
         {
             int w = (rongTrai - 16) / 2;
@@ -3463,6 +3484,15 @@ namespace Game4.God
             daXinBang = true;
         }
 
+        /// <summary>Xoá ô tìm và lấy lại toàn bộ danh sách bang.</summary>
+        private void xoaLocBang()
+        {
+            locBang = string.Empty;
+            cuon = 0;
+            Service.gI().searchClan(string.Empty);
+            daXinBang = true;
+        }
+
         public void onCancelChat()
         {
         }
@@ -3534,9 +3564,17 @@ namespace Game4.God
             int yDau = yDauDsBang();
             if (ds == null || ds.Length == 0)
             {
-                mFont.tahoma_7.drawString(g,
-                        daXinBang ? "Đang tải danh sách bang…"
-                                : "Bấm \"Tìm bang\" ở khung bên trái.",
+                // Chua hoi lan nao thi hoi NGAY, khong bat nguoi choi bam tim.
+                //
+                // "Bang hoi khac" dung nghia la moi bang dang co tren may chu;
+                // chuoi loc rong chinh la "lay tat ca". Bat bam mot nut roi moi
+                // thay gi do la mot buoc thua.
+                if (!daXinBang)
+                {
+                    Service.gI().searchClan(string.Empty);
+                    daXinBang = true;
+                }
+                mFont.tahoma_7.drawString(g, "Đang tải danh sách bang…",
                         xPhai + rongPhai / 2, yThan + caoThan / 2 - 5,
                         mFont.CENTER);
                 return;
@@ -4144,6 +4182,13 @@ namespace Game4.God
             }
 
             {
+                // Nut X xet TRUOC nut tim: no nam de len goc phai cua nut tim,
+                // xet sau thi nut tim an mat cham.
+                if (locBang.Length > 0 && cham2(oNutXoaLoc()))
+                {
+                    xoaLocBang();
+                    return true;
+                }
                 if (cham2(oNutBang(0)))
                 {
                     viecGoChu = GO_LOC_BANG;
