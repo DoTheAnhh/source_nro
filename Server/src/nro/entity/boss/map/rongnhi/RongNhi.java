@@ -51,15 +51,21 @@ public class RongNhi extends Boss {
      * nằm trong danh sách cấm là rồng bay tới, nên Nappa, Hành Tinh Chết, và
      * mọi bản đồ sự kiện thêm sau này đều lọt lưới.</p>
      *
-     * <p>Danh sách này là đúng bộ bản đồ thường mà boss lang thang vẫn dùng —
-     * cùng danh sách của Ăn Trộm. Thêm bản đồ mới thì mặc định rồng KHÔNG bay
-     * tới, muốn có thì khai thêm ở đây.</p>
+     * <p>Ba mươi sáu bản đồ, chép đúng theo bảng điểm đến của <code>MapNhanhDAO</code>
+     * — bảng duy nhất trong mã có tên từng bản đồ. Bản trước lấy theo khoảng số
+     * (0–20, 27–38, 63–84) nên nuốt trọn cả khu Nappa (63–75) và Núi khỉ
+     * (79–83), đúng chỗ rồng vẫn mọc ra mà không ai muốn.</p>
+
+     * <p>Thêm bản đồ mới thì mặc định rồng KHÔNG bay tới, muốn có thì khai thêm
+     * ở đây.</p>
      */
     private static final int[] MAP_THUONG = {
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-        27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38,
-        63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77,
-        79, 80, 81, 82, 83, 84
+        // Trái Đất
+        0, 1, 2, 3, 4, 5, 6, 27, 28, 29, 30, 42,
+        // Namếc
+        7, 8, 9, 10, 11, 12, 13, 31, 32, 33, 34, 43,
+        // Xayda
+        14, 15, 16, 17, 18, 19, 20, 35, 36, 37, 38, 44
     };
 
     private long lucThaiDuongCuoi;

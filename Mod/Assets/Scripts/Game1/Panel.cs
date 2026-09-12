@@ -7395,8 +7395,18 @@ namespace Game1
         /// <summary>Nâu nhạt hơn, dùng cho nét viền phụ.</summary>
         private const int MAU_VIEN_MO = 0x8B623A;
 
-        /// <summary>Nền sáng của dải đầu — chữ của NPC nằm trên nền này.</summary>
-        private const int MAU_NEN_DAU = 0xFBEFD8;
+        /// <summary>Nền NÂU ĐẬM của dải đầu.</summary>
+        /// <remarks>
+        /// Phải tối, vì chữ trên dải này do hàng chục nhánh khác vẽ bằng phông
+        /// màu sáng (trắng, vàng, xanh nhạt) — chúng được chọn từ thời dải đầu
+        /// còn là mảng nâu. Đổi nền sang kem là chữ trùng luôn với nền, đúng lỗi
+        /// "chữ mất tăm" vừa gặp; sửa nền thì chỉ một chỗ, còn sửa màu chữ thì
+        /// phải lần khắp các nhánh và vẫn sót.
+        /// </remarks>
+        private const int MAU_NEN_DAU = 0x8A5E34;
+
+        /// <summary>Nâu sáng hơn, dùng cho nửa trên của dải đầu.</summary>
+        private const int MAU_NEN_DAU_SANG = 0x9E6E3E;
 
         /// <summary>Cam của dải tiền ở đáy bảng.</summary>
         private const int MAU_DAI_DAU = 0xE0A56A;
@@ -7451,10 +7461,13 @@ namespace Game1
             g.setColor(MAU_NEN_DAU, 1f);
             g.fillRect(X + 3, Y + 3, W - 6, 44, 6);
             g.fillRect(X + 3, Y + 30, W - 6, 19);
-            g.setColor(0xFFFFFF, 0.45f);
+            // Nửa trên sáng hơn một bậc: dải có chiều sâu chứ không phẳng lì.
+            g.setColor(MAU_NEN_DAU_SANG, 1f);
+            g.fillRect(X + 3, Y + 3, W - 6, 24, 6);
+            g.setColor(0xFFFFFF, 0.18f);
             g.fillRect(X + 4, Y + 4, W - 8, 2, 2);
-            // Nét cam dày ở đáy: đây là màu nhận dạng của bảng, thay cho đường kẻ
-            // xám mảnh của bản gốc.
+            // Nét cam dày ở đáy: màu nhận dạng của bảng, thay đường kẻ xám mảnh
+            // của bản gốc.
             g.setColor(MAU_THE_CHON, 0.95f);
             g.fillRect(X + 3, Y + 47, W - 6, 3);
             g.setColor(MAU_VIEN_MO, 0.5f);
