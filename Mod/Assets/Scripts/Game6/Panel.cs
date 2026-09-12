@@ -6700,21 +6700,28 @@ namespace Game6
             cotHienTai = 0;
         }
 
-        /// <summary>Tên cột, và một nét cam dưới cột đang thao tác.</summary>
+        /// <summary>Tên cột — một tấm nhãn đứng yên, không phải cái thẻ bấm được.</summary>
         /// <remarks>
-        /// Vẫn phải cho biết cột nào đang thao tác: phím mũi tên và nút bấm đi
-        /// theo cột đó, còn ô đang chọn chỉ sáng ở một cột.
+        /// <para>Hai cột lúc nào cũng hiện cùng lúc nên đây chỉ là tên gọi, không
+        /// có gì để chuyển qua lại. Bản trước tô cột đang thao tác thành cam và
+        /// cột kia thành kem — nhìn y như một cặp thẻ đang chờ bấm, ai cũng thử
+        /// bấm vào rồi thấy chẳng có gì xảy ra.</para>
+        ///
+        /// <para>Cột nào đang thao tác thì đã thấy ở chỗ khác rồi: ô đang chọn
+        /// chỉ sáng lên ở một cột.</para>
         /// </remarks>
         private void veNhanCot(mGraphics g, string ten, bool dangThaoTac)
         {
             int x = xVungTui();
             int w = rongVungTui();
-            g.setColor(MAU_VIEN_MO, dangThaoTac ? 0.6f : 0.3f);
-            g.fillRect(x + 2, yScroll, w - 4, CAO_DAI_TAB, 8);
-            g.setColor(dangThaoTac ? MAU_THE_CHON : 0xEBD7B8, 1f);
-            g.fillRect(x + 3, yScroll + 1, w - 6, CAO_DAI_TAB - 2, 7);
-            mFont mf = dangThaoTac ? mFont.tahoma_7b_dark : mFont.tahoma_7_grey;
-            mf.drawString(g, ten, x + w / 2, yScroll + 5, mFont.CENTER);
+            g.setColor(MAU_VIEN_MO, 0.35f);
+            g.fillRect(x + 2, yScroll, w - 4, CAO_DAI_TAB, 6);
+            g.setColor(0xF3E3C6, 1f);
+            g.fillRect(x + 3, yScroll + 1, w - 6, CAO_DAI_TAB - 2, 5);
+            g.setColor(MAU_VIEN_MO, 0.35f);
+            g.fillRect(x + 3, yScroll + CAO_DAI_TAB - 1, w - 6, 1);
+            mFont.tahoma_7b_dark.drawString(g, ten, x + w / 2,
+                    yScroll + 5, mFont.CENTER);
         }
 
         /// <summary>Cột ngoài cùng: nhân vật đang mặc gì, cùng sức mạnh.</summary>
