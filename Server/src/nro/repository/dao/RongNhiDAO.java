@@ -74,11 +74,12 @@ public class RongNhiDAO {
      * còn ở bản cũ sẽ được nâng lên.</p>
 
      * <p>Bản 1 đánh tỉ lệ <b>ngược</b> — rồng 1 sao phổ biến nhất — nên máy còn
-     * ở bản đó bị gieo đè hẳn. Bản 2 lên bản 3 thì chỉ <b>sửa đúng cột tỉ lệ
-     * vĩnh viễn</b>, giữ nguyên mọi thứ khác: chỉ số và tỉ lệ bốc có thể đã được
-     * sửa tay, đạp lên chúng vì một cột là mất công người khác.</p>
+     * ở bản đó bị gieo đè hẳn. Từ bản 2 trở đi chỉ <b>sửa đúng cột vừa đổi</b>,
+     * giữ nguyên mọi thứ khác: chỉ số và tỉ lệ bốc có thể đã được sửa tay, đạp
+     * lên chúng vì một cột là mất công người khác. Bản 3 sửa tỉ lệ vĩnh viễn,
+     * bản 4 sửa khoảng hạn dùng.</p>
      */
-    private static final long PHIEN_BAN_GIEO = 3L;
+    private static final long PHIEN_BAN_GIEO = 4L;
 
     /** Chỉ số cộng phần trăm: sức đánh, HP, KI — ba dòng con nào cũng có. */
     private static final int CS_SUC_DANH = 50;
@@ -174,8 +175,11 @@ public class RongNhiDAO {
             return;
         }
         if (ban >= 2) {
-            // Ban 2 da co bo dong dung; chi thieu moi ti le vinh vien theo sao.
-            capNhatTiLeVinhVien();
+            // Ban 2 tro len da co bo dong dung; chi sua nhung cot vua doi.
+            if (ban < 3) {
+                capNhatTiLeVinhVien();
+            }
+            capNhatHanDung();
             datSo(K_GIEO_VER, PHIEN_BAN_GIEO);
             return;
         }
@@ -192,9 +196,9 @@ public class RongNhiDAO {
         for (int i = 0; i < ID_RONG_NHI.length; i++) {
             String ten = "Rồng nhí " + (i + 1) + " sao";
             themLoaiMacDinh(ten, ID_RONG_NHI[i], TU_TRUNG_THUONG,
-                    tlThuong[i], VV_THUONG[i], 7, 15, i);
+                    tlThuong[i], VV_THUONG[i], HSD_MIN, HSD_MAX, i);
             themLoaiMacDinh(ten, ID_RONG_NHI[i], TU_TRUNG_VANG,
-                    tlVang[i], VV_VANG[i], 15, 30, i);
+                    tlVang[i], VV_VANG[i], HSD_MIN, HSD_MAX, i);
         }
         datSo(K_GIEO_VER, PHIEN_BAN_GIEO);
         Logger.success("Đã gieo " + (ID_RONG_NHI.length * 2)
@@ -212,6 +216,16 @@ public class RongNhiDAO {
 
     /** Trứng vàng: cùng thứ tự nhưng rộng tay hơn hẳn, đó là chỗ nó đắt. */
     private static final double[] VV_VANG = {10, 15, 20, 26, 32, 40, 50};
+
+    /**
+     * Hạn dùng của bản <b>không</b> vĩnh viễn: bốc 1 đến 3 ngày.
+     *
+     * <p>Ngắn, và giống nhau ở cả hai loại trứng. Con có hạn chỉ là thứ dùng
+     * tạm trong lúc săn bản vĩnh viễn, nên hạn dài thì chẳng ai còn lý do mở
+     * thêm trứng nữa.</p>
+     */
+    private static final int HSD_MIN = 1;
+    private static final int HSD_MAX = 3;
 
     /**
      * Sửa đúng cột tỉ lệ vĩnh viễn của những dòng đã gieo ở bản 2.
@@ -249,6 +263,33 @@ public class RongNhiDAO {
     }
 
     /** Bậc sao của một mẫu rồng nhí: 0 là một sao, 6 là bảy sao. {@code -1} nếu không phải. */
+    /**
+     * Sửa đúng khoảng hạn dùng của những dòng đã gieo sẵn.
+     *
+     * <p>Chỉ đụng tới bảy mẫu rồng nhí mặc định; dòng quản trị tự thêm giữ
+     * nguyên khoảng ngày của họ.</p>
+     */
+    private static void capNhatHanDung() {
+        int sua = 0;
+        for (Loai x : dsLoai(false)) {
+            if (bacCuaItem(x.itemId) < 0) {
+                continue;
+            }
+            if (x.ngayMin == HSD_MIN && x.ngayMax == HSD_MAX) {
+                continue;
+            }
+            x.ngayMin = HSD_MIN;
+            x.ngayMax = HSD_MAX;
+            if (luuLoai(x) == null) {
+                sua++;
+            }
+        }
+        if (sua > 0) {
+            Logger.success("Đã đặt hạn dùng 1–3 ngày cho " + sua
+                    + " dòng rồng nhí\n");
+        }
+    }
+
     private static int bacCuaItem(int itemId) {
         for (int i = 0; i < ID_RONG_NHI.length; i++) {
             if (ID_RONG_NHI[i] == itemId) {
