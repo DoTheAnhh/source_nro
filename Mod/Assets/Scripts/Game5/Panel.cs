@@ -2494,16 +2494,17 @@ namespace Game5
     
         public void show()
         {
-            if (GameCanvas.isTouch)
-            {
-                cmdClose.x = 156;
-                cmdClose.y = 3;
-            }
-            else
-            {
-                cmdClose.x = GameCanvas.w - 19;
-                cmdClose.y = GameCanvas.h - 19;
-            }
+            // Nut X nam o goc TREN BEN PHAI cua chinh bang nay.
+            //
+            // Toa do 156 la so viet cung tu thoi bang nao cung rong 240 va luon
+            // dinh mep trai man hinh. Bang rong ra hay doi cho la nut dung im mot
+            // noi: bang NPC thi nut nam lung chung giua bang, con bang nguoi choi
+            // thi nut roi han sang bang ben canh.
+            //
+            // Toa do nay la toa do MAN HINH — nut duoc ve sau khi da tra translate
+            // ve goc, va phep bat cham cung so thang voi GameCanvas.px.
+            cmdClose.x = X + W - 22;
+            cmdClose.y = Y + 3;
             cmdClose.isPlaySoundButton = false;
             ChatPopup.currChatPopup = null;
             InfoDlg.hide();
@@ -3430,11 +3431,36 @@ namespace Game5
             }
         }
     
+        /// <summary>Bánh xe chuột: cuộn bảng đang nằm dưới con trỏ.</summary>
+        /// <remarks>
+        /// <para>Điều kiện cũ là <c>pxMouse > wScroll</c> — viết từ thời bảng nào
+        /// cũng dính mép trái màn hình. Bảng bên phải có mép trái ở tận giữa màn,
+        /// nên con trỏ ở trong nó luôn lớn hơn bề rộng vùng cuộn và bánh xe không
+        /// bao giờ ăn.</para>
+        ///
+        /// <para>Lưới túi cuộn theo Ô chứ không theo dòng 12 điểm: đó là lưới
+        /// vuông, không phải danh sách.</para>
+        /// </remarks>
         public void updateScroolMouse(int a)
         {
             bool flag = false;
-            if (GameCanvas.pxMouse > wScroll)
+            if (GameCanvas.pxMouse < X || GameCanvas.pxMouse > X + W)
             {
+                return;
+            }
+            if (isnewInventory && isTabInventory)
+            {
+                int buoc = oTui();
+                cmtoY -= a * buoc;
+                int tran = gioiHanCuonTui();
+                if (cmtoY > tran)
+                {
+                    cmtoY = tran;
+                }
+                if (cmtoY < 0)
+                {
+                    cmtoY = 0;
+                }
                 return;
             }
             if (indexMouse == -1)
@@ -6698,6 +6724,12 @@ namespace Game5
         /// <summary>Đỉnh vùng ô, ngay dưới dải tab.</summary>
         private int yOTui()
         {
+            if (nhieuCot)
+            {
+                // Hang tieu de da nam tren, ngang voi hang the cua bang NPC, nen
+                // luoi bat dau ngay dinh vung cuon.
+                return yScroll + 2;
+            }
             return yScroll + CAO_DAI_TAB + 2;
         }
 
@@ -6748,16 +6780,20 @@ namespace Game5
         /// </remarks>
         private void veNhanCot(mGraphics g, string ten, bool dangThaoTac)
         {
+            // Nam DUNG hang the cua bang NPC: cung y, cung be cao, nen ba cot
+            // doc thanh mot hang lien mach thay vi moi cot mot kieu.
             int x = xVungTui();
             int w = rongVungTui();
-            g.setColor(MAU_VIEN_MO, 0.35f);
-            g.fillRect(x + 2, yScroll, w - 4, CAO_DAI_TAB, 6);
+            int y = Y + 52;
+            int h = 26;
+            g.setColor(MAU_VIEN_MO, 0.4f);
+            g.fillRect(x + 2, y, w - 4, h, 6);
             g.setColor(0xF3E3C6, 1f);
-            g.fillRect(x + 3, yScroll + 1, w - 6, CAO_DAI_TAB - 2, 5);
+            g.fillRect(x + 3, y + 1, w - 6, h - 2, 5);
             g.setColor(MAU_VIEN_MO, 0.35f);
-            g.fillRect(x + 3, yScroll + CAO_DAI_TAB - 1, w - 6, 1);
+            g.fillRect(x + 3, y + h - 1, w - 6, 1);
             mFont.tahoma_7b_dark.drawString(g, ten, x + w / 2,
-                    yScroll + 5, mFont.CENTER);
+                    y + h / 2 - 5, mFont.CENTER);
         }
 
         /// <summary>Cột ngoài cùng: nhân vật đang mặc gì, cùng sức mạnh.</summary>
@@ -7272,6 +7308,13 @@ namespace Game5
     
         private void paintTab(mGraphics g)
         {
+            if (nhieuCot)
+            {
+                // Hai nhan cot da nam dung hang the roi. Ve them dong tieu de
+                // "Trang bi" o tren nua la hai hang chu chong len nhau, va ba cot
+                // moi cot mot kieu tieu de.
+                return;
+            }
            
             if (type == 23 || type == 24)
             {
@@ -7974,6 +8017,17 @@ namespace Game5
 
         private void paintTopInfo(mGraphics g)
         {
+            if (nhieuCot)
+            {
+                // Bang nguoi choi khong ve dai dau nua.
+                //
+                // Mo canh mot NPC thi dai dau duy nhat can doc la cua NPC: no noi
+                // dang ban gi, dang nang cap gi. Ten va suc manh cua chinh minh
+                // thi luc nao cung xem duoc o man nhan vat, con o day chi to chiem
+                // mot dai ngang giua man hinh.
+                nutChiSoDangHien = false;
+                return;
+            }
             g.setClip(X + 1, Y, W - 2, yScroll - 2);
             veDaiDau(g);
             // Moi khung hinh coi nhu nut KHONG hien; ham ve nut se bat co len

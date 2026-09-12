@@ -2518,12 +2518,22 @@ namespace Game3
     		pyMouse = y;
     	}
     
+    	/// <summary>Bánh xe chuột: đưa cho CẢ HAI bảng đang mở.</summary>
+    	/// <remarks>
+    	/// Mỗi bảng tự xét con trỏ có nằm trong nó không rồi mới cuộn, nên đưa cho
+    	/// cả hai là đúng chứ không phải cuộn hai lần. Bản trước chỉ đưa cho bảng
+    	/// thứ nhất, nên bảng người chơi bên phải không cuộn được bằng bánh xe.
+    	/// </remarks>
     	public void scrollMouse(int a)
     	{
     		pXYScrollMouse = a;
     		if (panel != null && panel.isShow)
     		{
     			panel.updateScroolMouse(a);
+    		}
+    		if (panel2 != null && panel2.isShow)
+    		{
+    			panel2.updateScroolMouse(a);
     		}
     	}
     
