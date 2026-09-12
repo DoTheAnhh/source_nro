@@ -278,6 +278,29 @@ public class MapShopDAO {
         return "[]";
     }
 
+    /**
+     * Dựng lại danh sách NPC của Đảo Kamê đúng như trước khi bị mất.
+     *
+     * <p>Quy Lão Kame, Santa, Bà Hạt Mít, Tranh Ngọc Namếc và Goku SSJ — đúng
+     * chỗ cũ của từng người. Riêng Tranh Ngọc Namếc <b>mượn hình Mị Nương</b>,
+     * tức vẫn giữ menu và cửa hàng đổi điểm, chỉ đổi hình.
+     *
+     * <p>Chỉ chạy khi bản đồ <b>không còn NPC nào</b> — một bản đồ đông người
+     * như Đảo Kamê mà trống trơn thì chắc chắn là hỏng dữ liệu, không phải ý của
+     * quản trị. Ai đã tự sắp lại NPC ở đây thì hàm này không đụng tới.
+     */
+    private static void khoiPhucNpcDaoKame() {
+        String json = "[[13,1092,408],[39,975,408],[21,1188,408],"
+                + "[85,280,288,77],[60,1300,408]]";
+        try {
+            ConnectDB.executeUpdate("UPDATE map_template SET npcs = ? WHERE id = 5", json);
+            Logger.success("Đảo Kamê: dựng lại 5 NPC đã mất — Tranh Ngọc Namếc mượn hình"
+                    + " Mị Nương\n");
+        } catch (Exception ex) {
+            Logger.logException(MapShopDAO.class, ex, "Lỗi dựng lại NPC Đảo Kamê");
+        }
+    }
+
     public static void suaNpcDaoKame() {
         CrisResultSet rs = null;
         String json = null;
@@ -321,6 +344,14 @@ public class MapShopDAO {
             } catch (NumberFormatException boQua) {
                 return;
             }
+        }
+        if (ds.isEmpty()) {
+            // Danh sach NPC cua Dao Kame bi mat sach — mot ban truoc ghi lai
+            // chuoi JSON ma quen dau dong, doc khong ra thi thanh rong. Dung
+            // lai dung nhung NPC von dung o day, NPC Tranh Ngoc Namec (85)
+            // muon hinh Mi Nuong (77) nhu da doi.
+            khoiPhucNpcDaoKame();
+            return;
         }
         if (co85 || viTri77 < 0) {
             return;
