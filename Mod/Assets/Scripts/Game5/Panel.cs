@@ -2266,15 +2266,22 @@ namespace Game5
             // Công thức cũ lùi ô sang trái một đoạn bằng |180 − W|, tính từ thời
             // bảng chỉ rộng 240. Bảng rộng ra là đoạn lùi ấy phình theo, ô chi
             // tiết trôi hẳn ra ngoài mép trái màn hình và mất một nửa.
-            int xGocO = X + 3;
+            // Ô chi tiết CĂN GIỮA vùng của nó — cột đang xem, hoặc cả bảng khi
+            // chỉ có một cột.
+            //
+            // Đặt từ mép trái vùng thì với cột ngoài cùng bên phải, ô rộng 180
+            // điểm tràn khỏi màn hình và bị kẹp dính vào mép phải — nhìn như nó
+            // luôn chạy sang bên phải. Căn giữa thì ô nằm gọn trong cột, hai bên
+            // đều có lề.
+            int xVung = X;
+            int rongVung = W;
             if (nhieuCot)
             {
-                // Mon nam o cot nao thi o chi tiet hien ben cot do: dang xem do
-                // trong hanh trang ma o chi tiet nhay sang phia trang bi thi
-                // phai tim mot luc moi thay.
-                xGocO = xCotTui(chiSoCotTui(newSelected == 0 ? 1 : 0)) + 3;
+                int cotO = chiSoCotTui(newSelected == 0 ? 1 : 0);
+                xVung = xCotTui(cotO);
+                rongVung = rongCotTui(cotO);
             }
-            cp.cx = xGocO;
+            cp.cx = xVung + (rongVung - cp.sayWidth) / 2;
             if (cp.cx + cp.sayWidth + 4 > GameCanvas.w)
             {
                 cp.cx = GameCanvas.w - cp.sayWidth - 4;
