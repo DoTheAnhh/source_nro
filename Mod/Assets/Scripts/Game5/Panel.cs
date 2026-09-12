@@ -1328,9 +1328,10 @@ namespace Game5
         /// </remarks>
         private bool coCotXem()
         {
-            return soCotDat >= 3 && GameCanvas.panel != null
-                    && !Equals(GameCanvas.panel)
-                    && GameCanvas.panel.typeShop == 2;
+            // Không còn cột xem trước riêng: ba cột chia đều là đủ rộng, và
+            // nhân vật vẫn đứng giữa cột "Trang bị" — chọn món trong cửa hàng
+            // thì chính người ấy mặc thử, xem trước ngay tại đó.
+            return false;
         }
 
         /// <summary>Lưới đang vẽ hoặc đang dò: 0 hành trang · 1 trang bị.</summary>
@@ -1351,30 +1352,57 @@ namespace Game5
             {
                 return;
             }
-            // Cat cho cho BA cot neu man hinh con du; cot xem truoc co ve hay
-            // khong thi luc ve moi biet.
-            int muon = 3;
-            int conLai = GameCanvas.w - GameCanvas.panel.W - 8;
-            int vua = conLai / WIDTH_PANEL;
-            if (vua < muon)
+            // BA cot bang nhau, lap day ca be ngang man hinh: bang NPC mot cot,
+            // trang bi mot cot, hanh trang mot cot.
+            //
+            // Truoc day bang NPC giu nguyen be rong cu con bang tui bam mep phai,
+            // nen giua man hinh ho ra mot khoang trong nhin thay ban do.
+            int cot = GameCanvas.w / 3;
+            if (cot < WIDTH_PANEL * 3 / 4)
             {
-                muon = vua;
-            }
-            if (muon < 2)
-            {
+                // Man qua hep cho ba cot — giu nguyen mot cot nhu cu.
                 return;
             }
-            soCotDat = muon;
+            soCotDat = 2;
             nhieuCot = true;
-            W = WIDTH_PANEL * muon;
+            GameCanvas.panel.datBeRong(cot, 0);
+            datBeRong(GameCanvas.w - cot, 1);
+        }
+
+        /// <summary>
+        /// Đặt lại bề rộng và chỗ đứng của bảng.
+        /// </summary>
+        /// <remarks>
+        /// <para>Dùng khi hai bảng mở cạnh nhau và phải chia đều bề ngang màn
+        /// hình. Tính lại đủ mọi số đo phụ thuộc bề rộng — vùng cuộn, mép trái,
+        /// bề rộng thẻ, chỗ bắt đầu hàng thẻ — chứ không chỉ đổi mỗi W, vì phần
+        /// vẽ và phần bắt chạm đều đọc những số ấy.</para>
+        /// </remarks>
+        /// <param name="viTri">0 bám mép trái · 1 bám mép phải.</param>
+        public void datBeRong(int wMoi, int viTri)
+        {
+            W = wMoi;
             wScroll = W - 4;
-            xScroll = GameCanvas.w - wScroll;
-            X = xScroll - 2;
-            cmx = -(GameCanvas.w + W);
-            cmtoX = GameCanvas.w - W;
+            if (viTri == 0)
+            {
+                X = 0;
+                xScroll = 2;
+                cmtoX = 0;
+            }
+            else
+            {
+                xScroll = GameCanvas.w - wScroll;
+                X = xScroll - 2;
+                cmtoX = GameCanvas.w - W;
+            }
+            cmx = cmtoX;
             TAB_W = W / 5 - 1;
-            startTabPos = xScroll + wScroll / 2
-                    - currentTabName.Length * TAB_W / 2;
+            int soThe = (currentTabName == null) ? 1 : currentTabName.Length;
+            if (soThe < 5)
+            {
+                TAB_W += 5;
+            }
+            startTabPos = xScroll + wScroll / 2 - soThe * TAB_W / 2;
         }
 
         /// <summary>Số cột đang trải.</summary>
@@ -1397,13 +1425,8 @@ namespace Game5
         /// </remarks>
         private int phanCot(int cot)
         {
-            if (coCotXem())
-            {
-                // xem trước · hành trang · trang bị
-                return (cot == 0) ? 33 : ((cot == 1) ? 39 : 28);
-            }
-            // hành trang · trang bị
-            return (cot == 0) ? 58 : 42;
+            // Hai cột bằng nhau: trang bị · hành trang.
+            return 50;
         }
 
         /// <summary>Mép trái của cột thứ <paramref name="cot"/>.</summary>
@@ -1429,9 +1452,14 @@ namespace Game5
         }
 
         /// <summary>Cột thứ mấy dành cho lưới nào: 0 hành trang · 1 trang bị.</summary>
+        /// <remarks>
+        /// Trang bị đứng TRƯỚC (cột giữa màn hình, sát bảng NPC) còn hành trang
+        /// ở ngoài cùng bên phải: mua bán là nhìn người mình đang mặc gì trước,
+        /// rồi mới tới đống đồ trong túi.
+        /// </remarks>
         private int chiSoCotTui(int loai)
         {
-            return (coCotXem() ? 1 : 0) + loai;
+            return (loai == 1) ? 0 : 1;
         }
 
         /// <summary>Mép trái của vùng lưới đang vẽ.</summary>
@@ -2197,7 +2225,28 @@ namespace Game5
         {
             cp.isClip = false;
             cp.sayWidth = 180;
-            cp.cx = 3 + X - ((X != 0) ? (Res.abs(cp.sayWidth - W) + 8) : 0);
+            // Ô chi tiết đặt sao cho LỌT hẳn trong màn hình.
+            //
+            // Công thức cũ lùi ô sang trái một đoạn bằng |180 − W|, tính từ thời
+            // bảng chỉ rộng 240. Bảng rộng ra là đoạn lùi ấy phình theo, ô chi
+            // tiết trôi hẳn ra ngoài mép trái màn hình và mất một nửa.
+            int xGocO = X + 3;
+            if (nhieuCot)
+            {
+                // Mon nam o cot nao thi o chi tiet hien ben cot do: dang xem do
+                // trong hanh trang ma o chi tiet nhay sang phia trang bi thi
+                // phai tim mot luc moi thay.
+                xGocO = xCotTui(chiSoCotTui(newSelected == 0 ? 1 : 0)) + 3;
+            }
+            cp.cx = xGocO;
+            if (cp.cx + cp.sayWidth + 4 > GameCanvas.w)
+            {
+                cp.cx = GameCanvas.w - cp.sayWidth - 4;
+            }
+            if (cp.cx < 4)
+            {
+                cp.cx = 4;
+            }
             cp.says = mFont.tahoma_7_red.splitFontArray(chat, cp.sayWidth - 10);
             cp.delay = 10000000;
             cp.c = null;
@@ -6814,13 +6863,17 @@ namespace Game5
                 // Cham vao cot nao thi cot do thanh cot dang thao tac. Dat
                 // newSelected o day de moi phan con lai — menu, phim mui ten,
                 // nut bam — chay y nhu che do mot cot, khong phai sua theo.
-                int xTui = xCotTui(chiSoCotTui(0));
+                // Do theo VUNG cua tung cot, khong theo thu tu trai phai: thu tu
+                // hai cot doi duoc, ma phep so sanh mot chieu thi khong.
                 int xTb = xCotTui(chiSoCotTui(1));
-                if (GameCanvas.px >= xTb)
+                int wTb = rongCotTui(chiSoCotTui(1));
+                int xTui = xCotTui(chiSoCotTui(0));
+                int wTui = rongCotTui(chiSoCotTui(0));
+                if (GameCanvas.px >= xTb && GameCanvas.px < xTb + wTb)
                 {
                     newSelected = 0;
                 }
-                else if (GameCanvas.px >= xTui)
+                else if (GameCanvas.px >= xTui && GameCanvas.px < xTui + wTui)
                 {
                     newSelected = 1;
                 }
