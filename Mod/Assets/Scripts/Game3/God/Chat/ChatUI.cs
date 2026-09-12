@@ -82,11 +82,11 @@ namespace Game3.God
             {
                 return;
             }
+            // Chi danh dau dung the cua kenh do. "Tat ca" va "H.thong"
+            // khong nhay: mot cai la cho xem gop, cai kia la tin may chu
+            // chay suot ngay — nhay ca hai thi cham do luon sang, nhin mai
+            // thanh quen va het tac dung bao.
             tinMoi[kenh] = true;
-            if (!dangXem(KENH_TAT_CA))
-            {
-                tinMoi[KENH_TAT_CA] = true;
-            }
         }
 
         /// <summary>Người chơi đang nhìn thẳng vào thẻ này.</summary>
@@ -652,6 +652,12 @@ namespace Game3.God
                 for (int i = 0; i < 3; i++)
                 {
                     g.fillRect(xg + 4, yg + 4 + i * 4, O_THU_GON - 8, 2);
+                }
+                if (coTinChuaDoc() && nhipNhay())
+                {
+                    // Thu gon roi van phai biet co tin moi: cham do o goc nut.
+                    g.setColor(0xFF4A3C, 1f);
+                    g.fillRect(xg + O_THU_GON - 7, yg + 2, 5, 5, 3);
                 }
                 oThuGon = new int[] { xg, yg, O_THU_GON, O_THU_GON };
                 oThe = new int[0][];

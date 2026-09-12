@@ -47,6 +47,16 @@ public class NpcService {
         Message msg;
         try {
             player.iDMark.setIndexMenu(indexMenu);
+            // Bang nay KHONG phai menu goc cua NPC nen xoa dau vet nut them cua
+            // menu truoc do.
+            //
+            // MenuController phan biet "muc goc" voi "nut them" bang phep so
+            // select >= menuGocSoLuong. Giu lai so cu — vi du menu goc chi co
+            // mot muc "Tu choi" — thi o bang moi, bam muc thu hai tro di lai bi
+            // hieu la bam nut them va chay lai chinh cai nut vua mo bang. Dung
+            // canh "bam Xoa het khong an gi".
+            player.menuGocSoLuong = menuSelect.length;
+            player.menuNutThem = null;
             msg = new Message(32);
             msg.writer().writeShort(npcTempId);
             msg.writer().writeUTF(npcSay);
