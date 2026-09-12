@@ -60,6 +60,36 @@ namespace Game6.God
         private static readonly string[] TEN_THE =
                 { "Tất cả", "H.thống", "T.giới", "Map", "Khu", "Bang" };
 
+        /// <summary>Tài khoản này gõ được tin hệ thống (quản trị viên) hay không.</summary>
+        /// <remarks>Máy chủ báo qua gói 121 mỗi lần vào bản đồ.</remarks>
+        private static bool quyenHeThong;
+
+        public static void datQuyenHeThong(bool duoc)
+        {
+            quyenHeThong = duoc;
+        }
+
+        /// <summary>Vào game lần mới: dọn tin cũ của Map, Khu và Thế giới.</summary>
+        /// <remarks>
+        /// <para>Ba kênh đó chỉ có nghĩa với đúng lúc đang nói; giữ lại thì vào
+        /// game thấy nguyên đống tin của phiên trước lẫn với tin mới.</para>
+        ///
+        /// <para>KHÔNG dọn tin bang: máy chủ giữ lịch sử tin bang và gửi lại cả
+        /// danh sách, đó là chỗ người chơi đọc lại chuyện lúc mình offline. Tin
+        /// hệ thống cũng để nguyên vì cùng lý do.</para>
+        /// </remarks>
+        public void donTinCuKhiVaoGame()
+        {
+            xoaKenh(KENH_MAP);
+            xoaKenh(KENH_KHU);
+            xoaKenh(KENH_THE_GIOI);
+            for (int i = 0; i < tinMoi.Length; i++)
+            {
+                tinMoi[i] = false;
+            }
+            cuon = 0;
+        }
+
         /// <summary>Thẻ nào đang có tin chưa đọc — để nháy báo.</summary>
         private readonly bool[] tinMoi = new bool[TEN_THE.Length];
 
@@ -74,7 +104,8 @@ namespace Game6.God
         private void danhDauTinMoi(int kenh)
         {
             if (kenh != KENH_THE_GIOI && kenh != KENH_MAP
-                    && kenh != KENH_KHU && kenh != KENH_BANG)
+                    && kenh != KENH_KHU && kenh != KENH_BANG
+                    && kenh != KENH_HE_THONG)
             {
                 return;
             }
@@ -279,6 +310,8 @@ namespace Game6.God
         private class DongTam
         {
             public int ma;
+            /// <summary>Tên người gửi — giữ RIÊNG để còn tô màu lúc vẽ.</summary>
+            public string ten;
             public string chu;
         }
 
@@ -309,7 +342,7 @@ namespace Game6.God
             demNapBang.Sort((a, b) => a.ma.CompareTo(b.ma));
             for (int i = 0; i < demNapBang.Count; i++)
             {
-                them(KENH_BANG, demNapBang[i].chu);
+                them(KENH_BANG, demNapBang[i].ten, demNapBang[i].chu);
             }
             demNapBang.Clear();
         }
@@ -321,10 +354,15 @@ namespace Game6.God
                 // Dang nap ca danh sach: gom lai, xep xong o ketThucNapBang moi
                 // ghi. Ghi ngay tung dong thi thu tu phu thuoc vao thu tu may
                 // chu gui, ma thu tu do la moi-truoc.
+                // Giu ten RIENG, khong gop vao noi dung.
+                //
+                // Gop thanh "Ten: chu" thi luc ve khong con ten de to mau, ca
+                // dong ra mot mau trang — dung canh dang xuat vao lai thi tin
+                // bang mat mau, trong khi tin moi nhan luc dang choi van co.
                 DongTam t = new DongTam();
                 t.ma = maTin;
-                t.chu = (ten == null || ten.Length == 0)
-                        ? chu : (ten + ": " + chu);
+                t.ten = (ten == null || ten.Length == 0) ? null : ten;
+                t.chu = chu;
                 demNapBang.Add(t);
                 return;
             }
@@ -929,6 +967,11 @@ namespace Game6.God
         /// </remarks>
         private bool theNayGuiDuoc()
         {
+            if (theChon == KENH_HE_THONG)
+            {
+                // O nhap cua the He thong chi mo cho quan tri vien.
+                return quyenHeThong;
+            }
             return theChon == KENH_BANG || theChon == KENH_THE_GIOI
                     || theChon == KENH_MAP || theChon == KENH_KHU;
         }
@@ -944,6 +987,8 @@ namespace Game6.God
                     return "Nhấn để chat bản đồ…";
                 case KENH_KHU:
                     return "Nhấn để chat khu…";
+                case KENH_HE_THONG:
+                    return "Nhấn để gửi tin hệ thống…";
                 default:
                     return "Nhấn để chat thế giới…";
             }
@@ -1190,6 +1235,12 @@ namespace Game6.God
                         if (kenhLucGo == KENH_KHU)
                         {
                             Service.gI().chatKhu(s);
+                            return;
+                        }
+                        if (kenhLucGo == KENH_HE_THONG)
+                        {
+                            // May chu phat lai cho ca minh, khong ghi tai cho.
+                            Service.gI().chatHeThong(s);
                             return;
                         }
                         if (kenhLucGo == KENH_THE_GIOI)

@@ -75,6 +75,18 @@ public class ServerNotify extends Thread {
         }
     }
 
+    /**
+     * Phát ngay một dòng tin hệ thống cho cả máy chủ, không qua hàng đợi.
+     *
+     * <p>Dành cho quản trị viên gõ thẳng từ thẻ "H.thống" của khung chat.</p>
+     */
+    public void phatNgay(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return;
+        }
+        sendChatVip(text.trim());
+    }
+
     public void notify(String text) {
         this.notifies.add(text);
     }

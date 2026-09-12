@@ -778,6 +778,32 @@ public class Service {
                 "HP", "KI", "SD", "Giáp");
     }
 
+    /**
+     * Báo cho client biết tài khoản này có được gõ tin <b>hệ thống</b> không.
+     *
+     * <p>Khung chat chỉ mở ô nhập ở thẻ "H.thống" cho quản trị viên. Client
+     * không tự biết quyền, nên máy chủ nói mỗi lần vào bản đồ — gói hai byte,
+     * gửi thừa cũng không tốn gì.</p>
+     */
+    public void guiQuyenChatHeThong(Player player) {
+        if (player == null || !player.isPl()) {
+            return;
+        }
+        Message msg = null;
+        try {
+            msg = new Message(121);
+            msg.writer().writeByte(0);
+            msg.writer().writeByte(player.isQuanTriVien() ? 1 : 0);
+            player.sendMessage(msg);
+        } catch (Exception e) {
+            Logger.logException(Service.class, e);
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
+    }
+
     public void chatJustForMe(Player me, Player plChat, String text) {
         Message msg;
         try {

@@ -3858,6 +3858,16 @@ namespace Game1
                             God.PhucLoiUI.getInstance().nhanDuLieu(dsNhomPL);
                         }
                         break;
+                    case 121:
+                        {
+                            // Quyen go tin he thong o khung chat.
+                            sbyte loaiChat = msg.reader().readByte();
+                            if (loaiChat == 0)
+                            {
+                                God.ChatUI.datQuyenHeThong(msg.reader().readByte() == 1);
+                            }
+                        }
+                        break;
                     case 127:
                         // So suu tam (the ra-da): may chu RadarService.
                         God.SoSuuTamUI.getInstance().nhanGoi(msg);
@@ -6369,6 +6379,8 @@ namespace Game1
                         {
                             GameCanvas.debug("SA21", 2);
                             RadarScr.list = new MyVector();
+                            // Vao game lan moi: don tin cu cua Map / Khu / The gioi.
+                            God.ChatUI.getInstance().donTinCuKhiVaoGame();
                             Teleport.vTeleport.removeAllElements();
                             GameScr.vCharInMap.removeAllElements();
                             GameScr.vItemMap.removeAllElements();

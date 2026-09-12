@@ -299,6 +299,22 @@ public class Controller implements IMessageHandler {
                     }
                     break;
 
+                // [121] Khung chat: quản trị viên gõ tin hệ thống.
+                case 121:
+                    if (player != null) {
+                        byte loaiChat = _msg.reader().readByte();
+                        if (loaiChat == 1) {
+                            String tinHeThong = _msg.reader().readUTF();
+                            if (player.isQuanTriVien()) {
+                                ServerNotify.gI().phatNgay(tinHeThong);
+                            } else {
+                                Service.gI().sendThongBao(player,
+                                        "Chỉ quản trị viên mới gửi được tin hệ thống.");
+                            }
+                        }
+                    }
+                    break;
+
                 // [127] Thẻ ra-đa: xem danh sách và bật/tắt thẻ đang dùng (tối đa 1 thẻ)
                 case 127:
                     if (player != null) {

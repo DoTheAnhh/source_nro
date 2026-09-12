@@ -2135,6 +2135,30 @@ namespace Game5
     		}
     	}
 
+    	/// <summary>Quản trị viên gõ tin hệ thống từ thẻ "H.thống".</summary>
+    	public void chatHeThong(string text)
+    	{
+    		Message message = null;
+    		try
+    		{
+    			message = new Message((sbyte)121);
+    			message.writer().writeByte(1);
+    			message.writer().writeUTF(text);
+    			session.sendMessage(message);
+    		}
+    		catch (Exception ex)
+    		{
+    			Cout.println(ex.Message + ex.StackTrace);
+    		}
+    		finally
+    		{
+    			if (message != null)
+    			{
+    				message.cleanup();
+    			}
+    		}
+    	}
+
     	public void chatTheGioi(string text)
     	{
     		Message message = null;
