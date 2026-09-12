@@ -504,6 +504,22 @@ public final class Manager {
      * liệu hỏng là lỗi con trỏ rỗng ném ra giữa lượt nạp, máy chủ dừng ngay tại
      * đó và không lên được.
      */
+    /**
+     * Như mangJson nhưng KHÔNG bỏ dấu nháy.
+     *
+     * <p>Mốc dịch chuyển giữ tên trong dấu nháy: <code>["Rừng xương",0,264,...]</code>.
+     * Bỏ nháy đi là chuỗi hết hợp lệ, đọc ra rỗng, và bản đồ mất sạch cổng qua
+     * map — đúng lỗi đã gặp.
+     */
+    private static JSONArray mangJsonGiuNhay(String raw) {
+        try {
+            Object o = raw == null ? null : JSONValue.parse(raw);
+            return o instanceof JSONArray ? (JSONArray) o : new JSONArray();
+        } catch (Exception ex) {
+            return new JSONArray();
+        }
+    }
+
     private static JSONArray mangJson(String raw) {
         try {
             Object o = raw == null ? null : JSONValue.parse(raw.replaceAll("\\\"", ""));
@@ -1069,7 +1085,7 @@ public final class Manager {
                     );
                     for (int j = 0; j < dataArray.size(); j++) {
                         WayPoint wp = new WayPoint();
-                        JSONArray dtwp = mangJson(String.valueOf(dataArray.get(j)));
+                        JSONArray dtwp = mangJsonGiuNhay(String.valueOf(dataArray.get(j)));
                         if (dtwp.size() < 10) {
                             continue;
                         }
@@ -1271,7 +1287,7 @@ public final class Manager {
                     .replaceAll("\",\"", ","));
             for (int j = 0; j < dataArray.size(); j++) {
                 WayPoint wp = new WayPoint();
-                JSONArray dtwp = mangJson(String.valueOf(dataArray.get(j)));
+                JSONArray dtwp = mangJsonGiuNhay(String.valueOf(dataArray.get(j)));
                 if (dtwp.size() < 10) {
                     continue;
                 }
