@@ -35,8 +35,8 @@ import nro.service.skill.SkillService;
  */
 public class RongNhi extends Boss {
 
-    /** Mỗi cú đánh trừ đúng bấy nhiêu máu, bất kể sát thương thật. */
-    private static final int MAU_MAT_MOI_DON = 1;
+    /** Bao nhiêu cú đánh thì hạ được, dù người đánh mạnh hay yếu. */
+    private static final int SO_DON_HA = 100;
 
     /** Khoảng cách giữa hai lần Thái dương hạ san, tính bằng mili giây. */
     private static final int NHIP_THAI_DUONG = 15_000;
@@ -98,17 +98,23 @@ public class RongNhi extends Boss {
     }
 
     /**
-     * Mỗi cú đánh trừ đúng 1 HP, nhưng <b>trả về sát thương thật</b>.
+     * Mỗi cú đánh mất đúng <b>1% máu tối đa</b>, và trả về đúng con số ấy.
      *
-     * <h3>Hai con số, hai việc khác nhau</h3>
+     * <h3>Vì sao hai con số phải bằng nhau</h3>
      *
-     * <p>Số trừ vào máu là 1: người 2 tỉ sức đánh và người mới chơi đều phải
-     * đánh đủ 100 cú, con rồng mới thành cuộc đuổi bắt chứ không phải cuộc đấu.
-     * Nhưng <b>giá trị trả về</b> là thứ client vẽ lên đầu con boss, nên trả về 1
-     * thì mọi cú đánh đều hiện "-1" và nhìn y như đòn không ăn — đúng cảnh "đánh
-     * không tính sát thương".</p>
+     * <p>Client <b>tự trừ</b> con số sát thương nhận được vào máu của mục tiêu
+     * để vẽ thanh máu ngay, không đợi máy chủ gửi lại. Nên hai con số phải là
+     * một: trả về 1 thì mọi đòn hiện "-1" (nhìn như đòn không ăn), còn trả về
+     * sát thương thật của người chơi thì client trừ mấy nghìn khỏi một thanh máu
+     * 100 điểm và thanh máu vỡ ngay cú đầu.</p>
      *
-     * <p>Vì thế trả lại đúng sát thương người chơi gây ra. Máu vẫn chỉ vơi 1.</p>
+     * <h3>Cách làm</h3>
+     *
+     * <p>Cho con rồng 100.000 máu và mỗi đòn lấy đi 1.000 — tức <b>đúng 100
+     * đòn</b> như thiết kế, người 2 tỉ sức đánh và người mới chơi như nhau —
+     * nhưng con số hiện lên là 1.000 chứ không phải 1, và thanh máu tụt đúng 1%
+     * mỗi lần. Sát thương thật của người đánh không còn ý nghĩa ở đây, đó là cả
+     * ý đồ của con boss này.</p>
      */
     @Override
     public double injured(Player plAtt, double damage, boolean piercing, boolean isMobAttack) {
@@ -119,13 +125,20 @@ public class RongNhi extends Boss {
             this.lastTimePlayerAttack = System.currentTimeMillis();
             this.hasPlayerAttackSinceSpawn = true;
         }
-        this.nPoint.subHP(MAU_MAT_MOI_DON);
+        long mat = this.nPoint.hpMax / SO_DON_HA;
+        if (mat < 1) {
+            mat = 1;
+        }
+        if (mat > this.nPoint.hp) {
+            mat = this.nPoint.hp;
+        }
+        this.nPoint.subHP(mat);
         if (isDie()) {
             ghiNguoiTieuDiet(plAtt);
             this.setDie(plAtt);
             die(plAtt);
         }
-        return damage > 0 ? damage : MAU_MAT_MOI_DON;
+        return mat;
     }
 
     /**

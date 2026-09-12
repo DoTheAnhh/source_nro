@@ -2325,7 +2325,7 @@ public class BossesData {
             ConstPlayer.TRAI_DAT, //gender
             new short[]{1722, 1723, 1724, -1, -1, -1}, //outfit {head, body, leg, bag, aura, eff}
             0, //dame — không gây sát thương lên người chơi
-            new long[]{100}, //hp
+            new long[]{100_000}, //hp — mỗi đòn mất đúng 1% nên vẫn là 100 đòn
             new int[]{3, 4, 5, 6, 11, 12, 13, 10, 17, 18, 19, 20, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38},
             new int[][]{
                 {Skill.THAI_DUONG_HA_SAN, 1, 15_000},},
@@ -2346,7 +2346,7 @@ public class BossesData {
             ConstPlayer.TRAI_DAT, //gender
             new short[]{1719, 1720, 1721, -1, -1, -1}, //outfit {head, body, leg, bag, aura, eff}
             0, //dame — không gây sát thương lên người chơi
-            new long[]{100}, //hp
+            new long[]{100_000}, //hp — mỗi đòn mất đúng 1% nên vẫn là 100 đòn
             new int[]{3, 4, 5, 6, 11, 12, 13, 10, 17, 18, 19, 20, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38},
             new int[][]{
                 {Skill.THAI_DUONG_HA_SAN, 1, 15_000},},
@@ -2367,7 +2367,7 @@ public class BossesData {
             ConstPlayer.TRAI_DAT, //gender
             new short[]{1716, 1717, 1718, -1, -1, -1}, //outfit {head, body, leg, bag, aura, eff}
             0, //dame — không gây sát thương lên người chơi
-            new long[]{100}, //hp
+            new long[]{100_000}, //hp — mỗi đòn mất đúng 1% nên vẫn là 100 đòn
             new int[]{3, 4, 5, 6, 11, 12, 13, 10, 17, 18, 19, 20, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38},
             new int[][]{
                 {Skill.THAI_DUONG_HA_SAN, 1, 15_000},},
@@ -2388,7 +2388,7 @@ public class BossesData {
             ConstPlayer.TRAI_DAT, //gender
             new short[]{1713, 1714, 1715, -1, -1, -1}, //outfit {head, body, leg, bag, aura, eff}
             0, //dame — không gây sát thương lên người chơi
-            new long[]{100}, //hp
+            new long[]{100_000}, //hp — mỗi đòn mất đúng 1% nên vẫn là 100 đòn
             new int[]{3, 4, 5, 6, 11, 12, 13, 10, 17, 18, 19, 20, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38},
             new int[][]{
                 {Skill.THAI_DUONG_HA_SAN, 1, 15_000},},
@@ -2409,7 +2409,7 @@ public class BossesData {
             ConstPlayer.TRAI_DAT, //gender
             new short[]{1710, 1711, 1712, -1, -1, -1}, //outfit {head, body, leg, bag, aura, eff}
             0, //dame — không gây sát thương lên người chơi
-            new long[]{100}, //hp
+            new long[]{100_000}, //hp — mỗi đòn mất đúng 1% nên vẫn là 100 đòn
             new int[]{3, 4, 5, 6, 11, 12, 13, 10, 17, 18, 19, 20, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38},
             new int[][]{
                 {Skill.THAI_DUONG_HA_SAN, 1, 15_000},},
@@ -2430,7 +2430,7 @@ public class BossesData {
             ConstPlayer.TRAI_DAT, //gender
             new short[]{1707, 1708, 1709, -1, -1, -1}, //outfit {head, body, leg, bag, aura, eff}
             0, //dame — không gây sát thương lên người chơi
-            new long[]{100}, //hp
+            new long[]{100_000}, //hp — mỗi đòn mất đúng 1% nên vẫn là 100 đòn
             new int[]{3, 4, 5, 6, 11, 12, 13, 10, 17, 18, 19, 20, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38},
             new int[][]{
                 {Skill.THAI_DUONG_HA_SAN, 1, 15_000},},
@@ -2451,7 +2451,7 @@ public class BossesData {
             ConstPlayer.TRAI_DAT, //gender
             new short[]{1704, 1705, 1706, -1, -1, -1}, //outfit {head, body, leg, bag, aura, eff}
             0, //dame — không gây sát thương lên người chơi
-            new long[]{100}, //hp
+            new long[]{100_000}, //hp — mỗi đòn mất đúng 1% nên vẫn là 100 đòn
             new int[]{3, 4, 5, 6, 11, 12, 13, 10, 17, 18, 19, 20, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38},
             new int[][]{
                 {Skill.THAI_DUONG_HA_SAN, 1, 15_000},},
