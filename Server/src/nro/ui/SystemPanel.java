@@ -11945,6 +11945,13 @@ public class SystemPanel extends JPanel {
     private final JTextField rnGiaThuong = new JTextField(5);
     private final JTextField rnGiaVang = new JTextField(5);
 
+    /** Đang xem bộ dòng của trứng nào: 1 thường · 2 vàng. */
+    private final javax.swing.JComboBox<String> rnChonTrung
+            = new javax.swing.JComboBox<>(new String[]{"Trứng thường", "Trứng vàng"});
+
+    /** Tổng tỉ lệ của bộ đang xem — phải bằng 100%. */
+    private final JLabel rnTong = new JLabel();
+
     private JComponent buildRongNhiTab() {
         JPanel root = new JPanel(new BorderLayout(0, 6));
         root.setOpaque(false);
@@ -11954,7 +11961,8 @@ public class SystemPanel extends JPanel {
                 + "trong bảng phải theo tỉ lệ riêng của dòng đó. Hạn dùng: trúng "
                 + "\"vĩnh viễn %\" thì vĩnh viễn, không thì bốc số ngày trong "
                 + "khoảng đã khai. Mảnh trứng dùng trong hành trang sẽ mở bảng "
-                + "đổi theo giá dưới đây. Không có gì viết cứng trong mã."),
+                + "đổi theo giá dưới đây. Hai loại trứng xem riêng — <b>tổng tỉ "
+                + "lệ của mỗi loại nên bằng 100%</b>."),
                 BorderLayout.NORTH);
 
         JPanel pCauHinh = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
@@ -11998,6 +12006,15 @@ public class SystemPanel extends JPanel {
         JPanel pLoai = new JPanel(new BorderLayout(0, 4));
         pLoai.setOpaque(false);
         pLoai.setBorder(titled("Các loại rồng nhí nở ra được"));
+        // Hai loai trung xem RIENG: gop lai thi bang dai gap doi va khong doc
+        // duoc tong ti le cua tung qua — ma tong ay moi la thu phai bang 100.
+        JPanel pChonTrung = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 2));
+        pChonTrung.setOpaque(false);
+        pChonTrung.add(new JLabel("Đang xem:"));
+        pChonTrung.add(rnChonTrung);
+        pChonTrung.add(rnTong);
+        rnChonTrung.addActionListener(e -> rnLoadLoai());
+        pLoai.add(pChonTrung, BorderLayout.NORTH);
         pLoai.add(ServerGuiUtils.cuon(rnLoaiTable), BorderLayout.CENTER);
         JPanel bLoai = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
         bLoai.setOpaque(false);
@@ -12089,10 +12106,27 @@ public class SystemPanel extends JPanel {
         note(OK_GREEN, "Đã lưu cấu hình trứng rồng nhí.");
     }
 
+    /** Loại trứng đang xem: 1 thường · 2 vàng. */
+    private int rnTrungDangXem() {
+        return (rnChonTrung.getSelectedIndex() == 1)
+                ? nro.repository.dao.RongNhiDAO.TU_TRUNG_VANG
+                : nro.repository.dao.RongNhiDAO.TU_TRUNG_THUONG;
+    }
+
     private void rnLoadLoai() {
         rnLoaiModel.setRowCount(0);
+        int trung = rnTrungDangXem();
+        double tong = 0;
         for (nro.repository.dao.RongNhiDAO.Loai x
                 : nro.repository.dao.RongNhiDAO.dsLoai(false)) {
+            // Dong "ca hai" hien o ca hai the: no thuc su no ra tu ca hai qua.
+            if (x.tuTrung != trung
+                    && x.tuTrung != nro.repository.dao.RongNhiDAO.TU_CA_HAI) {
+                continue;
+            }
+            if (x.bat) {
+                tong += x.tiLe;
+            }
             rnLoaiModel.addRow(new Object[]{x.id, x.ten,
                 x.itemId + " — " + tenVatPham(x.itemId), tenLoaiTrung(x.tuTrung),
                 soGon(x.tiLe), soGon(x.tiLeVinhVien),
@@ -12100,6 +12134,10 @@ public class SystemPanel extends JPanel {
                         : (x.ngayMin + " – " + x.ngayMax),
                 x.khoa ? "có" : "", x.bat ? "có" : ""});
         }
+        boolean du = Math.abs(tong - 100d) < 0.001d;
+        rnTong.setText("Tổng tỉ lệ: " + soGon(tong) + "%"
+                + (du ? "" : " — nên để bằng 100%"));
+        rnTong.setForeground(du ? OK_GREEN : WARN_RED);
         rnChiSoModel.setRowCount(0);
     }
 
@@ -12162,7 +12200,8 @@ public class SystemPanel extends JPanel {
         veLai.run();
         javax.swing.JComboBox<String> cbTrung = new javax.swing.JComboBox<>(
                 new String[]{"Cả hai", "Trứng thường", "Trứng vàng"});
-        cbTrung.setSelectedIndex(cu == null ? 0 : cu.tuTrung);
+        // Them moi thi chon san dung qua trung dang xem, khoi phai nho chon.
+        cbTrung.setSelectedIndex(cu == null ? rnTrungDangXem() : cu.tuTrung);
         JTextField fTiLe = new JTextField(cu == null ? "10" : soGon(cu.tiLe), 8);
         JTextField fVV = new JTextField(cu == null ? "0"
                 : soGon(cu.tiLeVinhVien), 8);

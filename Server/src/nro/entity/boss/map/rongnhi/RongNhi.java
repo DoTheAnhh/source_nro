@@ -98,16 +98,26 @@ public class RongNhi extends Boss {
     }
 
     /**
-     * Mỗi cú đánh trừ đúng 1 HP.
+     * Mỗi cú đánh trừ đúng 1 HP, nhưng <b>trả về sát thương thật</b>.
      *
-     * <p>Không gọi {@code super.injured}: bản gốc trừ theo sát thương thật, mà ở
-     * đây sát thương thật không có nghĩa gì — người 2 tỉ sức đánh và người mới
-     * chơi đều phải đánh đủ 100 cú.</p>
+     * <h3>Hai con số, hai việc khác nhau</h3>
+     *
+     * <p>Số trừ vào máu là 1: người 2 tỉ sức đánh và người mới chơi đều phải
+     * đánh đủ 100 cú, con rồng mới thành cuộc đuổi bắt chứ không phải cuộc đấu.
+     * Nhưng <b>giá trị trả về</b> là thứ client vẽ lên đầu con boss, nên trả về 1
+     * thì mọi cú đánh đều hiện "-1" và nhìn y như đòn không ăn — đúng cảnh "đánh
+     * không tính sát thương".</p>
+     *
+     * <p>Vì thế trả lại đúng sát thương người chơi gây ra. Máu vẫn chỉ vơi 1.</p>
      */
     @Override
     public double injured(Player plAtt, double damage, boolean piercing, boolean isMobAttack) {
         if (this.isDie()) {
             return 0;
+        }
+        if (plAtt != null && !plAtt.isBoss) {
+            this.lastTimePlayerAttack = System.currentTimeMillis();
+            this.hasPlayerAttackSinceSpawn = true;
         }
         this.nPoint.subHP(MAU_MAT_MOI_DON);
         if (isDie()) {
@@ -115,31 +125,39 @@ public class RongNhi extends Boss {
             this.setDie(plAtt);
             die(plAtt);
         }
-        return MAU_MAT_MOI_DON;
+        return damage > 0 ? damage : MAU_MAT_MOI_DON;
     }
 
     /**
-     * Chỉ làm đúng một việc: mỗi 15 giây thả một Thái dương hạ san.
+     * Chạy nhảy quanh người chơi, và mỗi 15 giây thả một Thái dương hạ san.
      *
-     * <p>Không gọi {@code super.attack()}: bản gốc chọn chiêu trong danh sách rồi
-     * đánh thật, tức có đường ra sát thương. Ở đây chặn từ gốc thay vì trông vào
-     * việc sức đánh đang bằng 0.</p>
+     * <h3>Vì sao phải tự lo phần di chuyển</h3>
+     *
+     * <p>Boss di chuyển ngay trong {@code attack()} của lớp cha — hết đường
+     * chạy thì bốc chiêu, gần thì nhảy quanh, xa thì đuổi theo. Bản trước của
+     * lớp này ghi đè {@code attack()} và thoát sớm khi chưa tới nhịp Thái dương,
+     * nên con rồng <b>đứng chôn chân</b> suốt cả lượt.</p>
+     *
+     * <p>Không gọi {@code super.attack()} vì bản gốc có đường ra sát thương, mà
+     * rồng nhí thì không được chạm vào máu người chơi. Ở đây chỉ có hai việc: di
+     * chuyển, và thả đòn làm mù.</p>
      */
     @Override
     public void attack() {
         if (this.typePk != ConstPlayer.PK_ALL) {
             return;
         }
-        if (!Util.canDoWithTime(this.lastTimeAttack, 1000)) {
+        if (!Util.canDoWithTime(this.lastTimeAttack, 500)) {
             return;
         }
         this.lastTimeAttack = System.currentTimeMillis();
-        if (!Util.canDoWithTime(this.lucThaiDuongCuoi, NHIP_THAI_DUONG)) {
-            return;
-        }
         try {
             Player pl = getPlayerAttack();
             if (pl == null || pl.isDie()) {
+                return;
+            }
+            chayNhay(pl);
+            if (!Util.canDoWithTime(this.lucThaiDuongCuoi, NHIP_THAI_DUONG)) {
                 return;
             }
             nro.entity.skill.Skill tdhs = chieuThaiDuong();
@@ -151,6 +169,24 @@ public class RongNhi extends Boss {
             SkillService.gI().useSkill(this, pl, null, -1, null);
         } catch (Exception ex) {
             nro.core.log.Logger.logException(RongNhi.class, ex);
+        }
+    }
+
+    /**
+     * Ở xa thì đuổi theo, ở gần thì nhảy loanh quanh.
+     *
+     * <p>Cùng luật với boss thường, chỉ khác là nhảy thường xuyên hơn một chút —
+     * con này không đánh ai nên đứng yên là chẳng còn gì để nhìn.</p>
+     */
+    private void chayNhay(Player pl) {
+        if (Util.getDistance(this, pl) > 200) {
+            this.moveToPlayer(pl);
+            return;
+        }
+        if (Util.isTrue(1, 2)) {
+            this.moveTo(pl.location.x + (Util.getOne(-1, 1) * Util.nextInt(30, 120)),
+                    Util.nextInt(10) % 2 == 0 ? pl.location.y
+                            : pl.location.y - Util.nextInt(0, 60));
         }
     }
 

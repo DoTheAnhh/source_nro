@@ -182,6 +182,7 @@ public class BossManager implements Runnable {
                     + " dòng danh sách boss xuống bảng boss_spawn\n");
         }
         boSungRongNhi(ds);
+        gieoDoRoiRongNhi();
         ds = nro.repository.dao.BossSpawnDAO.tatCa();
         ds = donDongCu(ds);
         int con = 0;
@@ -338,6 +339,53 @@ public class BossManager implements Runnable {
         if (them > 0) {
             Logger.success("Đã thêm " + them + " dòng rồng nhí vào boss_spawn\n");
         }
+    }
+
+    /**
+     * Gieo đồ rơi mặc định cho bảy con rồng nhí, nếu con đó chưa có dòng nào.
+     *
+     * <p>Mỗi con rơi 1–3 Thỏi vàng và 5–15 Mảnh trứng rồng nhí, chắc chắn rơi.
+     * Đồ rơi của boss <b>chỉ</b> đến từ bảng này — mọi đường thả đồ viết cứng
+     * trong lớp boss đã bị chặn — nên không gieo thì hạ rồng xong chẳng được
+     * gì.</p>
+     *
+     * <p>Chỉ gieo cho con <b>chưa có dòng nào</b>: quản trị sửa số lượng hay tắt
+     * bớt thì lần khởi động sau vẫn giữ nguyên ý họ.</p>
+     */
+    private void gieoDoRoiRongNhi() {
+        int[] ids = {BossID.Rong_1Sao, BossID.Rong_2Sao, BossID.Rong_3Sao,
+            BossID.Rong_4Sao, BossID.Rong_5Sao, BossID.Rong_6Sao,
+            BossID.Rong_7Sao};
+        int them = 0;
+        for (int id : ids) {
+            if (!nro.repository.dao.BossDAO.drops(id).isEmpty()) {
+                continue;
+            }
+            them += gieoMotDoRoi(id, THOI_VANG, 1, 3) ? 1 : 0;
+            them += gieoMotDoRoi(id, MANH_TRUNG_RONG_NHI, 5, 15) ? 1 : 0;
+        }
+        if (them > 0) {
+            Logger.success("Đã gieo " + them + " dòng đồ rơi cho rồng nhí\n");
+        }
+    }
+
+    /** Thỏi vàng — vật phẩm trong hành trang, không phải tiền vàng. */
+    private static final int THOI_VANG = 457;
+
+    /** Mảnh trứng rồng nhí. */
+    private static final int MANH_TRUNG_RONG_NHI = 1881;
+
+    private boolean gieoMotDoRoi(int bossId, int itemId, int min, int max) {
+        nro.repository.dao.BossDAO.Drop d = new nro.repository.dao.BossDAO.Drop();
+        d.bossId = bossId;
+        d.itemId = itemId;
+        d.qtyMin = min;
+        d.qtyMax = max;
+        d.rateNum = 1;
+        d.rateDen = 1;
+        d.active = true;
+        d.note = "Mặc định của rồng nhí";
+        return nro.repository.dao.BossDAO.saveDrop(d) == null;
     }
 
     private void them(java.util.List<nro.repository.dao.BossSpawnDAO.Dong> ds,

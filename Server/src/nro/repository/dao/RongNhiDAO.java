@@ -64,6 +64,27 @@ public class RongNhiDAO {
     /** Bảy con rồng nhí, theo thứ tự 1 sao đến 7 sao. */
     public static final int[] ID_RONG_NHI = {1872, 1873, 1874, 1875, 1876, 1877, 1878};
 
+    /** Phiên bản của bộ dữ liệu gieo sẵn. */
+    private static final String K_GIEO_VER = "gieo_ver";
+
+    /**
+     * Bản gieo hiện tại.
+     *
+     * <p>Tăng số này khi bộ dữ liệu mặc định đổi: lần khởi động sau, máy nào
+     * còn ở bản cũ sẽ được gieo lại. Bản 1 đánh tỉ lệ <b>ngược</b> — rồng 1 sao
+     * phổ biến nhất — nên phải gieo đè, không thì máy đã chạy bản ấy giữ mãi
+     * bảng sai.</p>
+     */
+    private static final long PHIEN_BAN_GIEO = 2L;
+
+    /** Chỉ số cộng phần trăm: sức đánh, HP, KI — ba dòng con nào cũng có. */
+    private static final int CS_SUC_DANH = 50;
+    private static final int CS_HP = 77;
+    private static final int CS_KI = 103;
+
+    /** Chí mạng: dòng thêm, con sao càng thấp càng dễ có và càng cao. */
+    private static final int CS_CHI_MANG = 14;
+
     private static volatile boolean daTaoBang;
 
     public static synchronized void damBaoBang() {
@@ -118,44 +139,65 @@ public class RongNhiDAO {
     }
 
     /**
-     * Gieo sẵn bảy con rồng nhí cho cả hai loại trứng, nếu bảng còn trống.
+     * Gieo sẵn bảy con rồng nhí cho <b>từng</b> loại trứng, kèm chỉ số.
      *
-     * <h3>Vì sao mỗi trứng một bộ dòng riêng</h3>
+     * <h3>Mỗi trứng một bộ dòng riêng, mỗi bộ cộng đúng 100%</h3>
      *
-     * <p>Bảy con là chung, nhưng <b>tỉ lệ thì ngược nhau</b>: trứng thường ra
-     * sao thấp là chính, trứng vàng dồn về sao cao và hạn dùng dài hơn, tỉ lệ
-     * vĩnh viễn cao hơn. Gộp vào một dòng "cả hai" thì hai quả trứng khác giá
-     * lại cho ra y hệt nhau, tức quả đắt không có lý do gì tồn tại.</p>
+     * <p>Bảy con là chung nhưng tỉ lệ thì khác hẳn nhau, nên trứng thường một
+     * bộ bảy dòng, trứng vàng một bộ bảy dòng. Tổng mỗi bộ đúng 100 để đọc con
+     * số trên panel là ra ngay phần trăm thật.</p>
      *
-     * <h3>Chỉ gieo khi bảng trống</h3>
+     * <h3>Một sao hiếm nhất và mạnh nhất</h3>
      *
-     * <p>Xoá bớt dòng hay sửa tỉ lệ là chuyện bình thường; gieo lại mỗi lần khởi
-     * động thì mọi sửa đổi đều bị đắp lại. Muốn về mốc đầu thì xoá sạch bảng rồi
-     * khởi động lại.</p>
+     * <p>Thứ tự sao của Ngọc Rồng: một sao là viên đầu, quý nhất. Trứng thường
+     * cho 2% ra một sao và 32% ra bảy sao; trứng vàng kéo đều hơn — 8% một sao,
+     * 19% bảy sao — nên quả đắt đáng tiền ở chỗ ấy chứ không phải ở chỗ ra con
+     * khác.</p>
      *
-     * <p><b>Bể chỉ số để trống.</b> Chỉ số của rồng nhí tuỳ máy chủ muốn cho bao
-     * nhiêu, đoán hộ thì sai hơn là để trống — khai ở bảng bên phải của tab.</p>
+     * <p>Chỉ số đi cùng thứ tự đó: một sao cộng 13–15%, mỗi bậc sao lùi hai
+     * điểm, tới bảy sao còn 1–3%. Chí mạng là dòng thêm — một sao chắc chắn có,
+     * mỗi bậc bớt 10% cơ hội.</p>
+     *
+     * <h3>Gieo lại khi bộ mặc định đổi</h3>
+     *
+     * <p>Gieo theo {@link #PHIEN_BAN_GIEO}: máy còn ở bản cũ thì <b>xoá sạch rồi
+     * gieo lại</b>. Bản 1 đánh tỉ lệ ngược nên không thể để nguyên, và bản ấy mới
+     * ra nên gần như chưa ai kịp sửa tay. Từ bản này trở đi, máy đã ở đúng phiên
+     * bản sẽ không bị đụng tới nữa.</p>
      */
     private static void gieoLanDau() {
-        if (!dsLoai(false).isEmpty()) {
+        if (so(K_GIEO_VER, 0) >= PHIEN_BAN_GIEO) {
             return;
         }
-        // Trung thuong: sao thap la chinh.
-        int[] tlThuong = {30, 25, 18, 12, 8, 5, 2};
-        // Trung vang: dồn ve sao cao.
-        int[] tlVang = {2, 4, 8, 13, 20, 25, 28};
-        for (int i = 0; i < ID_RONG_NHI.length; i++) {
-            themLoaiMacDinh("Rồng nhí " + (i + 1) + " sao", ID_RONG_NHI[i],
-                    TU_TRUNG_THUONG, tlThuong[i], 5, 7, 15);
-            themLoaiMacDinh("Rồng nhí " + (i + 1) + " sao", ID_RONG_NHI[i],
-                    TU_TRUNG_VANG, tlVang[i], 30, 15, 30);
+        try {
+            ConnectDB.executeUpdate("DELETE FROM rong_nhi_chi_so");
+            ConnectDB.executeUpdate("DELETE FROM rong_nhi_loai");
+        } catch (Exception ex) {
+            Logger.logException(RongNhiDAO.class, ex, "Lỗi dọn bảng rồng nhí");
+            return;
         }
+        // Tong moi bo dung 100.
+        int[] tlThuong = {2, 4, 7, 12, 18, 25, 32};
+        int[] tlVang = {8, 10, 13, 15, 17, 18, 19};
+        for (int i = 0; i < ID_RONG_NHI.length; i++) {
+            String ten = "Rồng nhí " + (i + 1) + " sao";
+            themLoaiMacDinh(ten, ID_RONG_NHI[i], TU_TRUNG_THUONG,
+                    tlThuong[i], 5, 7, 15, i);
+            themLoaiMacDinh(ten, ID_RONG_NHI[i], TU_TRUNG_VANG,
+                    tlVang[i], 30, 15, 30, i);
+        }
+        datSo(K_GIEO_VER, PHIEN_BAN_GIEO);
         Logger.success("Đã gieo " + (ID_RONG_NHI.length * 2)
-                + " dòng rồng nhí mặc định\n");
+                + " dòng rồng nhí kèm chỉ số\n");
     }
 
+    /**
+     * Thêm một loại kèm bể chỉ số của nó.
+     *
+     * @param bac 0 cho con một sao, 6 cho con bảy sao — càng nhỏ càng mạnh
+     */
     private static void themLoaiMacDinh(String ten, int itemId, int tuTrung,
-            double tiLe, double tiLeVinhVien, int ngayMin, int ngayMax) {
+            double tiLe, double tiLeVinhVien, int ngayMin, int ngayMax, int bac) {
         Loai x = new Loai();
         x.ten = ten;
         x.itemId = itemId;
@@ -166,7 +208,55 @@ public class RongNhiDAO {
         x.ngayMax = ngayMax;
         x.khoa = true;
         x.bat = true;
-        luuLoai(x);
+        if (luuLoai(x) != null) {
+            return;
+        }
+        int loaiId = timLoaiVuaThem(itemId, tuTrung);
+        if (loaiId <= 0) {
+            return;
+        }
+        // Mot sao 13-15%, moi bac lui hai diem, bay sao con 1-3%.
+        int max = 15 - bac * 2;
+        int min = Math.max(1, max - 2);
+        themChiSoMacDinh(loaiId, CS_SUC_DANH, min, max, 100);
+        themChiSoMacDinh(loaiId, CS_HP, min, max, 100);
+        themChiSoMacDinh(loaiId, CS_KI, min, max, 100);
+        // Chi mang: mot sao chac chan co, moi bac bot 10% co hoi.
+        int cmMax = 7 - bac;
+        themChiSoMacDinh(loaiId, CS_CHI_MANG, Math.max(1, cmMax - 2), cmMax,
+                100 - bac * 10);
+    }
+
+    /**
+     * Id của dòng vừa thêm.
+     *
+     * <p>Tra lại bằng {@code item_id} và loại trứng rồi lấy id lớn nhất, thay vì
+     * hỏi {@code LAST_INSERT_ID()}: lớp kết nối không trả về số ấy, mà lúc gieo
+     * thì bảng vừa được dọn sạch nên không có dòng cũ nào để nhầm.</p>
+     */
+    private static int timLoaiVuaThem(int itemId, int tuTrung) {
+        int id = -1;
+        for (Loai x : dsLoai(false)) {
+            if (x.itemId == itemId && x.tuTrung == tuTrung && x.id > id) {
+                id = x.id;
+            }
+        }
+        return id;
+    }
+
+    private static void themChiSoMacDinh(int loaiId, int optionId, int min,
+            int max, double tiLe) {
+        if (tiLe <= 0) {
+            return;
+        }
+        ChiSo cs = new ChiSo();
+        cs.loaiId = loaiId;
+        cs.optionId = optionId;
+        cs.min = min;
+        cs.max = max;
+        cs.tiLe = tiLe;
+        cs.bat = true;
+        luuChiSo(cs);
     }
 
     /** Ghi giá trị mặc định nếu khoá đó chưa có, không đè lên giá trị đã khai. */
