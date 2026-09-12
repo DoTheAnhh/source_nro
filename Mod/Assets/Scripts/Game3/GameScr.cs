@@ -5755,17 +5755,11 @@ namespace Game3
     				}
     			}
     			ChatTextField.gI().paint(g);
-    			// Co nguoi xin vao bang: nhay o nut BA GACH.
+    			// Khong nhay o nut ba gach nua.
     			//
-    			// Duong di toi cho xu ly la ba gach -> Nhan vat -> the Bang hoi, nen
-    			// dau hieu phai bat dau tu ba gach. Ve mot cham do nho o goc nut,
-    			// cung kieu voi cham bao cua cac man khac, thay cho anh loe cu.
-    			if (isNewClanMessage && !GameCanvas.panel.isShow
-    					&& GameCanvas.gameTick % 8 < 5)
-    			{
-    				g.setColor(0xFF4A3C, 1f);
-    				g.fillRect(cmdMenu.x + 20, cmdMenu.y - 2, 6, 6, 3);
-    			}
+    			// MOI dau hieu tin moi gio nam chung mot cho: khung chat va o thu
+    			// nho cua no. Rai dau hieu ra nhieu cho thi nguoi choi phai nho moi
+    			// cho nghia la gi, ma tin xin vao bang von cung ve thang khung chat.
     			if (isSuperPower)
     			{
     				dxPower += 5;

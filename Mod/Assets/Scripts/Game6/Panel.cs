@@ -7498,10 +7498,8 @@ namespace Game6
                 {
                     mFont2.drawString(g, currentTabName[i][0], startTabPos + i * TAB_W + TAB_W / 2, 59, mFont.CENTER);
                 }
-                if (type == 0 && currentTabName.Length == 5 && GameScr.isNewClanMessage && GameCanvas.gameTick % 4 == 0)
-                {
-                    g.drawImage(ItemMap.imageFlare, startTabPos + 3 * TAB_W + TAB_W / 2, 77, mGraphics.BOTTOM | mGraphics.HCENTER);
-                }
+                // Bang cu khong nhay nua: moi dau hieu tin moi da gom ve khung
+                // chat va o thu nho cua no.
             }
             // Khong ke ngan o day: cai ranh tab da lam xong viec ngan cach, ve
             // them mot duong nua la quay ve dung kieu bang cu.

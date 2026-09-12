@@ -1389,13 +1389,6 @@ namespace Game5.God
                 int x = x0 + LE + i * w;
                 veVienThuoc(g, x, yThe, w - 3, CAO_THE, sang);
                 mFont mf = sang ? mFont.tahoma_7b_white : mFont.tahoma_7b_dark;
-                // Cham bao tren the "Bang hoi" khi co nguoi xin vao.
-                if (TEN_THE[i] == "Bang hội" && GameScr.isNewClanMessage
-                        && GameCanvas.gameTick % 8 < 5)
-                {
-                    g.setColor(0xFF4A3C, 1f);
-                    g.fillRect(x + w - 12, yThe + 3, 6, 6, 3);
-                }
                 mf.drawString(g, TEN_THE[i], x + (w - 3) / 2, yThe + 5,
                         mFont.CENTER);
             }
