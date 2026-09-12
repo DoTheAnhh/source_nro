@@ -94,6 +94,13 @@ namespace Game5.God
             public string trangThai;
             public string choHoiSinh;
 
+            /// <summary>Tên người hạ con này gần nhất; rỗng nếu chưa ai hạ.</summary>
+            /// <remarks>
+            /// Là lần GẦN NHẤT chứ không phải trạng thái hiện thời: boss hồi sinh
+            /// rồi thì dòng này vẫn còn, vì người chơi muốn biết ai vừa ăn con đó.
+            /// </remarks>
+            public string nguoiTieuDiet;
+
             /// <summary>1 đang xuất hiện · 2 đang chờ hồi sinh.</summary>
             public int mau;
 
@@ -663,6 +670,15 @@ namespace Game5.God
             mFont.tahoma_7.drawString(g, catBot(dongTT, 42),
                     xPhai + rongPhai / 2, y, mFont.CENTER);
             y += 12;
+            if (d.nguoiTieuDiet != null && d.nguoiTieuDiet.Length > 0)
+            {
+                // Chi hien khi da co nguoi ha. Hien "Nguoi tieu diet: —" cho moi
+                // con chua ai dung toi chi lam day khung ma khong noi them gi.
+                mFont.tahoma_7b_dark.drawString(g,
+                        catBot("Người tiêu diệt: " + d.nguoiTieuDiet, 42),
+                        xPhai + rongPhai / 2, y, mFont.CENTER);
+                y += 12;
+            }
 
             int rongThanh = rongPhai - 24;
             g.setColor(MAU_THE, 0.95f);

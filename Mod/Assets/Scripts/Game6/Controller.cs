@@ -3715,6 +3715,8 @@ namespace Game6
                                     d.tenMap = msg.reader().readUTF();
                                     d.trangThai = msg.reader().readUTF();
                                     d.choHoiSinh = msg.reader().readUTF();
+                                    // Ten nguoi ha gan nhat, rong neu chua ai ha.
+                                    d.nguoiTieuDiet = msg.reader().readUTF();
                                     d.mau = msg.reader().readUnsignedByte();
                                     d.soPhase = msg.reader().readUnsignedByte();
                                     dsBoss.Add(d);

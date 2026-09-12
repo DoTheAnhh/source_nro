@@ -217,6 +217,9 @@ namespace Game3.God
             /// <summary>Tên người gửi — chỉ dòng ĐẦU của mỗi tin mới có.</summary>
             public string ten;
             public bool laMinh;
+
+            /// <summary>Kênh của tin, để tô màu chữ theo kênh.</summary>
+            public int kenh;
         }
 
         /// <summary>Số dòng giữ lại; cũ hơn thì rơi khỏi đầu danh sách.</summary>
@@ -797,7 +800,7 @@ namespace Game3.God
                     veTenCoVien(g, nhan, x, y, v.laMinh);
                     x += fontTen(v.laMinh).getWidth(nhan);
                 }
-                mFont.tahoma_7_white.drawString(g, v.chu, x, y, mFont.LEFT);
+                fontChu(v.kenh).drawString(g, v.chu, x, y, mFont.LEFT);
             }
 
             // Hai nut cuon o canh phai vung tin nhan.
@@ -866,6 +869,22 @@ namespace Game3.God
         private static mFont fontTen(bool laMinh)
         {
             return laMinh ? mFont.tahoma_7b_blue : mFont.tahoma_7b_focus;
+        }
+
+        /// <summary>Màu chữ của một dòng tin, theo kênh.</summary>
+        /// <remarks>
+        /// <para>Tin hệ thống đi màu XANH LƠ, tin người chơi giữ màu trắng. Trước
+        /// đây hai loại cùng một màu nên thông báo của máy chủ lẫn vào giữa tin
+        /// nhắn, rõ nhất ở thẻ "Tất cả" — cả khung là một mảng chữ trắng.</para>
+        ///
+        /// <para>Chọn xanh lơ vì ba màu còn lại trong khung đều đã có chủ: trắng
+        /// là nội dung tin, xanh dương là tên mình, xanh lá nhạt là tên người
+        /// khác. Nó cũng là màu lạnh và rất sáng nên tách hẳn khỏi nền nâu.</para>
+        /// </remarks>
+        private static mFont fontChu(int kenh)
+        {
+            return (kenh == KENH_HE_THONG)
+                    ? mFont.tahoma_7_blue1 : mFont.tahoma_7_white;
         }
 
         /// <summary>Tên người nhắn, viền tối bốn phía cho nổi khỏi nền.</summary>
@@ -951,6 +970,7 @@ namespace Game3.God
                     v.chu = a[j];
                     v.ten = (j == 0) ? tenHien : null;
                     v.laMinh = d.laMinh;
+                    v.kenh = d.kenh;
                     ds.Add(v);
                 }
             }

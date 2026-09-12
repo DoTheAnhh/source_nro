@@ -1546,6 +1546,36 @@ public void joinMap() {
         return 500;
     }
 
+    /**
+     * Tên người chơi hạ con boss này gần nhất, hoặc <code>null</code> nếu chưa ai hạ.
+     *
+     * <p>Chỉ nằm trong bộ nhớ: khởi động lại máy chủ là mất. Màn hình boss coi
+     * đây là thông tin vui, không phải sổ sách, nên không đáng thêm một bảng.</p>
+     */
+    public String nguoiTieuDiet;
+
+    /**
+     * Ghi lại người vừa kết liễu, cho màn hình boss hiện "Người tiêu diệt".
+     *
+     * <p>Gọi ngay tại chỗ máu về 0 trong <code>injured</code> chứ không đặt trong
+     * <code>die</code>: 46 lớp boss ghi đè <code>die(Player)</code> và <b>không lớp nào</b>
+     * gọi <code>super.die</code>, nên móc vào đó thì gần như con nào cũng lọt. Còn
+     * <code>injured</code> thì chỉ Mob và Hirudegarn ghi đè, mọi boss đều đi qua bản
+     * này.</p>
+     *
+     * <p>Đệ tử và phân thân tính cho sư phụ, giống <code>die</code> vẫn làm — người
+     * chơi coi đó là công của mình chứ không phải của con đệ.</p>
+     */
+    private void ghiNguoiTieuDiet(Player plKill) {
+        if (plKill == null) {
+            return;
+        }
+        Player nguoi = plKill.getMaster() != null ? plKill.getMaster() : plKill;
+        if (nguoi != null && nguoi.name != null && !nguoi.name.isEmpty()) {
+            this.nguoiTieuDiet = nguoi.name;
+        }
+    }
+
    @Override
 public void die(Player plKill) {
     Player killer = null;
@@ -1657,6 +1687,7 @@ public synchronized double injured(Player plAtt, double damage, boolean piercing
         this.nPoint.subHP(damage);
 
         if (isDie()) {
+            ghiNguoiTieuDiet(plAtt);
             this.setDie(plAtt);
             die(plAtt);
         }

@@ -98,6 +98,7 @@ public class BossManHinhService {
      *   UTF   tenMap            (rỗng nếu chưa xuất hiện)
      *   UTF   trangThai         ("đã hồi sinh", "chưa hồi sinh"…)
      *   UTF   choHoiSinh        ("56 phút 10 giây", rỗng nếu đang sống)
+     *   UTF   nguoiTieuDiet     (tên người hạ gần nhất, rỗng nếu chưa ai hạ)
      *   byte  mau               1 đang xuất hiện · 2 chờ hồi sinh
      *   byte  soPhase
      * </pre>
@@ -121,6 +122,7 @@ public class BossManHinhService {
                 msg.writer().writeUTF(tenMap(b));
                 msg.writer().writeUTF(trangThai(b));
                 msg.writer().writeUTF(choHoiSinh(b));
+                msg.writer().writeUTF(nguoiTieuDiet(b));
                 msg.writer().writeByte(dangSong(b) ? 1 : 2);
                 msg.writer().writeByte(b.data == null ? 0 : b.data.length);
             }
@@ -189,6 +191,19 @@ public class BossManHinhService {
                 msg.cleanup();
             }
         }
+    }
+
+    /**
+     * Tên người hạ con boss này gần nhất, hoặc chuỗi rỗng nếu chưa ai hạ.
+     *
+     * <p>Giữ luôn cả khi boss đã hồi sinh: đó là <b>lần gần nhất</b> chứ không
+     * phải trạng thái hiện thời, và người chơi vẫn muốn biết ai vừa ăn con đó.</p>
+     */
+    private String nguoiTieuDiet(Boss b) {
+        if (b == null || b.nguoiTieuDiet == null) {
+            return "";
+        }
+        return b.nguoiTieuDiet;
     }
 
     /** Nhận gói từ client: 0 xin danh sách, 1 kèm id xin chi tiết. */
