@@ -7013,10 +7013,7 @@ namespace Game4
             if (type != 13 || (currentTabIndex != 2 && !Equals(GameCanvas.panel2)))
             {
                 g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-                g.setColor(11837316);
-                g.fillRect(X + 1, H - 15, W - 2, 14);
-                g.setColor(13524492);
-                g.fillRect(X + 1, H - 15, W - 2, 1);
+                veDaiTien(g);
                 g.drawImage(imgXu, X + 11, H - 7, 3);
                 g.drawImage(imgLuong, X + 75, H - 8, 3);
                 mFont.tahoma_7_yellow.drawString(g, Char.myCharz().xuStr + string.Empty, X + 24, H - 13, mFont.LEFT, mFont.tahoma_7_grey);
@@ -7472,6 +7469,21 @@ namespace Game4
                 g.setColor(0xFFF3DC, 0.85f);
                 g.fillRect(x + 3, y + 2, w - 6, 2, 2);
             }
+        }
+
+        /// <summary>Dải tiền ở đáy bảng: nền cam nhạt bo góc, hai nét ngăn trên.</summary>
+        /// <remarks>
+        /// Cùng tông với dải đầu bảng, nên hai đầu bảng khép lại thành một khối.
+        /// Bản cũ là một mảng nâu vuông chạy hết bề ngang với một nét xám.
+        /// </remarks>
+        private void veDaiTien(mGraphics g)
+        {
+            g.setColor(MAU_VIEN_MO, 0.7f);
+            g.fillRect(X + 3, H - 17, W - 6, 1);
+            g.setColor(MAU_NEN_SANG, 0.85f);
+            g.fillRect(X + 3, H - 16, W - 6, 1);
+            g.setColor(MAU_DAI_DAU, 0.9f);
+            g.fillRect(X + 3, H - 15, W - 6, 12, 5);
         }
 
         /// <summary>Hai nét ngăn dưới hàng thẻ tab.</summary>
