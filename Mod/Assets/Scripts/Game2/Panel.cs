@@ -2613,7 +2613,7 @@ namespace Game2
                 {
                     return;
                 }
-                if (cmdClose.isPointerPressInside())
+                if (giuNutX() && cmdClose.isPointerPressInside())
                 {
                     cmdClose.performAction();
                     return;
@@ -2622,7 +2622,8 @@ namespace Game2
                 {
                     if (type != 4)
                     {
-                        hide();
+                        // Phim thoat cung dong ca hai bang, giong nut X.
+                        dongCaHai();
                         return;
                     }
                     setTypeMain();
@@ -4991,7 +4992,7 @@ namespace Game2
             }
             GameScr.resetTranslate(g);
             paintDetail(g);
-            if (cmx == cmtoX && !GameCanvas.menu.showMenu)
+            if (cmx == cmtoX && !GameCanvas.menu.showMenu && giuNutX())
             {
                 cmdClose.paint(g);
             }
@@ -10815,6 +10816,45 @@ namespace Game2
             GameCanvas.startYesNoDlg(info, new Command(mResources.YES, this, 3003, itemObject), new Command(mResources.NO, this, 4005, null));
         }
     
+        /// <summary>
+        /// Bảng này có phải bảng giữ nút X hay không.
+        /// </summary>
+        /// <remarks>
+        /// <para>Mở cửa hàng là hai bảng nằm cạnh nhau, mỗi bảng một nút X ở góc
+        /// riêng — hai dấu X trên cùng một màn hình, mà bấm cái nào cũng ra kết
+        /// quả giống nhau. Chỉ để lại <b>một</b> nút, ở góc trên bên phải của
+        /// bảng người chơi, tức góc phải trên cùng của màn hình.</para>
+        ///
+        /// <para>Bảng người chơi nhận ra bằng chính cờ nhiều cột: chỉ nó mới trải
+        /// cột, còn bảng NPC thì không.</para>
+        /// </remarks>
+        private bool giuNutX()
+        {
+            if (nhieuCot)
+            {
+                return true;
+            }
+            return GameCanvas.panel2 == null || Equals(GameCanvas.panel2)
+                    || !GameCanvas.panel2.nhieuCot;
+        }
+
+        /// <summary>Đóng cả bảng NPC lẫn bảng người chơi.</summary>
+        /// <remarks>
+        /// Hai bảng là hai nửa của cùng một lần nói chuyện với NPC: đóng một nửa
+        /// mà nửa kia còn nằm đó thì màn hình dở dang, và cái nửa còn lại cũng
+        /// chẳng làm gì được nữa.
+        /// </remarks>
+        private void dongCaHai()
+        {
+            Panel kia = Equals(GameCanvas.panel2)
+                    ? GameCanvas.panel : GameCanvas.panel2;
+            hide();
+            if (kia != null && !Equals(kia) && kia.isShow)
+            {
+                kia.hide();
+            }
+        }
+
         public void perform(int idAction, object p)
         {
             if (idAction == 9999)
@@ -10976,7 +11016,7 @@ namespace Game2
             }
             if (idAction == 1003)
             {
-                hide();
+                dongCaHai();
             }
             if (idAction == 1002)
             {
