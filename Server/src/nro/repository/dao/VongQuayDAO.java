@@ -279,6 +279,62 @@ public final class VongQuayDAO {
         return dungMon(chon);
     }
 
+    /**
+     * Bổ sung chỉ số và hạn dùng <b>còn thiếu</b> vào các dòng đang có, lấy theo
+     * danh sách gốc trong mã.
+     *
+     * <h3>Vì sao cần</h3>
+     *
+     * <p>Bảng chỉ được gieo <b>một lần</b>, ở lần chạy đầu tiên. Máy nào đã gieo
+     * từ bản trước thì giữ nguyên dữ liệu cũ — kể cả khi danh sách gốc trong mã
+     * sau đó được viết đầy đủ hơn. Đó là cảnh dòng "Cải trang Gatchan" chỉ còn
+     * mỗi chỉ số "không thể giao dịch", trong khi mã nguồn khai cho nó bốn dòng
+     * chỉ số và hạn dùng 1–5 ngày.</p>
+     *
+     * <h3>Chỉ điền chỗ trống</h3>
+     *
+     * <p>Dòng nào đã có chỉ số thì <b>không đụng tới</b>: người khai có thể đã
+     * cố ý bỏ bớt. Chỉ dòng đang để trống mới được điền, và hạn dùng cũng chỉ
+     * điền khi đang là 0. Nhờ vậy bấm mấy lần cũng ra một kết quả, và không mất
+     * công sửa tay của ai.</p>
+     *
+     * @return số dòng đã được bổ sung
+     */
+    public static int boSungTuMaNguon() {
+        damBaoBang();
+        int sua = 0;
+        List<Qua> dangCo = danhSach();
+        for (Qua goc : khoGoc()) {
+            for (Qua co : dangCo) {
+                if (co.nhom != goc.nhom || !cungVatPham(co.vatPham, goc.vatPham)) {
+                    continue;
+                }
+                boolean doi = false;
+                if ((co.chiSo == null || co.chiSo.trim().isEmpty())
+                        && goc.chiSo != null && !goc.chiSo.trim().isEmpty()) {
+                    co.chiSo = goc.chiSo;
+                    doi = true;
+                }
+                if (co.hsdMax <= 0 && goc.hsdMax > 0) {
+                    co.hsdMin = goc.hsdMin;
+                    co.hsdMax = goc.hsdMax;
+                    co.tiLeVinhVien = goc.tiLeVinhVien;
+                    doi = true;
+                }
+                if (doi && luu(co) == null) {
+                    sua++;
+                }
+                break;
+            }
+        }
+        return sua;
+    }
+
+    /** Hai ô vật phẩm chỉ cùng một món khi danh sách id trùng nhau. */
+    private static boolean cungVatPham(String a, String b) {
+        return docDanhSachSo(a).equals(docDanhSachSo(b));
+    }
+
     /** Dựng vật phẩm thật từ một dòng quà. */
     private static Item dungMon(Qua q) {
         List<Integer> ids = docDanhSachSo(q.vatPham);

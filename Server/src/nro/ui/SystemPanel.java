@@ -6405,6 +6405,8 @@ public class SystemPanel extends JPanel {
         nut.add(button("Tắt các dòng đã chọn", new Color(150, 120, 60),
                 e -> batTatVongQuay(false)));
         nut.add(button("Xoá các dòng đã chọn", WARN_RED, e -> xoaDongVongQuay()));
+        nut.add(button("Bổ sung từ mã nguồn", new Color(60, 130, 120),
+                e -> boSungVongQuay()));
         nut.add(button("Tách mỗi món một dòng", new Color(70, 120, 150),
                 e -> tachTungMonVongQuay()));
         nut.add(button("Gieo lại từ mã nguồn", new Color(120, 90, 160),
@@ -6634,6 +6636,28 @@ public class SystemPanel extends JPanel {
      * giữ nguyên phần trăm của mình. Trọng số quá nhỏ để chia (ví dụ 2 chia cho
      * 3 món) thì dừng lại và nói rõ, chứ không làm lệch tỉ lệ sau lưng.</p>
      */
+    /**
+     * Điền chỉ số và hạn dùng còn thiếu, lấy theo danh sách gốc trong mã.
+     *
+     * <p>Dùng khi bảng được gieo từ một bản cũ: dòng nào trong mã có chỉ số mà
+     * trong bảng đang trống thì được điền, dòng nào đã có thì giữ nguyên. Khác
+     * hẳn "Gieo lại từ mã nguồn" — nút kia xoá sạch rồi chép lại từ đầu.</p>
+     */
+    private void boSungVongQuay() {
+        if (JOptionPane.showConfirmDialog(this,
+                "Điền chỉ số và hạn dùng CÒN THIẾU theo danh sách trong mã?\n\n"
+                + "Dòng nào đã có chỉ số thì giữ nguyên, không đụng tới.",
+                "Bổ sung từ mã nguồn", JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+            return;
+        }
+        int sua = nro.repository.dao.VongQuayDAO.boSungTuMaNguon();
+        napBangVongQuay();
+        note(sua > 0 ? OK_GREEN : GREY, sua > 0
+                ? ("Đã bổ sung " + sua + " dòng.")
+                : "Không dòng nào thiếu — bảng đã đầy đủ so với mã nguồn.");
+    }
+
     private void tachTungMonVongQuay() {
         java.util.List<nro.repository.dao.VongQuayDAO.Qua> chon = vqDangChon();
         if (chon.isEmpty()) {

@@ -52,6 +52,18 @@ public class RongNhiDAO {
     public static final int TU_TRUNG_THUONG = 1;
     public static final int TU_TRUNG_VANG = 2;
 
+    /** Trứng rồng nhí thường. */
+    public static final int ID_TRUNG_THUONG = 1879;
+
+    /** Trứng vàng rồng nhí. */
+    public static final int ID_TRUNG_VANG = 1880;
+
+    /** Mảnh trứng rồng nhí. */
+    public static final int ID_MANH = 1881;
+
+    /** Bảy con rồng nhí, theo thứ tự 1 sao đến 7 sao. */
+    public static final int[] ID_RONG_NHI = {1872, 1873, 1874, 1875, 1876, 1877, 1878};
+
     private static volatile boolean daTaoBang;
 
     public static synchronized void damBaoBang() {
@@ -88,14 +100,73 @@ public class RongNhiDAO {
                     + " bat TINYINT(1) NOT NULL DEFAULT 1,"
                     + " PRIMARY KEY (id), KEY idx_loai (loai_id)"
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-            macDinh(K_TRUNG_THUONG, 1879);
-            macDinh(K_TRUNG_VANG, 1880);
-            macDinh(K_MANH, 0);
+            macDinh(K_TRUNG_THUONG, ID_TRUNG_THUONG);
+            macDinh(K_TRUNG_VANG, ID_TRUNG_VANG);
+            macDinh(K_MANH, ID_MANH);
             macDinh(K_MANH_THUONG, 49);
             macDinh(K_MANH_VANG, 99);
+            // May da chay ban truoc thi dong manh da nam san trong bang voi gia
+            // tri 0 (luc do chua biet id), ma INSERT IGNORE khong de len duoc.
+            // Chi va khi no van la 0 — quan tri da doi sang so khac thi de yen.
+            if (so(K_MANH, 0) <= 0) {
+                datSo(K_MANH, ID_MANH);
+            }
+            gieoLanDau();
         } catch (Exception ex) {
             Logger.logException(RongNhiDAO.class, ex, "Lỗi tạo bảng rồng nhí");
         }
+    }
+
+    /**
+     * Gieo sẵn bảy con rồng nhí cho cả hai loại trứng, nếu bảng còn trống.
+     *
+     * <h3>Vì sao mỗi trứng một bộ dòng riêng</h3>
+     *
+     * <p>Bảy con là chung, nhưng <b>tỉ lệ thì ngược nhau</b>: trứng thường ra
+     * sao thấp là chính, trứng vàng dồn về sao cao và hạn dùng dài hơn, tỉ lệ
+     * vĩnh viễn cao hơn. Gộp vào một dòng "cả hai" thì hai quả trứng khác giá
+     * lại cho ra y hệt nhau, tức quả đắt không có lý do gì tồn tại.</p>
+     *
+     * <h3>Chỉ gieo khi bảng trống</h3>
+     *
+     * <p>Xoá bớt dòng hay sửa tỉ lệ là chuyện bình thường; gieo lại mỗi lần khởi
+     * động thì mọi sửa đổi đều bị đắp lại. Muốn về mốc đầu thì xoá sạch bảng rồi
+     * khởi động lại.</p>
+     *
+     * <p><b>Bể chỉ số để trống.</b> Chỉ số của rồng nhí tuỳ máy chủ muốn cho bao
+     * nhiêu, đoán hộ thì sai hơn là để trống — khai ở bảng bên phải của tab.</p>
+     */
+    private static void gieoLanDau() {
+        if (!dsLoai(false).isEmpty()) {
+            return;
+        }
+        // Trung thuong: sao thap la chinh.
+        int[] tlThuong = {30, 25, 18, 12, 8, 5, 2};
+        // Trung vang: dồn ve sao cao.
+        int[] tlVang = {2, 4, 8, 13, 20, 25, 28};
+        for (int i = 0; i < ID_RONG_NHI.length; i++) {
+            themLoaiMacDinh("Rồng nhí " + (i + 1) + " sao", ID_RONG_NHI[i],
+                    TU_TRUNG_THUONG, tlThuong[i], 5, 7, 15);
+            themLoaiMacDinh("Rồng nhí " + (i + 1) + " sao", ID_RONG_NHI[i],
+                    TU_TRUNG_VANG, tlVang[i], 30, 15, 30);
+        }
+        Logger.success("Đã gieo " + (ID_RONG_NHI.length * 2)
+                + " dòng rồng nhí mặc định\n");
+    }
+
+    private static void themLoaiMacDinh(String ten, int itemId, int tuTrung,
+            double tiLe, double tiLeVinhVien, int ngayMin, int ngayMax) {
+        Loai x = new Loai();
+        x.ten = ten;
+        x.itemId = itemId;
+        x.tuTrung = tuTrung;
+        x.tiLe = tiLe;
+        x.tiLeVinhVien = tiLeVinhVien;
+        x.ngayMin = ngayMin;
+        x.ngayMax = ngayMax;
+        x.khoa = true;
+        x.bat = true;
+        luuLoai(x);
     }
 
     /** Ghi giá trị mặc định nếu khoá đó chưa có, không đè lên giá trị đã khai. */
