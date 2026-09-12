@@ -355,9 +355,9 @@ namespace Game3
     		bool trongNhom = false;
     		for (int i = 0; i < says.Length; i++)
     		{
-    			if (says[i] == "[[" || says[i] == "]]")
+    			if (says[i].StartsWith("[[") || says[i] == "]]")
     			{
-    				trongNhom = (says[i] == "[[");
+    				trongNhom = says[i].StartsWith("[[");
     				continue;
     			}
     			if (says[i].StartsWith("--"))
@@ -566,23 +566,41 @@ namespace Game3
     			return;
     		}
     		int bd = -1;
+    		string tieuDe = string.Empty;
     		for (int i = 0; i < says.Length; i++)
     		{
-    			if (says[i] == "[[")
+    			if (says[i].StartsWith("[["))
     			{
     				bd = i;
+    				// Ten nhom di ngay sau hai dau ngoac, tren CHINH dong danh dau.
+    				// Dong ay von da chua mot dong chu nen dai tieu de khong an
+    				// them cho nao.
+    				tieuDe = says[i].Substring(2);
     			}
     			else if (says[i] == "]]" && bd >= 0)
     			{
     				// Bam dung cong thuc ve chu ben duoi (sayRun, strY), khong thi
     				// khung lech va cat mat dong cuoi.
-    				int yTren = yGoc + sayRun - strY + 12 + bd * 12 + 2;
+    				int yTren = yGoc + sayRun - strY + 12 + bd * 12 - 2;
     				int yDuoi = yGoc + sayRun - strY + 12 + i * 12 + 10;
-    				g.setColor(0xB08A4E, 0.75f);
-    				g.fillRect(xKhung + 6, yTren, rongKhung - 12, yDuoi - yTren, 5);
+    				int x = xKhung + 6;
+    				int w = rongKhung - 12;
+    				// Vien nau, long kem, dai tieu de cam o dinh.
+    				g.setColor(0x8B623A, 0.9f);
+    				g.fillRect(x, yTren, w, yDuoi - yTren, 6);
     				g.setColor(0xFFF3DC, 1f);
-    				g.fillRect(xKhung + 7, yTren + 1, rongKhung - 14, yDuoi - yTren - 2, 4);
+    				g.fillRect(x + 1, yTren + 1, w - 2, yDuoi - yTren - 2, 5);
+    				if (tieuDe.Length > 0)
+    				{
+    					g.setColor(0xF0A164, 1f);
+    					g.fillRect(x + 1, yTren + 1, w - 2, 14, 5);
+    					g.setColor(0x8B623A, 0.45f);
+    					g.fillRect(x + 1, yTren + 15, w - 2, 1);
+    					mFont.tahoma_7b_dark.drawString(g, tieuDe,
+    							x + w / 2, yTren + 2, mFont.CENTER);
+    				}
     				bd = -1;
+    				tieuDe = string.Empty;
     			}
     		}
     	}
@@ -605,7 +623,7 @@ namespace Game3
     		int num7 = -1;
     		for (int i = 0; i < says.Length; i++)
     		{
-    			if (says[i] == "[[" || says[i] == "]]")
+    			if (says[i].StartsWith("[[") || says[i] == "]]")
     			{
     				continue;
     			}

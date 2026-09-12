@@ -2205,13 +2205,15 @@ namespace Game5
                         }
                     }
                 }
+                // Ten nhom ghi ngay sau hai dau ngoac: phan ve doc no lam dai
+                // tieu de cua khung, khong ton them mot dong nao.
                 if (!nhomChiSo.Equals(string.Empty))
                 {
-                    text = text + "\n[[" + nhomChiSo + "\n]]";
+                    text = text + "\n[[Chỉ số" + nhomChiSo + "\n]]";
                 }
                 if (!nhomSet.Equals(string.Empty))
                 {
-                    text = text + "\n[[" + nhomSet + "\n]]";
+                    text = text + "\n[[Set kích hoạt" + nhomSet + "\n]]";
                 }
                 if (currItem.template.strRequire > 1)
                 {
