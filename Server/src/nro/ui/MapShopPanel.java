@@ -112,7 +112,11 @@ public class MapShopPanel extends JPanel {
         title.setForeground(ACCENT);
         add(title, BorderLayout.NORTH);
 
-        JSplitPane doc = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, buildMap(), buildNpc());
+        JSplitPane phai = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+                buildNpc(), buildCong());
+        phai.setResizeWeight(0.55);
+        phai.setBorder(null);
+        JSplitPane doc = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, buildMap(), phai);
         doc.setResizeWeight(0.42);
         doc.setBorder(null);
 
@@ -166,6 +170,7 @@ public class MapShopPanel extends JPanel {
         mapTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 loadNpc();
+                loadCong();
             }
         });
         p.add(ServerGuiUtils.cuon(mapTable), BorderLayout.CENTER);
@@ -210,6 +215,349 @@ public class MapShopPanel extends JPanel {
             }
         }
         return null;
+    }
+
+    // =====================================================================
+    //  Cổng dịch chuyển
+    // =====================================================================
+
+    private final DefaultTableModel congModel = new DefaultTableModel(
+            new Object[]{"Tên cổng", "Vùng chạm (x1,y1 → x2,y2)", "Kiểu",
+                "Tới bản đồ", "Toạ độ tới"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return false;
+        }
+    };
+    private final JTable congTable = new JTable(congModel);
+    private List<MapShopDAO.Cong> dsCong = new ArrayList<>();
+
+    private JComponent buildCong() {
+        JPanel p = new JPanel(new BorderLayout(0, 4));
+        p.setOpaque(false);
+        p.setBorder(titled("Cổng dịch chuyển của bản đồ đang chọn"));
+
+        congTable.setRowHeight(22);
+        congTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        congTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        int[] w = {150, 190, 70, 200, 110};
+        for (int i = 0; i < w.length && i < congTable.getColumnCount(); i++) {
+            congTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
+        }
+        congTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2 && congTable.getSelectedRow() >= 0) {
+                    congDialog(false);
+                }
+            }
+        });
+        p.add(ServerGuiUtils.cuon(congTable), BorderLayout.CENTER);
+
+        JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        nut.setOpaque(false);
+        nut.add(button("Thêm cổng", OK_GREEN, e -> congDialog(true)));
+        nut.add(button("Sửa cổng", ACCENT, e -> congDialog(false)));
+        nut.add(button("Xoá cổng", WARN_RED, e -> xoaCong()));
+        nut.add(button("Nối hai chiều…", new Color(70, 120, 150), e -> noiHaiChieu()));
+        nut.add(button("Soát cổng toàn máy chủ", new Color(120, 90, 160),
+                e -> soatCong()));
+        p.add(nut, BorderLayout.SOUTH);
+        return p;
+    }
+
+    private void loadCong() {
+        congModel.setRowCount(0);
+        dsCong = new ArrayList<>();
+        MapShopDAO.MapRow m = mapDangChon();
+        if (m == null) {
+            return;
+        }
+        dsCong = MapShopDAO.congCuaMap(m.id);
+        for (MapShopDAO.Cong c : dsCong) {
+            congModel.addRow(new Object[]{c.ten,
+                c.minX + "," + c.minY + " → " + c.maxX + "," + c.maxY,
+                c.vao ? "cửa vào" : "cửa ra",
+                c.toiMap + " — " + tenMap(c.toiMap),
+                c.toiX + ", " + c.toiY});
+        }
+    }
+
+    private String tenMap(int id) {
+        for (MapShopDAO.MapRow m : dsMap) {
+            if (m.id == id) {
+                return String.valueOf(m.name);
+            }
+        }
+        return "(không có bản đồ này)";
+    }
+
+    /**
+     * Thêm hoặc sửa một cổng.
+     *
+     * <p>Vùng chạm là hình chữ nhật người chơi phải đứng trong đó mới đi được.
+     * Cổng bên mép trái bản đồ thường có vùng hẹp sát x = 0, cổng mép phải sát
+     * bề rộng bản đồ; cổng giữa bản đồ thì là cửa lên hoặc xuống.</p>
+     */
+    private void congDialog(boolean them) {
+        MapShopDAO.MapRow m = mapDangChon();
+        if (m == null) {
+            note(WARN_RED, "Chọn một bản đồ trước.");
+            return;
+        }
+        MapShopDAO.Cong cu = null;
+        int dong = congTable.getSelectedRow();
+        if (!them) {
+            if (dong < 0) {
+                note(WARN_RED, "Chọn một cổng trước.");
+                return;
+            }
+            cu = dsCong.get(congTable.convertRowIndexToModel(dong));
+        }
+        JTextField fTen = new JTextField(cu == null ? "" : cu.ten, 18);
+        JTextField fMinX = new JTextField(cu == null ? "0" : String.valueOf(cu.minX), 6);
+        JTextField fMinY = new JTextField(cu == null ? "0" : String.valueOf(cu.minY), 6);
+        JTextField fMaxX = new JTextField(cu == null ? "24" : String.valueOf(cu.maxX), 6);
+        JTextField fMaxY = new JTextField(cu == null ? "288" : String.valueOf(cu.maxY), 6);
+        JTextField fToiMap = new JTextField(cu == null ? "0" : String.valueOf(cu.toiMap), 6);
+        JTextField fToiX = new JTextField(cu == null ? "100" : String.valueOf(cu.toiX), 6);
+        JTextField fToiY = new JTextField(cu == null ? "288" : String.valueOf(cu.toiY), 6);
+        javax.swing.JCheckBox cbVao = new javax.swing.JCheckBox("Cửa vào",
+                cu == null || cu.vao);
+        javax.swing.JCheckBox cbNgoai = new javax.swing.JCheckBox("Chỉ ngoại tuyến",
+                cu != null && cu.ngoaiTuyen);
+
+        JPanel form = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(4, 6, 4, 6);
+        c.anchor = GridBagConstraints.WEST;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        int y = 0;
+        addRow(form, c, y++, "Tên cổng:", fTen);
+        addRow(form, c, y++, "Vùng chạm x từ:", fMinX);
+        addRow(form, c, y++, "y từ:", fMinY);
+        addRow(form, c, y++, "x đến:", fMaxX);
+        addRow(form, c, y++, "y đến:", fMaxY);
+        addRow(form, c, y++, "Tới bản đồ (id):", fToiMap);
+        addRow(form, c, y++, "Toạ độ tới x:", fToiX);
+        addRow(form, c, y++, "y:", fToiY);
+        form.add(cbVao, c);
+        c.gridy = y + 1;
+        form.add(cbNgoai, c);
+
+        if (JOptionPane.showConfirmDialog(this, form,
+                them ? "Thêm cổng" : "Sửa cổng", JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
+            return;
+        }
+        MapShopDAO.Cong moi = (cu == null) ? new MapShopDAO.Cong() : cu;
+        moi.ten = fTen.getText().trim();
+        moi.minX = soAnToan(fMinX.getText());
+        moi.minY = soAnToan(fMinY.getText());
+        moi.maxX = soAnToan(fMaxX.getText());
+        moi.maxY = soAnToan(fMaxY.getText());
+        moi.toiMap = soAnToan(fToiMap.getText());
+        moi.toiX = soAnToan(fToiX.getText());
+        moi.toiY = soAnToan(fToiY.getText());
+        moi.vao = cbVao.isSelected();
+        moi.ngoaiTuyen = cbNgoai.isSelected();
+        if (them) {
+            dsCong.add(moi);
+        }
+        String loi = MapShopDAO.luuCongMap(m.id, dsCong);
+        if (loi != null) {
+            note(WARN_RED, loi);
+            return;
+        }
+        loadCong();
+        note(OK_GREEN, "Đã lưu cổng của bản đồ " + m.name
+                + " — người chơi vào lại bản đồ là thấy.");
+    }
+
+    private void xoaCong() {
+        MapShopDAO.MapRow m = mapDangChon();
+        int dong = congTable.getSelectedRow();
+        if (m == null || dong < 0) {
+            note(WARN_RED, "Chọn một cổng trước.");
+            return;
+        }
+        dsCong.remove(congTable.convertRowIndexToModel(dong));
+        String loi = MapShopDAO.luuCongMap(m.id, dsCong);
+        if (loi != null) {
+            note(WARN_RED, loi);
+            return;
+        }
+        loadCong();
+        note(OK_GREEN, "Đã xoá cổng.");
+    }
+
+    /**
+     * Nối bản đồ đang chọn với một bản đồ khác, <b>cả hai chiều</b>.
+     *
+     * <p>Cổng một chiều là lỗi hay gặp nhất khi khai tay: đi sang được mà không
+     * về được. Nút này tạo luôn cặp cổng đối xứng — bên này ở mép phải, bên kia ở
+     * mép trái — rồi ghi cho cả hai bản đồ.</p>
+     */
+    private void noiHaiChieu() {
+        MapShopDAO.MapRow m = mapDangChon();
+        if (m == null) {
+            note(WARN_RED, "Chọn một bản đồ trước.");
+            return;
+        }
+        JTextField fToi = new JTextField("0", 6);
+        JTextField fTen1 = new JTextField("", 18);
+        JTextField fTen2 = new JTextField("", 18);
+        JPanel form = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(4, 6, 4, 6);
+        c.anchor = GridBagConstraints.WEST;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        int y = 0;
+        addRow(form, c, y++, "Nối với bản đồ (id):", fToi);
+        addRow(form, c, y++, "Tên cổng bên này:", fTen1);
+        addRow(form, c, y++, "Tên cổng bên kia:", fTen2);
+        if (JOptionPane.showConfirmDialog(this, form, "Nối hai chiều",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
+            return;
+        }
+        int idKia = soAnToan(fToi.getText());
+        MapShopDAO.MapRow kia = null;
+        for (MapShopDAO.MapRow x : dsMap) {
+            if (x.id == idKia) {
+                kia = x;
+                break;
+            }
+        }
+        if (kia == null) {
+            note(WARN_RED, "Không có bản đồ id " + idKia + ".");
+            return;
+        }
+        String ten1 = fTen1.getText().trim();
+        String ten2 = fTen2.getText().trim();
+        if (ten1.isEmpty()) {
+            ten1 = String.valueOf(kia.name);
+        }
+        if (ten2.isEmpty()) {
+            ten2 = String.valueOf(m.name);
+        }
+        // Ben nay dat cong o MEP PHAI, ben kia dat o MEP TRAI, va cho nhau doi
+        // dien nhau — di sang la dung ngay canh cong tro ve.
+        List<MapShopDAO.Cong> ben1 = MapShopDAO.congCuaMap(m.id);
+        MapShopDAO.Cong c1 = new MapShopDAO.Cong();
+        c1.ten = ten1;
+        c1.minX = 0;
+        c1.minY = 0;
+        c1.maxX = 24;
+        c1.maxY = 400;
+        c1.vao = true;
+        c1.toiMap = kia.id;
+        c1.toiX = 700;
+        c1.toiY = 288;
+        ben1.add(c1);
+        String loi = MapShopDAO.luuCongMap(m.id, ben1);
+        if (loi != null) {
+            note(WARN_RED, loi);
+            return;
+        }
+        List<MapShopDAO.Cong> ben2 = MapShopDAO.congCuaMap(kia.id);
+        MapShopDAO.Cong c2 = new MapShopDAO.Cong();
+        c2.ten = ten2;
+        c2.minX = 700;
+        c2.minY = 0;
+        c2.maxX = 760;
+        c2.maxY = 400;
+        c2.vao = true;
+        c2.toiMap = m.id;
+        c2.toiX = 60;
+        c2.toiY = 288;
+        ben2.add(c2);
+        loi = MapShopDAO.luuCongMap(kia.id, ben2);
+        if (loi != null) {
+            note(WARN_RED, loi);
+            return;
+        }
+        loadCong();
+        note(OK_GREEN, "Đã nối " + m.name + " ↔ " + kia.name
+                + ". Soát lại vùng chạm và toạ độ tới cho khớp bản đồ thật.");
+    }
+
+    /**
+     * Soát cổng của toàn bộ bản đồ và kể ra chỗ hỏng.
+     *
+     * <p>Ba loại lỗi, xếp theo mức nặng:</p>
+     *
+     * <ul>
+     *   <li><b>Không có cổng nào</b> — vào rồi không ra được, trừ khi có NPC
+     *       dịch chuyển đứng sẵn ở đó.</li>
+     *   <li><b>Cổng trỏ tới bản đồ không tồn tại</b> — bấm vào là lỗi.</li>
+     *   <li><b>Một chiều</b> — sang được mà không về được.</li>
+     * </ul>
+     */
+    private void soatCong() {
+        StringBuilder sb = new StringBuilder();
+        java.util.Map<Integer, List<MapShopDAO.Cong>> bang
+                = new java.util.LinkedHashMap<>();
+        for (MapShopDAO.MapRow m : dsMap) {
+            bang.put(m.id, MapShopDAO.congCuaMap(m.id));
+        }
+        int soLoi = 0;
+        for (MapShopDAO.MapRow m : dsMap) {
+            List<MapShopDAO.Cong> ds = bang.get(m.id);
+            if (ds.isEmpty()) {
+                sb.append("• [").append(m.id).append("] ").append(m.name)
+                        .append(" — KHÔNG có cổng nào\n");
+                soLoi++;
+                continue;
+            }
+            for (MapShopDAO.Cong c : ds) {
+                List<MapShopDAO.Cong> kia = bang.get(c.toiMap);
+                if (kia == null) {
+                    sb.append("• [").append(m.id).append("] ").append(m.name)
+                            .append(" — cổng \"").append(c.ten)
+                            .append("\" trỏ tới bản đồ ").append(c.toiMap)
+                            .append(" không tồn tại\n");
+                    soLoi++;
+                    continue;
+                }
+                boolean coDuong = false;
+                for (MapShopDAO.Cong v : kia) {
+                    if (v.toiMap == m.id) {
+                        coDuong = true;
+                        break;
+                    }
+                }
+                if (!coDuong) {
+                    sb.append("• [").append(m.id).append("] ").append(m.name)
+                            .append(" → [").append(c.toiMap).append("] ")
+                            .append(tenMap(c.toiMap))
+                            .append(" — MỘT CHIỀU, bên kia không có đường về\n");
+                    soLoi++;
+                }
+            }
+        }
+        if (soLoi == 0) {
+            note(OK_GREEN, "Soát xong: không bản đồ nào thiếu cổng.");
+            JOptionPane.showMessageDialog(this,
+                    "Không bản đồ nào thiếu cổng.", "Soát cổng",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        javax.swing.JTextArea ta = new javax.swing.JTextArea(sb.toString(), 24, 70);
+        ta.setEditable(false);
+        ta.setFont(new Font("Consolas", Font.PLAIN, 12));
+        JOptionPane.showMessageDialog(this, ServerGuiUtils.cuon(ta),
+                "Soát cổng — " + soLoi + " chỗ cần xem",
+                JOptionPane.WARNING_MESSAGE);
+        note(WARN_RED, "Soát xong: " + soLoi + " chỗ cần xem.");
+    }
+
+    private static int soAnToan(String raw) {
+        try {
+            return Integer.parseInt(raw.trim());
+        } catch (Exception boQua) {
+            return 0;
+        }
     }
 
     // =====================================================================

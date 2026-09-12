@@ -99,6 +99,170 @@ public class MapShopDAO {
     }
 
     /** NPC đứng trên một bản đồ, đọc từ cột {@code npcs}. */
+    // =====================================================================
+    //  Cổng dịch chuyển giữa các bản đồ
+    // =====================================================================
+
+    /**
+     * Một cổng dịch chuyển trên bản đồ.
+     *
+     * <p>Đọc từ cột <code>map_template.waypoints</code>, mỗi cổng là một mảng mười
+     * phần tử: tên, vùng chạm (minX, minY, maxX, maxY), có phải cửa vào không,
+     * có phải cổng ngoại tuyến không, rồi bản đồ và toạ độ nơi tới.</p>
+     */
+    public static final class Cong {
+
+        public String ten = "";
+        public int minX;
+        public int minY;
+        public int maxX;
+        public int maxY;
+        /** Cổng vào (người chơi bấm mũi tên lên để đi). */
+        public boolean vao = true;
+        /** Cổng chỉ dùng cho chế độ ngoại tuyến. */
+        public boolean ngoaiTuyen;
+        public int toiMap;
+        public int toiX;
+        public int toiY;
+    }
+
+    /**
+     * Đọc danh sách cổng của một bản đồ.
+     *
+     * <p>Chuỗi trong CSDL có hai dạng: dạng chuẩn
+     * <code>[["Tên",0,264,20,288,1,0,5,100,288]]</code> và dạng cũ bọc thêm dấu nháy
+     * quanh từng cổng. Bộ nạp của máy chủ gỡ dấu nháy bằng mấy phép thay chuỗi
+     * trước khi đọc, nên ở đây làm y như vậy — đọc lệch một dạng là bảng hiện ra
+     * rỗng trong khi bản đồ vẫn có cổng.</p>
+     */
+    public static List<Cong> congCuaMap(int mapId) {
+        List<Cong> out = new ArrayList<>();
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery(
+                    "SELECT waypoints FROM map_template WHERE id = ?", mapId);
+            if (!rs.next()) {
+                return out;
+            }
+            String raw = rs.getString("waypoints");
+            if (raw == null || raw.trim().isEmpty()) {
+                return out;
+            }
+            raw = raw.replaceAll("\\[\"\\[", "[[")
+                    .replaceAll("\\]\"\\]", "]]")
+                    .replaceAll("\",\"", ",");
+            Object o = org.json.simple.JSONValue.parse(raw);
+            if (!(o instanceof org.json.simple.JSONArray)) {
+                return out;
+            }
+            for (Object p : (org.json.simple.JSONArray) o) {
+                if (!(p instanceof org.json.simple.JSONArray)) {
+                    continue;
+                }
+                org.json.simple.JSONArray a = (org.json.simple.JSONArray) p;
+                if (a.size() < 10) {
+                    continue;
+                }
+                try {
+                    Cong c = new Cong();
+                    c.ten = String.valueOf(a.get(0));
+                    c.minX = Integer.parseInt(String.valueOf(a.get(1)).trim());
+                    c.minY = Integer.parseInt(String.valueOf(a.get(2)).trim());
+                    c.maxX = Integer.parseInt(String.valueOf(a.get(3)).trim());
+                    c.maxY = Integer.parseInt(String.valueOf(a.get(4)).trim());
+                    c.vao = Integer.parseInt(String.valueOf(a.get(5)).trim()) == 1;
+                    c.ngoaiTuyen = Integer.parseInt(String.valueOf(a.get(6)).trim()) == 1;
+                    c.toiMap = Integer.parseInt(String.valueOf(a.get(7)).trim());
+                    c.toiX = Integer.parseInt(String.valueOf(a.get(8)).trim());
+                    c.toiY = Integer.parseInt(String.valueOf(a.get(9)).trim());
+                    out.add(c);
+                } catch (NumberFormatException boQua) {
+                    // Dong hong trong du lieu cu — bo qua, khong lam vo ca bang.
+                }
+            }
+        } catch (Exception ex) {
+            Logger.logException(MapShopDAO.class, ex,
+                    "Lỗi đọc cổng của bản đồ " + mapId);
+        } finally {
+            dispose(rs);
+        }
+        return out;
+    }
+
+    /**
+     * Ghi lại danh sách cổng của một bản đồ, rồi áp vào máy chủ đang chạy.
+     *
+     * <p>Ghi ra <b>dạng chuẩn</b> (không bọc nháy) — bộ nạp đọc được cả hai dạng
+     * nên không cần giữ dạng cũ.</p>
+     */
+    public static String luuCongMap(int mapId, List<Cong> ds) {
+        StringBuilder sb = new StringBuilder("[");
+        for (Cong c : ds) {
+            if (sb.length() > 1) {
+                sb.append(',');
+            }
+            sb.append('[').append(org.json.simple.JSONValue.toJSONString(
+                    c.ten == null ? "" : c.ten))
+                    .append(',').append(c.minX)
+                    .append(',').append(c.minY)
+                    .append(',').append(c.maxX)
+                    .append(',').append(c.maxY)
+                    .append(',').append(c.vao ? 1 : 0)
+                    .append(',').append(c.ngoaiTuyen ? 1 : 0)
+                    .append(',').append(c.toiMap)
+                    .append(',').append(c.toiX)
+                    .append(',').append(c.toiY)
+                    .append(']');
+        }
+        sb.append(']');
+        try {
+            ConnectDB.executeUpdate(
+                    "UPDATE map_template SET waypoints = ? WHERE id = ?",
+                    sb.toString(), mapId);
+            apDungCong(mapId, ds);
+            return null;
+        } catch (Exception ex) {
+            Logger.logException(MapShopDAO.class, ex,
+                    "Lỗi lưu cổng của bản đồ " + mapId);
+            return "Lỗi ghi CSDL: " + ex.getMessage();
+        }
+    }
+
+    /**
+     * Áp danh sách cổng vào bản đồ <b>đang chạy</b>, khỏi khởi động lại.
+     *
+     * <p>Người chơi thấy cổng mới ở lần vào bản đồ kế tiếp: danh sách cổng được
+     * gửi kèm gói thông tin bản đồ lúc bước vào, chứ không cập nhật cho người
+     * đang đứng sẵn trong đó.</p>
+     */
+    public static void apDungCong(int mapId, List<Cong> ds) {
+        try {
+            nro.entity.map.Map map = nro.service.MapService.gI().getMapById(mapId);
+            if (map == null) {
+                return;
+            }
+            List<nro.entity.map.WayPoint> moi = new ArrayList<>();
+            for (Cong c : ds) {
+                nro.entity.map.WayPoint wp = new nro.entity.map.WayPoint();
+                wp.name = c.ten;
+                wp.minX = (short) c.minX;
+                wp.minY = (short) c.minY;
+                wp.maxX = (short) c.maxX;
+                wp.maxY = (short) c.maxY;
+                wp.isEnter = c.vao;
+                wp.isOffline = c.ngoaiTuyen;
+                wp.goMap = (short) c.toiMap;
+                wp.goX = (short) c.toiX;
+                wp.goY = (short) c.toiY;
+                moi.add(wp);
+            }
+            map.wayPoints.clear();
+            map.wayPoints.addAll(moi);
+        } catch (Exception boQua) {
+            // Luc khoi dong ban do chua dung — lan nap sau se doc tu CSDL.
+        }
+    }
+
     public static List<NpcTren> npcTrenMap(String npcsJson) {
         List<NpcTren> out = new ArrayList<>();
         Object o = org.json.simple.JSONValue.parse(npcsJson);
