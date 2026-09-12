@@ -6980,6 +6980,7 @@ namespace Game2
             {
                 g.translate(-cmx, 0);
             }
+            veRanhTab(g, startTabPos, currentTabName.Length);
             for (int i = 0; i < currentTabName.Length; i++)
             {
                 veTheTab(g, startTabPos + i * TAB_W, TAB_W - 1,
@@ -7005,7 +7006,8 @@ namespace Game2
                     g.drawImage(ItemMap.imageFlare, startTabPos + 3 * TAB_W + TAB_W / 2, 77, mGraphics.BOTTOM | mGraphics.HCENTER);
                 }
             }
-            veVachDuoiTab(g);
+            // Khong ke ngan o day: cai ranh tab da lam xong viec ngan cach, ve
+            // them mot duong nua la quay ve dung kieu bang cu.
         }
     
         private void paintBottomMoneyInfo(mGraphics g)
@@ -7441,10 +7443,39 @@ namespace Game2
             g.fillRect(X + 3, Y + 30, W - 6, 19);
             g.setColor(0xFFE2B8, 0.55f);
             g.fillRect(X + 4, Y + 4, W - 8, 2, 2);
+            // Tam nen loi thoai: mot the sang nam ben phai huy hieu, de chu
+            // khong phai doc trung tren mang cam.
+            g.setColor(MAU_VIEN_BANG, 0.35f);
+            g.fillRect(X + 48, Y + 7, W - 56, 37, 7);
+            g.setColor(0xFFF3DC, 0.92f);
+            g.fillRect(X + 49, Y + 8, W - 58, 35, 6);
+            veHuyHieuAvatar(g);
             g.setColor(MAU_VIEN_BANG, 0.85f);
             g.fillRect(X + 3, Y + 49, W - 6, 1);
             g.setColor(0xFFE9A3, 0.7f);
             g.fillRect(X + 3, Y + 50, W - 6, 1);
+        }
+
+        /// <summary>Huy hiệu tròn ôm lấy mặt NPC.</summary>
+        /// <remarks>
+        /// <para>Mặt NPC được vẽ ở (X+25, 50) bởi từng nhánh của
+        /// <c>paintTopInfo</c>. Huy hiệu này vẽ TRƯỚC, đúng chỗ ấy, nên mặt nằm
+        /// lọt trong một vòng tròn có viền thay vì dán thẳng lên dải cam.</para>
+        ///
+        /// <para>Ba lớp: viền nâu, vành sáng, rồi lòng kem. Vành sáng là thứ làm
+        /// huy hiệu nổi khối — thiếu nó thì nhìn chỉ là một chấm tròn dẹt.</para>
+        /// </remarks>
+        private void veHuyHieuAvatar(mGraphics g)
+        {
+            int r = 21;
+            int x = X + 25 - r;
+            int y = Y + 26 - r;
+            g.setColor(MAU_VIEN_BANG, 0.95f);
+            g.fillRect(x, y, r * 2, r * 2, r);
+            g.setColor(0xFFE9A3, 0.9f);
+            g.fillRect(x + 1, y + 1, r * 2 - 2, r * 2 - 2, r - 1);
+            g.setColor(0xF6E7CC, 1f);
+            g.fillRect(x + 3, y + 3, r * 2 - 6, r * 2 - 6, r - 3);
         }
 
         /// <summary>
@@ -7455,20 +7486,41 @@ namespace Game2
         /// với vùng nội dung thay vì nằm rời phía trên một đường kẻ — đó là chỗ
         /// mắt đọc ra "thẻ này đang mở".
         /// </remarks>
+        /// <summary>
+        /// Rãnh chứa cả hàng thẻ — hàng tab là <b>một dải liền</b> chứ không
+        /// phải mấy cái hộp rời.
+        /// </summary>
+        /// <remarks>
+        /// Kiểu "thanh gạt": một rãnh lõm màu kem sẫm, thẻ đang chọn là viên
+        /// thuốc cam trượt trong rãnh ấy. Khác hẳn hàng hộp vuông xếp cạnh nhau
+        /// của bản gốc, và cũng không cần đường kẻ ngăn bên dưới nữa.
+        /// </remarks>
+        private void veRanhTab(mGraphics g, int x, int soThe)
+        {
+            int w = soThe * TAB_W + 4;
+            g.setColor(MAU_VIEN_MO, 0.45f);
+            g.fillRect(x - 4, 50, w, 30, 15);
+            g.setColor(0xEBD7B8, 1f);
+            g.fillRect(x - 3, 51, w - 2, 28, 14);
+            g.setColor(MAU_VIEN_MO, 0.18f);
+            g.fillRect(x - 3, 51, w - 2, 3, 2);
+        }
+
+        /// <summary>Viên thuốc của thẻ đang chọn; thẻ khác không vẽ nền.</summary>
         private void veTheTab(mGraphics g, int x, int w, bool chon)
         {
-            int y = 52;
-            int h = 26;
-            g.setColor(MAU_VIEN_BANG, chon ? 0.95f : 0.4f);
-            g.fillRect(x, y, w, h, 6);
-            g.setColor(chon ? MAU_THE_CHON : MAU_NEN_SANG, chon ? 1f : 0.8f);
-            g.fillRect(x + 1, y + 1, w - 2, h - 2, 5);
-            if (chon)
+            if (!chon)
             {
-                g.fillRect(x + 3, y + h - 4, w - 6, 8);
-                g.setColor(0xFFF3DC, 0.85f);
-                g.fillRect(x + 3, y + 2, w - 6, 2, 2);
+                return;
             }
+            int y = 53;
+            int h = 24;
+            g.setColor(MAU_VIEN_BANG, 0.9f);
+            g.fillRect(x, y, w, h, 12);
+            g.setColor(MAU_THE_CHON, 1f);
+            g.fillRect(x + 1, y + 1, w - 2, h - 2, 11);
+            g.setColor(0xFFE2B8, 0.75f);
+            g.fillRect(x + 4, y + 2, w - 8, 3, 2);
         }
 
         /// <summary>Dải tiền ở đáy bảng: nền cam nhạt bo góc, hai nét ngăn trên.</summary>
