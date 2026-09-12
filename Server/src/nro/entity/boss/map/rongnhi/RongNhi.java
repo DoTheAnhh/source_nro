@@ -42,14 +42,24 @@ public class RongNhi extends Boss {
     private static final int NHIP_THAI_DUONG = 15_000;
 
     /**
-     * Tên hành tinh rồng nhí không bay tới.
+     * Danh sách bản đồ <b>thường</b> của ba hành tinh gốc.
      *
-     * <p>Lọc theo <b>tên</b> chứ không theo số hành tinh: mấy khu này nằm rải ở
-     * nhiều số hành tinh khác nhau tuỳ bản dữ liệu, còn tên thì cố định.</p>
+     * <h3>Vì sao là danh sách trắng chứ không phải danh sách cấm</h3>
+     *
+     * <p>Bản trước lọc bằng cách loại tên hành tinh phụ (Cold, Tương Lai,
+     * Fide...). Cách ấy sai ở chỗ nó <b>mặc định cho phép</b>: khu nào không
+     * nằm trong danh sách cấm là rồng bay tới, nên Nappa, Hành Tinh Chết, và
+     * mọi bản đồ sự kiện thêm sau này đều lọt lưới.</p>
+     *
+     * <p>Danh sách này là đúng bộ bản đồ thường mà boss lang thang vẫn dùng —
+     * cùng danh sách của Ăn Trộm. Thêm bản đồ mới thì mặc định rồng KHÔNG bay
+     * tới, muốn có thì khai thêm ở đây.</p>
      */
-    private static final String[] NOI_CAM = {
-        "cold", "tương lai", "tuong lai", "fide", "ngục tù", "nguc tu",
-        "thực vật", "thuc vat", "địa ngục", "dia nguc", "cereal", "xereal"
+    private static final int[] MAP_THUONG = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+        27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38,
+        63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77,
+        79, 80, 81, 82, 83, 84
     };
 
     private long lucThaiDuongCuoi;
@@ -82,19 +92,20 @@ public class RongNhi extends Boss {
     }
 
     private boolean laMapThuong(nro.entity.map.Map m) {
-        if (m.planetId < 0 || m.planetId > 2) {
-            return false;
-        }
-        if (MapService.gI().isMapNoNottify(m.mapId) || MapService.gI().isHome(m.mapId)) {
-            return false;
-        }
-        String ten = (m.mapName == null) ? "" : m.mapName.toLowerCase();
-        for (String c : NOI_CAM) {
-            if (ten.contains(c)) {
-                return false;
+        boolean coTrongDanhSach = false;
+        for (int id : MAP_THUONG) {
+            if (id == m.mapId) {
+                coTrongDanhSach = true;
+                break;
             }
         }
-        return true;
+        if (!coTrongDanhSach) {
+            return false;
+        }
+        // Luoi chan them: bản đồ trong danh sách mà đang bị dùng làm phó bản hay
+        // map riêng tư thì vẫn bỏ qua.
+        return !MapService.gI().isMapNoNottify(m.mapId)
+                && !MapService.gI().isHome(m.mapId);
     }
 
     /**

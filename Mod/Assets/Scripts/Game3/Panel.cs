@@ -7396,7 +7396,10 @@ namespace Game3
         /// <summary>Nâu nhạt hơn, dùng cho nét viền phụ.</summary>
         private const int MAU_VIEN_MO = 0x8B623A;
 
-        /// <summary>Cam của dải đầu bảng.</summary>
+        /// <summary>Nền sáng của dải đầu — chữ của NPC nằm trên nền này.</summary>
+        private const int MAU_NEN_DAU = 0xFBEFD8;
+
+        /// <summary>Cam của dải tiền ở đáy bảng.</summary>
         private const int MAU_DAI_DAU = 0xE0A56A;
 
         /// <summary>Cam sáng của thẻ tab đang chọn.</summary>
@@ -7436,46 +7439,27 @@ namespace Game3
         /// </remarks>
         private void veDaiDau(mGraphics g)
         {
-            g.setColor(MAU_DAI_DAU, 1f);
+            // Dải đầu để TRỐNG, không vẽ gì nằm dưới chữ.
+            //
+            // Vùng này là chỗ các nhánh của paintTopInfo vẽ mặt NPC và chữ ở
+            // những toạ độ cố định mà hàm này không biết trước: có nhánh ghi tên
+            // món, có nhánh ghi lời thoại, có nhánh ghi chỉ số nhân vật. Bản
+            // trước thêm một huy hiệu tròn và một tấm nền lời thoại vào đây, thế
+            // là chữ và mặt NPC đè lên nhau — đúng lỗi đã thấy.
+            //
+            // Nền sáng và một nét cam ở đáy là đủ để tách dải đầu khỏi phần dưới,
+            // mà không tranh chỗ với bất kỳ thứ gì.
+            g.setColor(MAU_NEN_DAU, 1f);
             g.fillRect(X + 3, Y + 3, W - 6, 44, 6);
-            // Nua duoi vuong goc: bo goc ca bon phia thi dai nhin nhu mot vien
-            // thuoc troi giua khung.
             g.fillRect(X + 3, Y + 30, W - 6, 19);
-            g.setColor(0xFFE2B8, 0.55f);
+            g.setColor(0xFFFFFF, 0.45f);
             g.fillRect(X + 4, Y + 4, W - 8, 2, 2);
-            // Tam nen loi thoai: mot the sang nam ben phai huy hieu, de chu
-            // khong phai doc trung tren mang cam.
-            g.setColor(MAU_VIEN_BANG, 0.35f);
-            g.fillRect(X + 48, Y + 7, W - 56, 37, 7);
-            g.setColor(0xFFF3DC, 0.92f);
-            g.fillRect(X + 49, Y + 8, W - 58, 35, 6);
-            veHuyHieuAvatar(g);
-            g.setColor(MAU_VIEN_BANG, 0.85f);
-            g.fillRect(X + 3, Y + 49, W - 6, 1);
-            g.setColor(0xFFE9A3, 0.7f);
+            // Nét cam dày ở đáy: đây là màu nhận dạng của bảng, thay cho đường kẻ
+            // xám mảnh của bản gốc.
+            g.setColor(MAU_THE_CHON, 0.95f);
+            g.fillRect(X + 3, Y + 47, W - 6, 3);
+            g.setColor(MAU_VIEN_MO, 0.5f);
             g.fillRect(X + 3, Y + 50, W - 6, 1);
-        }
-
-        /// <summary>Huy hiệu tròn ôm lấy mặt NPC.</summary>
-        /// <remarks>
-        /// <para>Mặt NPC được vẽ ở (X+25, 50) bởi từng nhánh của
-        /// <c>paintTopInfo</c>. Huy hiệu này vẽ TRƯỚC, đúng chỗ ấy, nên mặt nằm
-        /// lọt trong một vòng tròn có viền thay vì dán thẳng lên dải cam.</para>
-        ///
-        /// <para>Ba lớp: viền nâu, vành sáng, rồi lòng kem. Vành sáng là thứ làm
-        /// huy hiệu nổi khối — thiếu nó thì nhìn chỉ là một chấm tròn dẹt.</para>
-        /// </remarks>
-        private void veHuyHieuAvatar(mGraphics g)
-        {
-            int r = 21;
-            int x = X + 25 - r;
-            int y = Y + 26 - r;
-            g.setColor(MAU_VIEN_BANG, 0.95f);
-            g.fillRect(x, y, r * 2, r * 2, r);
-            g.setColor(0xFFE9A3, 0.9f);
-            g.fillRect(x + 1, y + 1, r * 2 - 2, r * 2 - 2, r - 1);
-            g.setColor(0xF6E7CC, 1f);
-            g.fillRect(x + 3, y + 3, r * 2 - 6, r * 2 - 6, r - 3);
         }
 
         /// <summary>
