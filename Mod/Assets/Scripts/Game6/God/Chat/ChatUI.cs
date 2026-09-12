@@ -60,6 +60,107 @@ namespace Game6.God
         private static readonly string[] TEN_THE =
                 { "Tất cả", "H.thống", "T.giới", "Map", "Khu", "Bang" };
 
+        /// <summary>Thẻ nào đang có tin chưa đọc — để nháy báo.</summary>
+        private readonly bool[] tinMoi = new bool[TEN_THE.Length];
+
+        /// <summary>
+        /// Đánh dấu thẻ có tin chưa đọc, cho thẻ và nút Chat nháy.
+        /// </summary>
+        /// <remarks>
+        /// Chỉ bốn kênh người chơi nói với nhau: Thế giới, Map, Khu, Bang. Tin
+        /// hệ thống chạy suốt ngày, cho nháy thì nút Chat nháy mãi và hết nghĩa.
+        /// Thẻ đang mở sẵn thì coi như đọc rồi, không nháy.
+        /// </remarks>
+        private void danhDauTinMoi(int kenh)
+        {
+            if (kenh != KENH_THE_GIOI && kenh != KENH_MAP
+                    && kenh != KENH_KHU && kenh != KENH_BANG)
+            {
+                return;
+            }
+            if (dangXem(kenh))
+            {
+                return;
+            }
+            tinMoi[kenh] = true;
+            if (!dangXem(KENH_TAT_CA))
+            {
+                tinMoi[KENH_TAT_CA] = true;
+            }
+        }
+
+        /// <summary>Người chơi đang nhìn thẳng vào thẻ này.</summary>
+        private bool dangXem(int kenh)
+        {
+            return !thuGon && choHien() && theChon == kenh;
+        }
+
+        /// <summary>Xem thẻ nào thì thẻ đó hết nháy; xem "Tất cả" thì hết sạch.</summary>
+        private void danhDauDaDoc(int the)
+        {
+            if (the < 0 || the >= tinMoi.Length)
+            {
+                return;
+            }
+            if (the == KENH_TAT_CA)
+            {
+                for (int i = 0; i < tinMoi.Length; i++)
+                {
+                    tinMoi[i] = false;
+                }
+                return;
+            }
+            tinMoi[the] = false;
+            for (int i = 0; i < tinMoi.Length; i++)
+            {
+                if (i != KENH_TAT_CA && tinMoi[i])
+                {
+                    return;
+                }
+            }
+            tinMoi[KENH_TAT_CA] = false;
+        }
+
+        /// <summary>Còn tin chưa đọc ở kênh nào không — nút Chat trên HUD nháy theo.</summary>
+        public static bool coTinChuaDoc()
+        {
+            ChatUI c = instance;
+            if (c == null)
+            {
+                return false;
+            }
+            for (int i = 0; i < c.tinMoi.Length; i++)
+            {
+                if (c.tinMoi[i])
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>Nhịp nháy dùng chung cho thẻ và nút Chat.</summary>
+        public static bool nhipNhay()
+        {
+            return GameCanvas.gameTick % 16 < 9;
+        }
+
+        /// <summary>
+        /// Tin báo boss — chạy ở dải băng trên đầu rồi, không đổ vào khung chat.
+        /// </summary>
+        /// <remarks>
+        /// Boss lên xuống liên tục, mỗi lượt vài dòng; để vào khung thì tin của
+        /// người chơi bị đẩy khuất chỉ sau vài giây.
+        /// </remarks>
+        private static bool laTinBoss(string chu)
+        {
+            if (chu == null)
+            {
+                return false;
+            }
+            return chu.ToLower().Contains("boss");
+        }
+
         private class Dong
         {
             public readonly int kenh;
@@ -279,6 +380,10 @@ namespace Game6.God
             // Truoc day doan theo tien to "(He thong)", nen nhung thong bao
             // khong co tien to do — vi du cau chao khi vao game — bi xep nham
             // sang the The gioi.
+            if (laTinBoss(chu))
+            {
+                return;
+            }
             them(KENH_HE_THONG, null, chu);
         }
 
@@ -298,6 +403,10 @@ namespace Game6.God
             bool laMinh = ten != null && Char.myCharz() != null
                     && ten == Char.myCharz().cName;
             nhatKy.Add(new Dong(kenh, ten, chu, laMinh));
+            if (!laMinh)
+            {
+                danhDauTinMoi(kenh);
+            }
             while (nhatKy.Count > TOI_DA_DONG)
             {
                 nhatKy.RemoveAt(0);
@@ -550,6 +659,9 @@ namespace Game6.God
                 return;
             }
 
+            // Khung dang mo o the nao thi the do coi nhu da doc.
+            danhDauDaDoc(theChon);
+
             int xK = xKhung();
             int yK = yKhung();
             int wK = rongKhung();
@@ -611,6 +723,12 @@ namespace Game6.God
                 (chon ? mFont.tahoma_7b_dark : mFont.tahoma_7b_white)
                         .drawString(g, TEN_THE[i], xT + (RONG_THE - 2) / 2,
                                 yK + 4, mFont.CENTER);
+                if (tinMoi[i] && nhipNhay())
+                {
+                    // Cham do goc the: nhin luot ca dai la biet the nao co tin moi.
+                    g.setColor(0xFF4A3C, 1f);
+                    g.fillRect(xT + RONG_THE - 9, yK + 5, 5, 5, 3);
+                }
                 oThe[i] = new int[] { xT, yK + 3, RONG_THE - 2, CAO_THE };
             }
             g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
@@ -760,17 +878,34 @@ namespace Game6.God
                 {
                     continue;
                 }
+                // O the "Tat ca" thi ghi kem ten kenh o dau dong: [Map] Ten: chu.
+                // Khong co no thi ba kenh tron lan nhau, doc khong biet tin nao
+                // cua dau.
+                string tenHien = d.ten;
+                string chuHien = d.chu;
+                if (theChon == KENH_TAT_CA)
+                {
+                    string nhanKenh = "[" + TEN_THE[d.kenh] + "] ";
+                    if (tenHien != null)
+                    {
+                        tenHien = nhanKenh + tenHien;
+                    }
+                    else
+                    {
+                        chuHien = nhanKenh + chuHien;
+                    }
+                }
                 // Ngat dong theo be rong CON LAI sau ten: dong dau bi ten chiem
                 // mat mot doan, ngat theo be rong day du thi dong do tran vien.
-                int truTen = (d.ten == null) ? 0
-                        : fontTen(d.laMinh).getWidth(d.ten + ": ");
-                string[] a = mFont.tahoma_7_white.splitFontArray(d.chu,
+                int truTen = (tenHien == null) ? 0
+                        : fontTen(d.laMinh).getWidth(tenHien + ": ");
+                string[] a = mFont.tahoma_7_white.splitFontArray(chuHien,
                         rongChu - truTen);
                 for (int j = 0; j < a.Length; j++)
                 {
                     DongVe v = new DongVe();
                     v.chu = a[j];
-                    v.ten = (j == 0) ? d.ten : null;
+                    v.ten = (j == 0) ? tenHien : null;
                     v.laMinh = d.laMinh;
                     ds.Add(v);
                 }
@@ -963,6 +1098,7 @@ namespace Game6.God
                         cuon = 0;
                     }
                     theChon = i;
+                    danhDauDaDoc(i);
                     return true;
                 }
             }

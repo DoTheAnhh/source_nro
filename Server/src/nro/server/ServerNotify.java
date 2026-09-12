@@ -16,7 +16,11 @@ public class ServerNotify extends Thread {
 
     private int indexNotify;
 
-    private final String notify[] = {"Chúc các bạn chơi game vui vẻ!"};
+    /**
+     * Câu phát lại mỗi phút. Để trống là tắt hẳn — câu "Chúc các bạn chơi game
+     * vui vẻ!" cứ một phút một lần đẩy tin của người chơi ra khỏi khung chat.
+     */
+    private final String notify[] = {};
 
     private static ServerNotify instance;
 
@@ -36,7 +40,7 @@ public class ServerNotify extends Thread {
     public void run() {
         while (!Maintenance.isRunning) {
             try {
-                if (Util.canDoWithTime(this.lastNotifyTime, 60000)) {
+                if (notify.length > 0 && Util.canDoWithTime(this.lastNotifyTime, 60000)) {
                     sendChatVip(notify[indexNotify]);
                     this.lastNotifyTime = System.currentTimeMillis();
                     indexNotify++;

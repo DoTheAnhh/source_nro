@@ -90,16 +90,9 @@ namespace Game1.God
             // Bon dong cu o day — so HP cam, so KI xanh, ten map, so khu — ve o
             // toa do co dinh (90,4) (90,17) (85,30) (85,40), dung ngay tren cho
             // khung moi dung. Ket qua la chu chong len chu, doc khong ra chu nao.
-            // Gio chi con phan khung moi KHONG lo: dong Clan cua nguoi choi dang
-            // chon, va bang ten ban do dat duoi khung.
-            if (Char.myCharz().charFocus != null
-                    && Char.myCharz().charFocus.clanID != -1)
-            {
-                mFont.tahoma_7b_red.drawStringBd(g,
-                        "Clan " + Char.myCharz().charFocus.clanID,
-                        GameCanvas.w / 2, 40, mFont.CENTER, mFont.tahoma_7_grey);
-            }
-
+            // Gio chi con bang ten ban do dat duoi khung. Dong "Clan <id>" mau
+            // do da bo han: no de len dau NPC va nguoi choi, ma id clan thi nguoi
+            // choi khong dung vao viec gi.
 
             // Hang chip trang thai nam CANH NUT BANH RANG, khong con xep doc o
             // canh trai: bat nhieu tuy chon thi cot doc do dai xuong tan hang o

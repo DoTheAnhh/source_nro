@@ -172,14 +172,14 @@ public abstract class Npc implements IAtionNpc {
                     createOtherMenu(player, ConstNpc.BASE_MENU, baseMenu.npcSay,
                             baseMenu.menuSelect);
                 } else {
-                    Message msg;
-                    msg = new Message(32);
-                    msg.writer().writeShort(idHien());
-                    msg.writer().writeUTF("Ta có thể giúp gì cho ngươi ?");
-                    msg.writer().writeByte(1);
-                    msg.writer().writeUTF("Từ chối");
-                    player.sendMessage(msg);
-                    msg.cleanup();
+                    // Menu mac dinh cung di qua createOtherMenu.
+                    //
+                    // NPC chua khai menu trong CSDL (nhu Goku SSJ o Dao Kame)
+                    // truoc day tu ghi goi 32 o day, nen KHONG nhan duoc nut
+                    // them cua panel: gan nut cho no thi trong game van chi thay
+                    // moi "Tu choi".
+                    createOtherMenu(player, ConstNpc.BASE_MENU,
+                            "Ta có thể giúp gì cho ngươi ?", "Từ chối");
                 }
             } catch (Exception e) {
                 Logger.logException(Npc.class, e);

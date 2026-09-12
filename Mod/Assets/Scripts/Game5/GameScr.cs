@@ -6793,6 +6793,12 @@ namespace Game5
     			veKhungNutNhanh(g, xC, yVe, W_CHAT, H_CHAT, dangBam);
     			int yChu = yVe + H_CHAT / 2 - mFont.tahoma_7b_yellow.getHeight() / 2
     					+ (dangBam ? 1 : 0);
+    			// Cham do nhay khi co tin chat chua doc (The gioi / Map / Khu / Bang).
+    			if (God.ChatUI.coTinChuaDoc() && God.ChatUI.nhipNhay())
+    			{
+    			    g.setColor(0xFF4A3C, 1f);
+    			    g.fillRect(xC + W_CHAT - 9, yVe + 3, 5, 5, 3);
+    			}
     			mFont.tahoma_7b_dark.drawString(g, "Chat", xC + W_CHAT / 2 + 1,
     					yChu + 1, mFont.CENTER);
     			mFont.tahoma_7b_yellow.drawString(g, "Chat", xC + W_CHAT / 2,
