@@ -3448,7 +3448,7 @@ namespace Game2
             {
                 return;
             }
-            if (isnewInventory && isTabInventory)
+            if (isnewInventory && isTabInven())
             {
                 int buoc = oTui();
                 cmtoY -= a * buoc;
