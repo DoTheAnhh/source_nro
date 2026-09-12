@@ -71,11 +71,14 @@ public class RongNhiDAO {
      * Bản gieo hiện tại.
      *
      * <p>Tăng số này khi bộ dữ liệu mặc định đổi: lần khởi động sau, máy nào
-     * còn ở bản cũ sẽ được gieo lại. Bản 1 đánh tỉ lệ <b>ngược</b> — rồng 1 sao
-     * phổ biến nhất — nên phải gieo đè, không thì máy đã chạy bản ấy giữ mãi
-     * bảng sai.</p>
+     * còn ở bản cũ sẽ được nâng lên.</p>
+
+     * <p>Bản 1 đánh tỉ lệ <b>ngược</b> — rồng 1 sao phổ biến nhất — nên máy còn
+     * ở bản đó bị gieo đè hẳn. Bản 2 lên bản 3 thì chỉ <b>sửa đúng cột tỉ lệ
+     * vĩnh viễn</b>, giữ nguyên mọi thứ khác: chỉ số và tỉ lệ bốc có thể đã được
+     * sửa tay, đạp lên chúng vì một cột là mất công người khác.</p>
      */
-    private static final long PHIEN_BAN_GIEO = 2L;
+    private static final long PHIEN_BAN_GIEO = 3L;
 
     /** Chỉ số cộng phần trăm: sức đánh, HP, KI — ba dòng con nào cũng có. */
     private static final int CS_SUC_DANH = 50;
@@ -166,7 +169,14 @@ public class RongNhiDAO {
      * bản sẽ không bị đụng tới nữa.</p>
      */
     private static void gieoLanDau() {
-        if (so(K_GIEO_VER, 0) >= PHIEN_BAN_GIEO) {
+        long ban = so(K_GIEO_VER, 0);
+        if (ban >= PHIEN_BAN_GIEO) {
+            return;
+        }
+        if (ban >= 2) {
+            // Ban 2 da co bo dong dung; chi thieu moi ti le vinh vien theo sao.
+            capNhatTiLeVinhVien();
+            datSo(K_GIEO_VER, PHIEN_BAN_GIEO);
             return;
         }
         try {
@@ -182,13 +192,70 @@ public class RongNhiDAO {
         for (int i = 0; i < ID_RONG_NHI.length; i++) {
             String ten = "Rồng nhí " + (i + 1) + " sao";
             themLoaiMacDinh(ten, ID_RONG_NHI[i], TU_TRUNG_THUONG,
-                    tlThuong[i], 5, 7, 15, i);
+                    tlThuong[i], VV_THUONG[i], 7, 15, i);
             themLoaiMacDinh(ten, ID_RONG_NHI[i], TU_TRUNG_VANG,
-                    tlVang[i], 30, 15, 30, i);
+                    tlVang[i], VV_VANG[i], 15, 30, i);
         }
         datSo(K_GIEO_VER, PHIEN_BAN_GIEO);
         Logger.success("Đã gieo " + (ID_RONG_NHI.length * 2)
                 + " dòng rồng nhí kèm chỉ số\n");
+    }
+
+    /**
+     * Tỉ lệ ra bản <b>vĩnh viễn</b>, theo bậc sao — càng xịn càng khó.
+     *
+     * <p>Rồng một sao mạnh nhất nên bản vĩnh viễn của nó phải là thứ hiếm: 2% ở
+     * trứng thường. Xuống tới bảy sao thì 20% — con yếu nhất cũng là con dễ giữ
+     * lâu dài nhất, nên người chơi luôn có cái để dùng trong lúc săn con xịn.</p>
+     */
+    private static final double[] VV_THUONG = {2, 4, 6, 9, 12, 16, 20};
+
+    /** Trứng vàng: cùng thứ tự nhưng rộng tay hơn hẳn, đó là chỗ nó đắt. */
+    private static final double[] VV_VANG = {10, 15, 20, 26, 32, 40, 50};
+
+    /**
+     * Sửa đúng cột tỉ lệ vĩnh viễn của những dòng đã gieo ở bản 2.
+     *
+     * <p>Tra theo {@code item_id} và loại trứng. Dòng nào quản trị tự thêm thì
+     * không khớp bộ mặc định nên không bị đụng tới.</p>
+     */
+    private static void capNhatTiLeVinhVien() {
+        int sua = 0;
+        for (Loai x : dsLoai(false)) {
+            int bac = bacCuaItem(x.itemId);
+            if (bac < 0) {
+                continue;
+            }
+            double moi;
+            if (x.tuTrung == TU_TRUNG_VANG) {
+                moi = VV_VANG[bac];
+            } else if (x.tuTrung == TU_TRUNG_THUONG) {
+                moi = VV_THUONG[bac];
+            } else {
+                continue;
+            }
+            if (x.tiLeVinhVien == moi) {
+                continue;
+            }
+            x.tiLeVinhVien = moi;
+            if (luuLoai(x) == null) {
+                sua++;
+            }
+        }
+        if (sua > 0) {
+            Logger.success("Đã cập nhật tỉ lệ vĩnh viễn cho " + sua
+                    + " dòng rồng nhí\n");
+        }
+    }
+
+    /** Bậc sao của một mẫu rồng nhí: 0 là một sao, 6 là bảy sao. {@code -1} nếu không phải. */
+    private static int bacCuaItem(int itemId) {
+        for (int i = 0; i < ID_RONG_NHI.length; i++) {
+            if (ID_RONG_NHI[i] == itemId) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
