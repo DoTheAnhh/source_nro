@@ -361,6 +361,7 @@ namespace Game6.God
         public void dong()
         {
             dangMo = false;
+            dongBangNguoi();
             hienHop = false;
             hienHopSo = false;
             hienHopKyNang = false;
@@ -3081,6 +3082,16 @@ namespace Game6.God
             {
                 veBangTimBang(g, yND, caoND);
             }
+
+            // Hai bang con ve SAU CUNG de nam tren moi thu khac.
+            if (tvXem != null)
+            {
+                veThongTinNguoi(g);
+            }
+            else if (tvChon != null)
+            {
+                veMenuThanhVien(g);
+            }
         }
 
         /// <summary>Danh sách thành viên bang của mình, hoặc null.</summary>
@@ -3925,6 +3936,451 @@ namespace Game6.God
         /// <summary>Bề cao một dòng chat bang.</summary>
         private const int CAO_DONG_CHAT = 26;
 
+        // ==================================================================
+        //  Thao tac voi mot NGUOI: bang chon, va bang xem thong tin
+        // ==================================================================
+
+        /// <summary>Thành viên đang mở bảng chọn thao tác, hoặc null.</summary>
+        private Member tvChon;
+
+        /// <summary>Người đang mở bảng "Xem thông tin", hoặc null.</summary>
+        private Member tvXem;
+
+        /// <summary>Người đang xem là người XIN vào bang, chưa phải thành viên.</summary>
+        /// <remarks>
+        /// Đổi hẳn nội dung bảng: người xin thì chưa có đóng góp, chưa có điểm
+        /// bang, chưa có ngày vào bang — bày mấy dòng số 0 ra chỉ tổ khó hiểu.
+        /// </remarks>
+        private bool tvXemLaNguoiXin;
+
+        private const int TT_XEM = 0;
+        private const int TT_PHONG_CHU = 1;
+        private const int TT_PHONG_PHO = 2;
+        private const int TT_DUOI = 3;
+
+        /// <summary>Đóng mọi bảng con đang mở của thẻ bang hội.</summary>
+        private void dongBangNguoi()
+        {
+            tvChon = null;
+            tvXem = null;
+            tvXemLaNguoiXin = false;
+        }
+
+        /// <summary>
+        /// Những thao tác chức vụ của mình được làm với <paramref name="m"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>Chủ bang làm được tất: xem, phong chủ, phong phó, đuổi. Với
+        /// một phó bang thì không còn mục phong phó — họ đã là phó rồi.</para>
+        ///
+        /// <para>Phó bang chỉ xem và đuổi, và chỉ với thành viên thường — đúng
+        /// bằng quyền máy chủ cho (xem <c>ClanService.kickOut</c>). Bày ra một
+        /// mục mà máy chủ sẽ lặng lẽ bỏ qua thì người bấm tưởng game hỏng.</para>
+        ///
+        /// <para>Thành viên thường không có mục nào, nên bấm vào một dòng cũng
+        /// không mở bảng chọn — không có gì trong đó để mở.</para>
+        /// </remarks>
+        private static int[] mucChoThanhVien(Member m)
+        {
+            if (m == null || m.ID == Char.myCharz().charID)
+            {
+                return new int[0];
+            }
+            int toi = Char.myCharz().role;
+            if (toi == 0)
+            {
+                if (m.role == 1)
+                {
+                    return new int[] { TT_XEM, TT_PHONG_CHU, TT_DUOI };
+                }
+                if (m.role == 2)
+                {
+                    return new int[] { TT_XEM, TT_PHONG_CHU, TT_PHONG_PHO,
+                        TT_DUOI };
+                }
+                return new int[] { TT_XEM };
+            }
+            if (toi == 1 && m.role == 2)
+            {
+                return new int[] { TT_XEM, TT_DUOI };
+            }
+            return new int[0];
+        }
+
+        private static string tenMuc(int ma)
+        {
+            if (ma == TT_PHONG_CHU)
+            {
+                return "Phong chủ bang";
+            }
+            if (ma == TT_PHONG_PHO)
+            {
+                return "Phong phó bang";
+            }
+            if (ma == TT_DUOI)
+            {
+                return "Đuổi khỏi bang";
+            }
+            return "Xem thông tin";
+        }
+
+        /// <summary>Làm một mục vừa chọn trong bảng thao tác.</summary>
+        /// <remarks>
+        /// "Phong chủ bang" đóng luôn cả bảng hành trang: máy chủ trả lời bằng
+        /// một bảng hỏi lại của NPC, mà bảng ấy nằm dưới bảng này thì không ai
+        /// thấy để bấm.
+        /// </remarks>
+        private void lamMuc(int ma, Member m)
+        {
+            if (m == null)
+            {
+                return;
+            }
+            if (ma == TT_XEM)
+            {
+                tvChon = null;
+                tvXem = m;
+                tvXemLaNguoiXin = false;
+                return;
+            }
+            tvChon = null;
+            if (ma == TT_PHONG_CHU)
+            {
+                dong();
+                Service.gI().clanRemote(m.ID, (sbyte) 0);
+            }
+            else if (ma == TT_PHONG_PHO)
+            {
+                Service.gI().clanRemote(m.ID, (sbyte) 1);
+            }
+            else if (ma == TT_DUOI)
+            {
+                Service.gI().clanRemote(m.ID, (sbyte) (-1));
+            }
+        }
+
+        /// <summary>Mở bảng thông tin cho một người đang xin vào bang.</summary>
+        /// <remarks>
+        /// Dựng một <c>Member</c> tạm từ lời xin: người xin chưa vào bang nên
+        /// không có bản ghi thành viên nào, mà bảng thông tin thì chỉ cần đúng
+        /// những trường này. Dựng tạm nhẹ hơn hẳn việc chẻ bảng thông tin ra
+        /// làm hai đường vẽ riêng.
+        /// </remarks>
+        private void xemNguoiXin(ClanMessage cm)
+        {
+            if (cm == null)
+            {
+                return;
+            }
+            Member m = new Member();
+            m.ID = cm.playerId;
+            m.name = cm.playerName;
+            m.head = cm.head;
+            m.body = cm.body;
+            m.leg = cm.leg;
+            m.headICON = -1;
+            m.role = 2;
+            m.powerPoint = Res.formatNumber(cm.power);
+            tvChon = null;
+            tvXem = m;
+            tvXemLaNguoiXin = true;
+        }
+
+        /// <summary>Giới hạn cuộn cho danh sách chat, vì mỗi dòng một bề cao.</summary>
+        /// <remarks>
+        /// Đếm ngược từ dòng cuối lên: dòng nào còn nhét vừa khoảng trống thì
+        /// còn kéo lên được. Chia đều như các danh sách khác thì dòng "xin vào
+        /// bang" cao gấp đôi sẽ làm cuộn hụt mất một quãng ở đáy.
+        /// </remarks>
+        private void gioiHanCuonChat(int so, int cao)
+        {
+            int con = cao;
+            int i = so - 1;
+            while (i >= 0)
+            {
+                int h = caoDongChat(
+                        (ClanMessage) ClanMessage.vMessage.elementAt(i));
+                if (con - h < 0)
+                {
+                    break;
+                }
+                con -= h;
+                i--;
+            }
+            int toiDa = i + 1;
+            if (cuon > toiDa)
+            {
+                cuon = toiDa;
+            }
+            if (cuon < 0)
+            {
+                cuon = 0;
+            }
+        }
+
+        // ---------------- Bang chon thao tac ----------------
+
+        /// <summary>Vùng mục thứ <paramref name="i"/> của bảng chọn thao tác.</summary>
+        private int[] oMucTV(int i, int x, int y, int w)
+        {
+            return new int[] { x + 8, y + 24 + i * 22, w - 16, 18 };
+        }
+
+        /// <summary>Bề cao bảng chọn thao tác với <paramref name="soMuc"/> mục.</summary>
+        private static int caoBangChon(int soMuc)
+        {
+            return 24 + (soMuc + 1) * 22 + 4;
+        }
+
+        /// <summary>
+        /// Bảng chọn thao tác với một thành viên.
+        /// </summary>
+        /// <remarks>
+        /// Phủ một lớp tối lên cả cột phải trước khi vẽ: bảng chọn nhỏ, mà nền
+        /// dưới nó là một danh sách dày chữ — không dằn xuống thì mắt không biết
+        /// phần nào đang bấm được.
+        /// </remarks>
+        private void veMenuThanhVien(mGraphics g)
+        {
+            int[] mucs = mucChoThanhVien(tvChon);
+            int w = rongPhai - 24;
+            int h = caoBangChon(mucs.Length);
+            int x = xPhai + 12;
+            int y = yThan + (caoThan - h) / 2;
+
+            g.setColor(0, 0.45f);
+            g.fillRect(xPhai, yThan, rongPhai, caoThan, BO_GOC);
+            veKhungBo(g, x, y, w, h, MAU_NEN, 0.99f, MAU_VIEN, 0.95f, 2);
+            mFont.tahoma_7b_dark.drawString(g, catBot(tvChon.name, 24),
+                    x + w / 2, y + 6, mFont.CENTER);
+            for (int i = 0; i < mucs.Length; i++)
+            {
+                veNutMotDong(g, oMucTV(i, x, y, w), tenMuc(mucs[i]));
+            }
+            veNutMotDong(g, oMucTV(mucs.Length, x, y, w), "Đóng");
+        }
+
+        private bool chamMenuThanhVien()
+        {
+            int[] mucs = mucChoThanhVien(tvChon);
+            int w = rongPhai - 24;
+            int h = caoBangChon(mucs.Length);
+            int x = xPhai + 12;
+            int y = yThan + (caoThan - h) / 2;
+            for (int i = 0; i < mucs.Length; i++)
+            {
+                if (cham2(oMucTV(i, x, y, w)))
+                {
+                    lamMuc(mucs[i], tvChon);
+                    return true;
+                }
+            }
+            if (cham2(oMucTV(mucs.Length, x, y, w)))
+            {
+                tvChon = null;
+            }
+            // Nuot moi cu cham con lai: bang chon dang che cot phai, de lot
+            // xuong la bam nham vao danh sach nam duoi no.
+            return true;
+        }
+
+        // ---------------- Bang xem thong tin ----------------
+
+        /// <summary>Vùng nút "Quay lại" của bảng xem thông tin.</summary>
+        private int[] oNutDongTT()
+        {
+            return new int[] { xPhai + 8, yThan + caoThan - 24,
+                rongPhai - 16, 18 };
+        }
+
+        /// <summary>
+        /// Bảng thông tin một người: khung xem trước bên trái, chỉ số bên phải.
+        /// </summary>
+        /// <remarks>
+        /// <para>Xem trước là <b>cả người</b> chứ không phải mỗi cái mặt: chức
+        /// vụ và con số thì dòng danh sách đã nói rồi, thứ duy nhất dòng ấy
+        /// không nói được là người này trông ra sao.</para>
+        ///
+        /// <para>Cột chỉ số dùng chung kiểu vạch màu với bảng chỉ số nhân vật —
+        /// cùng một thứ thì ở đâu cũng phải nhìn giống nhau.</para>
+        /// </remarks>
+        private void veThongTinNguoi(mGraphics g)
+        {
+            g.setColor(0, 0.45f);
+            g.fillRect(xPhai, yThan, rongPhai, caoThan, BO_GOC);
+            int yND = veKhungCoTieuDe(g, xPhai, yThan, rongPhai, caoThan,
+                    tvXemLaNguoiXin ? "Người xin vào bang" : "Thông tin thành viên",
+                    0, MAU_DAI_CAM);
+            int yHet = oNutDongTT()[1] - 4;
+
+            int xTr = xPhai + 6;
+            int wTr = (rongPhai - 18) * 40 / 100;
+            if (wTr < 68)
+            {
+                wTr = 68;
+            }
+            int xPh2 = xTr + wTr + 6;
+            int wPh2 = xPhai + rongPhai - 6 - xPh2;
+
+            int caoXem = yHet - yND - 18;
+            if (caoXem > 100)
+            {
+                caoXem = 100;
+            }
+            if (caoXem < 40)
+            {
+                caoXem = 40;
+            }
+            veKhungBo(g, xTr, yND + 2, wTr, caoXem, MAU_O_DO, 1f,
+                    MAU_VIEN_O, 0.85f, 1);
+            g.setClip(xTr + 1, yND + 3, wTr - 2, caoXem - 2);
+            veNguoiTheoPart(g, tvXem.head, tvXem.body, tvXem.leg,
+                    xTr + wTr / 2, yND + 2 + caoXem - 8);
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+            veChuChay(g, mFont.tahoma_7b_dark, tvXem.name, xTr + 3,
+                    yND + caoXem + 6, wTr - 6);
+
+            int y = yND + 6;
+            if (tvXemLaNguoiXin)
+            {
+                y = veDongTT(g, xPh2, wPh2, y, "Sức mạnh", tvXem.powerPoint,
+                        mFont.tahoma_7b_green);
+                y = veDongTT(g, xPh2, wPh2, y, "Tình trạng", "Đang xin vào",
+                        mFont.tahoma_7b_blue);
+                mFont.tahoma_7.drawString(g, "Duyệt đơn ở dòng chat bang.",
+                        xPh2, y + 4, mFont.LEFT);
+            }
+            else
+            {
+                y = veDongTT(g, xPh2, wPh2, y, "Chức vụ",
+                        Member.getRole(tvXem.role), fontChucVu(tvXem.role));
+                y = veDongTT(g, xPh2, wPh2, y, "Sức mạnh", tvXem.powerPoint,
+                        mFont.tahoma_7b_green);
+                y = veDongTT(g, xPh2, wPh2, y, "Điểm bang",
+                        tvXem.clanPoint + "", mFont.tahoma_7b_dark);
+                y = veDongTT(g, xPh2, wPh2, y, "Cá nhân",
+                        tvXem.curClanPoint + "", mFont.tahoma_7b_dark);
+                y = veDongTT(g, xPh2, wPh2, y, "Đã góp",
+                        tvXem.donate + "", mFont.tahoma_7b_blue);
+                y = veDongTT(g, xPh2, wPh2, y, "Đã nhận",
+                        tvXem.receive_donate + "", mFont.tahoma_7b_blue);
+                veDongTT(g, xPh2, wPh2, y, "Vào bang",
+                        (tvXem.joinTime == null) ? "?" : tvXem.joinTime,
+                        mFont.tahoma_7b_dark);
+            }
+
+            veNutMotDong(g, oNutDongTT(), "Quay lại");
+        }
+
+        /// <summary>Màu chữ của chức vụ, cùng quy ước với danh sách thành viên.</summary>
+        private static mFont fontChucVu(int chuc)
+        {
+            if (chuc == 0)
+            {
+                return mFont.tahoma_7b_red;
+            }
+            return (chuc == 1) ? mFont.tahoma_7b_green : mFont.tahoma_7b_dark;
+        }
+
+        /// <summary>Một dòng chỉ số trong bảng thông tin người.</summary>
+        private int veDongTT(mGraphics g, int x, int w, int y, string nhan,
+                string gia, mFont mf)
+        {
+            veNenDongChiSo(g, x, w, y, nhan);
+            mFont.tahoma_7b_dark.drawString(g, nhan, x + 8, y, mFont.LEFT);
+            int con = w - 18 - mFont.tahoma_7.getWidth(nhan);
+            mf.drawString(g, catTheoRong(mf, (gia == null) ? "" : gia, con),
+                    x + w - 6, y, mFont.RIGHT);
+            return y + 15;
+        }
+
+        /// <summary>
+        /// Vẽ một người từ ba mã bộ phận: đầu, thân, chân.
+        /// </summary>
+        /// <remarks>
+        /// <para>Không dựng được <c>Char</c> cho người khác — lớp ấy cần cả một
+        /// bộ trạng thái của nhân vật đang chơi. Nhưng bảng cũ đã có sẵn cách
+        /// ghép ba bộ phận bằng tay (xem <c>Panel.paintDetail</c> với
+        /// <c>partID</c>), và cách đó chỉ cần đúng ba mã này.</para>
+        ///
+        /// <para><c>Char.CharInfo[0][i]</c> giữ khung hình và độ lệch của tư thế
+        /// đứng yên: phần tử 0 là số khung, 1 và 2 là độ lệch ngang và dọc của
+        /// bộ phận thứ <c>i</c> so với gốc người.</para>
+        ///
+        /// <para>Bọc try/catch: ảnh bộ phận có thể chưa tải xong, và một khung
+        /// xem trước thiếu ảnh không được phép làm dừng phần vẽ của cả bảng.</para>
+        /// </remarks>
+        private static void veNguoiTheoPart(mGraphics g, int head, int body,
+                int leg, int x, int y)
+        {
+            try
+            {
+                if (GameScr.parts == null)
+                {
+                    return;
+                }
+                int[] bp = { head, body, leg };
+                for (int i = 0; i < bp.Length; i++)
+                {
+                    if (bp[i] < 0 || bp[i] >= GameScr.parts.Length)
+                    {
+                        continue;
+                    }
+                    Part p = GameScr.parts[bp[i]];
+                    if (p == null || p.pi == null)
+                    {
+                        continue;
+                    }
+                    int k = Char.CharInfo[0][i][0];
+                    if (k < 0 || k >= p.pi.Length || p.pi[k] == null)
+                    {
+                        continue;
+                    }
+                    SmallImage.drawSmallImage(g, p.pi[k].id,
+                            x + Char.CharInfo[0][i][1] + p.pi[k].dx,
+                            y - Char.CharInfo[0][i][2] + p.pi[k].dy, 0, 0);
+                }
+            }
+            catch (System.Exception)
+            {
+            }
+        }
+
+        /// <summary>Bấm một dòng thành viên: mở bảng chọn thao tác.</summary>
+        /// <remarks>
+        /// Dựng lại danh sách đã xếp y như lúc vẽ (<c>xepTheoChuc</c> cho kết
+        /// quả cố định), nên dòng bấm trúng luôn là dòng đang nhìn thấy.
+        /// </remarks>
+        private bool chamDongThanhVien()
+        {
+            MyVector ds = myMemberCuaToi();
+            int so = (ds == null) ? 0 : ds.size();
+            if (so == 0)
+            {
+                return false;
+            }
+            int yDau = yThan + CAO_DAI_TD + KHE_KHUNG + 2;
+            int yHet = yThan + caoThan - 4;
+            int thay = (yHet - yDau) / CAO_DONG_TV;
+            System.Collections.Generic.List<Member> dsXep = xepTheoChuc(ds);
+            for (int i = cuon; i < dsXep.Count && i - cuon < thay; i++)
+            {
+                int y = yDau + (i - cuon) * CAO_DONG_TV;
+                if (!cham(xPhai + 4, y, rongPhai - 12, CAO_DONG_TV - 4))
+                {
+                    continue;
+                }
+                // Khong co muc nao thi khong mo bang rong: thanh vien thuong
+                // bam vao dong nao cung khong ra gi, dung nhu ban noi.
+                if (mucChoThanhVien(dsXep[i]).Length > 0)
+                {
+                    tvChon = dsXep[i];
+                }
+                return true;
+            }
+            return false;
+        }
+
         /// <summary>
         /// Cột phải: chat bang, kèm hai nút "Nhắn" và "Xin đậu".
         /// </summary>
@@ -3964,16 +4420,30 @@ namespace Game6.God
                         xPhai + rongPhai / 2, yDau + 20, mFont.CENTER);
                 return;
             }
-            gioiHanCuon(so);
-            for (int i = cuon; i < so && i - cuon < thay; i++)
+            gioiHanCuonChat(so, yHet - yDau);
+            // Moi dong mot be cao rieng, nen cong don chu khong nhan chi so.
+            //
+            // Dong "xin vao bang" mang them mot hang nut ben duoi, cao han
+            // dong chat thuong. Nhan i * CAO_DONG_CHAT nhu truoc thi vung ve
+            // va vung bam lech nhau ngay tu dong thu hai.
+            int yVe = yDau;
+            int daVe = 0;
+            for (int i = cuon; i < so; i++)
             {
-                veMotDongChat(g, (ClanMessage) ClanMessage.vMessage.elementAt(i),
-                        yDau + (i - cuon) * CAO_DONG_CHAT);
+                ClanMessage cm = (ClanMessage) ClanMessage.vMessage.elementAt(i);
+                int caoDong = caoDongChat(cm);
+                if (yVe + caoDong > yHet)
+                {
+                    break;
+                }
+                veMotDongChat(g, cm, yVe);
+                yVe += caoDong;
+                daVe++;
             }
-            if (so > thay)
+            if (so > daVe)
             {
                 veVachCuon(g, xPhai + rongPhai - 6, yDau, yHet - yDau,
-                        so, thay);
+                        so, (daVe < 1) ? 1 : daVe);
             }
         }
 
@@ -4030,14 +4500,72 @@ namespace Game6.God
             return mFont.tahoma_7b_dark;
         }
 
+        /// <summary>Bề cao của riêng dòng "xin vào bang".</summary>
+        /// <remarks>
+        /// Cao hơn dòng chat thường đúng một hàng nút. Ba nút duyệt đơn không
+        /// thể nhét vừa bề ngang còn lại của một dòng 26 điểm, mà rút gọn chữ
+        /// tới mức vừa thì không ai đọc ra nút nào làm gì.
+        /// </remarks>
+        private const int CAO_DONG_XIN = 48;
+
+        /// <summary>Bề cao một dòng chat, theo loại dòng.</summary>
+        private int caoDongChat(ClanMessage cm)
+        {
+            if (cm != null && cm.type == LOAI_XIN_VAO
+                    && soNutXinVao() > 0)
+            {
+                return CAO_DONG_XIN;
+            }
+            return CAO_DONG_CHAT;
+        }
+
+        /// <summary>Số nút duyệt đơn mà chức vụ của mình được thấy.</summary>
+        /// <remarks>
+        /// Chủ bang ba nút: xem, đồng ý, từ chối. Phó bang một nút xem — duyệt
+        /// đơn là việc của chủ bang, mà máy chủ cũng chỉ nhận lệnh duyệt từ chủ
+        /// bang (xem <c>ClanService.acceptAskJoinClan</c>). Thành viên thường
+        /// không có nút nào, và dòng ấy thu lại bằng một dòng chat.
+        /// </remarks>
+        private static int soNutXinVao()
+        {
+            int toi = Char.myCharz().role;
+            if (toi == 0)
+            {
+                return 3;
+            }
+            return (toi == 1) ? 1 : 0;
+        }
+
+        /// <summary>Vùng nút thứ <paramref name="i"/> trong hàng nút duyệt đơn.</summary>
+        private int[] oNutDuyetDon(int i, int n, int y)
+        {
+            int tong = rongPhai - 20;
+            int w = (tong - (n - 1) * 4) / n;
+            return new int[] { xPhai + 8 + i * (w + 4), y + 28, w, 16 };
+        }
+
+        /// <summary>Chữ của nút xem, rút gọn khi nút quá hẹp.</summary>
+        private static string chuNutXem(int w)
+        {
+            return (w >= 68) ? "Xem thông tin" : "Xem";
+        }
+
         private void veMotDongChat(mGraphics g, ClanMessage cm, int y)
         {
             if (cm == null)
             {
                 return;
             }
-            veKhungBo(g, xPhai + 4, y, rongPhai - 12, CAO_DONG_CHAT - 3,
+            int caoDong = caoDongChat(cm) - 3;
+            veKhungBo(g, xPhai + 4, y, rongPhai - 12, caoDong,
                     MAU_O_DO, 1f, MAU_VIEN_O, 0.6f, 1);
+
+            if (cm.type == LOAI_XIN_VAO)
+            {
+                veDongXinVao(g, cm, y);
+                return;
+            }
+
             chuTenTheoChuc(cm).drawString(g, catBot(cm.playerName, 16),
                     xPhai + 10, y + 2, mFont.LEFT);
 
@@ -4058,13 +4586,6 @@ namespace Game6.God
                 }
                 return;
             }
-            if (cm.type == LOAI_XIN_VAO)
-            {
-                mFont.tahoma_7b_blue.drawString(g, "xin vào bang",
-                        xPhai + 10, y + 13, mFont.LEFT);
-                veNutMotDong(g, oNutTrongDongChat(y), "Cho vào");
-                return;
-            }
             string noi = "";
             if (cm.chat != null && cm.chat.Length > 0)
             {
@@ -4072,6 +4593,49 @@ namespace Game6.God
             }
             mFont.tahoma_7b_dark.drawString(g, catBot(noi, 30),
                     xPhai + 10, y + 13, mFont.LEFT);
+        }
+
+        /// <summary>
+        /// Dòng "xin vào bang": tên chạy, sức mạnh, và hàng nút duyệt đơn.
+        /// </summary>
+        /// <remarks>
+        /// <para>Tên <b>chạy</b> chứ không cắt cụt: tên trong game dài tới ba
+        /// mươi ký tự, mà đây là lúc người ta phải nhận ra đích xác ai đang xin
+        /// vào — cắt còn mười sáu ký tự thì hai người khác nhau nhìn y hệt.</para>
+        ///
+        /// <para>Sức mạnh nằm ngay cạnh tên vì nó là con số quyết định phần lớn
+        /// các đơn: nhận hay không thường chỉ nhìn mỗi nó.</para>
+        /// </remarks>
+        private void veDongXinVao(mGraphics g, ClanMessage cm, int y)
+        {
+            int n = soNutXinVao();
+            string sm = "Sm: " + Res.formatNumber(cm.power);
+            int rongSm = mFont.tahoma_7.getWidth(sm) + 6;
+            veChuChay(g, mFont.tahoma_7b_dark, cm.playerName, xPhai + 10,
+                    y + 3, rongPhai - 26 - rongSm);
+            mFont.tahoma_7b_green.drawString(g, sm, xPhai + rongPhai - 12,
+                    y + 3, mFont.RIGHT);
+            mFont.tahoma_7b_blue.drawString(g, "xin vào bang", xPhai + 10,
+                    y + 15, mFont.LEFT);
+            for (int i = 0; i < n; i++)
+            {
+                int[] o = oNutDuyetDon(i, n, y);
+                veNutMotDong(g, o, tenNutXinVao(i, o[2]));
+            }
+        }
+
+        /// <summary>Chữ trên nút thứ <paramref name="i"/> của hàng duyệt đơn.</summary>
+        private static string tenNutXinVao(int i, int w)
+        {
+            if (i == 1)
+            {
+                return "Đồng ý";
+            }
+            if (i == 2)
+            {
+                return "Từ chối";
+            }
+            return chuNutXem(w);
         }
 
         /// <summary>Nút hành động cuối một dòng xin đậu / xin vào bang.</summary>
@@ -4128,6 +4692,22 @@ namespace Game6.God
             Clan cl = Char.myCharz().clan;
             bool coBang = (cl != null && cl.ID > 0);
 
+            // Bang xem thong tin va bang chon thao tac nam TREN CUNG, nen chung
+            // an het cham truoc moi thu con lai.
+            if (tvXem != null)
+            {
+                if (cham2(oNutDongTT()))
+                {
+                    tvXem = null;
+                    tvXemLaNguoiXin = false;
+                }
+                return true;
+            }
+            if (tvChon != null)
+            {
+                return chamMenuThanhVien();
+            }
+
             // Dang xem chi tiet mot bang thi CHI khung do nhan thao tac.
             //
             // Khung chi tiet che kin cot phai, nen de cac nut phia sau van bat
@@ -4145,6 +4725,9 @@ namespace Game6.God
                 {
                     cuon = 0;
                 }
+                // Sang the khac thi bo bang con dang mo: no ve de len cot phai
+                // cua the CU, giu lai la che mat noi dung vua chuyen sang.
+                dongBangNguoi();
                 theBangChon = t;
                 return true;
             }
@@ -4201,7 +4784,9 @@ namespace Game6.God
                 {
                     dong();
                     Service.gI().leaveClan();
+                    return true;
                 }
+                chamDongThanhVien();
                 return true;
             }
 
@@ -4361,6 +4946,12 @@ namespace Game6.God
         /// thường thì máy chủ không tìm ra lời xin nào và lặng lẽ bỏ qua, người
         /// chơi tưởng đã cho mà chưa cho.
         /// </remarks>
+        /// <remarks>
+        /// <b>Chỉ nút mới ăn chạm</b>, phần còn lại của dòng thì không. Trước
+        /// đây bấm bất kỳ đâu trên dòng cũng là đồng ý cho vào bang — một cú
+        /// chạm trượt khi đang cuộn danh sách là nhận luôn một người lạ, mà
+        /// không có bước nào hỏi lại.
+        /// </remarks>
         private bool chamDongChat()
         {
             int so = ClanMessage.vMessage.size();
@@ -4370,45 +4961,59 @@ namespace Game6.God
             }
             int yDau = yThan + CAO_DAI_TD + KHE_KHUNG + 4;
             int yHet = oNutChat(0)[1] - 3;
-            int thay = (yHet - yDau) / CAO_DONG_CHAT;
-            for (int i = cuon; i < so && i - cuon < thay; i++)
+            int y = yDau;
+            for (int i = cuon; i < so; i++)
             {
                 ClanMessage cm = (ClanMessage) ClanMessage.vMessage.elementAt(i);
-                if (cm != null && cm.type == LOAI_XIN_DAU
-                        && cm.playerId == Char.myCharz().charID)
+                int caoDong = caoDongChat(cm);
+                if (y + caoDong > yHet)
                 {
-                    // Loi xin dau cua chinh minh: khong bam duoc, dung nhu khong
-                    // co nut. Xem veMotDongChat.
-                    continue;
+                    break;
                 }
-                if (cm == null || (cm.type != LOAI_XIN_DAU
-                        && cm.type != LOAI_XIN_VAO))
+                if (cm != null && cm.type == LOAI_XIN_VAO
+                        && chamDongXinVao(cm, y))
                 {
-                    // Dong chat thuong: bam vao khong lam gi. Gui clanDonate cho
-                    // mot dong chat thuong thi may chu khong tim ra loi xin nao va
-                    // lang le bo qua — nguoi choi tuong da cho ma chua cho.
-                    //
-                    // Loc theo `type` chu khong theo `maxCap`: mot loi xin dau da
-                    // du nguoi cho co maxCap == recieve, van la loi xin dau va van
-                    // phai xu ly dung nhu the.
-                    continue;
-                }
-                int y = yDau + (i - cuon) * CAO_DONG_CHAT;
-                if (cham2(oNutTrongDongChat(y))
-                        || cham(xPhai + 4, y, rongPhai - 12, CAO_DONG_CHAT - 3))
-                {
-                    if (cm.type == LOAI_XIN_VAO)
-                    {
-                        // Duyet loi xin vao. Ma 0 = ACCEPT_ASK_JOIN_CLAN, va doi
-                        // so dau la id CUA LOI XIN, khong phai id bang.
-                        Service.gI().joinClan(cm.id, (sbyte) 0);
-                    }
-                    else
-                    {
-                        Service.gI().clanDonate(cm.id);
-                    }
                     return true;
                 }
+                if (cm != null && cm.type == LOAI_XIN_DAU
+                        && cm.playerId != Char.myCharz().charID
+                        && cham2(oNutTrongDongChat(y)))
+                {
+                    // Loi xin dau cua chinh minh khong co nut — xem veMotDongChat.
+                    Service.gI().clanDonate(cm.id);
+                    return true;
+                }
+                y += caoDong;
+            }
+            return false;
+        }
+
+        /// <summary>Ba nút của một dòng xin vào bang.</summary>
+        private bool chamDongXinVao(ClanMessage cm, int y)
+        {
+            int n = soNutXinVao();
+            for (int i = 0; i < n; i++)
+            {
+                if (!cham2(oNutDuyetDon(i, n, y)))
+                {
+                    continue;
+                }
+                if (i == 0)
+                {
+                    xemNguoiXin(cm);
+                }
+                else if (i == 1)
+                {
+                    // Ma 0 = ACCEPT_ASK_JOIN_CLAN, va doi so dau la id CUA LOI
+                    // XIN, khong phai id bang.
+                    Service.gI().joinClan(cm.id, (sbyte) 0);
+                }
+                else
+                {
+                    // Ma 1 = CANCEL_ASK_JOIN_CLAN.
+                    Service.gI().joinClan(cm.id, (sbyte) 1);
+                }
+                return true;
             }
             return false;
         }
@@ -7177,6 +7782,27 @@ namespace Game6.God
             return 0;
         }
 
+        /// <summary>Số dòng chat hiện được, đếm từ dòng đang cuộn tới.</summary>
+        private int soDongChatThay()
+        {
+            int yDau = yThan + CAO_DAI_TD + KHE_KHUNG + 4;
+            int con = oNutChat(0)[1] - 3 - yDau;
+            int so = ClanMessage.vMessage.size();
+            int dem = 0;
+            for (int i = cuon; i < so; i++)
+            {
+                int h = caoDongChat(
+                        (ClanMessage) ClanMessage.vMessage.elementAt(i));
+                if (con - h < 0)
+                {
+                    break;
+                }
+                con -= h;
+                dem++;
+            }
+            return (dem < 1) ? 1 : dem;
+        }
+
         private int soHangThayDuoc()
         {
             if (theChon == THE_NHIEM_VU)
@@ -7188,6 +7814,17 @@ namespace Game6.God
                 if (dangChonCo)
                 {
                     return soHangCoThay();
+                }
+                // Danh sach chat dem RIENG vi moi dong mot be cao.
+                //
+                // Cong thuc chia deu ben duoi lay be cao dong chat thuong, nen
+                // khi co dong "xin vao bang" cao gap doi thi no dem thua vai
+                // dong. Gioi han cuon tinh tu con so ay se dung som, va may
+                // dong cuoi khong bao gio keo toi duoc.
+                if (bangXem == null && coBangHoi()
+                        && theBangChon == BANG_THONG_TIN)
+                {
+                    return soDongChatThay();
                 }
                 int buoc = buocDongBang();
                 int cao = (bangXem == null)

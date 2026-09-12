@@ -379,15 +379,18 @@ public class Clan {
         msg.writer().writeInt(cmg.id);
         msg.writer().writeInt(cmg.playerId);
 
-        if (cmg.type == 2) {
-            msg.writer().writeUTF(cmg.playerName + " (" 
-                    + Util.formatNumber(cmg.playerPower, FormatStyle.VIETNAMESE) + ")");
-        } else {
-            msg.writer().writeUTF(cmg.playerName);
-        }
+        // Ten di RIENG, suc manh di rieng — xem ClanService.ghiLoiXinVao.
+        msg.writer().writeUTF(cmg.playerName);
 
         msg.writer().writeByte(cmg.role);
         msg.writer().writeInt(cmg.time);
+
+        if (cmg.type == 2) {
+            msg.writer().writeShort(cmg.head);
+            msg.writer().writeShort(cmg.body);
+            msg.writer().writeShort(cmg.leg);
+            msg.writer().writeLong(cmg.playerPower);
+        }
 
         if (cmg.type == 0) {
             msg.writer().writeUTF(cmg.text);

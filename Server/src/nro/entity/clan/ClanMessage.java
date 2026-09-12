@@ -18,6 +18,19 @@ public class ClanMessage {
 
     public long playerPower;
 
+    /**
+     * Hình dáng người xin vào bang: đầu, thân, chân.
+     *
+     * <p>Chỉ dùng cho lời xin vào bang (<code>type == 2</code>). Người xin
+     * chưa phải thành viên nên client không có bản ghi nào về họ — không gửi
+     * kèm thì bảng "Xem thông tin" chỉ có mỗi cái tên.</p>
+     */
+    public short head;
+
+    public short body;
+
+    public short leg;
+
     public byte role;
 
     public int time;

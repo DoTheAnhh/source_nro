@@ -5298,6 +5298,17 @@ namespace Game3
                 }
                 else if (b == 2)
                 {
+                    // Hinh dang va suc manh cua nguoi xin.
+                    //
+                    // May chu truoc day nhet suc manh vao giua cai TEN
+                    // ("Ten (1 ty)") vi goi khong co cho nao khac de dat, nen
+                    // moi cho hien ten nguoi xin deu keo theo cap ngoac do.
+                    // Nay tach han ra, va gui kem ca dau/than/chan de bang
+                    // "Xem thong tin" ve duoc nguoi xin.
+                    clanMessage.head = msg.reader().readShort();
+                    clanMessage.body = msg.reader().readShort();
+                    clanMessage.leg = msg.reader().readShort();
+                    clanMessage.power = msg.reader().readLong();
                     // Loi xin vao bang hien nhu mot dong tin trong khung chat.
                     God.ChatUI.getInstance().nhanChatBang(clanMessage.id,
                             clanMessage.playerName, "xin vào bang");

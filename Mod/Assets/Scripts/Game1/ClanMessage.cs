@@ -25,6 +25,21 @@ namespace Game1
     	public int recieve;
     
     	public int maxCap;
+
+    	/// <summary>Hình dáng người xin vào bang: đầu, thân, chân.</summary>
+    	/// <remarks>
+    	/// Chỉ có ở dòng "xin vào bang". Người xin chưa phải thành viên nên
+    	/// client không có bản ghi nào khác về họ — không nhận kèm thì bảng
+    	/// "Xem thông tin" chỉ còn mỗi cái tên.
+    	/// </remarks>
+    	public short head;
+
+    	public short body;
+
+    	public short leg;
+
+    	/// <summary>Sức mạnh người xin vào bang.</summary>
+    	public long power;
     
     	public string[] option;
     

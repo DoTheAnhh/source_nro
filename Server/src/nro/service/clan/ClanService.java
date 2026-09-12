@@ -547,6 +547,9 @@ public class ClanService {
                             cmg.playerId = (int) player.id;
                             cmg.playerName = player.name;
                             cmg.playerPower = player.nPoint.power;
+                            cmg.head = player.getHead();
+                            cmg.body = player.getBody();
+                            cmg.leg = player.getLeg();
                             cmg.role = -1;
                             clan.addClanMessage(cmg);
                             clan.sendMessageClan(cmg);
@@ -729,13 +732,12 @@ public class ClanService {
                     msg.writer().writeByte(cmg.type);
                     msg.writer().writeInt(cmg.id);
                     msg.writer().writeInt(cmg.playerId);
-                    if (cmg.type == 2) {
-                        msg.writer().writeUTF(cmg.playerName + " (" + Util.formatNumber(cmg.playerPower, FormatStyle.VIETNAMESE) + ")");
-                    } else {
-                        msg.writer().writeUTF(cmg.playerName);
-                    }
+                    msg.writer().writeUTF(cmg.playerName);
                     msg.writer().writeByte(cmg.role);
                     msg.writer().writeInt(cmg.time);
+                    if (cmg.type == 2) {
+                        ghiLoiXinVao(msg, cmg);
+                    }
                     if (cmg.type == 0) {
                         String text = cmg.text;
                         msg.writer().writeUTF(text == null ? "" : text);
@@ -752,6 +754,27 @@ public class ClanService {
         } catch (Exception e) {
             Logger.logException(ClanService.class, e, "Lỗi send my clan " + player.clan.name + " - " + player.clan.id);
         }
+    }
+
+    /**
+     * Phần riêng của một lời <b>xin vào bang</b>: hình dáng và sức mạnh.
+     *
+     * <h3>Vì sao tách ra</h3>
+     *
+     * <p>Bản trước nhét sức mạnh vào giữa cái tên — <code>"Tên (1 tỷ)"</code>
+     * — vì gói không có chỗ nào khác để đặt. Hệ quả là client không tách lại
+     * được: mọi chỗ hiện tên người xin đều kèm theo cặp ngoặc, kể cả dòng
+     * thông báo trong khung chat.</p>
+     *
+     * <p>Nay tên đi riêng, sức mạnh đi riêng, và kèm cả đầu / thân / chân để
+     * bảng "Xem thông tin" vẽ được người xin — họ chưa vào bang nên client
+     * không có nguồn nào khác biết họ trông ra sao.</p>
+     */
+    private void ghiLoiXinVao(Message msg, ClanMessage cmg) throws Exception {
+        msg.writer().writeShort(cmg.head);
+        msg.writer().writeShort(cmg.body);
+        msg.writer().writeShort(cmg.leg);
+        msg.writer().writeLong(cmg.playerPower);
     }
 
     public void sendClanId(Player player) {
@@ -979,7 +1002,13 @@ public class ClanService {
             ClanMember leader = clan.getLeader();
             ClanMember cm = clan.getClanMember(memberId);
             if (cm != null) {
-                if (cm.role == DEPUTY) {
+                // Phong duoc CA thanh vien thuong, khong bat phai qua pho bang.
+                //
+                // Bang chon trong game co san muc "Phong chu bang" ngay tren
+                // mot thanh vien thuong, va co ca buoc hoi lai truoc khi lam.
+                // Bat buoc phai phong pho truoc roi moi phong chu la mot buoc
+                // thua, ma nguoi choi chi thay muc do bam vao khong ra gi.
+                if (cm.role != LEADER) {
                     ClanMessage cmg = new ClanMessage(clan);
                     cmg.type = 0;
                     cmg.role = leader.role;
