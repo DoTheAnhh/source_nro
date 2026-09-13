@@ -247,7 +247,10 @@ namespace Game1.God
             if (GameCanvas.panel != null && GameCanvas.panel.isShow
                     && !GameCanvas.panel.isClose)
             {
-                BanPhimSo.getInstance().dong();
+                if (!BanPhimSo.getInstance().laCuaBangDangMo())
+                {
+                    BanPhimSo.getInstance().dong();
+                }
                 // Hop do CHINH bang dang mo goi ra (o dien so luong giao dich)
                 // thi de yen: dong no la nguoi choi dang go thi hop bien mat,
                 // roi cu bam OK roi xuong man game va dong luon bang giao dich.

@@ -41,6 +41,26 @@ namespace Game3.God
 
         public bool dangMo;
 
+        /// <summary>Màn đã mở bàn phím, hoặc null. Đặt SAU <see cref="moRa"/>.</summary>
+        public object chu;
+
+        /// <summary>Bàn phím do chính bảng của game đang hiện mở ra.</summary>
+        /// <remarks>
+        /// Xem <c>HopNhapChu.laCuaBangDangMo</c>: bảng giao dịch vẫn mở suốt lúc
+        /// gõ số, nên chốt an toàn "thấy bảng mở thì đóng hộp" phải chừa ra.
+        /// </remarks>
+        public bool laCuaBangDangMo()
+        {
+            if (!dangMo || chu == null)
+            {
+                return false;
+            }
+            return (GameCanvas.panel != null && chu == (object) GameCanvas.panel
+                        && GameCanvas.panel.isShow)
+                    || (GameCanvas.panel2 != null && chu == (object) GameCanvas.panel2
+                        && GameCanvas.panel2.isShow);
+        }
+
         /// <summary>Tiêu đề mặc định khi chỗ gọi không nói gì khác.</summary>
         public const string TIEU_DE_MAC_DINH = "Nhập số lượng";
 
@@ -123,6 +143,7 @@ namespace Game3.God
             this.toiDa = toiDa;
             this.khiXong = khiXong;
             soDangGo = "";
+            chu = null;
             dangMo = true;
             GameCanvas.clearAllPointerEvent();
         }
@@ -130,6 +151,7 @@ namespace Game3.God
         public void dong()
         {
             dangMo = false;
+            chu = null;
             // Bo ham goi lai: giu lai thi lan mo sau ma cho goi quen truyen ham
             // moi se chay nham ham cua lan truoc.
             khiXong = null;

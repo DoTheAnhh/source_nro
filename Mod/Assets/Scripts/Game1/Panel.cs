@@ -10021,6 +10021,42 @@ namespace Game1
             }
         }
     
+        /// <summary>Đưa <paramref name="n"/> cái của một món vào ô giao dịch.</summary>
+        /// <remarks>
+        /// Xét lại món đã có trong ô giao dịch chưa: giữa lúc mở bàn phím và lúc
+        /// bấm OK, người chơi có thể đã đưa món ấy vào bằng đường khác.
+        /// </remarks>
+        private void duaMonVaoGiaoDich(Item mon, long n)
+        {
+            Panel gd = GameCanvas.panel;
+            if (mon == null || mon.template == null || gd == null || gd.type != 13 || !gd.isShow)
+            {
+                return;
+            }
+            if (n <= 0 || n > mon.quantity)
+            {
+                GameCanvas.startOKDlg(mResources.input_quantity_wrong);
+                return;
+            }
+            for (int j = 0; j < gd.vMyGD.size(); j++)
+            {
+                Item daCo = (Item)gd.vMyGD.elementAt(j);
+                if (daCo.indexUI == mon.indexUI)
+                {
+                    GameCanvas.startOKDlg(mResources.already_has_item);
+                    return;
+                }
+            }
+            mon.isSelect = true;
+            Item item = new Item();
+            item.template = mon.template;
+            item.quantity = (int)n;
+            item.indexUI = mon.indexUI;
+            item.itemOption = mon.itemOption;
+            gd.vMyGD.addElement(item);
+            Service.gI().giaodich(2, -1, (sbyte)item.indexUI, item.quantity);
+        }
+
         public void putQuantily()
         {
             if (chatTField == null)
@@ -11047,8 +11083,12 @@ namespace Game1
                 }
                 if (item4.quantity > 1)
                 {
-                    itemChoGiaoDich = item4;
-                    putQuantily();
+                    // Ban phim so kieu may tinh thay cho o nhap chu: tren dien
+                    // thoai khoi bat ban phim cua may, va chi go duoc so.
+                    Item monGD = item4;
+                    God.BanPhimSo.getInstance().moRa("Số lượng giao dịch",
+                            monGD.quantity, n => duaMonVaoGiaoDich(monGD, n));
+                    God.BanPhimSo.getInstance().chu = this;
                     return;
                 }
                 item4.isSelect = true;

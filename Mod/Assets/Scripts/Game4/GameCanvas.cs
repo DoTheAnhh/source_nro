@@ -787,6 +787,21 @@ namespace Game4
     					// day nhu cu: dang mo menu thi popup va hop thoai khong
     					// duoc gianh luot.
     				}
+    				else if (panel.isShow && (God.BanPhimSo.getInstance().dangMo
+    						|| God.HopNhapChu.getInstance().dangMo))
+    				{
+    					// Hop nhap so / nhap chu mo TREN mot bang cua game (o dien so
+    					// luong giao dich) thi chi hop nhan cham.
+    					//
+    					// Hai hop nay binh thuong an cham trong GameScr.updateKey, ma
+    					// ham do chi chay khi KHONG co bang nao mo (xem ngay duoi). Nen
+    					// hop ve ra ma bam khong an, con cu bam lot xuong bang: trung
+    					// khoang trong canh bang la bang dong, tuc huy luon giao dich.
+    					if (!God.BanPhimSo.getInstance().capNhatCham())
+    					{
+    						God.HopNhapChu.getInstance().capNhatCham();
+    					}
+    				}
     				else if (ChatPopup.serverChatPopUp != null)
     				{
     					ChatPopup.serverChatPopUp.update();
