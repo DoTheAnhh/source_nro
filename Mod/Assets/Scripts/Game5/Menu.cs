@@ -818,18 +818,29 @@ namespace Game5
     				cmx = cmtoX;
     			}
     		}
+    		// Cham TRONG o chi tiet dang cuon duoc thi de o chi tiet cuon, khong
+    		// dong menu.
+    		//
+    		// Ban cu kiem vung (cp.cx, 0, rong, cp.ch) — tu DINH MAN HINH xuong,
+    		// trong khi o chi tiet nam sat tren menu o day man hinh (cp.cy =
+    		// menuY - cp.ch). O chi tiet dai thi vung sai do phu gan nua tren man
+    		// hinh: cham vao mon o nua tren khong chon duoc, chi nua duoi moi an.
+    		// Cung chi xet cp cua `panel` trong khi o ruong / cua hang, o chi tiet
+    		// thuoc `panel2`.
     		bool flag2 = true;
-    		if (GameCanvas.panel.cp != null && GameCanvas.panel.cp.isClip)
+    		ChatPopup cpCuon = null;
+    		if (GameCanvas.panel != null && GameCanvas.panel.cp != null && GameCanvas.panel.cp.isClip)
     		{
-    			if (!GameCanvas.isPointerHoldIn(GameCanvas.panel.cp.cx, 0, GameCanvas.panel.cp.sayWidth + 2, GameCanvas.panel.cp.ch))
-    			{
-    				flag2 = true;
-    			}
-    			else
-    			{
-    				flag2 = false;
-    				GameCanvas.panel.cp.updateKey();
-    			}
+    			cpCuon = GameCanvas.panel.cp;
+    		}
+    		else if (GameCanvas.panel2 != null && GameCanvas.panel2.cp != null && GameCanvas.panel2.cp.isClip)
+    		{
+    			cpCuon = GameCanvas.panel2.cp;
+    		}
+    		if (cpCuon != null && GameCanvas.isPointerHoldIn(cpCuon.cx, cpCuon.cy, cpCuon.sayWidth + 2, cpCuon.ch))
+    		{
+    			flag2 = false;
+    			cpCuon.updateKey();
     		}
     		// Bo qua vai khung hinh dau: cu cham MO menu van con nguyen trong
     		// `isPointerJustRelease` khi menu bat dau chay, ma diem cham do nam

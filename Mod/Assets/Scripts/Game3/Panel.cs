@@ -3825,7 +3825,13 @@ namespace Game3
                 checkOptionSelect();
                 pointerDownTime = 0;
                 waitToPerform = 10;
-                if (isnewInventory)
+                // PHAI co isTabInven(), y nhu nhanh giu ngon ben duoi.
+                //
+                // `isnewInventory` mac dinh TRUE cho moi bang, nen thieu dieu
+                // kien nay thi go nhanh vao mot DANH SACH (the ruong) cung chay
+                // chonOTaiDiem() — ham chi biet luoi tui — roi ep selected ve -1:
+                // cham vao mon trong ruong khong ra gi, khong lay ra duoc.
+                if (isnewInventory && isTabInven())
                 {
                     // Chon lai o NGAY LUC NHA NGON.
                     //
@@ -4512,12 +4518,14 @@ namespace Game3
     
         private void setTabBox()
         {
-            currentListLength = checkCurrentListLength(Char.myCharz().arrItemBox.Length);
+            // Mot danh sach lien, KHONG chia trang: dong 0 la dong nhan, dong i
+            // la o thu i - 1 cua ruong. Xem chu thich o paintBox.
+            currentListLength = Char.myCharz().arrItemBox.Length + 1;
             ITEM_HEIGHT = 24;
             cmyLim = currentListLength * ITEM_HEIGHT - hScroll;
             if (cmyLim < 0)
             {
-                cmyLim = 9;
+                cmyLim = 0;
             }
             cmy = (cmtoY = cmyLast[currentTabIndex]);
             if (cmy < 0)
@@ -5923,10 +5931,17 @@ namespace Game3
             g.translate(0, -cmy);
             try
             {
+                // Ruong ve thanh MOT danh sach lien, khong chia trang nua.
+                //
+                // Ban cu chia 20 o mot trang, trang dang xem nam o `newSelected`,
+                // va so dong lay tu checkCurrentListLength. Ca hai deu da doi
+                // nghia tu khi co luoi o vuong: `isnewInventory` mac dinh TRUE
+                // cho moi bang nen checkCurrentListLength tra ve so dong ao cua
+                // luoi tui (vai dong), con `newSelected` thanh chi so cot. Ruong
+                // hien mot dong trong va chu "0" — khong xem duoc do, khong lay
+                // ra duoc. Ruong chi vai chuc o, cuon mot danh sach la du.
                 Item[] arrItemBox = Char.myCharz().arrItemBox;
-                currentListLength = checkCurrentListLength(arrItemBox.Length);
-                int num = arrItemBox.Length / 20 + ((arrItemBox.Length % 20 > 0) ? 1 : 0);
-                TAB_W_NEW = wScroll / num;
+                currentListLength = arrItemBox.Length + 1;
                 for (int i = 0; i < currentListLength; i++)
                 {
                     int num2 = xScroll + 36;
@@ -5943,20 +5958,14 @@ namespace Game3
                     }
                     if (i == 0)
                     {
-                        for (int j = 0; j < num; j++)
-                        {
-                            int num9 = ((j == newSelected && selected == 0) ? ((GameCanvas.gameTick % 10 < 7) ? (-1) : 0) : 0);
-                            g.setColor((j != newSelected) ? 15723751 : 16383818);
-                            g.fillRect(xScroll + j * TAB_W_NEW, num3 + 9 + num9, TAB_W_NEW - 1, 14);
-                            mFont.tahoma_7_grey.drawString(g, string.Empty + j, xScroll + j * TAB_W_NEW + TAB_W_NEW / 2, yScroll + 11 + num9, mFont.CENTER);
-                        }
+                        mFont.tahoma_7_grey.drawString(g, "Chạm vào một món để lấy ra",
+                                xScroll + wScroll / 2, num3 + 6, mFont.CENTER);
                         continue;
                     }
                     g.setColor((i != selected) ? 15196114 : 16383818);
                     g.fillRect(num2, num3, num4, h);
                     g.setColor((i != selected) ? 9993045 : 9541120);
-                    int inventorySelect_body = GetInventorySelect_body(i, newSelected);
-                    Item item = arrItemBox[inventorySelect_body];
+                    Item item = arrItemBox[i - 1];
                     if (item != null)
                     {
                         for (int k = 0; k < item.itemOption.Length; k++)
@@ -10834,14 +10843,10 @@ namespace Game3
             MyVector myVector = new MyVector();
             if (currentTabIndex == 0 && !Equals(GameCanvas.panel2))
             {
-                if (selected == 0)
+                // Dong 0 chi la dong nhan, khong con dai trang nao de doi.
+                if (selected > 0 && selected - 1 < Char.myCharz().arrItemBox.Length)
                 {
-                    setNewSelected(Char.myCharz().arrItemBox.Length, false);
-                }
-                else
-                {
-                    sbyte b = (sbyte)GetInventorySelect_body(selected, newSelected);
-                    Item item = Char.myCharz().arrItemBox[b];
+                    Item item = Char.myCharz().arrItemBox[selected - 1];
                     if (item != null)
                     {
                         if (isBoxClan)
@@ -11164,7 +11169,11 @@ namespace Game3
             }
             if (idAction == 1000)
             {
-                Service.gI().getItem(BOX_BAG, (sbyte)GetInventorySelect_body(selected, newSelected));
+                // Lay o THAT tu chinh mon gan vao lenh, khong suy tu `selected` va
+                // `newSelected` — hai bien ay doi theo cham va theo cot.
+                Item monLay = p as Item;
+                Service.gI().getItem(BOX_BAG, (sbyte)((monLay != null)
+                        ? monLay.indexUI : selected - 1));
             }
             if (idAction == 1001)
             {
@@ -13048,7 +13057,8 @@ namespace Game3
         private void updateKeyInventory()
         {
             updateKeyScrollView();
-            if (selected == 0)
+            // The ruong (bang loai 2, the 0) khong con dai trang o dong 0.
+            if (selected == 0 && !(type == 2 && currentTabIndex == 0))
             {
                 updateKeyInvenTab();
             }
