@@ -1849,10 +1849,10 @@ public class PlayerManagerPanel extends JPanel {
         tabs.addTab("HP sư phụ: " + fmt(p.nPoint.hpMax), bangChiTietHp(sp.get(0), "HP tối đa sau bước"));
         tabs.addTab("KI sư phụ: " + fmt(p.nPoint.mpMax), bangChiTietHp(sp.get(1), "KI tối đa sau bước"));
         tabs.addTab("SĐ sư phụ: " + fmt(p.nPoint.dame), bangChiTietHp(sp.get(2), "Sức đánh sau bước"));
-        tabs.addTab("Dmg người: " + giaTriCuoi(dmgNguoi), bangChiTietHp(dmgNguoi, "Dmg sau bước"));
-        tabs.addTab("Dmg người CM: " + giaTriCuoi(dmgNguoiCm), bangChiTietHp(dmgNguoiCm, "Dmg sau bước"));
-        tabs.addTab("Dmg quái: " + giaTriCuoi(dmgQuai), bangChiTietHp(dmgQuai, "Dmg sau bước"));
-        tabs.addTab("Dmg quái CM: " + giaTriCuoi(dmgQuaiCm), bangChiTietHp(dmgQuaiCm, "Dmg sau bước"));
+        tabs.addTab("Dmg người thường: " + giaTriCuoi(dmgNguoi), bangChiTietHp(dmgNguoi, "Dmg sau bước"));
+        tabs.addTab("Dmg người chí mạng: " + giaTriCuoi(dmgNguoiCm), bangChiTietHp(dmgNguoiCm, "Dmg sau bước"));
+        tabs.addTab("Dmg quái thường: " + giaTriCuoi(dmgQuai), bangChiTietHp(dmgQuai, "Dmg sau bước"));
+        tabs.addTab("Dmg quái chí mạng: " + giaTriCuoi(dmgQuaiCm), bangChiTietHp(dmgQuaiCm, "Dmg sau bước"));
         if (de != null) {
             tabs.addTab("HP đệ: " + fmt(p.Detu.nPoint.hpMax), bangChiTietHp(de.get(0), "HP tối đa sau bước"));
             tabs.addTab("KI đệ: " + fmt(p.Detu.nPoint.mpMax), bangChiTietHp(de.get(1), "KI tối đa sau bước"));

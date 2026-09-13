@@ -3250,6 +3250,19 @@ if (hasFull5NhatAn()) {
         return String.format(java.util.Locale.US, "×%.2f", heSo).replace(".00", "");
     }
 
+    private static boolean laSkillCongDonSatThuong(int skillId) {
+        switch (skillId) {
+            case Skill.DRAGON:
+            case Skill.DEMON:
+            case Skill.GALICK:
+            case Skill.LIEN_HOAN:
+            case Skill.KAIOKEN:
+                return true;
+            default:
+                return false;
+        }
+    }
+
     private java.util.List<String[]> apDungDameSauSkillService(java.util.List<String[]> ds, long dame,
             Skill skillSelect, boolean isAttackMob) {
         long now = System.currentTimeMillis();
@@ -3265,6 +3278,26 @@ if (hasFull5NhatAn()) {
                 dame = (long) (dame * heSo);
                 ghiDameTrace(ds, "SkillDamageConfig PvP " + moTaNhan(heSo), truoc, dame,
                         "Áp trong SkillService.playerAttackPlayer sau getDameAttack(false).");
+            }
+            if (laSkillCongDonSatThuong(skillSelect.template.id) && this.tlCongDonSD > 0) {
+                int stackTruoc = this.player.tlDameAdd;
+                int stackSau = Math.min(stackTruoc + 1, this.tlCongDonSD);
+                long truoc = dame;
+                dame = sauKhiCongPct(dame, stackSau);
+                ghiDameTrace(ds, "Cộng dồn PvP/TestDame +" + stackSau + "%", truoc, dame,
+                        "Player.injured tăng tlDameAdd từ " + stackTruoc + " lên "
+                        + stackSau + " rồi cộng đúng bấy nhiêu %. Stack reset về 0 nếu 7 giây không đánh.");
+            } else if (this.tlCongDonSD > 0) {
+                ghiDameTrace(ds, "Ghi chú cộng dồn PvP/TestDame", dame, dame,
+                        "Nhân vật có tlCongDonSD=" + this.tlCongDonSD
+                        + " nhưng skill hiện tại không thuộc nhóm đấm/liên hoàn/kaioken nên Player.injured không cộng stack.");
+            }
+            if (this.tlTanCongTocTraiDat > 0 || this.tlTanCongTocNamec > 0
+                    || this.tlTanCongTocXayda > 0) {
+                ghiDameTrace(ds, "Ghi chú damage theo hệ mục tiêu", dame, dame,
+                        "Player.injured sẽ cộng tiếp nếu mục tiêu đúng hệ: Trái Đất +"
+                        + this.tlTanCongTocTraiDat + "%, Namek +" + this.tlTanCongTocNamec
+                        + "%, Xayda +" + this.tlTanCongTocXayda + "%.");
             }
             if (this.player.isPl() && this.player.effectSkin != null
                     && this.player.effectSkin.isXDame) {
@@ -3342,6 +3375,11 @@ if (hasFull5NhatAn()) {
         int percentDameSkill = 0;
         int skillId = skillSelect.template.id;
         String skillText = tenSkill(skillSelect);
+        ghiDameTrace(ds, tinhChiMang ? "Đang xem nhánh chí mạng" : "Đang xem nhánh không chí mạng",
+                dameAttack, dameAttack,
+                "crit=" + this.crit + "%, tlSDCM=" + this.tlSDCM
+                + "%, isCrit100=" + this.isCrit100 + ", isCritTele=" + this.isCritTele
+                + ". Nếu crit đạt 100% hoặc bị ép crit thì damage thật đi theo tab chí mạng.");
 
         switch (skillId) {
             case Skill.DRAGON:
