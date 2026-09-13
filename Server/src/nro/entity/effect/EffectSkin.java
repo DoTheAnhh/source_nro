@@ -668,7 +668,7 @@ public class EffectSkin {
                             } else {
                                 Service.gI().chat(pl, textBuffSD[Util.nextInt(0, textBuffSD.length - 1)]);
                             }
-                            EffectSkillService.gI().setDameBuff(player, 11000, this.player.nPoint.tlSexyDame);
+                            EffectSkillService.gI().setDameBuff(pl, 11000, this.player.nPoint.tlSexyDame);
                         }
                     }
                     this.lastTimeThoBulma = System.currentTimeMillis();
@@ -688,7 +688,7 @@ public class EffectSkin {
                     for (int i = playersMap.size() - 1; i >= 0; i--) {
                         Player pl = playersMap.get(i);
                         if (pl != null && pl.nPoint != null && !this.player.equals(pl) && !pl.isBoss && !pl.isDie() && Util.getDistance(this.player, pl) <= 200) {
-                            EffectSkillService.gI().setDameBuff(player, 11000, this.player.nPoint.tlCoolDame);
+                            EffectSkillService.gI().setDameBuff(pl, 11000, this.player.nPoint.tlCoolDame);
                         }
                     }
                     this.lastTimeCooldame = System.currentTimeMillis();
@@ -708,7 +708,7 @@ public class EffectSkin {
                     for (int i = playersMap.size() - 1; i >= 0; i--) {
                         Player pl = playersMap.get(i);
                         if (pl != null && pl.nPoint != null && !this.player.equals(pl) && !pl.isBoss && !pl.isDie() && Util.getDistance(this.player, pl) <= 200) {
-                            EffectSkillService.gI().setDameBuff(player, 11000, this.player.nPoint.tlCuteAddame);
+                            EffectSkillService.gI().setDameBuff(pl, 11000, this.player.nPoint.tlCuteAddame);
                         }
                     }
                     this.lastTimeCuteDame = System.currentTimeMillis();

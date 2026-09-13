@@ -1827,8 +1827,16 @@ public class PlayerManagerPanel extends JPanel {
         }
         java.util.List<java.util.List<String[]>> sp;
         java.util.List<java.util.List<String[]>> de = null;
+        java.util.List<String[]> dmgNguoi;
+        java.util.List<String[]> dmgNguoiCm;
+        java.util.List<String[]> dmgQuai;
+        java.util.List<String[]> dmgQuaiCm;
         try {
             sp = p.nPoint.giaiThichChiSo();
+            dmgNguoi = p.nPoint.giaiThichDameDauRa(false, false);
+            dmgNguoiCm = p.nPoint.giaiThichDameDauRa(false, true);
+            dmgQuai = p.nPoint.giaiThichDameDauRa(true, false);
+            dmgQuaiCm = p.nPoint.giaiThichDameDauRa(true, true);
             if (p.Detu != null && p.Detu.nPoint != null) {
                 de = p.Detu.nPoint.giaiThichChiSo();
             }
@@ -1841,6 +1849,10 @@ public class PlayerManagerPanel extends JPanel {
         tabs.addTab("HP sư phụ: " + fmt(p.nPoint.hpMax), bangChiTietHp(sp.get(0), "HP tối đa sau bước"));
         tabs.addTab("KI sư phụ: " + fmt(p.nPoint.mpMax), bangChiTietHp(sp.get(1), "KI tối đa sau bước"));
         tabs.addTab("SĐ sư phụ: " + fmt(p.nPoint.dame), bangChiTietHp(sp.get(2), "Sức đánh sau bước"));
+        tabs.addTab("Dmg người: " + giaTriCuoi(dmgNguoi), bangChiTietHp(dmgNguoi, "Dmg sau bước"));
+        tabs.addTab("Dmg người CM: " + giaTriCuoi(dmgNguoiCm), bangChiTietHp(dmgNguoiCm, "Dmg sau bước"));
+        tabs.addTab("Dmg quái: " + giaTriCuoi(dmgQuai), bangChiTietHp(dmgQuai, "Dmg sau bước"));
+        tabs.addTab("Dmg quái CM: " + giaTriCuoi(dmgQuaiCm), bangChiTietHp(dmgQuaiCm, "Dmg sau bước"));
         if (de != null) {
             tabs.addTab("HP đệ: " + fmt(p.Detu.nPoint.hpMax), bangChiTietHp(de.get(0), "HP tối đa sau bước"));
             tabs.addTab("KI đệ: " + fmt(p.Detu.nPoint.mpMax), bangChiTietHp(de.get(1), "KI tối đa sau bước"));
@@ -1853,7 +1865,7 @@ public class PlayerManagerPanel extends JPanel {
     /** Bảng từng bước của một chỉ số (HP, KI hoặc sức đánh). */
     private javax.swing.JComponent bangChiTietHp(java.util.List<String[]> ds, String cotSau) {
         javax.swing.table.DefaultTableModel m = new javax.swing.table.DefaultTableModel(
-                new Object[]{"#", "Bước", "Thay đổi", "Tương đương", cotSau}, 0) {
+                new Object[]{"#", "Bước", "Mô tả / nguồn", "Thay đổi", "Tương đương", cotSau}, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
                 return false;
@@ -1864,6 +1876,10 @@ public class PlayerManagerPanel extends JPanel {
             long doi = Long.parseLong(r[1]);
             long sau = Long.parseLong(r[2]);
             long truoc = sau - doi;
+            String moTa = r.length > 3 ? r[3] : "";
+            if (moTa == null || moTa.trim().isEmpty()) {
+                moTa = moTaDongChiTiet(r[0]);
+            }
             // Bang bao nhieu phan tram so voi con so ngay truoc buoc — doc thang
             // ra "+40%", "x2" ma khong phai tu chia.
             String tuong = "";
@@ -1876,18 +1892,35 @@ public class PlayerManagerPanel extends JPanel {
                             .replace(".00)", ")");
                 }
             }
-            m.addRow(new Object[]{++i, r[0], (doi >= 0 ? "+" : "-") + fmt(Math.abs(doi)),
-                tuong, fmt(sau)});
+            m.addRow(new Object[]{++i, r[0], moTa,
+                (doi >= 0 ? "+" : "-") + fmt(Math.abs(doi)), tuong, fmt(sau)});
         }
         javax.swing.JTable t = new javax.swing.JTable(m);
         t.setRowHeight(22);
-        int[] w = {30, 380, 130, 120, 150};
+        t.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
+        int[] w = {35, 330, 520, 130, 120, 150};
         for (int c = 0; c < w.length; c++) {
             t.getColumnModel().getColumn(c).setPreferredWidth(w[c]);
         }
         javax.swing.JScrollPane sc = new javax.swing.JScrollPane(t);
-        sc.setPreferredSize(new java.awt.Dimension(840, 460));
+        sc.setPreferredSize(new java.awt.Dimension(1180, 500));
         return sc;
+    }
+
+    private String moTaDongChiTiet(String buoc) {
+        return "Điều kiện/hàm: " + buoc
+                + ". Dòng này tính trên giá trị ngay trước nó; cột Tương đương là % quy đổi của riêng bước này.";
+    }
+
+    private String giaTriCuoi(java.util.List<String[]> ds) {
+        if (ds == null || ds.isEmpty()) {
+            return "0";
+        }
+        try {
+            return fmt(Long.parseLong(ds.get(ds.size() - 1)[2]));
+        } catch (Exception ex) {
+            return "?";
+        }
     }
 
     private void doResetChieu() {

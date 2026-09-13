@@ -1578,14 +1578,6 @@ public class SkillService {
             }
             dameHit += (dameHit * bonusPercent / 100);
         }
-        // 5. Kiểm tra Detu master buff
-        if (plAtt.isDeTu) {
-            if (((Detu) plAtt).master != null && ((Detu) plAtt).master.charms != null
-                    && ((Detu) plAtt).master.charms.tdDeTu > System.currentTimeMillis()) {
-                dameHit *= 2;
-            }
-        }
-
         // 6. Kiểm tra miss
         if (miss) {
             dameHit = 0;

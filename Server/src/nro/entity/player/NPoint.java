@@ -54,6 +54,42 @@ public class NPoint {
         this.tlSpeed = new ArrayList<>();
     }
 
+    private static final String NGUON_KHONG_RO = "Nguồn không xác định";
+
+    private static final String[] VI_TRI_TRANG_BI = {
+        "Áo", "Quần", "Găng", "Giày", "Rada", "Cải trang",
+        "Giáp tập luyện", "Thú theo sau", "Danh hiệu", "Ô phụ"
+    };
+
+    private static final class NguonChiSo {
+
+        final long giaTri;
+        final String nguon;
+        final String dong;
+
+        NguonChiSo(long giaTri, String nguon, String dong) {
+            this.giaTri = giaTri;
+            this.nguon = nguon == null || nguon.isEmpty() ? NGUON_KHONG_RO : nguon;
+            this.dong = dong == null ? "" : dong;
+        }
+
+        String moTa() {
+            return dong.isEmpty() ? nguon : nguon + " | " + dong;
+        }
+    }
+
+    private List<NguonChiSo> nguonHpAdd = new ArrayList<>();
+    private List<NguonChiSo> nguonMpAdd = new ArrayList<>();
+    private List<NguonChiSo> nguonSdAdd = new ArrayList<>();
+    private List<NguonChiSo> nguonHpPct = new ArrayList<>();
+    private List<NguonChiSo> nguonMpPct = new ArrayList<>();
+    private List<NguonChiSo> nguonSdPct = new ArrayList<>();
+    private List<NguonChiSo> nguonSdMobPct = new ArrayList<>();
+    private List<NguonChiSo> nguonSdGiamPct = new ArrayList<>();
+    private NguonChiSo nguonSexyDame;
+    private NguonChiSo nguonCoolDame;
+    private NguonChiSo nguonCuteDame;
+
     public boolean isCrit;
     public boolean isCrit100;
     public boolean isCritTele;
@@ -398,7 +434,7 @@ public class NPoint {
             if (this.player.fusion.typeFusion == ConstPlayer.HOP_THE_PORATA2) {
                 this.player.inventory.itemsBag.stream().filter(it -> it.isNotNullItem() && it.template.id == 921).findFirst().ifPresent(btc2 -> {
                     for (ItemOption io : btc2.itemOptions) {
-                        addOption(io);
+                        addOption(io, nguonItem("Hành trang - bông tai cấp 2", btc2));
                         if (io.optionTemplate.id == 72) {
                             this.levelBT = io.param;
                         }
@@ -409,7 +445,7 @@ public class NPoint {
             if (this.player.fusion.typeFusion == ConstPlayer.HOP_THE_PORATA3) {
                 this.player.inventory.itemsBag.stream().filter(it -> it.isNotNullItem() && it.template.id == 1943).findFirst().ifPresent(btc3 -> {
                     for (ItemOption io : btc3.itemOptions) {
-                        addOption(io);
+                        addOption(io, nguonItem("Hành trang - bông tai cấp 3", btc3));
                         if (io.optionTemplate.id == 72) {
                             this.levelBT = io.param;
                         }
@@ -417,22 +453,27 @@ public class NPoint {
                 });
             }
     
-            if (BagesTemplate.sendListItemOption(player) != null) {
-                for (ItemOption io : BagesTemplate.sendListItemOption(player)) {
-                    addOption(io);
+            java.util.List<ItemOption> badgeOptions = BagesTemplate.sendListItemOption(player);
+            if (badgeOptions != null) {
+                for (ItemOption io : badgeOptions) {
+                    addOption(io, "Danh hiệu/badge đang bật");
                 }
             }
     
-            for (Item item : this.player.inventory.itemsBody) {
-                if (item.isNotNullItem()) {
+            for (int i = 0; i < this.player.inventory.itemsBody.size(); i++) {
+                Item item = this.player.inventory.itemsBody.get(i);
+                if (item != null && item.isNotNullItem()) {
                     if (item.template.id >= 592 && item.template.id <= 594) {
                         teleport = true;
                     }
-                    for (ItemOption io : item.itemOptions) {
-                        addOption(io);
+                    if (item.itemOptions != null) {
+                        for (ItemOption io : item.itemOptions) {
+                            addOption(io, nguonTrangBi(i, item));
+                        }
                     }
                 }
             }
+            setTinhNhatNguyetAn();
             setDameTrainArmor();
             setBasePoint();
             setOutfitFusion();
@@ -501,11 +542,15 @@ public class NPoint {
     private long hpTruocBuoc;
 
     private void ghiHp(String buoc, long giaTri) {
+        ghiHp(buoc, giaTri, "");
+    }
+
+    private void ghiHp(String buoc, long giaTri, String moTa) {
         if (nhatKyHp == null || giaTri == hpTruocBuoc) {
             return;
         }
         nhatKyHp.add(new String[]{buoc, String.valueOf(giaTri - hpTruocBuoc),
-            String.valueOf(giaTri)});
+            String.valueOf(giaTri), moTa == null ? "" : moTa});
         hpTruocBuoc = giaTri;
     }
 
@@ -526,20 +571,28 @@ public class NPoint {
     private long sdTruocBuoc;
 
     private void ghiMp(String buoc, long giaTri) {
+        ghiMp(buoc, giaTri, "");
+    }
+
+    private void ghiMp(String buoc, long giaTri, String moTa) {
         if (nhatKyMp == null || giaTri == mpTruocBuoc) {
             return;
         }
         nhatKyMp.add(new String[]{buoc, String.valueOf(giaTri - mpTruocBuoc),
-            String.valueOf(giaTri)});
+            String.valueOf(giaTri), moTa == null ? "" : moTa});
         mpTruocBuoc = giaTri;
     }
 
     private void ghiSd(String buoc, long giaTri) {
+        ghiSd(buoc, giaTri, "");
+    }
+
+    private void ghiSd(String buoc, long giaTri, String moTa) {
         if (nhatKySd == null || giaTri == sdTruocBuoc) {
             return;
         }
         nhatKySd.add(new String[]{buoc, String.valueOf(giaTri - sdTruocBuoc),
-            String.valueOf(giaTri)});
+            String.valueOf(giaTri), moTa == null ? "" : moTa});
         sdTruocBuoc = giaTri;
     }
 
@@ -643,7 +696,7 @@ public class NPoint {
                 for (nro.repository.dao.SetBonusDAO.Bonus b
                         : nro.repository.dao.SetBonusDAO.mocDangHuong(
                                 this.player.setClothes, setKey)) {
-                    apDungMotDong(b);
+                    apDungMotDong(setKey, b);
                 }
             }
         } catch (Exception ex) {
@@ -681,27 +734,50 @@ public class NPoint {
         }
     }
 
+    private static String dauSo(long v) {
+        return v >= 0 ? "+" : "";
+    }
+
+    private static String nguonSet(String setKey) {
+        return "Set kích hoạt: " + (setKey == null || setKey.isEmpty() ? "không rõ" : setKey);
+    }
+
+    private static String moTaSet(String setKey, nro.repository.dao.SetBonusDAO.Bonus b) {
+        if (b == null) {
+            return nguonSet(setKey) + " | Dòng set_bonus không rõ.";
+        }
+        return nguonSet(setKey) + " | "
+                + nro.repository.dao.SetBonusDAO.moTaChiSo(b.soMon, b.loai, b.giaTri, b.thamSo)
+                + " | Lấy từ bảng set_bonus, đã qua SetBonusDAO.mocDangHuong.";
+    }
+
     /** Cộng một dòng chỉ số set vào chỉ số hiện tại. */
-    private void apDungMotDong(nro.repository.dao.SetBonusDAO.Bonus b) {
+    private void apDungMotDong(String setKey, nro.repository.dao.SetBonusDAO.Bonus b) {
         long v = b.giaTri;
         switch (b.loai) {
             case "hp":
                 this.hpMax += v;
+                ghiHp("Set " + setKey + " " + dauSo(v) + v + " HP", this.hpMax, moTaSet(setKey, b));
                 break;
             case "hp_pct":
                 this.hpMax += calPercent(this.hpMax, (int) v);
+                ghiHp("Set " + setKey + " " + dauSo(v) + v + "% HP", this.hpMax, moTaSet(setKey, b));
                 break;
             case "ki":
                 this.mpMax += v;
+                ghiMp("Set " + setKey + " " + dauSo(v) + v + " KI", this.mpMax, moTaSet(setKey, b));
                 break;
             case "ki_pct":
                 this.mpMax += calPercent(this.mpMax, (int) v);
+                ghiMp("Set " + setKey + " " + dauSo(v) + v + "% KI", this.mpMax, moTaSet(setKey, b));
                 break;
             case "dame":
                 this.dame += v;
+                ghiSd("Set " + setKey + " " + dauSo(v) + v + " sức đánh", this.dame, moTaSet(setKey, b));
                 break;
             case "dame_pct":
                 this.dame += calPercent(this.dame, (int) v);
+                ghiSd("Set " + setKey + " " + dauSo(v) + v + "% sức đánh", this.dame, moTaSet(setKey, b));
                 break;
             case "def":
                 this.def += (int) v;
@@ -748,6 +824,9 @@ public class NPoint {
             case "dame_mob_pct":
                 // Danh sach: moi phan tu duoc nhan don o getDamage khi danh quai.
                 this.tlDameAttMob.add((int) v);
+                this.nguonSdMobPct.add(new NguonChiSo(v, nguonSet(setKey),
+                        nro.repository.dao.SetBonusDAO.moTaChiSo(b.soMon, b.loai, b.giaTri, b.thamSo)
+                        + " | Lấy từ bảng set_bonus."));
                 break;
             case "giap_pct":
                 this.tlGiap += (int) v;
@@ -834,20 +913,109 @@ public class NPoint {
                 }
                 ItemOption io = new ItemOption(oc.id, oc.param);
                 if (io.optionTemplate != null) {
-                    addOption(io);
+                    String nguon = "Sổ sưu tầm: " + mau.Name + " (id " + mau.Id
+                            + ", cấp hiện tại " + card.Level
+                            + (oc.active == 0 ? ", dòng mở khóa" : ", dòng Lv." + oc.active)
+                            + ")";
+                    addOption(io, nguon);
                 }
             }
         }
     }
 
+    private static String viTriTrangBi(int viTri) {
+        if (viTri >= 0 && viTri < VI_TRI_TRANG_BI.length) {
+            return VI_TRI_TRANG_BI[viTri];
+        }
+        return "Ô trang bị " + viTri;
+    }
+
+    private static String tenItem(Item item) {
+        if (item == null || item.template == null) {
+            return "vật phẩm không rõ";
+        }
+        return item.template.name + " (id " + item.template.id + ")";
+    }
+
+    private static String nguonTrangBi(int viTri, Item item) {
+        return "Trang bị - " + viTriTrangBi(viTri) + ": " + tenItem(item);
+    }
+
+    private static String nguonItem(String nhom, Item item) {
+        return nhom + ": " + tenItem(item);
+    }
+
+    private static String moTaOption(ItemOption io) {
+        if (io == null || io.optionTemplate == null) {
+            return "Option không rõ";
+        }
+        String text;
+        try {
+            text = io.getOptionString();
+        } catch (Exception ex) {
+            text = io.optionTemplate.name;
+        }
+        if (text == null || text.isEmpty()) {
+            text = io.optionTemplate.name;
+        }
+        return "Option " + io.optionTemplate.id + ": " + text;
+    }
+
+    private static NguonChiSo nguonChiSo(ItemOption io, String nguon, long giaTri) {
+        return new NguonChiSo(giaTri, nguon, moTaOption(io));
+    }
+
+    private static String moTaNguonList(List<NguonChiSo> ds) {
+        if (ds == null || ds.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (NguonChiSo n : ds) {
+            if (n == null) {
+                continue;
+            }
+            if (sb.length() > 0) {
+                sb.append("; ");
+            }
+            sb.append(n.moTa());
+        }
+        return sb.toString();
+    }
+
+    private void clearNguonChiSo() {
+        if (nguonHpAdd != null) {
+            nguonHpAdd.clear();
+            nguonMpAdd.clear();
+            nguonSdAdd.clear();
+            nguonHpPct.clear();
+            nguonMpPct.clear();
+            nguonSdPct.clear();
+            nguonSdMobPct.clear();
+            nguonSdGiamPct.clear();
+        }
+        nguonSexyDame = null;
+        nguonCoolDame = null;
+        nguonCuteDame = null;
+    }
+
     private void addOption(ItemOption io) {
+        addOption(io, NGUON_KHONG_RO);
+    }
+
+    private void addOption(ItemOption io, String nguon) {
+        if (io == null || io.optionTemplate == null) {
+            return;
+        }
         switch (io.optionTemplate.id) {
             case 0: //Tấn công +#
                 this.dameAdd += io.param;
+                this.nguonSdAdd.add(nguonChiSo(io, nguon, io.param));
                 break;
             case 2: //HP, KI+#000
                 this.hpAdd += io.param * 1000;
                 this.mpAdd += io.param * 1000;
+                this.nguonHpAdd.add(nguonChiSo(io, nguon, io.param * 1000L));
+                this.nguonMpAdd.add(nguonChiSo(io, nguon, io.param * 1000L));
                 break;
             case 3:// vô hiệu chưởng
                 this.voHieuChuong += io.param;
@@ -858,9 +1026,11 @@ public class NPoint {
                 break;
             case 6: //HP+#
                 this.hpAdd += io.param;
+                this.nguonHpAdd.add(nguonChiSo(io, nguon, io.param));
                 break;
             case 7: //KI+#
                 this.mpAdd += io.param;
+                this.nguonMpAdd.add(nguonChiSo(io, nguon, io.param));
                 break;
             case 8: //Hút #% HP, KI xung quanh mỗi 5 giây
                 this.tlHutHpMpXQ += io.param;
@@ -882,12 +1052,15 @@ public class NPoint {
                 break;
             case 19: //Tấn công+#% khi đánh quái
                 this.tlDameAttMob.add(io.param);
+                this.nguonSdMobPct.add(nguonChiSo(io, nguon, io.param));
                 break;
             case 22: //HP+#K
                 this.hpAdd += io.param * 1000;
+                this.nguonHpAdd.add(nguonChiSo(io, nguon, io.param * 1000L));
                 break;
             case 23: //MP+#K
                 this.mpAdd += io.param * 1000;
+                this.nguonMpAdd.add(nguonChiSo(io, nguon, io.param * 1000L));
                 break;
             case 24: //Làm chậm
                 this.wearingBuiBui = true;
@@ -946,13 +1119,17 @@ public class NPoint {
             case 48: //HP/KI+#
                 this.hpAdd += io.param;
                 this.mpAdd += io.param;
+                this.nguonHpAdd.add(nguonChiSo(io, nguon, io.param));
+                this.nguonMpAdd.add(nguonChiSo(io, nguon, io.param));
                 break;
             case 49: //Tấn công+#%
             case 50: //Sức đánh+#%
                 this.tlDame.add(io.param);
+                this.nguonSdPct.add(nguonChiSo(io, nguon, io.param));
                 break;
             case 77: //HP+#%
                 this.tlHp.add(io.param);
+                this.nguonHpPct.add(nguonChiSo(io, nguon, io.param));
                 break;
             case 80: //HP+#%/30s
                 this.tlHpHoi += io.param;
@@ -992,6 +1169,7 @@ public class NPoint {
                 break;
             case 103: //KI +#%
                 this.tlMp.add(io.param);
+                this.nguonMpPct.add(nguonChiSo(io, nguon, io.param));
                 break;
             case 104: //Biến #% tấn công quái thành HP
                 this.tlHutHpMob += io.param;
@@ -1024,10 +1202,12 @@ public class NPoint {
             case 117: //Đẹp +#% SĐ cho mình và người xung quanh
                 if (io.param > this.tlSexyDame) {
                     this.tlSexyDame = io.param;
+                    this.nguonSexyDame = nguonChiSo(io, nguon, io.param);
                 }
                 break;
             case 147: //+#% sức đánh
                 this.tlDame.add(io.param);
+                this.nguonSdPct.add(nguonChiSo(io, nguon, io.param));
                 break;
             case 155: //Giảm 50% sức đánh, HP, KI và +#% SM, TN, vàng từ quái
                 this.tlSubSD += 50;
@@ -1035,6 +1215,7 @@ public class NPoint {
                 this.tlSubMP += 50;
                 this.tlTNSM.add(io.param);
                 this.tlGold += io.param;
+                this.nguonSdGiamPct.add(new NguonChiSo(50, nguon, moTaOption(io)));
                 break;
             case 156:
                 this.tlCongDonSD += io.param;
@@ -1059,7 +1240,7 @@ public class NPoint {
                 this.tlGiamMu += io.param;
                 break;
             case 176: //
-                setInfoOption176();
+                setInfoOption176(nguon, io);
                 break;
             case 197:
                 this.tlTanCongTocXayda += io.param;
@@ -1100,6 +1281,7 @@ public class NPoint {
             case 258:
                 if (io.param > this.tlCoolDame) {
                     this.tlCoolDame = io.param;
+                    this.nguonCoolDame = nguonChiSo(io, nguon, io.param);
                 }
                 break;
             case 259: //HP+#%/10s
@@ -1108,6 +1290,7 @@ public class NPoint {
             case 226:
                 if (io.param > this.tlCuteAddame) {
                     this.tlCuteAddame = io.param;
+                    this.nguonCuteDame = nguonChiSo(io, nguon, io.param);
                 }
                 break;
             case 227:
@@ -1125,10 +1308,12 @@ public class NPoint {
         }
     }
 
-    private void setInfoOption176() {
+    private void setInfoOption176(String nguon, ItemOption io) {
         if (player.isPl()) {
-            this.tlDame.add(10);
-            speed = (byte) (5 + 3 * (50 / 100));
+            this.tlDame.add(20);
+            this.nguonSdPct.add(new NguonChiSo(20, nguon,
+                    moTaOption(io) + " | Hiệu ứng đủ 5 loại: +20% sức đánh"));
+            this.tlSpeed.add(50);
         }
     }
 
@@ -1155,7 +1340,11 @@ public class NPoint {
                 if (gtl != null && gtl.isNotNullItem()) {
                     this.wearingTrainArmor = true;
                     this.player.inventory.trainArmor = gtl;
-                    this.tlSubSD += ItemService.gI().getPercentTrainArmor(gtl);
+                    int pct = ItemService.gI().getPercentTrainArmor(gtl);
+                    this.tlSubSD += pct;
+                    this.nguonSdGiamPct.add(new NguonChiSo(pct,
+                            nguonItem("Trang bị - giáp tập luyện đang mặc", gtl),
+                            "Giảm sức đánh khi đang mặc giáp tập luyện"));
                 } else {
                     if (this.player.inventory.trainArmor == null) {
                         gtl = this.player.inventory.itemsBag.stream()
@@ -1175,8 +1364,14 @@ public class NPoint {
                             && this.player.inventory.trainArmor.itemOptions != null) {
                         for (ItemOption io : this.player.inventory.trainArmor.itemOptions) {
                             if (io != null && io.optionTemplate.id == 9 && io.param > 0) {
-                                this.tlDame.add(ItemService.gI()
-                                        .getPercentTrainArmor(this.player.inventory.trainArmor));
+                                int pct = ItemService.gI()
+                                        .getPercentTrainArmor(this.player.inventory.trainArmor);
+                                this.tlDame.add(pct);
+                                this.nguonSdPct.add(new NguonChiSo(pct,
+                                        nguonItem("Hành trang - giáp tập luyện còn hạn",
+                                                this.player.inventory.trainArmor),
+                                        "Không mặc trên người nên cộng +" + pct
+                                        + "% sức đánh từ giáp tập luyện"));
                                 break;
                             }
                         }
@@ -1368,16 +1563,36 @@ public class NPoint {
             hpTruocBuoc = 0;
         }
         // Tính toán giới hạn hpMax
-        long hpMax = this.hpg + this.hpAdd;
-        ghiHp("HP gốc + HP cộng thẳng từ đồ", hpMax);
+        long hpMax = this.hpg;
+        ghiHp("HP gốc (hpg)", hpMax, "Chỉ số HP gốc đang lưu trên nhân vật.");
+        long hpAddDaGhi = 0;
+        for (NguonChiSo n : this.nguonHpAdd) {
+            hpMax += n.giaTri;
+            hpAddDaGhi += n.giaTri;
+            ghiHp("Trang bị cộng thẳng HP", hpMax, n.moTa());
+        }
+        long hpAddChuaRo = this.hpAdd - hpAddDaGhi;
+        if (hpAddChuaRo != 0) {
+            hpMax += hpAddChuaRo;
+            ghiHp("HP cộng thẳng khác", hpMax,
+                    "Có nguồn cộng vào hpAdd nhưng chưa truyền mô tả nguồn.");
+        }
 //
 //        for (int tl : new ArrayList<>(this.tlHp)) {
 //            hpMax += (hpMax * tl / 100L);
 //        }
-        for (Integer tl : this.tlHp) {
-            if (tl != null) {
-                hpMax += (hpMax * tl / 100L);
-                ghiHp("Dòng % HP trên đồ (mỗi dòng nhân nối tiếp)", hpMax);
+        if (this.nguonHpPct.size() == this.tlHp.size()) {
+            for (NguonChiSo n : this.nguonHpPct) {
+                hpMax += (hpMax * n.giaTri / 100L);
+                ghiHp("Trang bị +" + n.giaTri + "% HP", hpMax,
+                        n.moTa() + " | Tính trên HP sau các dòng trước.");
+            }
+        } else {
+            for (Integer tl : this.tlHp) {
+                if (tl != null) {
+                    hpMax += (hpMax * tl / 100L);
+                    ghiHp("Dòng % HP trên đồ (mỗi dòng nhân nối tiếp)", hpMax);
+                }
             }
         }
          // Tinh ấn
@@ -1682,19 +1897,39 @@ public class NPoint {
             mpTruocBuoc = 0;
         }
         // Tính toán giới hạn mpMax
-        long mpMax = this.mpg + this.mpAdd;
-        ghiMp("KI gốc + KI cộng thẳng từ đồ", mpMax);
+        long mpMax = this.mpg;
+        ghiMp("KI gốc (mpg)", mpMax, "Chỉ số KI gốc đang lưu trên nhân vật.");
+        long mpAddDaGhi = 0;
+        for (NguonChiSo n : this.nguonMpAdd) {
+            mpMax += n.giaTri;
+            mpAddDaGhi += n.giaTri;
+            ghiMp("Trang bị cộng thẳng KI", mpMax, n.moTa());
+        }
+        long mpAddChuaRo = this.mpAdd - mpAddDaGhi;
+        if (mpAddChuaRo != 0) {
+            mpMax += mpAddChuaRo;
+            ghiMp("KI cộng thẳng khác", mpMax,
+                    "Có nguồn cộng vào mpAdd nhưng chưa truyền mô tả nguồn.");
+        }
 
         // Áp dụng các yếu tố ảnh hưởng đến mpMax
 //        for (Integer tl : this.tlMp) {
 //            mpMax += (mpMax * tl / 100L);
 //        }
-for (Integer tl : this.tlMp) {
-    if (tl != null) {
-        mpMax += (mpMax * tl / 100L);
-        ghiMp("Dòng % KI trên đồ (mỗi dòng nhân nối tiếp)", mpMax);
-    }
-}
+        if (this.nguonMpPct.size() == this.tlMp.size()) {
+            for (NguonChiSo n : this.nguonMpPct) {
+                mpMax += (mpMax * n.giaTri / 100L);
+                ghiMp("Trang bị +" + n.giaTri + "% KI", mpMax,
+                        n.moTa() + " | Tính trên KI sau các dòng trước.");
+            }
+        } else {
+            for (Integer tl : this.tlMp) {
+                if (tl != null) {
+                    mpMax += (mpMax * tl / 100L);
+                    ghiMp("Dòng % KI trên đồ (mỗi dòng nhân nối tiếp)", mpMax);
+                }
+            }
+        }
 // nhật ấn
 if (hasFull5NhatAn()) {
     mpMax += calPercent(mpMax, 15);
@@ -1972,16 +2207,37 @@ if (hasFull5NhatAn()) {
             nhatKySd.clear();
             sdTruocBuoc = 0;
         }
-        long dame = this.dameg + this.dameAdd;
-        ghiSd("Sức đánh gốc + cộng thẳng từ đồ", dame);
+        long dame = this.dameg;
+        ghiSd("Sức đánh gốc (dameg)", dame,
+                "Chỉ số sức đánh gốc đang lưu trên nhân vật.");
+        long sdAddDaGhi = 0;
+        for (NguonChiSo n : this.nguonSdAdd) {
+            dame += n.giaTri;
+            sdAddDaGhi += n.giaTri;
+            ghiSd("Trang bị cộng thẳng sức đánh", dame, n.moTa());
+        }
+        long sdAddChuaRo = this.dameAdd - sdAddDaGhi;
+        if (sdAddChuaRo != 0) {
+            dame += sdAddChuaRo;
+            ghiSd("Sức đánh cộng thẳng khác", dame,
+                    "Có nguồn cộng vào dameAdd nhưng chưa truyền mô tả nguồn.");
+        }
 
 //        for (Integer tl : this.tlDame) {
 //            dame += (dame * tl / 100L);
 //        }
-        for (Integer tl : this.tlDame) {
-            if (tl != null) {
-                dame += (dame * tl / 100L);
-                ghiSd("Dòng % sức đánh trên đồ (mỗi dòng nhân nối tiếp)", dame);
+        if (this.nguonSdPct.size() == this.tlDame.size()) {
+            for (NguonChiSo n : this.nguonSdPct) {
+                dame += (dame * n.giaTri / 100L);
+                ghiSd("Trang bị +" + n.giaTri + "% sức đánh", dame,
+                        n.moTa() + " | Tính trên sức đánh sau các dòng trước.");
+            }
+        } else {
+            for (Integer tl : this.tlDame) {
+                if (tl != null) {
+                    dame += (dame * tl / 100L);
+                    ghiSd("Dòng % sức đánh trên đồ (mỗi dòng nhân nối tiếp)", dame);
+                }
             }
         }
         // Nguyệt Ấn: đủ 5 món +15% Sức đánh
@@ -1993,131 +2249,169 @@ if (hasFull5NhatAn()) {
         if (this.player.isPl()) {
             if (InventoryService.gI().findItemRongNhi(this.player)) {
                 dame += calPercent(dame, 1);
-                ghiSd("InventoryService.gI().findItemRongNhi(player)", dame);
+                ghiSd("Rồng nhí trong hành trang (+1% sức đánh)", dame,
+                        "InventoryService.findItemRongNhi(player) trả về true.");
             }
-            dame += calPercent(dame, InventoryService.gI().DamageItemsInBoxCollection(this.player));
-            ghiSd("InventoryService.gI().findItemRongNhi(player)", dame);
+            int pctBox = InventoryService.gI().DamageItemsInBoxCollection(this.player);
+            if (pctBox != 0) {
+                dame += calPercent(dame, pctBox);
+                ghiSd("Bộ sưu tập +" + pctBox + "% sức đánh", dame,
+                        "Tính theo số vật phẩm trong rương sưu tầm.");
+            }
         }
 
 
         if (this.player.isPhanThan) {
             dame = calPercent(((PhanThan) this.player).master.nPoint.dame, SkillUtil.getPercentPhanThan(player));
-            ghiSd("isPhanThan", dame);
+            ghiSd("Phân thân: lấy % sức đánh sư phụ", dame,
+                    "SkillUtil.getPercentPhanThan(player) quyết định phân thân nhận bao nhiêu % từ master.");
         }
         if (this.player.THE_TUAN == 1 && this.player.LASTTIME_THE_TUAN > System.currentTimeMillis()) {
             dame += calPercent(dame, 3);
-            ghiSd("Thẻ tuần", dame);
+            ghiSd("Thẻ tuần +3% sức đánh", dame,
+                    "THE_TUAN=1 và LASTTIME_THE_TUAN còn hạn.");
         }
         if (this.player.THE_TUAN == 2 && this.player.LASTTIME_THE_TUAN > System.currentTimeMillis()) {
             dame += calPercent(dame, 5);
-            ghiSd("Thẻ tuần cao cấp", dame);
+            ghiSd("Thẻ tuần cao cấp +5% sức đánh", dame,
+                    "THE_TUAN=2 và LASTTIME_THE_TUAN còn hạn.");
         }
         if (this.player.THE_THANG == 1 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
             dame += calPercent(dame, 7);
-            ghiSd("Thẻ tháng", dame);
+            ghiSd("Thẻ tháng +7% sức đánh", dame,
+                    "THE_THANG=1 và LASTTIME_THE_THANG còn hạn.");
         }
         if (this.player.THE_THANG == 2 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
             dame += calPercent(dame, 10);
-            ghiSd("Thẻ tháng cao cấp", dame);
+            ghiSd("Thẻ tháng cao cấp +10% sức đánh", dame,
+                    "THE_THANG=2 và LASTTIME_THE_THANG còn hạn.");
         }
         if (this.player.THE_NAM == 1 && this.player.LASTTIME_THE_NAM > System.currentTimeMillis()) {
             dame += calPercent(dame, 15);
-            ghiSd("Thẻ năm", dame);
+            ghiSd("Thẻ năm +15% sức đánh", dame,
+                    "THE_NAM=1 và LASTTIME_THE_NAM còn hạn.");
         }
         if (this.player.THE_NAM == 2 && this.player.LASTTIME_THE_NAM > System.currentTimeMillis()) {
             dame += calPercent(dame, 18);
-            ghiSd("Thẻ năm cao cấp", dame);
+            ghiSd("Thẻ năm cao cấp +18% sức đánh", dame,
+                    "THE_NAM=2 và LASTTIME_THE_NAM còn hạn.");
         }
         if (this.player.THE_CHI_TON == 1 && this.player.LASTTIME_THE_CHI_TON > System.currentTimeMillis()) {
             dame += calPercent(dame, 20);
-            ghiSd("Thẻ chí tôn", dame);
+            ghiSd("Thẻ chí tôn +20% sức đánh", dame,
+                    "THE_CHI_TON=1 và LASTTIME_THE_CHI_TON còn hạn.");
         }
 
         if (this.player.tlDameClanAdd > 0) {
             dame += calPercent(dame, this.player.tlDameClanAdd);
-            ghiSd("tlDameClanAdd > 0", dame);
+            ghiSd("Bang hội +" + this.player.tlDameClanAdd + "% sức đánh", dame,
+                    "player.tlDameClanAdd nhận từ đồng đội/bang hội ở gần.");
         }
 
         if (this.player.effectSkill != null && this.player.effectSkill.isVirus) {
             dame -= calPercent(dame, 10);
-            ghiSd("effectSkill.isVirus", dame);
+            ghiSd("Virus -10% sức đánh", dame,
+                    "effectSkill.isVirus đang bật trên nhân vật.");
         }
 
-        dame += (dame * tlSexyDame / 100);
-        ghiSd("effectSkill.isVirus", dame);
+        if (tlSexyDame > 0) {
+            dame += (dame * tlSexyDame / 100);
+            ghiSd("Đẹp +" + tlSexyDame + "% sức đánh", dame,
+                    nguonSexyDame == null ? "Nguồn: option 117." : nguonSexyDame.moTa());
+        }
 
-        dame += (dame * tlCoolDame / 100);
-        ghiSd("effectSkill.isVirus", dame);
+        if (tlCoolDame > 0) {
+            dame += (dame * tlCoolDame / 100);
+            ghiSd("Cool +" + tlCoolDame + "% sức đánh", dame,
+                    nguonCoolDame == null ? "Nguồn: option 258." : nguonCoolDame.moTa());
+        }
 
-        dame += (dame * tlCuteAddame / 100);
-        ghiSd("effectSkill.isVirus", dame);
+        if (tlCuteAddame > 0) {
+            dame += (dame * tlCuteAddame / 100);
+            ghiSd("Cute +" + tlCuteAddame + "% sức đánh", dame,
+                    nguonCuteDame == null ? "Nguồn: option 226." : nguonCuteDame.moTa());
+        }
 
         if (this.player.isPl() && this.player.isUseDanhHieu_ThienTu == true && this.player.LastTimeDanhHieu_ThienTu > 0) {
             dame += calPercent(dame, 5);
-            ghiSd("isPl() && isUseDanhHieu_ThienTu == true && LastTimeDanhHieu_ThienTu > 0", dame);
+            ghiSd("Danh hiệu Thiên Tử +5% sức đánh", dame,
+                    "isUseDanhHieu_ThienTu bật và LastTimeDanhHieu_ThienTu còn hiệu lực.");
         }
         if (this.player.itemTime != null && this.player.itemTime.IsDuoiKhi) {
             dame += calPercent(dame, 10);
-            ghiSd("itemTime.IsDuoiKhi", dame);
+            ghiSd("Đuôi khỉ +10% sức đánh", dame,
+                    "itemTime.IsDuoiKhi đang bật.");
         }
         if (this.player.getBuff() == Buff.BUFF_ATK) {
             dame += calPercent(dame, 20);
-            ghiSd("getBuff() == Buff.BUFF_ATK", dame);
+            ghiSd("Buff tấn công +20% sức đánh", dame,
+                    "player.getBuff() == Buff.BUFF_ATK.");
         }
 
         if (this.player.itemTime != null && this.player.itemTime.isUseBanhDeoC1) {
             dame += calPercent(dame, 5);
-            ghiSd("itemTime.isUseBanhDeoC1", dame);
+            ghiSd("Bánh dẻo cấp 1 +5% sức đánh", dame,
+                    "itemTime.isUseBanhDeoC1 đang bật.");
         }
 
         if (this.player.itemTime != null && this.player.itemTime.isUseBanhDeoC2) {
             dame += calPercent(dame, 10);
-            ghiSd("itemTime.isUseBanhDeoC2", dame);
+            ghiSd("Bánh dẻo cấp 2 +10% sức đánh", dame,
+                    "itemTime.isUseBanhDeoC2 đang bật.");
         }
 
         if (this.player.itemTime != null && this.player.itemTime.isUseBanhDeoC3) {
             dame += calPercent(dame, 15);
-            ghiSd("itemTime.isUseBanhDeoC3", dame);
+            ghiSd("Bánh dẻo cấp 3 +15% sức đánh", dame,
+                    "itemTime.isUseBanhDeoC3 đang bật.");
         }
 
         if (this.player.itemTime != null && this.player.itemTime.isUseTrungThu1Trung) {
             dame += calPercent(dame, 10);
-            ghiSd("itemTime.isUseTrungThu1Trung", dame);
+            ghiSd("Trung thu 1 trứng +10% sức đánh", dame,
+                    "itemTime.isUseTrungThu1Trung đang bật.");
         }
 
         if (this.player.itemTime != null && this.player.itemTime.isUseTrungThu2Trung) {
             dame += calPercent(dame, 15);
-            ghiSd("itemTime.isUseTrungThu2Trung", dame);
+            ghiSd("Trung thu 2 trứng +15% sức đánh", dame,
+                    "itemTime.isUseTrungThu2Trung đang bật.");
         }
 
         if (this.player.itemTime != null && this.player.itemTime.isUseTrungThuDB) {
             dame += calPercent(dame, 20);
-            ghiSd("itemTime.isUseTrungThuDB", dame);
+            ghiSd("Trung thu đặc biệt +20% sức đánh", dame,
+                    "itemTime.isUseTrungThuDB đang bật.");
         }
 
         if (this.player.itemTime != null && this.player.itemTime.isUseHBTrungThu) {
             dame += calPercent(dame, 25);
-            ghiSd("itemTime.isUseHBTrungThu", dame);
+            ghiSd("Hộp bánh trung thu +25% sức đánh", dame,
+                    "itemTime.isUseHBTrungThu đang bật.");
         }
 
         if (this.player.itemTime != null && this.player.itemTime.isUseRocket1h) {
             dame += calPercent(dame, 20);
-            ghiSd("itemTime.isUseRocket1h", dame);
+            ghiSd("Rocket 1 giờ +20% sức đánh", dame,
+                    "itemTime.isUseRocket1h đang bật.");
         }
 
         if (this.player.effectSkill != null && this.player.effectSkill.isBongTuyet) {
             dame -= calPercent(dame, 20);
-            ghiSd("effectSkill.isBongTuyet", dame);
+            ghiSd("Bông tuyết -20% sức đánh", dame,
+                    "effectSkill.isBongTuyet đang bật.");
         }
 
         if (this.player.itemTime != null && this.player.itemTime.isRongXuong_2) {
             dame += calPercent(dame, 15);
-            ghiSd("itemTime.isRongXuong_2", dame);
+            ghiSd("Rồng xương cấp 2 +15% sức đánh", dame,
+                    "itemTime.isRongXuong_2 đang bật.");
         }
 
         if (this.player.effectSkin != null && this.player.effectSkin.isThoDaiKa) {
             dame -= calPercent(dame, 15);
-            ghiSd("effectSkin.isThoDaiKa", dame);
+            ghiSd("Thỏ đại ca -15% sức đánh", dame,
+                    "effectSkin.isThoDaiKa đang bật.");
         }
 
         //set worldcup
@@ -2125,13 +2419,15 @@ if (hasFull5NhatAn()) {
         //thức ăn
         if (!this.player.isDeTu && this.player.itemTime.isEatMeal || this.player.isDeTu && ((Detu) this.player).master.itemTime.isEatMeal) {
             dame += calPercent(dame, 10);
-            ghiSd("thức ăn (!isDeTu && itemTime.isEatMeal || isDeTu && ((Detu) player).master.itemTime.isEatMeal)", dame);
+            ghiSd("Thức ăn +10% sức đánh", dame,
+                    "Người chơi dùng itemTime.isEatMeal; đệ tử lấy trạng thái thức ăn từ sư phụ.");
         }
 
         if (this.player.Detu != null && this.player.fusion.typeFusion != ConstPlayer.NON_FUSION) {
             if (this.player.Detu.typeDeTu >= 5) {
                 dame += this.player.Detu.nPoint.dame * this.player.getPointfusion().getDameFusion() / 100L;
-                ghiSd("Đệ tử loại 5 trở lên (điểm hợp thể)", dame);
+                ghiSd("Đệ tử loại 5+ cộng sức đánh theo điểm hợp thể", dame,
+                        "Cộng đệ.nPoint.dame × getPointfusion().getDameFusion() / 100 khi đang hợp thể.");
             }
         }
 
@@ -2139,114 +2435,139 @@ if (hasFull5NhatAn()) {
          if (this.player.Detu != null && this.player.fusion.typeFusion != ConstPlayer.NON_FUSION) {
             if (this.player.Detu.typeDeTu == 1) {
                 dame += this.player.Detu.nPoint.dame *  20 / 100L;
-                ghiSd("Đệ tử loại 1 khi hợp thể (+20% của đệ)", dame);
+                ghiSd("Đệ tử loại 1 khi hợp thể +20% sức đánh của đệ", dame,
+                        "Cộng thêm 20% nPoint.dame của đệ tử loại 1.");
             }
         }
         if (this.player.Detu != null && this.player.fusion.typeFusion != ConstPlayer.NON_FUSION) {
             if (this.player.Detu.typeDeTu == 5) {
                 dame += this.player.Detu.nPoint.dame * 40/ 100L;
-                ghiSd("Đệ tử loại 5 khi hợp thể (+40% của đệ)", dame);
+                ghiSd("Đệ tử loại 5 khi hợp thể +40% sức đánh của đệ", dame,
+                        "Cộng thêm 40% nPoint.dame của đệ tử loại 5.");
             }
         }
         if (this.player.Detu != null && this.player.fusion.typeFusion != ConstPlayer.NON_FUSION) {
             dame += this.player.Detu.nPoint.dame;
-            ghiSd("Chỉ số đệ tử khi hợp thể", dame);
+            ghiSd("Hợp thể cộng 100% sức đánh của đệ tử", dame,
+                    "Cộng trực tiếp nPoint.dame hiện tại của đệ tử.");
         }
         if (this.player.fusion.typeFusion == ConstPlayer.HOP_THE_PORATA2) {
             dame += calPercent(dame, 5);
-            ghiSd("Hợp thể bông tai cấp 2", dame);
+            ghiSd("Hợp thể bông tai cấp 2 +5% sức đánh", dame,
+                    "fusion.typeFusion == HOP_THE_PORATA2.");
         }
         if (this.player.fusion.typeFusion == ConstPlayer.HOP_THE_PORATA3) {
             dame += calPercent(dame, 10);
-            ghiSd("Hợp thể bông tai cấp 3", dame);
+            ghiSd("Hợp thể bông tai cấp 3 +10% sức đánh", dame,
+                    "fusion.typeFusion == HOP_THE_PORATA3.");
         }
         if (this.player.fusion.typeFusion == ConstPlayer.HOP_THE_PORATA4) {
             dame += calPercent(dame, 15);
-            ghiSd("Hợp thể bông tai cấp 4", dame);
+            ghiSd("Hợp thể bông tai cấp 4 +15% sức đánh", dame,
+                    "fusion.typeFusion == HOP_THE_PORATA4.");
         }
         if (this.player.fusion.typeFusion == ConstPlayer.HOP_THE_PORATA5) {
             dame += calPercent(dame, 20);
-            ghiSd("Hợp thể bông tai cấp 5", dame);
+            ghiSd("Hợp thể bông tai cấp 5 +20% sức đánh", dame,
+                    "fusion.typeFusion == HOP_THE_PORATA5.");
         }
         //cuồng nộ
         if (this.player.itemTime != null && this.player.itemTime.isUseCuongNo) {
             dame *= 2;
-            ghiSd("cuồng nộ (itemTime.isUseCuongNo)", dame);
+            ghiSd("Cường nộ ×2 sức đánh", dame,
+                    "itemTime.isUseCuongNo đang bật.");
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao) {
             dame += calPercent(dame, 1);
-            ghiSd("itemTime.isUseHongDao", dame);
+            ghiSd("Hồng đào +1% sức đánh", dame,
+                    "itemTime.isUseHongDao đang bật.");
         }
         // hồng đào
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao0) {
             dame -= calPercent(dame, 99);
-            ghiSd("hồng đào (itemTime.isUseHongDao0)", dame);
+            ghiSd("Hồng đào 0 -99% sức đánh", dame,
+                    "itemTime.isUseHongDao0 đang bật.");
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao1) {
             dame += calPercent(dame, 2);
-            ghiSd("itemTime.isUseHongDao1", dame);
+            ghiSd("Hồng đào 1 +2% sức đánh", dame,
+                    "itemTime.isUseHongDao1 đang bật.");
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao3) {
             dame += calPercent(dame, 3);
-            ghiSd("itemTime.isUseHongDao3", dame);
+            ghiSd("Hồng đào 3 +3% sức đánh", dame,
+                    "itemTime.isUseHongDao3 đang bật.");
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao5) {
             dame += calPercent(dame, 5);
-            ghiSd("itemTime.isUseHongDao5", dame);
+            ghiSd("Hồng đào 5 +5% sức đánh", dame,
+                    "itemTime.isUseHongDao5 đang bật.");
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao10) {
             dame += calPercent(dame, 8);
-            ghiSd("itemTime.isUseHongDao10", dame);
+            ghiSd("Hồng đào 10 +8% sức đánh", dame,
+                    "itemTime.isUseHongDao10 đang bật.");
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao25) {
             dame += calPercent(dame, 12);
-            ghiSd("itemTime.isUseHongDao25", dame);
+            ghiSd("Hồng đào 25 +12% sức đánh", dame,
+                    "itemTime.isUseHongDao25 đang bật.");
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao50) {
             dame += calPercent(dame, 15);
-            ghiSd("itemTime.isUseHongDao50", dame);
+            ghiSd("Hồng đào 50 +15% sức đánh", dame,
+                    "itemTime.isUseHongDao50 đang bật.");
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao99) {
             dame += calPercent(dame, 20);
-            ghiSd("itemTime.isUseHongDao99", dame);
+            ghiSd("Hồng đào 99 +20% sức đánh", dame,
+                    "itemTime.isUseHongDao99 đang bật.");
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao999) {
             dame += calPercent(dame, 100);
-            ghiSd("itemTime.isUseHongDao999", dame);
+            ghiSd("Hồng đào 999 +100% sức đánh", dame,
+                    "itemTime.isUseHongDao999 đang bật.");
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseCuongNo2) {
-            dame *= 2.2;
-            ghiSd("itemTime.isUseCuongNo2", dame);
+            dame += calPercent(dame, 120);
+            ghiSd("Cường nộ cấp 2 (+120%, ×2.2)", dame,
+                    "itemTime.isUseCuongNo2 đang bật.");
         }
         if (this.player.itemTime != null && this.player.itemTime.istrbsd) {
             dame += calPercent(dame, 30);
-            ghiSd("itemTime.istrbsd", dame);
+            ghiSd("Thuốc rồng băng sức đánh +30%", dame,
+                    "itemTime.istrbsd đang bật.");
         }
         if (this.player.itemTime != null && this.player.itemTime.istrbsdxd) {
             dame += calPercent(dame, 15);
-            ghiSd("itemTime.istrbsdxd", dame);
+            ghiSd("Thuốc rồng băng sức đánh Xayda +15%", dame,
+                    "itemTime.istrbsdxd đang bật.");
         }
 
         if (this.player.itemTime != null && this.player.itemTime.isUseBanhTet) {
             dame += calPercent(dame, 15);
-            ghiSd("itemTime.isUseBanhTet", dame);
+            ghiSd("Bánh tét +15% sức đánh", dame,
+                    "itemTime.isUseBanhTet đang bật.");
         }
 
         if (this.player.itemTime != null && this.player.itemTime.isUseBanhTrung) {
             dame += calPercent(dame, 25);
-            ghiSd("itemTime.isUseBanhTrung", dame);
+            ghiSd("Bánh chưng +25% sức đánh", dame,
+                    "itemTime.isUseBanhTrung đang bật.");
         }
 
         // Phù map mabu
         if (this.player.isPhuHoMapMabu) {
             dame += 10_000;
-            ghiSd("Phù map mabu (isPhuHoMapMabu)", dame);
+            ghiSd("Phù map Mabu +10.000 sức đánh", dame,
+                    "player.isPhuHoMapMabu đang bật.");
         }
         if (this.player.isPlMan()) {
             Attribute at = ServerManager.gI().getAttributeManager().find(ConstAttribute.SUC_DANH);
             if (at != null && !at.isExpired()) {
                 dame += calPercent(dame, at.getValue());
-                ghiSd("!at.isExpired()", dame);
+                ghiSd("Sự kiện máy chủ +" + at.getValue() + "% sức đánh", dame,
+                        "Attribute SUC_DANH còn hiệu lực trên toàn máy chủ.");
             }
         }
         // Top Whis KHONG con cong chi so: gio thuong thoi vang moi ngay,
@@ -2257,71 +2578,86 @@ if (hasFull5NhatAn()) {
             int tiLeDameSucManhBocPha = SkillUtil.getPercentDameSucManhBocPha(player.playerSkill.skillSelect.point);
             if (this.player.effectSkill.isSUcManhBocPha) {
                 dame += (dame * tiLeDameSucManhBocPha / 100);
-                ghiSd("effectSkill.isSUcManhBocPha", dame);
+                ghiSd("Sức mạnh bộc phá +" + tiLeDameSucManhBocPha + "% sức đánh", dame,
+                        "Tính theo cấp kỹ năng đang chọn.");
             }
         }
         //giảm dame
-        dame -= (dame * tlSubSD / 100);
-        ghiSd("effectSkill.isSUcManhBocPha", dame);
+        if (tlSubSD > 0) {
+            dame -= (dame * tlSubSD / 100);
+            ghiSd("Giảm sức đánh -" + tlSubSD + "%", dame,
+                    moTaNguonList(nguonSdGiamPct));
+        }
 
         if (!this.player.isBoss && !this.player.getBot() && this.player.zone != null && MapService.gI().isMapCold(this.player.zone.map) && !this.isKhongLanh) {
             dame /= 2;
-            ghiSd("giảm dame (!isBoss && !getBot() && isMapCold(zone.map) && !isKhongLanh)", dame);
+            ghiSd("Map lạnh: giảm 50% sức đánh", dame,
+                    "Không phải boss/bot, đang ở map lạnh và chưa có kháng lạnh.");
         }
 
         if (!this.player.isBoss && !this.player.getBot() && this.player.zone != null && MapService.gI().isMapChristMasEvent(this.player.zone.map.mapId) && !this.isKhongLanh) {
             dame /= 2;
-            ghiSd("!isBoss && !getBot() && isMapChristMasEvent(zone.map.mapId) && !isKhongLanh", dame);
+            ghiSd("Map Noel: giảm 50% sức đánh", dame,
+                    "Không phải boss/bot, đang ở map Christmas Event và chưa có kháng lạnh.");
         }
 
         if (!this.player.isBoss && !this.player.getBot() && this.player.zone != null && MapService.gI().isMap5000NamTruoc(this.player.zone.map.mapId)) {
             dame -= calPercent(dame, 90);
-            ghiSd("!isBoss && !getBot() && isMap5000NamTruoc(zone.map.mapId)", dame);
+            ghiSd("Map 5000 năm trước: giảm 90% sức đánh", dame,
+                    "Không phải boss/bot và đang ở map 5000 năm trước.");
         }
 
         if (player.gender == ConstPlayer.XAYDA) {
             if (!this.player.isBoss && !this.player.getBot() && this.player.zone != null && MapService.gI().isMapCereal(this.player.zone.map)) {
                 dame /= 2;
-                ghiSd("!isBoss && !getBot() && isMapCereal(zone.map)", dame);
+                ghiSd("Xayda ở map Cereal: giảm 50% sức đánh", dame,
+                        "Áp riêng cho hệ Xayda khi ở map Cereal.");
             }
         }
 
         // Xử lý ngọc rồng đen 1 sao
         if (this.player.rewardBlackBall.timeOutOfDateReward[0] > System.currentTimeMillis()) {
             dame += (dame * RewardBlackBall.R1S_2 / 100);
-            ghiSd("Xử lý ngọc rồng đen 1 sao (rewardBlackBall.timeOutOfDateReward[0] > bây giờ)", dame);
+            ghiSd("Ngọc rồng đen 1 sao +" + RewardBlackBall.R1S_2 + "% sức đánh", dame,
+                    "rewardBlackBall.timeOutOfDateReward[0] còn hạn.");
         }
 
         if (this.player.effectSkill.isMonkey) {
             if (!laDeDangHopThe()) {
                 int percent = SkillUtil.getPercentDameMonkey(player.effectSkill.levelMonkey);
                 dame += (dame * percent / 100);
-                ghiSd("Biến khỉ", dame);
+                ghiSd("Biến khỉ +" + percent + "% sức đánh", dame,
+                        "Tính theo levelMonkey; bỏ qua khi đệ đang hợp thể.");
             }
         }
 
         // Xử lý phù
         if (this.player.zone != null && MapService.gI().isMapBlackBallWar(this.player.zone.map.mapId)) {
             dame *= this.player.effectSkin.xDame;
-            ghiSd("Xử lý phù (isMapBlackBallWar(zone.map.mapId))", dame);
+            ghiSd("Map ngọc rồng đen ×" + this.player.effectSkin.xDame + " sức đánh", dame,
+                    "Nhân theo effectSkin.xDame trong Black Ball War.");
         }
 
         if (this.player.itemTime != null && this.player.itemTime.Ishamburgersau) {
             dame += calPercent(dame, 10);
-            ghiSd("itemTime.Ishamburgersau", dame);
+            ghiSd("Hamburger sầu +10% sức đánh", dame,
+                    "itemTime.Ishamburgersau đang bật.");
         }
 
         if (this.player.itemTime != null && this.player.itemTime.Isthuocmothuong) {
             dame += calPercent(dame, 10);
-            ghiSd("itemTime.Isthuocmothuong", dame);
+            ghiSd("Thuốc mỡ thường +10% sức đánh", dame,
+                    "itemTime.Isthuocmothuong đang bật.");
         }
         if (this.player.itemTime != null && this.player.itemTime.Isthuocmodacbiet) {
             dame += calPercent(dame, 10);
-            ghiSd("itemTime.Isthuocmodacbiet", dame);
+            ghiSd("Thuốc mỡ đặc biệt +10% sức đánh", dame,
+                    "itemTime.Isthuocmodacbiet đang bật.");
         }
         if (this.player.itemTime != null && this.player.itemTime.iscuarangme) {
             dame += calPercent(dame, 5);
-            ghiSd("itemTime.iscuarangme", dame);
+            ghiSd("Cua rang me +5% sức đánh", dame,
+                    "itemTime.iscuarangme đang bật.");
         }
         this.dame = dame;
     }
@@ -2358,6 +2694,8 @@ if (hasFull5NhatAn()) {
         }
         if (this.player.itemTime != null && this.player.itemTime.IsKhauTrang) {
             this.tlDameAttMob.add(10);
+            this.nguonSdMobPct.add(new NguonChiSo(10, "Item time - khẩu trang",
+                    "IsKhauTrang đang bật: +10% sát thương khi đánh quái."));
         }
         if (this.player.itemTime != null && this.player.itemTime.isUseSatThuongChuan) {
             this.tlstc += 10;
@@ -2594,6 +2932,7 @@ if (hasFull5NhatAn()) {
     }
 
     private void resetPoint() {
+        clearNguonChiSo();
         this.voHieuChuong = 0;
         this.hpAdd = 0;
         this.mpAdd = 0;
@@ -2701,66 +3040,69 @@ if (hasFull5NhatAn()) {
     }
 
     public double getDameAttack(boolean isAttackMob) {
+        intrinsic = this.player.playerIntrinsic == null ? null : this.player.playerIntrinsic.intrinsic;
         setIsCrit();
         long dameAttack = this.dame;
-        intrinsic = this.player.playerIntrinsic.intrinsic;
         percentDameIntrinsic = 0;
         int percentDameSkill = 0;
         // int chu khong phai byte: set viet cung cho 100 roi cong them
         // cau hinh 100 nua la 200 — tran byte thanh -56, tuc tru sat
         // thuong thay vi cong.
         int percentXDame = 0;
-        Skill skillSelect = player.playerSkill.skillSelect;
+        Skill skillSelect = player.playerSkill == null ? null : player.playerSkill.skillSelect;
+        if (skillSelect == null || skillSelect.template == null) {
+            return dameAttack;
+        }
         if (skillSelect.template.id != Skill.DICH_CHUYEN_TUC_THOI && isCritTele) {
             isCrit = true;
             isCritTele = false;
         }
         switch (skillSelect.template.id) {
             case Skill.DRAGON:
-                if (intrinsic.id == 1) {
+                if (intrinsic != null && intrinsic.id == 1) {
                     percentDameIntrinsic = intrinsic.param1;
                 }
                 percentDameSkill = skillSelect.damage;
                 break;
             case Skill.KAMEJOKO:
-                if (intrinsic.id == 2) {
+                if (intrinsic != null && intrinsic.id == 2) {
                     percentDameIntrinsic = intrinsic.param1;
                 }
                 percentDameSkill = skillSelect.damage;
                 break;
             case Skill.GALICK:
-                if (intrinsic.id == 16) {
+                if (intrinsic != null && intrinsic.id == 16) {
                     percentDameIntrinsic = intrinsic.param1;
                 }
                 percentDameSkill = skillSelect.damage;
                 break;
             case Skill.ANTOMIC:
-                if (intrinsic.id == 17) {
+                if (intrinsic != null && intrinsic.id == 17) {
                     percentDameIntrinsic = intrinsic.param1;
                 }
                 percentDameSkill = skillSelect.damage;
                 break;
             case Skill.DEMON:
-                if (intrinsic.id == 8) {
+                if (intrinsic != null && intrinsic.id == 8) {
                     percentDameIntrinsic = intrinsic.param1;
                 }
                 percentDameSkill = skillSelect.damage;
                 break;
             case Skill.MASENKO:
-                if (intrinsic.id == 9) {
+                if (intrinsic != null && intrinsic.id == 9) {
                     percentDameIntrinsic = intrinsic.param1;
                 }
                 percentDameSkill = skillSelect.damage;
                 break;
             case Skill.LIEN_HOAN:
-                if (intrinsic.id == 13) {
+                if (intrinsic != null && intrinsic.id == 13) {
                     percentDameIntrinsic = intrinsic.param1;
                 }
 //                percentDameSkill = skillSelect.damage;
                 percentDameSkill = skillSelect.damage;
                 break;
             case Skill.KAIOKEN:
-                if (intrinsic.id == 26) {
+                if (intrinsic != null && intrinsic.id == 26) {
                     percentDameIntrinsic = intrinsic.param1;
                 }
                 percentDameSkill = skillSelect.damage;
@@ -2835,7 +3177,8 @@ if (hasFull5NhatAn()) {
         dameAttack += (dameAttack * percentDameIntrinsic / 100);
         dameAttack += (dameAttack * dameAfter / 100);
 
-        if (this.player.effectSkill != null && this.player.effectSkill.isDameBuff && (tlSexyDame == 0 || tlCoolDame == 0 || tlCuteAddame == 0)) {
+        if (this.player.effectSkill != null && this.player.effectSkill.isDameBuff
+                && this.player.effectSkill.tileDameBuff > 0) {
             int tiLeDame = this.player.effectSkill.tileDameBuff;
             dameAttack += (dameAttack * tiLeDame / 100L);
         }
@@ -2844,7 +3187,10 @@ if (hasFull5NhatAn()) {
             for (Integer tl : this.tlDameAttMob) {
                 dameAttack += (dameAttack * tl / 100);
             }
-            if (this.player.isDeTu && ((Detu) this.player).master.charms.tdDeTu > System.currentTimeMillis()) {
+            if (this.player.isDeTu
+                    && ((Detu) this.player).master != null
+                    && ((Detu) this.player).master.charms != null
+                    && ((Detu) this.player).master.charms.tdDeTu > System.currentTimeMillis()) {
                 dameAttack *= 2;
             }
         }
@@ -2854,12 +3200,6 @@ if (hasFull5NhatAn()) {
         if (isCrit) {
             dameAttack *= 2;
             dameAttack += (dameAttack * tlSDCM / 100);
-        }
-
-        if (isAttackMob) {
-            for (Integer tl : this.tlDameAttMob) {
-                dameAttack += (dameAttack * tl / 100);
-            }
         }
 
         // Phan tram sat thuong chieu tu cau hinh set (bang set_bonus, loai
@@ -2883,6 +3223,350 @@ if (hasFull5NhatAn()) {
             player.effectSkin.lastTimeXChuong = System.currentTimeMillis();
         }
         return dameAttack;
+    }
+
+    private static void ghiDameTrace(java.util.List<String[]> ds, String buoc,
+            long truoc, long sau, String moTa) {
+        ds.add(new String[]{buoc, String.valueOf(sau - truoc), String.valueOf(sau),
+            moTa == null ? "" : moTa});
+    }
+
+    private static long sauKhiCongPct(long giaTri, long pct) {
+        return giaTri + giaTri * pct / 100L;
+    }
+
+    private static String tenSkill(Skill skill) {
+        if (skill == null) {
+            return "không có kỹ năng đang chọn";
+        }
+        String ten = skill.template != null && skill.template.name != null
+                ? skill.template.name : "kỹ năng";
+        int id = skill.template != null ? skill.template.id : skill.skillId;
+        return ten + " (id " + id + ", cấp " + skill.point
+                + ", damage " + skill.damage + "%)";
+    }
+
+    private static String moTaNhan(double heSo) {
+        return String.format(java.util.Locale.US, "×%.2f", heSo).replace(".00", "");
+    }
+
+    private java.util.List<String[]> apDungDameSauSkillService(java.util.List<String[]> ds, long dame,
+            Skill skillSelect, boolean isAttackMob) {
+        long now = System.currentTimeMillis();
+        if (!isAttackMob) {
+            double heSo = 1.0;
+            try {
+                heSo = nro.core.config.SkillDamageConfig.getMultiplier(skillSelect.template.id);
+            } catch (Exception ignored) {
+                heSo = 1.0;
+            }
+            if (heSo != 1.0) {
+                long truoc = dame;
+                dame = (long) (dame * heSo);
+                ghiDameTrace(ds, "SkillDamageConfig PvP " + moTaNhan(heSo), truoc, dame,
+                        "Áp trong SkillService.playerAttackPlayer sau getDameAttack(false).");
+            }
+            if (this.player.isPl() && this.player.effectSkin != null
+                    && this.player.effectSkin.isXDame) {
+                ghiDameTrace(ds, "Ghi chú XDame khi đánh boss", dame, dame,
+                        "Nếu mục tiêu PvP là boss, SkillService sẽ chia damage còn 1/3.");
+            }
+            if (this.player.isPlMan() && this.tlDameBoss > 0) {
+                ghiDameTrace(ds, "Ghi chú +" + this.tlDameBoss + "% damage boss", dame, dame,
+                        "Chỉ cộng trong PvP khi mục tiêu là boss; popup này chưa biết mục tiêu.");
+            }
+            ghiDameTrace(ds, "Sau đó qua phòng thủ mục tiêu", dame, dame,
+                    "Player.injured còn xét né đòn, giáp, xuyên giáp, sát thương chuẩn, giảm damage theo hệ/map và HP mục tiêu.");
+            return ds;
+        }
+
+        boolean batTu = this.player.charms != null && this.player.charms.tdBatTu > now;
+        boolean halloween = this.player.effectSkill != null && this.player.effectSkill.isHalloween;
+        if ((batTu || halloween) && this.hp <= 1 && !this.player.isDeTu) {
+            long truoc = dame;
+            dame = 0;
+            ghiDameTrace(ds, "Bùa bất tử/Halloween khi còn 1 HP", truoc, dame,
+                    "SkillService.playerAttackMob chặn người chơi thường tấn công khi đang được bảo vệ.");
+        }
+        if (this.player.charms != null && this.player.charms.tdManhMe > now) {
+            long truoc = dame;
+            dame += dame * 150 / 100L;
+            ghiDameTrace(ds, "Bùa mạnh mẽ +150% damage quái", truoc, dame,
+                    "Áp trong SkillService.playerAttackMob sau getDameAttack(true).");
+        }
+        if (this.player.clan != null && this.player.clan.BuaManhMe > now) {
+            int bonusPercent = this.player.clan.level * 10;
+            if (bonusPercent > 100) {
+                bonusPercent = 100;
+            }
+            long truoc = dame;
+            dame += dame * bonusPercent / 100L;
+            ghiDameTrace(ds, "Bùa mạnh mẽ bang +" + bonusPercent + "% damage quái", truoc, dame,
+                    "Áp theo cấp bang trong SkillService.playerAttackMob, tối đa +100%.");
+        }
+        if (dame > 2_000_000_000L) {
+            long truoc = dame;
+            dame = 2_000_000_000L;
+            ghiDameTrace(ds, "Giới hạn damage gửi vào Mob.injured", truoc, dame,
+                    "SkillService.playerAttackMob chặn damage quái tối đa 2.000.000.000 trước khi gọi Mob.injured.");
+        }
+        if (this.tlDameMobFly > 0 || this.tlDameMobMonkey > 0 || this.tlDameMobRun > 0) {
+            ghiDameTrace(ds, "Ghi chú damage theo loại quái", dame, dame,
+                    "Mob.injured sẽ cộng tiếp nếu đúng loại: bay +" + this.tlDameMobFly
+                    + "%, khỉ +" + this.tlDameMobMonkey + "%, mặt đất/chạy +"
+                    + this.tlDameMobRun + "%. Popup này chưa biết quái mục tiêu.");
+        }
+        ghiDameTrace(ds, "Sau đó qua luật của quái", dame, dame,
+                "Mob.injured còn xét HP hiện tại, siêu quái, mộc nhân/bù nhìn, map đặc biệt và loại quái.");
+        return ds;
+    }
+
+    public java.util.List<String[]> giaiThichDameDauRa(boolean isAttackMob, boolean tinhChiMang) {
+        java.util.List<String[]> ds = new java.util.ArrayList<>();
+        long dameAttack = this.dame;
+        ghiDameTrace(ds, "Sức đánh hiện tại (nPoint.dame)", 0, dameAttack,
+                "Con số cuối của tab SĐ, sau trang bị, item time, fusion, set và các hiệu ứng chỉ số.");
+
+        if (this.player == null || this.player.playerSkill == null
+                || this.player.playerSkill.skillSelect == null
+                || this.player.playerSkill.skillSelect.template == null) {
+            ghiDameTrace(ds, "Không có kỹ năng đang chọn", dameAttack, dameAttack,
+                    "Không thể mô phỏng damage đầu ra nếu playerSkill.skillSelect đang null.");
+            return ds;
+        }
+
+        Skill skillSelect = this.player.playerSkill.skillSelect;
+        Intrinsic noiTai = this.player.playerIntrinsic == null
+                ? null : this.player.playerIntrinsic.intrinsic;
+        int percentDameIntrinsic = 0;
+        int percentDameSkill = 0;
+        int skillId = skillSelect.template.id;
+        String skillText = tenSkill(skillSelect);
+
+        switch (skillId) {
+            case Skill.DRAGON:
+                if (noiTai != null && noiTai.id == 1) {
+                    percentDameIntrinsic = noiTai.param1;
+                }
+                percentDameSkill = skillSelect.damage;
+                break;
+            case Skill.KAMEJOKO:
+                if (noiTai != null && noiTai.id == 2) {
+                    percentDameIntrinsic = noiTai.param1;
+                }
+                percentDameSkill = skillSelect.damage;
+                break;
+            case Skill.GALICK:
+                if (noiTai != null && noiTai.id == 16) {
+                    percentDameIntrinsic = noiTai.param1;
+                }
+                percentDameSkill = skillSelect.damage;
+                break;
+            case Skill.ANTOMIC:
+                if (noiTai != null && noiTai.id == 17) {
+                    percentDameIntrinsic = noiTai.param1;
+                }
+                percentDameSkill = skillSelect.damage;
+                break;
+            case Skill.DEMON:
+                if (noiTai != null && noiTai.id == 8) {
+                    percentDameIntrinsic = noiTai.param1;
+                }
+                percentDameSkill = skillSelect.damage;
+                break;
+            case Skill.MASENKO:
+                if (noiTai != null && noiTai.id == 9) {
+                    percentDameIntrinsic = noiTai.param1;
+                }
+                percentDameSkill = skillSelect.damage;
+                break;
+            case Skill.LIEN_HOAN:
+                if (noiTai != null && noiTai.id == 13) {
+                    percentDameIntrinsic = noiTai.param1;
+                }
+                percentDameSkill = skillSelect.damage;
+                break;
+            case Skill.KAIOKEN:
+                if (noiTai != null && noiTai.id == 26) {
+                    percentDameIntrinsic = noiTai.param1;
+                }
+                percentDameSkill = skillSelect.damage;
+                break;
+            case Skill.TU_SAT:
+                percentDameSkill = skillSelect.damage;
+                break;
+            case Skill.DICH_CHUYEN_TUC_THOI:
+                ghiDameTrace(ds, "Dịch chuyển tức thời ép chí mạng", dameAttack, dameAttack,
+                        "getDameAttack ép isCrit=true và dao động khoảng ±5% trước khi nhân chí mạng.");
+                tinhChiMang = true;
+                break;
+            case Skill.MAKANKOSAPPO:
+                long truocMakan = dameAttack;
+                dameAttack = Util.CrisGH((long) this.mpMax * skillSelect.damage / 100L);
+                ghiDameTrace(ds, "Makankosappo lấy KI tối đa × damage%", truocMakan, dameAttack,
+                        skillText + " | Chiêu này return sớm, không đi qua công thức SĐ chung.");
+                int tlMakan = nro.repository.dao.SetBonusDAO.phanTramSkill(
+                        this.player.setClothes, Skill.MAKANKOSAPPO);
+                if (tlMakan != 0) {
+                    long truoc = dameAttack;
+                    dameAttack = sauKhiCongPct(dameAttack, tlMakan);
+                    ghiDameTrace(ds, "Set skill Makankosappo +" + tlMakan + "%", truoc, dameAttack,
+                            "Lấy từ set_bonus loại skill_pct, tham_so=MAKANKOSAPPO.");
+                }
+                return dsSauRandomSom(ds, dameAttack, skillSelect, isAttackMob);
+            case Skill.QUA_CAU_KENH_KHI:
+                long hpmob = 0;
+                long hppl = 0;
+                if (this.player.zone != null) {
+                    for (Mob mob : this.player.zone.mobs) {
+                        if (mob != null && !mob.isDie()
+                                && Util.getDistance(this.player, mob) <= SkillUtil.getRangeQCKK(skillSelect.point)) {
+                            hpmob += mob.point.hp;
+                        }
+                    }
+                    for (Player pl : this.player.zone.getHumanoids()) {
+                        if (pl != null && !pl.isDie() && this.player.id != pl.id
+                                && Util.getDistance(this.player, pl) <= SkillUtil.getRangeQCKK(skillSelect.point)) {
+                            hppl += pl.nPoint.hp;
+                        }
+                    }
+                }
+                long truocQckk = dameAttack;
+                dameAttack = (hpmob * 10 / 100L) + (hppl * 10 / 100L) + this.dame * 10L;
+                ghiDameTrace(ds, "Quả cầu kênh khi", truocQckk, dameAttack,
+                        "10% tổng HP quái gần + 10% tổng HP người gần + SĐ hiện tại ×10. HP quái="
+                        + hpmob + ", HP người=" + hppl + ".");
+                int tlQckk = phanTramSetTheoLoai("qckk_pct");
+                if (tlQckk != 0) {
+                    long truoc = dameAttack;
+                    dameAttack = sauKhiCongPct(dameAttack, tlQckk);
+                    ghiDameTrace(ds, "Set qckk_pct +" + tlQckk + "%", truoc, dameAttack,
+                            "Tổng phần trăm từ set_bonus loại qckk_pct.");
+                }
+                int tlQckkChieu = nro.repository.dao.SetBonusDAO.phanTramSkill(
+                        this.player.setClothes, Skill.QUA_CAU_KENH_KHI);
+                if (tlQckkChieu != 0) {
+                    long truoc = dameAttack;
+                    dameAttack = sauKhiCongPct(dameAttack, tlQckkChieu);
+                    ghiDameTrace(ds, "Set skill QCKK +" + tlQckkChieu + "%", truoc, dameAttack,
+                            "Lấy từ set_bonus loại skill_pct, tham_so=QUA_CAU_KENH_KHI.");
+                }
+                ghiDameTrace(ds, "Dao động ngẫu nhiên QCKK", dameAttack, dameAttack,
+                        "Cú thật cộng ngẫu nhiên từ -5% đến +5%; bảng giữ giá trị trung tâm để dễ kiểm tra.");
+                return apDungDameSauSkillService(ds, dameAttack, skillSelect, isAttackMob);
+            case Skill.DE_TRUNG:
+                int tlDanhThuong = phanTramSetTheoLoai("danh_thuong_pct");
+                if (tlDanhThuong != 0) {
+                    long truoc = dameAttack;
+                    dameAttack = sauKhiCongPct(dameAttack, tlDanhThuong);
+                    ghiDameTrace(ds, "Set đánh thường +" + tlDanhThuong + "%", truoc, dameAttack,
+                            "Tổng phần trăm từ set_bonus loại danh_thuong_pct.");
+                }
+                int tlDeTrung = nro.repository.dao.SetBonusDAO.phanTramSkill(
+                        this.player.setClothes, Skill.DE_TRUNG);
+                if (tlDeTrung != 0) {
+                    long truoc = dameAttack;
+                    dameAttack = sauKhiCongPct(dameAttack, tlDeTrung);
+                    ghiDameTrace(ds, "Set skill Đẻ trứng +" + tlDeTrung + "%", truoc, dameAttack,
+                            "Lấy từ set_bonus loại skill_pct, tham_so=DE_TRUNG.");
+                }
+                return dsSauRandomSom(ds, dameAttack, skillSelect, isAttackMob);
+            default:
+                break;
+        }
+
+        if (percentDameSkill != 0) {
+            long truoc = dameAttack;
+            dameAttack = dameAttack * percentDameSkill / 100L;
+            ghiDameTrace(ds, "Kỹ năng " + skillText, truoc, dameAttack,
+                    "Nhân theo damage% của skill trước nội tại và các buff damage đầu ra.");
+        }
+        if (percentDameIntrinsic != 0) {
+            long truoc = dameAttack;
+            dameAttack = sauKhiCongPct(dameAttack, percentDameIntrinsic);
+            ghiDameTrace(ds, "Nội tại +" + percentDameIntrinsic + "% damage skill", truoc, dameAttack,
+                    "Nội tại id " + (noiTai == null ? "null" : noiTai.id)
+                    + " khớp với kỹ năng đang chọn.");
+        }
+        if (this.dameAfter != 0) {
+            long truoc = dameAttack;
+            dameAttack = sauKhiCongPct(dameAttack, this.dameAfter);
+            ghiDameTrace(ds, "dameAfter +" + this.dameAfter + "%", truoc, dameAttack,
+                    "Giá trị cộng một lần, getDameAttack thật sẽ reset dameAfter về 0 sau khi tính.");
+        }
+        if (this.player.effectSkill != null && this.player.effectSkill.isDameBuff
+                && this.player.effectSkill.tileDameBuff > 0) {
+            int tiLeDame = this.player.effectSkill.tileDameBuff;
+            long truoc = dameAttack;
+            dameAttack = sauKhiCongPct(dameAttack, tiLeDame);
+            ghiDameTrace(ds, "Buff damage tạm +" + tiLeDame + "%", truoc, dameAttack,
+                    "effectSkill.isDameBuff/tileDameBuff, nhận từ aura Đẹp/Cool/Cute của người khác.");
+        }
+        if (isAttackMob) {
+            if (this.nguonSdMobPct.size() == this.tlDameAttMob.size()) {
+                for (NguonChiSo n : this.nguonSdMobPct) {
+                    long truoc = dameAttack;
+                    dameAttack = sauKhiCongPct(dameAttack, n.giaTri);
+                    ghiDameTrace(ds, "Đánh quái +" + n.giaTri + "%", truoc, dameAttack,
+                            n.moTa() + " | Chỉ áp một lần trong getDameAttack(true).");
+                }
+            } else {
+                for (Integer tl : this.tlDameAttMob) {
+                    if (tl != null) {
+                        long truoc = dameAttack;
+                        dameAttack = sauKhiCongPct(dameAttack, tl);
+                        ghiDameTrace(ds, "Đánh quái +" + tl + "%", truoc, dameAttack,
+                                "Nguồn chưa gắn mô tả; lấy từ tlDameAttMob.");
+                    }
+                }
+            }
+            if (this.player.isDeTu
+                    && ((Detu) this.player).master != null
+                    && ((Detu) this.player).master.charms != null
+                    && ((Detu) this.player).master.charms.tdDeTu > System.currentTimeMillis()) {
+                long truoc = dameAttack;
+                dameAttack *= 2;
+                ghiDameTrace(ds, "Bùa đệ tử của sư phụ ×2", truoc, dameAttack,
+                        "Áp một lần trong getDameAttack(true); SkillService không nhân lại lần hai nữa.");
+            }
+        }
+        if (tinhChiMang) {
+            long truoc = dameAttack;
+            dameAttack *= 2;
+            ghiDameTrace(ds, "Chí mạng ×2", truoc, dameAttack,
+                    "Bảng này đang xem nhánh chí mạng; thực tế phụ thuộc tỉ lệ crit/isCrit100/isCritTele.");
+            if (this.tlSDCM != 0) {
+                truoc = dameAttack;
+                dameAttack = sauKhiCongPct(dameAttack, this.tlSDCM);
+                ghiDameTrace(ds, "Sát thương chí mạng +" + this.tlSDCM + "%", truoc, dameAttack,
+                        "Tổng tlSDCM từ set, item time và các dòng cộng sát thương chí mạng.");
+            }
+        }
+        int percentXDame = nro.repository.dao.SetBonusDAO.phanTramSkill(
+                this.player.setClothes, skillId);
+        if (percentXDame != 0) {
+            long truoc = dameAttack;
+            dameAttack = sauKhiCongPct(dameAttack, percentXDame);
+            ghiDameTrace(ds, "Set skill " + skillText + " +" + percentXDame + "%", truoc, dameAttack,
+                    "Lấy từ set_bonus loại skill_pct, tham_so=id kỹ năng đang chọn.");
+        }
+        ghiDameTrace(ds, "Dao động ngẫu nhiên cuối", dameAttack, dameAttack,
+                "getDameAttack cộng thêm khoảng ±5% trước khi trả damage; bảng giữ giá trị trung tâm.");
+        if (this.player.effectSkin != null && this.player.effectSkin.isXChuong
+                && (skillId == Skill.KAMEJOKO || skillId == Skill.ANTOMIC || skillId == Skill.MASENKO)) {
+            long truoc = dameAttack;
+            dameAttack *= this.xChuong;
+            ghiDameTrace(ds, "X chưởng ×" + this.xChuong, truoc, dameAttack,
+                    "effectSkin.isXChuong đang bật; cú thật sẽ bật isXDame rồi tắt isXChuong.");
+        }
+        return apDungDameSauSkillService(ds, dameAttack, skillSelect, isAttackMob);
+    }
+
+    private java.util.List<String[]> dsSauRandomSom(java.util.List<String[]> ds, long dameAttack,
+            Skill skillSelect, boolean isAttackMob) {
+        ghiDameTrace(ds, "Chiêu return sớm", dameAttack, dameAttack,
+                "Không qua phần skill damage chung, chí mạng chung, dameAfter hay dao động cuối của getDameAttack.");
+        return apDungDameSauSkillService(ds, dameAttack, skillSelect, isAttackMob);
     }
 
     public int getCurrPercentHP() {
