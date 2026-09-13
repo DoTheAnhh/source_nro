@@ -222,6 +222,8 @@ namespace Game1
     		this.parentScreen = parentScreen;
     		this.to = to;
     		isShow = false;
+    		God.HopNhapChu.getInstance().dong();
+    		God.HopNhapChu.getInstance().chu = parentScreen;
     		God.HopNhapChu.getInstance().moRa(tieuDe, banDau, 100, goTiengViet,
     				chu =>
     		{

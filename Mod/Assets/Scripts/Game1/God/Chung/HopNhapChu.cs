@@ -38,6 +38,34 @@ namespace Game1.God
 
         public bool dangMo;
 
+        /// <summary>Màn đã mở hộp (nơi nhận chuỗi gõ xong), hoặc null.</summary>
+        /// <remarks>
+        /// Chỗ mở đặt nó <b>trước</b> khi gọi <see cref="moRa"/>; <see cref="dong"/>
+        /// xoá đi. Dùng để chốt an toàn trong <c>ClientManager</c> nhận ra hộp này
+        /// là của chính bảng đang mở — xem <see cref="laCuaBangDangMo"/>.
+        /// </remarks>
+        public object chu;
+
+        /// <summary>Hộp do chính bảng của game đang hiện mở ra.</summary>
+        /// <remarks>
+        /// Ô điền số lượng khi giao dịch là của bảng giao dịch, mà bảng ấy
+        /// <b>vẫn mở</b> suốt lúc gõ. Chốt an toàn đóng hộp khi thấy bảng mở,
+        /// nên trước đây sau một giây hộp tự biến mất giữa lúc đang gõ — và cú
+        /// bấm OK rơi xuống màn game, trúng khoảng trống cạnh bảng, đóng bảng,
+        /// tức <b>huỷ luôn giao dịch</b>.
+        /// </remarks>
+        public bool laCuaBangDangMo()
+        {
+            if (!dangMo || chu == null)
+            {
+                return false;
+            }
+            return (GameCanvas.panel != null && chu == (object) GameCanvas.panel
+                        && GameCanvas.panel.isShow)
+                    || (GameCanvas.panel2 != null && chu == (object) GameCanvas.panel2
+                        && GameCanvas.panel2.isShow);
+        }
+
         /// <summary>Lúc hộp được mở, theo đồng hồ máy.</summary>
         private long lucMo;
 
@@ -155,6 +183,7 @@ namespace Game1.God
         public void dong()
         {
             dangMo = false;
+            chu = null;
             dongBanPhimMay();
             // Bo ham goi lai: giu lai thi lan mo sau ma cho goi quen truyen ham
             // moi se chay nham ham cua lan truoc.

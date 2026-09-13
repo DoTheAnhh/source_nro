@@ -248,7 +248,11 @@ namespace Game3.God
                     && !GameCanvas.panel.isClose)
             {
                 BanPhimSo.getInstance().dong();
-                if (!HopNhapChu.getInstance().vuaMo)
+                // Hop do CHINH bang dang mo goi ra (o dien so luong giao dich)
+                // thi de yen: dong no la nguoi choi dang go thi hop bien mat,
+                // roi cu bam OK roi xuong man game va dong luon bang giao dich.
+                if (!HopNhapChu.getInstance().vuaMo
+                        && !HopNhapChu.getInstance().laCuaBangDangMo())
                 {
                     HopNhapChu.getInstance().dong();
                 }

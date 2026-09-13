@@ -11583,11 +11583,22 @@ namespace Game1
     
         public void onChatFromMe(string text, string to)
         {
-            if (chatTField.tfChat.getText() == null || chatTField.tfChat.getText().Equals(string.Empty) || text.Equals(string.Empty) || text == null)
+            // Chuoi go xong nam o THAM SO `text`, khong phai o o nhap cu.
+            //
+            // Tren dien thoai, chu go vao hop God.HopNhapChu roi duoc chuyen
+            // thang vao day; `tfChat` khong he duoc ghi gi va luon rong. Ban
+            // truoc xet `tfChat` truoc tien nen tra ve ngay — dien so luong giao
+            // dich xong bam OK ma khong co mon nao duoc dua vao. Cac nhanh ben
+            // duoi van doc `tfChat`, nen chep chuoi vao do truoc khi xet tiep.
+            if (string.IsNullOrEmpty(text) || chatTField == null)
             {
-                chatTField.isShow = false;
+                if (chatTField != null)
+                {
+                    chatTField.isShow = false;
+                }
                 return;
             }
+            chatTField.tfChat.setText(text);
             if (chatTField.strChat.Equals(mResources.input_clan_name))
             {
                 InfoDlg.showWait();
