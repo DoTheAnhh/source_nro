@@ -1112,6 +1112,9 @@ namespace Game3
     	public bool blindEff;
     
     	public bool telePortSkill;
+
+    	/// <summary>Lúc bật <see cref="telePortSkill"/>, để tự tắt nếu máy chủ không trả lời.</summary>
+    	public long lucTelePortSkill;
     
     	public bool sleepEff;
     
@@ -5286,6 +5289,7 @@ namespace Game3
     			}
     			ServerEffect.addServerEffect(60, cx, cy, 1);
     			telePortSkill = true;
+    			lucTelePortSkill = mSystem.currentTimeMillis();
     		}
     		if (skillPaint.id >= 107 && skillPaint.id <= 113)
     		{

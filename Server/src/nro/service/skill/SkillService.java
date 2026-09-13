@@ -81,7 +81,44 @@ public class SkillService {
                 return t;
             });
 
+    /**
+     * Dùng chiêu — và bảo đảm một cú <b>dịch chuyển tức thời</b> không thành
+     * luôn được báo lại cho client.
+     *
+     * <h3>Vì sao phải có</h3>
+     *
+     * <p>Client dùng dịch chuyển là tự nhảy tới mục tiêu ngay và bật cờ
+     * <code>telePortSkill</code>. Cờ ấy <b>chặn gửi toạ độ</b> lên máy chủ, và chỉ tắt
+     * khi nhận gói đặt vị trí (123) mà máy chủ gửi lúc dịch chuyển thành công.</p>
+     *
+     * <p>Nhưng có cả chục đường dừng im lặng trước lúc đó: mục tiêu vừa bị
+     * Kamejoko hạ, chưa hồi chiêu, thiếu KI, đang dính hiệu ứng, hết thể lực.
+     * Không có gói nào về, cờ kẹt mãi, client thôi gửi toạ độ — máy chủ giữ vị
+     * trí cũ từ đó tới lúc đăng xuất. Đi qua cổng thì máy chủ lấy cổng gần vị
+     * trí CŨ, có khi là cổng hướng khác: client hiện tên map này, máy chủ đưa
+     * sang map kia, và bản đồ loạn.</p>
+     *
+     * <p>Nên sau mỗi lần dùng: là dịch chuyển mà vị trí trên máy chủ không đổi
+     * thì gửi riêng cho người chơi vị trí thật, kéo client về và tắt cờ.</p>
+     */
     public boolean useSkill(Player player, Player plTarget, Mob mobTarget, int status, Message msg) {
+        boolean laDichChuyen = player != null && player.isPl()
+                && player.location != null && player.playerSkill != null
+                && player.playerSkill.skillSelect != null
+                && player.playerSkill.skillSelect.template != null
+                && player.playerSkill.skillSelect.template.id == Skill.DICH_CHUYEN_TUC_THOI
+                && (plTarget != null || mobTarget != null);
+        int xCu = laDichChuyen ? player.location.x : 0;
+        int yCu = laDichChuyen ? player.location.y : 0;
+        boolean ketQua = useSkillGoc(player, plTarget, mobTarget, status, msg);
+        if (laDichChuyen && player.location != null
+                && player.location.x == xCu && player.location.y == yCu) {
+            Service.gI().setPosChoRieng(player, xCu, yCu);
+        }
+        return ketQua;
+    }
+
+    private boolean useSkillGoc(Player player, Player plTarget, Mob mobTarget, int status, Message msg) {
         long tStart = System.currentTimeMillis();
         long tCheckClan = 0, tSkillData = 0, tEffectCheck = 0, tSkillUse = 0;
 

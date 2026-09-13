@@ -793,6 +793,16 @@ public class Service {
      *   byte  cachTinh    0 cao nhất · 1 cộng dồn · 2 chỉ mốc 5
      * </pre>
      */
+    /**
+     * Mã gói bảng mốc set kích hoạt.
+     *
+     * <p><b>Không phải 123.</b> Bản đầu dùng 123, mà 123 là gói <i>đặt vị trí</i>
+     * (<code>setPos</code>) — client đọc nó ở Controller2 trước, rồi Controller lại
+     * đọc tiếp như bảng mốc set và vượt cuối gói. Bảng mốc set vì thế cũng
+     * không bao giờ tới client đúng.</p>
+     */
+    public static final int GOI_CHE_DO_MOC_SET = 126;
+
     public void guiCheDoMocSet(Player player) {
         if (player == null || !player.isPl()) {
             return;
@@ -801,7 +811,7 @@ public class Service {
         try {
             java.util.List<int[]> ds =
                     nro.repository.dao.SetBonusDAO.bangMocChoClient();
-            msg = new Message(123);
+            msg = new Message(GOI_CHE_DO_MOC_SET);
             msg.writer().writeShort(ds.size());
             for (int[] d : ds) {
                 msg.writer().writeShort(d[0]);
@@ -2605,6 +2615,32 @@ public class Service {
             msg.cleanup();
         } catch (Exception e) {
             Logger.logException(Service.class, e);
+        }
+    }
+
+    /**
+     * Đặt lại vị trí chỉ cho <b>chính người chơi</b>, không phát hiệu ứng cho
+     * người xung quanh.
+     *
+     * <p>Dùng để kéo client về đúng chỗ máy chủ đang giữ khi một cú dịch chuyển
+     * tức thời không thành. Kiểu vị trí 1 là kiểu client dùng để tắt cờ
+     * <code>telePortSkill</code> — xem <code>SkillService.useSkill</code>.</p>
+     */
+    public void setPosChoRieng(Player player, int x, int y) {
+        Message msg = null;
+        try {
+            msg = new Message(123);
+            msg.writer().writeInt((int) player.id);
+            msg.writer().writeShort(x);
+            msg.writer().writeShort(y);
+            msg.writer().writeByte(1);
+            player.sendMessage(msg);
+        } catch (Exception e) {
+            Logger.logException(Service.class, e);
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
         }
     }
 

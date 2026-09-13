@@ -3870,9 +3870,12 @@ namespace Game1
                             }
                         }
                         break;
-                    case 123:
+                    case 126:
                         {
                             // Bang cach tinh moc cua cac set kich hoat.
+                            //
+                            // KHONG dung 123: 123 la goi dat vi tri, Controller2
+                            // da doc no roi — doc them o day la vuot cuoi goi.
                             int soDongSet = msg.reader().readUnsignedShort();
                             Panel.xoaCheDoMocSet();
                             for (int iSet = 0; iSet < soDongSet; iSet++)

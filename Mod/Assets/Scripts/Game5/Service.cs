@@ -1050,6 +1050,18 @@ namespace Game5
     
     	public void charMove()
     	{
+    		// Co dich chuyen tuc thoi TU TAT sau hai giay.
+    		//
+    		// Co nay chan gui toa do va chi tat khi may chu gui goi dat vi tri.
+    		// Cu dich chuyen hong (muc tieu vua chet, chua hoi chieu...) thi may
+    		// chu khong gui gi, co ket, client thoi gui toa do toi luc dang xuat —
+    		// may chu giu vi tri cu, di qua cong la sang nham ban do. May chu nay
+    		// da tra goi ca khi hong; day la luoi an toan khi goi bi lac.
+    		if (Char.myCharz().telePortSkill
+    				&& mSystem.currentTimeMillis() - Char.myCharz().lucTelePortSkill > 2000)
+    		{
+    			Char.myCharz().telePortSkill = false;
+    		}
     		int num = Char.myCharz().cx - Char.myCharz().cxSend;
     		int num2 = Char.myCharz().cy - Char.myCharz().cySend;
     		if (Char.ischangingMap || (num == 0 && num2 == 0) || Controller.isStopReadMessage || Char.myCharz().isTeleport || Char.myCharz().cy <= 0 || Char.myCharz().telePortSkill)

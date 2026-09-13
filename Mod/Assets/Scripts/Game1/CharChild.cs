@@ -37,6 +37,7 @@ namespace Game1
                 skillPaint = GameScr.sks[skillPaint.id - 65];
                 ServerEffect.addServerEffect(60, cx, cy, 1);
                 telePortSkill = true;
+                lucTelePortSkill = mSystem.currentTimeMillis();
             }
             if (skillPaint.id >= 107 && skillPaint.id <= 113)
             {
