@@ -154,7 +154,9 @@ public class BaHatMit extends Npc {
                                     // panel, nen mot muc la du.
                                     createOtherMenu(player, ConstMenu.MENU_NANG_CAP_TRANG_BI,
                                             "Ta sẽ biến trang bị của ngươi thành trang bị Kích Hoạt",
-                                            "Nâng đồ\nHủy diệt", "Nâng cấp\nset kích hoạt");
+                                            // Bo muc "Nang do Huy diet": khong con nang do
+                                            // than len huy diet o day nua.
+                                            "Nâng cấp\nset kích hoạt");
                                     break;
                                 case 2:
                                     ChangeMapService.gI().changeMapNonSpaceship(player, 112, 200 + Util.nextInt(-100, 100), 408);
@@ -276,9 +278,6 @@ public class BaHatMit extends Npc {
                         case ConstMenu.MENU_NANG_CAP_TRANG_BI: {
                             switch (select) {
                                 case 0:
-                                    CombineService.gI().openTabCombine(player, CombineService.NANG_CAP_DO_HD);
-                                    break;
-                                case 1:
                                     CombineService.gI().openTabCombine(player, CombineService.NANG_CAP_KICH_HOAT);
                                     break;
                             }

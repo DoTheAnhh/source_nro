@@ -1523,29 +1523,8 @@ public class NPoint {
             hpMax += calPercent(hpMax, 20);
             ghiHp("Buff HP (+20%)", hpMax);
         }
-        //TOP WHIS
-        List<Player> list = TopKillWhisManager.getInstance().getList();
-        if (!list.isEmpty() && list.size() > 2 && this.player.isPl()) {
-            if (list.size() >= 5 && this.player.isPl()) {
-                int playerRank = getPlayerRank(list, this.player);
-                if (playerRank == 1) {
-                    hpMax += calPercent(hpMax, 30);
-                    ghiHp("Top Whis hạng 1 (+30%)", hpMax);
-                } else if (playerRank == 2) {
-                    hpMax += calPercent(hpMax, 20);
-                    ghiHp("Top Whis hạng 2 (+20%)", hpMax);
-                } else if (playerRank == 3) {
-                    hpMax += calPercent(hpMax, 10);
-                    ghiHp("Top Whis hạng 3 (+10%)", hpMax);
-                } else if (playerRank >= 4 && playerRank <= 5) {
-                    hpMax += calPercent(hpMax, 5);
-                    ghiHp("Top Whis hạng 4–5 (+5%)", hpMax);
-                } else if (playerRank >= 6 && playerRank <= 10) {
-                    hpMax += calPercent(hpMax, 3);
-                    ghiHp("Top Whis hạng 6–10 (+3%)", hpMax);
-                }
-            }
-        }
+        // Top Whis KHONG con cong chi so: gio thuong thoi vang moi ngay,
+        // xem TopWhisDAO.phatNeuCan.
 
         // Phù map mabu
         if (this.player.isPhuHoMapMabu) {
@@ -1862,28 +1841,8 @@ if (hasFull5NhatAn()) {
                 ghiMp("!at.isExpired()", mpMax);
             }
         }
-        //WHIS
-        List<Player> list = TopKillWhisManager.getInstance().getList();
-        if (!list.isEmpty() && list.size() > 2 && this.player.isPl()) {
-            if (list.size() >= 5 && this.player.isPl()) {
-                int playerRank = getPlayerRank(list, this.player);
-                if (playerRank == 1) {
-                    mpMax += calPercent(mpMax, 30);
-                    ghiMp("Top Whis hạng 1", mpMax);
-                } else if (playerRank == 2) {
-                    mpMax += calPercent(mpMax, 20);
-                    ghiMp("Top Whis hạng 2", mpMax);
-                } else if (playerRank == 3) {
-                    this.hpMax += calPercent(mpMax, 10);
-                } else if (playerRank >= 4 && playerRank <= 5) {
-                    mpMax += calPercent(mpMax, 5);
-                    ghiMp("Top Whis hạng 4–5", mpMax);
-                } else if (playerRank >= 6 && playerRank <= 10) {
-                    mpMax += calPercent(mpMax, 3);
-                    ghiMp("Top Whis hạng 6–10", mpMax);
-                }
-            }
-        }
+        // Top Whis KHONG con cong chi so: gio thuong thoi vang moi ngay,
+        // xem TopWhisDAO.phatNeuCan.
 
         //hồng đào
         if (this.player.itemTime != null && this.player.itemTime.isUseHongDao0) {
@@ -2290,29 +2249,8 @@ if (hasFull5NhatAn()) {
                 ghiSd("!at.isExpired()", dame);
             }
         }
-        //WHIS
-        List<Player> list = TopKillWhisManager.getInstance().getList();
-        if (!list.isEmpty() && list.size() > 2 && this.player.isPl()) {
-            if (list.size() >= 5 && this.player.isPl()) {
-                int playerRank = getPlayerRank(list, this.player);
-                if (playerRank == 1) {
-                    dame += calPercent(dame, 30);
-                    ghiSd("Top Whis hạng 1", dame);
-                } else if (playerRank == 2) {
-                    dame += calPercent(dame, 20);
-                    ghiSd("Top Whis hạng 2", dame);
-                } else if (playerRank == 3) {
-                    dame += calPercent(dame, 10);
-                    ghiSd("Top Whis hạng 3", dame);
-                } else if (playerRank >= 4 && playerRank <= 5) {
-                    dame += calPercent(dame, 5);
-                    ghiSd("Top Whis hạng 4–5", dame);
-                } else if (playerRank >= 6 && playerRank <= 10) {
-                    dame += calPercent(dame, 3);
-                    ghiSd("Top Whis hạng 6–10", dame);
-                }
-            }
-        }
+        // Top Whis KHONG con cong chi so: gio thuong thoi vang moi ngay,
+        // xem TopWhisDAO.phatNeuCan.
 
         //SucManhBocPha
         if (player.isPl() && player.playerSkill.skillSelect != null) {

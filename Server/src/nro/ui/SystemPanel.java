@@ -88,7 +88,8 @@ public class SystemPanel extends JPanel {
         tabs.addTab("Boss & quái", nhomThe(
                 the("Boss", buildBossTongHop()),
                 the("Đồ rơi từ quái", buildDoRoiTongHop()),
-                the("Top máy đấm", buildTopMayDamTab())));
+                the("Top máy đấm", buildTopMayDamTab()),
+                the("Top Whis", buildTopWhisTab())));
         tabs.addTab("Vật phẩm", nhomThe(
                 the("Tỉ lệ", buildTiLeTab()),
                 the("Tỉ lệ nâng sao", buildTiLeSaoTab()),
@@ -225,6 +226,9 @@ public class SystemPanel extends JPanel {
                     break;
                 case "Top máy đấm":
                     napBangTop();
+                    break;
+                case "Top Whis":
+                    napBangWhis();
                     break;
                 case "Nhiệm vụ chính tuyến":
                     napBangNhiemVuChinh();
@@ -7308,6 +7312,218 @@ public class SystemPanel extends JPanel {
         napBangTop();
         note(n >= 0 ? OK_GREEN : WARN_RED, n >= 0
                 ? "Đã xoá bảng xếp hạng — " + n + " nhân vật về 0."
+                : "Không xoá được — xem log máy chủ.");
+    }
+
+    // ---------------------------------------------------------------- top Whis
+    private static final int COT_W_HANG = 0;
+    private static final int COT_W_ID = 1;
+    private static final int COT_W_TEN = 2;
+    private static final int COT_W_LV = 3;
+    private static final int COT_W_GIAY = 4;
+    private static final int COT_W_THUONG = 5;
+    private static final int COT_W_DA_NHAN = 6;
+    private static final int COT_W_ONLINE = 7;
+
+    private final DefaultTableModel whisModel = new DefaultTableModel(
+            new Object[]{"Hạng", "Id", "Tên nhân vật", "Cấp Whis",
+                "Thời gian (giây)", "Thưởng / ngày", "Hôm nay đã nhận",
+                "Đang online"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return c == COT_W_LV || c == COT_W_GIAY;
+        }
+    };
+    private final JTable whisTable = new JTable(whisModel);
+    private final JTextField whisTop1 = new JTextField(5);
+    private final JTextField whisTop25 = new JTextField(5);
+    private final JTextField whisTop6 = new JTextField(5);
+
+    /**
+     * Tab <b>Top Whis</b> — bảng xếp hạng Thách Đấu Whis và mức thưởng mỗi ngày.
+     *
+     * <p>Cùng cách làm với tab Top máy đấm: kỷ lục nằm trên từng nhân vật (cột
+     * {@code data_luyentap}), sửa một dòng là sửa thẳng kỷ lục người đó. Xem
+     * {@code TopWhisDAO}.</p>
+     */
+    private JComponent buildTopWhisTab() {
+        JPanel root = new JPanel(new BorderLayout(0, 8));
+        root.setOpaque(false);
+        root.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        whisTable.setRowHeight(24);
+        whisTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        int[] w = {50, 70, 220, 90, 120, 110, 120, 90};
+        for (int i = 0; i < whisTable.getColumnCount() && i < w.length; i++) {
+            whisTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
+        }
+
+        JPanel tren = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        tren.setOpaque(false);
+        tren.add(new JLabel("Thỏi vàng mỗi ngày — Top 1:"));
+        tren.add(whisTop1);
+        tren.add(new JLabel("Top 2–5:"));
+        tren.add(whisTop25);
+        tren.add(new JLabel("Top 6 trở đi:"));
+        tren.add(whisTop6);
+        tren.add(button("Lưu mức thưởng", ACCENT, e -> luuMucThuongWhis()));
+
+        JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        nut.setOpaque(false);
+        nut.add(button("Lưu các dòng đã sửa", OK_GREEN, e -> luuBangWhis()));
+        nut.add(button("Tải lại", GREY, e -> napBangWhis()));
+        nut.add(button("Xoá kỷ lục dòng đang chọn", new Color(120, 90, 160),
+                e -> xoaMotDongWhis()));
+        nut.add(button("XOÁ TOÀN BỘ BẢNG", WARN_RED, e -> xoaToanBoWhis()));
+
+        JPanel dau = new JPanel(new BorderLayout(0, 4));
+        dau.setOpaque(false);
+        dau.add(nhan("Bảng xếp hạng Thách Đấu Whis ở NPC Whis. Xếp theo <b>cấp Whis "
+                + "đã hạ</b> cao nhất, cùng cấp thì ai hạ <b>nhanh hơn</b> đứng trên."
+                + "<br><br>"
+                + "Đứng top <b>không còn được cộng chỉ số</b>. Thay vào đó mỗi ngày "
+                + "được thỏi vàng theo hạng: hạng 1, hạng 2–5, và hạng 6 trở đi "
+                + "(tới hạng 100). Thưởng tự vào hành trang lần đầu nhân vật online "
+                + "trong ngày, tính theo hạng <b>lúc nhận</b>; chưa lọt top thì chiều "
+                + "lọt top vẫn nhận được. Hành trang đầy thì chưa phát, đợi có chỗ."
+                + "<br><br>"
+                + "Kỷ lục <b>nằm trên từng nhân vật</b>, sửa một dòng là sửa thẳng kỷ "
+                + "lục người đó, người đang online cũng được sửa luôn trong bộ nhớ. "
+                + "Đặt cấp về 0 là đưa người đó ra khỏi bảng."), BorderLayout.NORTH);
+        dau.add(tren, BorderLayout.SOUTH);
+
+        root.add(dau, BorderLayout.NORTH);
+        root.add(ServerGuiUtils.cuon(whisTable), BorderLayout.CENTER);
+        root.add(nut, BorderLayout.SOUTH);
+        napBangWhis();
+        return root;
+    }
+
+    private void napBangWhis() {
+        if (whisTable.isEditing()) {
+            whisTable.getCellEditor().stopCellEditing();
+        }
+        whisTop1.setText(String.valueOf(ConfigDAO.num(
+                nro.repository.dao.TopWhisDAO.KHOA_THUONG_TOP1,
+                nro.repository.dao.TopWhisDAO.MAC_DINH_TOP1)));
+        whisTop25.setText(String.valueOf(ConfigDAO.num(
+                nro.repository.dao.TopWhisDAO.KHOA_THUONG_TOP2_5,
+                nro.repository.dao.TopWhisDAO.MAC_DINH_TOP2_5)));
+        whisTop6.setText(String.valueOf(ConfigDAO.num(
+                nro.repository.dao.TopWhisDAO.KHOA_THUONG_TOP6,
+                nro.repository.dao.TopWhisDAO.MAC_DINH_TOP6)));
+        whisModel.setRowCount(0);
+        int hang = 1;
+        for (nro.repository.dao.TopWhisDAO.Dong d
+                : nro.repository.dao.TopWhisDAO.danhSach(100)) {
+            whisModel.addRow(new Object[]{hang, d.id, d.ten, d.level,
+                String.format(java.util.Locale.ROOT, "%.2f", d.thoiGian / 1000d),
+                nro.repository.dao.TopWhisDAO.soThoiTheoHang(hang) + " thỏi",
+                d.daNhanHomNay ? "rồi" : "",
+                d.online ? "có" : ""});
+            hang++;
+        }
+    }
+
+    private void luuMucThuongWhis() {
+        long a;
+        long b;
+        long c;
+        try {
+            a = Long.parseLong(whisTop1.getText().trim());
+            b = Long.parseLong(whisTop25.getText().trim());
+            c = Long.parseLong(whisTop6.getText().trim());
+        } catch (NumberFormatException ex) {
+            note(WARN_RED, "Mức thưởng phải là số nguyên.");
+            return;
+        }
+        if (a < 0 || b < 0 || c < 0) {
+            note(WARN_RED, "Mức thưởng không được âm.");
+            return;
+        }
+        boolean ok = ConfigDAO.set(nro.repository.dao.TopWhisDAO.KHOA_THUONG_TOP1, String.valueOf(a))
+                & ConfigDAO.set(nro.repository.dao.TopWhisDAO.KHOA_THUONG_TOP2_5, String.valueOf(b))
+                & ConfigDAO.set(nro.repository.dao.TopWhisDAO.KHOA_THUONG_TOP6, String.valueOf(c));
+        ConfigDAO.reload();
+        napBangWhis();
+        note(ok ? OK_GREEN : WARN_RED, ok
+                ? "Đã lưu mức thưởng Top Whis: " + a + " / " + b + " / " + c + " thỏi vàng mỗi ngày."
+                : "Không lưu được mức thưởng — xem log máy chủ.");
+    }
+
+    private void luuBangWhis() {
+        if (whisTable.isEditing()) {
+            whisTable.getCellEditor().stopCellEditing();
+        }
+        int hong = 0;
+        String hongDau = null;
+        for (int r = 0; r < whisModel.getRowCount(); r++) {
+            long id;
+            int lv;
+            long ms;
+            try {
+                id = Long.parseLong(String.valueOf(whisModel.getValueAt(r, COT_W_ID)).trim());
+                lv = Integer.parseInt(String.valueOf(whisModel.getValueAt(r, COT_W_LV)).trim());
+                ms = Math.round(Double.parseDouble(String.valueOf(
+                        whisModel.getValueAt(r, COT_W_GIAY)).trim().replace(',', '.')) * 1000d);
+            } catch (NumberFormatException ex) {
+                hong++;
+                if (hongDau == null) {
+                    hongDau = "Dòng " + (r + 1) + " có ô không phải số.";
+                }
+                continue;
+            }
+            String loi = nro.repository.dao.TopWhisDAO.sua(id, lv, ms);
+            if (loi != null) {
+                hong++;
+                if (hongDau == null) {
+                    hongDau = loi;
+                }
+            }
+        }
+        nro.repository.dao.TopWhisDAO.napLaiBoNho();
+        napBangWhis();
+        note(hong == 0 ? OK_GREEN : WARN_RED, hong == 0
+                ? "Đã lưu bảng xếp hạng Whis."
+                : hongDau + " (" + hong + " dòng không lưu được)");
+    }
+
+    private void xoaMotDongWhis() {
+        int r = whisTable.getSelectedRow();
+        if (r < 0) {
+            note(WARN_RED, "Chưa chọn dòng nào.");
+            return;
+        }
+        r = whisTable.convertRowIndexToModel(r);
+        long id = Long.parseLong(String.valueOf(whisModel.getValueAt(r, COT_W_ID)).trim());
+        String ten = String.valueOf(whisModel.getValueAt(r, COT_W_TEN));
+        if (JOptionPane.showConfirmDialog(this,
+                "Xoá kỷ lục Whis của \"" + ten + "\"?",
+                "Xoá kỷ lục", JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+            return;
+        }
+        String loi = nro.repository.dao.TopWhisDAO.sua(id, 0, 0);
+        nro.repository.dao.TopWhisDAO.napLaiBoNho();
+        napBangWhis();
+        note(loi == null ? OK_GREEN : WARN_RED,
+                loi == null ? "Đã xoá kỷ lục Whis của " + ten + "." : loi);
+    }
+
+    private void xoaToanBoWhis() {
+        if (JOptionPane.showConfirmDialog(this,
+                "XOÁ TOÀN BỘ bảng xếp hạng Whis?\n\n"
+                + "Cấp Whis của MỌI nhân vật về 0, kể cả người đang online.\n"
+                + "Không lấy lại được.",
+                "Xoá toàn bộ bảng", JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+            return;
+        }
+        int n = nro.repository.dao.TopWhisDAO.resetTatCa();
+        nro.repository.dao.TopWhisDAO.napLaiBoNho();
+        napBangWhis();
+        note(n >= 0 ? OK_GREEN : WARN_RED, n >= 0
+                ? "Đã xoá bảng xếp hạng Whis — " + n + " nhân vật về 0."
                 : "Không xoá được — xem log máy chủ.");
     }
 

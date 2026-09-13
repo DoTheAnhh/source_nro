@@ -18,7 +18,15 @@ import java.util.List;
 public class TopKillWhisManager {
 
     private static final TopKillWhisManager INSTANCE = new TopKillWhisManager();
-    private final List<Player> list = new ArrayList<>();
+    /**
+     * Danh sach hien hanh. Nap lai thi dung danh sach MOI roi moi thay vao.
+     *
+     * <p>Ban truoc xoa danh sach cu roi do dan vao, ma vong cap nhat cua nhan
+     * vat doc no ngay cung luc (phat thuong, hieu ung top) — dung luc dang do
+     * thi thay danh sach rong hay thieu nua, va duyet theo chi so co the vang
+     * loi. Thay nguyen khoi thi ben doc luon thay mot danh sach tron ven.</p>
+     */
+    private volatile List<Player> list = new ArrayList<>();
 
     public static TopKillWhisManager getInstance() {
         return INSTANCE;
@@ -29,7 +37,7 @@ public class TopKillWhisManager {
     }
 
     public void load() {
-        list.clear();
+        List<Player> moi = new ArrayList<>();
 
         // Truy vấn SQL đã sửa, lấy từ `data_luyentap` thay vì `levelKillWhis`
         String sql = "SELECT player.id, player.name, player.head, player.gender, "
@@ -39,7 +47,7 @@ public class TopKillWhisManager {
                 + "FROM player "
                 + "INNER JOIN account ON account.id = player.account_id "
                 + "WHERE account.ban = 0 "
-                + "AND JSON_EXTRACT(data_luyentap, '$[5]') IS NOT NULL "
+                + "AND CAST(JSON_UNQUOTE(JSON_EXTRACT(data_luyentap, '$[5]')) AS UNSIGNED) > 0 "
                 + "ORDER BY levelKillWhis DESC, timeKillWhis ASC "
                 + "LIMIT 100;";
 
@@ -49,8 +57,9 @@ public class TopKillWhisManager {
 
             while (rs.next()) {
                 Player player = extractPlayerFromResultSet(rs);
-                list.add(player);
+                moi.add(player);
             }
+            list = moi;
 
         } catch (SQLException e) {
             System.err.println("❌ Lỗi khi tải danh sách TopKillWhis!");

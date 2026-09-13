@@ -1549,6 +1549,7 @@ public class Player implements Runnable {
                     SendMabu14H();
                     MajinBuu12H.gI().update(this);
                     UpdateEffectKillWhis();
+                    nro.repository.dao.TopWhisDAO.phatNeuCan(this);
                     SendDropTail();
                     if (this.isPl() && this.iDMark != null) {
                         if (!isBoss && this.iDMark != null && this.iDMark.isGotoFuture() && Util.canDoWithTime(this.iDMark.getLastTimeGoToFuture(), 60000)) {
