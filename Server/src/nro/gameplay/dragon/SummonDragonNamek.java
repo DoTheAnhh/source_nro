@@ -275,22 +275,30 @@ public class SummonDragonNamek {
     }
 
     public void showConfirmShenron(Player pl, int menu, byte select) {
+        String wish = getWish(menu, select);
+        if (wish == null) {
+            sendWhishesNamec(pl);
+            return;
+        }
         this.menuShenron = menu;
         this.select = select;
-        String wish = null;
-        switch (menu) {
-            case ConstNpc.SHOW_SHENRON_NAMEK_CONFIRM:
-                switch (select) {
-                    case 0:
-                        wish = "1 viên ngọc rồng 3 sao";
-                        break;
-                    case 1:
-                        wish = "Pet hổ béo 1 ngày";
-                        break;
-                }
-                break;
+        NpcService.gI().createMenuRongThieng_Namec(pl, ConstNpc.SHENRON_NAMEK_CONFIRM, "Ng\u01b0\u01a1i c\u00f3 ch\u1eafc mu\u1ed1n \u01b0\u1edbc?", wish, "T\u1eeb ch\u1ed1i");
+    }
+
+    private String getWish(int menu, int select) {
+        if (menu != ConstNpc.SHOW_SHENRON_NAMEK_CONFIRM) {
+            return null;
         }
-        NpcService.gI().createMenuRongThieng_Namec(pl, ConstNpc.SHENRON_NAMEK_CONFIRM, "Ngươi có chắc muốn ước?", wish, "Từ chối");
+        switch (select) {
+            case 0:
+                return "1 vi\u00ean ng\u1ecdc r\u1ed3ng 3 sao";
+            case 1:
+                return "Pet h\u1ed5 b\u00e9o 1 ng\u00e0y";
+            case 2:
+                return "x99 b\u1ed9t m\u1ef3";
+            default:
+                return null;
+        }
     }
 
     public void sendWhishesNamec(Player pl) {

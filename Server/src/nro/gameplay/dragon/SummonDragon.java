@@ -489,28 +489,46 @@ public class SummonDragon {
     }
 
     public void showConfirmShenron(Player pl, int menu, byte select) {
+        String wish = getWish(menu, select);
+        if (wish == null) {
+            reOpenShenronWishes(pl, menu);
+            return;
+        }
         this.menuShenron = menu;
         this.select = select;
-        String wish = null;
-        switch (menu) {
-            case ConstNpc.SHENRON_1_1:
-                wish = SHENRON_1_STAR_WISHES_1[select];
-                break;
-            case ConstNpc.SHENRON_1_2:
-                wish = SHENRON_1_STAR_WISHES_2[select];
-                break;
-            case ConstNpc.SHENRON_2:
-                wish = SHENRON_2_STARS_WHISHES[select];
-                break;
-            case ConstNpc.SHENRON_3:
-                wish = SHENRON_3_STARS_WHISHES[select];
-                break;
-        }
-        NpcService.gI().createMenuRongThieng_Nomal(pl, ConstNpc.SHENRON_CONFIRM, "Ngươi có chắc muốn ước?", wish, "Từ chối");
+        NpcService.gI().createMenuRongThieng_Nomal(pl, ConstNpc.SHENRON_CONFIRM, "Ng\u01b0\u01a1i c\u00f3 ch\u1eafc mu\u1ed1n \u01b0\u1edbc?", wish, "T\u1eeb ch\u1ed1i");
     }
 
     public void reOpenShenronWishes(Player pl) {
-        switch (menuShenron) {
+        reOpenShenronWishes(pl, menuShenron);
+    }
+
+    private String getWish(int menu, int select) {
+        String[] wishes;
+        switch (menu) {
+            case ConstNpc.SHENRON_1_1:
+                wishes = SHENRON_1_STAR_WISHES_1;
+                break;
+            case ConstNpc.SHENRON_1_2:
+                wishes = SHENRON_1_STAR_WISHES_2;
+                break;
+            case ConstNpc.SHENRON_2:
+                wishes = SHENRON_2_STARS_WHISHES;
+                break;
+            case ConstNpc.SHENRON_3:
+                wishes = SHENRON_3_STARS_WHISHES;
+                break;
+            default:
+                return null;
+        }
+        if (select < 0 || select >= wishes.length) {
+            return null;
+        }
+        return wishes[select];
+    }
+
+    private void reOpenShenronWishes(Player pl, int menu) {
+        switch (menu) {
             case ConstNpc.SHENRON_1_1:
                 NpcService.gI().createMenuRongThieng_Nomal(pl, ConstNpc.SHENRON_1_1, SHENRON_SAY, SHENRON_1_STAR_WISHES_1);
                 break;
@@ -522,6 +540,9 @@ public class SummonDragon {
                 break;
             case ConstNpc.SHENRON_3:
                 NpcService.gI().createMenuRongThieng_Nomal(pl, ConstNpc.SHENRON_3, SHENRON_SAY, SHENRON_3_STARS_WHISHES);
+                break;
+            default:
+                sendWhishesShenron(pl);
                 break;
         }
     }

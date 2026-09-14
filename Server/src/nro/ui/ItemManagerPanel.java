@@ -141,6 +141,8 @@ public class ItemManagerPanel extends JPanel {
     private final JLabel lblSoNguoi = new JLabel();
     private final JTextField fId = new JTextField(8);
     private final JTextField fQty = new JTextField("1", 6);
+    private final javax.swing.JSpinner spCapDo = new javax.swing.JSpinner(
+            new javax.swing.SpinnerNumberModel(0, 0, 8, 1));
 
 
     /**
@@ -590,6 +592,7 @@ public class ItemManagerPanel extends JPanel {
         // — dung la loi "o nhap bi bop lai con vai pixel".
         khoaBeRong(fId, 90);
         khoaBeRong(fQty, 90);
+        khoaBeRong(spCapDo, 90);
         khoaBeRong(cbPlayer, 240);
 
         GridBagConstraints c = new GridBagConstraints();
@@ -663,6 +666,12 @@ public class ItemManagerPanel extends JPanel {
 
         c.gridx = 0;
         c.gridy = 5;
+        form.add(new JLabel("Cấp trang bị:"), c);
+        c.gridx = 1;
+        form.add(spCapDo, c);
+
+        c.gridx = 0;
+        c.gridy = 6;
         form.add(new JLabel("Set kích hoạt:"), c);
         c.gridx = 1;
         c.gridwidth = 2;
@@ -677,7 +686,7 @@ public class ItemManagerPanel extends JPanel {
         // Truoc do tach thanh hai hang, lam form cao them hai dong va o "So o
         // sao" bi cat khoi khung ben phai — nhin thay nhung khong go duoc.
         c.gridx = 0;
-        c.gridy = 6;
+        c.gridy = 7;
         form.add(cbCoSao, c);
         c.gridx = 1;
         c.gridwidth = 2;
@@ -777,12 +786,19 @@ public class ItemManagerPanel extends JPanel {
             lblName.setText("(không có id này)");
             lblName.setForeground(WARN_RED);
             lblIcon.setIcon(null);
+            spCapDo.setValue(0);
+            spCapDo.setEnabled(false);
             return;
         }
         String vichSao = PlayerManagerPanel.rawUnsafe(t);
         lblName.setText(t.name + "   " + PlayerManagerPanel.typeName(t.type));
         lblName.setForeground(ACCENT);
         lblIcon.setIcon(PlayerManagerPanel.iconOf(t.iconID));
+        boolean trangBi = laTrangBi(t);
+        spCapDo.setEnabled(trangBi);
+        if (!trangBi) {
+            spCapDo.setValue(0);
+        }
         // Ao, quan, gang, giay, rada... deu co chi so san trong game — dien
         // luon de chi viec sua, khoi phai tu tra tung id. Chi dien khi bang con
         // nguyen nhu lan dien truoc, de khong xoa mat so ai do vua go.
@@ -1048,6 +1064,17 @@ public class ItemManagerPanel extends JPanel {
                     + "giày, rada) nên không gắn set kích hoạt được.");
             return;
         }
+        int capDo = ((Number) spCapDo.getValue()).intValue();
+        if (capDo > 0 && !laTrangBi(t)) {
+            note(WARN_RED, "\"" + t.name + "\" không phải trang bị nên không gắn cấp đồ được.");
+            return;
+        }
+        opts.removeIf(io -> io != null && io.optionTemplate != null
+                && io.optionTemplate.id == 72);
+        if (capDo > 0) {
+            opts.add(new ItemOption(72, capDo));
+        }
+
         java.util.Set<Integer> daCoChiSo = new java.util.HashSet<>();
         for (ItemOption io : opts) {
             if (io != null && io.optionTemplate != null) {
@@ -1150,6 +1177,7 @@ public class ItemManagerPanel extends JPanel {
                 + (chiSoSet.length == 0 ? ""
                         : "\nGắn set: " + cbSet.getSelectedItem()
                         + " (" + chiSoSet.length + " dòng chỉ số).")
+                + (capDo == 0 ? "" : "\nCấp trang bị: +" + capDo)
                 + (soOSao == 0 ? "" : "\n" + soOSao + " ô sao"
                         + (soSaoGan > 0 ? " — " + fSaoGan.getText() : ""))
                 + (cbGiaoDich.isSelected() ? "" : "\nMón này KHÔNG giao dịch được."),
