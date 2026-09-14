@@ -30,6 +30,14 @@ namespace Game4
     	public int lastRequest;
     
     	public string joinTime;
+
+    public bool hasBattleStats;
+    public string hpInfo;
+    public string kiInfo;
+    public string dameInfo;
+    public string defInfo;
+    public string critInfo;
+    public string critDameInfo;
     
     	public static string getRole(int r)
     	{

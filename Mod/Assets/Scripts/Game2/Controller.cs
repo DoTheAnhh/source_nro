@@ -1607,6 +1607,7 @@ namespace Game2
                                 member5.clanPoint = msg.reader().readInt();
                                 member5.curClanPoint = msg.reader().readInt();
                                 member5.joinTime = NinjaUtil.getDate(msg.reader().readInt());
+                                readClanMemberBattleStats(member5, msg);
                                 GameCanvas.panel.myMember.addElement(member5);
                             }
                             int num109 = msg.reader().readUnsignedByte();
@@ -1719,6 +1720,7 @@ namespace Game2
                                 member.receive_donate = msg.reader().readInt();
                                 member.clanPoint = msg.reader().readInt();
                                 member.joinTime = NinjaUtil.getDate(msg.reader().readInt());
+                                readClanMemberBattleStats(member, msg);
                                 GameCanvas.panel.member.addElement(member);
                             }
                             GameCanvas.panel.isViewMember = true;
@@ -5246,6 +5248,26 @@ namespace Game2
             return array;
         }
     
+        private static void readClanMemberBattleStats(Member m, Message msg)
+        {
+            m.hasBattleStats = msg.reader().readBoolean();
+            if (!m.hasBattleStats)
+            {
+                m.hpInfo = null;
+                m.kiInfo = null;
+                m.dameInfo = null;
+                m.defInfo = null;
+                m.critInfo = null;
+                m.critDameInfo = null;
+                return;
+            }
+            m.hpInfo = msg.reader().readUTF();
+            m.kiInfo = msg.reader().readUTF();
+            m.dameInfo = msg.reader().readUTF();
+            m.defInfo = msg.reader().readUTF();
+            m.critInfo = msg.reader().readUTF();
+            m.critDameInfo = msg.reader().readUTF();
+        }
         public void readClanMsg(Message msg, int index)
         {
             try

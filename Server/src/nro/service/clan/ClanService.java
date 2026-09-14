@@ -676,6 +676,7 @@ public class ClanService {
                         msg.writer().writeInt(cm.receiveDonate);
                         msg.writer().writeInt(cm.clanPoint);
                         msg.writer().writeInt(cm.joinTime);
+                        writeMemberBattleStats(msg, cm);
                     }
                     player.sendMessage(msg);
                     msg.cleanup();
@@ -725,6 +726,7 @@ public class ClanService {
                     msg.writer().writeInt(cm.clanPoint);
                     msg.writer().writeInt(cm.memberPoint);
                     msg.writer().writeInt(cm.joinTime);
+                    writeMemberBattleStats(msg, cm);
                 }
                 List<ClanMessage> clanMessages = player.clan.getCurrClanMessages();
                 msg.writer().writeByte(clanMessages.size());
@@ -754,6 +756,24 @@ public class ClanService {
         } catch (Exception e) {
             Logger.logException(ClanService.class, e, "Lỗi send my clan " + player.clan.name + " - " + player.clan.id);
         }
+    }
+
+    private void writeMemberBattleStats(Message msg, ClanMember cm) throws Exception {
+        Player pl = Client.gI().getPlayerByID(cm.id);
+        if (pl == null || pl.nPoint == null) {
+            msg.writer().writeBoolean(false);
+            return;
+        }
+        pl.nPoint.calPoint();
+        msg.writer().writeBoolean(true);
+        msg.writer().writeUTF(Util.formatNumber(pl.nPoint.hp, FormatStyle.VIETNAMESE)
+                + " / " + Util.formatNumber(pl.nPoint.hpMax, FormatStyle.VIETNAMESE));
+        msg.writer().writeUTF(Util.formatNumber(pl.nPoint.mp, FormatStyle.VIETNAMESE)
+                + " / " + Util.formatNumber(pl.nPoint.mpMax, FormatStyle.VIETNAMESE));
+        msg.writer().writeUTF(Util.formatNumber(pl.nPoint.dame, FormatStyle.VIETNAMESE));
+        msg.writer().writeUTF(Util.formatNumber(pl.nPoint.def, FormatStyle.VIETNAMESE));
+        msg.writer().writeUTF(pl.nPoint.crit + "%");
+        msg.writer().writeUTF(pl.nPoint.tlSDCM + "%");
     }
 
     /**

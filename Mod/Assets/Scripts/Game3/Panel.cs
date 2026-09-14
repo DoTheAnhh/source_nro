@@ -2486,6 +2486,20 @@ namespace Game3
             string text3 = text;
             text = text3 + "\n|2|1|" + mResources.power + ": " + m.powerPoint;
             text += "\n--";
+            if (m.hasBattleStats)
+            {
+                text += "\n|2|HP: " + m.hpInfo;
+                text += "\n|2|KI: " + m.kiInfo;
+                text += "\n|1|Sức đánh: " + m.dameInfo;
+                text += "\n|1|Giáp: " + m.defInfo;
+                text += "\n|7|Chí mạng: " + m.critInfo;
+                text += "\n|7|Sức đánh chí mạng: " + m.critDameInfo;
+            }
+            else
+            {
+                text += "\n|6|Chỉ số: chưa cập nhật (offline)";
+            }
+            text += "\n--";
             text3 = text;
             text = text3 + "\n|5|" + mResources.clan_capsuledonate + ": " + m.clanPoint;
             text3 = text;
