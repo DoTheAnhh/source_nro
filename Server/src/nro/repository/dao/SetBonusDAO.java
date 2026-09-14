@@ -99,6 +99,8 @@ public class SetBonusDAO {
         LOAI.put("fix_stun", "Giảm thời gian bị choáng + % (khi đang bật khiên)");
         LOAI.put("tai_tao_pct", "Hồi phục từ Tái tạo năng lượng + %");
         LOAI.put("hoi_chieu_pct", "Giảm thời gian hồi chiêu + %");
+        LOAI.put("hoi_chieu_skill_pct",
+                "Giam thoi gian hoi chieu mot chieu + % (dien id chieu vao Tham so)");
         LOAI.put("choang_pct", "Thời gian choáng Dịch chuyển tức thời + %");
         LOAI.put("choang_tdhs_pct", "Thời gian choáng Thái Dương Hạ San + %");
         LOAI.put("ne_don_pct", "Né đòn + % (bằng ne_don, tên rõ hơn)");
@@ -179,6 +181,10 @@ public class SetBonusDAO {
             case "fix_stun": than = dau + giaTri + "% giảm thời gian bị choáng"; break;
             case "tai_tao_pct": than = dau + giaTri + "% hồi phục từ Tái tạo năng lượng"; break;
             case "hoi_chieu_pct": than = dau + giaTri + "% giảm thời gian hồi chiêu"; break;
+            case "hoi_chieu_skill_pct":
+                than = dau + giaTri + "% giam hoi chieu "
+                        + CHIEU.getOrDefault(thamSo, "id " + thamSo);
+                break;
             case "choang_pct":
                 than = dau + giaTri + "% thời gian choáng Dịch chuyển tức thời";
                 break;
@@ -496,6 +502,10 @@ public class SetBonusDAO {
         if (b.soMon < 1) {
             return "Số món phải từ 1 trở lên.";
         }
+        if ("hoi_chieu_skill_pct".equals(b.loai)
+                && (b.giaTri < 0 || b.giaTri > 100)) {
+            return "Hoi chieu mot ky nang phai nam trong khoang 0..100%.";
+        }
         try {
             if (b.id > 0) {
                 ConnectDB.executeUpdate(
@@ -722,6 +732,10 @@ public class SetBonusDAO {
      */
     public static int phanTramLamMoi(SetClothes sc, int idChieu) {
         return phanTramTheoChieu(sc, "lam_moi_pct", idChieu);
+    }
+
+    public static int phanTramHoiChieuSkill(SetClothes sc, int idChieu) {
+        return phanTramTheoChieu(sc, "hoi_chieu_skill_pct", idChieu);
     }
 
     /**

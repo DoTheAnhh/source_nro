@@ -1969,6 +1969,11 @@ public class SkillService {
         if (tlSet != 0) {
             subTimeParam += tlSet;
         }
+        int tlSetTheoChieu = nro.repository.dao.SetBonusDAO.phanTramHoiChieuSkill(
+                player.setClothes, skillId);
+        if (tlSetTheoChieu != 0) {
+            subTimeParam += tlSetTheoChieu;
+        }
         // Chan 95%: de 100% thi chieu khong con thoi gian cho, spam vo han.
         if (subTimeParam + subTimeParamVip > 95) {
             subTimeParam = 95 - subTimeParamVip;

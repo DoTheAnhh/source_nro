@@ -2873,7 +2873,7 @@ public class SystemPanel extends JPanel {
      * chỉ là một con số bình thường.</p>
      */
     private static String tenThamSo(String loai, int thamSo) {
-        if (!"skill_pct".equals(loai)) {
+        if (!laLoaiTheoChieu(loai)) {
             return String.valueOf(thamSo);
         }
         String t = nro.repository.dao.SetBonusDAO.CHIEU.get(thamSo);
@@ -2881,6 +2881,13 @@ public class SystemPanel extends JPanel {
     }
 
     /** Cột của bản đọc. */
+
+    private static boolean laLoaiTheoChieu(String loai) {
+        return "skill_pct".equals(loai)
+                || "lam_moi_pct".equals(loai)
+                || "hoi_chieu_skill_pct".equals(loai);
+    }
+
     private static final String[] COT_SET = {
         "Set", "Hành tinh", "Trạng thái", "Hiệu ứng theo số món", "Ghi chú"
     };
@@ -3169,10 +3176,9 @@ public class SystemPanel extends JPanel {
             n++;
             // Ca hai loai theo chieu deu phai hien ten chieu o cot Tham so —
             // de trong thi khong doc duoc dong do nham chieu nao.
-            String thamSo = "skill_pct".equals(b.loai)
-                    || "lam_moi_pct".equals(b.loai)
+            String thamSo = laLoaiTheoChieu(b.loai)
                     ? nro.repository.dao.SetBonusDAO.CHIEU.getOrDefault(
-                            b.thamSo, "chiêu " + b.thamSo)
+                            b.thamSo, "chiÃªu " + b.thamSo)
                     : "";
             // Ghi chu de trong thi hien luon tac dung — bang khong bao gio co
             // cot trong ma nguoi doc phai tu suy ra set nay lam gi.
@@ -3476,7 +3482,7 @@ public class SystemPanel extends JPanel {
         java.util.List<String[]> tacDung = new java.util.ArrayList<>();
         for (Map.Entry<String, String> e
                 : nro.repository.dao.SetBonusDAO.LOAI.entrySet()) {
-            if ("skill_pct".equals(e.getKey()) || "lam_moi_pct".equals(e.getKey())) {
+            if (laLoaiTheoChieu(e.getKey())) {
                 continue;       // hai loai theo chieu -> tach thanh tung dong rieng
             }
             tacDung.add(new String[]{e.getKey(), "0", e.getValue()});
@@ -3491,6 +3497,11 @@ public class SystemPanel extends JPanel {
                 : nro.repository.dao.SetBonusDAO.CHIEU.entrySet()) {
             tacDung.add(new String[]{"lam_moi_pct", String.valueOf(e.getKey()),
                 "Tỉ lệ làm mới kỹ năng sau khi dùng %  —  " + e.getValue()});
+        }
+        for (Map.Entry<Integer, String> e
+                : nro.repository.dao.SetBonusDAO.CHIEU.entrySet()) {
+            tacDung.add(new String[]{"hoi_chieu_skill_pct", String.valueOf(e.getKey()),
+                "Giam thoi gian hoi chieu ky nang + %  -  " + e.getValue()});
         }
         // Moi moc so mon co tac dung RIENG. Muc dau la "khong co gi" de bo
         // trong nhung moc chua dung — set 5 mon thuong chi an o moc 5.
