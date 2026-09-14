@@ -417,10 +417,10 @@ public class Clan {
 }
 
     public void addClanMessage(ClanMessage cmg) {
-        this.clanMessages.add(0, cmg);
+        this.clanMessages.add(cmg);
         if (clanMessages.size() > 20) {
-            for (int i = clanMessages.size() - 1; i >= 20; i--) {
-                clanMessages.remove(i).dispose();
+            while (clanMessages.size() > 20) {
+                clanMessages.remove(0).dispose();
             }
         }
     }
