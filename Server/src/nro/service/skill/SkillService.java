@@ -1721,26 +1721,7 @@ public class SkillService {
     }
 
     /**
-     * Phần nới của cổng hồi chiêu, tính bằng mili giây.
-     *
-     * <h2>Vì sao 200 chứ không phải 50</h2>
-     *
-     * <p>Client tự đếm hồi chiêu bằng đồng hồ của nó rồi mới gửi gói tấn công.
-     * Hai đồng hồ không bao giờ khớp, và đường truyền thì <b>dồn gói</b>: mạng
-     * khựng một nhịp rồi thông lại là hai gói cách nhau đúng bằng hồi chiêu ở
-     * máy người chơi lại tới máy chủ cách nhau sáu bảy chục mili giây.</p>
-     *
-     * <p>Với phần nới 50, gói thứ hai <b>bị bỏ trong im lặng</b>: không sát
-     * thương, không thông báo, không log. Client vẫn chạy hoạt ảnh đấm nên
-     * người chơi thấy đúng cảnh "đấm mà không ăn" — mà chỉ thỉnh thoảng, đúng
-     * lúc mạng vấp.</p>
-     *
-     * <p>Tàn sát không dính vì nó gọi thẳng {@code mob.injured} chứ không đi qua
-     * cổng này. Đó là lý do "tàn sát thì đòn nào cũng tính".</p>
-     *
-     * <p>200 phủ được nhịp vấp thường gặp mà vẫn chặn được client sửa để đấm
-     * liên tục — hồi chiêu của đấm là 500 trở lên, nên nới 200 không cho đánh
-     * nhanh hơn quá một phần ba.</p>
+     * Phần nới của cổng hồi chiêu cho chiêu bấm từng lần, tính bằng mili giây.
      */
     private static final int NOI_HOI_CHIEU_MS = 200;
 
@@ -1815,24 +1796,10 @@ public class SkillService {
     /**
      * Cổng hồi chiêu.
      *
-     * <h2>Vì sao chiêu đánh liên tục phải đi đường khác</h2>
-     *
-     * <p>Cổng cũ hỏi "lần đánh trước cách đây đã đủ lâu chưa". Câu hỏi đó
-     * <b>không có trí nhớ</b>: gói nào tới sớm hơn mốc là mất hẳn, và mốc thì
-     * vẫn đứng nguyên ở lần đánh cuối <i>ăn được</i>. Mạng vấp một nhịp rồi
-     * thông lại là hai gói tới sát nhau — gói sau chết, dù tính cả quãng dừng
-     * thì người chơi vẫn đang đánh chậm hơn hồi chiêu. Client đã chạy hoạt ảnh
-     * đấm rồi, nên nhìn ra đúng cảnh "đấm mà không mất máu", và chỉ thỉnh
-     * thoảng, không tài nào tả lại được.</p>
-     *
-     * <p>Tàn sát không dính vì nó gọi thẳng {@code mob.injured}, không qua cổng
-     * này — đó là lý do "bật tàn sát thì đòn nào cũng tính".</p>
-     *
-     * <p>Thùng nhịp thì có trí nhớ. {@code mocSanSang} là "lần tới được phép
-     * đánh"; mỗi đòn ăn được đẩy nó lên một vòng hồi chiêu tính từ <b>mốc
-     * cũ</b>. Gói tới sớm vẫn ăn, chỉ là nó tiêu trước phần của lượt sau. Nhịp
-     * trung bình vì thế đúng bằng hồi chiêu — chặt hơn cổng cũ, vốn cho đánh
-     * đều đặn nhanh hơn {@link #NOI_HOI_CHIEU_MS} mili giây mỗi đòn.</p>
+     * <p>Chiêu đánh liên tục (đấm/chưởng/liên hoàn) không bị chặn ở máy chủ nữa:
+     * client đã tự giữ nhịp, còn chặn thêm ở đây làm rơi gói trong im lặng,
+     * sinh ra cảnh đấm 1 và 3 ăn dame còn đấm 2 không mất máu. Tàn sát không
+     * qua cổng này nên vốn không bị hiện tượng đó.</p>
      */
     public boolean canUseSkillWithCooldown(Player player) {
         Skill sk = player.playerSkill.skillSelect;
@@ -1840,7 +1807,7 @@ public class SkillService {
             return false;
         }
         if (sk.template != null && laChieuDanhLienTuc(sk.template.id)) {
-            return System.currentTimeMillis() >= sk.mocSanSang - NOI_HOI_CHIEU_MS;
+            return true;
         }
         int cho = sk.coolDown - NOI_HOI_CHIEU_MS;
         if (cho < 0) {
