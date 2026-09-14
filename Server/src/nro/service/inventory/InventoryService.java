@@ -1669,6 +1669,10 @@ public class InventoryService {
 //                }
 //                return true;
             case 2500: //quả trứng
+                if (player.Detu == null) {
+                    Service.gI().sendThongBao(player, "Bạn cần có đệ tử trước khi dùng trứng Bill.");
+                    return false;
+                }
                 if (player.billEgg == null) {
                     BillEgg.createBillEgg(player);
                 }

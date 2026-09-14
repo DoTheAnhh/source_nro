@@ -1530,6 +1530,15 @@ namespace Game1
     	{
     		myChar = null;
     	}
+
+	public static void clearMyPet()
+	{
+		myPet = null;
+		if (myChar != null)
+		{
+			myChar.havePet = false;
+		}
+	}
     
     	public void bagSort()
     	{
@@ -8473,3 +8482,5 @@ namespace Game1
     	}
     }
 }
+
+

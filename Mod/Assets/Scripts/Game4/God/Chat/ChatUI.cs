@@ -452,6 +452,8 @@ namespace Game4.God
             {
                 nhatKy.RemoveAt(0);
             }
+            // Luon keo ve day khi co tin moi; nguoi choi muon doc cu thi scroll nguoc len.
+            cuon = 0;
         }
 
         // ==================================================================

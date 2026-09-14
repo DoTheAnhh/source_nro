@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Game6.God;
@@ -14,11 +14,11 @@ namespace Game6
     /// không nhớ ai đang bật kênh nào — kênh đi kèm từng gói, nên tắt mic là im
     /// ngay, không cần gói báo tắt.</para>
     ///
-    /// <para><b>Vì sao µ-law 8 kHz.</b> Unity không có sẵn bộ mã hoá tiếng nói,
-    /// mà nhúng Opus thì phải kèm thư viện gốc cho từng nền tảng. µ-law là bảng
-    /// tra 8 bit, viết gọn trong vài chục dòng, cho 8 KB/s — nghe rõ lời, và một
-    /// khu mười người nói cùng lúc vẫn chưa tới 1 Mbps. Đổi lại tiếng hơi rè so
-    /// với Opus; với thoại trong game thì đủ.</para>
+    /// <para><b>Vì sao PCM16 16 kHz.</b> Unity không có sẵn bộ mã hoá tiếng nói,
+    /// mà nhúng Opus thì phải kèm thư viện gốc cho từng nền tảng. PCM16 giữ âm
+    /// tự nhiên hơn nén 8 bit, gói nhỏ theo 20 ms, và một
+    /// khu mười người nói cùng lúc vẫn chưa tới 1 Mbps. Đổi lại tốn băng thông hơn
+    /// Opus; với thoại trong game vẫn nhẹ.</para>
     ///
     /// <para><b>Phát lại.</b> Mỗi người nói một <c>AudioSource</c> riêng, dùng
     /// clip vòng và con trỏ ghi. Trộn tất cả vào một clip thì hai người nói cùng
@@ -31,19 +31,19 @@ namespace Game6
         public const int KENH_MAP = 1;
         public const int KENH_BANG = 2;
 
-        /// <summary>Tần số lấy mẫu. 8 kHz đủ cho tiếng nói, cao hơn chỉ tốn băng thông.</summary>
-        private const int TAN_SO = 8000;
+        /// <summary>Tần số lấy mẫu. 16 kHz cho tiếng nói trong hơn nhưng vẫn nhẹ.</summary>
+        private const int TAN_SO = 16000;
 
-        /// <summary>Mỗi gói gửi bao nhiêu mẫu — 160 mẫu = 20 ms, cỡ gói thoại quen thuộc.</summary>
-        private const int MAU_MOI_GOI = 160;
+        /// <summary>Mỗi gói gửi bao nhiêu mẫu - 320 mẫu ở 16 kHz = 20 ms.</summary>
+        private const int MAU_MOI_GOI = 320;
 
         /// <summary>Clip vòng của mic dài mấy giây.</summary>
         private const int GIAY_DEM_MIC = 1;
 
         /// <summary>Dưới ngưỡng này coi như im lặng, không gửi gói.</summary>
-        private const float NGUONG_IM = 0.012f;
+        private const float NGUONG_IM = 0.018f;
 
-        /// <summary>Đệm lúc bắt đầu phát — 160 ms, đủ nuốt mạng giật mà chưa thấy trễ.</summary>
+        /// <summary>Đệm lúc bắt đầu phát - 160 ms, đủ nuốt mạng giật mà chưa thấy trễ.</summary>
         private const int DEM_BAT_DAU = MAU_MOI_GOI * 8;
 
         /// <summary>Người nói im quá ngần này giây thì dừng loa của họ.</summary>
@@ -118,8 +118,8 @@ namespace Game6
 
         /// <summary>Âm lượng phát tiếng người khác, 0..4 (1 = giữ nguyên).</summary>
         /// <remarks>
-        /// Mặc định 2, không phải 1. Tiếng đi qua µ-law 8 bit rồi mới tới đây,
-        /// mà µ-law dồn phần lớn độ phân giải vào quãng nhỏ — phát lại nguyên
+        /// Mặc định 2, không phải 1. Gói voice dùng PCM16 nên sạch hơn,
+        /// nhưng vẫn cần bù âm lượng vì mic thiết bị thường nhỏ hơn loa game
         /// biên độ thì nghe rất khẽ so với mọi âm khác trong game.
         /// </remarks>
         public static float amLuongLoa = 2f;
@@ -138,7 +138,7 @@ namespace Game6
         private AudioClip clipMic;
         private int viTriDocMic;
         private readonly float[] demDoc = new float[MAU_MOI_GOI];
-        private readonly sbyte[] demGui = new sbyte[MAU_MOI_GOI];
+        private readonly sbyte[] demGui = new sbyte[MAU_MOI_GOI * 2];
 
         /// <summary>Ai đang nói — hiện lên màn hình cho biết.</summary>
         public static readonly Dictionary<int, string> dangNoi =
@@ -318,7 +318,7 @@ namespace Game6
                 }
                 for (int i = 0; i < MAU_MOI_GOI; i++)
                 {
-                    demGui[i] = MaHoa.tuFloat(nenMem(demDoc[i] * amLuongMic));
+                    MaHoa.ghiPcm16(demGui, i * 2, nenMem(demDoc[i] * amLuongMic));
                 }
                 Service.gI().guiTieng((sbyte)kenhDangBat, demGui);
             }
@@ -344,7 +344,7 @@ namespace Game6
         /// sóng, chỉ thấp hơn, nên không đẻ ra hoạ ba.</para>
         ///
         /// <para>Vẫn kẹp lần cuối: mẫu vào là NaN thì mọi phép tính trên đều ra
-        /// NaN, mà NaN lọt xuống µ-law là một tiếng nổ.</para>
+        /// NaN, mà NaN lọt xuống PCM là một tiếng nổ.</para>
         /// </remarks>
         private static float nenMem(float v)
         {
@@ -389,9 +389,14 @@ namespace Game6
         public void nhan(int kenhGoi, int idNguoiNoi, string tenNguoiNoi,
                 sbyte[] tieng, int soByte)
         {
-            if (!batLoa[chiMuc(kenhGoi)] || soByte <= 0)
+            if (kenhDangBat == KENH_TAT || kenhGoi != kenhDangBat
+                    || !batLoa[chiMuc(kenhGoi)] || soByte <= 1)
             {
                 return;
+            }
+            if ((soByte & 1) != 0)
+            {
+                soByte--;
             }
             dangNoi[idNguoiNoi] = tenNguoiNoi;
             hetNoiLuc[idNguoiNoi] = Time.time + 0.5f;
@@ -401,12 +406,13 @@ namespace Game6
             {
                 return;
             }
-            float[] mau = new float[soByte];
-            for (int i = 0; i < soByte; i++)
+            int soMau = soByte / 2;
+            float[] mau = new float[soMau];
+            for (int i = 0; i < soMau; i++)
             {
                 // Nén mềm luôn ở đây: âm lượng loa cũng đẩy được quá 1, và
                 // AudioClip.SetData cắt phẳng y như mic nếu để tràn.
-                mau[i] = nenMem(MaHoa.raFloat(tieng[i]) * amLuongLoa);
+                mau[i] = nenMem(MaHoa.docPcm16(tieng, i * 2) * amLuongLoa);
             }
             n.kenh = kenhGoi;
             n.nhanLanCuoi = Time.time;
@@ -612,63 +618,33 @@ namespace Game6
             }
         }
 
-        /// <summary>
-        /// µ-law: nén 16 bit xuống 8 bit theo thang loga.
-        /// </summary>
-        /// <remarks>
-        /// Tai người nghe theo thang loga nên chia đều 256 mức theo loga giữ được
-        /// nhiều chi tiết ở âm nhỏ hơn hẳn so với cắt thẳng xuống 8 bit tuyến
-        /// tính. Đây là chuẩn G.711 dùng trong điện thoại — cùng bài toán.
-        /// </remarks>
+        /// <summary>PCM 16-bit little-endian: trong hơn nén 8-bit, vẫn đủ nhẹ cho voice.</summary>
         private static class MaHoa
         {
-            private const int CAN = 132;
-            private const int TOI_DA = 32635;
-
-            public static sbyte tuFloat(float f)
+            public static void ghiPcm16(sbyte[] dich, int viTri, float f)
             {
+                if (f > 1f)
+                {
+                    f = 1f;
+                }
+                else if (f < -1f)
+                {
+                    f = -1f;
+                }
                 int mau = (int)(f * 32767f);
-                if (mau > 32767)
-                {
-                    mau = 32767;
-                }
-                if (mau < -32768)
-                {
-                    mau = -32768;
-                }
-                int dau = (mau >> 8) & 0x80;
-                if (dau != 0)
-                {
-                    mau = -mau;
-                }
-                if (mau > TOI_DA)
-                {
-                    mau = TOI_DA;
-                }
-                mau += CAN;
-                int mu = 7;
-                for (int mask = 0x4000; (mau & mask) == 0 && mu > 0; mask >>= 1)
-                {
-                    mu--;
-                }
-                int dinhTri = (mau >> (mu + 3)) & 0x0F;
-                return (sbyte)(~(dau | (mu << 4) | dinhTri));
+                dich[viTri] = (sbyte)(mau & 0xFF);
+                dich[viTri + 1] = (sbyte)((mau >> 8) & 0xFF);
             }
 
-            public static float raFloat(sbyte b)
+            public static float docPcm16(sbyte[] nguon, int viTri)
             {
-                int u = ~b & 0xFF;
-                int dau = u & 0x80;
-                int mu = (u >> 4) & 0x07;
-                int dinhTri = u & 0x0F;
-                int mau = ((dinhTri << 3) + CAN) << mu;
-                mau -= CAN;
-                if (dau != 0)
-                {
-                    mau = -mau;
-                }
+                int lo = (byte)nguon[viTri];
+                int hi = (byte)nguon[viTri + 1];
+                short mau = (short)(lo | (hi << 8));
                 return mau / 32768f;
             }
         }
     }
 }
+
+

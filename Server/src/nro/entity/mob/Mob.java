@@ -33,6 +33,7 @@ import nro.service.achievement.AchievementService;
 import nro.entity.attribute.Attribute;
 import nro.service.badges.BadgesTaskService;
 import nro.entity.boss.map.trainingboss.TrainningService;
+import nro.service.reward.RewardService;
 
 public class Mob {
 
@@ -1300,12 +1301,44 @@ public class Mob {
             ItemMap im = new ItemMap(zone, (short) d.itemId, sl,
                     x + Util.nextInt(-10, 10), yEnd, player.id);
             apChiSoNgauNhienQuai(im, d.chiSo);
+            boSungChiSoGocTrangBi(im);
             apHanSuDungQuai(im, d.hsdMin, d.hsdMax, d.hsdVinhVien);
             ra.add(im);
         }
         return ra;
     }
 
+    private static void boSungChiSoGocTrangBi(ItemMap im) {
+        if (im == null || im.itemTemplate == null) {
+            return;
+        }
+        int type = im.itemTemplate.type;
+        if (type < 0 || type > 4) {
+            return;
+        }
+        List<ItemOption> goc = new ArrayList<>();
+        RewardService.gI().initBaseOptionClothes(im.itemTemplate.id, type, goc);
+        for (ItemOption them : goc) {
+            if (them == null || them.optionTemplate == null
+                    || daCoOption(im.options, them.optionTemplate.id)) {
+                continue;
+            }
+            im.options.add(them);
+        }
+    }
+
+    private static boolean daCoOption(List<ItemOption> ops, int id) {
+        if (ops == null) {
+            return false;
+        }
+        for (ItemOption o : ops) {
+            if (o != null && o.optionTemplate != null
+                    && o.optionTemplate.id == id) {
+                return true;
+            }
+        }
+        return false;
+    }
     /**
      * Mẫu bản đồ theo id.
      *

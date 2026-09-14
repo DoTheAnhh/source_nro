@@ -1874,7 +1874,7 @@ namespace Game1
                             sbyte b37 = msg.reader().readByte();
                             if (b37 == 0)
                             {
-                                Char.myCharz().havePet = false;
+                                Char.clearMyPet();
                             }
                             if (b37 == 1)
                             {
@@ -1885,6 +1885,8 @@ namespace Game1
                                 break;
                             }
                             InfoDlg.hide();
+                            Char.clearMyPet();
+                            Char.myCharz().havePet = true;
                             Char.myPetz().head = msg.reader().readShort();
                             Char.myPetz().setDefaultPart();
                             int num98 = msg.reader().readUnsignedByte();
@@ -7504,3 +7506,4 @@ namespace Game1
 
     }
 }
+

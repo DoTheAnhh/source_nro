@@ -155,6 +155,26 @@ public class DetuService {
         }).start();
     }
 
+    public void createBotTuTrungByGender(Player player, byte loai, int gender, byte... limitPower) {
+        new Thread(() -> {
+            try {
+                createNewBot(player, loai, (byte) gender);
+                if (limitPower != null && limitPower.length == 1) {
+                    player.Detu.nPoint.limitPower = limitPower[0];
+                    player.Detu.nPoint.initPowerLimit();
+                }
+                CheckPlayer(player);
+                Thread.sleep(1000);
+                Service.gI().chatJustForMe(player, player.Detu,
+                        loai == ConstDetu.BILL ? "Ta là Bill, ngươi gọi ta?"
+                        : (loai == ConstDetu.CELL ? "Hử... ta đã tỉnh."
+                                : "Oa oa oa..."));
+            } catch (Exception e) {
+                Logger.logException(DetuService.class, e);
+            }
+        }).start();
+    }
+
     public void createNormalBot(Player player, byte... limitPower) {
         new Thread(() -> {
             try {
@@ -252,35 +272,11 @@ public class DetuService {
     }
 
     public void createMabuPet(Player player, byte... limitPower) {
-        new Thread(() -> {
-            try {
-                createNewPet(player, true, false, false, false, false );
-                if (limitPower != null && limitPower.length == 1) {
-                    player.Detu.nPoint.limitPower = limitPower[0];
-                    player.Detu.nPoint.initPowerLimit();
-                }
-                Thread.sleep(1000);
-                Service.gI().chatJustForMe(player, player.Detu, "Oa oa oa...");
-            } catch (Exception e) {
-                Logger.logException(DetuService.class, e);
-            }
-        }).start();
+        createBotTuTrung(player, ConstDetu.MABU, limitPower);
     }
 
     public void createMabuPetByGender(Player player, int gender, byte... limitPower) {
-        new Thread(() -> {
-            try {
-                createNewPet(player, true, false, false, false, false ,(byte) gender);
-                if (limitPower != null && limitPower.length == 1) {
-                    player.Detu.nPoint.limitPower = limitPower[0];
-                    player.Detu.nPoint.initPowerLimit();
-                }
-                Thread.sleep(1000);
-                Service.gI().chatJustForMe(player, player.Detu, "Oa oa oa...");
-            } catch (Exception e) {
-                Logger.logException(DetuService.class, e);
-            }
-        }).start();
+        createBotTuTrungByGender(player, ConstDetu.MABU, gender, limitPower);
     }
     
     public void createUbuPet(Player player) {
@@ -373,14 +369,14 @@ public void createBlackPet(Player player) {
     }
 
     public void changeMabuPet(Player player, int gender) {
-        byte limitPower = 0;
+        byte limitPower = player.Detu.nPoint.limitPower;
         if (player.fusion.typeFusion != ConstPlayer.NON_FUSION) {
             player.Detu.unFusion();
         }
         ChangeMapService.gI().exitMap(player.Detu);
         player.Detu.dispose();
         player.Detu = null;
-        createMabuPetByGender(player, gender, limitPower);
+        createBotTuTrungByGender(player, ConstDetu.MABU, gender, limitPower);
     }
     
     public void changeUbuPet(Player player) {

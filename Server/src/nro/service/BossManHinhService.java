@@ -69,7 +69,7 @@ public class BossManHinhService {
     public static final byte OPCODE = 119;
 
     /** Số boss nhiều nhất gửi một lần, cho gói không phình. */
-    private static final int TOI_DA_BOSS = 120;
+    private static final int TOI_DA_BOSS = 250;
 
     /** Số món rơi nhiều nhất hiện cho mỗi phase — khung bên trái chỉ vừa nhiêu này. */
     private static final int TOI_DA_ROI = 12;

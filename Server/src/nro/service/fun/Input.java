@@ -363,17 +363,7 @@ public class Input {
                                 gender = 0;
                             }
 
-                            int type = player.Detu.typeDeTu;
-
-                            switch (type) {
-                                case ConstDetu.MABU:
-                                    DetuService.gI().changeMabuPet(player, gender);
-                                    break;
-
-                                default:
-                                    DetuService.gI().changeNormalPet(player, gender);
-                                    break;
-                            }
+                            DetuService.gI().changeNormalPet(player, gender);
 
                             // Trừ vật phẩm đổi pet (áp dụng cho tất cả)
                             InventoryService.gI().subQuantityItemsBag(player, player.Item_ChangePet, 1);

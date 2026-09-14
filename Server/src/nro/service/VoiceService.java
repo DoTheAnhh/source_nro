@@ -54,8 +54,8 @@ public class VoiceService {
     /** Một gói không được dài hơn ngần này byte. */
     private static final int TOI_DA_MOT_GOI = 4096;
 
-    /** Mỗi người gửi tối đa ngần này byte mỗi giây. */
-    private static final int TOI_DA_MOI_GIAY = 20_000;
+    /** Mỗi người gửi tối đa ngần này byte mỗi giây. PCM16 16 kHz cần khoảng 32 KB/s. */
+    private static final int TOI_DA_MOI_GIAY = 80_000;
 
     /**
      * Nhận một gói tiếng từ client và phát lại cho những người cần nghe.

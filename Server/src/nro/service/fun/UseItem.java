@@ -717,6 +717,10 @@ public class UseItem {
                                 ItemUseHandler.gI().hopQuaTanThu(pl, item);
                                 break;
                             case 568: {
+                                if (pl.Detu == null) {
+                                    Service.gI().sendThongBao(pl, "Bạn cần có đệ tử trước khi dùng trứng Mabư.");
+                                    break;
+                                }
                                 Item trung568 = InventoryService.gI().findItemBag(pl, 568);
                                 if (trung568 != null && trung568.quantity > 0) {
                                     int genderRand = pl.gender;

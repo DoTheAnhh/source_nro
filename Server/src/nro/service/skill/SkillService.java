@@ -165,6 +165,7 @@ public class SkillService {
             if (player.playerSkill == null || player.playerSkill.skillSelect == null) {
                 return false;
             }
+            lamMoiQckkBiKet(player);
             // Cổng chặn "đang có hiệu ứng thì không dùng chiêu" phải MIỄN TRỪ
             // đúng ba chiêu mà bản thân chúng tạo ra hiệu ứng rồi mới phát.
             //
@@ -719,26 +720,30 @@ public class SkillService {
                     //ném cầu
                     player.playerSkill.prepareQCKK = false;
                     mobs = new ArrayList<>();
+                    int tamX = player.location.x;
+                    int tamY = player.location.y;
                     if (plTarget != null) {
+                        tamX = plTarget.location.x;
+                        tamY = plTarget.location.y;
                         playerAttackPlayer(player, plTarget, false);
-                        if (!player.isBoss) {
-                            for (Mob mob : player.zone.mobs) {
-                                if (!mob.isDie()
-                                        && Util.getDistance(plTarget, mob) <= SkillUtil.getRangeQCKK(player.playerSkill.skillSelect.point)) {
-                                    mobs.add(mob);
-                                }
-                            }
-                        }
                     }
                     Double dameQCKKQuai = null;
                     if (mobTarget != null) {
+                        tamX = mobTarget.location.x;
+                        tamY = mobTarget.location.y;
                         if (!player.isBoss) {
                             playerAttackMob(player, mobTarget, false, true);
-                            for (Mob mob : player.zone.mobs) {
-                                if (!mob.equals(mobTarget) && !mob.isDie()
-                                        && Util.getDistance(mob, mobTarget) <= SkillUtil.getRangeQCKK(player.playerSkill.skillSelect.point)) {
-                                    mobs.add(mob);
-                                }
+                        }
+                    }
+                    if (!player.isBoss) {
+                        int tamNo = SkillUtil.getRangeQCKK(player.playerSkill.skillSelect.point);
+                        for (Mob mob : player.zone.mobs) {
+                            if (mob == null || mob.isDie() || mob.equals(mobTarget)) {
+                                continue;
+                            }
+                            if (Util.getDistance(tamX, tamY,
+                                    mob.location.x, mob.location.y) <= tamNo) {
+                                mobs.add(mob);
                             }
                         }
                     }
@@ -1614,6 +1619,20 @@ public class SkillService {
         hutHPMP(plAtt, dameHit, null, mob);
         sendPlayerAttackMob(plAtt, mob);
         mob.injured(plAtt, dameHit, dieWhenHpFull);
+    }
+
+    private void lamMoiQckkBiKet(Player player) {
+        if (player == null || player.playerSkill == null
+                || !player.playerSkill.prepareQCKK) {
+            return;
+        }
+        boolean dangDungQckk = player.playerSkill.skillSelect != null
+                && player.playerSkill.skillSelect.template != null
+                && player.playerSkill.skillSelect.template.id == Skill.QUA_CAU_KENH_KHI;
+        long daQua = System.currentTimeMillis() - player.playerSkill.lastTimePrepareQCKK;
+        if (!dangDungQckk || daQua > 7000) {
+            player.playerSkill.prepareQCKK = false;
+        }
     }
 
     private void sendPlayerPrepareSkill(Player player, int affterMiliseconds) {
