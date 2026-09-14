@@ -733,8 +733,7 @@ public class SkillService {
                     Double dameQCKKQuai = null;
                     if (mobTarget != null) {
                         if (!player.isBoss) {
-                            dameQCKKQuai = player.nPoint.getDameAttack(true);
-                            playerAttackMob(player, mobTarget, false, true, dameQCKKQuai);
+                            playerAttackMob(player, mobTarget, false, true);
                             for (Mob mob : player.zone.mobs) {
                                 if (!mob.equals(mobTarget) && !mob.isDie()
                                         && Util.getDistance(mob, mobTarget) <= SkillUtil.getRangeQCKK(player.playerSkill.skillSelect.point)) {
@@ -747,7 +746,7 @@ public class SkillService {
                         dameQCKKQuai = player.nPoint.getDameAttack(true);
                     }
                     for (Mob mob : mobs) {
-                        playerAttackMob(player, mob, false, true, dameQCKKQuai);
+                        mob.injured(player, Util.CrisGH(dameQCKKQuai), true);
                     }
                     PlayerService.gI().sendInfoHpMpMoney(player);
                     affterUseSkill(player, player.playerSkill.skillSelect.template.id);
@@ -1374,10 +1373,6 @@ public class SkillService {
         return finalDame;
     }
 
-    private double tinhDameDanhQuai(Player plAtt, Double dameCoBanDaTinh) {
-        return dameCoBanDaTinh != null ? dameCoBanDaTinh : plAtt.nPoint.getDameAttack(true);
-    }
-
     private void playerAttackPlayer(Player plAtt, Player plInjure, boolean miss) {
         if (plAtt == null || plInjure == null || plAtt.nPoint == null) {
             return;
@@ -1564,16 +1559,12 @@ public class SkillService {
     }
 
     private void playerAttackMob(Player plAtt, Mob mob, boolean miss, boolean dieWhenHpFull) {
-        playerAttackMob(plAtt, mob, miss, dieWhenHpFull, null);
-    }
-
-    private void playerAttackMob(Player plAtt, Mob mob, boolean miss, boolean dieWhenHpFull, Double dameCoBanDaTinh) {
         if (mob == null || mob.isDie() || plAtt == null || plAtt.nPoint == null || plAtt.playerSkill == null) {
             return;
         }
 
         // 1. Tính dame cơ bản
-        double dameHit = tinhDameDanhQuai(plAtt, dameCoBanDaTinh);
+        double dameHit = plAtt.nPoint.getDameAttack(true);
 
         // 2. Kiểm tra hiệu ứng da, hiệu ứng bất tử
         if (plAtt.isPl() && plAtt.effectSkin != null && plAtt.effectSkin.isXDame) {
