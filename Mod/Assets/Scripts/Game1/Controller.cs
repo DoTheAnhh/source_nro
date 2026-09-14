@@ -1840,6 +1840,14 @@ namespace Game1
                         Char.myCharz().expForOneAdd = msg.reader().readShort();
                         Char.myCharz().cDefGoc = msg.reader().readShort();
                         Char.myCharz().cCriticalGoc = msg.reader().readByte();
+                        if (msg.reader().available() >= 4)
+                        {
+                            Char.myCharz().cCritDameFull = msg.reader().readInt();
+                        }
+                        else
+                        {
+                            Char.myCharz().cCritDameFull = 0;
+                        }
                         InfoDlg.hide();
                         break;
                     case 1:
@@ -1995,6 +2003,14 @@ namespace Game1
                             // tinh ma theo CAP bien khi, va chi may chu biet cap
                             // do. Cai trang, hoa da, bien hinh su kien cung the.
                             Char.myPetz().head = msg.reader().readShort();
+                            if (msg.reader().available() >= 4)
+                            {
+                                Char.myPetz().cCritDameFull = msg.reader().readInt();
+                            }
+                            else
+                            {
+                                Char.myPetz().cCritDameFull = 0;
+                            }
                             break;
                         }
                     case -37:

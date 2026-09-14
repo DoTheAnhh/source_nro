@@ -110,6 +110,8 @@ namespace Game1
     
     	public int cCriticalFull;
     
+    	public int cCritDameFull;
+    
     	public int clevel;
     
     	public int cMP;

@@ -1599,7 +1599,7 @@ namespace Game1.God
             y += 12;
             veCapChiSo(g, xCot1, xCot2, y,
                     "Crit: " + c.cCriticalFull + "%",
-                    "Sdcm: " + congChiSo(CS_SUC_DANH_CM) + "%");
+                    "Sdcm: " + c.cCritDameFull + "%");
         }
 
         /// <summary>Một hàng hai cột của khối chỉ số dưới nhân vật.</summary>
@@ -1711,6 +1711,7 @@ namespace Game1.God
             y = veDong(g, y, "Sức đánh", NinjaUtil.getMoneys(c.cDamFull), MAU_TRANG);
             y = veDong(g, y, "Giáp", NinjaUtil.getMoneys(c.cDefull), MAU_TRANG);
             y = veDong(g, y, "Chí mạng", c.cCriticalFull + "%", MAU_TRANG);
+            y = veDong(g, y, "Sức đánh chí mạng", c.cCritDameFull + "%", MAU_TRANG);
             y = veDong(g, y, "Né đòn", congChiSo(CS_NE_DON) + "%", MAU_XANH);
             y = veDong(g, y, "Chính xác", congChiSo(CS_CHINH_XAC) + "%", MAU_XANH);
             y = veDong(g, y, "Hút HP", congChiSo(CS_HUT_HP) + "%", MAU_TIM);
@@ -5288,6 +5289,7 @@ namespace Game1.God
                     NinjaUtil.getMoneys(de.cDamFull));
             y = veDongDe(g, x, w, y, "Giáp", NinjaUtil.getMoneys(de.cDefull));
             y = veDongDe(g, x, w, y, "Chí mạng", de.cCriticalFull + "%");
+            y = veDongDe(g, x, w, y, "Sức đánh chí mạng", de.cCritDameFull + "%");
             veDongDe(g, x, w, y, "Thể lực",
                     de.cStamina + " / " + de.cMaxStamina);
         }

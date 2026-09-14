@@ -2665,6 +2665,8 @@ namespace Game2
                         .Append(NinjaUtil.getMoneys(c.cDefull)).Append("\n");
                 sb.Append(mResources.critical).Append(": ")
                         .Append(c.cCriticalFull).Append("%\n");
+                sb.Append("Sức đánh chí mạng: ")
+                        .Append(c.cCritDameFull).Append("%\n");
                 sb.Append("Né: ").Append(tinhNeDon()).Append("%\n");
                 sb.Append("------------------------\n");
                 sb.Append("Sức mạnh: ").Append(NinjaUtil.getMoneys(c.cPower)).Append("\n");

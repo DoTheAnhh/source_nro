@@ -975,6 +975,7 @@ public class Service {
                 msg.writer().writeShort(100);
                 msg.writer().writeShort(player.nPoint.defg);
                 msg.writer().writeByte(player.nPoint.critg);
+                msg.writer().writeInt(player.nPoint.tlSDCM);
                 player.sendMessage(msg);
                 msg.cleanup();
             } catch (Exception e) {
@@ -2220,6 +2221,7 @@ public class Service {
                 // getHead() la dung ham may chu dung o moi noi khac de ve nhan
                 // vat, nen mot dong nay lo het cac truong hop tren.
                 msg.writer().writeShort(pl.Detu.getHead());
+                msg.writer().writeInt(pl.Detu.nPoint.tlSDCM);
 
                 pl.sendMessage(msg);
                 msg.cleanup();
