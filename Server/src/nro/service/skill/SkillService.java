@@ -256,7 +256,7 @@ public class SkillService {
             } else {
                 switch (player.playerSkill.skillSelect.template.type) {
                     case 1:
-                        useSkillAttack(player, plTarget, mobTarget);
+                        useSkillAttack(player, plTarget, mobTarget, x, y);
                         break;
                     case 3:
                         useSkillAlone(player);
@@ -595,6 +595,10 @@ public class SkillService {
 
     //--------------------------------------------------------------------------
     public void useSkillAttack(Player player, Player plTarget, Mob mobTarget) {
+        useSkillAttack(player, plTarget, mobTarget, null, null);
+    }
+
+    public void useSkillAttack(Player player, Player plTarget, Mob mobTarget, Short skillX, Short skillY) {
         long time = System.currentTimeMillis();
 
         long t1 = System.currentTimeMillis();
@@ -720,8 +724,8 @@ public class SkillService {
                     //ném cầu
                     player.playerSkill.prepareQCKK = false;
                     mobs = new ArrayList<>();
-                    int tamX = player.location.x;
-                    int tamY = player.location.y;
+                    int tamX = toaDoHopLe(skillX) ? skillX : player.location.x;
+                    int tamY = toaDoHopLe(skillY) ? skillY : player.location.y;
                     if (plTarget != null) {
                         tamX = plTarget.location.x;
                         tamY = plTarget.location.y;
@@ -1633,6 +1637,10 @@ public class SkillService {
         if (!dangDungQckk || daQua > 7000) {
             player.playerSkill.prepareQCKK = false;
         }
+    }
+
+    private boolean toaDoHopLe(Short toaDo) {
+        return toaDo != null && toaDo >= 0;
     }
 
     private void sendPlayerPrepareSkill(Player player, int affterMiliseconds) {

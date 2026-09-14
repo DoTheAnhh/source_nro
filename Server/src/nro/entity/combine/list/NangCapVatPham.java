@@ -119,12 +119,19 @@ public class NangCapVatPham {
 
         if (canUseDBV && (daBaoVe != null || daBaoVeKhoa != null)) {
             CombineService.gI().baHatMit.createOtherMenu(player, ConstNpc.MENU_START_COMBINE,
-                    text.toString(), "Nâng cấp", "Nâng cấp\ndùng đá\nbảo vệ", "Đóng");
+                    text.toString(),
+                    "N\u00e2ng c\u1ea5p",
+                    "N\u00e2ng c\u1ea5p\nx10",
+                    "N\u00e2ng c\u1ea5p\nx100",
+                    "N\u00e2ng c\u1ea5p\nd\u00f9ng \u0111\u00e1\nb\u1ea3o v\u1ec7",
+                    "N\u00e2ng c\u1ea5p\nx10\nd\u00f9ng \u0111\u00e1\nb\u1ea3o v\u1ec7",
+                    "N\u00e2ng c\u1ea5p\nx100\nd\u00f9ng \u0111\u00e1\nb\u1ea3o v\u1ec7",
+                    "\u0110\u00f3ng");
             return;
         }
 
         CombineService.gI().baHatMit.createOtherMenu(player, ConstNpc.MENU_START_COMBINE,
-                text.toString(), "Nâng cấp", "Đóng");
+                text.toString(), "N\u00e2ng c\u1ea5p", "N\u00e2ng c\u1ea5p\nx10", "N\u00e2ng c\u1ea5p\nx100", "\u0110\u00f3ng");
     }
 
     /**
@@ -141,10 +148,28 @@ public class NangCapVatPham {
      * đều đổi được: dùng mất viên đá, tiêu mất vàng, kéo món đồ ra khỏi ô.</p>
      */
     public static void nangCapVatPham(Player player, boolean useDBV) {
+        nangCapVatPham(player, useDBV, 1);
+    }
+
+    public static void nangCapVatPham(Player player, boolean useDBV, int soLan) {
+        int daLam = 0;
+        for (int i = 0; i < soLan; i++) {
+            if (!nangCapVatPhamMotLan(player, useDBV)) {
+                break;
+            }
+            daLam++;
+        }
+        if (soLan > 1) {
+            Service.gI().sendThongBao(player, "Da chay nang cap " + daLam + "/" + soLan + " lan.");
+        }
+        CombineService.gI().reOpenItemCombine(player);
+    }
+
+    private static boolean nangCapVatPhamMotLan(Player player, boolean useDBV) {
         if (player.combine.itemsCombine.size() != 2) {
             Service.gI().sendThongBao(player,
                     "Cần đúng 1 trang bị và 1 loại đá nâng cấp trong ô.");
-            return;
+            return false;
         }
 
         Item trangBi = null;
@@ -159,7 +184,7 @@ public class NangCapVatPham {
         if (trangBi == null || daNangCap == null || !trangBi.canNangCapWithNDC(daNangCap)) {
             Service.gI().sendThongBao(player,
                     "Trang bị và đá nâng cấp không khớp nhau.");
-            return;
+            return false;
         }
         Item daBaoVe = InventoryService.gI().findItemBag(player, 987);
         Item daBaoVeKhoa = InventoryService.gI().findItemBag(player, 1143);
@@ -171,22 +196,22 @@ public class NangCapVatPham {
         if (level >= CombineService.MAX_LEVEL_ITEM) {
             Service.gI().sendThongBao(player, "Món này đã đạt cấp tối đa (+"
                     + CombineService.MAX_LEVEL_ITEM + ").");
-            return;
+            return false;
         }
         if (daNangCap.quantity < da) {
             Service.gI().sendThongBao(player, "Không đủ " + daNangCap.template.name
                     + " — cần " + da + ", đang có " + daNangCap.quantity + ".");
-            return;
+            return false;
         }
         if (player.inventory.gold < gold) {
             Service.gI().sendThongBao(player, "Không đủ vàng, còn thiếu "
                     + Util.soCham(gold - player.inventory.gold) + " vàng.");
-            return;
+            return false;
         }
         if (canUseDBV && useDBV && daBaoVe == null && daBaoVeKhoa == null) {
             Service.gI().sendThongBao(player,
                     "Không có Đá Bảo Vệ trong hành trang.");
-            return;
+            return false;
         }
         if (Util.isTrue(getRatio(level), 100)) {
             for (ItemOption io : trangBi.itemOptions) {
@@ -232,7 +257,7 @@ public class NangCapVatPham {
         InventoryService.gI().subQuantityItemsBag(player, daNangCap, da);
         InventoryService.gI().sendItemBag(player);
         Service.gI().sendMoney(player);
-        CombineService.gI().reOpenItemCombine(player);
+        return true;
     }
 
 }

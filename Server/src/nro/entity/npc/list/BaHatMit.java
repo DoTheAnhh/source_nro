@@ -748,10 +748,27 @@ public class BaHatMit extends Npc {
                                 break;
                             }
                             case CombineService.NANG_CAP_VAT_PHAM: {
-                                if (select == 0) {
-                                    CombineService.gI().startCombine(player);
-                                } else if (select == 1) {
-                                    NangCapVatPham.nangCapVatPham(player, true);
+                                switch (select) {
+                                    case 0:
+                                        CombineService.gI().startCombine(player);
+                                        break;
+                                    case 1:
+                                        NangCapVatPham.nangCapVatPham(player, false, 10);
+                                        break;
+                                    case 2:
+                                        NangCapVatPham.nangCapVatPham(player, false, 100);
+                                        break;
+                                    case 3:
+                                        NangCapVatPham.nangCapVatPham(player, true);
+                                        break;
+                                    case 4:
+                                        NangCapVatPham.nangCapVatPham(player, true, 10);
+                                        break;
+                                    case 5:
+                                        NangCapVatPham.nangCapVatPham(player, true, 100);
+                                        break;
+                                    default:
+                                        break;
                                 }
                                 break;
                             }
@@ -860,5 +877,4 @@ public class BaHatMit extends Npc {
         }
     }
 }
-
 
