@@ -44,6 +44,7 @@ import nro.entity.npc.NonInteractiveNPC;
 public class SkillService {
 
     private static SkillService instance;
+    private static final double DAME_TOI_DA_DANH_QUAI = 2_000_000_000D;
 
     public static SkillService gI() {
         if (instance == null) {
@@ -729,9 +730,11 @@ public class SkillService {
                             }
                         }
                     }
+                    Double dameQCKKQuai = null;
                     if (mobTarget != null) {
                         if (!player.isBoss) {
-                            playerAttackMob(player, mobTarget, false, true);
+                            dameQCKKQuai = player.nPoint.getDameAttack(true);
+                            playerAttackMob(player, mobTarget, false, true, dameQCKKQuai);
                             for (Mob mob : player.zone.mobs) {
                                 if (!mob.equals(mobTarget) && !mob.isDie()
                                         && Util.getDistance(mob, mobTarget) <= SkillUtil.getRangeQCKK(player.playerSkill.skillSelect.point)) {
@@ -740,8 +743,11 @@ public class SkillService {
                             }
                         }
                     }
+                    if (!mobs.isEmpty() && dameQCKKQuai == null) {
+                        dameQCKKQuai = player.nPoint.getDameAttack(true);
+                    }
                     for (Mob mob : mobs) {
-                        mob.injured(player, Util.CrisGH(player.nPoint.getDameAttack(true)), true);
+                        playerAttackMob(player, mob, false, true, dameQCKKQuai);
                     }
                     PlayerService.gI().sendInfoHpMpMoney(player);
                     affterUseSkill(player, player.playerSkill.skillSelect.template.id);
@@ -1330,53 +1336,70 @@ public class SkillService {
         }
     }
 
+    private Skill laySkillDangChon(Player player) {
+        if (player == null || player.playerSkill == null) {
+            return null;
+        }
+        return player.playerSkill.skillSelect;
+    }
+
+    private double heSoDameSkill(Player plAtt) {
+        Skill skillSelect = laySkillDangChon(plAtt);
+        if (skillSelect == null || skillSelect.template == null) {
+            return 1.0;
+        }
+        try {
+            return nro.core.config.SkillDamageConfig.getMultiplier(skillSelect.template.id);
+        } catch (Exception e) {
+            return 1.0;
+        }
+    }
+
+    private double tinhDameDanhNguoi(Player plAtt, Player plInjure) {
+        double finalDame = plAtt.nPoint.getDameAttack(false) * heSoDameSkill(plAtt);
+
+        if (plAtt.isPl() && plAtt.effectSkin != null && plAtt.effectSkin.isXDame) {
+            plAtt.effectSkin.isXDame = false;
+            if (plInjure != null && plInjure.isBoss) {
+                finalDame /= 3;
+            }
+        }
+
+        if (plAtt.isPlMan() && plInjure != null && plInjure.isBoss) {
+            int tlDameBoss = plAtt.nPoint.tlDameBoss;
+            if (tlDameBoss > 0) {
+                finalDame += Util.CrisGH((finalDame / 100) * tlDameBoss);
+            }
+        }
+        return finalDame;
+    }
+
+    private double tinhDameDanhQuai(Player plAtt, Double dameCoBanDaTinh) {
+        return dameCoBanDaTinh != null ? dameCoBanDaTinh : plAtt.nPoint.getDameAttack(true);
+    }
+
     private void playerAttackPlayer(Player plAtt, Player plInjure, boolean miss) {
-        if (plInjure.effectSkill.anTroi) {
+        if (plAtt == null || plInjure == null || plAtt.nPoint == null) {
+            return;
+        }
+
+        if (plInjure.effectSkill != null && plInjure.effectSkill.anTroi) {
             plAtt.nPoint.isCrit100 = true;
         }
 
         // ============================================================
         // 🔹 1. TÍNH SÁT THƯƠNG THEO CONFIG SKILL
         // ============================================================
-        double baseDame = plAtt.nPoint.getDameAttack(false);
-        double multiplier = 1.0;
-
-        if (plAtt.playerSkill != null && plAtt.playerSkill.skillSelect != null) {
-            try {
-                multiplier = nro.core.config.SkillDamageConfig.getMultiplier(plAtt.playerSkill.skillSelect.template.id);
-            } catch (Exception e) {
-                multiplier = 1.0; // fallback nếu lỗi
-            }
-        }
-
-        double finalDame = baseDame * multiplier;
+        double finalDame = tinhDameDanhNguoi(plAtt, plInjure);
 
         // ============================================================
-        // 🔹 2. HIỆU ỨNG ĐẶC BIỆT & BONUS KHÁC
-        // ============================================================
-        if (plAtt.isPl() && plAtt.effectSkin != null && plAtt.effectSkin.isXDame) {
-            plAtt.effectSkin.isXDame = false;
-            if (plInjure.isBoss) {
-                finalDame /= 3; // giảm dame khi đánh boss nếu có skin
-            }
-        }
-
-        if (plAtt.isPlMan()) {
-            int tlDameBoss = plAtt.nPoint.tlDameBoss;
-            if (tlDameBoss > 0 && plInjure.isBoss) {
-                finalDame += Util.CrisGH((finalDame / 100) * tlDameBoss);
-            }
-        }
-
-        // ============================================================
-        // 🔹 3. TÍNH TOÁN DAME GÂY RA
+        // 🔹 2. TÍNH TOÁN DAME GÂY RA
         // ============================================================
         double dameHit = plInjure.injured(plAtt, miss ? 0 : finalDame, false, false);
-        if (plAtt.playerSkill == null) {
+        Skill skillSelect = laySkillDangChon(plAtt);
+        if (skillSelect == null || skillSelect.template == null) {
             return;
         }
-
-        Skill skillSelect = plAtt.playerSkill.skillSelect;
 
         // Hiển thị thông báo khi sát thương quá lớn
         if (plAtt.isPl() && dameHit >= 150_000_000) {
@@ -1416,7 +1439,7 @@ public class SkillService {
         try {
             msg = new Message(-60);
             msg.writer().writeInt((int) plAtt.id); // id người đánh
-            msg.writer().writeByte(plAtt.playerSkill.skillSelect.skillId); // skill id
+            msg.writer().writeByte(skillSelect.skillId); // skill id
             msg.writer().writeByte(1); // số mục tiêu
             msg.writer().writeInt((int) plInjure.id); // id bị đánh
             msg.writer().writeByte(1); // continue
@@ -1541,12 +1564,16 @@ public class SkillService {
     }
 
     private void playerAttackMob(Player plAtt, Mob mob, boolean miss, boolean dieWhenHpFull) {
+        playerAttackMob(plAtt, mob, miss, dieWhenHpFull, null);
+    }
+
+    private void playerAttackMob(Player plAtt, Mob mob, boolean miss, boolean dieWhenHpFull, Double dameCoBanDaTinh) {
         if (mob == null || mob.isDie() || plAtt == null || plAtt.nPoint == null || plAtt.playerSkill == null) {
             return;
         }
 
         // 1. Tính dame cơ bản
-        double dameHit = plAtt.nPoint.getDameAttack(true);
+        double dameHit = tinhDameDanhQuai(plAtt, dameCoBanDaTinh);
 
         // 2. Kiểm tra hiệu ứng da, hiệu ứng bất tử
         if (plAtt.isPl() && plAtt.effectSkin != null && plAtt.effectSkin.isXDame) {
@@ -1590,8 +1617,8 @@ public class SkillService {
             }
         }
 
-        if (dameHit > 2_000_000_000) {
-            dameHit = 2_000_000_000;
+        if (dameHit > DAME_TOI_DA_DANH_QUAI) {
+            dameHit = DAME_TOI_DA_DANH_QUAI;
         }
         hutHPMP(plAtt, dameHit, null, mob);
         sendPlayerAttackMob(plAtt, mob);
