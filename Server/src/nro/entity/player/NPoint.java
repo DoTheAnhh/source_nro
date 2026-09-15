@@ -3132,6 +3132,7 @@ if (hasFull5NhatAn()) {
                 isCrit = false;
                 long hpmob = 0;
                 long hppl = 0;
+                long hpboss = 0;
 
                 for (Mob mob : this.player.zone.mobs) {
                     if (!mob.isDie() && Util.getDistance(this.player, mob) <= SkillUtil.getRangeQCKK(this.player.playerSkill.skillSelect.point)) {
@@ -3141,10 +3142,15 @@ if (hasFull5NhatAn()) {
 
                 for (Player pl : this.player.zone.getHumanoids()) {
                     if (!pl.isDie() && this.player.id != pl.id && Util.getDistance(this.player, pl) <= SkillUtil.getRangeQCKK(this.player.playerSkill.skillSelect.point)) {
-                        hppl += pl.nPoint.hp;
+                        if (pl.isBoss) {
+                            hpboss += pl.nPoint.hpMax;
+                        } else {
+                            hppl += pl.nPoint.hp;
+                        }
                     }
                 }
-                long dameqckk = (hpmob * 10 / 100) + (hppl * 10 / 100) + this.dame * 10;
+                long dameqckk = (hpmob * 10 / 100) + (hppl * 10 / 100)
+                        + (hpboss * 10 / 100) + this.dame * 10;
 
                 int tlQckk = phanTramSetTheoLoai("qckk_pct");
                 if (tlQckk != 0) {
@@ -3156,8 +3162,6 @@ if (hasFull5NhatAn()) {
                 if (tlQckkChieu != 0) {
                     dameqckk += dameqckk * tlQckkChieu / 100;
                 }
-
-                dameqckk = dameqckk + (Util.nextInt(-5, 5) * dameqckk / 100);
 
                 return dameqckk;
             case Skill.DE_TRUNG:
@@ -3458,6 +3462,7 @@ if (hasFull5NhatAn()) {
             case Skill.QUA_CAU_KENH_KHI:
                 long hpmob = 0;
                 long hppl = 0;
+                long hpboss = 0;
                 if (this.player.zone != null) {
                     for (Mob mob : this.player.zone.mobs) {
                         if (mob != null && !mob.isDie()
@@ -3468,15 +3473,21 @@ if (hasFull5NhatAn()) {
                     for (Player pl : this.player.zone.getHumanoids()) {
                         if (pl != null && !pl.isDie() && this.player.id != pl.id
                                 && Util.getDistance(this.player, pl) <= SkillUtil.getRangeQCKK(skillSelect.point)) {
-                            hppl += pl.nPoint.hp;
+                            if (pl.isBoss) {
+                                hpboss += pl.nPoint.hpMax;
+                            } else {
+                                hppl += pl.nPoint.hp;
+                            }
                         }
                     }
                 }
                 long truocQckk = dameAttack;
-                dameAttack = (hpmob * 10 / 100L) + (hppl * 10 / 100L) + this.dame * 10L;
+                dameAttack = (hpmob * 10 / 100L) + (hppl * 10 / 100L)
+                        + (hpboss * 10 / 100L) + this.dame * 10L;
                 ghiDameTrace(ds, "Quả cầu kênh khi", truocQckk, dameAttack,
-                        "10% tổng HP quái gần + 10% tổng HP người gần + SĐ hiện tại ×10. HP quái="
-                        + hpmob + ", HP người=" + hppl + ".");
+                        "10% HP hiện tại quái/người gần + 10% HP tối đa boss gần + SĐ hiện tại ×10. "
+                        + "HP quái=" + hpmob + ", HP người=" + hppl
+                        + ", HP tối đa boss=" + hpboss + ".");
                 int tlQckk = phanTramSetTheoLoai("qckk_pct");
                 if (tlQckk != 0) {
                     long truoc = dameAttack;
@@ -3492,8 +3503,8 @@ if (hasFull5NhatAn()) {
                     ghiDameTrace(ds, "Set skill QCKK +" + tlQckkChieu + "%", truoc, dameAttack,
                             "Lấy từ set_bonus loại skill_pct, tham_so=QUA_CAU_KENH_KHI.");
                 }
-                ghiDameTrace(ds, "Dao động ngẫu nhiên QCKK", dameAttack, dameAttack,
-                        "Cú thật cộng ngẫu nhiên từ -5% đến +5%; bảng giữ giá trị trung tâm để dễ kiểm tra.");
+                ghiDameTrace(ds, "QCKK cố định, không chí mạng", dameAttack, dameAttack,
+                        "Không nhân chí mạng và không dao động ngẫu nhiên; HP boss dùng HP tối đa.");
                 return apDungDameSauSkillService(ds, dameAttack, skillSelect, isAttackMob);
             case Skill.DE_TRUNG:
                 int tlDanhThuong = phanTramSetTheoLoai("danh_thuong_pct");
