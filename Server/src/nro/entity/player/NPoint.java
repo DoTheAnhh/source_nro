@@ -3127,6 +3127,9 @@ if (hasFull5NhatAn()) {
                 }
                 return dameSkill;
             case Skill.QUA_CAU_KENH_KHI:
+                // QCKK dung cong thuc rieng va khong duoc chi mang. setIsCrit()
+                // chay truoc switch nen phai xoa co de packet khong hien crit ao.
+                isCrit = false;
                 long hpmob = 0;
                 long hppl = 0;
 

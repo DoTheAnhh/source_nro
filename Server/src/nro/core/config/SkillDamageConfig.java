@@ -39,7 +39,8 @@ public class SkillDamageConfig {
 
         // ===== Skill đặc biệt =====
         skillDamageMultipliers.put(Skill.TU_SAT, 3.0);         
-        skillDamageMultipliers.put(Skill.QUA_CAU_KENH_KHI, 2.5);
+        // QCKK đã tự scale theo tổng HP trong vùng và sức đánh x10.
+        skillDamageMultipliers.put(Skill.QUA_CAU_KENH_KHI, 1.0);
         skillDamageMultipliers.put(Skill.MAKANKOSAPPO, 3.0);
 
         // ... bạn có thể thêm skill khác ở đây
