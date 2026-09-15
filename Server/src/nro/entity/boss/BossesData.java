@@ -2321,7 +2321,7 @@ public class BossesData {
      * bốc thật trong mọi bản đồ thường.</p>
      */
     public static BossData RONG_NHI_1S = new BossData(
-            "Rồng nhí 1s", //name
+            "Rồng nhí 1 sao", //name
             ConstPlayer.TRAI_DAT, //gender
             new short[]{1722, 1723, 1724, -1, -1, -1}, //outfit {head, body, leg, bag, aura, eff}
             0, //dame — không gây sát thương lên người chơi
@@ -2342,7 +2342,7 @@ public class BossesData {
      * bốc thật trong mọi bản đồ thường.</p>
      */
     public static BossData RONG_NHI_2S = new BossData(
-            "Rồng nhí 2s", //name
+            "Rồng nhí 2 sao", //name
             ConstPlayer.TRAI_DAT, //gender
             new short[]{1719, 1720, 1721, -1, -1, -1}, //outfit {head, body, leg, bag, aura, eff}
             0, //dame — không gây sát thương lên người chơi
@@ -2363,7 +2363,7 @@ public class BossesData {
      * bốc thật trong mọi bản đồ thường.</p>
      */
     public static BossData RONG_NHI_3S = new BossData(
-            "Rồng nhí 3s", //name
+            "Rồng nhí 3 sao", //name
             ConstPlayer.TRAI_DAT, //gender
             new short[]{1716, 1717, 1718, -1, -1, -1}, //outfit {head, body, leg, bag, aura, eff}
             0, //dame — không gây sát thương lên người chơi
@@ -2384,7 +2384,7 @@ public class BossesData {
      * bốc thật trong mọi bản đồ thường.</p>
      */
     public static BossData RONG_NHI_4S = new BossData(
-            "Rồng nhí 4s", //name
+            "Rồng nhí 4 sao", //name
             ConstPlayer.TRAI_DAT, //gender
             new short[]{1713, 1714, 1715, -1, -1, -1}, //outfit {head, body, leg, bag, aura, eff}
             0, //dame — không gây sát thương lên người chơi
@@ -2405,7 +2405,7 @@ public class BossesData {
      * bốc thật trong mọi bản đồ thường.</p>
      */
     public static BossData RONG_NHI_5S = new BossData(
-            "Rồng nhí 5s", //name
+            "Rồng nhí 5 sao", //name
             ConstPlayer.TRAI_DAT, //gender
             new short[]{1710, 1711, 1712, -1, -1, -1}, //outfit {head, body, leg, bag, aura, eff}
             0, //dame — không gây sát thương lên người chơi
@@ -2426,7 +2426,7 @@ public class BossesData {
      * bốc thật trong mọi bản đồ thường.</p>
      */
     public static BossData RONG_NHI_6S = new BossData(
-            "Rồng nhí 6s", //name
+            "Rồng nhí 6 sao", //name
             ConstPlayer.TRAI_DAT, //gender
             new short[]{1707, 1708, 1709, -1, -1, -1}, //outfit {head, body, leg, bag, aura, eff}
             0, //dame — không gây sát thương lên người chơi
@@ -2447,7 +2447,7 @@ public class BossesData {
      * bốc thật trong mọi bản đồ thường.</p>
      */
     public static BossData RONG_NHI_7S = new BossData(
-            "Rồng nhí 7s", //name
+            "Rồng nhí 7 sao", //name
             ConstPlayer.TRAI_DAT, //gender
             new short[]{1704, 1705, 1706, -1, -1, -1}, //outfit {head, body, leg, bag, aura, eff}
             0, //dame — không gây sát thương lên người chơi

@@ -197,7 +197,8 @@ public class SkillService {
                 useSkill(player.PhanThan, plTarget, mobTarget, -1, null);
             }
             boolean laQCKK = player.playerSkill.skillSelect.template.id == Skill.QUA_CAU_KENH_KHI;
-            if (laQCKK && plTarget != null && !canAttackPlayer(player, plTarget)) {
+            if (laQCKK && plTarget != null && !plTarget.isBoss
+                    && !canAttackPlayer(player, plTarget)) {
                 plTarget = null;
             }
             if ((player.effectSkill != null && player.effectSkill.isHaveEffectSkill()
@@ -746,7 +747,6 @@ public class SkillService {
                         tamY = plTarget.location.y;
                         playerAttackPlayer(player, plTarget, false);
                     }
-                    Double dameQCKKQuai = null;
                     if (mobTarget != null && !mobTarget.isDie()) {
                         tamX = mobTarget.location.x;
                         tamY = mobTarget.location.y;
@@ -766,11 +766,10 @@ public class SkillService {
                             }
                         }
                     }
-                    if (!mobs.isEmpty() && dameQCKKQuai == null) {
-                        dameQCKKQuai = player.nPoint.getDameAttack(true);
-                    }
                     for (Mob mob : mobs) {
-                        mob.injured(player, Util.CrisGH(dameQCKKQuai), true);
+                        // Moi muc tieu di qua cung pipeline voi muc tieu chinh:
+                        // tinh buff/giam dame, gioi han, hut HP/KI va gui packet danh.
+                        playerAttackMob(player, mob, false, true);
                     }
                     PlayerService.gI().sendInfoHpMpMoney(player);
                     affterUseSkill(player, player.playerSkill.skillSelect.template.id);

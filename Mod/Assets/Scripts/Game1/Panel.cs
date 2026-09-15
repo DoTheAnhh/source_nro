@@ -348,8 +348,6 @@ namespace Game1
     
         public Member currMem;
 
-        public Member detailMem;
-    
         public Clan[] clans;
     
         public MyVector member;
@@ -2420,7 +2418,6 @@ namespace Game1
     
         public void addMessageDetail(ClanMessage cm)
         {
-            detailMem = null;
             partID = null;
             charInfo = null;
             currItem = null;
@@ -2459,7 +2456,6 @@ namespace Game1
     
         public void addThachDauDetail(TopInfo t)
         {
-            detailMem = null;
             string text = "|0|1|" + t.name;
             text = text + "\n|1|Top " + t.rank;
             text = text + "\n|1|" + t.info;
@@ -2473,7 +2469,6 @@ namespace Game1
     
         public void addClanMemberDetail(Member m)
         {
-            detailMem = m;
             string text = "|0|1|" + m.name;
             string text2 = "\n|2|1|";
             if (m.role == 0)
@@ -2502,6 +2497,20 @@ namespace Game1
             text = text3 + "\n|4|" + mResources.receive_pea + ": " + m.receive_donate + mResources.time;
             text3 = text;
             text = text3 + "\n|6|" + mResources.join_date + ": " + m.joinTime;
+            text += "\n--";
+            if (m.hasBattleStats)
+            {
+                text += "\n|2|HP: " + m.hpInfo;
+                text += "\n|2|KI: " + m.kiInfo;
+                text += "\n|1|Sức đánh: " + m.dameInfo;
+                text += "\n|1|Giáp: " + m.defInfo;
+                text += "\n|7|Chí mạng: " + m.critInfo;
+                text += "\n|7|Sức đánh chí mạng: " + m.critDameInfo;
+            }
+            else
+            {
+                text += "\n|6|Chỉ số: chưa cập nhật (offline)";
+            }
             cp = new ChatPopup();
             popUpDetailInit(cp, text);
             partID = null;
@@ -2511,7 +2520,6 @@ namespace Game1
     
         public void addClanDetail(Clan cl)
         {
-            detailMem = null;
             partID = null;
             charInfo = null;
             currItem = null;
@@ -4856,7 +4864,6 @@ namespace Game1
             {
                 SmallImage.drawSmallImage(g, idIcon, cp.cx + 8, cp.cy + 2, 0, mGraphics.TOP | mGraphics.LEFT);
             }
-            paintClanMemberBattleStats(g);
             if (currItem != null && currItem.template.type != 5)
             {
                 if (currItem.compare > 0)
@@ -4872,42 +4879,6 @@ namespace Game1
             }
         }
 
-        private void paintClanMemberBattleStats(mGraphics g)
-        {
-            if (detailMem == null || cp == null || type != 0 || currentTabIndex != 3 || !isViewMember)
-            {
-                return;
-            }
-            GameCanvas.resetTrans(g);
-            int x = cp.cx + 10;
-            int y = cp.cy + 118;
-            int w = cp.sayWidth - 18;
-            mFont.tahoma_7b_dark.drawString(g, "Chỉ số", x, y, mFont.LEFT);
-            y += 13;
-            if (!detailMem.hasBattleStats)
-            {
-                mFont.tahoma_7_grey.drawString(g, "Chưa cập nhật (offline)", x, y, mFont.LEFT);
-                return;
-            }
-            veDongChiSoThanhVien(g, x, y, w, "HP", detailMem.hpInfo, mFont.tahoma_7b_blue);
-            y += 12;
-            veDongChiSoThanhVien(g, x, y, w, "KI", detailMem.kiInfo, mFont.tahoma_7b_blue);
-            y += 12;
-            veDongChiSoThanhVien(g, x, y, w, "SĐ", detailMem.dameInfo, mFont.tahoma_7b_green);
-            y += 12;
-            veDongChiSoThanhVien(g, x, y, w, "Giáp", detailMem.defInfo, mFont.tahoma_7b_dark);
-            y += 12;
-            veDongChiSoThanhVien(g, x, y, w, "Chí mạng", detailMem.critInfo, mFont.tahoma_7b_red);
-            y += 12;
-            veDongChiSoThanhVien(g, x, y, w, "SDCM", detailMem.critDameInfo, mFont.tahoma_7b_red);
-        }
-
-        private void veDongChiSoThanhVien(mGraphics g, int x, int y, int w, string ten, string giaTri, mFont fontGiaTri)
-        {
-            mFont.tahoma_7b_dark.drawString(g, ten + ":", x, y, mFont.LEFT);
-            fontGiaTri.drawString(g, giaTri == null ? "" : giaTri, x + w, y, mFont.RIGHT);
-        }
-    
         public void paintTop(mGraphics g)
         {
             g.setClip(xScroll, yScroll, wScroll, hScroll);

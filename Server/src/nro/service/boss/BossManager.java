@@ -315,21 +315,22 @@ public class BossManager implements Runnable {
             BossID.Rong_7Sao};
         int them = 0;
         for (int i = 0; i < ids.length; i++) {
-            boolean coRoi = false;
+            nro.repository.dao.BossSpawnDAO.Dong dongCu = null;
             for (nro.repository.dao.BossSpawnDAO.Dong d : dangCo) {
                 if (d.bossId == ids[i]) {
-                    coRoi = true;
+                    dongCu = d;
                     break;
                 }
             }
-            if (coRoi) {
+            if (dongCu != null && dongCu.bat && dongCu.soBanSao > 0) {
                 continue;
             }
-            nro.repository.dao.BossSpawnDAO.Dong d
-                    = new nro.repository.dao.BossSpawnDAO.Dong();
+            nro.repository.dao.BossSpawnDAO.Dong d = dongCu == null
+                    ? new nro.repository.dao.BossSpawnDAO.Dong() : dongCu;
             d.bossId = ids[i];
             d.ten = "RONG_NHI_" + (i + 1) + "S";
-            d.soBanSao = 1;
+            d.soBanSao = Math.max(1, d.soBanSao);
+            d.bat = true;
             d.thuTu = 900 + i;
             d.ghiChu = "Rồng nhí " + (i + 1) + " sao — 100 HP, mỗi đòn 1 HP";
             if (nro.repository.dao.BossSpawnDAO.luu(d) == null) {

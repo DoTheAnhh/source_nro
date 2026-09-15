@@ -19,7 +19,7 @@ namespace Game6.God
     /// <para>Bố cục tính một lần trong <see cref="tinhBoCuc"/> rồi cả phần vẽ lẫn
     /// phần bắt chạm cùng đọc, tránh hai bên tính lệch nhau.</para>
     /// </remarks>
-    public class BossUI
+    public class BossUI : IChatable
     {
         private static BossUI instance;
 
@@ -114,6 +114,8 @@ namespace Game6.God
         }
 
         private readonly List<Dong> ds = new List<Dong>();
+        private readonly List<Dong> dsLoc = new List<Dong>();
+        private string locBoss = "";
         private int chon;
         private int cuon;
 
@@ -273,9 +275,11 @@ namespace Game6.God
             // moi lan lam moi lai keo khung ve dong dang chon — dang cuon giua
             // danh sach la bi giat ve cho con dang chon, ma mac dinh no la dong
             // dau. Dung loi "keo toi nua lai nhay len dau".
+            capPhaseChon();
+            capNhatLoc(false);
             if (soDongHien > 0)
             {
-                int toiDaCuon = Math.max(0, ds.Count - soDongHien);
+                int toiDaCuon = Math.max(0, dsLoc.Count - soDongHien);
                 if (cuon > toiDaCuon)
                 {
                     cuon = toiDaCuon;
@@ -285,8 +289,6 @@ namespace Game6.God
                     cuon = 0;
                 }
             }
-            capPhaseChon();
-
             lucXinCuoi = mSystem.currentTimeMillis();
             dangCho = false;
             // KHONG tu mo man hinh khi du lieu ve.
@@ -486,8 +488,8 @@ namespace Game6.God
             // ten ban do khong bi cat.
             xTrai = x0 + LE;
             rongTrai = (rong - LE * 3) * 46 / 100;
-            yDong = y0 + CAO_TIEU_DE + LE + 14;
-            caoVungDong = cao - CAO_TIEU_DE - LE * 2 - 14;
+            yDong = y0 + CAO_TIEU_DE + LE + 34;
+            caoVungDong = cao - CAO_TIEU_DE - LE * 2 - 34;
             soDongHien = Math.max(1, caoVungDong / CAO_DONG);
 
             xPhai = xTrai + rongTrai + LE;
@@ -500,6 +502,38 @@ namespace Game6.God
         private Dong bossChon()
         {
             return (chon >= 0 && chon < ds.Count) ? ds[chon] : null;
+        }
+
+        private void capNhatLoc(bool veDau)
+        {
+            Dong dangChon = bossChon();
+            string tuKhoa = locBoss == null ? "" : locBoss.Trim().ToLower();
+            dsLoc.Clear();
+            for (int i = 0; i < ds.Count; i++)
+            {
+                Dong d = ds[i];
+                if (d != null && (tuKhoa.Length == 0
+                        || (d.ten != null && d.ten.ToLower().IndexOf(tuKhoa) >= 0)
+                        || (d.tenMap != null && d.tenMap.ToLower().IndexOf(tuKhoa) >= 0)))
+                {
+                    dsLoc.Add(d);
+                }
+            }
+            if (dangChon != null && !dsLoc.Contains(dangChon) && dsLoc.Count > 0)
+            {
+                chon = ds.IndexOf(dsLoc[0]);
+                phaseChon = 0;
+                roiChon = 0;
+            }
+            if (veDau)
+            {
+                cuon = 0;
+            }
+        }
+
+        private void capNhatLoc()
+        {
+            capNhatLoc(true);
         }
 
         /// <summary>Phase đang xem của con đang chọn, hoặc null.</summary>
@@ -547,27 +581,52 @@ namespace Game6.God
                 return;
             }
             veDanhSach(g);
-            veChiTiet(g);
+            if (dsLoc.Count > 0)
+            {
+                veChiTiet(g);
+            }
         }
 
         private void veDanhSach(mGraphics g)
         {
             mFont.tahoma_7b_red.drawString(g,
-                    "DANH SÁCH BOSS (" + ds.Count + ")",
+                    "DANH SÁCH BOSS (" + dsLoc.Count
+                    + (locBoss.Length > 0 ? "/" + ds.Count : "") + ")",
                     xTrai + rongTrai / 2, y0 + CAO_TIEU_DE + LE - 2,
                     mFont.CENTER);
 
-            if (cuon > Math.max(0, ds.Count - soDongHien))
+            int yLoc = y0 + CAO_TIEU_DE + LE + 11;
+            veKhungBo(g, xTrai, yLoc, rongTrai - 4, 18, MAU_THE, 0.95f,
+                    MAU_VIEN, 0.65f, 1);
+            string chuLoc = locBoss.Length == 0 ? "Lọc boss..." : locBoss;
+            (locBoss.Length == 0 ? mFont.tahoma_7_grey : mFont.tahoma_7b_dark)
+                    .drawString(g, catBot(chuLoc, 22), xTrai + 6, yLoc + 4,
+                            mFont.LEFT);
+            if (locBoss.Length > 0)
             {
-                cuon = Math.max(0, ds.Count - soDongHien);
+                mFont.tahoma_7b_red.drawString(g, "X", xTrai + rongTrai - 14,
+                        yLoc + 4, mFont.CENTER);
             }
-            for (int i = cuon; i < ds.Count && i - cuon < soDongHien; i++)
+            if (dsLoc.Count == 0)
             {
-                veMotDong(g, ds[i], yDong + (i - cuon) * CAO_DONG, i == chon);
+                mFont.tahoma_7_grey.drawString(g, "Không tìm thấy boss",
+                        xTrai + rongTrai / 2, yDong + 8, mFont.CENTER);
+                return;
             }
-            if (ds.Count > soDongHien)
+
+            if (cuon > Math.max(0, dsLoc.Count - soDongHien))
             {
-                veVachCuon(g, ds.Count, soDongHien);
+                cuon = Math.max(0, dsLoc.Count - soDongHien);
+            }
+            for (int i = cuon; i < dsLoc.Count && i - cuon < soDongHien; i++)
+            {
+                Dong d = dsLoc[i];
+                veMotDong(g, d, yDong + (i - cuon) * CAO_DONG,
+                        ds.IndexOf(d) == chon);
+            }
+            if (dsLoc.Count > soDongHien)
+            {
+                veVachCuon(g, dsLoc.Count, soDongHien);
             }
         }
 
@@ -917,7 +976,7 @@ namespace Game6.God
         /// </remarks>
         private void cuonDanhSach()
         {
-            int toiDa = Math.max(0, ds.Count - soDongHien);
+            int toiDa = Math.max(0, dsLoc.Count - soDongHien);
             if (toiDa <= 0)
             {
                 cuon = 0;
@@ -997,20 +1056,34 @@ namespace Game6.God
                 dong();
                 return true;
             }
+            int yLoc = y0 + CAO_TIEU_DE + LE + 11;
+            if (locBoss.Length > 0
+                    && cham(xTrai + rongTrai - 24, yLoc, 20, 18))
+            {
+                locBoss = "";
+                capNhatLoc();
+                return true;
+            }
+            if (cham(xTrai, yLoc, rongTrai - 4, 18))
+            {
+                Utils.startChat(this, "Lọc boss", locBoss, TField.INPUT_TYPE_ANY);
+                return true;
+            }
             // Chon boss trong danh sach ben trai.
-            for (int i = cuon; i < ds.Count && i - cuon < soDongHien; i++)
+            for (int i = cuon; i < dsLoc.Count && i - cuon < soDongHien; i++)
             {
                 int y = yDong + (i - cuon) * CAO_DONG;
                 if (cham(xTrai, y, rongTrai - 4, CAO_DONG - 4))
                 {
-                    if (chon != i)
+                    int chonMoi = ds.IndexOf(dsLoc[i]);
+                    if (chon != chonMoi)
                     {
                         // Doi con khac thi ve tab phase dau: phase 3 cua con truoc
                         // khong co nghia gi voi con moi chon.
                         phaseChon = 0;
                         roiChon = 0;
                     }
-                    chon = i;
+                    chon = chonMoi;
                     roiChon = 0;
                     xinChiTiet();
                     return true;
@@ -1050,6 +1123,17 @@ namespace Game6.God
                 }
             }
             return true;
+        }
+
+        public void onChatFromMe(string text, string to)
+        {
+            locBoss = text == null ? "" : text.Trim();
+            capNhatLoc();
+            xinChiTiet();
+        }
+
+        public void onCancelChat()
+        {
         }
 
         private static bool cham(int x, int y, int w, int h)
