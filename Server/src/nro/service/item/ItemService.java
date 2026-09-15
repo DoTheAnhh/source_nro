@@ -17,6 +17,7 @@ import nro.entity.shop.Shop;
 import nro.entity.shop.tab.TabShop;
 import nro.entity.template.ItemOptionTemplate;
 import nro.entity.template.ItemTemplate;
+import nro.service.reward.RewardService;
 
 public class ItemService {
 
@@ -1592,85 +1593,7 @@ public class ItemService {
 
     public List<ItemOption> getDefaultOptionTL(int itemId) {
         List<ItemOption> options = new ArrayList<>();
-        int tiLe = Util.nextInt(100, 115);
-
-        switch (itemId) {
-            // Áo
-            case 555:
-                options.add(new ItemOption(47, 800 * tiLe / 100));
-                break; // TD
-            case 557:
-                options.add(new ItemOption(47, 850 * tiLe / 100));
-                break; // NM
-            case 559:
-                options.add(new ItemOption(47, 900 * tiLe / 100));
-                break; // XD
-
-            // Quần
-            case 556: {
-                int cs = 52000 * tiLe / 100;
-                options.add(new ItemOption(22, cs / 1000));
-                options.add(new ItemOption(27, cs / 20));
-                break;
-            }
-            case 558: {
-                int cs = 50000 * tiLe / 100;
-                options.add(new ItemOption(22, cs / 1000));
-                options.add(new ItemOption(27, cs / 20));
-                break;
-            }
-            case 560: {
-                int cs = 48000 * tiLe / 100;
-                options.add(new ItemOption(22, cs / 1000));
-                options.add(new ItemOption(27, cs / 20));
-                break;
-            }
-
-            // Găng
-            case 562:
-                options.add(new ItemOption(0, 4400 * tiLe / 100));
-                break;
-            case 564:
-                options.add(new ItemOption(0, 4300 * tiLe / 100));
-                break;
-            case 566:
-                options.add(new ItemOption(0, 4500 * tiLe / 100));
-                break;
-
-            // Giày
-            case 563: {
-                int cs = 48000 * tiLe / 100;
-                options.add(new ItemOption(23, cs / 1000));
-                options.add(new ItemOption(28, cs / 20));
-                break;
-            }
-            case 565: {
-                int cs = 50000 * tiLe / 100;
-                options.add(new ItemOption(23, cs / 1000));
-                options.add(new ItemOption(28, cs / 20));
-                break;
-            }
-            case 567: {
-                int cs = 46000 * tiLe / 100;
-                options.add(new ItemOption(23, cs / 1000));
-                options.add(new ItemOption(28, cs * 150 / 1000));
-                break;
-            }
-
-            // Nhẫn
-            case 561:
-                options.add(new ItemOption(14, 14 * tiLe / 100));
-                break;
-        }
-
-        // Random option phụ
-        if (Util.isTrue(30, 100)) {
-            options.add(new ItemOption(Util.nextInt(86, 87), 0));
-        }
-
-        // Yêu cầu sức mạnh
-        options.add(new ItemOption(21, Util.nextInt(15, 40)));
-
+        RewardService.gI().initDefaultOptionThanLinh(itemId, options);
         return options;
     }
 

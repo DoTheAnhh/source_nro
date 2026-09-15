@@ -49,6 +49,10 @@ public class RewardService {
 
     //chỉ số cơ bản: hp, ki, hồi phục, sđ, crit
     public void initBaseOptionClothes(int tempId, int type, List<ItemOption> list) {
+        if (isThanLinh(tempId)) {
+            initDefaultOptionThanLinh(tempId, list);
+            return;
+        }
         int[][] option_param = {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}};
         switch (type) {
             case 0: //áo
@@ -712,6 +716,82 @@ public class RewardService {
                                 option_param[i][1] * 10 / 100))));
             }
         }
+    }
+
+    public void initDefaultOptionThanLinh(int itemId, List<ItemOption> list) {
+        if (list == null) {
+            return;
+        }
+        int tiLe = Util.nextInt(100, 115);
+        switch (itemId) {
+            case 555:
+                list.add(new ItemOption(47, 800 * tiLe / 100));
+                break;
+            case 557:
+                list.add(new ItemOption(47, 850 * tiLe / 100));
+                break;
+            case 559:
+                list.add(new ItemOption(47, 900 * tiLe / 100));
+                break;
+            case 556: {
+                int cs = 52000 * tiLe / 100;
+                list.add(new ItemOption(22, cs / 1000));
+                list.add(new ItemOption(27, cs / 20));
+                break;
+            }
+            case 558: {
+                int cs = 50000 * tiLe / 100;
+                list.add(new ItemOption(22, cs / 1000));
+                list.add(new ItemOption(27, cs / 20));
+                break;
+            }
+            case 560: {
+                int cs = 48000 * tiLe / 100;
+                list.add(new ItemOption(22, cs / 1000));
+                list.add(new ItemOption(27, cs / 20));
+                break;
+            }
+            case 562:
+                list.add(new ItemOption(0, 4400 * tiLe / 100));
+                break;
+            case 564:
+                list.add(new ItemOption(0, 4300 * tiLe / 100));
+                break;
+            case 566:
+                list.add(new ItemOption(0, 4500 * tiLe / 100));
+                break;
+            case 563: {
+                int cs = 48000 * tiLe / 100;
+                list.add(new ItemOption(23, cs / 1000));
+                list.add(new ItemOption(28, cs / 20));
+                break;
+            }
+            case 565: {
+                int cs = 50000 * tiLe / 100;
+                list.add(new ItemOption(23, cs / 1000));
+                list.add(new ItemOption(28, cs / 20));
+                break;
+            }
+            case 567: {
+                int cs = 46000 * tiLe / 100;
+                list.add(new ItemOption(23, cs / 1000));
+                list.add(new ItemOption(28, cs * 150 / 1000));
+                break;
+            }
+            case 561:
+                list.add(new ItemOption(14, 14 * tiLe / 100));
+                break;
+            default:
+                return;
+        }
+        if (Util.isTrue(30, 100)) {
+            list.add(new ItemOption(Util.nextInt(86, 87), 0));
+        }
+        list.add(new ItemOption(21, Util.nextInt(15, 40)));
+    }
+
+    private boolean isThanLinh(int itemId) {
+        return itemId >= 555 && itemId <= 567;
     }
 
     //sao pha lê
