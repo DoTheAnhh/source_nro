@@ -23,11 +23,11 @@ public final class HieuUngPhuKyNangService {
             return;
         }
         int id = nguon.playerSkill.skillSelect.template.id;
-        int dot = lay(nguon, "skill_burn_hp_pct", id);
-        int cham = lay(nguon, "skill_slow_pct", id);
-        int chamDanh = lay(nguon, "skill_attack_slow_pct", id);
-        int yeu = lay(nguon, "skill_weaken_pct", id);
-        int choang = lay(nguon, "skill_stun_chance_pct", id);
+        int dot = layCoTiLe(nguon, "skill_burn_hp_pct", id);
+        int cham = layCoTiLe(nguon, "skill_slow_pct", id);
+        int chamDanh = layCoTiLe(nguon, "skill_attack_slow_pct", id);
+        int yeu = layCoTiLe(nguon, "skill_weaken_pct", id);
+        int choang = layCoTiLe(nguon, "skill_stun_chance_pct", id);
         if (dot <= 0 && cham <= 0 && chamDanh <= 0 && yeu <= 0 && choang <= 0) {
             return;
         }
@@ -66,11 +66,11 @@ public final class HieuUngPhuKyNangService {
             return;
         }
         int id = nguon.playerSkill.skillSelect.template.id;
-        int dot = lay(nguon, "skill_burn_hp_pct", id);
-        int cham = lay(nguon, "skill_slow_pct", id);
-        int chamDanh = lay(nguon, "skill_attack_slow_pct", id);
-        int yeu = lay(nguon, "skill_weaken_pct", id);
-        int choang = lay(nguon, "skill_stun_chance_pct", id);
+        int dot = layCoTiLe(nguon, "skill_burn_hp_pct", id);
+        int cham = layCoTiLe(nguon, "skill_slow_pct", id);
+        int chamDanh = layCoTiLe(nguon, "skill_attack_slow_pct", id);
+        int yeu = layCoTiLe(nguon, "skill_weaken_pct", id);
+        int choang = layCoTiLe(nguon, "skill_stun_chance_pct", id);
         if (dot <= 0 && cham <= 0 && chamDanh <= 0 && yeu <= 0 && choang <= 0) {
             return;
         }
@@ -206,6 +206,10 @@ public final class HieuUngPhuKyNangService {
 
     private static int lay(Player p, String loai, int id) {
         return Math.max(0, SetBonusDAO.tongTheoChieu(p, loai, id));
+    }
+
+    private static int layCoTiLe(Player p, String loai, int id) {
+        return Math.max(0, SetBonusDAO.tongTheoChieuKichHoat(p, loai, id));
     }
 
     private static int thoiGian(Player p, int id, int goc) {

@@ -2269,7 +2269,7 @@ public class SystemPanel extends JPanel {
      */
     private final DefaultTableModel setModel = new DefaultTableModel(
             new Object[]{"ID", "Nguồn", "Từ mấy món", "Loại chỉ số", "Giá trị",
-                "Tham số", "Bật", "Ghi chú"}, 0) {
+                "Tỉ lệ %", "Tham số", "Bật", "Ghi chú"}, 0) {
         @Override
         public boolean isCellEditable(int r, int c) {
             return false;
@@ -3015,6 +3015,8 @@ public class SystemPanel extends JPanel {
                             dauTien ? (batSet ? "BẬT" : "tắt") : "",
                             b.soMon + " món tăng: "
                                     + moTaGon(b.soMon, b.loai, b.giaTri, b.thamSo)
+                                    + (b.tiLeKichHoat >= 100 ? ""
+                                            : " (tỉ lệ " + b.tiLeKichHoat + "%)")
                                     + (b.active ? "" : "   (dòng đang tắt)"),
                             b.ghiChu == null ? "" : b.ghiChu);
                     dauTien = false;
@@ -3253,11 +3255,12 @@ public class SystemPanel extends JPanel {
             // cot trong ma nguoi doc phai tu suy ra set nay lam gi.
             String ghiChu = b.ghiChu == null || b.ghiChu.trim().isEmpty()
                     ? nro.repository.dao.SetBonusDAO.moTaChiSo(
-                            b.soMon, b.loai, b.giaTri, b.thamSo)
+                            b.soMon, b.loai, b.giaTri, b.thamSo, b.tiLeKichHoat)
                     : b.ghiChu;
             setModel.addRow(new Object[]{b.id, "cấu hình", b.soMon,
                 nro.repository.dao.SetBonusDAO.LOAI.getOrDefault(b.loai, b.loai),
-                PlayerManagerPanel.fmt(b.giaTri), thamSo, b.active ? "có" : "", ghiChu});
+                PlayerManagerPanel.fmt(b.giaTri), b.tiLeKichHoat, thamSo,
+                b.active ? "có" : "", ghiChu});
         }
 
         lblGoc.setText("  " + nro.repository.dao.SetBonusDAO.tenSet(key)
@@ -3283,9 +3286,11 @@ public class SystemPanel extends JPanel {
         JTextField fMon = new JTextField(them ? "5" : String.valueOf(setModel.getValueAt(r, 2)), 6);
         JTextField fGiaTri = new JTextField(them ? "0"
                 : String.valueOf(setModel.getValueAt(r, 4)).replace(".", ""), 12);
-        JTextField fGhiChu = new JTextField(them ? "" : nz(setModel.getValueAt(r, 7)), 24);
+        JTextField fTiLe = new JTextField(them ? "100"
+                : String.valueOf(setModel.getValueAt(r, 5)), 12);
+        JTextField fGhiChu = new JTextField(them ? "" : nz(setModel.getValueAt(r, 8)), 24);
         javax.swing.JCheckBox cbOn = new javax.swing.JCheckBox("Bật",
-                them || "có".equals(String.valueOf(setModel.getValueAt(r, 6))));
+                them || "có".equals(String.valueOf(setModel.getValueAt(r, 7))));
 
         // O chon chieu — dung cho moi loai chi so theo ky nang.
         JComboBox<String> cbChieu = new JComboBox<>();
@@ -3294,7 +3299,7 @@ public class SystemPanel extends JPanel {
             cbChieu.addItem(en.getKey() + " — " + en.getValue());
         }
         if (!them) {
-            String cu = String.valueOf(setModel.getValueAt(r, 5));
+            String cu = String.valueOf(setModel.getValueAt(r, 6));
             for (int k = 0; k < cbChieu.getItemCount(); k++) {
                 if (cbChieu.getItemAt(k).endsWith(cu)) {
                     cbChieu.setSelectedIndex(k);
@@ -3333,20 +3338,21 @@ public class SystemPanel extends JPanel {
         form.add(cbLoai, c);
         c.weightx = 0;
         addRow(form, c, 3, "Giá trị:", fGiaTri);
+        addRow(form, c, 4, "Tỉ lệ kích hoạt (%):", fTiLe);
         c.gridx = 0;
-        c.gridy = 4;
+        c.gridy = 5;
         form.add(new JLabel("Tham số (chiêu):"), c);
         c.gridx = 1;
         c.weightx = 1;
         cbChieu.setPreferredSize(new Dimension(260, 26));
         form.add(cbChieu, c);
         c.weightx = 0;
-        addRow(form, c, 5, "Ghi chú:", fGhiChu);
+        addRow(form, c, 6, "Ghi chú:", fGhiChu);
         c.gridx = 1;
-        c.gridy = 6;
+        c.gridy = 7;
         form.add(cbOn, c);
         c.gridx = 0;
-        c.gridy = 7;
+        c.gridy = 8;
         c.gridwidth = 2;
         form.add(new JLabel("<html><span style='color:#777'>"
                 + "Loại có đuôi <b>%</b> tính trên giá trị đã có sau khi cộng trang bị.<br>"
@@ -3373,6 +3379,7 @@ public class SystemPanel extends JPanel {
                 b.soMon = Integer.parseInt(fMon.getText().trim());
                 b.giaTri = Long.parseLong(fGiaTri.getText().trim()
                         .replace(".", "").replace(",", ""));
+                b.tiLeKichHoat = Integer.parseInt(fTiLe.getText().trim());
                 b.thamSo = Integer.parseInt(
                         String.valueOf(cbChieu.getSelectedItem()).split(" ")[0].trim());
             } catch (NumberFormatException ex) {
@@ -3422,7 +3429,7 @@ public class SystemPanel extends JPanel {
                 : nro.repository.dao.SetBonusDAO.tatCa()) {
             if (key.equals(b.setKey) && b.active) {
                 ds.add(nro.repository.dao.SetBonusDAO.moTaChiSo(
-                        b.soMon, b.loai, b.giaTri, b.thamSo));
+                        b.soMon, b.loai, b.giaTri, b.thamSo, b.tiLeKichHoat));
             }
         }
         if (ds.isEmpty()) {
@@ -3601,6 +3608,7 @@ public class SystemPanel extends JPanel {
         java.util.Map<Integer, JComboBox<String>> oTacDung =
                 new java.util.LinkedHashMap<>();
         java.util.Map<Integer, JTextField> oGiaTri = new java.util.LinkedHashMap<>();
+        java.util.Map<Integer, JTextField> oTiLeKichHoat = new java.util.LinkedHashMap<>();
         for (int mon : MOC) {
             JComboBox<String> cb = new JComboBox<>();
             cb.addItem(KHONG);
@@ -3609,6 +3617,7 @@ public class SystemPanel extends JPanel {
             }
             cb.setPreferredSize(new Dimension(320, 24));
             JTextField ft = new JTextField(7);
+            JTextField ftl = new JTextField("100", 5);
             nro.repository.dao.SetBonusDAO.Bonus b = bonusCu.get(mon);
             if (b != null) {
                 // Doi chieu CA loai VA tham so.
@@ -3636,9 +3645,11 @@ public class SystemPanel extends JPanel {
                     }
                 }
                 ft.setText(String.valueOf(b.giaTri));
+                ftl.setText(String.valueOf(b.tiLeKichHoat));
             }
             oTacDung.put(mon, cb);
             oGiaTri.put(mon, ft);
+            oTiLeKichHoat.put(mon, ftl);
         }
 
         // ---------- dựng form ----------
@@ -3678,7 +3689,7 @@ public class SystemPanel extends JPanel {
         g.insets = new Insets(3, 4, 3, 4);
         g.anchor = GridBagConstraints.WEST;
         g.fill = GridBagConstraints.HORIZONTAL;
-        String[] dauCot = {"", "Dòng chữ in trên món đồ", "Chỉ số / chiêu", "Giá trị"};
+        String[] dauCot = {"", "Dòng chữ in trên món đồ", "Chỉ số / chiêu", "Giá trị", "Tỉ lệ %"};
         for (int i = 0; i < dauCot.length; i++) {
             g.gridx = i;
             g.gridy = 0;
@@ -3698,6 +3709,8 @@ public class SystemPanel extends JPanel {
             bang.add(oTacDung.get(mon), g);
             g.gridx = 3;
             bang.add(oGiaTri.get(mon), g);
+            g.gridx = 4;
+            bang.add(oTiLeKichHoat.get(mon), g);
         }
         c.gridy = y++;
         form.add(bang, c);
@@ -3708,7 +3721,7 @@ public class SystemPanel extends JPanel {
         // Bang moc o tren chi cho MOT dong chinh moi moc. Khung nay cho them
         // bao nhieu chi so tuy y vao cung moc 2/3/4/5.
         DefaultTableModel mPhu = new DefaultTableModel(
-                new Object[]{"Moc", "Chi so", "Gia tri"}, 0);
+                new Object[]{"Mốc", "Chỉ số", "Giá trị", "Tỉ lệ %"}, 0);
         JTable bPhu = new JTable(mPhu);
         bPhu.setRowHeight(24);
         JComboBox<Integer> oPhuMoc = new JComboBox<>();
@@ -3726,6 +3739,7 @@ public class SystemPanel extends JPanel {
         bPhu.getColumnModel().getColumn(0).setPreferredWidth(50);
         bPhu.getColumnModel().getColumn(1).setPreferredWidth(520);
         bPhu.getColumnModel().getColumn(2).setPreferredWidth(90);
+        bPhu.getColumnModel().getColumn(3).setPreferredWidth(70);
         for (nro.repository.dao.SetBonusDAO.Bonus b : phuCu) {
             String nhan = null;
             for (String[] t : tacDung) {
@@ -3735,7 +3749,7 @@ public class SystemPanel extends JPanel {
                 }
             }
             mPhu.addRow(new Object[]{b.soMon, nhan == null ? b.loai : nhan,
-                String.valueOf(b.giaTri)});
+                String.valueOf(b.giaTri), String.valueOf(b.tiLeKichHoat)});
         }
         c.gridx = 0;
         c.gridy = y++;
@@ -3755,7 +3769,7 @@ public class SystemPanel extends JPanel {
         JPanel nutPhu = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 2));
         nutPhu.setOpaque(false);
         nutPhu.add(button("Them chi so", OK_GREEN, ev -> {
-            mPhu.addRow(new Object[]{5, tacDung.get(0)[2], "0"});
+            mPhu.addRow(new Object[]{5, tacDung.get(0)[2], "0", "100"});
         }));
         nutPhu.add(button("Xoa dong dang chon", WARN_RED, ev -> {
             int r = bPhu.getSelectedRow();
@@ -3832,6 +3846,7 @@ public class SystemPanel extends JPanel {
         for (int mon : MOC) {
             int chon = oTacDung.get(mon).getSelectedIndex();
             String so = oGiaTri.get(mon).getText().trim();
+            String tiLe = oTiLeKichHoat.get(mon).getText().trim();
             if (chon <= 0) {
                 if (!so.isEmpty()) {
                     lblLoi.setText("Mốc " + mon + " món có điền giá trị nhưng chưa "
@@ -3846,8 +3861,13 @@ public class SystemPanel extends JPanel {
                 continue;
             }
             try {
+                long tiLeSo = Long.parseLong(tiLe);
+                if (tiLeSo < 0 || tiLeSo > 100) {
+                    lblLoi.setText("Tỉ lệ của mốc " + mon + " món phải từ 0 đến 100%.");
+                    continue;
+                }
                 tacDungMoi.put(mon, new long[]{chon - 1,
-                    Long.parseLong(so.replace(".", "").replace(",", ""))});
+                    Long.parseLong(so.replace(".", "").replace(",", "")), tiLeSo});
             } catch (NumberFormatException ex) {
                 lblLoi.setText("Giá trị của mốc " + mon + " món phải là số nguyên.");
                 continue;
@@ -3938,6 +3958,7 @@ public class SystemPanel extends JPanel {
             b.loai = loai[0];
             b.thamSo = Integer.parseInt(loai[1]);
             b.giaTri = td[1];
+            b.tiLeKichHoat = (int) td[2];
             b.active = true;
             String e = nro.repository.dao.SetBonusDAO.luu(b);
             if (e != null && loi2 == null) {
@@ -3984,9 +4005,17 @@ public class SystemPanel extends JPanel {
                 continue;
             }
             long v;
+            int tiLePhu;
             try {
                 v = Long.parseLong(String.valueOf(mPhu.getValueAt(r, 2))
                         .replace(".", "").replace(",", "").trim());
+                tiLePhu = Integer.parseInt(String.valueOf(mPhu.getValueAt(r, 3)).trim());
+                if (tiLePhu < 0 || tiLePhu > 100) {
+                    if (loi2 == null) {
+                        loi2 = "Dòng thêm " + (r + 1) + " có tỉ lệ phải từ 0 đến 100%.";
+                    }
+                    continue;
+                }
             } catch (NumberFormatException ex) {
                 if (loi2 == null) {
                     loi2 = "Dong them " + (r + 1) + " co gia tri khong phai so.";
@@ -4001,6 +4030,7 @@ public class SystemPanel extends JPanel {
             bp.loai = loaiPhu[0];
             bp.thamSo = Integer.parseInt(loaiPhu[1]);
             bp.giaTri = v;
+            bp.tiLeKichHoat = tiLePhu;
             bp.active = true;
             String e = nro.repository.dao.SetBonusDAO.luu(bp);
             if (e != null && loi2 == null) {

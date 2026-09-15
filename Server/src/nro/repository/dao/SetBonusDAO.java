@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import nro.core.log.Logger;
+import nro.core.util.Util;
 import nro.entity.player.SetClothes;
 import nro.repository.ConnectDB;
 import nro.repository.CrisResultSet;
@@ -297,6 +298,13 @@ public class SetBonusDAO {
         return soMon + " món: " + than;
     }
 
+    public static String moTaChiSo(int soMon, String loai, long giaTri,
+            int thamSo, int tiLeKichHoat) {
+        String moTa = moTaChiSo(soMon, loai, giaTri, thamSo);
+        int tiLe = Math.max(0, Math.min(100, tiLeKichHoat));
+        return tiLe >= 100 ? moTa : moTa + " (tỉ lệ kích hoạt " + tiLe + "%)";
+    }
+
     /**
      * Tên các chiêu, để panel hiện ô chọn thay vì bắt nhớ id.
      *
@@ -358,6 +366,8 @@ public class SetBonusDAO {
         public int soMon = 5;
         public String loai;
         public long giaTri;
+        /** Tỉ lệ kích hoạt riêng của dòng, 0..100; dữ liệu cũ mặc định 100. */
+        public int tiLeKichHoat = 100;
         /**
          * Tham số phụ. Với {@code skill_pct} đây là <b>id chiêu</b>
          * (0 Dragon, 1 Kamejoko, 2 Demon, 3 Masenko, 4 Galick, 5 Antomic…).
@@ -373,6 +383,7 @@ public class SetBonusDAO {
     /** Đọc lại cả hai bảng. */
     public static void reload() {
         nro.repository.schema.LuocDoPanel.damBao();
+        vaCotTiLeKichHoat();
         Map<String, List<Bonus>> ds = new HashMap<>();
         CrisResultSet rs = null;
         try {
@@ -384,6 +395,7 @@ public class SetBonusDAO {
                 b.soMon = rs.getInt("so_mon");
                 b.loai = rs.getString("loai");
                 b.giaTri = rs.getLong("gia_tri");
+                b.tiLeKichHoat = rs.getInt("ti_le_kich_hoat");
                 b.thamSo = rs.getInt("tham_so");
                 b.active = true;
                 b.ghiChu = rs.getStringOrNull("ghi_chu");
@@ -569,6 +581,7 @@ public class SetBonusDAO {
                 b.soMon = rs.getInt("so_mon");
                 b.loai = rs.getString("loai");
                 b.giaTri = rs.getLong("gia_tri");
+                b.tiLeKichHoat = rs.getInt("ti_le_kich_hoat");
                 b.thamSo = rs.getInt("tham_so");
                 b.active = rs.getBoolean("active");
                 b.ghiChu = rs.getStringOrNull("ghi_chu");
@@ -592,6 +605,9 @@ public class SetBonusDAO {
         if (b.soMon < 1) {
             return "Số món phải từ 1 trở lên.";
         }
+        if (b.tiLeKichHoat < 0 || b.tiLeKichHoat > 100) {
+            return "Tỉ lệ kích hoạt phải nằm trong khoảng 0..100%.";
+        }
         if ("hoi_chieu_skill_pct".equals(b.loai)
                 && (b.giaTri < 0 || b.giaTri > 100)) {
             return "Hoi chieu mot ky nang phai nam trong khoang 0..100%.";
@@ -607,14 +623,14 @@ public class SetBonusDAO {
             if (b.id > 0) {
                 ConnectDB.executeUpdate(
                         "UPDATE set_bonus SET set_key = ?, so_mon = ?, loai = ?, gia_tri = ?,"
-                        + " tham_so = ?, active = ?, ghi_chu = ? WHERE id = ?",
-                        b.setKey, b.soMon, b.loai, b.giaTri, b.thamSo,
+                        + " ti_le_kich_hoat = ?, tham_so = ?, active = ?, ghi_chu = ? WHERE id = ?",
+                        b.setKey, b.soMon, b.loai, b.giaTri, b.tiLeKichHoat, b.thamSo,
                         b.active ? 1 : 0, b.ghiChu, b.id);
             } else {
                 ConnectDB.executeUpdate(
-                        "INSERT INTO set_bonus (set_key, so_mon, loai, gia_tri, tham_so,"
-                        + " active, ghi_chu) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                        b.setKey, b.soMon, b.loai, b.giaTri, b.thamSo,
+                        "INSERT INTO set_bonus (set_key, so_mon, loai, gia_tri, ti_le_kich_hoat, tham_so,"
+                        + " active, ghi_chu) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        b.setKey, b.soMon, b.loai, b.giaTri, b.tiLeKichHoat, b.thamSo,
                         b.active ? 1 : 0, b.ghiChu);
             }
             reload();
@@ -691,6 +707,23 @@ public class SetBonusDAO {
      * Dùng {@code ADD COLUMN IF NOT EXISTS} nên gọi lại không sao.</p>
      */
     private static volatile boolean daVaCotHanhTinh;
+    private static volatile boolean daVaCotTiLeKichHoat;
+
+    private static void vaCotTiLeKichHoat() {
+        if (daVaCotTiLeKichHoat) {
+            return;
+        }
+        daVaCotTiLeKichHoat = true;
+        try {
+            ConnectDB.executeUpdate("ALTER TABLE set_bonus ADD COLUMN IF NOT EXISTS"
+                    + " ti_le_kich_hoat INT NOT NULL DEFAULT 100 AFTER gia_tri");
+            ConnectDB.executeUpdate("ALTER TABLE set_bonus MODIFY loai VARCHAR(40) NOT NULL");
+        } catch (Exception ex) {
+            daVaCotTiLeKichHoat = false;
+            Logger.logException(SetBonusDAO.class, ex,
+                    "Không thêm được cột tỉ lệ kích hoạt cho set_bonus");
+        }
+    }
 
     private static void vaCotHanhTinh() {
         if (daVaCotHanhTinh) {
@@ -863,6 +896,29 @@ public class SetBonusDAO {
         }
         return phanTramTheoChieu(player.setClothes, loai, idChieu)
                 + TrangBiBonusDAO.giaTri(player, loai, idChieu);
+    }
+
+    /**
+     * Tổng hiệu ứng theo chiêu sau khi quay tỉ lệ riêng của từng dòng set.
+     * Trang bị dùng option tỉ lệ chung nên phần giá trị trang bị luôn được giữ ở đây.
+     */
+    public static int tongTheoChieuKichHoat(nro.entity.player.Player player,
+            String loai, int idChieu) {
+        if (player == null || loai == null) {
+            return 0;
+        }
+        ensureLoaded();
+        int tong = TrangBiBonusDAO.giaTri(player, loai, idChieu);
+        for (String setKey : cacSet()) {
+            for (Bonus b : mocDangHuong(player.setClothes, setKey)) {
+                if (loai.equals(b.loai) && b.thamSo == idChieu
+                        && Util.isTrue(Math.max(0, Math.min(100,
+                                b.tiLeKichHoat)), 100)) {
+                    tong += (int) b.giaTri;
+                }
+            }
+        }
+        return tong;
     }
 
     /** Tổng một bonus không chọn chiêu từ set kích hoạt và trang bị. */
