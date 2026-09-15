@@ -742,6 +742,9 @@ public class SkillService {
                     mobs = new ArrayList<>();
                     int tamX = toaDoHopLe(skillX) ? skillX : player.location.x;
                     int tamY = toaDoHopLe(skillY) ? skillY : player.location.y;
+                    if (plTarget == null && !player.isBoss) {
+                        plTarget = timBossTaiTamNoQCKK(player, tamX, tamY);
+                    }
                     if (plTarget != null) {
                         tamX = plTarget.location.x;
                         tamY = plTarget.location.y;
@@ -1667,6 +1670,28 @@ public class SkillService {
 
     private boolean toaDoHopLe(Short toaDo) {
         return toaDo != null && toaDo >= 0;
+    }
+
+    private Player timBossTaiTamNoQCKK(Player player, int tamX, int tamY) {
+        if (player == null || player.zone == null || player.playerSkill == null
+                || player.playerSkill.skillSelect == null) {
+            return null;
+        }
+        int tamNo = SkillUtil.getRangeQCKK(player.playerSkill.skillSelect.point);
+        Player ganNhat = null;
+        int khoangCachGanNhat = Integer.MAX_VALUE;
+        for (Player boss : player.zone.getBosses()) {
+            if (boss == null || boss.location == null || boss.nPoint == null || boss.isDie()) {
+                continue;
+            }
+            int khoangCach = Util.getDistance(tamX, tamY,
+                    boss.location.x, boss.location.y);
+            if (khoangCach <= tamNo && khoangCach < khoangCachGanNhat) {
+                ganNhat = boss;
+                khoangCachGanNhat = khoangCach;
+            }
+        }
+        return ganNhat;
     }
 
     private void cancelPrepareQCKK(Player player) {
