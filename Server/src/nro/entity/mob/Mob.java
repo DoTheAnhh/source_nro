@@ -34,6 +34,7 @@ import nro.entity.attribute.Attribute;
 import nro.service.badges.BadgesTaskService;
 import nro.entity.boss.map.trainingboss.TrainningService;
 import nro.service.reward.RewardService;
+import nro.service.effect.HieuUngPhuKyNangService;
 
 public class Mob {
 
@@ -630,10 +631,13 @@ public class Mob {
 
     public void attack() {
         Player player = getPlayerCanAttack();
+        int giamTocDanh = HieuUngPhuKyNangService.giamTocDanh(this);
+        long nhipDanhThuc = giamTocDanh <= 0 ? timeAttack
+                : (long) timeAttack * 100L / (100 - giamTocDanh);
         if (!isDie() && !effectSkill.isHaveEffectSkill() && tempId != ConstMob.MOC_NHAN && tempId != ConstMob.MAY_DO_SUC_MANH
                 && tempId != ConstMob.BU_NHIN_MA_QUAI && tempId != ConstMob.CO_MAY_HUY_DIET && !this.isBigBoss()
                 && (this.lvMob < 1 || MapService.gI().isMapPhoBan(this.zone.map.mapId))
-                && Util.canDoWithTime(lastTimeAttackPlayer, timeAttack)) {
+                && Util.canDoWithTime(lastTimeAttackPlayer, nhipDanhThuc)) {
             if (player != null) {
                 this.mobAttackPlayer(player);
             }
@@ -717,6 +721,7 @@ public class Mob {
 
     private void mobAttackPlayer(Player player) {
         double dameMob = Util.CrisGH(this.point.getDameAttack());
+        dameMob = HieuUngPhuKyNangService.giamSatThuong(this, dameMob);
         if (dameMob > 2_000_000_000) {
             dameMob = 2_000_000_000;
         }

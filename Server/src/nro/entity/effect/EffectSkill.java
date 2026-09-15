@@ -1,6 +1,7 @@
 package nro.entity.effect;
 
 import nro.service.effect.EffectSkillService;
+import nro.service.effect.HieuUngPhuKyNangService;
 import nro.entity.mob.Mob;
 import nro.entity.player.Player;
 import nro.service.item.ItemTimeService;
@@ -162,6 +163,17 @@ public class EffectSkill {
 
     public int timeAnTroi;
     public Mob mobAnTroi;
+
+    // Hiệu ứng phụ từ set/trang bị theo kỹ năng.
+    public boolean isDebuffKyNang;
+    public long lastTimeDebuffKyNang;
+    public int timeDebuffKyNang;
+    public long lastTimeThieuDotKyNang;
+    public int thieuDotHpPct;
+    public int giamTocChayKyNang;
+    public int giamTocDanhKyNang;
+    public int giamSatThuongKyNang;
+    public Player nguoiGayDebuffKyNang;
     
     //dịch chuyển tức thời
     public boolean isBlindDCTT;
@@ -296,6 +308,9 @@ public class EffectSkill {
         if (isBiNgo) {
             EffectSkillService.gI().removeBiNgo(this.player);
         }
+        if (isDebuffKyNang) {
+            HieuUngPhuKyNangService.xoa(this.player);
+        }
     }
 
     public void update() {
@@ -403,6 +418,19 @@ public class EffectSkill {
         if (isBiNgo && Util.canDoWithTime(LastTimeBiNgo, TimeBiNgo)) {
             EffectSkillService.gI().removeBiNgo(player);
         }
+        HieuUngPhuKyNangService.update(player);
+    }
+
+    public void xoaDebuffKyNang() {
+        isDebuffKyNang = false;
+        lastTimeDebuffKyNang = 0;
+        timeDebuffKyNang = 0;
+        lastTimeThieuDotKyNang = 0;
+        thieuDotHpPct = 0;
+        giamTocChayKyNang = 0;
+        giamTocDanhKyNang = 0;
+        giamSatThuongKyNang = 0;
+        nguoiGayDebuffKyNang = null;
     }
     
     public boolean isHaveEffectSkill() {
@@ -424,5 +452,6 @@ public class EffectSkill {
         this.plTroi = null;
         this.mobAnTroi = null;
         this.playerUseMafuba = null;
+        this.nguoiGayDebuffKyNang = null;
     }
 }

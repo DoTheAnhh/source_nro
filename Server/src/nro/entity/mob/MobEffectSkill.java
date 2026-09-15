@@ -18,7 +18,17 @@ public class MobEffectSkill {
     public int timeStun;
     public boolean isStun;
 
+    public boolean isDebuffKyNang;
+    public long lastTimeDebuffKyNang;
+    public int timeDebuffKyNang;
+    public long lastTimeThieuDotKyNang;
+    public int thieuDotHpPct;
+    public int giamTocDanhKyNang;
+    public int giamSatThuongKyNang;
+    public Player nguoiGayDebuffKyNang;
+
     public void update() {
+        nro.service.effect.HieuUngPhuKyNangService.update(mob);
         if (isStun && (Util.canDoWithTime(lastTimeStun, timeStun) || mob.isDie())) {
             removeStun();
         }
@@ -50,6 +60,17 @@ public class MobEffectSkill {
                 this.lastTimeMaPhongBa = System.currentTimeMillis();
             }
         }
+    }
+
+    public void xoaDebuffKyNang() {
+        isDebuffKyNang = false;
+        lastTimeDebuffKyNang = 0;
+        timeDebuffKyNang = 0;
+        lastTimeThieuDotKyNang = 0;
+        thieuDotHpPct = 0;
+        giamTocDanhKyNang = 0;
+        giamSatThuongKyNang = 0;
+        nguoiGayDebuffKyNang = null;
     }
 
     public boolean isHaveEffectSkill() {

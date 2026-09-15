@@ -50,6 +50,34 @@ public final class TrangBiBonusDAO {
                 gieo("skill_crit_pct", id, "Chí mạng " + ten + " +#%");
                 gieo("skill_sdcm_pct", id, "Sát thương chí mạng " + ten + " +#%");
                 gieo("skill_xuyen_giap_pct", id, "Xuyên giáp " + ten + " +#%");
+                gieo("skill_burn_hp_pct", id,
+                        ten + " thiêu đốt #% HP tối đa/giây");
+                gieo("skill_slow_pct", id,
+                        ten + " giảm #% tốc chạy mục tiêu");
+                gieo("skill_attack_slow_pct", id,
+                        ten + " giảm #% tốc ra đòn mục tiêu");
+                gieo("skill_weaken_pct", id,
+                        ten + " giảm #% sát thương mục tiêu");
+                gieo("skill_stun_chance_pct", id,
+                        ten + " có #% tỉ lệ gây choáng");
+                gieo("skill_debuff_chance_pct", id,
+                        ten + " có #% tỉ lệ gây hiệu ứng phụ");
+                gieo("skill_debuff_duration_pct", id,
+                        ten + " tăng #% thời gian hiệu ứng phụ");
+            }
+
+            // QCKK và Tự Phát Nổ không chí mạng, nhưng từng mục tiêu trúng đòn
+            // vẫn có thể nhận hiệu ứng phụ đã cấu hình.
+            int[] gayHieuUngRieng = {Skill.QUA_CAU_KENH_KHI, Skill.TU_SAT};
+            for (int id : gayHieuUngRieng) {
+                String ten = SetBonusDAO.CHIEU.getOrDefault(id, "Kỹ năng " + id);
+                gieo("skill_burn_hp_pct", id, ten + " thiêu đốt #% HP tối đa/giây");
+                gieo("skill_slow_pct", id, ten + " giảm #% tốc chạy mục tiêu");
+                gieo("skill_attack_slow_pct", id, ten + " giảm #% tốc ra đòn mục tiêu");
+                gieo("skill_weaken_pct", id, ten + " giảm #% sát thương mục tiêu");
+                gieo("skill_stun_chance_pct", id, ten + " có #% tỉ lệ gây choáng");
+                gieo("skill_debuff_chance_pct", id, ten + " có #% tỉ lệ gây hiệu ứng phụ");
+                gieo("skill_debuff_duration_pct", id, ten + " tăng #% thời gian hiệu ứng phụ");
             }
 
             int[] nhieuMucTieu = {Skill.DRAGON, Skill.KAMEJOKO, Skill.DEMON,

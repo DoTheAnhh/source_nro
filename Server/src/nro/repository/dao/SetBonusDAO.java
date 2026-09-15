@@ -96,6 +96,20 @@ public class SetBonusDAO {
         LOAI.put("dame_boss_pct", "Sát thương lên Boss + %");
         LOAI.put("skill_xuyen_giap_pct",
                 "Xuyên giáp một chiêu + % (chọn chiêu ở Tham số)");
+        LOAI.put("skill_burn_hp_pct",
+                "Thiêu đốt: trừ HP tối đa mỗi giây + % (chọn chiêu)");
+        LOAI.put("skill_slow_pct",
+                "Hiệu ứng phụ: giảm tốc chạy mục tiêu + % (chọn chiêu)");
+        LOAI.put("skill_attack_slow_pct",
+                "Hiệu ứng phụ: giảm tốc ra đòn mục tiêu + % (chọn chiêu)");
+        LOAI.put("skill_weaken_pct",
+                "Hiệu ứng phụ: giảm sát thương mục tiêu + % (chọn chiêu)");
+        LOAI.put("skill_stun_chance_pct",
+                "Hiệu ứng phụ: tỉ lệ gây choáng + % (chọn chiêu)");
+        LOAI.put("skill_debuff_chance_pct",
+                "Tỉ lệ kích hoạt hiệu ứng phụ + % (chọn chiêu; bỏ trống = 100%)");
+        LOAI.put("skill_debuff_duration_pct",
+                "Thời gian hiệu ứng phụ + % (chọn chiêu; gốc 5 giây)");
         LOAI.put("lam_moi_pct",
                 "Tỉ lệ làm mới một chiêu sau khi dùng % (điền id chiêu vào Tham số)");
         LOAI.put("may_man", "May mắn + %");
@@ -242,6 +256,34 @@ public class SetBonusDAO {
                 break;
             case "skill_xuyen_giap_pct":
                 than = dau + giaTri + "% xuyên giáp chiêu "
+                        + CHIEU.getOrDefault(thamSo, "id " + thamSo);
+                break;
+            case "skill_burn_hp_pct":
+                than = dau + giaTri + "% HP tối đa/giây thiêu đốt bởi "
+                        + CHIEU.getOrDefault(thamSo, "id " + thamSo);
+                break;
+            case "skill_slow_pct":
+                than = dau + giaTri + "% giảm tốc chạy bởi "
+                        + CHIEU.getOrDefault(thamSo, "id " + thamSo);
+                break;
+            case "skill_attack_slow_pct":
+                than = dau + giaTri + "% giảm tốc ra đòn bởi "
+                        + CHIEU.getOrDefault(thamSo, "id " + thamSo);
+                break;
+            case "skill_weaken_pct":
+                than = dau + giaTri + "% giảm sát thương gây ra bởi "
+                        + CHIEU.getOrDefault(thamSo, "id " + thamSo);
+                break;
+            case "skill_stun_chance_pct":
+                than = dau + giaTri + "% tỉ lệ gây choáng bởi "
+                        + CHIEU.getOrDefault(thamSo, "id " + thamSo);
+                break;
+            case "skill_debuff_chance_pct":
+                than = dau + giaTri + "% tỉ lệ kích hoạt hiệu ứng phụ của "
+                        + CHIEU.getOrDefault(thamSo, "id " + thamSo);
+                break;
+            case "skill_debuff_duration_pct":
+                than = dau + giaTri + "% thời gian hiệu ứng phụ của "
                         + CHIEU.getOrDefault(thamSo, "id " + thamSo);
                 break;
             case "lam_moi_pct":

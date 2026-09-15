@@ -1303,6 +1303,14 @@ public class NPoint {
         for (Integer tl : this.tlSpeed) {
             this.speed += calPercent(this.speed, tl);
         }
+        if (this.player.effectSkill != null
+                && this.player.effectSkill.giamTocChayKyNang > 0) {
+            int giam = Math.min(90, this.player.effectSkill.giamTocChayKyNang);
+            this.speed -= calPercent(this.speed, giam);
+            if (this.speed < 1) {
+                this.speed = 1;
+            }
+        }
         if (this.player.effectSkin.isSlow) {
             this.speed = 1;
         }

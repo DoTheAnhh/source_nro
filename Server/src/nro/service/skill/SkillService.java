@@ -10,6 +10,7 @@ import nro.entity.boss.list.broly.BrolyZone0;
 import nro.entity.boss.list.broly.SuperBroly;
 import nro.entity.boss.list.broly.SuperBrolyZone0;
 import nro.service.effect.EffectSkillService;
+import nro.service.effect.HieuUngPhuKyNangService;
 import nro.core.consts.ConstPlayer;
 import nro.entity.intrinsic.Intrinsic;
 import nro.entity.mob.Mob;
@@ -1303,12 +1304,17 @@ public class SkillService {
         if (tlSetNo != 0) {
             dame += dame * tlSetNo / 100;
         }
+        dame = HieuUngPhuKyNangService.giamSatThuong(player, dame);
         int soQuaiTrongVung = 0;
         if (!player.isBoss) {
             for (Mob mob : player.zone.mobs) {
                 if (Util.getDistance(player, mob) <= rangeBom) {
                     soQuaiTrongVung++;
+                    double hpTruoc = mob.point.hp;
                     mob.injured(player, dame, true);
+                    if (mob.point.hp < hpTruoc && !mob.isDie()) {
+                        HieuUngPhuKyNangService.apDung(player, mob);
+                    }
                 }
             }
         }
@@ -1328,8 +1334,11 @@ public class SkillService {
                     double dameCho = pl.isBoss
                             ? (player.effectSkill.isMonkey ? dame / 3 : dame / 2)
                             : dame;
-                    pl.injured(player, dameCho,
+                    double dameDaNhan = pl.injured(player, dameCho,
                             MapService.gI().isMapYardart(player.zone.map.mapId), false);
+                    if (dameDaNhan > 0 && !pl.isDie()) {
+                        HieuUngPhuKyNangService.apDung(player, pl);
+                    }
                     PlayerService.gI().sendInfoHpMpMoney(pl);
                     Service.gI().Send_Info_NV(pl);
                 }
@@ -1585,10 +1594,14 @@ public class SkillService {
         // 🔹 1. TÍNH SÁT THƯƠNG THEO CONFIG SKILL
         // ============================================================
         double finalDame = tinhDameDanhNguoi(plAtt, plInjure, dameCoBanDaTinh);
+        finalDame = HieuUngPhuKyNangService.giamSatThuong(plAtt, finalDame);
         // ============================================================
         // 🔹 2. TÍNH TOÁN DAME GÂY RA
         // ============================================================
         double dameHit = plInjure.injured(plAtt, miss ? 0 : finalDame, false, false);
+        if (dameHit > 0 && !plInjure.isDie()) {
+            HieuUngPhuKyNangService.apDung(plAtt, plInjure);
+        }
         Skill skillSelect = laySkillDangChon(plAtt);
         if (skillSelect == null || skillSelect.template == null) {
             return;
@@ -1800,6 +1813,7 @@ public class SkillService {
             }
             dameHit += (dameHit * bonusPercent / 100);
         }
+        dameHit = HieuUngPhuKyNangService.giamSatThuong(plAtt, dameHit);
         // 6. Kiểm tra miss
         if (miss) {
             dameHit = 0;
@@ -1817,7 +1831,11 @@ public class SkillService {
         }
         hutHPMP(plAtt, dameHit, null, mob);
         sendPlayerAttackMob(plAtt, mob);
+        double hpTruoc = mob.point.hp;
         mob.injured(plAtt, dameHit, dieWhenHpFull);
+        if (mob.point.hp < hpTruoc && !mob.isDie()) {
+            HieuUngPhuKyNangService.apDung(plAtt, mob);
+        }
     }
 
     private void lamMoiQckkBiKet(Player player) {
@@ -2075,9 +2093,15 @@ public class SkillService {
             return false;
         }
         if (sk.template != null && laChieuDanhLienTuc(sk.template.id)) {
-            return true;
+            int giamTocDanh = HieuUngPhuKyNangService.giamTocDanh(player);
+            return giamTocDanh <= 0 || System.currentTimeMillis() >= sk.mocSanSang;
         }
         int cho = sk.coolDown - NOI_HOI_CHIEU_MS;
+        int giamTocDanh = HieuUngPhuKyNangService.giamTocDanh(player);
+        if (giamTocDanh > 0) {
+            cho = (int) Math.min(Integer.MAX_VALUE,
+                    (long) cho * 100L / (100 - giamTocDanh));
+        }
         if (cho < 0) {
             cho = 0;
         }
@@ -2219,6 +2243,14 @@ public class SkillService {
         // chiêu có gồng, thời gian hoạt ảnh được rút riêng ở nhánh chuẩn bị.
         subTimeParam += nro.repository.dao.SetBonusDAO.phanTramGiamTheoTocDo(
                 player, skillId);
+        int giamTocDanh = HieuUngPhuKyNangService.giamTocDanh(player);
+        if (giamTocDanh > 0) {
+            // Slow 50% means twice the interval between attacks.
+            subTimeParam -= giamTocDanh * 100 / (100 - giamTocDanh);
+            if (subTimeParam < -900) {
+                subTimeParam = -900;
+            }
+        }
         // Chan 95%: de 100% thi chieu khong con thoi gian cho, spam vo han.
         if (subTimeParam + subTimeParamVip > 95) {
             subTimeParam = 95 - subTimeParamVip;
@@ -2290,8 +2322,8 @@ public class SkillService {
             sk.mocSanSang = bayGio;
             return;
         }
-        if (giam < 0) {
-            giam = 0;
+        if (giam < -900) {
+            giam = -900;
         } else if (giam > 100) {
             giam = 100;
         }

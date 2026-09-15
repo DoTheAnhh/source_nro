@@ -2890,11 +2890,39 @@ public class SystemPanel extends JPanel {
                 || "skill_target_add".equals(loai)
                 || "skill_cast_speed_pct".equals(loai)
                 || "skill_xuyen_giap_pct".equals(loai)
+                || "skill_burn_hp_pct".equals(loai)
+                || "skill_slow_pct".equals(loai)
+                || "skill_attack_slow_pct".equals(loai)
+                || "skill_weaken_pct".equals(loai)
+                || "skill_stun_chance_pct".equals(loai)
+                || "skill_debuff_chance_pct".equals(loai)
+                || "skill_debuff_duration_pct".equals(loai)
                 || "lam_moi_pct".equals(loai)
                 || "hoi_chieu_skill_pct".equals(loai);
     }
 
     private static boolean choPhepLoaiVoiChieu(String loai, int id) {
+        if (laLoaiHieuUngPhu(loai)) {
+            switch (id) {
+                case nro.entity.skill.Skill.DRAGON:
+                case nro.entity.skill.Skill.KAMEJOKO:
+                case nro.entity.skill.Skill.DEMON:
+                case nro.entity.skill.Skill.MASENKO:
+                case nro.entity.skill.Skill.GALICK:
+                case nro.entity.skill.Skill.ANTOMIC:
+                case nro.entity.skill.Skill.KAIOKEN:
+                case nro.entity.skill.Skill.QUA_CAU_KENH_KHI:
+                case nro.entity.skill.Skill.MAKANKOSAPPO:
+                case nro.entity.skill.Skill.TU_SAT:
+                case nro.entity.skill.Skill.LIEN_HOAN:
+                case nro.entity.skill.Skill.DICH_CHUYEN_TUC_THOI:
+                case nro.entity.skill.Skill.SUPER_KAME:
+                case nro.entity.skill.Skill.LIEN_HOAN_CHUONG:
+                    return true;
+                default:
+                    return false;
+            }
+        }
         if ("skill_crit_pct".equals(loai) || "skill_sdcm_pct".equals(loai)
                 || "skill_xuyen_giap_pct".equals(loai)
                 || "skill_pct".equals(loai)) {
@@ -2917,6 +2945,16 @@ public class SystemPanel extends JPanel {
             }
         }
         return true;
+    }
+
+    private static boolean laLoaiHieuUngPhu(String loai) {
+        return "skill_burn_hp_pct".equals(loai)
+                || "skill_slow_pct".equals(loai)
+                || "skill_attack_slow_pct".equals(loai)
+                || "skill_weaken_pct".equals(loai)
+                || "skill_stun_chance_pct".equals(loai)
+                || "skill_debuff_chance_pct".equals(loai)
+                || "skill_debuff_duration_pct".equals(loai);
     }
 
     private static final String[] COT_SET = {
