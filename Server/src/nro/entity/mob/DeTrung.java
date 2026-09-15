@@ -45,20 +45,21 @@ public final class DeTrung extends Mob {
     public void attack(Player pl, Mob mob, boolean miss) {
         Message msg;
         try {
+            long dameDon = tinhDameDon(miss);
             if (pl != null) {
-                long dame = !miss ? this.point.dame : 0;
+                long dame = dameDon;
             }
 
-            if (mob != null) {
-                if (mob.point.gethp() > this.point.dame) {
-                    long tnsm = mob.getTiemNangForPlayer(this.player, this.point.dame);
+            if (mob != null && dameDon > 0) {
+                if (mob.point.gethp() > dameDon) {
+                    long tnsm = mob.getTiemNangForPlayer(this.player, dameDon);
                     msg = new Message(-95);
                     msg.writer().writeByte(3);
                     msg.writer().writeInt(this.id);
                     msg.writer().writeInt((int) mob.id);
-                    mob.point.sethp((mob.point.gethp() - this.point.dame));
+                    mob.point.sethp((mob.point.gethp() - dameDon));
                     msg.writeCris(Util.CrisGH(mob.point.gethp()), Manager.readInt);
-                    msg.writeCris(Util.CrisGH(this.point.dame), Manager.readInt);
+                    msg.writeCris(Util.CrisGH(dameDon), Manager.readInt);
                     Service.gI().sendMessAllPlayerInMap(this.player, msg);
                     msg.cleanup();
                     Service.gI().addSMTN(player, (byte) 2, tnsm, true);
@@ -66,6 +67,25 @@ public final class DeTrung extends Mob {
             }
         } catch (Exception e) {
         }
+    }
+
+    /** Damage của từng cú pet đánh; chí mạng được quay độc lập ở mỗi cú. */
+    private long tinhDameDon(boolean miss) {
+        if (miss || player == null || player.nPoint == null) {
+            return 0;
+        }
+        long dame = Util.CrisGH(this.point.dame);
+        int themCrit = nro.repository.dao.SetBonusDAO.phanTramChiMangSkill(
+                player, nro.entity.skill.Skill.DE_TRUNG);
+        int tiLeCrit = Math.max(0, Math.min(100, player.nPoint.crit + themCrit));
+        if (!Util.isTrue(tiLeCrit, 100)) {
+            return dame;
+        }
+        dame = Util.CrisGH(dame * 2D);
+        int themSdcm = nro.repository.dao.SetBonusDAO.phanTramSdcmSkill(
+                player, nro.entity.skill.Skill.DE_TRUNG);
+        int tongSdcm = player.nPoint.tlSDCM + themSdcm;
+        return Util.CrisGH(dame + dame * (double) tongSdcm / 100D);
     }
     
     @Override

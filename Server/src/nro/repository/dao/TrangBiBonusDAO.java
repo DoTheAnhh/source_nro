@@ -39,6 +39,10 @@ public final class TrangBiBonusDAO {
                     "Khi trói giảm #% giáp mục tiêu");
             gieo("detrung_dame_pct", Skill.DE_TRUNG,
                     "Sát thương pet Đẻ Trứng +#%");
+            gieo("skill_crit_pct", Skill.DE_TRUNG,
+                    "Tỉ lệ chí mạng pet Đẻ Trứng +#%");
+            gieo("skill_sdcm_pct", Skill.DE_TRUNG,
+                    "Sát thương chí mạng pet Đẻ Trứng +#%");
             gieo("dame_boss_pct", -1, "Sát thương lên Boss +#%");
 
             int[] gayDame = {Skill.DRAGON, Skill.KAMEJOKO, Skill.DEMON,

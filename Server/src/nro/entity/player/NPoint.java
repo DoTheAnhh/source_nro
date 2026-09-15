@@ -3191,6 +3191,9 @@ if (hasFull5NhatAn()) {
 
                 return dameqckk;
             case Skill.DE_TRUNG:
+                // Đây là damage nền của pet. Chí mạng phải được quay theo từng
+                // cú pet đánh, không chốt một lần duy nhất lúc nở trứng.
+                isCrit = false;
                 int tlDanhThuong = phanTramSetTheoLoai("danh_thuong_pct");
                 if (tlDanhThuong != 0) {
                     dameAttack += dameAttack * tlDanhThuong / 100;
@@ -3201,7 +3204,7 @@ if (hasFull5NhatAn()) {
                 if (tlDeTrung != 0) {
                     dameAttack += dameAttack * tlDeTrung / 100;
                 }
-                return apDungChiMangChoSkillReturnSom(dameAttack, Skill.DE_TRUNG);
+                return dameAttack;
         }
         if (percentDameSkill != 0) {
             dameAttack = dameAttack * percentDameSkill / 100;
