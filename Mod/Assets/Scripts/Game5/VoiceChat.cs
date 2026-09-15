@@ -429,8 +429,8 @@ namespace Game5
                     n.viTriGhi = (n.loa.timeSamples + DEM_BAT_DAU) % tong;
                 }
             }
-            ghiVong(n.clip, mau, soByte, n.viTriGhi);
-            n.viTriGhi = (n.viTriGhi + soByte) % tong;
+            ghiVong(n.clip, mau, soMau, n.viTriGhi);
+            n.viTriGhi = (n.viTriGhi + soMau) % tong;
             // Xoa sach doan phia truoc: goi sau den muon thi loa phat im lang,
             // khong phat lai tieng cu con nam trong vong dem.
             ghiVong(n.clip, IM, IM.Length, n.viTriGhi);
