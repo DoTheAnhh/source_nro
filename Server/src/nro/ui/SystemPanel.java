@@ -2884,6 +2884,9 @@ public class SystemPanel extends JPanel {
 
     private static boolean laLoaiTheoChieu(String loai) {
         return "skill_pct".equals(loai)
+                || "skill_crit_pct".equals(loai)
+                || "skill_sdcm_pct".equals(loai)
+                || "skill_duration_pct".equals(loai)
                 || "lam_moi_pct".equals(loai)
                 || "hoi_chieu_skill_pct".equals(loai);
     }
@@ -3218,7 +3221,7 @@ public class SystemPanel extends JPanel {
         javax.swing.JCheckBox cbOn = new javax.swing.JCheckBox("Bật",
                 them || "có".equals(String.valueOf(setModel.getValueAt(r, 6))));
 
-        // O chon chieu — dung cho ca skill_pct va lam_moi_pct.
+        // O chon chieu — dung cho moi loai chi so theo ky nang.
         JComboBox<String> cbChieu = new JComboBox<>();
         for (java.util.Map.Entry<Integer, String> en
                 : nro.repository.dao.SetBonusDAO.CHIEU.entrySet()) {
@@ -3282,8 +3285,8 @@ public class SystemPanel extends JPanel {
         form.add(new JLabel("<html><span style='color:#777'>"
                 + "Loại có đuôi <b>%</b> tính trên giá trị đã có sau khi cộng trang bị.<br>"
                 + "Giá trị âm cũng được, để trừ bớt.<br>"
-                + "Ô <b>Tham số</b> dùng cho các loại theo chiêu: <i>Sát thương một "
-                + "chiêu</i> và <i>Tỉ lệ làm mới một chiêu</i>. Loại khác thì bỏ qua.<br>"
+                + "Ô <b>Tham số</b> dùng cho các loại theo chiêu: sát thương, chí mạng, "
+                + "SDCM, thời gian tác dụng, hồi chiêu và làm mới. Loại khác thì bỏ qua.<br>"
                 + "<b>Từ mấy món</b> cho phép làm nhiều mốc: thêm ba dòng 2 món, 4 món, "
                 + "5 món là set có ba mức thưởng như trong game."
                 + "</span></html>"), c);

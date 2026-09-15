@@ -129,6 +129,7 @@ public class EffectSkill {
     //huýt sáo
     public int tiLeHPHuytSao;
     public long lastTimeHuytSao;
+    public int timeHuytSao = 30000;
     
     //thôi miên
     public boolean isThoiMien;
@@ -378,7 +379,7 @@ public class EffectSkill {
         if (isSocola && (Util.canDoWithTime(lastTimeSocola, timeSocola))) {
             EffectSkillService.gI().removeSocola(this.player);
         }
-        if (tiLeHPHuytSao != 0 && Util.canDoWithTime(lastTimeHuytSao, 30000)) {
+        if (tiLeHPHuytSao != 0 && Util.canDoWithTime(lastTimeHuytSao, timeHuytSao)) {
             EffectSkillService.gI().removeHuytSao(this.player);
         }
         if (isStone && Util.canDoWithTime(lastTimeStone, timeStone)) {

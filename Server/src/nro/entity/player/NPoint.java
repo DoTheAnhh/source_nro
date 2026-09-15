@@ -3035,8 +3035,26 @@ if (hasFull5NhatAn()) {
             isCrit100 = false;
             isCrit = true;
         } else {
-            isCrit = Util.isTrue(this.crit, ConstRatio.PER100);
+            Skill skill = this.player.playerSkill == null
+                    ? null : this.player.playerSkill.skillSelect;
+            int idSkill = skill == null || skill.template == null
+                    ? -1 : skill.template.id;
+            int themChiMang = idSkill < 0 ? 0
+                    : nro.repository.dao.SetBonusDAO.phanTramChiMangSkill(
+                            this.player.setClothes, idSkill);
+            int tiLeChiMang = Math.max(0, Math.min(100, this.crit + themChiMang));
+            isCrit = Util.isTrue(tiLeChiMang, ConstRatio.PER100);
         }
+    }
+
+    private long apDungChiMangChoSkillReturnSom(long dameAttack, int idSkill) {
+        if (!isCrit || idSkill == Skill.QUA_CAU_KENH_KHI) {
+            return dameAttack;
+        }
+        dameAttack *= 2;
+        int themSdcm = nro.repository.dao.SetBonusDAO.phanTramSdcmSkill(
+                this.player.setClothes, idSkill);
+        return dameAttack + dameAttack * (this.tlSDCM + themSdcm) / 100L;
     }
 
     public double getDameAttack(boolean isAttackMob) {
@@ -3125,7 +3143,7 @@ if (hasFull5NhatAn()) {
                 if (tlMakan != 0) {
                     dameSkill += dameSkill * tlMakan / 100;
                 }
-                return dameSkill;
+                return apDungChiMangChoSkillReturnSom(dameSkill, Skill.MAKANKOSAPPO);
             case Skill.QUA_CAU_KENH_KHI:
                 // QCKK dung cong thuc rieng va khong duoc chi mang. setIsCrit()
                 // chay truoc switch nen phai xoa co de packet khong hien crit ao.
@@ -3175,7 +3193,7 @@ if (hasFull5NhatAn()) {
                 if (tlDeTrung != 0) {
                     dameAttack += dameAttack * tlDeTrung / 100;
                 }
-                return dameAttack;
+                return apDungChiMangChoSkillReturnSom(dameAttack, Skill.DE_TRUNG);
         }
         if (percentDameSkill != 0) {
             dameAttack = dameAttack * percentDameSkill / 100;
@@ -3206,7 +3224,9 @@ if (hasFull5NhatAn()) {
 
         if (isCrit) {
             dameAttack *= 2;
-            dameAttack += (dameAttack * tlSDCM / 100);
+            int themSdcmSkill = nro.repository.dao.SetBonusDAO.phanTramSdcmSkill(
+                    this.player.setClothes, skillSelect.template.id);
+            dameAttack += (dameAttack * (tlSDCM + themSdcmSkill) / 100);
         }
 
         // Phan tram sat thuong chieu tu cau hinh set (bang set_bonus, loai
@@ -3382,9 +3402,14 @@ if (hasFull5NhatAn()) {
         int percentDameSkill = 0;
         int skillId = skillSelect.template.id;
         String skillText = tenSkill(skillSelect);
+        int themChiMangSkill = nro.repository.dao.SetBonusDAO.phanTramChiMangSkill(
+                this.player.setClothes, skillId);
+        int themSdcmSkill = nro.repository.dao.SetBonusDAO.phanTramSdcmSkill(
+                this.player.setClothes, skillId);
         ghiDameTrace(ds, tinhChiMang ? "Đang xem nhánh chí mạng" : "Đang xem nhánh không chí mạng",
                 dameAttack, dameAttack,
-                "crit=" + this.crit + "%, tlSDCM=" + this.tlSDCM
+                "crit=" + this.crit + "% + crit riêng chiêu=" + themChiMangSkill
+                + "%, tlSDCM=" + this.tlSDCM + "% + SDCM riêng chiêu=" + themSdcmSkill
                 + "%, isCrit100=" + this.isCrit100 + ", isCritTele=" + this.isCritTele
                 + ". Nếu crit đạt 100% hoặc bị ép crit thì damage thật đi theo tab chí mạng.");
 
@@ -3458,7 +3483,8 @@ if (hasFull5NhatAn()) {
                     ghiDameTrace(ds, "Set skill Makankosappo +" + tlMakan + "%", truoc, dameAttack,
                             "Lấy từ set_bonus loại skill_pct, tham_so=MAKANKOSAPPO.");
                 }
-                return dsSauRandomSom(ds, dameAttack, skillSelect, isAttackMob);
+                return dsSauRandomSom(ds, dameAttack, skillSelect, isAttackMob,
+                        tinhChiMang, themSdcmSkill);
             case Skill.QUA_CAU_KENH_KHI:
                 long hpmob = 0;
                 long hppl = 0;
@@ -3522,7 +3548,8 @@ if (hasFull5NhatAn()) {
                     ghiDameTrace(ds, "Set skill Đẻ trứng +" + tlDeTrung + "%", truoc, dameAttack,
                             "Lấy từ set_bonus loại skill_pct, tham_so=DE_TRUNG.");
                 }
-                return dsSauRandomSom(ds, dameAttack, skillSelect, isAttackMob);
+                return dsSauRandomSom(ds, dameAttack, skillSelect, isAttackMob,
+                        tinhChiMang, themSdcmSkill);
             default:
                 break;
         }
@@ -3587,11 +3614,13 @@ if (hasFull5NhatAn()) {
             dameAttack *= 2;
             ghiDameTrace(ds, "Chí mạng ×2", truoc, dameAttack,
                     "Bảng này đang xem nhánh chí mạng; thực tế phụ thuộc tỉ lệ crit/isCrit100/isCritTele.");
-            if (this.tlSDCM != 0) {
+            int tongSdcm = this.tlSDCM + themSdcmSkill;
+            if (tongSdcm != 0) {
                 truoc = dameAttack;
-                dameAttack = sauKhiCongPct(dameAttack, this.tlSDCM);
-                ghiDameTrace(ds, "Sát thương chí mạng +" + this.tlSDCM + "%", truoc, dameAttack,
-                        "Tổng tlSDCM từ set, item time và các dòng cộng sát thương chí mạng.");
+                dameAttack = sauKhiCongPct(dameAttack, tongSdcm);
+                ghiDameTrace(ds, "Sát thương chí mạng +" + tongSdcm + "%", truoc, dameAttack,
+                        "Gồm SDCM chung +" + this.tlSDCM + "% và SDCM riêng chiêu +"
+                        + themSdcmSkill + "%.");
             }
         }
         int percentXDame = nro.repository.dao.SetBonusDAO.phanTramSkill(
@@ -3615,9 +3644,22 @@ if (hasFull5NhatAn()) {
     }
 
     private java.util.List<String[]> dsSauRandomSom(java.util.List<String[]> ds, long dameAttack,
-            Skill skillSelect, boolean isAttackMob) {
+            Skill skillSelect, boolean isAttackMob, boolean tinhChiMang, int themSdcmSkill) {
         ghiDameTrace(ds, "Chiêu return sớm", dameAttack, dameAttack,
-                "Không qua phần skill damage chung, chí mạng chung, dameAfter hay dao động cuối của getDameAttack.");
+                "Không qua phần skill damage chung, dameAfter hay dao động cuối của getDameAttack.");
+        if (tinhChiMang) {
+            long truoc = dameAttack;
+            dameAttack *= 2;
+            ghiDameTrace(ds, "Chí mạng chiêu return sớm ×2", truoc, dameAttack,
+                    "Tỉ lệ gồm chí mạng chung và skill_crit_pct của chiêu.");
+            int tongSdcm = this.tlSDCM + themSdcmSkill;
+            if (tongSdcm != 0) {
+                truoc = dameAttack;
+                dameAttack = sauKhiCongPct(dameAttack, tongSdcm);
+                ghiDameTrace(ds, "SDCM chiêu return sớm +" + tongSdcm + "%", truoc, dameAttack,
+                        "Gồm SDCM chung và skill_sdcm_pct của chiêu.");
+            }
+        }
         return apDungDameSauSkillService(ds, dameAttack, skillSelect, isAttackMob);
     }
 

@@ -25,7 +25,9 @@ public final class DeTrung extends Mob {
         this.point.hp = this.point.maxHp;
         this.zone = player.zone;
         this.lastTimeSpawn = System.currentTimeMillis();
-        this.timeSurvive = SkillUtil.getTimeSurviveMobMe(level);
+        this.timeSurvive = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
+                player.setClothes, nro.entity.skill.Skill.DE_TRUNG,
+                SkillUtil.getTimeSurviveMobMe(level));
         spawn();
     }
 

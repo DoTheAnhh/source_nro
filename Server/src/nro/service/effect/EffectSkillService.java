@@ -445,6 +445,8 @@ public class EffectSkillService {
     public void setIsMonkey(Player player) {
         EffectSkillService.gI().sendEffectMonkey(player);
         int timeMonkey = SkillUtil.getTimeMonkey(player.playerSkill.skillSelect.point);
+        timeMonkey = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
+                player.setClothes, Skill.BIEN_KHI, timeMonkey);
         player.effectSkill.isMonkey = true;
         player.effectSkill.timeMonkey = timeMonkey;
         player.effectSkill.lastTimeUpMonkey = System.currentTimeMillis();
@@ -639,8 +641,9 @@ public class EffectSkillService {
 
     //Huýt sáo *****************************************************************
     //Hưởng huýt sáo
-    public void setStartHuytSao(Player player, int tiLeHP) {
+    public void setStartHuytSao(Player player, int tiLeHP, int timeHuytSao) {
         player.effectSkill.tiLeHPHuytSao = tiLeHP;
+        player.effectSkill.timeHuytSao = timeHuytSao;
         player.effectSkill.lastTimeHuytSao = System.currentTimeMillis();
     }
 
@@ -674,7 +677,9 @@ public class EffectSkillService {
     public void setStartShield(Player player) {
         player.effectSkill.isShielding = true;
         player.effectSkill.lastTimeShieldUp = System.currentTimeMillis();
-        player.effectSkill.timeShield = SkillUtil.getTimeShield(player.playerSkill.skillSelect.point);
+        int timeShield = SkillUtil.getTimeShield(player.playerSkill.skillSelect.point);
+        player.effectSkill.timeShield = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
+                player.setClothes, Skill.KHIEN_NANG_LUONG, timeShield);
     }
 
     public void removeShield(Player player) {
@@ -1061,6 +1066,8 @@ public class EffectSkillService {
         } else {
             timeMonkey = SkillUtil.getTimeMonkey(khi.point);
         }
+        timeMonkey = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
+                player.setClothes, Skill.BIEN_KHI, timeMonkey);
 
         player.effectSkill.isMonkey = true;
         player.effectSkill.timeMonkey = timeMonkey;

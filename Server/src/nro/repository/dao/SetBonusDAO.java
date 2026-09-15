@@ -81,6 +81,12 @@ public class SetBonusDAO {
         LOAI.put("hut_hp", "Hút HP + %");
         LOAI.put("hut_ki", "Hút KI + %");
         LOAI.put("skill_pct", "Sát thương một chiêu + % (điền id chiêu vào Tham số)");
+        LOAI.put("skill_crit_pct",
+                "Tỉ lệ chí mạng một chiêu + % (chọn chiêu ở Tham số)");
+        LOAI.put("skill_sdcm_pct",
+                "Sát thương chí mạng một chiêu + % (chọn chiêu ở Tham số)");
+        LOAI.put("skill_duration_pct",
+                "Thời gian tác dụng một chiêu + % (chọn chiêu ở Tham số)");
         LOAI.put("lam_moi_pct",
                 "Tỉ lệ làm mới một chiêu sau khi dùng % (điền id chiêu vào Tham số)");
         LOAI.put("may_man", "May mắn + %");
@@ -194,6 +200,18 @@ public class SetBonusDAO {
             case "ne_don_pct": than = dau + giaTri + "% né đòn"; break;
             case "skill_pct":
                 than = dau + giaTri + "% sát thương chiêu "
+                        + CHIEU.getOrDefault(thamSo, "id " + thamSo);
+                break;
+            case "skill_crit_pct":
+                than = dau + giaTri + "% tỉ lệ chí mạng chiêu "
+                        + CHIEU.getOrDefault(thamSo, "id " + thamSo);
+                break;
+            case "skill_sdcm_pct":
+                than = dau + giaTri + "% sát thương chí mạng chiêu "
+                        + CHIEU.getOrDefault(thamSo, "id " + thamSo);
+                break;
+            case "skill_duration_pct":
+                than = dau + giaTri + "% thời gian tác dụng chiêu "
                         + CHIEU.getOrDefault(thamSo, "id " + thamSo);
                 break;
             case "lam_moi_pct":
@@ -506,6 +524,13 @@ public class SetBonusDAO {
                 && (b.giaTri < 0 || b.giaTri > 100)) {
             return "Hoi chieu mot ky nang phai nam trong khoang 0..100%.";
         }
+        if ("skill_crit_pct".equals(b.loai)
+                && (b.giaTri < 0 || b.giaTri > 100)) {
+            return "Ti le chi mang mot ky nang phai nam trong khoang 0..100%.";
+        }
+        if ("skill_duration_pct".equals(b.loai) && b.giaTri < 0) {
+            return "Thoi gian tac dung chi duoc tang tu 0% tro len.";
+        }
         try {
             if (b.id > 0) {
                 ConnectDB.executeUpdate(
@@ -736,6 +761,27 @@ public class SetBonusDAO {
 
     public static int phanTramHoiChieuSkill(SetClothes sc, int idChieu) {
         return phanTramTheoChieu(sc, "hoi_chieu_skill_pct", idChieu);
+    }
+
+    public static int phanTramChiMangSkill(SetClothes sc, int idChieu) {
+        return phanTramTheoChieu(sc, "skill_crit_pct", idChieu);
+    }
+
+    public static int phanTramSdcmSkill(SetClothes sc, int idChieu) {
+        return phanTramTheoChieu(sc, "skill_sdcm_pct", idChieu);
+    }
+
+    public static int phanTramThoiGianSkill(SetClothes sc, int idChieu) {
+        return phanTramTheoChieu(sc, "skill_duration_pct", idChieu);
+    }
+
+    public static int thoiGianSauBonus(SetClothes sc, int idChieu, int thoiGianGoc) {
+        int phanTram = phanTramThoiGianSkill(sc, idChieu);
+        long ketQua = thoiGianGoc + (long) thoiGianGoc * phanTram / 100L;
+        if (ketQua < 0) {
+            return 0;
+        }
+        return ketQua > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) ketQua;
     }
 
     /**
