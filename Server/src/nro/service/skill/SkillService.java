@@ -201,7 +201,8 @@ public class SkillService {
                     && player.playerSkill.skillSelect.template.id != Skill.QUA_CAU_KENH_KHI
                     && player.playerSkill.skillSelect.template.id != Skill.MAKANKOSAPPO))
                     || (plTarget != null && !canAttackPlayer(player, plTarget))
-                    || (mobTarget != null && mobTarget.isDie())) {
+                    || (mobTarget != null && mobTarget.isDie()
+                    && player.playerSkill.skillSelect.template.id != Skill.QUA_CAU_KENH_KHI)) {
                 return false;
             }
             // Hai cong duoi day truoc kia cung nam trong khoi `if` tren, va
@@ -216,6 +217,9 @@ public class SkillService {
             boolean chieuBamTay = laChieuBamTungLan(
                     player.playerSkill.skillSelect.template.id);
             if (!canUseSkillWithMana(player)) {
+                if (player.playerSkill.skillSelect.template.id == Skill.QUA_CAU_KENH_KHI) {
+                    cancelPrepareQCKK(player);
+                }
                 if (chieuBamTay) {
                     Service.gI().sendThongBao(player, "Không đủ KI để dùng "
                             + player.playerSkill.skillSelect.template.name + ".");
@@ -223,6 +227,9 @@ public class SkillService {
                 return false;
             }
             if (!canUseSkillWithCooldown(player)) {
+                if (player.playerSkill.skillSelect.template.id == Skill.QUA_CAU_KENH_KHI) {
+                    cancelPrepareQCKK(player);
+                }
                 if (chieuBamTay) {
                     long con = player.playerSkill.skillSelect.coolDown
                             - (System.currentTimeMillis()
@@ -723,6 +730,7 @@ public class SkillService {
                 } else {
                     //ném cầu
                     player.playerSkill.prepareQCKK = false;
+                    sendPlayerStopPrepareSkill(player);
                     mobs = new ArrayList<>();
                     int tamX = toaDoHopLe(skillX) ? skillX : player.location.x;
                     int tamY = toaDoHopLe(skillY) ? skillY : player.location.y;
@@ -732,7 +740,7 @@ public class SkillService {
                         playerAttackPlayer(player, plTarget, false);
                     }
                     Double dameQCKKQuai = null;
-                    if (mobTarget != null) {
+                    if (mobTarget != null && !mobTarget.isDie()) {
                         tamX = mobTarget.location.x;
                         tamY = mobTarget.location.y;
                         if (!player.isBoss) {
@@ -1635,12 +1643,38 @@ public class SkillService {
                 && player.playerSkill.skillSelect.template.id == Skill.QUA_CAU_KENH_KHI;
         long daQua = System.currentTimeMillis() - player.playerSkill.lastTimePrepareQCKK;
         if (!dangDungQckk || daQua > 7000) {
-            player.playerSkill.prepareQCKK = false;
+            cancelPrepareQCKK(player);
         }
     }
 
     private boolean toaDoHopLe(Short toaDo) {
         return toaDo != null && toaDo >= 0;
+    }
+
+    private void cancelPrepareQCKK(Player player) {
+        if (player == null || player.playerSkill == null
+                || !player.playerSkill.prepareQCKK) {
+            return;
+        }
+        player.playerSkill.prepareQCKK = false;
+        sendPlayerStopPrepareSkill(player);
+    }
+
+    private void sendPlayerStopPrepareSkill(Player player) {
+        Message msg = null;
+        try {
+            msg = new Message(-45);
+            msg.writer().writeByte(5);
+            msg.writer().writeInt((int) player.id);
+            msg.writer().writeShort(player.playerSkill.skillSelect.skillId);
+            Service.gI().sendMessAllPlayerInMap(player, msg);
+        } catch (Exception e) {
+            Logger.logException(SkillService.class, e);
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
     }
 
     private void sendPlayerPrepareSkill(Player player, int affterMiliseconds) {
