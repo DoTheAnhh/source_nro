@@ -742,20 +742,24 @@ public class SkillService {
                     mobs = new ArrayList<>();
                     int tamX = toaDoHopLe(skillX) ? skillX : player.location.x;
                     int tamY = toaDoHopLe(skillY) ? skillY : player.location.y;
-                    if (plTarget == null && !player.isBoss) {
-                        plTarget = timBossTaiTamNoQCKK(player, tamX, tamY);
-                    }
                     if (plTarget != null) {
                         tamX = plTarget.location.x;
                         tamY = plTarget.location.y;
-                        playerAttackPlayer(player, plTarget, false);
                     }
                     if (mobTarget != null && !mobTarget.isDie()) {
                         tamX = mobTarget.location.x;
                         tamY = mobTarget.location.y;
                     }
+                    List<Player> bossesQCKK = new ArrayList<>();
                     if (!player.isBoss) {
                         int tamNo = SkillUtil.getRangeQCKK(player.playerSkill.skillSelect.point);
+                        bossesQCKK.addAll(timBossTrongTamNoQCKK(player, tamX, tamY));
+                        if (plTarget != null && plTarget.isBoss && !plTarget.isDie()
+                                && !bossesQCKK.contains(plTarget)
+                                && Util.getDistance(tamX, tamY,
+                                        plTarget.location.x, plTarget.location.y) <= tamNo) {
+                            bossesQCKK.add(plTarget);
+                        }
                         for (Mob mob : player.zone.mobs) {
                             if (mob == null || mob.isDie() || mob.equals(mobTarget)) {
                                 continue;
@@ -766,19 +770,27 @@ public class SkillService {
                             }
                         }
                     }
-                    Double dameQCKKQuai = null;
-                    if (!player.isBoss && ((mobTarget != null && !mobTarget.isDie()) || !mobs.isEmpty())) {
+                    boolean coMucTieuNguoi = plTarget != null && !plTarget.isBoss;
+                    Double dameQCKKCoBan = null;
+                    if (!player.isBoss && (coMucTieuNguoi || !bossesQCKK.isEmpty()
+                            || (mobTarget != null && !mobTarget.isDie()) || !mobs.isEmpty())) {
                         // Chot cong thuc mot lan cho ca vu no. Tinh lai sau tung
                         // muc tieu se lam tong HP thay doi ngay trong cung mot don.
-                        dameQCKKQuai = player.nPoint.getDameAttack(true);
+                        dameQCKKCoBan = player.nPoint.getDameAttack(true);
+                    }
+                    if (plTarget != null && (player.isBoss || !plTarget.isBoss)) {
+                        playerAttackPlayer(player, plTarget, false, dameQCKKCoBan);
+                    }
+                    for (Player boss : bossesQCKK) {
+                        playerAttackPlayer(player, boss, false, dameQCKKCoBan);
                     }
                     if (mobTarget != null && !mobTarget.isDie() && !player.isBoss) {
-                        playerAttackMob(player, mobTarget, false, true, dameQCKKQuai);
+                        playerAttackMob(player, mobTarget, false, true, dameQCKKCoBan);
                     }
                     for (Mob mob : mobs) {
                         // Moi muc tieu di qua cung pipeline voi muc tieu chinh:
                         // tinh buff/giam dame, gioi han, hut HP/KI va gui packet danh.
-                        playerAttackMob(player, mob, false, true, dameQCKKQuai);
+                        playerAttackMob(player, mob, false, true, dameQCKKCoBan);
                     }
                     PlayerService.gI().sendInfoHpMpMoney(player);
                     affterUseSkill(player, player.playerSkill.skillSelect.template.id);
@@ -1386,8 +1398,10 @@ public class SkillService {
         }
     }
 
-    private double tinhDameDanhNguoi(Player plAtt, Player plInjure) {
-        double finalDame = plAtt.nPoint.getDameAttack(false) * heSoDameSkill(plAtt);
+    private double tinhDameDanhNguoi(Player plAtt, Player plInjure, Double dameCoBanDaTinh) {
+        double dameCoBan = dameCoBanDaTinh != null
+                ? dameCoBanDaTinh : plAtt.nPoint.getDameAttack(false);
+        double finalDame = dameCoBan * heSoDameSkill(plAtt);
 
         if (plAtt.isPl() && plAtt.effectSkin != null && plAtt.effectSkin.isXDame) {
             plAtt.effectSkin.isXDame = false;
@@ -1406,6 +1420,11 @@ public class SkillService {
     }
 
     private void playerAttackPlayer(Player plAtt, Player plInjure, boolean miss) {
+        playerAttackPlayer(plAtt, plInjure, miss, null);
+    }
+
+    private void playerAttackPlayer(Player plAtt, Player plInjure, boolean miss,
+            Double dameCoBanDaTinh) {
         if (plAtt == null || plInjure == null || plAtt.nPoint == null) {
             return;
         }
@@ -1417,7 +1436,7 @@ public class SkillService {
         // ============================================================
         // 🔹 1. TÍNH SÁT THƯƠNG THEO CONFIG SKILL
         // ============================================================
-        double finalDame = tinhDameDanhNguoi(plAtt, plInjure);
+        double finalDame = tinhDameDanhNguoi(plAtt, plInjure, dameCoBanDaTinh);
 
         // ============================================================
         // 🔹 2. TÍNH TOÁN DAME GÂY RA
@@ -1672,26 +1691,24 @@ public class SkillService {
         return toaDo != null && toaDo >= 0;
     }
 
-    private Player timBossTaiTamNoQCKK(Player player, int tamX, int tamY) {
+    private List<Player> timBossTrongTamNoQCKK(Player player, int tamX, int tamY) {
+        List<Player> ketQua = new ArrayList<>();
         if (player == null || player.zone == null || player.playerSkill == null
                 || player.playerSkill.skillSelect == null) {
-            return null;
+            return ketQua;
         }
         int tamNo = SkillUtil.getRangeQCKK(player.playerSkill.skillSelect.point);
-        Player ganNhat = null;
-        int khoangCachGanNhat = Integer.MAX_VALUE;
         for (Player boss : player.zone.getBosses()) {
             if (boss == null || boss.location == null || boss.nPoint == null || boss.isDie()) {
                 continue;
             }
             int khoangCach = Util.getDistance(tamX, tamY,
                     boss.location.x, boss.location.y);
-            if (khoangCach <= tamNo && khoangCach < khoangCachGanNhat) {
-                ganNhat = boss;
-                khoangCachGanNhat = khoangCach;
+            if (khoangCach <= tamNo) {
+                ketQua.add(boss);
             }
         }
-        return ganNhat;
+        return ketQua;
     }
 
     private void cancelPrepareQCKK(Player player) {
