@@ -750,9 +750,6 @@ public class SkillService {
                     if (mobTarget != null && !mobTarget.isDie()) {
                         tamX = mobTarget.location.x;
                         tamY = mobTarget.location.y;
-                        if (!player.isBoss) {
-                            playerAttackMob(player, mobTarget, false, true);
-                        }
                     }
                     if (!player.isBoss) {
                         int tamNo = SkillUtil.getRangeQCKK(player.playerSkill.skillSelect.point);
@@ -766,10 +763,19 @@ public class SkillService {
                             }
                         }
                     }
+                    Double dameQCKKQuai = null;
+                    if (!player.isBoss && ((mobTarget != null && !mobTarget.isDie()) || !mobs.isEmpty())) {
+                        // Chot cong thuc mot lan cho ca vu no. Tinh lai sau tung
+                        // muc tieu se lam tong HP thay doi ngay trong cung mot don.
+                        dameQCKKQuai = player.nPoint.getDameAttack(true);
+                    }
+                    if (mobTarget != null && !mobTarget.isDie() && !player.isBoss) {
+                        playerAttackMob(player, mobTarget, false, true, dameQCKKQuai);
+                    }
                     for (Mob mob : mobs) {
                         // Moi muc tieu di qua cung pipeline voi muc tieu chinh:
                         // tinh buff/giam dame, gioi han, hut HP/KI va gui packet danh.
-                        playerAttackMob(player, mob, false, true);
+                        playerAttackMob(player, mob, false, true, dameQCKKQuai);
                     }
                     PlayerService.gI().sendInfoHpMpMoney(player);
                     affterUseSkill(player, player.playerSkill.skillSelect.template.id);
@@ -1582,12 +1588,18 @@ public class SkillService {
     }
 
     private void playerAttackMob(Player plAtt, Mob mob, boolean miss, boolean dieWhenHpFull) {
+        playerAttackMob(plAtt, mob, miss, dieWhenHpFull, null);
+    }
+
+    private void playerAttackMob(Player plAtt, Mob mob, boolean miss, boolean dieWhenHpFull,
+            Double dameCoBanDaTinh) {
         if (mob == null || mob.isDie() || plAtt == null || plAtt.nPoint == null || plAtt.playerSkill == null) {
             return;
         }
 
         // 1. Tính dame cơ bản
-        double dameHit = plAtt.nPoint.getDameAttack(true);
+        double dameHit = dameCoBanDaTinh != null
+                ? dameCoBanDaTinh : plAtt.nPoint.getDameAttack(true);
 
         // 2. Kiểm tra hiệu ứng da, hiệu ứng bất tử
         if (plAtt.isPl() && plAtt.effectSkin != null && plAtt.effectSkin.isXDame) {

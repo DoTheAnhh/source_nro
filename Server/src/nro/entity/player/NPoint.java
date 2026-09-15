@@ -3137,7 +3137,7 @@ if (hasFull5NhatAn()) {
                 }
 
                 for (Player pl : this.player.zone.getHumanoids()) {
-                    if (!pl.isDie() && !pl.isBoss && this.player.id != pl.id && Util.getDistance(this.player, pl) <= SkillUtil.getRangeQCKK(this.player.playerSkill.skillSelect.point)) {
+                    if (!pl.isDie() && this.player.id != pl.id && Util.getDistance(this.player, pl) <= SkillUtil.getRangeQCKK(this.player.playerSkill.skillSelect.point)) {
                         hppl += pl.nPoint.hp;
                     }
                 }
@@ -3463,7 +3463,7 @@ if (hasFull5NhatAn()) {
                         }
                     }
                     for (Player pl : this.player.zone.getHumanoids()) {
-                        if (pl != null && !pl.isDie() && !pl.isBoss && this.player.id != pl.id
+                        if (pl != null && !pl.isDie() && this.player.id != pl.id
                                 && Util.getDistance(this.player, pl) <= SkillUtil.getRangeQCKK(skillSelect.point)) {
                             hppl += pl.nPoint.hp;
                         }
