@@ -22,11 +22,14 @@ public final class DeTrung extends Mob {
         this.tempId = SkillUtil.getTempMobMe(level);
         this.point.maxHp = SkillUtil.getHPMobMe(Util.CrisGH(player.nPoint.hpMax), level);
         this.point.dame = SkillUtil.getHPMobMe(Util.CrisGH(player.nPoint.getDameAttack(false)), level);
+        int tangDame = nro.repository.dao.SetBonusDAO.tongTheoLoai(
+                player, "detrung_dame_pct");
+        this.point.dame += this.point.dame * tangDame / 100L;
         this.point.hp = this.point.maxHp;
         this.zone = player.zone;
         this.lastTimeSpawn = System.currentTimeMillis();
         this.timeSurvive = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
-                player.setClothes, nro.entity.skill.Skill.DE_TRUNG,
+                player, nro.entity.skill.Skill.DE_TRUNG,
                 SkillUtil.getTimeSurviveMobMe(level));
         spawn();
     }

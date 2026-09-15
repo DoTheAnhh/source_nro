@@ -446,7 +446,7 @@ public class EffectSkillService {
         EffectSkillService.gI().sendEffectMonkey(player);
         int timeMonkey = SkillUtil.getTimeMonkey(player.playerSkill.skillSelect.point);
         timeMonkey = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
-                player.setClothes, Skill.BIEN_KHI, timeMonkey);
+                player, Skill.BIEN_KHI, timeMonkey);
         player.effectSkill.isMonkey = true;
         player.effectSkill.timeMonkey = timeMonkey;
         player.effectSkill.lastTimeUpMonkey = System.currentTimeMillis();
@@ -679,7 +679,7 @@ public class EffectSkillService {
         player.effectSkill.lastTimeShieldUp = System.currentTimeMillis();
         int timeShield = SkillUtil.getTimeShield(player.playerSkill.skillSelect.point);
         player.effectSkill.timeShield = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
-                player.setClothes, Skill.KHIEN_NANG_LUONG, timeShield);
+                player, Skill.KHIEN_NANG_LUONG, timeShield);
     }
 
     public void removeShield(Player player) {
@@ -1067,7 +1067,7 @@ public class EffectSkillService {
             timeMonkey = SkillUtil.getTimeMonkey(khi.point);
         }
         timeMonkey = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
-                player.setClothes, Skill.BIEN_KHI, timeMonkey);
+                player, Skill.BIEN_KHI, timeMonkey);
 
         player.effectSkill.isMonkey = true;
         player.effectSkill.timeMonkey = timeMonkey;

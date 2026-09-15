@@ -63,6 +63,8 @@ public class PlayerSkill {
 
     public long lastTimePrepareQCKK;
     public long lastTimePrepareTuSat;
+    /** Thời gian gồng thật của lượt Tự Sát hiện tại, đã áp tốc độ vận chiêu. */
+    public int timePrepareTuSat = 3000;
     public long lastTimePrepareLaze;
 
     public byte getIndexSkillSelect() {
@@ -111,7 +113,5 @@ public class PlayerSkill {
         this.skills = null;
     }
 }
-
-
 
 

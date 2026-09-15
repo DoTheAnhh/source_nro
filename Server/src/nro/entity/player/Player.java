@@ -2799,6 +2799,13 @@ public byte getAura() {
             }
             int tlGiap = this.nPoint.tlGiap;
             int tlNeDon = this.nPoint.tlNeDon;
+            if (plAtt != null && this.effectSkill != null
+                    && this.effectSkill.anTroi && this.effectSkill.plTroi == plAtt) {
+                int giamGiap = nro.repository.dao.SetBonusDAO.tongTheoLoai(
+                        plAtt, "troi_giam_giap_pct");
+                giamGiap = Math.max(0, Math.min(100, giamGiap));
+                tlGiap -= tlGiap * giamGiap / 100;
+            }
             long now = System.currentTimeMillis();
             if (plAtt != null && plAtt.playerSkill.skillSelect != null && plAtt.playerSkill.skillSelect.template != null) {
                 switch (plAtt.playerSkill.skillSelect.template.id) {
@@ -2860,6 +2867,12 @@ public byte getAura() {
                     tileXuyenGiap = plAtt.nPoint.tlxgc;
                 } else {
                     tileXuyenGiap = plAtt.nPoint.tlxgcc;
+                }
+                if (plAtt.playerSkill.skillSelect != null
+                        && plAtt.playerSkill.skillSelect.template != null) {
+                    tileXuyenGiap += nro.repository.dao.SetBonusDAO.tongTheoChieu(
+                            plAtt, "skill_xuyen_giap_pct",
+                            plAtt.playerSkill.skillSelect.template.id);
                 }
             }
             damage = calculateFinalDamage(Util.CrisGH(damage), tlGiap, tileXuyenGiap, tileSatthuongChuan);

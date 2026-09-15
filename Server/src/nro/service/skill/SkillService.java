@@ -720,6 +720,7 @@ public class SkillService {
                 if (mobTarget != null) {
                     playerAttackMob(player, mobTarget, miss, false);
                 }
+                tanCongMucTieuThem(player, plTarget, mobTarget, miss, false);
                 if (player.DeTrung != null) {
                     player.DeTrung.attack(plTarget, mobTarget, miss);
                 }
@@ -734,7 +735,9 @@ public class SkillService {
                     //bắt đầu tụ quả cầu
                     player.playerSkill.prepareQCKK = true;
                     player.playerSkill.lastTimePrepareQCKK = System.currentTimeMillis();
-                    sendPlayerPrepareSkill(player, 4000);
+                    sendPlayerPrepareSkill(player,
+                            nro.repository.dao.SetBonusDAO.thoiGianVanChieu(
+                                    player, Skill.QUA_CAU_KENH_KHI, 4000));
                 } else {
                     //ném cầu
                     player.playerSkill.prepareQCKK = false;
@@ -802,7 +805,9 @@ public class SkillService {
                     //bắt đầu nạp laze
                     player.playerSkill.prepareLaze = true;
                     player.playerSkill.lastTimePrepareLaze = System.currentTimeMillis();
-                    sendPlayerPrepareSkill(player, 3000);
+                    sendPlayerPrepareSkill(player,
+                            nro.repository.dao.SetBonusDAO.thoiGianVanChieu(
+                                    player, Skill.MAKANKOSAPPO, 3000));
                 } else {
                     //bắn laze
                     player.playerSkill.prepareLaze = false;
@@ -812,6 +817,7 @@ public class SkillService {
                     if (mobTarget != null) {
                         playerAttackMob(player, mobTarget, false, true);
                     }
+                    tanCongMucTieuThem(player, plTarget, mobTarget, false, true);
                     affterUseSkill(player, player.playerSkill.skillSelect.template.id);
                 }
                 PlayerService.gI().sendInfoHpMpMoney(player);
@@ -821,7 +827,7 @@ public class SkillService {
                 EffectSkillService.gI().sendEffectUseSkill(player, Skill.SOCOLA);
                 int timeSocola = SkillUtil.getTimeSocola();
                 timeSocola = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
-                        player.setClothes, Skill.SOCOLA, timeSocola);
+                        player, Skill.SOCOLA, timeSocola);
                 if (plTarget != null) {
                     EffectSkillService.gI().setSocola(plTarget, System.currentTimeMillis(), timeSocola);
                     Service.gI().Send_Caitrang(plTarget);
@@ -829,6 +835,17 @@ public class SkillService {
                 }
                 if (mobTarget != null) {
                     EffectSkillService.gI().sendMobToSocola(player, mobTarget, timeSocola);
+                }
+                for (MucTieuThem mt : layMucTieuThem(player, plTarget, mobTarget)) {
+                    if (mt.player != null) {
+                        EffectSkillService.gI().setSocola(mt.player,
+                                System.currentTimeMillis(), timeSocola);
+                        Service.gI().Send_Caitrang(mt.player);
+                        ItemTimeService.gI().sendItemTime(mt.player, 4133,
+                                timeSocola / 1000);
+                    } else if (mt.mob != null) {
+                        EffectSkillService.gI().sendMobToSocola(player, mt.mob, timeSocola);
+                    }
                 }
                 affterUseSkill(player, player.playerSkill.skillSelect.template.id);
                 break;
@@ -845,7 +862,7 @@ public class SkillService {
                     timeChoangDCTT += timeChoangDCTT * tlChoang / 100;
                 }
                 timeChoangDCTT = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
-                        player.setClothes, Skill.DICH_CHUYEN_TUC_THOI, timeChoangDCTT);
+                        player, Skill.DICH_CHUYEN_TUC_THOI, timeChoangDCTT);
                 if (plTarget != null) {
                     if (player.isBoss) {
                         Service.gI().chat(player, "Dịch chuyển tức thời");
@@ -876,6 +893,25 @@ public class SkillService {
                     mobTarget.effectSkill.setStartBlindDCTT(System.currentTimeMillis(), timeChoangDCTT);
                     EffectSkillService.gI().sendEffectMob(player, mobTarget, EffectSkillService.TURN_ON_EFFECT, EffectSkillService.BLIND_EFFECT);
                 }
+                for (MucTieuThem mt : layMucTieuThem(player, plTarget, mobTarget)) {
+                    if (mt.player != null) {
+                        playerAttackPlayer(player, mt.player, miss);
+                        EffectSkillService.gI().setBlindDCTT(mt.player,
+                                System.currentTimeMillis(), timeChoangDCTT);
+                        EffectSkillService.gI().sendEffectPlayer(player, mt.player,
+                                EffectSkillService.TURN_ON_EFFECT,
+                                EffectSkillService.BLIND_EFFECT);
+                        ItemTimeService.gI().sendItemTime(mt.player, 3779,
+                                timeChoangDCTT / 1000);
+                    } else if (mt.mob != null) {
+                        playerAttackMob(player, mt.mob, false, false);
+                        mt.mob.effectSkill.setStartBlindDCTT(
+                                System.currentTimeMillis(), timeChoangDCTT);
+                        EffectSkillService.gI().sendEffectMob(player, mt.mob,
+                                EffectSkillService.TURN_ON_EFFECT,
+                                EffectSkillService.BLIND_EFFECT);
+                    }
+                }
                 player.nPoint.isCrit100 = true;
                 affterUseSkill(player, player.playerSkill.skillSelect.template.id);
                 break;
@@ -884,7 +920,7 @@ public class SkillService {
                 EffectSkillService.gI().sendEffectUseSkill(player, Skill.THOI_MIEN);
                 int timeSleep = SkillUtil.getTimeThoiMien(player.playerSkill.skillSelect.point);
                 timeSleep = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
-                        player.setClothes, Skill.THOI_MIEN, timeSleep);
+                        player, Skill.THOI_MIEN, timeSleep);
                 if (plTarget != null) {
                     if (plTarget.nPoint != null && plTarget.nPoint.tlFixStun > 0 && plTarget.effectSkill != null && plTarget.effectSkill.isShielding) {
                         int fix = Math.min(plTarget.nPoint.tlFixStun, 100);
@@ -907,6 +943,22 @@ public class SkillService {
                     mobTarget.effectSkill.setThoiMien(System.currentTimeMillis(), timeSleep);
                     EffectSkillService.gI().sendEffectMob(player, mobTarget, EffectSkillService.TURN_ON_EFFECT, EffectSkillService.SLEEP_EFFECT);
                 }
+                for (MucTieuThem mt : layMucTieuThem(player, plTarget, mobTarget)) {
+                    if (mt.player != null) {
+                        EffectSkillService.gI().setThoiMien(mt.player,
+                                System.currentTimeMillis(), timeSleep);
+                        EffectSkillService.gI().sendEffectPlayer(player, mt.player,
+                                EffectSkillService.TURN_ON_EFFECT,
+                                EffectSkillService.SLEEP_EFFECT);
+                        ItemTimeService.gI().sendItemTime(mt.player, 3782,
+                                timeSleep / 1000);
+                    } else if (mt.mob != null) {
+                        mt.mob.effectSkill.setThoiMien(System.currentTimeMillis(), timeSleep);
+                        EffectSkillService.gI().sendEffectMob(player, mt.mob,
+                                EffectSkillService.TURN_ON_EFFECT,
+                                EffectSkillService.SLEEP_EFFECT);
+                    }
+                }
                 affterUseSkill(player, player.playerSkill.skillSelect.template.id);
                 break;
             case Skill.TROI:
@@ -914,7 +966,7 @@ public class SkillService {
                 EffectSkillService.gI().sendEffectUseSkill(player, Skill.TROI);
                 int timeHold = SkillUtil.getTimeTroi(player.playerSkill.skillSelect.point);
                 timeHold = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
-                        player.setClothes, Skill.TROI, timeHold);
+                        player, Skill.TROI, timeHold);
                 EffectSkillService.gI().setUseTroi(player, System.currentTimeMillis(), timeHold);
                 if (plTarget != null && (!plTarget.playerSkill.prepareQCKK && !plTarget.playerSkill.prepareLaze && !plTarget.playerSkill.prepareTuSat)) {
                     player.effectSkill.plAnTroi = plTarget;
@@ -925,6 +977,22 @@ public class SkillService {
                     player.effectSkill.mobAnTroi = mobTarget;
                     EffectSkillService.gI().sendEffectMob(player, mobTarget, EffectSkillService.TURN_ON_EFFECT, EffectSkillService.HOLD_EFFECT);
                     mobTarget.effectSkill.setTroi(System.currentTimeMillis(), timeHold);
+                }
+                for (MucTieuThem mt : layMucTieuThem(player, plTarget, mobTarget)) {
+                    if (mt.player != null && !mt.player.playerSkill.prepareQCKK
+                            && !mt.player.playerSkill.prepareLaze
+                            && !mt.player.playerSkill.prepareTuSat) {
+                        EffectSkillService.gI().sendEffectPlayer(player, mt.player,
+                                EffectSkillService.TURN_ON_EFFECT,
+                                EffectSkillService.HOLD_EFFECT);
+                        EffectSkillService.gI().setAnTroi(mt.player, player,
+                                System.currentTimeMillis(), timeHold);
+                    } else if (mt.mob != null) {
+                        EffectSkillService.gI().sendEffectMob(player, mt.mob,
+                                EffectSkillService.TURN_ON_EFFECT,
+                                EffectSkillService.HOLD_EFFECT);
+                        mt.mob.effectSkill.setTroi(System.currentTimeMillis(), timeHold);
+                    }
                 }
                 affterUseSkill(player, player.playerSkill.skillSelect.template.id);
                 break;
@@ -990,7 +1058,7 @@ public class SkillService {
                     timeStun += timeStun * tlTdhs / 100;
                 }
                 timeStun = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
-                        player.setClothes, Skill.THAI_DUONG_HA_SAN, timeStun);
+                        player, Skill.THAI_DUONG_HA_SAN, timeStun);
                 mobs = new ArrayList<>();
                 players = new ArrayList<>();
                 if (!MapService.gI().isHome(player.zone.map.mapId)) {
@@ -1068,7 +1136,7 @@ public class SkillService {
             case Skill.HUYT_SAO:
                 int tileHP = SkillUtil.getPercentHPHuytSao(player.playerSkill.skillSelect.point);
                 int timeHuytSao = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
-                        player.setClothes, Skill.HUYT_SAO, 30000);
+                        player, Skill.HUYT_SAO, 30000);
                 if (player.zone != null) {
                     if (!MapService.gI().isMapOffline(player.zone.map.mapId)) {
                         if (!player.isBoss) {
@@ -1137,12 +1205,15 @@ public class SkillService {
                 if (!player.playerSkill.prepareTuSat) {
                     player.playerSkill.prepareTuSat = true;
                     player.playerSkill.lastTimePrepareTuSat = System.currentTimeMillis();
+                    player.playerSkill.timePrepareTuSat =
+                            nro.repository.dao.SetBonusDAO.thoiGianVanChieu(
+                                    player, Skill.TU_SAT, GIAY_GONG_TU_SAT);
                     // Báo cho client ĐÚNG con số mà cổng chặn dùng. Lệch nhau
                     // thì hoạt ảnh gồng và lúc được nổ không khớp.
-                    sendPlayerPrepareBom(player, GIAY_GONG_TU_SAT);
+                    sendPlayerPrepareBom(player, player.playerSkill.timePrepareTuSat);
                     final Player nguoiNo = player;
                     HEN_NO.schedule(() -> kiemTraGongTuSat(nguoiNo),
-                            GIAY_GONG_TU_SAT,
+                            player.playerSkill.timePrepareTuSat,
                             java.util.concurrent.TimeUnit.MILLISECONDS);
                 }
                 // Đang gồng mà bấm nữa thì bỏ qua — không huỷ, không nổ sớm.
@@ -1184,7 +1255,8 @@ public class SkillService {
             // lai phai doi nhip mot giay cua vong lap ban do — dung cai cham ma
             // ta dang di sua.
             if (System.currentTimeMillis()
-                    - player.playerSkill.lastTimePrepareTuSat < GIAY_GONG_TU_SAT) {
+                    - player.playerSkill.lastTimePrepareTuSat
+                    < player.playerSkill.timePrepareTuSat) {
                 return;
             }
             player.playerSkill.prepareTuSat = false;
@@ -1422,10 +1494,12 @@ public class SkillService {
             }
         }
 
-        if (plAtt.isPlMan() && plInjure != null && plInjure.isBoss) {
-            int tlDameBoss = plAtt.nPoint.tlDameBoss;
-            if (tlDameBoss > 0) {
-                finalDame += Util.CrisGH((finalDame / 100) * tlDameBoss);
+        if (plInjure != null && plInjure.isBoss) {
+            int tlDameBoss = plAtt.nPoint.tlDameBoss
+                    + nro.repository.dao.SetBonusDAO.tongTheoLoai(
+                            plAtt, "dame_boss_pct");
+            if (tlDameBoss != 0) {
+                finalDame += finalDame * tlDameBoss / 100D;
             }
         }
         return finalDame;
@@ -1433,6 +1507,68 @@ public class SkillService {
 
     private void playerAttackPlayer(Player plAtt, Player plInjure, boolean miss) {
         playerAttackPlayer(plAtt, plInjure, miss, null);
+    }
+
+    private static final class MucTieuThem {
+        final Player player;
+        final Mob mob;
+        final int khoangCach;
+
+        MucTieuThem(Player player, Mob mob, int khoangCach) {
+            this.player = player;
+            this.mob = mob;
+            this.khoangCach = khoangCach;
+        }
+    }
+
+    /** Các mục tiêu gần nhất ngoài mục tiêu chính, dùng chung cho damage/control. */
+    private List<MucTieuThem> layMucTieuThem(Player nguoiDung, Player plChinh,
+            Mob mobChinh) {
+        List<MucTieuThem> ra = new ArrayList<>();
+        if (nguoiDung == null || nguoiDung.zone == null || nguoiDung.playerSkill == null
+                || nguoiDung.playerSkill.skillSelect == null
+                || nguoiDung.playerSkill.skillSelect.template == null) {
+            return ra;
+        }
+        int idChieu = nguoiDung.playerSkill.skillSelect.template.id;
+        int soThem = nro.repository.dao.SetBonusDAO.tongTheoChieu(
+                nguoiDung, "skill_target_add", idChieu);
+        if (soThem <= 0) {
+            return ra;
+        }
+        for (Mob mob : nguoiDung.zone.mobs) {
+            if (mob != null && mob != mobChinh && !mob.isDie()
+                    && trongTamChieu(nguoiDung, mob.location.x, mob.location.y)) {
+                ra.add(new MucTieuThem(null, mob,
+                        Util.getDistance(nguoiDung, mob)));
+            }
+        }
+        List<Player> nguoiTrongMap = nguoiDung.isBoss
+                ? nguoiDung.zone.getNotBosses() : nguoiDung.zone.getHumanoids();
+        for (Player pl : nguoiTrongMap) {
+            if (pl != null && pl != plChinh && pl != nguoiDung && !pl.isDie()
+                    && canAttackPlayer(nguoiDung, pl)
+                    && trongTamChieu(nguoiDung, pl.location.x, pl.location.y)) {
+                ra.add(new MucTieuThem(pl, null,
+                        Util.getDistance(nguoiDung, pl)));
+            }
+        }
+        ra.sort((a, b) -> Integer.compare(a.khoangCach, b.khoangCach));
+        if (ra.size() > soThem) {
+            return new ArrayList<>(ra.subList(0, soThem));
+        }
+        return ra;
+    }
+
+    private void tanCongMucTieuThem(Player nguoiDung, Player plChinh,
+            Mob mobChinh, boolean miss, boolean dieWhenHpFull) {
+        for (MucTieuThem mt : layMucTieuThem(nguoiDung, plChinh, mobChinh)) {
+            if (mt.player != null) {
+                playerAttackPlayer(nguoiDung, mt.player, miss);
+            } else if (mt.mob != null) {
+                playerAttackMob(nguoiDung, mt.mob, miss, dieWhenHpFull);
+            }
+        }
     }
 
     private void playerAttackPlayer(Player plAtt, Player plInjure, boolean miss,
@@ -1449,7 +1585,6 @@ public class SkillService {
         // 🔹 1. TÍNH SÁT THƯƠNG THEO CONFIG SKILL
         // ============================================================
         double finalDame = tinhDameDanhNguoi(plAtt, plInjure, dameCoBanDaTinh);
-
         // ============================================================
         // 🔹 2. TÍNH TOÁN DAME GÂY RA
         // ============================================================
@@ -2080,6 +2215,10 @@ public class SkillService {
         if (tlSetTheoChieu != 0) {
             subTimeParam += tlSetTheoChieu;
         }
+        // Tốc độ ra đòn cũng rút ngắn nhịp giữa hai lần tung chiêu. Với các
+        // chiêu có gồng, thời gian hoạt ảnh được rút riêng ở nhánh chuẩn bị.
+        subTimeParam += nro.repository.dao.SetBonusDAO.phanTramGiamTheoTocDo(
+                player, skillId);
         // Chan 95%: de 100% thi chieu khong con thoi gian cho, spam vo han.
         if (subTimeParam + subTimeParamVip > 95) {
             subTimeParam = 95 - subTimeParamVip;

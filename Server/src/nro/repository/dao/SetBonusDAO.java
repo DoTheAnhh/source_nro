@@ -87,6 +87,15 @@ public class SetBonusDAO {
                 "Sát thương chí mạng một chiêu + % (chọn chiêu ở Tham số)");
         LOAI.put("skill_duration_pct",
                 "Thời gian tác dụng một chiêu + % (chọn chiêu ở Tham số)");
+        LOAI.put("troi_giam_giap_pct", "Khi Trói: giảm giáp mục tiêu + %");
+        LOAI.put("detrung_dame_pct", "Sát thương pet Đẻ Trứng + %");
+        LOAI.put("skill_target_add",
+                "Số mục tiêu thêm của một chiêu + N (chọn chiêu ở Tham số)");
+        LOAI.put("skill_cast_speed_pct",
+                "Tốc độ ra đòn/vận chiêu một chiêu + % (chọn chiêu ở Tham số)");
+        LOAI.put("dame_boss_pct", "Sát thương lên Boss + %");
+        LOAI.put("skill_xuyen_giap_pct",
+                "Xuyên giáp một chiêu + % (chọn chiêu ở Tham số)");
         LOAI.put("lam_moi_pct",
                 "Tỉ lệ làm mới một chiêu sau khi dùng % (điền id chiêu vào Tham số)");
         LOAI.put("may_man", "May mắn + %");
@@ -212,6 +221,27 @@ public class SetBonusDAO {
                 break;
             case "skill_duration_pct":
                 than = dau + giaTri + "% thời gian tác dụng chiêu "
+                        + CHIEU.getOrDefault(thamSo, "id " + thamSo);
+                break;
+            case "troi_giam_giap_pct":
+                than = dau + giaTri + "% giảm giáp mục tiêu đang bị Trói";
+                break;
+            case "detrung_dame_pct":
+                than = dau + giaTri + "% sát thương pet Đẻ Trứng";
+                break;
+            case "skill_target_add":
+                than = dau + giaTri + " mục tiêu cho chiêu "
+                        + CHIEU.getOrDefault(thamSo, "id " + thamSo);
+                break;
+            case "skill_cast_speed_pct":
+                than = dau + giaTri + "% tốc độ ra đòn/vận chiêu "
+                        + CHIEU.getOrDefault(thamSo, "id " + thamSo);
+                break;
+            case "dame_boss_pct":
+                than = dau + giaTri + "% sát thương lên Boss";
+                break;
+            case "skill_xuyen_giap_pct":
+                than = dau + giaTri + "% xuyên giáp chiêu "
                         + CHIEU.getOrDefault(thamSo, "id " + thamSo);
                 break;
             case "lam_moi_pct":
@@ -767,12 +797,65 @@ public class SetBonusDAO {
         return phanTramTheoChieu(sc, "skill_crit_pct", idChieu);
     }
 
+    public static int phanTramChiMangSkill(nro.entity.player.Player player, int idChieu) {
+        return tongTheoChieu(player, "skill_crit_pct", idChieu);
+    }
+
     public static int phanTramSdcmSkill(SetClothes sc, int idChieu) {
         return phanTramTheoChieu(sc, "skill_sdcm_pct", idChieu);
     }
 
+    public static int phanTramSdcmSkill(nro.entity.player.Player player, int idChieu) {
+        return tongTheoChieu(player, "skill_sdcm_pct", idChieu);
+    }
+
     public static int phanTramThoiGianSkill(SetClothes sc, int idChieu) {
         return phanTramTheoChieu(sc, "skill_duration_pct", idChieu);
+    }
+
+    /** Tổng một bonus theo chiêu từ set kích hoạt và mọi món đang mặc. */
+    public static int tongTheoChieu(nro.entity.player.Player player, String loai,
+            int idChieu) {
+        if (player == null) {
+            return 0;
+        }
+        return phanTramTheoChieu(player.setClothes, loai, idChieu)
+                + TrangBiBonusDAO.giaTri(player, loai, idChieu);
+    }
+
+    /** Tổng một bonus không chọn chiêu từ set kích hoạt và trang bị. */
+    public static int tongTheoLoai(nro.entity.player.Player player, String loai) {
+        if (player == null) {
+            return 0;
+        }
+        return phanTramLoai(player.setClothes, loai)
+                + TrangBiBonusDAO.giaTriTheoLoai(player, loai);
+    }
+
+    public static int thoiGianSauBonus(nro.entity.player.Player player,
+            int idChieu, int thoiGianGoc) {
+        int phanTram = tongTheoChieu(player, "skill_duration_pct", idChieu);
+        long ketQua = thoiGianGoc + (long) thoiGianGoc * phanTram / 100L;
+        if (ketQua < 0) {
+            return 0;
+        }
+        return ketQua > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) ketQua;
+    }
+
+    /** Thời gian vận chiêu sau bonus tốc độ; +100% tốc độ nghĩa là nhanh gấp đôi. */
+    public static int thoiGianVanChieu(nro.entity.player.Player player,
+            int idChieu, int thoiGianGoc) {
+        int pct = tongTheoChieu(player, "skill_cast_speed_pct", idChieu);
+        pct = Math.max(0, pct);
+        long mau = 100L + pct;
+        return (int) Math.max(0L, (long) thoiGianGoc * 100L / mau);
+    }
+
+    /** Đổi % tốc độ sang % thời gian được rút để dùng chung đường cooldown cũ. */
+    public static int phanTramGiamTheoTocDo(nro.entity.player.Player player,
+            int idChieu) {
+        int pct = Math.max(0, tongTheoChieu(player, "skill_cast_speed_pct", idChieu));
+        return (int) ((long) pct * 100L / (100L + pct));
     }
 
     public static int thoiGianSauBonus(SetClothes sc, int idChieu, int thoiGianGoc) {

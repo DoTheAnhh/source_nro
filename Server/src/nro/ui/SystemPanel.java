@@ -2887,8 +2887,36 @@ public class SystemPanel extends JPanel {
                 || "skill_crit_pct".equals(loai)
                 || "skill_sdcm_pct".equals(loai)
                 || "skill_duration_pct".equals(loai)
+                || "skill_target_add".equals(loai)
+                || "skill_cast_speed_pct".equals(loai)
+                || "skill_xuyen_giap_pct".equals(loai)
                 || "lam_moi_pct".equals(loai)
                 || "hoi_chieu_skill_pct".equals(loai);
+    }
+
+    private static boolean choPhepLoaiVoiChieu(String loai, int id) {
+        if ("skill_crit_pct".equals(loai) || "skill_sdcm_pct".equals(loai)
+                || "skill_xuyen_giap_pct".equals(loai)
+                || "skill_pct".equals(loai)) {
+            switch (id) {
+                case nro.entity.skill.Skill.DRAGON:
+                case nro.entity.skill.Skill.KAMEJOKO:
+                case nro.entity.skill.Skill.DEMON:
+                case nro.entity.skill.Skill.MASENKO:
+                case nro.entity.skill.Skill.GALICK:
+                case nro.entity.skill.Skill.ANTOMIC:
+                case nro.entity.skill.Skill.KAIOKEN:
+                case nro.entity.skill.Skill.MAKANKOSAPPO:
+                case nro.entity.skill.Skill.LIEN_HOAN:
+                case nro.entity.skill.Skill.DICH_CHUYEN_TUC_THOI:
+                case nro.entity.skill.Skill.SUPER_KAME:
+                case nro.entity.skill.Skill.LIEN_HOAN_CHUONG:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+        return true;
     }
 
     private static final String[] COT_SET = {
@@ -3490,21 +3518,21 @@ public class SystemPanel extends JPanel {
             }
             tacDung.add(new String[]{e.getKey(), "0", e.getValue()});
         }
-        for (Map.Entry<Integer, String> e
-                : nro.repository.dao.SetBonusDAO.CHIEU.entrySet()) {
-            tacDung.add(new String[]{"skill_pct", String.valueOf(e.getKey()),
-                "Sát thương chiêu + %  —  " + e.getValue()});
-        }
-        // Mot dong cho moi chieu, y het cach lam cua sat thuong chieu.
-        for (Map.Entry<Integer, String> e
-                : nro.repository.dao.SetBonusDAO.CHIEU.entrySet()) {
-            tacDung.add(new String[]{"lam_moi_pct", String.valueOf(e.getKey()),
-                "Tỉ lệ làm mới kỹ năng sau khi dùng %  —  " + e.getValue()});
-        }
-        for (Map.Entry<Integer, String> e
-                : nro.repository.dao.SetBonusDAO.CHIEU.entrySet()) {
-            tacDung.add(new String[]{"hoi_chieu_skill_pct", String.valueOf(e.getKey()),
-                "Giam thoi gian hoi chieu ky nang + %  -  " + e.getValue()});
+        // Bung mọi loại theo kỹ năng thành từng lựa chọn rõ tên chiêu. Riêng
+        // crit/SDCM/xuyên giáp/sát thương chỉ hiện chiêu thực sự gây damage.
+        for (Map.Entry<String, String> loai
+                : nro.repository.dao.SetBonusDAO.LOAI.entrySet()) {
+            if (!laLoaiTheoChieu(loai.getKey())) {
+                continue;
+            }
+            for (Map.Entry<Integer, String> chieu
+                    : nro.repository.dao.SetBonusDAO.CHIEU.entrySet()) {
+                if (choPhepLoaiVoiChieu(loai.getKey(), chieu.getKey())) {
+                    tacDung.add(new String[]{loai.getKey(),
+                        String.valueOf(chieu.getKey()),
+                        loai.getValue() + "  —  " + chieu.getValue()});
+                }
+            }
         }
         // Moi moc so mon co tac dung RIENG. Muc dau la "khong co gi" de bo
         // trong nhung moc chua dung — set 5 mon thuong chi an o moc 5.

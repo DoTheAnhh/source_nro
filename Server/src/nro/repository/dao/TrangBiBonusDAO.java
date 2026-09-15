@@ -1,0 +1,208 @@
+package nro.repository.dao;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import nro.core.log.Logger;
+import nro.entity.item.Item;
+import nro.entity.item.ItemOption;
+import nro.entity.player.Player;
+import nro.entity.skill.Skill;
+import nro.repository.ConnectDB;
+import nro.repository.CrisResultSet;
+
+/** Bonus kỹ năng lấy trực tiếp từ option trên các món đang mặc. */
+public final class TrangBiBonusDAO {
+
+    public static final class CauHinh {
+        public int optionId;
+        public String loai;
+        public int thamSo;
+        public boolean active;
+        public String ghiChu;
+    }
+
+    private static final Map<Integer, CauHinh> THEO_OPTION = new HashMap<>();
+    private static volatile boolean loaded;
+
+    private TrangBiBonusDAO() {
+    }
+
+    /** Tạo bảng, gieo đủ option mặc định và nạp cache. Gọi lại không tạo trùng. */
+    public static synchronized void damBaoVaGieo() {
+        nro.repository.schema.LuocDoPanel.damBao();
+        try {
+            gieo("troi_giam_giap_pct", Skill.TROI,
+                    "Khi trói giảm #% giáp mục tiêu");
+            gieo("detrung_dame_pct", Skill.DE_TRUNG,
+                    "Sát thương pet Đẻ Trứng +#%");
+            gieo("dame_boss_pct", -1, "Sát thương lên Boss +#%");
+
+            int[] gayDame = {Skill.DRAGON, Skill.KAMEJOKO, Skill.DEMON,
+                Skill.MASENKO, Skill.GALICK, Skill.ANTOMIC, Skill.KAIOKEN,
+                Skill.MAKANKOSAPPO, Skill.LIEN_HOAN, Skill.DICH_CHUYEN_TUC_THOI,
+                Skill.SUPER_KAME, Skill.LIEN_HOAN_CHUONG};
+            for (int id : gayDame) {
+                String ten = SetBonusDAO.CHIEU.getOrDefault(id, "Kỹ năng " + id);
+                gieo("skill_crit_pct", id, "Chí mạng " + ten + " +#%");
+                gieo("skill_sdcm_pct", id, "Sát thương chí mạng " + ten + " +#%");
+                gieo("skill_xuyen_giap_pct", id, "Xuyên giáp " + ten + " +#%");
+            }
+
+            int[] nhieuMucTieu = {Skill.DRAGON, Skill.KAMEJOKO, Skill.DEMON,
+                Skill.MASENKO, Skill.GALICK, Skill.ANTOMIC, Skill.KAIOKEN,
+                Skill.MAKANKOSAPPO, Skill.SOCOLA,
+                Skill.DICH_CHUYEN_TUC_THOI, Skill.THOI_MIEN, Skill.TROI,
+                Skill.LIEN_HOAN,
+                Skill.SUPER_KAME, Skill.LIEN_HOAN_CHUONG, Skill.MA_PHONG_BA};
+            for (int id : nhieuMucTieu) {
+                gieo("skill_target_add", id, "Thêm # mục tiêu cho "
+                        + SetBonusDAO.CHIEU.getOrDefault(id, "Kỹ năng " + id));
+            }
+
+            int[] nhanhHon = {Skill.DRAGON, Skill.KAMEJOKO, Skill.DEMON,
+                Skill.MASENKO, Skill.GALICK, Skill.ANTOMIC, Skill.KAIOKEN,
+                Skill.QUA_CAU_KENH_KHI, Skill.MAKANKOSAPPO, Skill.DE_TRUNG,
+                Skill.TU_SAT, Skill.LIEN_HOAN, Skill.SUPER_KAME,
+                Skill.LIEN_HOAN_CHUONG, Skill.MA_PHONG_BA};
+            for (int id : nhanhHon) {
+                gieo("skill_cast_speed_pct", id, "Tốc độ ra đòn "
+                        + SetBonusDAO.CHIEU.getOrDefault(id, "Kỹ năng " + id) + " +#%");
+            }
+        } catch (Exception ex) {
+            Logger.logException(TrangBiBonusDAO.class, ex,
+                    "Không gieo được option bonus trang bị");
+        }
+        reload();
+    }
+
+    private static void gieo(String loai, int thamSo, String ten) throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery(
+                    "SELECT option_id FROM trang_bi_bonus WHERE loai = ? AND tham_so = ?",
+                    loai, thamSo);
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            dispose(rs);
+        }
+        int optionId = ChiSoOptionDAO.them(ten, 0);
+        if (optionId < 0) {
+            throw new IllegalStateException("Không tạo được option " + ten);
+        }
+        ConnectDB.executeUpdate(
+                "INSERT INTO trang_bi_bonus(option_id, loai, tham_so, active, ghi_chu)"
+                + " VALUES (?, ?, ?, 1, ?)",
+                optionId, loai, thamSo, "Tự tạo khi khởi động server");
+    }
+
+    public static synchronized void reload() {
+        nro.repository.schema.LuocDoPanel.damBao();
+        Map<Integer, CauHinh> moi = new HashMap<>();
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery(
+                    "SELECT * FROM trang_bi_bonus WHERE active = 1");
+            while (rs.next()) {
+                CauHinh c = new CauHinh();
+                c.optionId = rs.getInt("option_id");
+                c.loai = rs.getString("loai");
+                c.thamSo = rs.getInt("tham_so");
+                c.active = true;
+                c.ghiChu = rs.getStringOrNull("ghi_chu");
+                moi.put(c.optionId, c);
+            }
+        } catch (Exception ex) {
+            Logger.logException(TrangBiBonusDAO.class, ex,
+                    "Không đọc được trang_bi_bonus");
+        } finally {
+            dispose(rs);
+        }
+        THEO_OPTION.clear();
+        THEO_OPTION.putAll(moi);
+        loaded = true;
+    }
+
+    public static int giaTri(Player player, String loai, int thamSo) {
+        if (player == null || player.inventory == null
+                || player.inventory.itemsBody == null || loai == null) {
+            return 0;
+        }
+        ensureLoaded();
+        long tong = 0;
+        for (Item item : player.inventory.itemsBody) {
+            if (item == null || !item.isNotNullItem() || item.itemOptions == null) {
+                continue;
+            }
+            for (ItemOption io : item.itemOptions) {
+                if (io == null || io.optionTemplate == null) {
+                    continue;
+                }
+                CauHinh c = THEO_OPTION.get(io.optionTemplate.id);
+                if (c != null && loai.equals(c.loai)
+                        && (c.thamSo == thamSo || c.thamSo == -1)) {
+                    tong += io.param;
+                }
+            }
+        }
+        if (tong > Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
+        }
+        if (tong < Integer.MIN_VALUE) {
+            return Integer.MIN_VALUE;
+        }
+        return (int) tong;
+    }
+
+    /** Tổng theo loại, bỏ qua kỹ năng được ánh xạ; dùng cho bonus loại toàn cục. */
+    public static int giaTriTheoLoai(Player player, String loai) {
+        if (player == null || player.inventory == null
+                || player.inventory.itemsBody == null || loai == null) {
+            return 0;
+        }
+        ensureLoaded();
+        long tong = 0;
+        for (Item item : player.inventory.itemsBody) {
+            if (item == null || !item.isNotNullItem() || item.itemOptions == null) {
+                continue;
+            }
+            for (ItemOption io : item.itemOptions) {
+                if (io == null || io.optionTemplate == null) {
+                    continue;
+                }
+                CauHinh c = THEO_OPTION.get(io.optionTemplate.id);
+                if (c != null && loai.equals(c.loai)) {
+                    tong += io.param;
+                }
+            }
+        }
+        return (int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, tong));
+    }
+
+    public static List<CauHinh> tatCa() {
+        ensureLoaded();
+        List<CauHinh> ra = new ArrayList<>(THEO_OPTION.values());
+        Collections.sort(ra, (a, b) -> Integer.compare(a.optionId, b.optionId));
+        return ra;
+    }
+
+    private static void ensureLoaded() {
+        if (!loaded) {
+            reload();
+        }
+    }
+
+    private static void dispose(CrisResultSet rs) {
+        if (rs != null) {
+            try {
+                rs.dispose();
+            } catch (Exception ignored) {
+            }
+        }
+    }
+}

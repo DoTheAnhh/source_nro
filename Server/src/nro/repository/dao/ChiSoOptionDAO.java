@@ -81,6 +81,7 @@ public final class ChiSoOptionDAO {
                 ItemOptionTemplate t = new ItemOptionTemplate();
                 t.id = idMoi;
                 t.name = ten.trim();
+                t.type = type;
                 Manager.ITEM_OPTION_TEMPLATES.add(t);
             }
             tangPhienBanVatPham();
@@ -209,6 +210,9 @@ public final class ChiSoOptionDAO {
                 + " OR option_ids LIKE ? OR option_ids LIKE ? OR option_ids LIKE ?",
                 String.valueOf(id), id + ",%", "%," + id, "%," + id + ",%") > 0) {
             return "set kích hoạt";
+        }
+        if (dem("SELECT COUNT(*) c FROM trang_bi_bonus WHERE option_id = ?", id) > 0) {
+            return "cấu hình bonus kỹ năng trên trang bị";
         }
         String mau = "%[" + id + ",%";
         if (dem("SELECT COUNT(*) c FROM player WHERE items_body LIKE ?"

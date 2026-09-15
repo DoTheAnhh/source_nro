@@ -79,6 +79,19 @@ public final class LuocDoPanel {
         + " PRIMARY KEY (`id`), KEY `idx_set` (`set_key`)"
         + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 
+        // Ánh xạ một item option sang bonus kỹ năng. ItemOption chỉ chứa một
+        // param (giá trị), nên id kỹ năng nằm ở bảng này. Nhờ vậy cùng bonus
+        // dùng được cho ván bay, cải trang, đeo lưng và mọi ô trang bị khác.
+        "CREATE TABLE IF NOT EXISTS `trang_bi_bonus` ("
+        + " `option_id` int(11) NOT NULL,"
+        + " `loai` varchar(40) NOT NULL,"
+        + " `tham_so` int(11) NOT NULL DEFAULT -1,"
+        + " `active` tinyint(1) NOT NULL DEFAULT 1,"
+        + " `ghi_chu` varchar(255) DEFAULT NULL,"
+        + " PRIMARY KEY (`option_id`),"
+        + " UNIQUE KEY `uq_loai_skill` (`loai`, `tham_so`)"
+        + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
         // Điểm đến của capsule. Trước đây danh sách này gõ cứng trong
         // MapService.getMapCapsule(), thêm hay bớt một chỗ là phải sửa mã rồi
         // biên dịch lại.
