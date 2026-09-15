@@ -196,11 +196,15 @@ public class SkillService {
             if (player.PhanThan != null) {
                 useSkill(player.PhanThan, plTarget, mobTarget, -1, null);
             }
+            boolean laQCKK = player.playerSkill.skillSelect.template.id == Skill.QUA_CAU_KENH_KHI;
+            if (laQCKK && plTarget != null && !canAttackPlayer(player, plTarget)) {
+                plTarget = null;
+            }
             if ((player.effectSkill != null && player.effectSkill.isHaveEffectSkill()
                     && (player.playerSkill.skillSelect.template.id != Skill.TU_SAT
                     && player.playerSkill.skillSelect.template.id != Skill.QUA_CAU_KENH_KHI
                     && player.playerSkill.skillSelect.template.id != Skill.MAKANKOSAPPO))
-                    || (plTarget != null && !canAttackPlayer(player, plTarget))
+                    || (plTarget != null && !laQCKK && !canAttackPlayer(player, plTarget))
                     || (mobTarget != null && mobTarget.isDie()
                     && player.playerSkill.skillSelect.template.id != Skill.QUA_CAU_KENH_KHI)) {
                 return false;
@@ -277,6 +281,9 @@ public class SkillService {
             }
             tSkillUse = System.currentTimeMillis() - t3;
         } catch (Exception e) {
+            if (skillIdSelected == Skill.QUA_CAU_KENH_KHI) {
+                cancelPrepareQCKK(player);
+            }
             System.out.println("[ERROR] useSkill exception for player " + playerName + ": " + e.getMessage());
             e.printStackTrace();
         } finally {
