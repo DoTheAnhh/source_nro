@@ -2902,6 +2902,12 @@ public class SystemPanel extends JPanel {
     }
 
     private static boolean choPhepLoaiVoiChieu(String loai, int id) {
+        if ("skill_pct".equals(loai)
+                && (id == nro.entity.skill.Skill.QUA_CAU_KENH_KHI
+                || id == nro.entity.skill.Skill.TU_SAT
+                || id == nro.entity.skill.Skill.DE_TRUNG)) {
+            return true;
+        }
         if (("skill_crit_pct".equals(loai) || "skill_sdcm_pct".equals(loai))
                 && id == nro.entity.skill.Skill.DE_TRUNG) {
             return true;

@@ -294,6 +294,13 @@ public class BossManager implements Runnable {
         them(ds, BossID.O_DO_NOMAL, "O_DO_NOMAL", 100, 29);
         them(ds, BossID.VIRUS_NOMAL, "VIRUS_NOMAL", 100, 30);
         them(ds, BossID.XIN_BA_TO_NOMAL, "XIN_BA_TO_NOMAL", 100, 31);
+        them(ds, BossID.Rong_1Sao, "RONG_NHI_1S", 1, 32);
+        them(ds, BossID.Rong_2Sao, "RONG_NHI_2S", 1, 33);
+        them(ds, BossID.Rong_3Sao, "RONG_NHI_3S", 1, 34);
+        them(ds, BossID.Rong_4Sao, "RONG_NHI_4S", 1, 35);
+        them(ds, BossID.Rong_5Sao, "RONG_NHI_5S", 1, 36);
+        them(ds, BossID.Rong_6Sao, "RONG_NHI_6S", 1, 37);
+        them(ds, BossID.Rong_7Sao, "RONG_NHI_7S", 1, 38);
         return ds;
     }
 
@@ -601,27 +608,34 @@ public class BossManager implements Runnable {
                     return new SuperBrolyNew();
                 case BossID.GOMAH:
                     return new Gomah();
+                case BossID.RONG_NHI_1S:
                 case BossID.Rong_1Sao:
                     return new nro.entity.boss.map.rongnhi.RongNhi(
-                            BossID.Rong_1Sao, nro.entity.boss.BossesData.RONG_NHI_1S);
+                            bossID, nro.entity.boss.BossesData.RONG_NHI_1S);
+                case BossID.RONG_NHI_2S:
                 case BossID.Rong_2Sao:
                     return new nro.entity.boss.map.rongnhi.RongNhi(
-                            BossID.Rong_2Sao, nro.entity.boss.BossesData.RONG_NHI_2S);
+                            bossID, nro.entity.boss.BossesData.RONG_NHI_2S);
+                case BossID.RONG_NHI_3S:
                 case BossID.Rong_3Sao:
                     return new nro.entity.boss.map.rongnhi.RongNhi(
-                            BossID.Rong_3Sao, nro.entity.boss.BossesData.RONG_NHI_3S);
+                            bossID, nro.entity.boss.BossesData.RONG_NHI_3S);
+                case BossID.RONG_NHI_4S:
                 case BossID.Rong_4Sao:
                     return new nro.entity.boss.map.rongnhi.RongNhi(
-                            BossID.Rong_4Sao, nro.entity.boss.BossesData.RONG_NHI_4S);
+                            bossID, nro.entity.boss.BossesData.RONG_NHI_4S);
+                case BossID.RONG_NHI_5S:
                 case BossID.Rong_5Sao:
                     return new nro.entity.boss.map.rongnhi.RongNhi(
-                            BossID.Rong_5Sao, nro.entity.boss.BossesData.RONG_NHI_5S);
+                            bossID, nro.entity.boss.BossesData.RONG_NHI_5S);
+                case BossID.RONG_NHI_6S:
                 case BossID.Rong_6Sao:
                     return new nro.entity.boss.map.rongnhi.RongNhi(
-                            BossID.Rong_6Sao, nro.entity.boss.BossesData.RONG_NHI_6S);
+                            bossID, nro.entity.boss.BossesData.RONG_NHI_6S);
+                case BossID.RONG_NHI_7S:
                 case BossID.Rong_7Sao:
                     return new nro.entity.boss.map.rongnhi.RongNhi(
-                            BossID.Rong_7Sao, nro.entity.boss.BossesData.RONG_NHI_7S);
+                            bossID, nro.entity.boss.BossesData.RONG_NHI_7S);
                 default:
                     // Khong co lop rieng -> dung boss chung tu boss_data.
                     return bossChungTuCSDL(bossID);

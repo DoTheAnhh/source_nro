@@ -12,7 +12,6 @@ import nro.entity.player.Player;
 import nro.entity.template.ItemTemplate;
 import nro.net.io.Message;
 import nro.repository.dao.BossDAO;
-import nro.service.boss.BossManager;
 import nro.service.item.ItemService;
 
 /**
@@ -20,10 +19,11 @@ import nro.service.item.ItemService;
  *
  * <h2>Lấy dữ liệu ở đâu</h2>
  *
- * <p>Danh sách và trạng thái lấy từ {@code BossManager} — tức đúng những con boss
- * đang sống trong máy chủ. Vật phẩm rơi lấy từ {@code boss_drop}, chính bảng mà
- * tab "1. Đang chạy &amp; đồ rơi" trên panel quản lý; sửa ở panel là trong game
- * thấy ngay.</p>
+ * <p>Danh sách và trạng thái lấy từ sổ đăng ký chung {@code Boss.tatCaBoss()}
+ * — tức đúng những con boss đang sống trong máy chủ, kể cả boss nằm ở manager
+ * phụ như rồng nhí. Vật phẩm rơi lấy từ {@code boss_drop}, chính bảng mà tab
+ * "1. Đang chạy &amp; đồ rơi" trên panel quản lý; sửa ở panel là trong game thấy
+ * ngay.</p>
  *
  * <h2>Nhiều phase là nhiều tab của một dòng</h2>
  *
@@ -399,8 +399,9 @@ public class BossManHinhService {
         List<Boss> ra = new ArrayList<>();
         // Chup ban sao TRUOC khi loc.
         //
-        // getBosses() tra ve chinh danh sach dang song cua BossManager, ma luong
-        // boss them va xoa lien tuc. Duyet thang tren do la ConcurrentModification
+        // Boss.tatCaBoss() tra ve ban sao cua moi manager boss. Dung BossManager
+        // rieng se bo sot nhung con dang o manager phu, vi du rong nhi. Duyet
+        // thang tren danh sach song la ConcurrentModification
         // — no bay ra giua chung, goi nay khong gui duoc gi, va nguoi choi bam
         // nut Boss thay nhu nut chet.
         List<Boss> banSao = chupDanhSach();
@@ -458,7 +459,7 @@ public class BossManHinhService {
     private List<Boss> chupDanhSach() {
         for (int lan = 0; lan < 2; lan++) {
             try {
-                return new ArrayList<>(BossManager.gI().getBosses());
+                return Boss.tatCaBoss();
             } catch (Exception dangSua) {
                 // Luong boss vua them hoac xoa mot con — thu lai.
             }

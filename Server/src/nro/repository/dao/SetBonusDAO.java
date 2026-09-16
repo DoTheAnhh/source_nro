@@ -853,6 +853,11 @@ public class SetBonusDAO {
         return phanTramTheoChieu(sc, "skill_pct", idChieu);
     }
 
+    /** Sát thương riêng chiêu, cộng từ set kích hoạt và mọi trang bị đang mặc. */
+    public static int phanTramSkill(nro.entity.player.Player player, int idChieu) {
+        return tongTheoChieu(player, "skill_pct", idChieu);
+    }
+
     /**
      * Tỉ lệ <b>làm mới</b> một chiêu sau khi dùng, cộng dồn từ các set đang mặc.
      *

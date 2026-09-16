@@ -51,6 +51,7 @@ public final class TrangBiBonusDAO {
                 Skill.SUPER_KAME, Skill.LIEN_HOAN_CHUONG};
             for (int id : gayDame) {
                 String ten = SetBonusDAO.CHIEU.getOrDefault(id, "Kỹ năng " + id);
+                gieo("skill_pct", id, "Sát thương " + ten + " +#%");
                 gieo("skill_crit_pct", id, "Chí mạng " + ten + " +#%");
                 gieo("skill_sdcm_pct", id, "Sát thương chí mạng " + ten + " +#%");
                 gieo("skill_xuyen_giap_pct", id, "Xuyên giáp " + ten + " +#%");
@@ -75,6 +76,7 @@ public final class TrangBiBonusDAO {
             int[] gayHieuUngRieng = {Skill.QUA_CAU_KENH_KHI, Skill.TU_SAT};
             for (int id : gayHieuUngRieng) {
                 String ten = SetBonusDAO.CHIEU.getOrDefault(id, "Kỹ năng " + id);
+                gieo("skill_pct", id, "Sát thương " + ten + " +#%");
                 gieo("skill_burn_hp_pct", id, ten + " thiêu đốt #% HP tối đa/giây");
                 gieo("skill_slow_pct", id, ten + " giảm #% tốc chạy mục tiêu");
                 gieo("skill_attack_slow_pct", id, ten + " giảm #% tốc ra đòn mục tiêu");
@@ -83,6 +85,7 @@ public final class TrangBiBonusDAO {
                 gieo("skill_debuff_chance_pct", id, ten + " có #% tỉ lệ gây hiệu ứng phụ");
                 gieo("skill_debuff_duration_pct", id, ten + " tăng #% thời gian hiệu ứng phụ");
             }
+            gieo("skill_pct", Skill.DE_TRUNG, "Sát thương kỹ năng Đẻ Trứng +#%");
 
             int[] nhieuMucTieu = {Skill.DRAGON, Skill.KAMEJOKO, Skill.DEMON,
                 Skill.MASENKO, Skill.GALICK, Skill.ANTOMIC, Skill.KAIOKEN,

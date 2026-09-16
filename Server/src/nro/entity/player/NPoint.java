@@ -3147,7 +3147,7 @@ if (hasFull5NhatAn()) {
                 // Chieu nay return som nen khong qua duong tinh chung — phai tu
                 // ap phan tram cua set o day.
                 int tlMakan = nro.repository.dao.SetBonusDAO.phanTramSkill(
-                        this.player.setClothes, Skill.MAKANKOSAPPO);
+                        this.player, Skill.MAKANKOSAPPO);
                 if (tlMakan != 0) {
                     dameSkill += dameSkill * tlMakan / 100;
                 }
@@ -3184,7 +3184,7 @@ if (hasFull5NhatAn()) {
                 }
                 // Chieu nay return som — tu ap phan tram theo chieu cua set.
                 int tlQckkChieu = nro.repository.dao.SetBonusDAO.phanTramSkill(
-                        this.player.setClothes, Skill.QUA_CAU_KENH_KHI);
+                        this.player, Skill.QUA_CAU_KENH_KHI);
                 if (tlQckkChieu != 0) {
                     dameqckk += dameqckk * tlQckkChieu / 100;
                 }
@@ -3200,7 +3200,7 @@ if (hasFull5NhatAn()) {
                 }
                 // Chieu nay return som — tu ap phan tram theo chieu cua set.
                 int tlDeTrung = nro.repository.dao.SetBonusDAO.phanTramSkill(
-                        this.player.setClothes, Skill.DE_TRUNG);
+                        this.player, Skill.DE_TRUNG);
                 if (tlDeTrung != 0) {
                     dameAttack += dameAttack * tlDeTrung / 100;
                 }
@@ -3245,7 +3245,7 @@ if (hasFull5NhatAn()) {
         // cho MOI ky nang di qua duong tinh chung, khong phai chi 10 chieu duoc
         // liet ke tay. Ba chieu return som ben tren tu ap rieng.
         percentXDame += nro.repository.dao.SetBonusDAO.phanTramSkill(
-                this.player.setClothes, skillSelect.template.id);
+                this.player, skillSelect.template.id);
         dameAttack += dameAttack * percentXDame / 100;
 
         long tempDameAttack = (long) (dameAttack / 100L * 5L);
@@ -3487,7 +3487,7 @@ if (hasFull5NhatAn()) {
                 ghiDameTrace(ds, "Makankosappo lấy KI tối đa × damage%", truocMakan, dameAttack,
                         skillText + " | Chiêu này return sớm, không đi qua công thức SĐ chung.");
                 int tlMakan = nro.repository.dao.SetBonusDAO.phanTramSkill(
-                        this.player.setClothes, Skill.MAKANKOSAPPO);
+                        this.player, Skill.MAKANKOSAPPO);
                 if (tlMakan != 0) {
                     long truoc = dameAttack;
                     dameAttack = sauKhiCongPct(dameAttack, tlMakan);
@@ -3533,7 +3533,7 @@ if (hasFull5NhatAn()) {
                             "Tổng phần trăm từ set_bonus loại qckk_pct.");
                 }
                 int tlQckkChieu = nro.repository.dao.SetBonusDAO.phanTramSkill(
-                        this.player.setClothes, Skill.QUA_CAU_KENH_KHI);
+                        this.player, Skill.QUA_CAU_KENH_KHI);
                 if (tlQckkChieu != 0) {
                     long truoc = dameAttack;
                     dameAttack = sauKhiCongPct(dameAttack, tlQckkChieu);
@@ -3552,7 +3552,7 @@ if (hasFull5NhatAn()) {
                             "Tổng phần trăm từ set_bonus loại danh_thuong_pct.");
                 }
                 int tlDeTrung = nro.repository.dao.SetBonusDAO.phanTramSkill(
-                        this.player.setClothes, Skill.DE_TRUNG);
+                        this.player, Skill.DE_TRUNG);
                 if (tlDeTrung != 0) {
                     long truoc = dameAttack;
                     dameAttack = sauKhiCongPct(dameAttack, tlDeTrung);
@@ -3635,7 +3635,7 @@ if (hasFull5NhatAn()) {
             }
         }
         int percentXDame = nro.repository.dao.SetBonusDAO.phanTramSkill(
-                this.player.setClothes, skillId);
+                this.player, skillId);
         if (percentXDame != 0) {
             long truoc = dameAttack;
             dameAttack = sauKhiCongPct(dameAttack, percentXDame);

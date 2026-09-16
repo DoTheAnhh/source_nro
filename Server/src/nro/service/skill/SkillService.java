@@ -1300,7 +1300,7 @@ public class SkillService {
         // Cung cach ma MAKANKOSAPPO va QUA_CAU_KENH_KHI dang lam: hai chieu do
         // cung return som khoi duong tinh chung nen phai tu cong phan tram set.
         int tlSetNo = nro.repository.dao.SetBonusDAO.phanTramSkill(
-                player.setClothes, Skill.TU_SAT);
+                player, Skill.TU_SAT);
         if (tlSetNo != 0) {
             dame += dame * tlSetNo / 100;
         }
