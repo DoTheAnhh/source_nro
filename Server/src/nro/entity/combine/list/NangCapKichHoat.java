@@ -269,8 +269,8 @@ public class NangCapKichHoat {
     /**
      * Các set đã khai trên panel, đang bật, thuộc hành tinh của người chơi.
      *
-     * <p>Set để trống hành tinh (mục "Khác") <b>cũng lấy</b>: đó là set dùng
-     * chung, không riêng hành tinh nào.</p>
+     * <p>Set để "Chung" — và set chưa xếp hành tinh (mục "Khác") — <b>cũng
+     * lấy</b>: chúng không thuộc riêng hành tinh nào.</p>
      */
     private static List<SetBonusDAO.DinhNghia> setCuaHanhTinh(int gender) {
         String ht = tenHanhTinh(gender);
@@ -284,7 +284,7 @@ public class NangCapKichHoat {
             }
             String cua = (d.hanhTinh == null || d.hanhTinh.trim().isEmpty())
                     ? SetBonusDAO.KHAC : d.hanhTinh.trim();
-            if (cua.equals(ht) || cua.equals(SetBonusDAO.KHAC)) {
+            if (cua.equals(ht) || SetBonusDAO.laDungChung(cua)) {
                 ra.add(d);
             }
         }

@@ -1628,16 +1628,16 @@ public class Mob {
     /**
      * Set này có đúng hành tinh của người chơi không.
      *
-     * <p>Set để hành tinh "Khác" thì coi là dùng chung cho mọi hệ — đó là ý
-     * nghĩa của mục đó trên tab Set kích hoạt.</p>
+     * <p>Set để "Chung" (hoặc chưa xếp hành tinh) thì hệ nào đánh quái cũng
+     * rơi ra — đó là ý nghĩa của mục đó trên tab Set kích hoạt.</p>
      */
     private static boolean hopHeSet(String setKey, int gender) {
         String he = nro.repository.dao.SetBonusDAO.hanhTinh(setKey);
-        if (he == null || nro.repository.dao.SetBonusDAO.KHAC.equals(he)) {
+        if (nro.repository.dao.SetBonusDAO.laDungChung(he)) {
             return true;
         }
         String[] ds = nro.repository.dao.SetBonusDAO.CAC_HANH_TINH;
-        return gender >= 0 && gender < ds.length && ds[gender].equals(he);
+        return gender >= 0 && gender < 3 && ds[gender].equals(he);
     }
 
     /**

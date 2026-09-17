@@ -562,8 +562,42 @@ public class SetBonusDAO {
     /** Nhãn cho set chưa xếp được vào hành tinh nào. */
     public static final String KHAC = "Khác";
 
-    /** Các hành tinh, theo thứ tự muốn hiện trên panel. */
-    public static final String[] CAC_HANH_TINH = {"Trái Đất", "Namếc", "Xayda", KHAC};
+    /**
+     * Nhãn cho set <b>dùng chung cả ba hành tinh</b>.
+     *
+     * <h3>Khác "Khác" ở chỗ nào</h3>
+     *
+     * <p>"Khác" là set <b>chưa xếp</b> hành tinh — nó chỉ được đem ra khi
+     * không còn set nào hợp hệ, tức là một mức dự phòng. Còn "Chung" là lựa
+     * chọn <b>cố ý</b>: set ấy đứng ngang hàng với set của hệ, quái đánh ra
+     * cũng rơi và hệ nào mặc cũng kích hoạt được.</p>
+     */
+    public static final String CHUNG = "Chung";
+
+    /**
+     * Các hành tinh, theo thứ tự muốn hiện trên panel.
+     *
+     * <p><b>Ba ô đầu phải giữ đúng thứ tự mã hệ</b> (0 Trái Đất, 1 Namếc,
+     * 2 Xayda): nhiều chỗ tra thẳng {@code CAC_HANH_TINH[gender]} để ra tên hệ
+     * của người chơi.</p>
+     */
+    public static final String[] CAC_HANH_TINH = {"Trái Đất", "Namếc",
+        "Xayda", CHUNG, KHAC};
+
+    /**
+     * Nhãn hành tinh này có nghĩa là <b>mọi hệ đều dùng được</b> không.
+     *
+     * <p>Một chỗ duy nhất trả lời câu hỏi đó, vì nó được hỏi ở bốn nơi rời
+     * nhau: lúc quái rơi đồ, lúc phát đồ, lúc nâng cấp set, và lúc panel xếp
+     * nhóm. Bốn chỗ tự xét lấy thì sớm muộn lệch nhau.</p>
+     */
+    public static boolean laDungChung(String ht) {
+        if (ht == null || ht.trim().isEmpty()) {
+            return true;
+        }
+        String t = ht.trim();
+        return CHUNG.equals(t) || KHAC.equals(t);
+    }
 
     /**
      * Hành tinh của một set.
@@ -1173,10 +1207,15 @@ public class SetBonusDAO {
      *
      * <h3>Lọc theo hành tinh</h3>
      *
-     * <p>Chỉ lấy set có hành tinh <b>đúng bằng hệ người chơi</b>. Không có set
-     * nào của hệ đó thì lấy set để hành tinh <b>"Khác"</b> — coi là dùng chung.
-     * <b>Không bao giờ</b> lấy set của hệ khác: người Xayda đánh quái mà rơi ra
-     * đồ mang set của Namếc là mặc vào không kích hoạt được gì.</p>
+     * <p>Lấy set có hành tinh <b>đúng bằng hệ người chơi</b>, <b>và</b> set để
+     * hành tinh "Chung" — hai thứ đứng ngang hàng nhau trong lượt bốc, nên
+     * set chung cũng rơi ra bình thường chứ không phải chỉ khi hệ đó chưa có
+     * set nào.</p>
+     *
+     * <p>Set để "Khác" (chưa xếp hành tinh) vẫn là mức <b>dự phòng</b>: chỉ
+     * đem ra khi không còn gì hợp. <b>Không bao giờ</b> lấy set của hệ khác:
+     * người Xayda đánh quái mà rơi ra đồ mang set của Namếc là mặc vào không
+     * kích hoạt được gì.</p>
      *
      * @param can    số option lấy tối đa; set có ít hơn thì lấy đúng số đang có
      * @param gender hệ người chơi: 0 Trái Đất, 1 Namếc, 2 Xayda; số khác thì
@@ -1210,7 +1249,8 @@ public class SetBonusDAO {
                 mang[i] = ids.get(i);
             }
             String ht = hanhTinh(d.setKey);
-            if (heCuaNguoiChoi == null || heCuaNguoiChoi.equals(ht)) {
+            if (heCuaNguoiChoi == null || heCuaNguoiChoi.equals(ht)
+                    || CHUNG.equals(ht)) {
                 hopHe.add(mang);
             } else if (KHAC.equals(ht)) {
                 dungChung.add(mang);
