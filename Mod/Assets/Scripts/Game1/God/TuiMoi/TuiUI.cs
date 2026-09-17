@@ -4465,58 +4465,6 @@ namespace Game1.God
             return y + 15;
         }
 
-        /// <summary>
-        /// Vẽ một người từ ba mã bộ phận: đầu, thân, chân.
-        /// </summary>
-        /// <remarks>
-        /// <para>Không dựng được <c>Char</c> cho người khác — lớp ấy cần cả một
-        /// bộ trạng thái của nhân vật đang chơi. Nhưng bảng cũ đã có sẵn cách
-        /// ghép ba bộ phận bằng tay (xem <c>Panel.paintDetail</c> với
-        /// <c>partID</c>), và cách đó chỉ cần đúng ba mã này.</para>
-        ///
-        /// <para><c>Char.CharInfo[0][i]</c> giữ khung hình và độ lệch của tư thế
-        /// đứng yên: phần tử 0 là số khung, 1 và 2 là độ lệch ngang và dọc của
-        /// bộ phận thứ <c>i</c> so với gốc người.</para>
-        ///
-        /// <para>Bọc try/catch: ảnh bộ phận có thể chưa tải xong, và một khung
-        /// xem trước thiếu ảnh không được phép làm dừng phần vẽ của cả bảng.</para>
-        /// </remarks>
-        private static void veNguoiTheoPart(mGraphics g, int head, int body,
-                int leg, int x, int y)
-        {
-            try
-            {
-                if (GameScr.parts == null)
-                {
-                    return;
-                }
-                int[] bp = { head, body, leg };
-                for (int i = 0; i < bp.Length; i++)
-                {
-                    if (bp[i] < 0 || bp[i] >= GameScr.parts.Length)
-                    {
-                        continue;
-                    }
-                    Part p = GameScr.parts[bp[i]];
-                    if (p == null || p.pi == null)
-                    {
-                        continue;
-                    }
-                    int k = Char.CharInfo[0][i][0];
-                    if (k < 0 || k >= p.pi.Length || p.pi[k] == null)
-                    {
-                        continue;
-                    }
-                    SmallImage.drawSmallImage(g, p.pi[k].id,
-                            x + Char.CharInfo[0][i][1] + p.pi[k].dx,
-                            y - Char.CharInfo[0][i][2] + p.pi[k].dy, 0, 0);
-                }
-            }
-            catch (System.Exception)
-            {
-            }
-        }
-
         /// <summary>Bấm một dòng thành viên: mở bảng chọn thao tác.</summary>
         /// <remarks>
         /// Dựng lại danh sách đã xếp y như lúc vẽ (<c>xepTheoChuc</c> cho kết

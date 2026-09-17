@@ -525,7 +525,8 @@ namespace Game1.God
         /// Đã thử dời xuống 35 cho nó nằm giữa hai hàng, nhưng chỗ cũ mới là chỗ
         /// người chơi quen tay tìm tới.
         /// </remarks>
-        private const int TAM_Y_BA_GACH = 19;
+        /// <summary>Tâm dọc của nút ba gạch — giữa hàng nút trên (6..38).</summary>
+        private const int TAM_Y_BA_GACH = 22;
         private const int NUT_CANH = 30;
         /// <summary>Mau loe khi bam. 225225225 trong ma cu KHONG phai mau trang —
         /// giai ra la (108,170,9), tuc mau xanh la.</summary>
@@ -642,24 +643,13 @@ namespace Game1.God
             int nua = NUT_CANH / 2;
             bool dangBam = mScreen.keyTouch == CHAM_BA_GACH;
 
-            // Nen: o vuong bo goc, toi va hoi trong -> noi ro tren moi nen map.
+            // Cung mot kieu voi ca hang nut ben duoi: hinh o tren, ten o duoi.
             //
-            // Khong ve vach vien tren/duoi nua: hai vach do cat ngang het be
-            // ngang nut nen doc ra nhu hai duong ke lac cho, khong ra vien.
-            g.setColor(0x2A211A, dangBam ? 0.92f : 0.72f);
-            g.fillRect(x - nua, TAM_Y_BA_GACH - nua, NUT_CANH, NUT_CANH, 8);
-
-            // Ba vach.
-            int rongVach = 16;
-            int caoVach = 2;
-            int buoc = 6;
-            g.setColor(dangBam ? 0xFFFFFF : 0xF7E3C6, 1f);
-            for (int i = -1; i <= 1; i++)
-            {
-                g.fillRect(x - rongVach / 2,
-                        TAM_Y_BA_GACH + i * buoc - caoVach / 2,
-                        rongVach, caoVach, 1);
-            }
+            // Nut nay von da phang san, nhung de rieng mot minh khong ten thi
+            // no lac ra giua bon nut co ten. Ve chung mot ham thi sua kieu mot
+            // lan la ca nam nut doi theo.
+            GameScr.veNutHud(g, x - nua, TAM_Y_BA_GACH - nua, NUT_CANH,
+                    NUT_CANH, GameScr.NUT_MENU, "Menu", dangBam);
         }
 
 

@@ -18,25 +18,40 @@ namespace Game4
             menu = GameCanvas.loadImage("/mainImage/img1.png");
             menu1 = GameCanvas.loadImage("/mainImage/img2.png");
         }
+        /// <summary>Hình của nút này, đoán theo chữ trên nút.</summary>
+        /// <remarks>
+        /// Ba nút dùng chung một lớp và chỉ khác nhau ở chữ, nên đọc chữ là
+        /// cách duy nhất phân biệt mà không phải thêm một trường vào cả ba chỗ
+        /// dựng nút. Chữ "Khu" và "Tab" còn kèm số ("Khu 0", "Tab 1") nên so
+        /// bằng <c>StartsWith</c>; không khớp cái nào thì lấy hình thẻ.
+        /// </remarks>
+        private int hinhNut()
+        {
+            if (caption != null)
+            {
+                if (caption.StartsWith("Cờ"))
+                {
+                    return GameScr.NUT_CO;
+                }
+                if (caption.StartsWith("Khu"))
+                {
+                    return GameScr.NUT_KHU;
+                }
+            }
+            return GameScr.NUT_TAB;
+        }
+
         /// <summary>
-        /// Nút tab, vẽ bằng mã thay cho hai ảnh <c>img1</c>/<c>img2</c>.
+        /// Nút Cờ / Khu / Tab: <b>hình ở trên, tên ở dưới</b>.
         /// </summary>
         /// <remarks>
-        /// Hai ảnh cũ chỉ có một cỡ nên phóng to là rỗ, và chúng là hai tấm
-        /// phẳng không ăn nhập với phần HUD còn lại đã dựng bằng mã.
-        ///
-        /// Dùng chung <c>GameScr.veKhungNutNhanh</c> với hai nút Capsule và Đậu
-        /// thần: vành đồng, viền kép, lòng ô sáng, bốn đinh tán ở góc.
+        /// Cả năm nút của hàng HUD đi qua <c>GameScr.veNutHud</c> — kể cả ô
+        /// Chat và nút ba gạch do hai lớp khác vẽ. Sửa kiểu một lần là cả hàng
+        /// đổi theo, không có nút nào lạc kiểu.
         /// </remarks>
         public override void paint(mGraphics g)
         {
-            GameScr.veKhungNutNhanh(g, x, y, w, h, isFocus);
-            // Chu vang co mot net bong toi: long o sang nen chu toi tron se
-            // chim, ma chu vang khong bong thi vien chu nhoe vao nen.
-            int yChu = y + h / 2 - mFont.tahoma_7b_yellow.getHeight() / 2;
-            mFont.tahoma_7b_dark.drawString(g, caption, x + w / 2 + 1,
-                    yChu + 1, 3);
-            mFont.tahoma_7b_yellow.drawString(g, caption, x + w / 2, yChu, 3);
+            GameScr.veNutHud(g, x, y, w, h, hinhNut(), caption, isFocus);
         }
     
         public override bool isPointerInside()

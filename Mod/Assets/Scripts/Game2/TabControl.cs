@@ -147,8 +147,9 @@ namespace Game2
             //
             // O chat do GameScr dat (xC, yC) — o duoi cua cot phai. Sua kich
             // thuoc o day thi phai sua ca W_CHAT/H_CHAT ben do.
+            // O cao 32 chu khong 26: nut nay gio la hinh o tren, ten o duoi.
             int rongO = 42;
-            int caoO = 26;
+            int caoO = 32;
             int cotPhai = GameCanvas.w - 85;
             int cotTrai = cotPhai - rongO - 6;
             int hangTren = 6;
