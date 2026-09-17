@@ -13619,7 +13619,6 @@ public class SystemPanel extends JPanel {
         pTrung.add(dtNhanTrung, BorderLayout.CENTER);
         JPanel bTrung = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
         bTrung.setOpaque(false);
-        bTrung.add(button("Tặng trứng", OK_GREEN, e -> dtTangTrung()));
         bTrung.add(button("Dựng lại vật phẩm", ACCENT, e -> dtDungLaiTrung()));
         pTrung.add(bTrung, BorderLayout.SOUTH);
         root.add(pTrung, BorderLayout.SOUTH);
@@ -13629,78 +13628,6 @@ public class SystemPanel extends JPanel {
     }
 
     // ---------------------------------------------------------------- nạp bảng
-
-    /**
-     * Tặng thẳng một quả trứng vào hành trang người chơi <b>đang online</b>.
-     *
-     * <h3>Vì sao chỉ người đang online</h3>
-     *
-     * <p>Nhét vật phẩm cho người đang ngoại tuyến nghĩa là sửa cột JSON hành
-     * trang trong CSDL; người ấy đăng nhập lại là máy chủ ghi đè bằng bản
-     * trong bộ nhớ và món quà biến mất. Người đang online thì thêm vào đúng
-     * túi máy chủ đang giữ, thấy ngay.</p>
-     */
-    private void dtTangTrung() {
-        java.util.List<nro.repository.dao.TrungDeTuDAO.Trung> ds
-                = nro.repository.dao.TrungDeTuDAO.dsTrung();
-        if (ds.isEmpty()) {
-            dtCanhBao("Chưa có vật phẩm trứng. Bấm \"Dựng lại vật phẩm\" trước.");
-            return;
-        }
-        JTextField fTen = new JTextField(16);
-        JComboBox<String> cbLoai = new JComboBox<>();
-        for (nro.repository.dao.TrungDeTuDAO.Trung t : ds) {
-            cbLoai.addItem(nz(t.ten) + "  (vật phẩm " + t.itemId + ")");
-        }
-        JTextField fSl = new JTextField("1", 4);
-        JPanel form = new JPanel(new java.awt.GridLayout(0, 2, 6, 6));
-        form.add(new JLabel("Tên nhân vật (đang online):"));
-        form.add(fTen);
-        form.add(new JLabel("Loại trứng:"));
-        form.add(cbLoai);
-        form.add(new JLabel("Số lượng:"));
-        form.add(fSl);
-        int ok = JOptionPane.showConfirmDialog(this, form, "Tặng trứng đệ tử",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (ok != JOptionPane.OK_OPTION) {
-            return;
-        }
-        String ten = fTen.getText().trim();
-        if (ten.isEmpty()) {
-            dtCanhBao("Chưa nhập tên nhân vật.");
-            return;
-        }
-        int sl;
-        try {
-            sl = Integer.parseInt(fSl.getText().trim());
-        } catch (NumberFormatException ex) {
-            dtCanhBao("Số lượng phải là số nguyên.");
-            return;
-        }
-        if (sl < 1) {
-            dtCanhBao("Số lượng phải từ 1 trở lên.");
-            return;
-        }
-        nro.repository.dao.TrungDeTuDAO.Trung chon
-                = ds.get(Math.max(0, cbLoai.getSelectedIndex()));
-        nro.entity.player.Player pl
-                = nro.server.Client.gI().getPlayerByName(ten);
-        if (pl == null) {
-            dtCanhBao("Không thấy nhân vật \"" + ten + "\" đang online.");
-            return;
-        }
-        nro.entity.item.Item it = nro.service.item.ItemService.gI()
-                .createNewItem((short) chon.itemId, sl);
-        if (!nro.service.inventory.InventoryService.gI().addItemBag(pl, it)) {
-            dtCanhBao("Hành trang của " + ten + " đã đầy.");
-            return;
-        }
-        nro.service.inventory.InventoryService.gI().sendItemBag(pl);
-        nro.service.Service.gI().sendThongBao(pl,
-                "Bạn nhận được " + sl + " " + nz(chon.ten) + ".");
-        JOptionPane.showMessageDialog(this, "Đã tặng " + sl + " "
-                + nz(chon.ten) + " cho " + ten + ".");
-    }
 
     /**
      * Thêm lại những quả trứng còn thiếu trong {@code item_template}.
@@ -13719,12 +13646,6 @@ public class SystemPanel extends JPanel {
         JOptionPane.showMessageDialog(this,
                 "Đã kiểm tra xong. Vật phẩm vừa thêm chỉ có hiệu lực sau khi "
                 + "khởi động lại máy chủ.");
-    }
-
-    /** Báo một câu ngắn cho người dùng panel — dùng trong khung trứng đệ tử. */
-    private void dtCanhBao(String cau) {
-        JOptionPane.showMessageDialog(this, cau, "Trứng đệ tử",
-                JOptionPane.WARNING_MESSAGE);
     }
 
     /** Liệt kê ba quả trứng kèm mã vật phẩm đã cấp. */

@@ -54,16 +54,38 @@ public final class TrungDeTuDAO {
     }
 
     /**
-     * Ba quả trứng dựng sẵn: {loại đệ, tên, mã icon, mô tả}.
+     * Một quả trứng dựng sẵn trong mã nguồn.
+     *
+     * <p>Là lớp có kiểu rõ ràng chứ <b>không</b> phải mảng {@code Object[]}.
+     * Bản đầu viết bằng {@code Object[][]} và ép kiểu lúc đọc: mã loại là
+     * {@code byte} nên nó đóng hộp thành {@code Byte}, mà chỗ đọc lại ép sang
+     * {@code Integer} — ném {@code ClassCastException} ngay vòng lặp đầu, bị
+     * khối {@code catch} nuốt mất, và ba quả trứng lặng lẽ không bao giờ được
+     * tạo. Kiểu rõ ràng thì trình biên dịch bắt lỗi ấy từ trước.</p>
      *
      * <p>Mã loại phải khớp {@link ConstDetu} — chính con số ấy là thứ
      * {@code DeTuDAO.loai()} dùng để tra hệ số chỉ số mà quản trị đã chỉnh trên
      * panel, nên trứng Cell nở ra đúng con đệ mang chỉ số của dòng "Cell".</p>
      */
-    private static final Object[][] DUNG_SAN = {
-        {ConstDetu.MABU, "Trứng Mabư", 27997, "Nở ra đệ tử Mabư"},
-        {ConstDetu.CELL, "Trứng Cell", 27998, "Nở ra đệ tử Cell"},
-        {ConstDetu.BILL, "Trứng Berus", 27999, "Nở ra đệ tử Berus"}
+    private static final class MacDinh {
+
+        final byte loai;
+        final String ten;
+        final int icon;
+        final String moTa;
+
+        MacDinh(byte loai, String ten, int icon, String moTa) {
+            this.loai = loai;
+            this.ten = ten;
+            this.icon = icon;
+            this.moTa = moTa;
+        }
+    }
+
+    private static final MacDinh[] DUNG_SAN = {
+        new MacDinh(ConstDetu.MABU, "Trứng Mabư", 27997, "Nở ra đệ tử Mabư"),
+        new MacDinh(ConstDetu.CELL, "Trứng Cell", 27998, "Nở ra đệ tử Cell"),
+        new MacDinh(ConstDetu.BILL, "Trứng Berus", 27999, "Nở ra đệ tử Berus")
     };
 
     /** Kiểu vật phẩm dùng được — cùng kiểu với trứng rồng nhí, bình hút... */
@@ -92,11 +114,11 @@ public final class TrungDeTuDAO {
                     + " bat TINYINT(1) NOT NULL DEFAULT 1,"
                     + " PRIMARY KEY (loai)"
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-            for (Object[] d : DUNG_SAN) {
-                byte loai = (byte) (int) (Integer) d[0];
-                String ten = (String) d[1];
-                int icon = (Integer) d[2];
-                String moTa = (String) d[3];
+            for (MacDinh d : DUNG_SAN) {
+                byte loai = d.loai;
+                String ten = d.ten;
+                int icon = d.icon;
+                String moTa = d.moTa;
                 if (daKhai(loai)) {
                     continue;
                 }
@@ -113,6 +135,10 @@ public final class TrungDeTuDAO {
             }
             xoaDem();
         } catch (Exception ex) {
+            // Hong thi cho phep thu lai: de nguyen co daDamBao = true thi ca
+            // phien nay khong con lan nao dung duoc, ke ca khi bam nut tren
+            // panel.
+            daDamBao = false;
             Logger.logException(TrungDeTuDAO.class, ex,
                     "Không dựng được vật phẩm trứng đệ tử");
         }
