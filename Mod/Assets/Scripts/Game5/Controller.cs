@@ -1124,6 +1124,14 @@ namespace Game5
                             if (b21 == 0)
                             {
                                 GameCanvas.panel.vFriend.removeAllElements();
+                                // Doc mot lan ra CA HAI dang: mang cho bang moi
+                                // cua mod, va InfoItem cho bang cu cua game.
+                                // Goi tin chi den mot lan nen khong the doc lai.
+                                var idsB = new System.Collections.Generic.List<int>();
+                                var tenB = new System.Collections.Generic.List<string>();
+                                var smB = new System.Collections.Generic.List<string>();
+                                var hinhB = new System.Collections.Generic.List<short[]>();
+                                var onB = new System.Collections.Generic.List<bool>();
                                 int num35 = msg.reader().readUnsignedByte();
                                 for (int num36 = 0; num36 < num35; num36++)
                                 {
@@ -1136,13 +1144,24 @@ namespace Game5
                                     char6.bag = msg.reader().readUnsignedByte();
                                     char6.cName = msg.reader().readUTF();
                                     bool isOnline = msg.reader().readBoolean();
-                                    InfoItem infoItem2 = new InfoItem(mResources.power + ": " + msg.reader().readUTF());
+                                    string smChu = msg.reader().readUTF();
+                                    InfoItem infoItem2 = new InfoItem(mResources.power + ": " + smChu);
                                     infoItem2.charInfo = char6;
                                     infoItem2.isOnline = isOnline;
                                     GameCanvas.panel.vFriend.addElement(infoItem2);
+                                    idsB.Add(char6.charID);
+                                    tenB.Add(char6.cName);
+                                    smB.Add(smChu);
+                                    hinhB.Add(new short[] { char6.head, char6.body,
+                                            char6.leg, (short) char6.bag });
+                                    onB.Add(isOnline);
                                 }
-                                GameCanvas.panel.setTypeFriend();
-                                GameCanvas.panel.show();
+                                if (!God.TuiUI.getInstance().nhanDsNguoi(1, idsB,
+                                        tenB, smB, hinhB, onB))
+                                {
+                                    GameCanvas.panel.setTypeFriend();
+                                    GameCanvas.panel.show();
+                                }
                             }
                             if (b21 == 3)
                             {
@@ -1188,6 +1207,11 @@ namespace Game5
                             if (b11 == 0)
                             {
                                 GameCanvas.panel.vEnemy.removeAllElements();
+                                var idsT = new System.Collections.Generic.List<int>();
+                                var tenT = new System.Collections.Generic.List<string>();
+                                var smT = new System.Collections.Generic.List<string>();
+                                var hinhT = new System.Collections.Generic.List<short[]>();
+                                var onT = new System.Collections.Generic.List<bool>();
                                 int num19 = msg.reader().readUnsignedByte();
                                 for (int l = 0; l < num19; l++)
                                 {
@@ -1199,15 +1223,25 @@ namespace Game5
                                     char4.leg = msg.reader().readShort();
                                     char4.bag = msg.reader().readShort();
                                     char4.cName = msg.reader().readUTF();
-                                    InfoItem infoItem = new InfoItem(msg.reader().readUTF());
+                                    string smChuT = msg.reader().readUTF();
+                                    InfoItem infoItem = new InfoItem(smChuT);
                                     bool flag3 = msg.reader().readBoolean();
                                     infoItem.charInfo = char4;
                                     infoItem.isOnline = flag3;
-                                    Res.outz("isonline = " + flag3);
                                     GameCanvas.panel.vEnemy.addElement(infoItem);
+                                    idsT.Add(char4.charID);
+                                    tenT.Add(char4.cName);
+                                    smT.Add(smChuT);
+                                    hinhT.Add(new short[] { char4.head, char4.body,
+                                            char4.leg, (short) char4.bag });
+                                    onT.Add(flag3);
                                 }
-                                GameCanvas.panel.setTypeEnemy();
-                                GameCanvas.panel.show();
+                                if (!God.TuiUI.getInstance().nhanDsNguoi(2, idsT,
+                                        tenT, smT, hinhT, onT))
+                                {
+                                    GameCanvas.panel.setTypeEnemy();
+                                    GameCanvas.panel.show();
+                                }
                             }
                             break;
                         }

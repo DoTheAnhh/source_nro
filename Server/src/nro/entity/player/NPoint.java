@@ -4593,15 +4593,20 @@ private boolean hasFull5NhatAn() {
         if (type == 0) {
             int pointHp = point * 20;
             tiemNangUse = giaNangTiemNang(type, point);
-            if (this.hpg + pointHp <= TRAN_HP_GOC
-                    && (tranDe == null || this.hpg + pointHp <= tranDe[0])) {
+            // De tu dung TRAN CUA LOAI NO, khong lay min voi tran cua nguoi
+            // choi.
+            //
+            // Tran theo loai da nhan he so roi: de thuong 600.000 thi Mabu
+            // 630.000, Cell 661.500, Bill 694.575. Lay min voi con so cung
+            // 600.000 la cat phang phan hon ay di, va ca he thong loai de
+            // thanh vo nghia o dung cho nguoi choi de y nhat — muc cao nhat.
+            long tran = (tranDe != null) ? tranDe[0] : TRAN_HP_GOC;
+            if (this.hpg + pointHp <= tran) {
                 if (doUseTiemNang(tiemNangUse)) {
                     hpg += pointHp;
                     updatePoint = true;
                 }
             } else {
-                long tran = (tranDe == null) ? TRAN_HP_GOC
-                        : Math.min(TRAN_HP_GOC, tranDe[0]);
                 baoChoNguoi(player, "HP gốc đã đạt mức tối đa ("
                         + Util.soCham(tran)
                         + "), đang có "
@@ -4613,15 +4618,13 @@ private boolean hasFull5NhatAn() {
         if (type == 1) {
             int pointMp = point * 20;
             tiemNangUse = giaNangTiemNang(type, point);
-            if (this.mpg + pointMp <= TRAN_KI_GOC
-                    && (tranDe == null || this.mpg + pointMp <= tranDe[0])) {
+            long tran = (tranDe != null) ? tranDe[0] : TRAN_KI_GOC;
+            if (this.mpg + pointMp <= tran) {
                 if (doUseTiemNang(tiemNangUse)) {
                     mpg += pointMp;
                     updatePoint = true;
                 }
             } else {
-                long tran = (tranDe == null) ? TRAN_KI_GOC
-                        : Math.min(TRAN_KI_GOC, tranDe[0]);
                 baoChoNguoi(player, "KI gốc đã đạt mức tối đa ("
                         + Util.soCham(tran)
                         + "), đang có "
@@ -4632,15 +4635,23 @@ private boolean hasFull5NhatAn() {
         }
         if (type == 2) {
             tiemNangUse = giaNangTiemNang(type, point);
-            if ((this.dameg + point) <= powerLimit.getDamage()
-                    && this.dameg + point <= TRAN_SUC_DANH_GOC
-                    && (tranDe == null || this.dameg + point <= tranDe[1])) {
+            // De tu: chi mot tran duy nhat, cua LOAI no.
+            //
+            // powerLimit la tran theo bac suc manh cua NGUOI CHOI, ma de tu
+            // co bang tran rieng (de_tu_chi_so) voi he so tung loai. Hoi ca
+            // hai thi cai nao thap hon thang, va bang tren panel mat tac dung.
+            boolean duocNang = (tranDe != null)
+                    ? (this.dameg + point <= tranDe[1])
+                    : ((this.dameg + point) <= powerLimit.getDamage()
+                            && this.dameg + point <= TRAN_SUC_DANH_GOC);
+            if (duocNang) {
                 if (doUseTiemNang(tiemNangUse)) {
                     dameg += point;
                     updatePoint = true;
                 }
             } else {
-                baoChoNguoi(player, "Sức đánh của bạn đã đạt mức tối đa");
+                baoChoNguoi(player, "Sức đánh của bạn đã đạt mức tối đa"
+                        + (tranDe != null ? " (" + Util.soCham(tranDe[1]) + ")" : ""));
                 Service.gI().sendMoney(player);
                 return;
             }
@@ -4655,14 +4666,17 @@ private boolean hasFull5NhatAn() {
             //
             // Tong cua point so hang, so hang thu k la (defg + 5 + k) * 100000.
             tiemNangUse = giaNangTiemNang(type, point);
-            if ((this.defg + point) <= powerLimit.getDefense()
-                    && (tranDe == null || this.defg + point <= tranDe[2])) {
+            boolean duocNangGiap = (tranDe != null)
+                    ? (this.defg + point <= tranDe[2])
+                    : ((this.defg + point) <= powerLimit.getDefense());
+            if (duocNangGiap) {
                 if (doUseTiemNang(tiemNangUse)) {
                     defg += point;
                     updatePoint = true;
                 }
             } else {
-                baoChoNguoi(player, "Giáp của bạn đã đạt mức tối đa");
+                baoChoNguoi(player, "Giáp của bạn đã đạt mức tối đa"
+                        + (tranDe != null ? " (" + Util.soCham(tranDe[2]) + ")" : ""));
                 Service.gI().sendMoney(player);
                 return;
             }
@@ -4679,14 +4693,17 @@ private boolean hasFull5NhatAn() {
             // long ngay tai buoc gay tran. Tran thi de tiemNangUse bang gia tri
             // lon nhat, va doUseTiemNang se tu bao khong du tiem nang.
             tiemNangUse = giaNangTiemNang(type, point);
-            if ((this.critg + point) <= powerLimit.getCritical()
-                    && (tranDe == null || this.critg + point <= tranDe[3])) {
+            boolean duocNangCrit = (tranDe != null)
+                    ? (this.critg + point <= tranDe[3])
+                    : ((this.critg + point) <= powerLimit.getCritical());
+            if (duocNangCrit) {
                 if (doUseTiemNang(tiemNangUse)) {
                     critg += point;
                     updatePoint = true;
                 }
             } else {
-                baoChoNguoi(player, "Chí mạng của bạn đã đạt mức tối đa");
+                baoChoNguoi(player, "Chí mạng của bạn đã đạt mức tối đa"
+                        + (tranDe != null ? " (" + tranDe[3] + "%)" : ""));
                 Service.gI().sendMoney(player);
                 return;
             }

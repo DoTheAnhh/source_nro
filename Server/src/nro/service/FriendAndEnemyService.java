@@ -23,6 +23,12 @@ public class FriendAndEnemyService {
     private static final byte REVENGE = 1;
     private static final byte REMOVE_ENEMY = 2;
 
+    /** Dịch chuyển thẳng tới kẻ thù rồi bật PK — không cược, không thách đấu. */
+    private static final byte TELE_TRA_THU = 3;
+
+    /** Chờ bấy nhiêu mili giây rồi mới bật tên đỏ. */
+    private static final long CHO_TRUOC_KHI_PK = 5000L;
+
     private static FriendAndEnemyService i;
 
     public static FriendAndEnemyService gI() {
@@ -75,6 +81,9 @@ public class FriendAndEnemyService {
                     break;
                 case REMOVE_ENEMY:
                     removeEnemy(player, msg.reader().readInt());
+                    break;
+                case TELE_TRA_THU:
+                    teleTraThu(player, msg.reader().readInt());
                     break;
             }
         } catch (IOException ex) {
@@ -317,6 +326,91 @@ public class FriendAndEnemyService {
         } catch (Exception e) {
             Logger.logException(FriendAndEnemyService.class, e);
         }
+    }
+
+    /**
+     * Dịch chuyển tới kẻ thù, chào một câu, rồi <b>năm giây sau</b> bật tên đỏ
+     * cho cả hai.
+     *
+     * <h3>Vì sao chờ năm giây</h3>
+     *
+     * <p>Bật PK ngay lúc vừa hiện ra là người kia chưa kịp thấy gì đã ăn đòn.
+     * Năm giây đủ để đọc câu chào và chạy nếu muốn — và câu chào ấy chính là
+     * lời báo trước.</p>
+     *
+     * <h3>Không cược</h3>
+     *
+     * <p>Khác hẳn nút "Trả thù" cũ: cái đó mở bảng thách đấu của
+     * {@code PVPService}, có cược và phải bên kia đồng ý. Ở đây chỉ đơn giản
+     * là hai người cùng bật cờ đánh nhau.</p>
+     */
+    private void teleTraThu(Player player, int enemyId) {
+        boolean laThu = false;
+        for (Enemy e : player.enemies) {
+            if (e.id == enemyId) {
+                laThu = true;
+                break;
+            }
+        }
+        if (!laThu) {
+            Service.gI().sendThongBao(player, "Người này không có trong danh sách kẻ thù");
+            return;
+        }
+        Player pl = Client.gI().getPlayerByID(enemyId);
+        if (pl == null || pl.zone == null) {
+            Service.gI().sendThongBao(player, "Kẻ thù đang không có mặt");
+            return;
+        }
+        if (!player.isFounder() && !player.nPoint.teleport) {
+            Service.gI().sendThongBao(player,
+                    "Yêu cầu trang bị có khả năng dịch chuyển tức thời");
+            return;
+        }
+        if (pl.itemTime.isUseAnDanh && !player.isFounder()) {
+            Service.gI().sendThongBao(player, "Không thể thực hiện");
+            return;
+        }
+        int mapId = pl.zone.map.mapId;
+        if (MapService.gI().isMapOffline(mapId)
+                || MapService.gI().isMapBangHoi(mapId)
+                || MapService.gI().isMapBlackBallWar(mapId)
+                || MapService.gI().isMapPhoBan(mapId)
+                || MapService.gI().isMapMaBu12H(mapId)
+                || (!player.isFounder() && pl.zone.isFullPlayer())) {
+            Service.gI().sendThongBao(player, "Không thể thực hiện");
+            return;
+        }
+        player.changeMapVIP = true;
+        ChangeMapService.gI().changeMapYardrat(player,
+                ChangeMapService.gI().checkMapCanJoin(player, pl.zone),
+                pl.location.x + Util.nextInt(-5, 5), pl.location.y);
+        Service.gI().chat(player, "Ta tới đây để trả thù");
+        Service.gI().sendThongBao(pl, player.name
+                + " vừa tới trả thù — năm giây nữa hai người sẽ đánh được nhau.");
+        final Player keTraThu = player;
+        final Player keBiTraThu = pl;
+        new Thread(() -> {
+            try {
+                Thread.sleep(CHO_TRUOC_KHI_PK);
+                // Trong nam giay ay ho co the da thoat, doi khu, hoac chet —
+                // bat co cho mot nguoi khong con o do la bat vao khoang khong.
+                if (keTraThu.zone == null || keBiTraThu.zone == null
+                        || keTraThu.zone != keBiTraThu.zone) {
+                    return;
+                }
+                batCoDanhNhau(keTraThu);
+                batCoDanhNhau(keBiTraThu);
+            } catch (Exception e) {
+                Logger.logException(FriendAndEnemyService.class, e);
+            }
+        }).start();
+    }
+
+    /** Bật cờ đánh nhau (tên đỏ) cho một người. */
+    private static void batCoDanhNhau(Player p) {
+        nro.service.PlayerService.gI().changeAndSendTypePK(p,
+                nro.core.consts.ConstPlayer.PK_ALL);
+        Service.gI().sendThongBao(p, "Cờ đánh nhau đã bật!");
     }
 
     public void addEnemy(Player player, Player enemy) {

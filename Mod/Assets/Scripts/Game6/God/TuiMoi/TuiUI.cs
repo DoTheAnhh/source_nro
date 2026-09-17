@@ -1040,6 +1040,7 @@ namespace Game6.God
         /// <summary>Mở bảng.</summary>
         public void moRa()
         {
+            bangNguoi = 0;
             dangMo = true;
             hienHop = false;
             cuon = 0;
@@ -1247,6 +1248,12 @@ namespace Game6.God
                 default:
                     veChucNang(g);
                     break;
+            }
+            if (bangNguoi != 0)
+            {
+                // De len ca hai cot: bang nay chiem tron than, khong phai mot
+                // khung nho noi len giua the dang xem.
+                veBangNguoi(g);
             }
             veThanhTien(g);
             // Ve sau cung: hop thong tin phai nam tren moi thu khac.
@@ -3987,6 +3994,15 @@ namespace Game6.God
         private int idChiSo = -1;
         private bool coChiSo;
         private bool choChiSo;
+
+        /// <summary>Khối chỉ số đang bày của ai — id nhân vật, hoặc -1.</summary>
+        /// <remarks>
+        /// Ba bảng dùng chung khối chỉ số: thành viên bang, bạn bè, kẻ thù.
+        /// Bản trước hỏi thẳng <c>tvXem.ID</c> của bảng bang hội, nên mở bảng
+        /// bạn bè ra là mọi dòng đều hiện dấu gạch — số đã về tới nơi nhưng
+        /// không đối chiếu được với ai.
+        /// </remarks>
+        private int idDangXem = -1;
         private long[] boChiSo;
 
         /// <summary>Người đang xem có online không — số liệu sống hay lấy từ CSDL.</summary>
@@ -4019,6 +4035,7 @@ namespace Game6.God
             coChiSo = false;
             choChiSo = true;
             idChiSo = -1;
+            idDangXem = (m != null) ? m.ID : -1;
             boChiSo = null;
             cuonCs = 0;
             caoKhoiCs = 0;
@@ -4271,6 +4288,421 @@ namespace Game6.God
             }
             // Nuot moi cu cham con lai: bang chon dang che cot phai, de lot
             // xuong la bam nham vao danh sach nam duoi no.
+            return true;
+        }
+
+
+        // ==================================================================
+        //  Bang "Ban be" va "Ke thu"
+        // ==================================================================
+
+        /// <summary>Một người trong danh sách bạn bè hoặc kẻ thù.</summary>
+        private class NguoiDs
+        {
+            public int id;
+            public string ten;
+            public string sucManh;
+            public short head;
+            public short body;
+            public short leg;
+            public sbyte bag;
+            public bool online;
+        }
+
+        /// <summary>Bảng đang mở: 0 không, 1 bạn bè, 2 kẻ thù.</summary>
+        /// <remarks>
+        /// Hai bảng dùng chung mọi thứ — danh sách, khung xem trước, khối chỉ số
+        /// — vì chúng chỉ khác nhau ở hàng nút dưới cùng. Viết thành hai bảng
+        /// riêng thì mỗi lần sửa bố cục phải sửa hai chỗ giống hệt nhau.
+        /// </remarks>
+        private int bangNguoi;
+
+        private readonly System.Collections.Generic.List<NguoiDs> dsNguoi
+                = new System.Collections.Generic.List<NguoiDs>();
+
+        /// <summary>Dòng đang chọn trong danh sách, hoặc -1.</summary>
+        private int nguoiChon = -1;
+
+        /// <summary>Dòng đầu tiên đang hiện.</summary>
+        private int cuonNguoi;
+        private bool dangKeoNguoi;
+        private int yMocKeoNguoi;
+
+        /// <summary>Đang chờ máy chủ gửi danh sách về.</summary>
+        private bool choDsNguoi;
+
+        /// <summary>Nhân vật dựng tạm để vẽ khung xem trước.</summary>
+        private Char nguoiVeDs;
+        private int idDaVe = -1;
+
+        /// <summary>Bề cao một dòng trong danh sách.</summary>
+        private const int CAO_DONG_NGUOI = 26;
+
+        /// <summary>Xin máy chủ danh sách bạn bè rồi mở bảng.</summary>
+        public void moBanBe()
+        {
+            batDauBangNguoi(1);
+            Service.gI().friend(0, -1);
+        }
+
+        /// <summary>Xin máy chủ danh sách kẻ thù rồi mở bảng.</summary>
+        public void moKeThu()
+        {
+            batDauBangNguoi(2);
+            Service.gI().enemy(0, -1);
+        }
+
+        private void batDauBangNguoi(int loai)
+        {
+            bangNguoi = loai;
+            dsNguoi.Clear();
+            nguoiChon = -1;
+            cuonNguoi = 0;
+            dangKeoNguoi = false;
+            choDsNguoi = true;
+            nguoiVeDs = null;
+            idDaVe = -1;
+            boChiSo = null;
+            coChiSo = false;
+            choChiSo = false;
+            idChiSo = -1;
+            idDangXem = -1;
+        }
+
+        /// <summary>Máy chủ gửi danh sách về — một đường cho cả hai bảng.</summary>
+        /// <param name="loai">1 bạn bè, 2 kẻ thù.</param>
+        /// <returns>
+        /// <c>true</c> nếu bảng này đang chờ đúng loại đó, tức là đã nhận. Trả
+        /// <c>false</c> thì chỗ gọi cứ mở bảng cũ của game như trước — người
+        /// chơi vẫn còn đường vào danh sách qua menu nhân vật.
+        /// </returns>
+        public bool nhanDsNguoi(int loai, System.Collections.Generic.List<int> ids,
+                System.Collections.Generic.List<string> tens,
+                System.Collections.Generic.List<string> sucManhs,
+                System.Collections.Generic.List<short[]> hinhs,
+                System.Collections.Generic.List<bool> onlines)
+        {
+            if (!dangMo || bangNguoi != loai || !choDsNguoi)
+            {
+                return false;
+            }
+            choDsNguoi = false;
+            dsNguoi.Clear();
+            for (int i = 0; i < ids.Count; i++)
+            {
+                NguoiDs n = new NguoiDs();
+                n.id = ids[i];
+                n.ten = (i < tens.Count) ? tens[i] : "";
+                n.sucManh = (i < sucManhs.Count) ? sucManhs[i] : "";
+                short[] h = (i < hinhs.Count) ? hinhs[i] : null;
+                if (h != null && h.Length >= 4)
+                {
+                    n.head = h[0];
+                    n.body = h[1];
+                    n.leg = h[2];
+                    n.bag = (sbyte) h[3];
+                }
+                else
+                {
+                    n.head = -1;
+                    n.body = -1;
+                    n.leg = -1;
+                    n.bag = -1;
+                }
+                n.online = (i < onlines.Count) && onlines[i];
+                dsNguoi.Add(n);
+            }
+            if (dsNguoi.Count > 0)
+            {
+                chonNguoi(0);
+            }
+            return true;
+        }
+
+        private void chonNguoi(int i)
+        {
+            if (i < 0 || i >= dsNguoi.Count)
+            {
+                nguoiChon = -1;
+                return;
+            }
+            nguoiChon = i;
+            nguoiVeDs = null;
+            idDaVe = -1;
+            idDangXem = dsNguoi[i].id;
+            // Xin chi so bang dung goi ma bang thanh vien bang dung (116).
+            boChiSo = null;
+            coChiSo = false;
+            choChiSo = true;
+            idChiSo = -1;
+            cuonCs = 0;
+            caoKhoiCs = 0;
+            Service.gI().xinChiSoNhanVat(dsNguoi[i].id);
+        }
+
+        private NguoiDs nguoiDangXem()
+        {
+            return (nguoiChon >= 0 && nguoiChon < dsNguoi.Count)
+                    ? dsNguoi[nguoiChon] : null;
+        }
+
+        // ---------------- Bo cuc ----------------
+
+        /// <summary>Vùng cột danh sách bên trái.</summary>
+        private int[] oCotDs()
+        {
+            return new int[] { xTrai, yThan, rongTrai, caoThan };
+        }
+
+        /// <summary>Vùng ba nút dưới cùng của cột phải.</summary>
+        private int[] oNutNguoi(int i)
+        {
+            int soNut = 3;
+            int w = (rongPhai - 12 - (soNut - 1) * 4) / soNut;
+            return new int[] { xPhai + 6 + i * (w + 4),
+                yThan + caoThan - 24, w, 18 };
+        }
+
+        // ---------------- Ve ----------------
+
+        private void veBangNguoi(mGraphics g)
+        {
+            veCotDsNguoi(g);
+            veCotXemNguoi(g);
+        }
+
+        private void veCotDsNguoi(mGraphics g)
+        {
+            int yND = veKhungCoTieuDe(g, xTrai, yThan, rongTrai, caoThan,
+                    bangNguoi == 1 ? "Bạn bè" : "Kẻ thù", 0, MAU_DAI_CAM);
+            int yHet = yThan + caoThan - 4;
+            int caoVung = yHet - yND - 2;
+            int thay = caoVung / CAO_DONG_NGUOI;
+            if (thay < 1)
+            {
+                thay = 1;
+            }
+            if (choDsNguoi)
+            {
+                mFont.tahoma_7.drawString(g, "Đang lấy danh sách…",
+                        xTrai + rongTrai / 2, yND + 10, mFont.CENTER);
+                return;
+            }
+            if (dsNguoi.Count == 0)
+            {
+                mFont.tahoma_7.drawString(g, bangNguoi == 1
+                        ? "Chưa có người bạn nào" : "Chưa có kẻ thù nào",
+                        xTrai + rongTrai / 2, yND + 10, mFont.CENTER);
+                return;
+            }
+            cuonNguoi = ganTrongKhoang(cuonNguoi, dsNguoi.Count - thay);
+            bool coCuon = dsNguoi.Count > thay;
+            int wDong = rongTrai - 8 - (coCuon ? 7 : 0);
+
+            g.setClip(xTrai, yND, rongTrai, caoVung);
+            for (int i = cuonNguoi; i < dsNguoi.Count && i - cuonNguoi < thay; i++)
+            {
+                int y = yND + 2 + (i - cuonNguoi) * CAO_DONG_NGUOI;
+                NguoiDs n = dsNguoi[i];
+                bool chon = (i == nguoiChon);
+                g.setColor(chon ? MAU_THE_CHON : MAU_O, chon ? 0.95f : 0.6f);
+                g.fillRect(xTrai + 4, y, wDong, CAO_DONG_NGUOI - 3, 4);
+                // Vach mau bao con dang trong game hay khong — mot cham nho o
+                // dau dong thi de nhin hon mot dong chu "Online" chiem cho.
+                g.setColor(n.online ? MAU_XANH : MAU_VIEN, 0.95f);
+                g.fillRect(xTrai + 6, y + 2, 3, CAO_DONG_NGUOI - 7, 1);
+                mFont.tahoma_7b_dark.drawString(g, catBot(n.ten, 18),
+                        xTrai + 13, y + 1, mFont.LEFT);
+                mFont mfSm = n.online ? mFont.tahoma_7b_green : mFont.tahoma_7_grey;
+                mfSm.drawString(g, n.sucManh, xTrai + 13, y + 12, mFont.LEFT);
+            }
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+            if (coCuon)
+            {
+                veVachCuonTai(g, xTrai + rongTrai - 6, yND, caoVung,
+                        dsNguoi.Count, thay, cuonNguoi);
+            }
+        }
+
+        private void veCotXemNguoi(mGraphics g)
+        {
+            NguoiDs n = nguoiDangXem();
+            int yND = veKhungCoTieuDe(g, xPhai, yThan, rongPhai, caoThan,
+                    n == null ? "Thông tin" : catBot(n.ten, 20), 0, MAU_DAI_CAM);
+            if (n == null)
+            {
+                mFont.tahoma_7.drawString(g, "Chọn một người ở danh sách",
+                        xPhai + rongPhai / 2, yND + 12, mFont.CENTER);
+                return;
+            }
+            int yHet = oNutNguoi(0)[1] - 4;
+
+            int caoChiSo = (yHet - (yND + 2)) * 52 / 100;
+            int caoVuaDu = 18 + TEN_CS_XEM.Length * CAO_DONG_CS_XEM + 2;
+            if (caoChiSo > caoVuaDu)
+            {
+                caoChiSo = caoVuaDu;
+            }
+            if (caoChiSo < 18 + 3 * CAO_DONG_CS_XEM)
+            {
+                caoChiSo = 18 + 3 * CAO_DONG_CS_XEM;
+            }
+            int yChiSo = yHet - caoChiSo;
+
+            int caoXem = yChiSo - 6 - (yND + 2) - 14;
+            if (caoXem < 46)
+            {
+                caoXem = 46;
+            }
+            int wXem = rongPhai - 12;
+            veKhungBo(g, xPhai + 6, yND + 2, wXem, caoXem, MAU_O_DO, 1f,
+                    MAU_VIEN_O, 0.85f, 1);
+            g.setClip(xPhai + 7, yND + 3, wXem - 2, caoXem - 2);
+            veNguoiDs(g, xPhai + 6 + wXem / 2, yND + 2, caoXem, n);
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+            mFont mfTt = n.online ? mFont.tahoma_7b_green : mFont.tahoma_7_grey;
+            mfTt.drawString(g, n.online ? "Đang trong game" : "Ngoại tuyến",
+                    xPhai + rongPhai / 2, yND + 2 + caoXem + 3, mFont.CENTER);
+
+            veKhoiChiSo(g, xPhai + 6, yChiSo, rongPhai - 12, caoChiSo);
+
+            veNutMotDong(g, oNutNguoi(0),
+                    bangNguoi == 1 ? "Dịch chuyển" : "Trả thù");
+            veNutMotDong(g, oNutNguoi(1), bangNguoi == 1 ? "Xoá bạn" : "Xoá");
+            veNutMotDong(g, oNutNguoi(2), "Quay lại");
+        }
+
+        /// <summary>Khung xem trước — dựng một <c>Char</c> tạm như bảng bang hội.</summary>
+        private void veNguoiDs(mGraphics g, int xGiua, int yDinh, int cao, NguoiDs n)
+        {
+            int caoNguoi = (nguoiVeDs != null && nguoiVeDs.ch > 0)
+                    ? nguoiVeDs.ch : 32;
+            int yChan = yDinh + cao / 2 + caoNguoi / 2;
+            try
+            {
+                if (nguoiVeDs == null || idDaVe != n.id)
+                {
+                    nguoiVeDs = new Char();
+                    nguoiVeDs.head = n.head;
+                    nguoiVeDs.body = n.body;
+                    nguoiVeDs.leg = n.leg;
+                    nguoiVeDs.bag = -1;
+                    nguoiVeDs.cName = n.ten;
+                    idDaVe = n.id;
+                }
+                nguoiVeDs.paintCharBody(g, xGiua, yChan, 1, 0, false);
+            }
+            catch (System.Exception)
+            {
+                // Anh bo phan chua tai xong: bo qua khung nay.
+            }
+        }
+
+        // ---------------- Cham ----------------
+
+        /// <summary>Kéo cuộn danh sách người.</summary>
+        private void cuonDsNguoi()
+        {
+            int[] o = oCotDs();
+            int thay = (caoThan - CAO_DAI_TD - KHE_KHUNG - 6) / CAO_DONG_NGUOI;
+            if (thay < 1)
+            {
+                thay = 1;
+            }
+            int toiDa = dsNguoi.Count - thay;
+            if (toiDa <= 0)
+            {
+                cuonNguoi = 0;
+                dangKeoNguoi = false;
+                return;
+            }
+            bool trong = GameCanvas.pxMouse >= o[0]
+                    && GameCanvas.pxMouse <= o[0] + o[2]
+                    && GameCanvas.pyMouse >= o[1]
+                    && GameCanvas.pyMouse <= o[1] + o[3];
+            if (GameCanvas.pXYScrollMouse != 0 && trong)
+            {
+                cuonNguoi += (GameCanvas.pXYScrollMouse > 0) ? -1 : 1;
+            }
+            if (GameCanvas.isPointerDown)
+            {
+                if (!dangKeoNguoi)
+                {
+                    if (GameCanvas.pxFirst < o[0] || GameCanvas.pxFirst > o[0] + o[2]
+                            || GameCanvas.pyFirst < o[1]
+                            || GameCanvas.pyFirst > o[1] + o[3])
+                    {
+                        return;
+                    }
+                    dangKeoNguoi = true;
+                    yMocKeoNguoi = GameCanvas.pyFirst;
+                }
+                int buoc = (GameCanvas.py - yMocKeoNguoi) / CAO_DONG_NGUOI;
+                if (buoc != 0)
+                {
+                    cuonNguoi -= buoc;
+                    yMocKeoNguoi += buoc * CAO_DONG_NGUOI;
+                }
+            }
+            else
+            {
+                dangKeoNguoi = false;
+            }
+            cuonNguoi = ganTrongKhoang(cuonNguoi, toiDa);
+        }
+
+        /// <summary>Bắt chạm cho bảng người. Luôn nuốt cú chạm.</summary>
+        private bool chamBangNguoi()
+        {
+            if (cham2(oNutNguoi(2)))
+            {
+                bangNguoi = 0;
+                dsNguoi.Clear();
+                nguoiChon = -1;
+                return true;
+            }
+            NguoiDs n = nguoiDangXem();
+            if (n != null && cham2(oNutNguoi(0)))
+            {
+                if (bangNguoi == 1)
+                {
+                    // Dich chuyen toi ban — may chu tu kiem trang bi co kha nang
+                    // dich chuyen, o day khong doan truoc.
+                    Service.gI().gotoPlayer(n.id);
+                }
+                else
+                {
+                    Service.gI().enemy(3, n.id);
+                }
+                return true;
+            }
+            if (n != null && cham2(oNutNguoi(1)))
+            {
+                if (bangNguoi == 1)
+                {
+                    Service.gI().friend(2, n.id);
+                }
+                else
+                {
+                    Service.gI().enemy(2, n.id);
+                }
+                dsNguoi.RemoveAt(nguoiChon);
+                chonNguoi(dsNguoi.Count > 0 ? 0 : -1);
+                return true;
+            }
+            // Cham mot dong trong danh sach.
+            int yND = yThan + CAO_DAI_TD + KHE_KHUNG;
+            int thay = (caoThan - CAO_DAI_TD - KHE_KHUNG - 6) / CAO_DONG_NGUOI;
+            for (int i = cuonNguoi; i < dsNguoi.Count && i - cuonNguoi < thay; i++)
+            {
+                int y = yND + 2 + (i - cuonNguoi) * CAO_DONG_NGUOI;
+                if (cham2(new int[] { xTrai + 4, y, rongTrai - 8,
+                        CAO_DONG_NGUOI - 3 }))
+                {
+                    chonNguoi(i);
+                    return true;
+                }
+            }
             return true;
         }
 
@@ -4574,13 +5006,13 @@ namespace Game6.God
 
             int yD = y + 18;
             int caoVung = cao - 18;
-            if (choChiSo && (tvXem == null || idChiSo != tvXem.ID))
+            if (choChiSo && (idDangXem < 0 || idChiSo != idDangXem))
             {
                 mFont.tahoma_7.drawString(g, "Đang lấy chỉ số…", x + w / 2,
                         yD + 8, mFont.CENTER);
                 return;
             }
-            bool ro = coChiSo && tvXem != null && idChiSo == tvXem.ID;
+            bool ro = coChiSo && idDangXem >= 0 && idChiSo == idDangXem;
 
             int thay = soDongCsThay(cao);
             bool coCuon = TEN_CS_XEM.Length > thay;
@@ -5795,15 +6227,24 @@ namespace Game6.God
             new int[] { 2, 3, 12 },
             new int[] { 1, 7, 4, 9 },
             new int[] { 19, 6, 8 },
-            new int[] { 100003, 100001, 100002, 16, 17 }
+            new int[] { 100003, 200001, 200002, 100001, 100002, 16, 17 }
         };
+
+        /// <summary>Mã riêng của bảng này, không phải mã mod hay mã game.</summary>
+        /// <remarks>
+        /// Hai mục "Bạn bè" và "Kẻ thù" mở bảng nằm ngay trong màn này chứ
+        /// không gọi ra màn khác, nên chúng không có mã ở bảng nào sẵn có. Đặt
+        /// từ 200000 trở lên để không đụng hai dải kia.
+        /// </remarks>
+        private const int MA_RIENG = 200000;
 
         private static readonly string[][] TEN_MUC_CN = {
             new string[] { "Tự Đánh", "Tàn Sát", "Tàn Sát Người" },
             new string[] { "Tự Động Hồi Sinh", "Auto Nhặt", "Auto Up Đệ",
                 "Auto Login" },
             new string[] { "Thông tin đệ tử", "D.s Nhân Vật", "Giảm Đồ Họa" },
-            new string[] { "Sổ sưu tầm", "Đổi cờ", "Đăng xuất", "Cấu hình Voice", "Âm thanh" }
+            new string[] { "Sổ sưu tầm", "Bạn bè", "Kẻ thù", "Đổi cờ",
+                "Đăng xuất", "Cấu hình Voice", "Âm thanh" }
         };
 
         // Thẻ con thứ tư đổi từ "Màn khác" sang "Hệ thống".
@@ -5843,6 +6284,10 @@ namespace Game6.God
             {
                 int[] o = oMucChucNang(i);
                 bool laToggle = ma[i] != 16 && ma[i] < MA_MAN_PHU;
+                if (ma[i] >= MA_RIENG)
+                {
+                    laToggle = false;
+                }
                 g.setColor(MAU_O, 0.65f);
                 g.fillRect(o[0], o[1], o[2], o[3], 4);
                 if (laToggle)
@@ -5883,9 +6328,21 @@ namespace Game6.God
             }
             // Cai gi mo ra man/hop moi thi phai dong bang nay truoc, khong
             // thi thu vua mo nam duoi bang.
-            if (ma[i] >= MA_MAN_PHU || ma[i] == 16)
+            if ((ma[i] >= MA_MAN_PHU || ma[i] == 16) && ma[i] < MA_RIENG)
             {
+                // Hai muc rieng mo bang NGAY TRONG man nay, dong man di thi
+                // khong con gi de mo bang len.
                 dong();
+            }
+            if (ma[i] == MA_RIENG + 1)
+            {
+                moBanBe();
+                return;
+            }
+            if (ma[i] == MA_RIENG + 2)
+            {
+                moKeThu();
+                return;
             }
             if (ma[i] >= MA_GAME)
             {
@@ -7606,6 +8063,19 @@ namespace Game6.God
                 return true;
             }
             tinhBoCuc();
+            if (bangNguoi != 0)
+            {
+                // Bang nguoi che tron than: moi cu keo trong no la de cuon
+                // danh sach, va khoi chi so ben phai cung cuon rieng.
+                cuonDsNguoi();
+                cuonChiSoNguoi();
+                if (!GameCanvas.isPointerJustRelease)
+                {
+                    return true;
+                }
+                GameCanvas.isPointerJustRelease = false;
+                return chamBangNguoi();
+            }
             if (theChon == THE_BANG_HOI && tvXem != null)
             {
                 // Bang thong tin dang che ca cot phai: cu keo trong no la de

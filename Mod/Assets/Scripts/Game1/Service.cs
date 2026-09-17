@@ -3312,7 +3312,8 @@ namespace Game1
     		{
     			message = new Message((sbyte)(-99));
     			message.writer().writeByte(b);
-    			if (b == 1 || b == 2)
+    			// 3 la "tele tra thu" — cung can id nhu hai hanh dong kia.
+    			if (b == 1 || b == 2 || b == 3)
     			{
     				message.writer().writeInt(charID);
     			}
