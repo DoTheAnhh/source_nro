@@ -1109,6 +1109,22 @@ namespace Game1.God
         /// <summary>Trễ giữa hai ô của một hàng vừa cuộn tới.</summary>
         private const int TRE_TRONG_HANG = 26;
 
+        /// <summary>Quãng lưới còn phải trôi, tính bằng <b>hàng</b>.</summary>
+        /// <remarks>
+        /// <para>Một nấc lăn không dời lưới ngay mà cộng vào đây, rồi mỗi
+        /// khung hình lưới đi một phần quãng còn lại. Cộng thẳng thì lưới
+        /// nhích một cái rồi đứng im — vẫn là giật, chỉ là giật quãng ngắn
+        /// hơn.</para>
+        ///
+        /// <para>Đi <b>một phần năm</b> quãng còn lại mỗi khung: nhanh lúc
+        /// đầu rồi chậm dần khi tới nơi, và lăn liên tiếp thì các nấc cộng
+        /// dồn thành một mạch chứ không xếp hàng chờ nhau.</para>
+        /// </remarks>
+        private float conPhaiTroi;
+
+        /// <summary>Mỗi khung hình đi bấy nhiêu phần quãng còn lại.</summary>
+        private const float NHIP_TROI = 0.2f;
+
         /// <summary>Khung hình TRƯỚC có vẽ lưới túi không.</summary>
         private bool daVeLuoiTruoc;
         private bool dangVeLuoi;
@@ -2138,6 +2154,30 @@ namespace Game1.God
             {
                 thay = 1;
             }
+            // Troi dan toi cho: chay o day vi ham ve chac chan duoc goi moi
+            // khung hinh khi luoi dang hien.
+            if (conPhaiTroi > 0.0005f || conPhaiTroi < -0.0005f)
+            {
+                float buocTroi = conPhaiTroi * NHIP_TROI;
+                // San bang toi thieu: phan tu cuoi cung cua quang cu chia doi
+                // mai thi khong bao gio het, va luoi dung lai lech vai diem.
+                if (buocTroi < 0.004f && buocTroi > -0.004f)
+                {
+                    buocTroi = conPhaiTroi;
+                }
+                duCuon += buocTroi;
+                conPhaiTroi -= buocTroi;
+                apDuCuon();
+                int truocKep = cuon;
+                gioiHanCuon(soHangTui());
+                if (cuon != truocKep)
+                {
+                    // Cham day hoac cham dinh: bo not quang con lai, khong day
+                    // mai vao tuong.
+                    conPhaiTroi = 0f;
+                    duCuon = 0f;
+                }
+            }
             long gio = mSystem.currentTimeMillis();
             int soHang = soHangTui();
             // Cat ca vung luoi mot lan: hang ve them va hang dang troi deu co
@@ -2156,6 +2196,7 @@ namespace Game1.God
                 // Luoi vua mo: quen het, roi xep cac hang dang thay NOI TIEP
                 // nhau thanh mot vet chay lien tuc.
                 lucHienLuoi = gio;
+                conPhaiTroi = 0f;
                 for (int k = 0; k < mocHang.Length; k++)
                 {
                     mocHang[k] = 0L;
@@ -8776,12 +8817,12 @@ namespace Game1.God
             {
                 if (dangVeLuoi)
                 {
-                    // Luoi o: mot nac di NUA hang, va phan le duoc giu lai —
-                    // nen hang moi lo ra dan dan chu khong nhay ra tron mot
-                    // hang moi nac. Danh sach thuong van di tron mot dong: o
-                    // do mot dong la mot muc, nua dong khong co nghia gi.
-                    duCuon += GameCanvas.pXYScrollMouse > 0 ? -0.5f : 0.5f;
-                    apDuCuon();
+                    // Luoi o: mot nac di NUA hang, va di TU TU — cong vao
+                    // quang con phai troi chu khong doi cho ngay.
+                    //
+                    // Danh sach thuong van nhay tron mot dong: o do mot dong la
+                    // mot muc, nua dong khong co nghia gi.
+                    conPhaiTroi += GameCanvas.pXYScrollMouse > 0 ? -0.5f : 0.5f;
                 }
                 else
                 {
