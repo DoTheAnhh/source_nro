@@ -364,6 +364,7 @@ namespace Game6.God
             // Lan sau mo lai the Bang hoi thi lai xuong tin moi nhat.
             soTinChatDaThay = -1;
             dongBangNguoi();
+            dongBangDs();
             hienHop = false;
             hienHopSo = false;
             hienHopKyNang = false;
@@ -4440,8 +4441,12 @@ namespace Game6.God
             Service.gI().xinChiSoNhanVat(dsNguoi[i].id);
         }
 
-        /// <summary>Đóng bảng người, trả thân bảng về thẻ đang mở.</summary>
-        private void dongBangNguoi()
+        /// <summary>Đóng bảng danh sách bạn bè / kẻ thù.</summary>
+        /// <remarks>
+        /// Tên khác <c>dongBangNguoi</c> — hàm kia lo bảng thông tin thành viên
+        /// bang, hai thứ khác hẳn nhau dù cùng nói về "người".
+        /// </remarks>
+        private void dongBangDs()
         {
             bangNguoi = 0;
             dsNguoi.Clear();
@@ -4727,7 +4732,7 @@ namespace Game6.God
             int[] oX = oNutX();
             if (cham(oX[0], oX[1], oX[2], oX[3]))
             {
-                dongBangNguoi();
+                dongBangDs();
                 dong();
                 return true;
             }
@@ -4736,7 +4741,7 @@ namespace Game6.God
             {
                 if (cham(x0 + LE + i * wThe, yThe, wThe - 2, CAO_THE))
                 {
-                    dongBangNguoi();
+                    dongBangDs();
                     if (theChon != i)
                     {
                         cuon = 0;
@@ -4748,7 +4753,7 @@ namespace Game6.God
             }
             if (cham2(oNutVeN()))
             {
-                dongBangNguoi();
+                dongBangDs();
                 return true;
             }
             NguoiDs n = nguoiDangXem();
