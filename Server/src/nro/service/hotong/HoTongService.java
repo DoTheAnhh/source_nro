@@ -109,9 +109,7 @@ public final class HoTongService {
             Service.gI().sendThongBao(pl,
                     "Cờ đen đã bật — người khác có thể tấn công bạn suốt chuyến đi.");
         }
-        Service.gI().sendThongBao(pl, "Hãy đi cùng Đường Tăng tới Đảo Kamê. "
-                + "Giữa hai người mà có " + c.khoangCachMap
-                + " bản đồ là hỏng việc.");
+        Service.gI().sendThongBao(pl, "Bắt đầu hộ tống");
         return null;
     }
 
@@ -297,12 +295,19 @@ public final class HoTongService {
     // =====================================================================
     //  Kết thúc
     // =====================================================================
+    /**
+     * Hong viec.
+     *
+     * <p>Chi mot cau. Ly do (<code>vi</code>) van nhan vao de con doc log khi
+     * can, nhung khong doc cho nguoi choi nghe: ho vua hong mot chuyen di,
+     * them mot cau giai thich dai chi lam kho chiu hon.</p>
+     */
     public void thatBai(Player chu, String vi) {
         if (chu == null) {
             return;
         }
         ketThuc(chu);
-        Service.gI().sendThongBao(chu, vi + "\nNhiệm vụ hộ tống thất bại!");
+        Service.gI().sendThongBao(chu, "Hộ tống thất bại");
     }
 
     public void thanhCong(Player chu) {
