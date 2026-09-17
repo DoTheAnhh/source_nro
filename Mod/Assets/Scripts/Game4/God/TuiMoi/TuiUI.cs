@@ -1229,32 +1229,38 @@ namespace Game4.God
             g.fillRect(x0 + 2, y0 + 2, rong - 4, cao - 4, 11);
 
             veDaiThe(g);
-            switch (theChon)
-            {
-                case THE_BAN_THAN:
-                    veBanThan(g);
-                    break;
-                case THE_KY_NANG:
-                    veKyNang(g);
-                    break;
-                case THE_NHIEM_VU:
-                    veNhiemVu(g);
-                    break;
-                case THE_BANG_HOI:
-                    veBangHoi(g);
-                    break;
-                case THE_DE_TU:
-                    veDeTu(g);
-                    break;
-                default:
-                    veChucNang(g);
-                    break;
-            }
             if (bangNguoi != 0)
             {
-                // De len ca hai cot: bang nay chiem tron than, khong phai mot
-                // khung nho noi len giua the dang xem.
+                // Bang nay chiem TRON than, nen the ben duoi khong ve nua.
+                //
+                // Ve the roi phu bang len thi nhung manh khung cua the — dai
+                // the con, vien khung lom — van tho ra o mep va o khe giua hai
+                // cot, nhin nhu bang bi vien thua mot lop.
                 veBangNguoi(g);
+            }
+            else
+            {
+                switch (theChon)
+                {
+                    case THE_BAN_THAN:
+                        veBanThan(g);
+                        break;
+                    case THE_KY_NANG:
+                        veKyNang(g);
+                        break;
+                    case THE_NHIEM_VU:
+                        veNhiemVu(g);
+                        break;
+                    case THE_BANG_HOI:
+                        veBangHoi(g);
+                        break;
+                    case THE_DE_TU:
+                        veDeTu(g);
+                        break;
+                    default:
+                        veChucNang(g);
+                        break;
+                }
             }
             veThanhTien(g);
             // Ve sau cung: hop thong tin phai nam tren moi thu khac.
@@ -8168,7 +8174,14 @@ namespace Game4.God
                 {
                     return true;
                 }
-                GameCanvas.isPointerJustRelease = false;
+                // KHONG xoa isPointerJustRelease o day.
+                //
+                // GameCanvas.isPointerHoldIn tra false ngay khi ca
+                // isPointerDown lan isPointerJustRelease deu tat — ma luc nha
+                // ngon thi isPointerDown da tat roi. Xoa not co con lai la moi
+                // cai cham() ben trong deu tra false: bang mo ra khong bam duoc
+                // gi ca, ke ca nut X. Chinh cham() se goi clearAllPointerEvent
+                // khi no nhan cu cham.
                 return chamBangNguoi();
             }
             if (theChon == THE_BANG_HOI && tvXem != null)
