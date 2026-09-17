@@ -9541,6 +9541,7 @@ namespace Game1
                         myVector.addElement(new Command(mResources.receive_upper, this, 30001, currItem));
                         myVector.addElement(new Command(mResources.DELETE, this, 30002, currItem));
                         myVector.addElement(new Command(mResources.receive_all, this, 30003, currItem));
+                        myVector.addElement(new Command("Xoá tất", this, 30004, currItem));
                     }
                     else if (currItem.buyCoin == 0 && currItem.buyGold == 0)
                     {
@@ -9653,8 +9654,10 @@ namespace Game1
             if (currItem != null)
             {
                 Char.myCharz().setPartTemp(currItem.headTemp, currItem.bodyTemp, currItem.legTemp, currItem.bagTemp);
-                if (typeShop != 2)
+                if (typeShop != 2 && typeShop != 4)
                 {
+                    // Ruong Thuong De (typeShop 4) khong phai cua hang: mon
+                    // trong do la qua da trung, khong co gia nao de mua them.
                     myVector.addElement(new Command("Mua Nhiều", Items.getInstance(), 3, new ItemGroup(currItem.template.id, currItem.indexUI, currItem.buyGold > 0, currItem.buyCoin > 0)));
                     God.NhatKy.ghi("PANEL them muc Mua Nhieu");
                 }
@@ -11413,6 +11416,12 @@ namespace Game1
             {
                 Res.outz("nhan tat");
                 Service.gI().buyItem(2, selected, 0);
+            }
+            if (idAction == 30004)
+            {
+                // 3 la "xoa tat" — may chu doc cung mot duong voi nhan / xoa
+                // / nhan tat (ShopService.takeItem).
+                Service.gI().buyItem(3, selected, 0);
             }
             if (idAction == 3000)
             {

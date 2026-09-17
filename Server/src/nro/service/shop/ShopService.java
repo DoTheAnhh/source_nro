@@ -549,8 +549,13 @@ public class ShopService {
         }
         player.iDMark.setTagNameShop(tagName);
         if (coThat.isEmpty()) {
+            // VAN gui goi, chi la goi rong.
+            //
+            // Ban truoc bao "Ruong dang trong" roi return: nguoi choi vua nhan
+            // het do xong thi client khong nhan duoc goi nao ca, nen bang van
+            // bay nguyen danh sach cu — nhin nhu nhan hut, bam lai thi bao
+            // "khong con mon do". Gui goi rong thi bang tu trong theo.
             Service.gI().sendThongBao(player, "Rương đang trống.");
-            return;
         }
         Message msg = null;
         try {
@@ -1434,6 +1439,22 @@ public class ShopService {
 
     private void getItemSideBoxLuckyRound(Player player, List<Item> items, byte type, int index) {
         if (items == null) {
+            return;
+        }
+        if (type == 3) {
+            // Xoa het: khong hoi lai o day vi client da hoi truoc khi gui.
+            int xoa = 0;
+            for (int i = items.size() - 1; i >= 0; i--) {
+                Item it = items.get(i);
+                if (it != null && it.isNotNullItem()) {
+                    items.remove(i);
+                    xoa++;
+                }
+            }
+            Service.gI().sendThongBao(player, (xoa > 0)
+                    ? ("Đã xoá " + xoa + " món khỏi rương.")
+                    : "Rương không có gì để xoá.");
+            openShopType4(player, player.iDMark.getTagNameShop(), items);
             return;
         }
         if (type == 2) {

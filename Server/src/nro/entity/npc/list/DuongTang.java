@@ -22,6 +22,22 @@ public class DuongTang extends Npc {
         super(mapId, status, cx, cy, tempId, avartar);
     }
 
+    /**
+     * Dong bao con bao lau nua moi toi luot ho tong tiep theo.
+     *
+     * <p>Hien ngay trong loi thoai chu khong doi nguoi choi bam vao roi moi
+     * bao "chua toi luot": ho den tan noi mot chuyen chi de nghe mot cau tu
+     * choi thi lan sau ho khong den nua.</p>
+     */
+    private static String dongThoiGian(Player player) {
+        long con = nro.service.hotong.HoTongService.gI().conLaiMs(player);
+        if (con <= 0) {
+            return "|2|Đã có thể hộ tống\n";
+        }
+        return "|7|Lượt hộ tống sau: còn "
+                + nro.service.hotong.HoTongService.moTaThoiGian(con) + "\n";
+    }
+
     @Override
     public void openBaseMenu(Player player) {
         if (player.HoTongDuongTang) {
@@ -31,14 +47,15 @@ public class DuongTang extends Npc {
         if (canOpenNpc(player)) {
             switch (this.mapId) {
                 case 0:
-                    // Bon nut, dung thu tu ma confirmMenu ben duoi cho: 0 vao
-                    // Ngu Hanh Son, 1 mo bang ho tong, 2 tu choi, 3 doi diem
-                    // cong duc lay qua.
+                    // Ba nut: 0 vao Ngu Hanh Son, 1 mo bang ho tong, 2 tu choi.
+                    //
+                    // Nut "Nhan thuong" da bo: qua vao thang ruong ngay khi ho
+                    // tong xong, khong con phai quay ve doi diem lay qua.
                     this.createOtherMenu(player, ConstNpc.BASE_MENU,
                             "A mi phò phò, thí chủ hãy giúp giải cứu đồ đệ của bần tăng đang bị\n"
-                            + "phong ấn tại ngũ hành sơn\n",
-                            "Đồng ý", "Nhiệm vụ\nhộ tống",
-                            "Từ chối", "Nhận thưởng");
+                            + "phong ấn tại ngũ hành sơn\n"
+                            + dongThoiGian(player),
+                            "Đồng ý", "Nhiệm vụ\nhộ tống", "Từ chối");
                     break;
                 case 123:
                     this.createOtherMenu(player, ConstNpc.BASE_MENU,
@@ -80,31 +97,6 @@ public class DuongTang extends Npc {
                                             "Đồng ý", "Từ chối");
                                     break;
                                 }
-                                case 3: {
-                                    int DiemCongDuc = 0;
-                                    for (Item io : player.inventory.itemsBody) {
-                                        if (io.isNotNullItem()) {
-                                            if (io.template.id == 543) {
-                                                DiemCongDuc = io.getOptionParam(11);
-                                            }
-                                        }
-                                    }
-                                    for (Item item : player.inventory.itemsBag) {
-                                        if (item.isNotNullItem()) {
-                                            if (item.template.id == 543) {
-                                                DiemCongDuc = item.getOptionParam(11);
-                                            }
-                                        }
-                                    }
-                                    this.createOtherMenu(player, 1,
-                                            "A mi phò phò, thí chủ đang có " + DiemCongDuc + " điểm công đức, xin hãy chọn 1 phần quà\n"
-                                            + "500 cộng thêm 7 ngày sử dụng Cải Trang đang mặc\n" + "600 cộng thêm 9 ngày sử dụng Cải Trang đệ tử đang mặc\n"
-                                            + "700 Cải trang thành Bát Giới (dành riêng cho đệ tử)\n" + "1000 Cải trang thành Tôn Ngộ Không (dành riêng cho đệ tử)\n"
-                                            + "1300 Cải trang thành Sa Tăng (dành riêng cho đệ tử)\n",
-                                            "500", "600", "700", "1.000", "1.300", "Từ chối");
-                                    break;
-                                }
-
                             }
                             break;
                         case 123:
@@ -228,41 +220,17 @@ public class DuongTang extends Npc {
                         case 0:
                             switch (select) {
                                 case 0: {
-                                    // KHONG doi mac cai trang Ton Ngo Khong nua.
+                                    // Moi dieu kien nam trong HoTongService:
+                                    // nhiem vu con bat khong, da toi luot chua,
+                                    // co dung o Lang Aru khong. De rai o day
+                                    // thi panel sua mot dang ma NPC xet mot neo.
                                     //
-                                    // Bo cai trang ay gan nhu khong ai con giu,
-                                    // nen dieu kien do bien ca nhiem vu thanh
-                                    // thu khong the lam — trong khi phan thuong
-                                    // cua no lai la cai trang. Vong Kim Co van
-                                    // phai co: chinh no dem diem cong duc, va no
-                                    // la thu bi tru mot luot moi lan hoan thanh.
-                                    if (InventoryService.gI().findItemBag(player, 543) == null) {
-                                        Service.gI().sendThongBao(player, "Bạn không có Vòng Kim Cô!");
-                                        return;
+                                    // Da bo han Vong Kim Co va diem cong duc.
+                                    String loi = nro.service.hotong.HoTongService
+                                            .gI().batDau(player);
+                                    if (loi != null) {
+                                        Service.gI().sendThongBao(player, loi);
                                     }
-                                    if (InventoryService.gI().findItemBag(player, 543) != null) {
-                                        for (Item item : player.inventory.itemsBag) {
-                                            if (item.isNotNullItem()) {
-                                                if (item.template.id == 543) {
-                                                    if (item.itemOptions.get(1).param < 1) {
-                                                        Service.gI().sendThongBao(player, "Vòng Kim Cô đã hết lượt sử dụng!");
-                                                        return;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        for (Item item : player.inventory.itemsBody) {
-                                            if (item.isNotNullItem()) {
-                                                if (item.template.id == 543) {
-                                                    if (item.itemOptions.get(1).param < 1) {
-                                                        Service.gI().sendThongBao(player, "Vòng Kim Cô đã hết lượt sử dụng!");
-                                                        return;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    DetuService.DuongTang(player);
                                     break;
                                 }
                             }

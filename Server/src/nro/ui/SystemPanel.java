@@ -112,7 +112,8 @@ public class SystemPanel extends JPanel {
         tabs.addTab("Nhiệm vụ & sự kiện", nhomThe(
                 the("Nhiệm vụ chính tuyến", buildNhiemVuChinhTab()),
                 the("Sự kiện", buildSuKienTab()),
-                the("Phúc lợi", buildPhucLoiTab())));
+                the("Phúc lợi", buildPhucLoiTab()),
+                the("Hộ tống Đường Tăng", buildHoTongTab())));
         tabs.addTab("Bản đồ", nhomThe(
                 the("Bản đồ nhanh", buildMapNhanhTab()),
                 the("Điểm đến capsule", buildCapsuleTab())));
@@ -165,6 +166,241 @@ public class SystemPanel extends JPanel {
         t.addChangeListener(e -> napTabTen(
                 t.getTitleAt(Math.max(0, t.getSelectedIndex()))));
         return t;
+    }
+
+    /** Bảng quà và ô cấu hình của thẻ "Hộ tống Đường Tăng". */
+    private final DefaultTableModel htQuaModel = new DefaultTableModel(
+            new Object[]{"#", "Vật phẩm", "Số lượng", "Tỉ lệ", "Bật",
+                "Ghi chú"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return false;
+        }
+    };
+    private final JTable htQuaTable = new JTable(htQuaModel);
+    private final JTextField fHtPhutHoi = new JTextField(8);
+    private final JTextField fHtKhoangCach = new JTextField(6);
+    private final JTextField fHtMsBuoc = new JTextField(8);
+    private final JTextField fHtBuocDiem = new JTextField(8);
+    private final javax.swing.JCheckBox cbHtBat =
+            new javax.swing.JCheckBox("Bật nhiệm vụ hộ tống");
+    private final javax.swing.JCheckBox cbHtCo =
+            new javax.swing.JCheckBox("Bật cờ đen cho người hộ tống");
+
+    /**
+     * Thẻ quản lý nhiệm vụ hộ tống Đường Tăng.
+     *
+     * <p>Hai phần: bên trái là mấy con số điều khiển chuyến đi, bên phải là
+     * danh sách quà. Không có con số nào của nhiệm vụ này nằm trong mã nguồn
+     * nữa — sửa ở đây là máy chủ đang chạy đọc được ngay (chậm nhất mười lăm
+     * giây, theo nhớ tạm của DAO).</p>
+     */
+    private JComponent buildHoTongTab() {
+        JPanel root = new JPanel(new BorderLayout(0, 6));
+        root.setOpaque(false);
+        root.setBorder(new EmptyBorder(8, 8, 8, 8));
+        root.add(nhan("<html>Đường Tăng <b>tự đi</b> từ Làng Aru sang Đảo Kamê "
+                + "(Aru → Đồi hoa cúc → Thung lũng tre → Rừng nấm → Rừng xương). "
+                + "Người chơi phải bám theo; cách quá số bản đồ bên dưới là "
+                + "thất bại. Tới cửa sang Đảo Kamê là xong, không cần bước "
+                + "qua.</html>"), BorderLayout.NORTH);
+
+        JPanel pCau = new JPanel(new GridBagLayout());
+        pCau.setOpaque(false);
+        pCau.setBorder(titled("Cấu hình"));
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(4, 6, 4, 6);
+        c.anchor = GridBagConstraints.WEST;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        int y = 0;
+        addRowC(pCau, c, y++, "", cbHtBat);
+        addRow(pCau, c, y++, "Thời gian hồi (phút):", fHtPhutHoi);
+        y = ghiChuHang(pCau, c, y, "0 = không phải chờ");
+        addRow(pCau, c, y++, "Cách xa tối đa (bản đồ):", fHtKhoangCach);
+        addRow(pCau, c, y++, "Mỗi bước cách nhau (ms):", fHtMsBuoc);
+        addRow(pCau, c, y++, "Mỗi bước đi (điểm ảnh):", fHtBuocDiem);
+        y = ghiChuHang(pCau, c, y,
+                "Số ms nhỏ và bước lớn thì Đường Tăng đi nhanh");
+        addRowC(pCau, c, y++, "", cbHtCo);
+        y = ghiChuHang(pCau, c, y,
+                "Bật thì người nhận nhiệm vụ mang cờ đen suốt chuyến — ai cũng "
+                + "đánh được họ. Cờ tự tắt khi xong.");
+        JPanel bCau = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        bCau.setOpaque(false);
+        bCau.add(button("Lưu cấu hình", OK_GREEN, e -> htLuuCauHinh()));
+        bCau.add(button("Tải lại", GREY, e -> htNapTatCa()));
+        pCau.add(bCau, c);
+
+        htQuaTable.setRowHeight(24);
+        htQuaTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        htQuaTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        int[] wQ = {40, 220, 90, 70, 45, 200};
+        for (int i = 0; i < wQ.length && i < htQuaTable.getColumnCount(); i++) {
+            htQuaTable.getColumnModel().getColumn(i).setPreferredWidth(wQ[i]);
+        }
+        htQuaTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    htSuaQua(false);
+                }
+            }
+        });
+        JPanel pQua = new JPanel(new BorderLayout(0, 4));
+        pQua.setOpaque(false);
+        pQua.setBorder(titled("Phần thưởng khi hộ tống thành công"));
+        pQua.add(ServerGuiUtils.cuon(htQuaTable), BorderLayout.CENTER);
+        JPanel bQua = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        bQua.setOpaque(false);
+        bQua.add(button("Thêm quà", OK_GREEN, e -> htSuaQua(true)));
+        bQua.add(button("Sửa quà", ACCENT, e -> htSuaQua(false)));
+        bQua.add(button("Xoá quà", WARN_RED, e -> htXoaQua()));
+        pQua.add(bQua, BorderLayout.SOUTH);
+
+        JPanel traiBoc = new JPanel(new BorderLayout());
+        traiBoc.setOpaque(false);
+        traiBoc.add(pCau, BorderLayout.NORTH);
+        javax.swing.JSplitPane chia = new javax.swing.JSplitPane(
+                javax.swing.JSplitPane.HORIZONTAL_SPLIT,
+                ServerGuiUtils.cuon(traiBoc), pQua);
+        chia.setResizeWeight(0.38);
+        chia.setBorder(null);
+        root.add(chia, BorderLayout.CENTER);
+        htNapTatCa();
+        return root;
+    }
+
+    private void htNapTatCa() {
+        nro.repository.dao.HoTongDAO.CauHinh c
+                = nro.repository.dao.HoTongDAO.cauHinh();
+        cbHtBat.setSelected(c.bat);
+        fHtPhutHoi.setText(String.valueOf(c.phutHoi));
+        fHtKhoangCach.setText(String.valueOf(c.khoangCachMap));
+        fHtMsBuoc.setText(String.valueOf(c.msMoiBuoc));
+        fHtBuocDiem.setText(String.valueOf(c.buocDiemAnh));
+        cbHtCo.setSelected(c.batCo);
+
+        htQuaModel.setRowCount(0);
+        for (nro.repository.dao.HoTongDAO.Qua q
+                : nro.repository.dao.HoTongDAO.dsQua()) {
+            String sl = (q.slMin == q.slMax) ? String.valueOf(q.slMin)
+                    : (q.slMin + " – " + q.slMax);
+            htQuaModel.addRow(new Object[]{q.id, htTenVatPham(q.itemId), sl,
+                gonSo(q.tiLe / 10d) + "%", q.bat ? "có" : "", nz(q.ghiChu)});
+        }
+    }
+
+    /** Tên vật phẩm kèm mã, hoặc mỗi mã nếu bảng mẫu chưa có dòng đó. */
+    private static String htTenVatPham(int id) {
+        try {
+            nro.entity.template.ItemTemplate t = nro.service.item.ItemService
+                    .gI().getTemplate((short) id);
+            if (t != null && t.name != null) {
+                return t.name + " (" + id + ")";
+            }
+        } catch (Exception boQua) {
+            // Chua nap xong bang vat pham.
+        }
+        return String.valueOf(id);
+    }
+
+    private void htLuuCauHinh() {
+        nro.repository.dao.HoTongDAO.CauHinh c
+                = new nro.repository.dao.HoTongDAO.CauHinh();
+        c.bat = cbHtBat.isSelected();
+        c.phutHoi = laySoAnToan(fHtPhutHoi.getText());
+        c.khoangCachMap = laySoAnToan(fHtKhoangCach.getText());
+        c.msMoiBuoc = laySoAnToan(fHtMsBuoc.getText());
+        c.buocDiemAnh = laySoAnToan(fHtBuocDiem.getText());
+        c.batCo = cbHtCo.isSelected();
+        String loi = nro.repository.dao.HoTongDAO.luuCauHinh(c);
+        if (loi != null) {
+            note(WARN_RED, loi);
+            return;
+        }
+        htNapTatCa();
+        note(OK_GREEN, "Đã lưu cấu hình hộ tống.");
+    }
+
+    private void htSuaQua(boolean them) {
+        int r = htQuaTable.getSelectedRow();
+        if (!them && r < 0) {
+            note(WARN_RED, "Chọn một dòng quà trước.");
+            return;
+        }
+        nro.repository.dao.HoTongDAO.Qua cu = null;
+        if (!them) {
+            int ma = intOf(htQuaModel.getValueAt(
+                    htQuaTable.convertRowIndexToModel(r), 0));
+            for (nro.repository.dao.HoTongDAO.Qua x
+                    : nro.repository.dao.HoTongDAO.dsQua()) {
+                if (x.id == ma) {
+                    cu = x;
+                    break;
+                }
+            }
+        }
+        JTextField fId = new JTextField(cu == null ? "" : String.valueOf(cu.itemId), 8);
+        JTextField fMin = new JTextField(cu == null ? "1" : String.valueOf(cu.slMin), 8);
+        JTextField fMax = new JTextField(cu == null ? "1" : String.valueOf(cu.slMax), 8);
+        JTextField fTl = new JTextField(cu == null ? "1000" : String.valueOf(cu.tiLe), 8);
+        javax.swing.JCheckBox cbBat = new javax.swing.JCheckBox("Bật",
+                cu == null || cu.bat);
+        JTextField fGhi = new JTextField(cu == null ? "" : nz(cu.ghiChu), 24);
+
+        JPanel form = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(4, 6, 4, 6);
+        c.anchor = GridBagConstraints.WEST;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        int y = 0;
+        addRow(form, c, y++, "Mã vật phẩm:", fId);
+        addRow(form, c, y++, "Số lượng ít nhất:", fMin);
+        addRow(form, c, y++, "Số lượng nhiều nhất:", fMax);
+        addRow(form, c, y++, "Tỉ lệ rơi (phần nghìn):", fTl);
+        y = ghiChuHang(form, c, y, "1000 = chắc chắn rơi, 50 = 5%");
+        addRow(form, c, y++, "Ghi chú:", fGhi);
+        form.add(cbBat, c);
+
+        if (JOptionPane.showConfirmDialog(this, form,
+                them ? "Thêm quà hộ tống" : "Sửa quà hộ tống",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
+            return;
+        }
+        nro.repository.dao.HoTongDAO.Qua moi
+                = new nro.repository.dao.HoTongDAO.Qua();
+        moi.id = (cu == null) ? 0 : cu.id;
+        moi.itemId = laySoAnToan(fId.getText());
+        moi.slMin = laySoAnToan(fMin.getText());
+        moi.slMax = laySoAnToan(fMax.getText());
+        moi.tiLe = laySoAnToan(fTl.getText());
+        moi.bat = cbBat.isSelected();
+        moi.ghiChu = fGhi.getText().trim();
+        String loi = nro.repository.dao.HoTongDAO.luuQua(moi);
+        if (loi != null) {
+            note(WARN_RED, loi);
+            return;
+        }
+        htNapTatCa();
+        note(OK_GREEN, "Đã lưu quà hộ tống.");
+    }
+
+    private void htXoaQua() {
+        int r = htQuaTable.getSelectedRow();
+        if (r < 0) {
+            note(WARN_RED, "Chọn một dòng quà trước.");
+            return;
+        }
+        int ma = intOf(htQuaModel.getValueAt(
+                htQuaTable.convertRowIndexToModel(r), 0));
+        String loi = nro.repository.dao.HoTongDAO.xoaQua(ma);
+        if (loi != null) {
+            note(WARN_RED, loi);
+            return;
+        }
+        htNapTatCa();
+        note(OK_GREEN, "Đã xoá dòng quà.");
     }
 
     /** Nạp lại bảng của thẻ con đang mở trong nhóm đang xem. */

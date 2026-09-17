@@ -104,110 +104,28 @@ public class DuongTang extends Player{
         if (master != null && master.isDie()) {
             return;
         }
-        // Dang ho tong thi BAM THEO chu; xong viec roi thi chi di loanh quanh.
+        // Dang ho tong thi TU DI theo tuyen; nguoi choi la ben phai bam theo.
         //
-        // Truoc day khong ai goi followPlayer(), nen Duong Tang chi dung mot
-        // cho: nguoi choi co di dung map can den thi cung khong bao gio nhan
-        // duoc diem cong duc, vi doan tra thuong nam trong chinh ham do.
+        // Ban truoc nguoc lai: Duong Tang bam theo nguoi choi, nen nhiem vu
+        // chi la chay toi dich roi quay dau — khong co gi de ho tong ca.
         if (master != null && master.HoTongDuongTang) {
-            if (Util.canDoWithTime(lanCuoiBam, NHIP_BAM)) {
-                lanCuoiBam = System.currentTimeMillis();
-                followPlayer();
-            }
+            nro.service.hotong.HoTongService.gI().nhip(this);
             return;
         }
         moveIdle();
     }
 
+    /** Moc lan buoc gan nhat — nhip di do HoTongService quyet dinh. */
+    public long lucBuocCuoi;
+    
     /**
-     * Cach nhau bao lau giua hai buoc bam theo chu, tinh bang mili giay.
+     * Hai ham <code>followPlayer</code> va <code>followMaster</code> da bo.
      *
-     * <p>Bam moi vong update thi Duong Tang giat lien tuc va goi
-     * <code>playerMove</code> hang chuc lan mot giay cho ca vung nhin thay.</p>
+     * <p>Chung lo viec Duong Tang bam theo nguoi choi — dung nguoc voi cach
+     * nhiem vu chay bay gio. Giu lai lam "cho tuong thich" thi chi to co hai
+     * duong di khac nhau cung ton tai, va mot ngay nao do co nguoi goi nham
+     * cai cu.</p>
      */
-    private static final int NHIP_BAM = 400;
-
-    private long lanCuoiBam;
-    
-    public void followPlayer() {
-        followMaster(50);
-    }    
-    
-    private void followMaster(int dis) {
-        if (isRun) {
-            // Bo qua nhip dau — KHONG ngu mot giay o day.
-            //
-            // Ham nay chay trong vong update chung, nen mot lenh sleep la ca
-            // vong lap dung hinh mot giay, keo theo moi nguoi choi trong khu.
-            isRun = false;
-            return;
-        }
-        if (this.zone == null || this.zone.map == null) {
-            return;
-        }
-        if (master != null && master.HoTongDuongTang && this.zone.map.mapId == this.MapHoTong) {
-            master.HoTongDuongTang = false;
-            Service.gI().sendThongBao(master, "Bạn nhận được 100 điểm công đức");
-            updatekimco();
-            ChangeMapService.gI().exitMap(this);
-            this.dispose();
-            return;
-        }
-        if (this.master != null) {
-            int mX = master.location.x;
-            int mY = master.location.y;
-            int distance = (int) Math.sqrt(Math.pow(mX - this.location.x, 2) + Math.pow(mY - this.location.y, 2));            
-            if (distance >= 20 && distance <= 150) {
-                int disX = this.location.x - mX;
-                int disX1 = mX -  this.location.x;
-                if (disX < 0) {
-                    this.location.x = this.location.x + Util.nextInt(20, dis);
-                }
-                if (disX1 <0){
-                    this.location.x = this.location.x - Util.nextInt(20, dis);
-                }
-                if (disX < 0){
-                    this.location.y = this.zone.map.yPhysicInTop(this.location.x,mY);
-                }
-                PlayerService.gI().playerMove(this, this.location.x, this.location.y);
-            } else if (distance > 250 && this.zone != null && this.zone.map.mapId != 0) {
-                Service.gI().sendThongBao(this.master, "Bạn đang cách quá xa Đường Tăng, Hãy đến gần sư phụ hơn");
-                this.master.zone.load_Me_To_Another(this.master);
-            }
-        }
-    }
-        
-    private void updatekimco() {
-        for (Item io : this.master.inventory.itemsBody) {
-            if (io.isNotNullItem()) {
-                if (io.template.id == 543) {
-                    io.addOptionParam(11, 100);
-                    io.subOptionParam(12, 1);
-                    if (io.getOptionParam(11) > 30_000) {
-                        io.getOptionParam(11, 30_000);
-                        Service.gI().sendThongBao(this.master, "Điểm công đức đã đạt đến giới hạn.");
-                    }
-                    break;
-                }
-            }
-        }
-        for (Item item : this.master.inventory.itemsBag) {
-            if (item.isNotNullItem()) {
-                if (item.template.id == 543) {
-                    item.addOptionParam(11, 100);
-                    item.subOptionParam(12, 1);
-                    if (item.getOptionParam(11) > 30_000) {
-                        item.getOptionParam(11, 30_000);
-                        Service.gI().sendThongBao(this.master, "Điểm công đức đã đạt đến giới hạn.");
-                    }
-                    break;
-                }
-            }
-        }
-        InventoryService.gI().sendItemBag(master);
-        InventoryService.gI().sendItemBody(master);
-    }
-    
     @Override
     protected void setDie(Player plAtt) {
         if (this.effectSkin.xHPKI > 1) {

@@ -268,9 +268,9 @@ public class PlayerService {
             if (player.PetFollow != null) {
                 player.PetFollow.followMaster();
             }
-            if (player.Duongtang != null) {
-                player.Duongtang.followPlayer();
-            }
+            // Duong Tang KHONG bam theo nguoi choi nua: ong ay tu di theo
+            // tuyen, va chinh nguoi choi phai bam theo ong ay. Nhip di nam o
+            // HoTongService, goi tu DuongTang.update().
             if (player.PhanThan != null) {
                 player.PhanThan.followMaster();
             }
