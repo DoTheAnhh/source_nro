@@ -215,6 +215,17 @@ public final class TrungDeTuDAO {
         return ds;
     }
 
+    /**
+     * Kiểm lại và thêm những quả còn thiếu, dù đã chạy một lần trong phiên.
+     *
+     * <p>Dành cho nút trên panel: bảng bị xoá tay thì không phải khởi động lại
+     * máy chủ mới dựng lại được dòng vật phẩm.</p>
+     */
+    public static synchronized void dungLai() {
+        daDamBao = false;
+        damBaoVatPham();
+    }
+
     /** Bỏ nhớ tạm — gọi sau khi sửa bảng để có hiệu lực ngay. */
     public static synchronized void xoaDem() {
         dem = null;
