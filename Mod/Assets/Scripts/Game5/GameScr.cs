@@ -4580,7 +4580,10 @@ namespace Game5
     
     	public void checkMouseChat()
     	{
-    		if (GameCanvas.isMouseFocus(xC, yC, W_CHAT, H_CHAT))
+    		int[] oChatChuot = God.HudCot.oNut(God.HudCot.CHAT);
+    		if (God.HudCot.bamDuoc()
+    				&& GameCanvas.isMouseFocus(oChatChuot[0], oChatChuot[1],
+    						oChatChuot[2], oChatChuot[3]))
     		{
     			if (!TileMap.isOfflineMap())
     			{
@@ -4636,7 +4639,10 @@ namespace Game5
     			{
     				checkMouseChat();
     			}
-    			if (!TileMap.isOfflineMap() && GameCanvas.isPointerHoldIn(xC, yC, W_CHAT, H_CHAT))
+    			int[] oChatCham = God.HudCot.oNut(God.HudCot.CHAT);
+    			if (!TileMap.isOfflineMap() && God.HudCot.bamDuoc()
+    					&& GameCanvas.isPointerHoldIn(oChatCham[0], oChatCham[1],
+    							oChatCham[2], oChatCham[3]))
     			{
     				mScreen.keyTouch = 15;
     				GameCanvas.isPointerJustDown = false;
@@ -6651,6 +6657,14 @@ namespace Game5
     		else
     		{
     			// Ba vach cua nut menu: kho icon khong co hinh nao nhu vay.
+    			//
+    			// Bo nen toi roi nen ba vach phai tu co VIEN: ve mot ban toi to hon
+    			// mot diem o duoi, khong thi vach sang lan vao canh la va mai nha.
+    			g.setColor(0x140F09, 0.85f);
+    			for (int i = -1; i <= 1; i++)
+    			{
+    				g.fillRect(x + w / 2 - 8, yIcon + i * 5 - 2, 16, 4, 2);
+    			}
     			g.setColor(dangBam ? 0xFFFFFF : 0xF7E3C6, 1f);
     			for (int i = -1; i <= 1; i++)
     			{
@@ -6696,18 +6710,24 @@ namespace Game5
     	private static void veChuVienToi(mGraphics g, string chu, int xGiua,
     			int y, mFont mf)
     	{
+    		// Tu tru nua be rong roi ve KIEU TRAI.
+    		//
+    		// Duong can giua cua mFont chia be rong cho hai bang phep dich bit,
+    		// tuc luon lam tron XUONG — chu le mot diem sang trai, va o nut ba gach
+    		// thi nhin ra ngay. Tu tinh thi lam tron len duoc.
+    		int xTrai = xGiua - (mf.getWidth(chu) + 1) / 2;
     		for (int dx = -1; dx <= 1; dx++)
     		{
     			for (int dy = -1; dy <= 1; dy++)
     			{
     				if (dx != 0 || dy != 0)
     				{
-    					mFont.tahoma_7b_dark.drawString(g, chu, xGiua + dx,
-    							y + dy, mFont.CENTER);
+    					mFont.tahoma_7b_dark.drawString(g, chu, xTrai + dx,
+    							y + dy, mFont.LEFT);
     				}
     			}
     		}
-    		mf.drawString(g, chu, xGiua, y, mFont.CENTER);
+    		mf.drawString(g, chu, xTrai, y, mFont.LEFT);
     	}
 
     	public static void veKhungNutNhanh(mGraphics g, int x, int y, int canh,
@@ -6945,7 +6965,13 @@ namespace Game5
     			// bong bong chu R nghia la gi.
     			bool dangBam = mScreen.keyTouch == 15 || mScreen.keyMouse == 15;
     			int yVe = yC + mGraphics.addYWhenOpenKeyBoard;
-    			veNutHud(g, xC, yVe, W_CHAT, H_CHAT, ICON_BA_VACH, "Chat", null,
+    			if (!God.HudCot.conThay())
+    			{
+    				return;
+    			}
+    			int[] oChat = God.HudCot.oNut(God.HudCot.CHAT);
+    			veNutHud(g, oChat[0], oChat[1] + mGraphics.addYWhenOpenKeyBoard,
+    					oChat[2], oChat[3], ICON_BA_VACH, "Chat", null,
     					dangBam, false, imgChat);
     			// Ten "Chat" do chinh veNutHud ve, khong ve them o day nua.
     			//

@@ -110,8 +110,10 @@ namespace Game3
         /// </remarks>
         public static int mepDuoiHangNut()
         {
-            return (firstCommand != null && firstCommand.h > 0)
-                    ? (firstCommand.y + firstCommand.h) : 64;
+            // Day cua CA COT nut HUD, khong phai day cua rieng nut Tab: cot gio
+            // dai chin nut, neo theo nut Tab thi danh sach nhan vat trong map
+            // chui vao sau lung may nut duoi.
+            return God.HudCot.mepDuoi();
         }
 
         /// <summary>Mép trái của nút "Cờ" — bảng mục tiêu dừng trước chỗ này.</summary>
@@ -126,68 +128,16 @@ namespace Game3
                     ? coCommand.x : (GameCanvas.w - 133);
         }
 
+        /// <summary>Xếp lại chỗ ba nút theo cột HUD.</summary>
+        /// <remarks>
+        /// Cả hàng nút nay do <c>God.HudCot</c> xếp — một chỗ duy nhất cho chín
+        /// nút, kể cả ô Chat của <c>GameScr</c> và năm nút do
+        /// <c>ClientManager</c> vẽ. Hàm này còn để những chỗ gọi cũ (đổi cỡ cửa
+        /// sổ) không phải sửa.
+        /// </remarks>
         public static void xepLaiCho()
         {
-            // HAI HANG nut o goc tren phai, moi hang xep tu PHAI sang trai.
-            //
-            //   hang 1:  [Co]  [Khu]  [ba gach]
-            //   hang 2:  [Tab] [chat]
-            //
-            // Nut ba gach va nut chat do cho khac ve (ClientManager va GameScr),
-            // o day chi xep ba nut cua lop nay cho khop voi chung:
-            //
-            //   ba gach : tam (w-22, 19), canh 30  -> chiem w-37 .. w-7
-            //   chat    : 34x34 tai (w-41, 40)     -> tam ngang 57
-            //
-            // Khe giua hai nut trong cung mot hang la 6 diem.
-            // Luoi 2x2, o nao cung 42x26, khe 6 diem ca ngang lan doc.
-            //
-            //     [Co ] [Khu ]
-            //     [Tab] [chat]
-            //
-            // O chat do GameScr dat (xC, yC) — o duoi cua cot phai. Sua kich
-            // thuoc o day thi phai sua ca W_CHAT/H_CHAT ben do.
-            // O cao 32 chu khong 26: nut nay gio la hinh o tren, ten o duoi.
-            int rongO = 42;
-            int caoO = 32;
-            int cotPhai = GameCanvas.w - 85;
-            int cotTrai = cotPhai - rongO - 6;
-            int hangTren = 6;
-            int hangDuoi = hangTren + caoO + 6;
-
-            khuCommand.w = rongO;
-            khuCommand.h = caoO;
-            khuCommand.x = cotPhai;
-            khuCommand.y = hangTren;
-
-            coCommand.w = rongO;
-            coCommand.h = caoO;
-            coCommand.x = cotTrai;
-            coCommand.y = hangTren;
-
-            // Hang duoi: [Tab] [Chat], cach nhau 6 diem.
-            //
-            // O chat neo theo MEP PHAI cua nut ba gach (x = w-49, rong 42) chu
-            // khong theo cot cua luoi, nen o Tab phai lui sang trai cho vua:
-            // Tab ket thuc o w-55, con 6 diem khe truoc o chat.
-            //
-            // Dat Tab o cotPhai (w-85) thi no ket thuc o w-43, tuc DE LEN o chat
-            // 6 diem — dung loi da thay o anh chup.
-            firstCommand.w = rongO;
-            firstCommand.h = caoO;
-            firstCommand.x = GameCanvas.w - 97;
-            firstCommand.y = hangDuoi;
-            // Tinh nguoc tu nut Tab chu khong dat cung tai `w - 210`: dat
-            // cung thi hang so bi hut ve trai khi bot nut, ho ra mot khoang
-            // trong truoc nut Tab. Tinh nguoc thi hang luon nam sat ben trai
-            // nut Tab du hien may nut.
-            //
-            // Nut rong 20, buoc 25 -> nut cuoi ket thuc cach nut Tab 5px.
-            for (int i = 0; i < TransferTab.Length; i++)
-            {
-                TransferTab[i].x = firstCommand.x - (TransferTab.Length - i) * 25;
-                TransferTab[i].y = firstCommand.y;
-            }
+            theoCotHud();
         }
         /// <summary>Co ve hang nut Tab luc nay khong.</summary>
         /// <remarks>
@@ -274,6 +224,14 @@ namespace Game3
                     break;
                 }
             }
+            if (!God.HudCot.conThay())
+            {
+                // Cot dang thu han: khong ve nut nao.
+                return;
+            }
+            // Xep lai theo cot HUD ngay truoc khi ve: cot con dang truot nen
+            // moi khung hinh mot cho khac.
+            theoCotHud();
             firstCommand.caption = "Tab " + (currentTabIndex + 1);
             firstCommand.paint(g);
             // So khu doc thang tu ban do dang dung, khong giu mot ban sao rieng:
@@ -307,10 +265,42 @@ namespace Game3
         {
             _selectTab = !_selectTab;
         }
+        /// <summary>Đặt ba nút vào đúng chỗ của chúng trong cột HUD.</summary>
+        /// <remarks>
+        /// Cột do <c>God.HudCot</c> xếp, và nó còn trượt lúc thu mở nên phải hỏi
+        /// lại mỗi khung hình — cả lúc vẽ lẫn lúc bắt chạm, kẻo bấm một nơi mà
+        /// nút nằm một nẻo.
+        /// </remarks>
+        private static void theoCotHud()
+        {
+            datO(coCommand, God.HudCot.CO);
+            datO(khuCommand, God.HudCot.KHU);
+            datO(firstCommand, God.HudCot.TAB);
+            // Hang so tab nam ngay ben TRAI nut Tab.
+            for (int i = 0; i < TransferTab.Length; i++)
+            {
+                TransferTab[i].w = 20;
+                TransferTab[i].h = God.HudCot.CAO;
+                TransferTab[i].x = firstCommand.x
+                        - (TransferTab.Length - i) * 23;
+                TransferTab[i].y = firstCommand.y;
+            }
+        }
+
+        private static void datO(TabCommand c, int chiSo)
+        {
+            int[] o = God.HudCot.oNut(chiSo);
+            c.x = o[0];
+            c.y = o[1];
+            c.w = o[2];
+            c.h = o[3];
+        }
+
         public bool isPointerHoldInTab()
         {
-            if (!choHien())
+            if (!choHien() || !God.HudCot.bamDuoc())
                 return false;
+            theoCotHud();
             if (firstCommand.isPointerInside())
             {
                 firstCommand.Invoke();

@@ -262,7 +262,6 @@ namespace Game5.God
             }
             return BanPhimSo.getInstance().dangMo
                     || HopNhapChu.getInstance().dangMo
-                    || MenuTongUI.getInstance().dangMo
                     || TroChoiUI.getInstance().dangMo
                     || CoUI.getInstance().dangMo
                     || ChonNhanhUI.getInstance().dangMo
@@ -310,10 +309,6 @@ namespace Game5.God
                 return;
             }
             if (TuiUI.getInstance().capNhatCham())
-            {
-                return;
-            }
-            if (MenuTongUI.getInstance().capNhatCham())
             {
                 return;
             }
@@ -615,6 +610,95 @@ namespace Game5.God
                     0, mGraphics.VCENTER | mGraphics.HCENTER);
 
             veNutBaGach(g);
+            HudCot.capNhat();
+            veNamNutMoi(g);
+        }
+
+        /// <summary>Năm nút vừa dọn từ popup MENU ra hàng nút HUD.</summary>
+        /// <remarks>
+        /// Bốn nút đầu của cột (Chat, Cờ, Khu, Tab) do <c>GameScr</c> và
+        /// <c>TabControll</c> vẽ; năm nút này trước nằm trong popup nên không ai
+        /// vẽ, giờ vẽ ở đây. Tất cả cùng hỏi <c>HudCot</c> một chỗ xếp.
+        /// </remarks>
+        private void veNamNutMoi(mGraphics g)
+        {
+            if (!HudCot.conThay())
+            {
+                return;
+            }
+            for (int i = 0; i < NUT_MOI.Length; i++)
+            {
+                int chiSo = (int) NUT_MOI[i][0];
+                int[] o = HudCot.oNut(chiSo);
+                GameScr.veNutHud(g, o[0], o[1], o[2], o[3],
+                        (int) NUT_MOI[i][1], (string) NUT_MOI[i][2], null,
+                        mScreen.keyTouch == CHAM_NUT_MOI + chiSo, false);
+            }
+        }
+
+        /// <summary>Mã chạm gốc của năm nút mới; cộng thêm chỉ số nút.</summary>
+        private const int CHAM_NUT_MOI = 900;
+
+        /// <summary>{chỉ số trong cột, mã icon, tên}.</summary>
+        private static readonly object[][] NUT_MOI = new object[][]
+        {
+            new object[] { HudCot.BOSS, 27016, "Boss" },
+            new object[] { HudCot.SU_KIEN, 12769, "Sự kiện" },
+            new object[] { HudCot.PHUC_LOI, 27135, "Phúc lợi" },
+            new object[] { HudCot.NHAN_VAT, 27017, "Nhân vật" },
+            new object[] { HudCot.TRO_CHOI, 4028, "Trò chơi" }
+        };
+
+        /// <summary>Bấm một trong năm nút mới. Trả true nếu đã nuốt cú chạm.</summary>
+        private bool chamNamNutMoi()
+        {
+            if (!HudCot.bamDuoc() || GameCanvas.isPointerMove)
+            {
+                return false;
+            }
+            for (int i = 0; i < NUT_MOI.Length; i++)
+            {
+                int chiSo = (int) NUT_MOI[i][0];
+                int[] o = HudCot.oNut(chiSo);
+                if (!GameCanvas.isPointerHoldIn(o[0], o[1], o[2], o[3]))
+                {
+                    continue;
+                }
+                mScreen.keyTouch = CHAM_NUT_MOI + chiSo;
+                if (GameCanvas.isPointerJustRelease && GameCanvas.isPointerClick)
+                {
+                    GameCanvas.clearAllPointerEvent();
+                    lamViecNut(chiSo);
+                }
+                return true;
+            }
+            return false;
+        }
+
+        private void lamViecNut(int chiSo)
+        {
+            if (chiSo == HudCot.BOSS)
+            {
+                BossUI.getInstance().moCho();
+            }
+            else if (chiSo == HudCot.SU_KIEN)
+            {
+                // Su kien va Phuc loi khong co ham mo: cach mo la XIN du lieu,
+                // goi tra loi ve thi man tu bat len.
+                Service.gI().suKienXin();
+            }
+            else if (chiSo == HudCot.PHUC_LOI)
+            {
+                Service.gI().phucLoiXin();
+            }
+            else if (chiSo == HudCot.NHAN_VAT)
+            {
+                TuiUI.getInstance().moRa();
+            }
+            else if (chiSo == HudCot.TRO_CHOI)
+            {
+                TroChoiUI.getInstance().moRa();
+            }
         }
 
         /// <summary>Toạ độ tâm nút ba gạch — góc trên phải.</summary>
@@ -648,11 +732,10 @@ namespace Game5.God
             // Nut nay von da phang san, nhung de rieng mot minh khong ten thi
             // no lac ra giua bon nut co ten. Ve chung mot ham thi sua kieu mot
             // lan la ca nam nut doi theo.
-            // Nut nay GIU mang nen toi: kho icon khong co hinh nao cho no, chi
-            // co ba vach ve tay — de tran tren ban do thi ba vach lan vao canh
-            // la va mai nha, khong con doc ra la mot cai nut.
+            // Khong con mang nen toi — ba vach tu co vien toi de doc duoc tren
+            // moi nen ban do (xem GameScr.veNutHud).
             GameScr.veNutHud(g, x - nua, TAM_Y_BA_GACH - nua, NUT_CANH,
-                    NUT_CANH, GameScr.ICON_BA_VACH, "Menu", dangBam, true);
+                    NUT_CANH, GameScr.ICON_BA_VACH, "Menu", dangBam, false);
         }
 
 
@@ -752,6 +835,10 @@ namespace Game5.God
                 }
                 return true;
             }
+            if (chamNamNutMoi())
+            {
+                return true;
+            }
             if (!GameCanvas.isPointerMove
                     && GameCanvas.isPointerHoldIn(xBaGach() - NUT_CANH / 2,
                             TAM_Y_BA_GACH - NUT_CANH / 2, NUT_CANH, NUT_CANH))
@@ -760,7 +847,9 @@ namespace Game5.God
                 if (GameCanvas.isPointerJustRelease && GameCanvas.isPointerClick)
                 {
                     GameCanvas.clearAllPointerEvent();
-                    MenuTongUI.getInstance().moRa();
+                    // Nut nay gio la CONG TAC thu/mo ca cot nut HUD, khong con
+                    // mo popup menu nua: nam muc trong popup da ra hang nut.
+                    HudCot.doiThuMo();
                 }
                 return true;
             }
@@ -840,8 +929,7 @@ namespace Game5.God
             // Ve sau cung: hai man nay phai nam tren moi thu khac.
             VoiceConfigUI.getInstance().ve(g);
             PhucLoiUI.getInstance().ve(g);
-            // Ve SAU ba man kia de popup menu nam tren cung khi vua bam mo.
-            MenuTongUI.getInstance().ve(g);
+            // Popup MENU da bo: nam muc cua no ra thang hang nut HUD.
             CoUI.getInstance().ve(g);
             ChonNhanhUI.getInstance().ve(g);
             TroChoiUI.getInstance().ve(g);
