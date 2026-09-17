@@ -33,6 +33,43 @@ public class TinhAnTrangBi {
                 || nro.repository.dao.SetBonusDAO.laDoSetKichHoat(item);
     }
 
+    /** Ba mẫu đá ấn: Tinh Ấn, Nguyệt Ấn, Nhật Ấn. */
+    private static boolean laDaAn(Item item) {
+        if (item == null || !item.isNotNullItem()) {
+            return false;
+        }
+        int id = item.template.id;
+        return id == 1724 || id == 1725 || id == 1726;
+    }
+
+    /**
+     * Hai ô ghép, đọc theo <b>món là gì</b> chứ không theo ô nào trước.
+     *
+     * <h3>Vì sao không đọc theo thứ tự ô</h3>
+     *
+     * <p>Bản cũ lấy cứng ô 0 làm trang bị và ô 1 làm đá. Bỏ đá vào trước thì
+     * chính hòn đá bị đem đi kiểm \"có ấn được không\", và người chơi nhận câu
+     * \"Vật phẩm này không thể hóa ấn\" dù đã bỏ đúng và đủ đồ. Không có gì
+     * trên màn hình nói rằng thứ tự bỏ vào lại quan trọng.</p>
+     *
+     * <p>Hai món khác hẳn nhau — một bên là đá ấn, bên kia là trang bị — nên
+     * nhận ra bằng chính món đó là chắc chắn, và bỏ vào ô nào cũng xong.</p>
+     *
+     * <return>{trang bị, đá ấn}, hoặc <code>null</code> nếu chưa đủ hai món</return>
+     */
+    private static Item[] doiMon(Player player) {
+        if (player.combine == null || player.combine.itemsCombine == null
+                || player.combine.itemsCombine.size() < 2) {
+            return null;
+        }
+        Item a = player.combine.itemsCombine.get(0);
+        Item b = player.combine.itemsCombine.get(1);
+        if (laDaAn(a) && !laDaAn(b)) {
+            return new Item[]{b, a};
+        }
+        return new Item[]{a, b};
+    }
+
     public static void showInfoCombine(Player player) {
         if (InventoryService.gI().getCountEmptyBag(player) <= 0) {
             CombineService.gI().baHatMit.createOtherMenu(player, ConstNpc.IGNORE_MENU,
@@ -46,8 +83,9 @@ public class TinhAnTrangBi {
             return;
         }
 
-        Item item = player.combine.itemsCombine.get(0);
-        Item dangusac = player.combine.itemsCombine.get(1);
+        Item[] doi = doiMon(player);
+        Item item = doi[0];
+        Item dangusac = doi[1];
 
         if (!isTrangBiAn(item)) {
             CombineService.gI().baHatMit.createOtherMenu(player, ConstNpc.IGNORE_MENU,
@@ -55,9 +93,7 @@ public class TinhAnTrangBi {
             return;
         }
 
-        if (dangusac == null || !dangusac.isNotNullItem()
-                || !(dangusac.template.id == 1724 || dangusac.template.id == 1725 || dangusac.template.id == 1726)
-                || dangusac.quantity < 99) {
+        if (!laDaAn(dangusac) || dangusac.quantity < 99) {
             CombineService.gI().baHatMit.createOtherMenu(player, ConstNpc.IGNORE_MENU,
                     "Bạn chưa bỏ đủ vật phẩm !!!", "Đóng");
             return;
@@ -90,17 +126,16 @@ public class TinhAnTrangBi {
             return;
         }
 
-        Item item = player.combine.itemsCombine.get(0);
-        Item dangusac = player.combine.itemsCombine.get(1);
+        Item[] doi = doiMon(player);
+        Item item = doi[0];
+        Item dangusac = doi[1];
 
         if (!isTrangBiAn(item)) {
             Service.gI().sendThongBao(player, "Không thể tinh ấn vật phẩm này");
             return;
         }
 
-        if (dangusac == null || !dangusac.isNotNullItem()
-                || !(dangusac.template.id == 1724 || dangusac.template.id == 1725 || dangusac.template.id == 1726)
-                || dangusac.quantity < 99) {
+        if (!laDaAn(dangusac) || dangusac.quantity < 99) {
             Service.gI().sendThongBao(player, "Thiếu đá ngũ sắc");
             return;
         }

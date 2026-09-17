@@ -35,6 +35,40 @@ namespace Game1.God
         /// </remarks>
         private const long NHIP_DUNG = 600L;
 
+        /// <summary>Bao nhiêu nhịp không thấy món trong túi thì coi là hết.</summary>
+        /// <remarks>
+        /// Không dừng ngay lần đầu không thấy: máy chủ gửi lại cả hành trang
+        /// sau mỗi lần dùng, và giữa hai gói thì mảng đồ có lúc chưa có món
+        /// nào. Dừng ngay ở nhịp đó là báo "đã dùng hết" trong khi trong túi
+        /// vẫn còn năm quả.
+        /// </remarks>
+        private const int TOI_DA_KHONG_THAY = 5;
+
+        /// <summary>Chờ hết hiệu lực lâu nhất bấy nhiêu, rồi tự dừng.</summary>
+        /// <remarks>
+        /// Chốt chặn cuối: nếu vì lý do nào đó hiệu ứng không bao giờ biến mất
+        /// khỏi hàng đồng hồ thì vòng dùng nhanh cũng không treo vĩnh viễn.
+        /// Ba mươi phút dài hơn mọi món thời gian đang có trong game.
+        /// </remarks>
+        private const long CHO_TOI_DA = 30L * 60L * 1000L;
+
+        /// <summary>Bao lâu nhắc một lần trong lúc chờ, tính bằng mili giây.</summary>
+        private const long NHIP_BAO_CHO = 30000L;
+
+        private int soLanKhongThay;
+        private long lucBatDauCho;
+        private long lucBaoCho;
+
+        /// <summary>Các icon hiệu ứng có ngay TRƯỚC lần dùng vừa rồi.</summary>
+        /// <remarks>
+        /// Dùng để <b>học</b> icon hiệu ứng thật của món: icon nào mọc thêm sau
+        /// khi dùng thì chính là của món đó. Bản trước đoán bằng icon vật phẩm
+        /// trong hành trang, mà hai thứ ấy không phải lúc nào cũng trùng — đoán
+        /// trượt thì vòng dùng nhanh không biết là đang có hiệu lực.
+        /// </remarks>
+        private readonly List<short> iconTruocKhiDung = new List<short>();
+        private bool dangHocIcon;
+
         /// <summary>Bao nhiêu lần dùng mà số lượng không giảm thì coi là dừng.</summary>
         /// <remarks>
         /// Đây là cách nhận ra <b>đã full cấp</b> mà không phải biết trước từng
@@ -101,7 +135,40 @@ namespace Game1.God
             iconNhanh = -1;
             soLuongTruoc = -1;
             soLanKhongGiam = 0;
+            soLanKhongThay = 0;
+            lucBatDauCho = 0L;
+            lucBaoCho = 0L;
+            dangHocIcon = false;
+            iconTruocKhiDung.Clear();
             GameScr.info1.addInfo(cau, 0);
+        }
+
+        /// <summary>Chụp lại các icon hiệu ứng đang chạy.</summary>
+        private void chupIcon()
+        {
+            iconTruocKhiDung.Clear();
+            for (int i = 0; i < Char.vItemTime.size(); i++)
+            {
+                ItemTime t = (ItemTime)Char.vItemTime.elementAt(i);
+                if (t != null)
+                {
+                    iconTruocKhiDung.Add(t.idIcon);
+                }
+            }
+        }
+
+        /// <summary>Icon hiệu ứng vừa mọc thêm so với lần chụp, hoặc -1.</summary>
+        private short iconVuaMoc()
+        {
+            for (int i = 0; i < Char.vItemTime.size(); i++)
+            {
+                ItemTime t = (ItemTime)Char.vItemTime.elementAt(i);
+                if (t != null && !iconTruocKhiDung.Contains(t.idIcon))
+                {
+                    return t.idIcon;
+                }
+            }
+            return -1;
         }
 
         /// <summary>Mỗi khung hình: dùng thêm một món nếu tới lượt.</summary>
@@ -114,8 +181,32 @@ namespace Game1.God
             Item mon = timTrongTui(idNhanh);
             if (mon == null)
             {
-                ketThucNhanh("Đã dùng hết vật phẩm");
+                // Chua chac la het: may chu gui lai ca hanh trang sau moi lan
+                // dung, giua hai goi thi mang do co luc trong.
+                soLanKhongThay++;
+                if (soLanKhongThay >= TOI_DA_KHONG_THAY)
+                {
+                    ketThucNhanh("Đã dùng hết vật phẩm");
+                }
                 return;
+            }
+            soLanKhongThay = 0;
+
+            // Hoc icon hieu ung that cua mon, ngay sau lan dung dau tien.
+            if (dangHocIcon)
+            {
+                short moc = iconVuaMoc();
+                if (moc >= 0)
+                {
+                    iconNhanh = moc;
+                    dangHocIcon = false;
+                }
+                else if (mSystem.currentTimeMillis() - lucDungCuoi > 2000L)
+                {
+                    // Qua hai giay khong thay hieu ung nao moc them: mon nay
+                    // khong phai dang thoi gian, thoi hoc.
+                    dangHocIcon = false;
+                }
             }
             // Manh so suu tam da len cap toi da: dung NGAY.
             //
@@ -130,8 +221,28 @@ namespace Game1.God
             // Con hieu luc thi cho, KHONG tinh la mot lan that bai.
             if (buffConChay(iconNhanh))
             {
+                long gio = mSystem.currentTimeMillis();
+                if (lucBatDauCho == 0L)
+                {
+                    lucBatDauCho = gio;
+                    lucBaoCho = 0L;
+                }
+                if (gio - lucBatDauCho > CHO_TOI_DA)
+                {
+                    ketThucNhanh("Dùng nhanh: chờ quá lâu, đã dừng");
+                    return;
+                }
+                if (gio - lucBaoCho > NHIP_BAO_CHO)
+                {
+                    // Nhac cho nguoi choi biet vong VAN CON SONG. Cho im lang
+                    // sau phut thi ai cung tuong no da tat tu lau.
+                    lucBaoCho = gio;
+                    GameScr.info1.addInfo("Dùng nhanh: chờ hết hiệu lực (còn "
+                            + soLanConLai + ")", 0);
+                }
                 return;
             }
+            lucBatDauCho = 0L;
             if (mSystem.currentTimeMillis() - lucDungCuoi < NHIP_DUNG)
             {
                 return;
@@ -154,6 +265,8 @@ namespace Game1.God
             }
             soLuongTruoc = mon.quantity;
             lucDungCuoi = mSystem.currentTimeMillis();
+            chupIcon();
+            dangHocIcon = true;
             Utils.UseItem(idNhanh);
             soLanConLai--;
             if (soLanConLai <= 0)
@@ -280,6 +393,11 @@ namespace Game1.God
                 soLanConLai = soLan;
                 soLuongTruoc = -1;
                 soLanKhongGiam = 0;
+                soLanKhongThay = 0;
+                lucBatDauCho = 0L;
+                lucBaoCho = 0L;
+                dangHocIcon = false;
+                iconTruocKhiDung.Clear();
                 lucDungCuoi = 0L;
                 GameScr.info1.addInfo("Dùng nhanh " + soLan + " món", 0);
                 Utils.resetTF();
