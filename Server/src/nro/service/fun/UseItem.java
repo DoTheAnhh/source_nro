@@ -461,6 +461,12 @@ public class UseItem {
                                 .dungVatPham(pl, item)) {
                             break;
                         }
+                        // Ba qua trung de tu: id do may chu tu cap luc khoi
+                        // dong (TrungDeTuDAO), khong co so nao de viet cung.
+                        if (nro.service.detu.TrungDeTuService.gI()
+                                .dungVatPham(pl, item)) {
+                            break;
+                        }
                         switch (item.template.id) {
                             case 992:
                                 if (TaskService.gI().getIdTask(pl) == ConstTask.TASK_31_1) {

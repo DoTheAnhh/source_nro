@@ -77,6 +77,12 @@ public class MenuController {
                 nro.service.rongnhi.RongNhiService.gI().chonSoLuong(player, select);
                 return;
             }
+            // Bang hoi lai cua trung de tu cung khong thuoc NPC nao: no mo tu
+            // vat pham trong hanh trang.
+            if (mucDangMo == ConstNpc.NO_TRUNG_DE_TU) {
+                nro.service.detu.TrungDeTuService.gI().chon(player, select);
+                return;
+            }
         }
         switch (npcId) {
 

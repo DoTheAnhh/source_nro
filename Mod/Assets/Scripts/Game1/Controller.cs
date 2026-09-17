@@ -3900,15 +3900,24 @@ namespace Game1
                             int trangThai = msg.reader().readUnsignedByte();
                             if (trangThai != 0)
                             {
-                                long hpNg = msg.reader().readLong();
-                                long kiNg = msg.reader().readLong();
-                                long sdNg = msg.reader().readLong();
-                                int sdcmNg = msg.reader().readShort();
-                                int cmNg = msg.reader().readShort();
-                                int giapNg = msg.reader().readInt();
+                                // Thu tu nay la giao keo voi may chu
+                                // (Service.guiBoChiSo): doi mot cho la lech ca goi.
+                                long[] boCs = new long[13];
+                                boCs[0] = msg.reader().readLong();   // suc manh
+                                boCs[1] = msg.reader().readLong();   // tiem nang
+                                boCs[2] = msg.reader().readLong();   // HP toi da
+                                boCs[3] = msg.reader().readLong();   // KI toi da
+                                boCs[4] = msg.reader().readLong();   // suc danh
+                                boCs[5] = msg.reader().readInt();    // giap
+                                boCs[6] = msg.reader().readShort();  // ti le chi mang
+                                boCs[7] = msg.reader().readShort();  // suc danh chi mang
+                                boCs[8] = msg.reader().readShort();  // ne don
+                                boCs[9] = msg.reader().readShort();  // chinh xac
+                                boCs[10] = msg.reader().readShort(); // hut HP
+                                boCs[11] = msg.reader().readInt();   // the luc
+                                boCs[12] = msg.reader().readInt();   // the luc toi da
                                 God.TuiUI.getInstance().nhanChiSoNhanVat(
-                                        idNguoi, hpNg, kiNg, sdNg, sdcmNg, cmNg,
-                                        giapNg, trangThai == 1);
+                                        idNguoi, boCs, trangThai == 1);
                             }
                             else
                             {

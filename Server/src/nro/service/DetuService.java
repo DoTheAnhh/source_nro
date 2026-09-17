@@ -238,6 +238,70 @@ public class DetuService {
         pet.nPoint.setFullHpMp();
         player.Detu = pet;
     }
+    // =====================================================================
+    //  De tu no ra tu trung — danh cho NGUOI CHOI
+    // =====================================================================
+    /**
+     * Nở một quả trứng thành đệ tử thuộc {@code loai}.
+     *
+     * <h3>Khác hàm dành cho bot ở chỗ nào</h3>
+     *
+     * <p>{@code createBotTuTrung} dựng đệ cho <b>bot</b>: id âm, không có ô
+     * trang bị dành cho người chơi. Đệ của người chơi phải đi qua
+     * {@code Player.setIdForPet} và có đủ ô đồ, không thì mặc đồ cho đệ là
+     * tràn mảng.</p>
+     *
+     * <h3>Chỉ số vẫn là chỉ số trên panel</h3>
+     *
+     * <p>Dựng xong thì gọi {@code CheckPlayer} — đúng bước mà đệ bot đi — nên
+     * HP, sức đánh, giáp, chí mạng và sức mạnh khởi điểm đều bốc từ
+     * {@code de_tu_chi_so} rồi nhân hệ số của dòng loại trong
+     * {@code de_tu_loai}. Ở đây không có con số nào viết cứng.</p>
+     *
+     * <p>Chạy trong luồng riêng và ngủ một giây trước khi chào: gói thông tin
+     * đệ phải kịp tới client, không thì câu chào hiện trước cả con đệ.</p>
+     */
+    public void taoDeTuTuTrung(Player player, byte loai) {
+        new Thread(() -> {
+            try {
+                dungDeTuChoNguoiChoi(player, loai);
+                CheckPlayer(player);
+                Thread.sleep(1000);
+                Service.gI().chatJustForMe(player, player.Detu,
+                        loai == ConstDetu.BILL ? "Ta là Bill, ngươi gọi ta?"
+                        : (loai == ConstDetu.CELL ? "Hử... ta đã tỉnh."
+                                : "Oa oa oa..."));
+            } catch (Exception e) {
+                Logger.logException(DetuService.class, e);
+            }
+        }).start();
+    }
+
+    /**
+     * Dựng con đệ mới cho người chơi, <b>thay hẳn</b> con đang có.
+     *
+     * <p>Không hỏi lại ở đây; chỗ gọi (vật phẩm trứng) đã hỏi rồi.</p>
+     */
+    private void dungDeTuChoNguoiChoi(Player player, byte loai) {
+        Detu pet = new Detu(player);
+        pet.name = "$" + ConstDetu.tenLoai(loai);
+        pet.gender = (byte) Util.nextInt(0, 2);
+        pet.id = Player.setIdForPet(pet, player.id);
+        pet.typeDeTu = loai;
+        pet.thuctinh = (byte) 0;
+        pet.nPoint.stamina = 1000;
+        pet.nPoint.maxStamina = 1000;
+        for (int j = 0; j < ConstPlayer.QTY_MAX_ITEM_BODY_PET; j++) {
+            pet.inventory.itemsBody.add(ItemService.gI().createItemNull());
+        }
+        pet.playerSkill.skills.add(SkillUtil.createSkill(Util.nextInt(0, 2) * 2, 1));
+        for (int j = 0; j < ConstPlayer.QTY_MAX_SKILL_PET; j++) {
+            pet.playerSkill.skills.add(SkillUtil.createEmptySkill());
+        }
+        pet.nPoint.setFullHpMp();
+        player.Detu = pet;
+    }
+
 //-------------------------------CREATE DETU------------------------------------
     public void createNormalPetByGender(Player player, int gender, byte... limitPower) {
         new Thread(() -> {

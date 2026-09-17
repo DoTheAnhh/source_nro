@@ -6953,36 +6953,41 @@ namespace Game3
     			return;
     		}
     		resetTranslate(g);
-    		if (!TileMap.isOfflineMap() && !isVS())
-    		{
-    			// O chat: cung khung, cung chu voi ba o Co / Khu / Tab.
-    			//
-    			// Bo hai anh tron mau cam (imgChat / imgChatPC). Chung la anh mot
-    			// co, mau cam khong an nhap voi tong dong vang cua ca hang, va hinh
-    			// TRON dung canh bon o VUONG thi lac han.
-    			//
-    			// Ghi chu "Chat" nhu ba o kia: doc ra ngay, khong phai doan mot cai
-    			// bong bong chu R nghia la gi.
-    			bool dangBam = mScreen.keyTouch == 15 || mScreen.keyMouse == 15;
-    			int yVe = yC + mGraphics.addYWhenOpenKeyBoard;
-    			if (!God.HudCot.conThay())
-    			{
-    				return;
-    			}
-    			int[] oChat = God.HudCot.oNut(God.HudCot.CHAT);
-    			veNutHud(g, oChat[0], oChat[1] + mGraphics.addYWhenOpenKeyBoard,
-    					oChat[2], oChat[3], ICON_BA_VACH, "Chat", null,
-    					dangBam, false, imgChat);
-    			// Ten "Chat" do chinh veNutHud ve, khong ve them o day nua.
-    			//
-    			// Khong co cham do bao tin moi: khung chat lon nam ngay canh nut
-    			// nay va cac the trong no da tu nhay roi.
-    		}
+    		// O chat KHONG ve o day nua — xem veOChat(), goi tu God.ClientManager
+    		// cung mot luot voi ca hang nut HUD, tuc nam DUOI moi bang.
     		if (isUseTouch)
     		{
     		}
     	}
     
+    	/// <summary>
+    	/// Ô "Chat" của hàng nút HUD.
+    	/// </summary>
+    	/// <remarks>
+    	/// <para>Cùng khung, cùng chữ với tám ô kia — bỏ hẳn hai ảnh tròn màu cam
+    	/// (imgChat / imgChatPC): chúng là ảnh một cỡ, màu cam không ăn nhập với
+    	/// tông đồng vàng của cả hàng, và hình TRÒN đứng cạnh tám ô VUÔNG thì lạc
+    	/// hẳn.</para>
+    	///
+    	/// <para>Tách khỏi <c>paintTouchControl</c> để vẽ <b>cùng một lượt</b> với
+    	/// tám nút kia. Trước đây nó vẽ ở một nhánh khác của chuỗi vẽ, nên riêng
+    	/// nó nằm ở một lớp khác với cả hàng.</para>
+    	/// </remarks>
+    	public static void veOChat(mGraphics g)
+    	{
+    		if (TileMap.isOfflineMap() || gI().isVS() || !God.HudCot.conThay())
+    		{
+    			return;
+    		}
+    		bool dangBam = mScreen.keyTouch == 15 || mScreen.keyMouse == 15;
+    		int[] oChat = God.HudCot.oNut(God.HudCot.CHAT);
+    		veNutHud(g, oChat[0], oChat[1] + mGraphics.addYWhenOpenKeyBoard,
+    				oChat[2], oChat[3], ICON_BA_VACH, "Chat", null,
+    				dangBam, false, imgChat);
+    		// Khong co cham do bao tin moi: khung chat lon nam ngay canh nut nay
+    		// va cac the trong no da tu nhay roi.
+    	}
+
     	public void paintImageBarRight(mGraphics g, Char c)
     	{
     		int num = (int)(c.cHP * hpBarW / ((c.cHPFull > 0) ? c.cHPFull : 1));

@@ -307,6 +307,11 @@ public final class Manager {
     nro.repository.dao.MapShopDAO.vaChuaNpcMap();
     nro.repository.dao.MapShopDAO.suaNpcDaoKame();
 
+    // Ba qua trung de tu phai co dong trong item_template TRUOC khi nap
+    // danh sach mau vat pham: nap xong moi them thi phai toi lan chay sau
+    // may chu moi biet ba mon do.
+    nro.repository.dao.TrungDeTuDAO.damBaoVatPham();
+
     this.loadDatabase();
 
     // Tạo bảng và các option bonus kỹ năng sau khi danh sách option gốc đã

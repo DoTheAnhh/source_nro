@@ -597,6 +597,9 @@ public class ConstNpc {
     /** Bang chon so luong trung can doi. */
     public static final int DOI_TRUNG_RONG_NHI_SO_LUONG = 2149;
 
+    /** Bang hoi lai truoc khi no trung de tu (Mabu / Cell / Berus). */
+    public static final int NO_TRUNG_DE_TU = 2150;
+
     //----------------------BONUS------------------------------------------   
     public static final int MENU_3 = 10005;
     public static final int MENU_4 = 10006;

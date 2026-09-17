@@ -3978,33 +3978,28 @@ namespace Game4.God
         private Char nguoiVe;
 
         /// <summary>Chỉ số của người đang xem, do máy chủ gửi về (gói 116).</summary>
+        /// <remarks>
+        /// Giữ nguyên <b>một mảng</b> đúng thứ tự máy chủ gửi, không tách ra
+        /// thành từng biến rời: bảng này đã lên mười hai dòng, mỗi lần thêm
+        /// một chỉ số mà phải khai thêm một biến, sửa chữ ký hàm nhận và sửa
+        /// cả chỗ vẽ thì chỉ tổ quên chỗ nọ chỗ kia.
+        /// </remarks>
         private int idChiSo = -1;
         private bool coChiSo;
         private bool choChiSo;
-        private long hpNguoiXem;
-        private long kiNguoiXem;
-        private long sdNguoiXem;
-        private int sdcmNguoiXem;
-        private int cmNguoiXem;
-        private int giapNguoiXem;
+        private long[] boChiSo;
 
         /// <summary>Người đang xem có online không — số liệu sống hay lấy từ CSDL.</summary>
         private bool nguoiDangOnline;
 
         /// <summary>Máy chủ trả về chỉ số của một nhân vật.</summary>
-        public void nhanChiSoNhanVat(int id, long hp, long ki, long sd,
-                int sdcm, int cm, int giap, bool dangOnline)
+        public void nhanChiSoNhanVat(int id, long[] bo, bool dangOnline)
         {
-            giapNguoiXem = giap;
             idChiSo = id;
             coChiSo = true;
             choChiSo = false;
             nguoiDangOnline = dangOnline;
-            hpNguoiXem = hp;
-            kiNguoiXem = ki;
-            sdNguoiXem = sd;
-            sdcmNguoiXem = sdcm;
-            cmNguoiXem = cm;
+            boChiSo = bo;
         }
 
         /// <summary>Người này đang ngoại tuyến nên máy chủ không có chỉ số.</summary>
@@ -4024,6 +4019,9 @@ namespace Game4.God
             coChiSo = false;
             choChiSo = true;
             idChiSo = -1;
+            boChiSo = null;
+            cuonCs = 0;
+            caoKhoiCs = 0;
             nguoiVe = null;
             if (m != null)
             {
@@ -4298,15 +4296,30 @@ namespace Game4.God
         /// </remarks>
         private void veThongTinNguoi(mGraphics g)
         {
-            g.setColor(0, 0.45f);
-            g.fillRect(xPhai, yThan, rongPhai, caoThan, BO_GOC);
+            // KHONG phu mot lop den len cot phai truoc khi ve.
+            //
+            // Bang nay chiem tron cot phai va tu no da co nen rieng, nen lop
+            // den chi lo ra o bon goc bo tron va o vien — thanh mot duong vien
+            // toi bao quanh, trong nhu vet ban chu khong ra chieu sau.
             int yND = veKhungCoTieuDe(g, xPhai, yThan, rongPhai, caoThan,
                     tvXemLaNguoiXin ? "Người xin vào bang" : "Thông tin thành viên",
                     0, MAU_DAI_CAM);
             int yHet = oNutDongTT()[1] - 4;
 
-            // Khoi chi so nam DUOI CUNG, chiem het khoang trong con lai.
-            int caoChiSo = 16 + 3 * 15 + 6;
+            // Khoi chi so nam DUOI CUNG. Chia theo PHAN TRAM chieu cao con lai
+            // chu khong co dinh: bang gio cuon duoc nen cho no rong bao nhieu
+            // cung dung, nhung an het cho cua khung xem truoc thi lai khong con
+            // thay nguoi. Chan tren la vua du mot lan het danh sach.
+            int caoChiSo = (yHet - (yND + 2)) * 46 / 100;
+            int caoVuaDu = 18 + TEN_CS_XEM.Length * CAO_DONG_CS_XEM + 2;
+            if (caoChiSo > caoVuaDu)
+            {
+                caoChiSo = caoVuaDu;
+            }
+            if (caoChiSo < 18 + 3 * CAO_DONG_CS_XEM)
+            {
+                caoChiSo = 18 + 3 * CAO_DONG_CS_XEM;
+            }
             int yChiSo = yHet - caoChiSo;
 
             int xTr = xPhai + 6;
@@ -4406,27 +4419,161 @@ namespace Game4.God
             }
         }
 
+        /// <summary>Tên các dòng chỉ số của bảng thông tin người khác.</summary>
+        /// <remarks>
+        /// Cùng danh sách với thẻ "Thông tin" của hành trang, chỉ bỏ tên và
+        /// xếp hạng: tên đã nằm ngay dưới khung xem trước, còn xếp hạng thì
+        /// máy chủ không giữ cho người đang ngoại tuyến.
+        /// </remarks>
+        private static readonly string[] TEN_CS_XEM = {
+            "Sức mạnh", "Tiềm năng", "HP", "KI", "Sức đánh", "Giáp",
+            "Chí mạng", "Sức đánh chí mạng", "Né đòn", "Chính xác", "Hút HP",
+            "Thể lực"
+        };
+
+        /// <summary>Bề cao một dòng trong khối chỉ số.</summary>
+        private const int CAO_DONG_CS_XEM = 15;
+
+        /// <summary>Dòng đầu tiên đang hiện của khối chỉ số.</summary>
+        private int cuonCs;
+        private bool dangKeoCs;
+        private int yMocKeoCs;
+
+        /// <summary>Vùng khối chỉ số của khung hình vừa vẽ — để bắt kéo cuộn.</summary>
+        /// <remarks>
+        /// Ghi lại lúc vẽ chứ không tính lại: bề cao khối phụ thuộc chỗ trống
+        /// còn lại của bảng, tính lại theo công thức riêng là vùng bắt kéo lệch
+        /// khỏi vùng vẽ mà không có gì báo.
+        /// </remarks>
+        private int xKhoiCs, yKhoiCs, wKhoiCs, caoKhoiCs;
+
+        /// <summary>Số dòng chỉ số hiện được trong một khối cao bấy nhiêu.</summary>
+        private static int soDongCsThay(int cao)
+        {
+            int n = (cao - 18) / CAO_DONG_CS_XEM;
+            return (n < 1) ? 1 : n;
+        }
+
+        /// <summary>Điểm này có nằm trong khối chỉ số không.</summary>
+        private bool trongKhoiCs(int x, int y)
+        {
+            return caoKhoiCs > 0 && x >= xKhoiCs && x <= xKhoiCs + wKhoiCs
+                    && y >= yKhoiCs && y <= yKhoiCs + caoKhoiCs;
+        }
+
+        /// <summary>Kéo cuộn khối chỉ số của bảng thông tin người.</summary>
+        private void cuonChiSoNguoi()
+        {
+            int toiDa = TEN_CS_XEM.Length - soDongCsThay(caoKhoiCs);
+            if (toiDa <= 0)
+            {
+                cuonCs = 0;
+                dangKeoCs = false;
+                return;
+            }
+            if (GameCanvas.pXYScrollMouse != 0
+                    && trongKhoiCs(GameCanvas.pxMouse, GameCanvas.pyMouse))
+            {
+                cuonCs += (GameCanvas.pXYScrollMouse > 0) ? -1 : 1;
+            }
+            if (GameCanvas.isPointerDown)
+            {
+                if (!dangKeoCs)
+                {
+                    // Chon vung nhan cu keo lúc ĐẶT ngón xuống roi giu nguyen
+                    // den khi nha: xet lai theo cho ngon dang di thi keo ra khoi
+                    // khoi mot ti la cuon dung giua chung.
+                    if (!trongKhoiCs(GameCanvas.pxFirst, GameCanvas.pyFirst))
+                    {
+                        return;
+                    }
+                    dangKeoCs = true;
+                    yMocKeoCs = GameCanvas.pyFirst;
+                }
+                int buoc = (GameCanvas.py - yMocKeoCs) / CAO_DONG_CS_XEM;
+                if (buoc != 0)
+                {
+                    cuonCs -= buoc;
+                    yMocKeoCs += buoc * CAO_DONG_CS_XEM;
+                }
+            }
+            else
+            {
+                dangKeoCs = false;
+            }
+            cuonCs = ganTrongKhoang(cuonCs, toiDa);
+        }
+
+        /// <summary>Chữ của dòng chỉ số thứ <paramref name="i"/>.</summary>
+        /// <remarks>
+        /// Chỉ số nào máy chủ không biết thì bằng -1 — hiện dấu gạch, thà vậy
+        /// còn hơn bày số 0 rồi người xem tưởng người kia né đòn bằng không.
+        /// Người đang ngoại tuyến luôn thiếu ba dòng né đòn, chính xác và hút
+        /// HP: chúng được cộng từ trang bị lúc vào game chứ không ai ghi xuống.
+        /// </remarks>
+        private string giaChiSoXem(int i)
+        {
+            if (boChiSo == null || boChiSo.Length < 13)
+            {
+                return "—";
+            }
+            if (i == 11)
+            {
+                return (boChiSo[11] < 0) ? "—"
+                        : (boChiSo[11] + "/" + boChiSo[12]);
+            }
+            long v = boChiSo[i];
+            if (v < 0)
+            {
+                return "—";
+            }
+            return (i >= 6) ? (v + "%") : NinjaUtil.getMoneys(v);
+        }
+
+        /// <summary>Phông chữ của dòng chỉ số thứ <paramref name="i"/>.</summary>
+        private static mFont fontCsXem(int i)
+        {
+            if (i == 2)
+            {
+                return mFont.tahoma_7b_red;
+            }
+            if (i == 0 || i == 4 || i == 8 || i == 9)
+            {
+                return mFont.tahoma_7b_green;
+            }
+            if (i == 1 || i == 3 || i == 10)
+            {
+                return mFont.tahoma_7b_blue;
+            }
+            return mFont.tahoma_7b_dark;
+        }
+
         /// <summary>
-        /// Khối chỉ số dưới cùng: HP, KI, sức đánh, SDCM, tỉ lệ chí mạng.
+        /// Khối chỉ số dưới cùng: đủ mọi chỉ số, cuộn dọc được.
         /// </summary>
         /// <remarks>
-        /// <para>Chia <b>hai cột</b>: năm dòng xếp một cột thì khối cao gấp đôi
-        /// mà nửa bảng vẫn trống.</para>
+        /// <para>Bản trước chỉ có sáu dòng xếp hai cột vì khối cao cố định. Nay
+        /// khối <b>cuộn</b> nên bày được đúng bộ chỉ số mà thẻ "Thông tin" của
+        /// hành trang bày cho chính mình — xem người khác và xem mình thấy cùng
+        /// một danh sách thì mới so được.</para>
         ///
         /// <para>Mấy con số này client không tự biết — chúng là kết quả tính cả
         /// trang bị, set và hiệu ứng đang chạy. Bảng xin máy chủ lúc mở (gói
-        /// 116); người đang ngoại tuyến thì máy chủ không tính được nên hiện dấu
-        /// gạch, thà vậy còn hơn bày một con số sai.</para>
+        /// 116).</para>
         /// </remarks>
         private void veKhoiChiSo(mGraphics g, int x, int y, int w, int cao)
         {
+            xKhoiCs = x;
+            yKhoiCs = y;
+            wKhoiCs = w;
+            caoKhoiCs = cao;
+
             veKhungBo(g, x, y, w, 14, MAU_DAI_CAM, 0.95f, MAU_VIEN, 0.85f, 1);
             mFont.tahoma_7b_dark.drawString(g, "Chỉ số", x + w / 2, y + 2,
                     mFont.CENTER);
 
             int yD = y + 18;
-            int wCot = (w - 4) / 2;
-            int xCot2 = x + wCot + 4;
+            int caoVung = cao - 18;
             if (choChiSo && (tvXem == null || idChiSo != tvXem.ID))
             {
                 mFont.tahoma_7.drawString(g, "Đang lấy chỉ số…", x + w / 2,
@@ -4434,28 +4581,28 @@ namespace Game4.God
                 return;
             }
             bool ro = coChiSo && tvXem != null && idChiSo == tvXem.ID;
-            string hp = ro ? NinjaUtil.getMoneys(hpNguoiXem) : "—";
-            string ki = ro ? NinjaUtil.getMoneys(kiNguoiXem) : "—";
-            string sd = ro ? NinjaUtil.getMoneys(sdNguoiXem) : "—";
-            // Nguoi offline: may chu doc ba con so da luu, con hai ti le chi
-            // mang thi khong luu nen gui -1.
-            string sdcm = (ro && sdcmNguoiXem >= 0) ? (sdcmNguoiXem + "%") : "—";
-            string cm = (ro && cmNguoiXem >= 0) ? (cmNguoiXem + "%") : "—";
-            string giap = (ro && giapNguoiXem >= 0)
-                    ? NinjaUtil.getMoneys(giapNguoiXem) : "—";
 
-            int yA = yD;
-            yA = veDongTT(g, x, wCot, yA, "HP", hp, mFont.tahoma_7b_red);
-            yA = veDongTT(g, x, wCot, yA, "KI", ki, mFont.tahoma_7b_blue);
-            veDongTT(g, x, wCot, yA, "Giáp", giap, mFont.tahoma_7b_dark);
+            int thay = soDongCsThay(cao);
+            bool coCuon = TEN_CS_XEM.Length > thay;
+            int wDong = coCuon ? (w - 7) : w;
+            cuonCs = ganTrongKhoang(cuonCs, TEN_CS_XEM.Length - thay);
 
-            int yB = yD;
-            yB = veDongTT(g, xCot2, wCot, yB, "Sức đánh", sd,
-                    mFont.tahoma_7b_green);
-            yB = veDongTT(g, xCot2, wCot, yB, "SDCM", sdcm, mFont.tahoma_7b_dark);
-            veDongTT(g, xCot2, wCot, yB, "Tỉ lệ CM", cm, mFont.tahoma_7b_dark);
-            // Ghi chu nam ngay tren dai tieu de: sau khi them dong Giap thi hai
-            // cot da kin ba hang, khong con cho o duoi.
+            g.setClip(x, yD, w, caoVung);
+            int yDong = yD;
+            for (int i = cuonCs; i < TEN_CS_XEM.Length && i - cuonCs < thay; i++)
+            {
+                yDong = veDongTT(g, x, wDong, yDong, TEN_CS_XEM[i],
+                        ro ? giaChiSoXem(i) : "—", fontCsXem(i));
+            }
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+            if (coCuon)
+            {
+                veVachCuonTai(g, x + w - 5, yD, caoVung, TEN_CS_XEM.Length,
+                        thay, cuonCs);
+            }
+
+            // Ghi chu nam ngay tren dai tieu de: ca khoi ben duoi da danh cho
+            // danh sach cuon.
             if (!ro)
             {
                 mFont.tahoma_7_grey.drawString(g, "(không lấy được)",
@@ -6726,6 +6873,52 @@ namespace Game4.God
             return false;
         }
 
+        /// <summary>
+        /// Một dòng mô tả: in <b>hết chữ</b>, dài quá thì cho phần sau dấu hai
+        /// chấm chạy từ phải sang trái.
+        /// </summary>
+        /// <remarks>
+        /// <para>Bản trước cắt cứng 42 ký tự rồi chấm lửng. Mà mấy dòng mốc set
+        /// đều có dạng "3 món: 30% tỉ lệ làm mới Quả Cầu Kênh Khí" — phần bị
+        /// cắt chính là phần nói món set ấy làm gì, tức là cắt mất đúng thứ
+        /// người ta mở bảng ra để đọc.</para>
+        ///
+        /// <para>Giữ <b>nhãn</b> (phần tới dấu hai chấm) đứng yên và chỉ cho
+        /// phần sau chạy: nhãn là thứ để dò nhanh xem dòng nào là dòng mình cần,
+        /// nó mà trôi thì phải chờ đúng nhịp mới đọc được "mấy món".</para>
+        ///
+        /// <para>Không có dấu hai chấm, hoặc nhãn dài gần hết chỗ thì cho chạy
+        /// cả dòng — chừa lại một mẩu chỗ cho phần chạy thì nó nhấp nháy từng
+        /// chữ một, đọc không nổi.</para>
+        /// </remarks>
+        private void veChuMoTa(mGraphics g, mFont mf, string chu, int x, int y,
+                int w)
+        {
+            if (chu == null || chu.Length == 0)
+            {
+                return;
+            }
+            if (mf.getWidth(chu) <= w)
+            {
+                mf.drawString(g, chu, x, y, mFont.LEFT);
+                return;
+            }
+            int i = chu.IndexOf(':');
+            if (i >= 0 && i + 1 < chu.Length)
+            {
+                string nhan = chu.Substring(0, i + 1);
+                int wNhan = mf.getWidth(nhan);
+                if (wNhan + 30 < w)
+                {
+                    mf.drawString(g, nhan, x, y, mFont.LEFT);
+                    veChuChay(g, mf, chu.Substring(i + 1), x + wNhan, y,
+                            w - wNhan);
+                    return;
+                }
+            }
+            veChuChay(g, mf, chu, x, y, w);
+        }
+
         private void veDongMoTa(mGraphics g, DongMoTa d, int x, int y, int w)
         {
             if (d.vai == VAI_SAO)
@@ -6752,8 +6945,7 @@ namespace Game4.God
                 // la dong quyet dinh y nghia cua ca cum ben duoi.
                 g.setColor(MAU_VIEN, 0.28f);
                 g.fillRect(x - 3, y - 2, w + 6, 13, 4);
-                mFont.tahoma_7b_red.drawString(g, catBot(d.chu, 42), x, y,
-                        mFont.LEFT);
+                veChuMoTa(g, mFont.tahoma_7b_red, d.chu, x, y, w);
                 return;
             }
             if (d.vai == VAI_MOC_DAT)
@@ -6765,8 +6957,7 @@ namespace Game4.God
                 // tren nen kem doc rat met mat.
                 g.setColor(MAU_XANH_DUONG, 0.22f);
                 g.fillRect(x - 3, y - 2, w + 6, 13, 4);
-                mFont.tahoma_7b_blue.drawString(g, catBot(d.chu, 42), x, y,
-                        mFont.LEFT);
+                veChuMoTa(g, mFont.tahoma_7b_blue, d.chu, x, y, w);
                 return;
             }
             if (d.vai == VAI_SAO_CONG)
@@ -6775,13 +6966,12 @@ namespace Game4.God
                 // duoc dong nay voi hang sao o tren.
                 g.setColor(MAU_VIEN_SANG_SAO, 0.30f);
                 g.fillRect(x - 3, y - 2, w + 6, 13, 4);
-                mFont.tahoma_7b_dark.drawString(g, catBot(d.chu, 42), x, y,
-                        mFont.LEFT);
+                veChuMoTa(g, mFont.tahoma_7b_dark, d.chu, x, y, w);
                 return;
             }
             mFont mf = (d.vai == VAI_MOC_CHUA || d.vai == VAI_MO_TA)
                     ? mFont.tahoma_7 : mFont.tahoma_7b_dark;
-            mf.drawString(g, catBot(d.chu, 42), x, y, mFont.LEFT);
+            veChuMoTa(g, mf, d.chu, x, y, w);
         }
 
         /// <summary>
@@ -7416,7 +7606,16 @@ namespace Game4.God
                 return true;
             }
             tinhBoCuc();
-            cuonLuoi();
+            if (theChon == THE_BANG_HOI && tvXem != null)
+            {
+                // Bang thong tin dang che ca cot phai: cu keo trong no la de
+                // cuon khoi chi so, khong phai de cuon danh sach nam duoi.
+                cuonChiSoNguoi();
+            }
+            else
+            {
+                cuonLuoi();
+            }
             if (theChon == THE_NHIEM_VU)
             {
                 // Chay CANH cuonLuoi chu khong thay no: cuonLuoi lo danh sach ban

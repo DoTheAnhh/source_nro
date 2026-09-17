@@ -588,24 +588,37 @@ namespace Game4.God
 
         private void veNutHud(mGraphics g)
         {
-            if (!choVeNutHud())
+            if (choVeNutHud())
+            {
+                // Ve canh giua nhu hai nut kia: truoc day banh rang ve theo goc
+                // tren trai nen tam cua no lech sang trai, ba nut nhin khong
+                // cach deu.
+                if (mScreen.keyTouch == 999)
+                {
+                    g.setColor(MAU_LOE, 0.35f);
+                    g.fillRect(xBanhRang() - NUT_CANH / 2, TAM_Y - NUT_CANH / 2,
+                            NUT_CANH, NUT_CANH, 20);
+                }
+                SmallImage.drawSmallImage(g, 4387, xBanhRang(), TAM_Y,
+                        0, mGraphics.VCENTER | mGraphics.HCENTER);
+            }
+
+            // CA CHIN NUT ve o day, mot luot.
+            //
+            // Cho nay nam trong GameScr.paint, tuc TRUOC moi bang cua mod va
+            // truoc ca bang/menu/hop thoai cua game — nen bang nao mo ra cung
+            // phu len hang nut, khong con canh nut noi tren mat bang. Truoc day
+            // ba nut Tab/Khu/Co ve o CUOI GameCanvas.paint nen phai tu giau di
+            // moi lan co bang mo, con o Chat thi ve o mot nhanh khac han.
+            if (!HudCot.choVe())
             {
                 return;
             }
-            // Ve canh giua nhu hai nut kia: truoc day banh rang ve theo goc tren
-            // trai nen tam cua no lech sang trai, ba nut nhin khong cach deu.
-            if (mScreen.keyTouch == 999)
-            {
-                g.setColor(MAU_LOE, 0.35f);
-                g.fillRect(xBanhRang() - NUT_CANH / 2, TAM_Y - NUT_CANH / 2,
-                        NUT_CANH, NUT_CANH, 20);
-            }
-            SmallImage.drawSmallImage(g, 4387, xBanhRang(), TAM_Y,
-                    0, mGraphics.VCENTER | mGraphics.HCENTER);
-
-            veNutBaGach(g);
             HudCot.capNhat();
+            veNutBaGach(g);
             veNamNutMoi(g);
+            GameScr.veOChat(g);
+            TabControll.veHangNut(g);
         }
 
         /// <summary>Năm nút vừa dọn từ popup MENU ra hàng nút HUD.</summary>

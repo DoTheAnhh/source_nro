@@ -159,21 +159,15 @@ namespace Game6
         /// popup nao — hoi chi de tao som sau the instance do.</para>
         /// </remarks>
         /// <summary>
-        /// Hàng nút Cờ / Khu / Tab có được vẽ và nhận chạm ở khung hình này không.
+        /// Ba nút Cờ / Khu / Tab có <b>nhận chạm</b> ở khung hình này không.
         /// </summary>
         /// <remarks>
-        /// Ba nút này nằm <b>dưới cùng</b> mọi thứ: hễ có bảng, menu hay màn phụ
-        /// nào mở ra là chúng nhường chỗ.
-        ///
-        /// Trước đây chúng chỉ tránh màn phụ của mod, còn bảng của game (trang
-        /// bị, cửa hàng, bang hội…) thì không — nên mở bảng ra là ba cái nút nổi
-        /// đè lên mặt bảng, che mất phần trên bên phải của nó.
-        ///
-        /// Cách nhường chỗ là <b>không vẽ</b> chứ không phải vẽ sớm hơn: chuỗi
-        /// vẽ của game đặt bảng sau cùng, muốn nút nằm dưới thì phải chen vào
-        /// giữa chuỗi ấy, mà chen vào đó thì mỗi lần game đổi thứ tự vẽ là hỏng.
+        /// Chỉ lo phần chạm, không lo phần vẽ nữa: nút vẫn hiện khi có bảng mở
+        /// (nằm dưới bảng), nhưng <b>không</b> được ăn cú chạm — <c>GameCanvas</c>
+        /// hỏi <c>isPointerHoldInTab()</c> TRƯỚC khi đẩy chạm cho màn hình, nên
+        /// nhận bừa là bấm vào mặt bảng lại trúng nút nằm dưới nó.
         /// </remarks>
-        private static bool choHien()
+        private static bool choCham()
         {
             if (!isShow)
             {
@@ -203,13 +197,32 @@ namespace Game6
             return !God.ClientManager.coManPhuDangMo();
         }
 
+        /// <summary>
+        /// Không vẽ gì nữa — ba nút đã dọn sang <see cref="veHangNut"/>.
+        /// </summary>
+        /// <remarks>
+        /// Hàm này là thứ vẽ <b>cuối cùng</b> trong <c>GameCanvas.paint</c>, tức
+        /// nằm trên cả bảng lẫn màn "Xin chờ". Vẽ ở đây thì ba nút cứ nổi lên
+        /// trên mọi thứ, nên bản trước phải giấu chúng đi mỗi lần có bảng mở —
+        /// mà giấu thì người chơi mất luôn nút. Nay chúng vẽ sớm cùng cả hàng
+        /// nút HUD, nằm dưới mọi bảng, và không phải giấu nữa.
+        /// </remarks>
         public override void paint(mGraphics g)
         {
-            if (!choHien())
+            if (!choCham())
             {
                 // Dong luon hang so tab: mo popup roi dong popup thi hang so
                 // khong con treo lo lung.
                 _selectTab = false;
+            }
+        }
+
+        /// <summary>Vẽ ba nút Tab / Khu / Cờ — gọi từ chuỗi vẽ của HUD.</summary>
+        public static void veHangNut(mGraphics g)
+        {
+            if (!isShow || !God.HudCot.conThay())
+            {
+                // Cot dang thu han: khong ve nut nao.
                 return;
             }
             // So tab ghi THANG TRONG nut, khong con dong chu do treo ben duoi.
@@ -226,11 +239,6 @@ namespace Game6
                     break;
                 }
             }
-            if (!God.HudCot.conThay())
-            {
-                // Cot dang thu han: khong ve nut nao.
-                return;
-            }
             // Xep lai theo cot HUD ngay truoc khi ve: cot con dang truot nen
             // moi khung hinh mot cho khac.
             theoCotHud();
@@ -245,9 +253,8 @@ namespace Game6
             khuCommand.paint(g);
             coCommand.paint(g);
             paintTab(g);
-            base.paint(g);
         }
-        private void paintTab(mGraphics g)
+        private static void paintTab(mGraphics g)
         {
             if (!selectTab) return;
             foreach (var cmd in TransferTab)
@@ -300,7 +307,7 @@ namespace Game6
 
         public bool isPointerHoldInTab()
         {
-            if (!choHien() || !God.HudCot.bamDuoc())
+            if (!choCham() || !God.HudCot.bamDuoc())
                 return false;
             theoCotHud();
             if (firstCommand.isPointerInside())

@@ -2631,30 +2631,21 @@ public class Service {
             Player pl = Client.gI().getPlayerByID(id);
             msg = new Message(GOI_CHI_SO_NHAN_VAT);
             msg.writer().writeInt(id);
+            long[] cs;
+            byte nguon;
             if (pl != null && pl.nPoint != null) {
                 // Dang online: so lieu song, day du.
-                msg.writer().writeByte(1);
-                msg.writer().writeLong(pl.nPoint.hpMax);
-                msg.writer().writeLong(pl.nPoint.mpMax);
-                msg.writer().writeLong(pl.nPoint.dame);
-                msg.writer().writeShort(pl.nPoint.tlSDCM);
-                msg.writer().writeShort(pl.nPoint.crit);
-                msg.writer().writeInt(pl.nPoint.def);
+                cs = chiSoNguoiOnline(pl);
+                nguon = 1;
             } else {
-                long[] cs = chiSoTrongCSDL(id);
-                if (cs == null) {
-                    msg.writer().writeByte(0);
-                } else {
-                    // Lay tu CSDL — day du, tru khi nhan vat chua luu lai lan
-                    // nao ke tu ban co hai o moi (luc do hai ti le bang -1).
-                    msg.writer().writeByte(2);
-                    msg.writer().writeLong(cs[0]);
-                    msg.writer().writeLong(cs[1]);
-                    msg.writer().writeLong(cs[2]);
-                    msg.writer().writeShort((int) cs[3]);
-                    msg.writer().writeShort((int) cs[4]);
-                    msg.writer().writeInt((int) cs[5]);
-                }
+                cs = chiSoTrongCSDL(id);
+                nguon = 2;
+            }
+            if (cs == null) {
+                msg.writer().writeByte(0);
+            } else {
+                msg.writer().writeByte(nguon);
+                guiBoChiSo(msg, cs);
             }
             nguoiXem.sendMessage(msg);
         } catch (Exception e) {
@@ -2683,9 +2674,48 @@ public class Service {
      * <b>chưa</b> có: trả về -1 và bảng bên client hiện dấu gạch cho riêng mấy
      * dòng đó. Nhân vật ấy đăng nhập một lần là máy chủ ghi đủ.</p>
      *
-     * @return <code>{hpMax, mpMax, dame, sdcm, crit, giap}</code> hoặc
+     * @return bộ chỉ số theo đúng thứ tự <code>guiBoChiSo</code> ghi, hoặc
      *         <code>null</code> nếu không đọc được
      */
+    /**
+     * Ghi một bộ chỉ số xuống gói tin.
+     *
+     * <p>Thứ tự ở đây là <b>giao kèo với client</b>: bên kia đọc đúng dãy này,
+     * đổi một chỗ là cả gói lệch. Cả người đang online lẫn người lấy từ CSDL
+     * đều đi qua đây, nên hai đường không thể lệch nhau — trước kia mỗi đường
+     * tự ghi lấy, và mỗi lần thêm một dòng chỉ số là phải nhớ sửa cả hai.</p>
+     *
+     * <p>Chỉ số nào không biết thì bằng -1, client hiện dấu gạch.</p>
+     */
+    private static void guiBoChiSo(Message msg, long[] cs) throws Exception {
+        msg.writer().writeLong(cs[0]);  // suc manh
+        msg.writer().writeLong(cs[1]);  // tiem nang
+        msg.writer().writeLong(cs[2]);  // hp toi da
+        msg.writer().writeLong(cs[3]);  // ki toi da
+        msg.writer().writeLong(cs[4]);  // suc danh
+        msg.writer().writeInt((int) cs[5]);    // giap
+        msg.writer().writeShort((int) cs[6]);  // ti le chi mang
+        msg.writer().writeShort((int) cs[7]);  // suc danh chi mang
+        msg.writer().writeShort((int) cs[8]);  // ne don
+        msg.writer().writeShort((int) cs[9]);  // chinh xac
+        msg.writer().writeShort((int) cs[10]); // hut HP
+        msg.writer().writeInt((int) cs[11]);   // the luc
+        msg.writer().writeInt((int) cs[12]);   // the luc toi da
+    }
+
+    /**
+     * Bộ chỉ số của một người <b>đang online</b> — tính sống, đủ cả mấy tỉ lệ
+     * chỉ có lúc nhân vật đang chạy (né đòn, chính xác, hút HP).
+     */
+    private static long[] chiSoNguoiOnline(Player pl) {
+        nro.entity.player.NPoint n = pl.nPoint;
+        return new long[]{
+            n.power, n.tiemNang, n.hpMax, n.mpMax, n.dame, n.def,
+            n.crit, n.tlSDCM, n.tlNeDon, n.tlchinhxac, n.tlHutHp,
+            n.stamina, n.maxStamina
+        };
+    }
+
     /** Đọc một ô JSON thành số; hỏng hay rỗng thì lấy giá trị dự phòng. */
     private static long doSo(Object o, long duPhong) {
         if (o == null) {
@@ -2721,7 +2751,16 @@ public class Service {
             long sdcm = (ds.size() > 16) ? doSo(ds.get(16), -1) : -1;
             long crit = (ds.size() > 17) ? doSo(ds.get(17), -1) : -1;
             long giap = (ds.size() > 18) ? doSo(ds.get(18), -1) : -1;
-            return new long[]{hpMax, mpMax, dame, sdcm, crit, giap};
+            long sucManh = doSo(ds.get(1), -1);
+            long tiemNang = doSo(ds.get(2), -1);
+            long theLuc = doSo(ds.get(3), -1);
+            long theLucMax = doSo(ds.get(4), -1);
+            // Né đòn, chính xác và hút HP KHÔNG nằm trong data_point: chúng
+            // được cộng lại từ trang bị mỗi lần nhân vật vào game, không ai
+            // ghi xuống. Gửi -1 để client hiện dấu gạch, thà vậy còn hơn bày
+            // số 0 rồi người xem tưởng người kia né đòn bằng không.
+            return new long[]{sucManh, tiemNang, hpMax, mpMax, dame, giap,
+                crit, sdcm, -1, -1, -1, theLuc, theLucMax};
         } catch (Exception ex) {
             Logger.logException(Service.class, ex,
                     "Lỗi đọc chỉ số trong CSDL của nhân vật " + id);

@@ -13515,6 +13515,15 @@ public class SystemPanel extends JPanel {
     };
     private final JTable dtLoaiTable = new JTable(dtLoaiModel);
 
+    /**
+     * Ba quả trứng đệ tử và mã vật phẩm máy chủ đã cấp cho chúng.
+     *
+     * <p>Chỉ để đọc. Mã vật phẩm do {@code TrungDeTuDAO} tự cấp lúc khởi động
+     * lần đầu — mỗi máy chủ một số khác nhau — nên phải có chỗ tra, không thì
+     * muốn bỏ trứng vào cửa hàng hay hòm quà lại không biết ghi số mấy.</p>
+     */
+    private final JLabel dtNhanTrung = new JLabel();
+
     private JComponent buildDeTuTab() {
         JPanel root = new JPanel(new BorderLayout(0, 6));
         root.setOpaque(false);
@@ -13603,11 +13612,39 @@ public class SystemPanel extends JPanel {
         tren.setResizeWeight(0.35);
         tren.setBorder(null);
         root.add(tren, BorderLayout.CENTER);
+
+        JPanel pTrung = new JPanel(new BorderLayout());
+        pTrung.setOpaque(false);
+        pTrung.setBorder(titled("Trứng đệ tử"));
+        pTrung.add(dtNhanTrung, BorderLayout.CENTER);
+        root.add(pTrung, BorderLayout.SOUTH);
+
         dtLoadTatCa();
         return root;
     }
 
     // ---------------------------------------------------------------- nạp bảng
+
+    /** Liệt kê ba quả trứng kèm mã vật phẩm đã cấp. */
+    private void dtNapTrung() {
+        StringBuilder s = new StringBuilder("<html>");
+        java.util.List<nro.repository.dao.TrungDeTuDAO.Trung> ds
+                = nro.repository.dao.TrungDeTuDAO.dsTrung();
+        if (ds.isEmpty()) {
+            s.append("Chưa dựng — khởi động lại máy chủ để nó tự thêm ba vật "
+                    + "phẩm trứng.");
+        } else {
+            s.append("Dùng trong hành trang sẽ nở ra đệ tử đúng loại, chỉ số "
+                    + "bốc theo bảng bên trên.<br>");
+            for (nro.repository.dao.TrungDeTuDAO.Trung t : ds) {
+                s.append("<b>").append(nz(t.ten)).append("</b> — vật phẩm ")
+                        .append(t.itemId).append(", icon ").append(t.iconId)
+                        .append(", nở ra loại ").append(t.loai)
+                        .append(t.bat ? "" : " (đang tắt)").append("<br>");
+            }
+        }
+        dtNhanTrung.setText(s.append("</html>").toString());
+    }
 
     private void dtLoadTatCa() {
         nro.repository.dao.DeTuDAO.ChiSo t = nro.repository.dao.DeTuDAO.chiSo();
@@ -13625,6 +13662,8 @@ public class SystemPanel extends JPanel {
         fMaxDame.setText(PlayerManagerPanel.fmt(t.maxDame));
         fMaxGiap.setText(String.valueOf(t.maxGiap));
         fMaxCrit.setText(String.valueOf(t.maxCrit));
+
+        dtNapTrung();
 
         dtLoaiModel.setRowCount(0);
         for (nro.repository.dao.DeTuDAO.Loai l

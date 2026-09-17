@@ -1,8 +1,8 @@
 namespace Game2.God
 {
     /// <summary>
-    /// Hàng nút HUD ở góc trên phải: Chat, Cờ, Khu, Tab, Boss, Sự kiện, Phúc
-    /// lợi, Nhân vật, Trò chơi — xếp thành <b>hai hàng</b>, cộng nút ba gạch
+    /// Hàng nút HUD ở góc trên phải: Boss, Trò chơi, Nhân vật, Phúc lợi, Sự
+    /// kiện, Tab, Khu, Cờ, Chat — xếp thành <b>hai hàng</b>, cộng nút ba gạch
     /// đứng riêng một cột ngoài cùng.
     /// </summary>
     /// <remarks>
@@ -12,10 +12,13 @@ namespace Game2.God
     /// mỗi lần đổi lưới là phải sửa cả ba. Nay mọi nút hỏi đúng một hàm
     /// <see cref="oNut"/>.</para>
     ///
-    /// <para><b>Xếp từ PHẢI sang trái.</b> Nút số 0 (ô Chat) nằm sát nút ba
-    /// gạch, rồi lùi dần sang trái; hết một hàng thì xuống hàng dưới, cũng bắt
-    /// đầu từ mép phải. Nhờ vậy cụm nút luôn dính vào góc phải màn hình dù bớt
-    /// hay thêm nút.</para>
+    /// <para><b>Thứ tự các hằng số CHÍNH LÀ thứ tự nhìn thấy</b>: trái sang
+    /// phải, hết hàng trên mới xuống hàng dưới. Muốn đổi chỗ hai nút thì đổi hai
+    /// con số ở đây, không phải đi sửa chỗ vẽ.</para>
+    ///
+    /// <para><b>Xếp từ TRÁI sang phải</b>, lấy mốc là mép trái của cả cụm. Bản
+    /// trước xếp từ phải sang, nên hàng dưới thiếu một nút là cả hàng thụt vào
+    /// một ô — nhìn như bị lệch. Nay hàng nào cũng bắt đầu ở cùng một mép.</para>
     ///
     /// <para><b>Thu mở trượt mượt.</b> <see cref="mo"/> chạy từ 0 tới 1 theo lối
     /// giảm dần (mỗi khung hình đi một phần quãng còn lại) nên nút trôi ra nhanh
@@ -24,15 +27,19 @@ namespace Game2.God
     /// </remarks>
     public static class HudCot
     {
-        public const int CHAT = 0;
-        public const int CO = 1;
-        public const int KHU = 2;
-        public const int TAB = 3;
-        public const int BOSS = 4;
-        public const int SU_KIEN = 5;
-        public const int PHUC_LOI = 6;
-        public const int NHAN_VAT = 7;
-        public const int TRO_CHOI = 8;
+        // Hang tren, trai sang phai.
+        public const int BOSS = 0;
+        public const int TRO_CHOI = 1;
+        public const int NHAN_VAT = 2;
+        public const int PHUC_LOI = 3;
+        public const int SU_KIEN = 4;
+
+        // Hang duoi, trai sang phai.
+        public const int TAB = 5;
+        public const int KHU = 6;
+        public const int CO = 7;
+        public const int CHAT = 8;
+
         public const int SO_NUT = 9;
 
         /// <summary>Bề rộng một nút.</summary>
@@ -79,6 +86,31 @@ namespace Game2.God
             mo += lech * 0.22f;
         }
 
+        /// <summary>
+        /// Có được vẽ hàng nút ở khung hình này không.
+        /// </summary>
+        /// <remarks>
+        /// <para>Chỉ hỏi <b>đang ở đâu</b>, không hỏi có bảng nào đang mở: cả
+        /// hàng nút nay vẽ sớm, trong <c>GameScr.paint</c>, nên mọi bảng đều phủ
+        /// lên nó. Không cần giấu nữa — bảng mở ra thì nút nằm dưới, đúng như
+        /// mấy nút khác của HUD.</para>
+        ///
+        /// <para>Lúc <b>đang tải bản đồ</b> thì giấu: màn "Xin chờ" vẽ sau cùng
+        /// và phủ đen cả màn hình, mà hàng nút trước đây vẽ sau cả nó nên nổi
+        /// lên giữa màn chờ.</para>
+        /// </remarks>
+        public static bool choVe()
+        {
+            if (Game2.Char.isLoadingMap
+                    || Game2.LoginScr.isContinueToLogin
+                    || Game2.ServerListScreen.waitToLogin
+                    || Game2.ServerListScreen.isWait)
+            {
+                return false;
+            }
+            return Game2.GameCanvas.currentScreen is Game2.GameScr;
+        }
+
         /// <summary>Cụm đã ra đủ để bấm được chưa.</summary>
         public static bool bamDuoc()
         {
@@ -103,9 +135,7 @@ namespace Game2.God
         {
             int cot = i % SO_MOI_HANG;
             int hang = i / SO_MOI_HANG;
-            // Mep phai cua hai hang: ngay ben trai nut ba gach.
-            int xPhai = GameCanvas.w - LE_PHAI - RONG - KHE;
-            int xRaHan = xPhai - RONG - cot * (RONG + KHE);
+            int xRaHan = mepTrai() + cot * (RONG + KHE);
             int yRaHan = Y_DAU + hang * (CAO + KHE);
 
             int[] oMenu = oNutMenu();
@@ -124,9 +154,10 @@ namespace Game2.God
         /// <summary>Mép trái của cả cụm — bảng mục tiêu dừng trước chỗ này.</summary>
         public static int mepTrai()
         {
-            int cotCuoi = (SO_NUT < SO_MOI_HANG ? SO_NUT : SO_MOI_HANG) - 1;
-            int xPhai = GameCanvas.w - LE_PHAI - RONG - KHE;
-            return xPhai - RONG - cotCuoi * (RONG + KHE);
+            // Nut phai nhat cua hang tren nam ngay ben trai nut ba gach; lui tiep
+            // du so cot con lai thi ra mep trai.
+            int xPhaiNhat = GameCanvas.w - LE_PHAI - RONG - KHE - RONG;
+            return xPhaiNhat - (SO_MOI_HANG - 1) * (RONG + KHE);
         }
     }
 }
