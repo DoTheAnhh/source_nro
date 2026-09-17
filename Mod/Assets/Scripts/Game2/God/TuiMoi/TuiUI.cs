@@ -1122,6 +1122,13 @@ namespace Game2.God
         /// <summary>Dòng sau chờ dòng trước bấy nhiêu mili giây.</summary>
         private const int TRE_DONG_KN = 34;
 
+        /// <summary>Một dòng kỹ năng lộ hết trong bấy nhiêu mili giây.</summary>
+        /// <remarks>
+        /// Lâu hơn một ô hành trang: quãng lộ ở đây dài bằng cả bề ngang bảng
+        /// chứ không phải một ô vuông nhỏ, đi cùng tốc độ thì nó vụt qua.
+        /// </remarks>
+        private const int THOI_GIAN_DONG_KN = 260;
+
         /// <summary>Quãng lưới còn phải trôi, tính bằng <b>hàng</b>.</summary>
         /// <remarks>
         /// <para>Một nấc lăn không dời lưới ngay mà cộng vào đây, rồi mỗi
@@ -2722,7 +2729,7 @@ namespace Game2.God
                 {
                     mocDongKn[i] = gioKn;
                 }
-                float tKn = (gioKn - mocDongKn[i]) / (float) THOI_GIAN_HIEN;
+                float tKn = (gioKn - mocDongKn[i]) / (float) THOI_GIAN_DONG_KN;
                 if (tKn <= 0f)
                 {
                     continue;
@@ -2733,23 +2740,26 @@ namespace Game2.God
                 }
                 if (tKn < 1f)
                 {
-                    // Lo dan theo chieu doc, cat trong rao cua danh sach.
-                    int caoLoKn = (int) (tKn * caoDong);
-                    if (caoLoKn < 1)
+                    // Lo dan theo chieu NGANG, trai sang phai.
+                    //
+                    // Mot dong ky nang chi cao ba muoi may diem, lo theo chieu
+                    // doc thi ca dong hien xong trong chop mat — nhin van la
+                    // "ra nguyen dong mot phat". Lo theo chieu ngang thi quang
+                    // chay dai bang ca be ngang bang, thanh ra thay ro tung ti
+                    // mot: khung o, roi anh, roi ten, roi dong cap.
+                    int rongLoKn = (int) (tKn * knW);
+                    if (rongLoKn < 1)
                     {
-                        caoLoKn = 1;
+                        rongLoKn = 1;
                     }
                     int ky1 = (y > knY) ? y : knY;
-                    int ky2 = (y + caoLoKn < knY + knH)
-                            ? (y + caoLoKn) : (knY + knH);
+                    int ky2 = (y + caoDong < knY + knH)
+                            ? (y + caoDong) : (knY + knH);
                     if (ky2 <= ky1)
                     {
                         continue;
                     }
-                    g.setClip(knX, ky1, knW, ky2 - ky1);
-                    // Troi len mot doan roi dat xuong, giong o hanh trang.
-                    float conKn = (1f - tKn) * (1f - tKn);
-                    y += (int) (conKn * TROI_LEN);
+                    g.setClip(knX, ky1, rongLoKn, ky2 - ky1);
                 }
 
                 veKhungBo(g, x + 4, y, w - 8, caoDong - 3,
