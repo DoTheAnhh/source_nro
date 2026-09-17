@@ -1152,8 +1152,8 @@ namespace Game4
                                     idsB.Add(char6.charID);
                                     tenB.Add(char6.cName);
                                     smB.Add(smChu);
-                                    hinhB.Add(new short[] { char6.head, char6.body,
-                                            char6.leg, (short) char6.bag });
+                                    hinhB.Add(new short[] { (short) char6.head, (short) char6.body,
+                                            (short) char6.leg, (short) char6.bag });
                                     onB.Add(isOnline);
                                 }
                                 if (!God.TuiUI.getInstance().nhanDsNguoi(1, idsB,
@@ -1232,8 +1232,8 @@ namespace Game4
                                     idsT.Add(char4.charID);
                                     tenT.Add(char4.cName);
                                     smT.Add(smChuT);
-                                    hinhT.Add(new short[] { char4.head, char4.body,
-                                            char4.leg, (short) char4.bag });
+                                    hinhT.Add(new short[] { (short) char4.head, (short) char4.body,
+                                            (short) char4.leg, (short) char4.bag });
                                     onT.Add(flag3);
                                 }
                                 if (!God.TuiUI.getInstance().nhanDsNguoi(2, idsT,

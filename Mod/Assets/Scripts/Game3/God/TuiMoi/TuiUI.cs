@@ -4505,7 +4505,7 @@ namespace Game3.God
                 int y = yND + 2 + (i - cuonNguoi) * CAO_DONG_NGUOI;
                 NguoiDs n = dsNguoi[i];
                 bool chon = (i == nguoiChon);
-                g.setColor(chon ? MAU_THE_CHON : MAU_O, chon ? 0.95f : 0.6f);
+                g.setColor(chon ? MAU_THE_CON_CHON : MAU_O, chon ? 0.95f : 0.6f);
                 g.fillRect(xTrai + 4, y, wDong, CAO_DONG_NGUOI - 3, 4);
                 // Vach mau bao con dang trong game hay khong — mot cham nho o
                 // dau dong thi de nhin hon mot dong chu "Online" chiem cho.
