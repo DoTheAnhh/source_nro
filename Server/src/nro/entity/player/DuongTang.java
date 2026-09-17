@@ -63,7 +63,9 @@ public class DuongTang extends Player{
         }
         ChangeMapService.gI().goToMap(this, master.zone);
         this.zone.load_Me_To_Another(this);
-        Service.gI().chat(this, "Mau đưa sư phụ đến " + MapService.gI().getMapById(this.MapHoTong).mapName);
+        // Duong Tang khong noi gi ca: moi cau chat cua ong ay la mot bong bong
+        // che mat ban do va che luon chinh ong ay, ma nguoi choi thi chi can
+        // biet phai bam theo.
     }
 
     private long lastTimeMoveIdle;
@@ -90,8 +92,6 @@ public class DuongTang extends Player{
         if (this.isDie()) {
             if (this != null && this.master != null){
                 Service.gI().sendThongBao(this.master, "Đường tăng đã chết\nNhiệm vụ hộ tống thất bại!");
-                Service.getInstance().chat(this, "Chết mẹ thầy rồi");
-                Service.getInstance().chat(this, "Sao mày ngu thế hả?");
                 Service.gI().hsChar(this, nPoint.hpMax, nPoint.mpMax);
                 ChangeMapService.gI().spaceShipArrive(this, (byte) 2, ChangeMapService.DEFAULT_SPACE_SHIP);
                 ChangeMapService.gI().exitMap(this);

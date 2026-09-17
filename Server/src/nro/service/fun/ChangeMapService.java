@@ -1139,14 +1139,11 @@ public class ChangeMapService {
                 player.timeChangeMap144 = System.currentTimeMillis();
                 return;
             }
-            if (player.HoTongDuongTang && !Util.canDoWithTime(player.lastTimeDuongTang, 15_000)) {
-                resetPoint(player);
-                Service.gI().sendThongBao(player, "Không thể chuyển map quá nhanh khi đang hộ tống");
-                return;
-            }
-            if (player.HoTongDuongTang) {
-                player.lastTimeDuongTang = System.currentTimeMillis();
-            }
+            // KHONG con chan chuyen map khi dang ho tong.
+            //
+            // Cai chan mười lam giay do sinh ra tu co che cu, khi Duong Tang
+            // bam theo nguoi choi. Nay ong ay tu di con nguoi choi phai duoi
+            // theo, nen chan lai chinh la chan nguoi choi lam nhiem vu.
             // Quang nghi toi thieu giua hai lan qua cong, cho MOI ban do.
             //
             // Ba thay doi:

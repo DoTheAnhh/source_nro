@@ -162,8 +162,48 @@ public final class HoTongService {
         }
         int buoc = (khoang > 0) ? c.buocDiemAnh : -c.buocDiemAnh;
         int xMoi = dt.location.x + buoc;
-        int yMoi = dt.zone.map.yPhysicInTop(xMoi, dt.location.y);
+        int yMoi = khongDonTho(dt, xMoi,
+                dt.zone.map.yPhysicInTop(xMoi, dt.location.y));
         PlayerService.gI().playerMove(dt, xMoi, yMoi);
+    }
+
+    /**
+     * Kéo điểm đến ra khỏi <b>lòng đất</b>.
+     *
+     * <h3>Vì sao cần</h3>
+     *
+     * <p>{@code yPhysicInTop} tìm mặt đất <b>bên dưới</b> điểm đang đứng. Đi
+     * tới chỗ mặt đất cao hơn — một cái gò, một bậc đá — thì điểm mới nằm lọt
+     * trong lòng đất, và Đường Tăng lội đi nửa người dưới đất.</p>
+     *
+     * <p>Ô đặc thì dời lên tới ô trống gần nhất phía trên rồi đặt chân lên mặt
+     * ô đất ấy. Cả cột là đất thì giữ nguyên, còn hơn quăng ông ấy lên đỉnh
+     * bản đồ.</p>
+     */
+    private static int khongDonTho(DuongTang dt, int x, int y) {
+        try {
+            nro.entity.map.Map m = (dt.zone == null) ? null : dt.zone.map;
+            if (m == null || m.tileMap == null) {
+                return y;
+            }
+            int cot = x / 24;
+            int hang = y / 24;
+            if (hang < 0 || cot < 0 || hang >= m.tileMap.length
+                    || cot >= m.tileMap[hang].length) {
+                return y;
+            }
+            if (m.tileMap[hang][cot] == 0) {
+                return y;
+            }
+            for (int i = hang; i >= 0; i--) {
+                if (m.tileMap[i][cot] == 0) {
+                    return (i + 1) * 24;
+                }
+            }
+            return y;
+        } catch (Exception boQua) {
+            return y;
+        }
     }
 
     /** Tới cửa: qua bản đồ kế, hoặc xong việc nếu đó là cửa đích. */
@@ -177,7 +217,6 @@ public final class HoTongService {
             return;
         }
         ChangeMapService.gI().changeMap(dt, z, cua.goX, cua.goY);
-        Service.gI().chat(dt, "Đi tiếp thôi Ngộ Không!");
     }
 
     /**
