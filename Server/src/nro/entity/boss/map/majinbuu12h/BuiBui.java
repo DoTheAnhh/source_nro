@@ -46,6 +46,7 @@ public class BuiBui extends Boss {
                     this.zone.map.yPhysicInTop(this.location.x, this.location.y),
                     plKill.id);
             mayluyentap.addOptionParam(1, Util.nextInt(20, 60));
+            Service.gI().dropItemMap(this.zone, mayluyentap);
         }
 
         if (Util.isTrue(100, 100)) {
@@ -54,6 +55,7 @@ public class BuiBui extends Boss {
                     this.zone.map.yPhysicInTop(this.location.x, this.location.y),
                     plKill.id);
             mayluyentap.addOptionParam(1, Util.nextInt(20, 60));
+            Service.gI().dropItemMap(this.zone, mayluyentap);
         }
 
         if (Util.isTrue(100, 100)) {
@@ -62,6 +64,7 @@ public class BuiBui extends Boss {
                     this.zone.map.yPhysicInTop(this.location.x, this.location.y),
                     plKill.id);
             mayluyentap.addOptionParam(1, Util.nextInt(20, 60));
+            Service.gI().dropItemMap(this.zone, mayluyentap);
         }
 
         if (Util.isTrue(100, 100)) {
@@ -69,6 +72,7 @@ public class BuiBui extends Boss {
                     this.location.x - 10,
                     this.zone.map.yPhysicInTop(this.location.x, this.location.y),
                     plKill.id);
+            Service.gI().dropItemMap(this.zone, vang);
         }
 
         if (Util.isTrue(100, 100)) {
@@ -76,6 +80,7 @@ public class BuiBui extends Boss {
                     this.location.x - 20,
                     this.zone.map.yPhysicInTop(this.location.x, this.location.y),
                     plKill.id);
+            Service.gI().dropItemMap(this.zone, vang);
         }
 
         if (Util.isTrue(100, 100)) {
@@ -83,6 +88,7 @@ public class BuiBui extends Boss {
                     this.location.x - 40,
                     this.zone.map.yPhysicInTop(this.location.x, this.location.y),
                     plKill.id);
+            Service.gI().dropItemMap(this.zone, vang);
         }
 
         if (Util.isTrue(100, 100)) {
@@ -90,6 +96,7 @@ public class BuiBui extends Boss {
                     this.location.x + 10,
                     this.zone.map.yPhysicInTop(this.location.x, this.location.y),
                     plKill.id);
+            Service.gI().dropItemMap(this.zone, vang);
         }
 
         if (Util.isTrue(100, 100)) {
@@ -97,6 +104,7 @@ public class BuiBui extends Boss {
                     this.location.x + 20,
                     this.zone.map.yPhysicInTop(this.location.x, this.location.y),
                     plKill.id);
+            Service.gI().dropItemMap(this.zone, vang);
         }
 
         if (Util.isTrue(100, 100)) {
@@ -104,6 +112,7 @@ public class BuiBui extends Boss {
                     this.location.x + 40,
                     this.zone.map.yPhysicInTop(this.location.x, this.location.y),
                     plKill.id);
+            Service.gI().dropItemMap(this.zone, vang);
         }
     }
 

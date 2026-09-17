@@ -50,32 +50,41 @@ public class Drabura2 extends Boss {
         if (Util.isTrue(100, 100)) {
         ItemMap mayluyentap = new ItemMap(this.zone, 521, 1, this.location.x, this.zone.map.yPhysicInTop(this.location.x, this.location.y), plKill.id);
             mayluyentap.addOptionParam(1, Util.nextInt(20, 60));
+        Service.gI().dropItemMap(this.zone, mayluyentap);
         }
         if (Util.isTrue(100, 100)) {
         ItemMap mayluyentap = new ItemMap(this.zone, 521, 1, this.location.x + Util.nextInt(30, 60), this.zone.map.yPhysicInTop(this.location.x, this.location.y), plKill.id);
             mayluyentap.addOptionParam(1, Util.nextInt(20, 60));
+        Service.gI().dropItemMap(this.zone, mayluyentap);
         }
         if (Util.isTrue(100, 100)) {
         ItemMap mayluyentap = new ItemMap(this.zone, 521, 1, this.location.x - Util.nextInt(30, 60), this.zone.map.yPhysicInTop(this.location.x, this.location.y), plKill.id);
             mayluyentap.addOptionParam(1, Util.nextInt(20, 60));
+        Service.gI().dropItemMap(this.zone, mayluyentap);
         }
         if (Util.isTrue(100, 100)) {
         ItemMap vang = new ItemMap(this.zone, 190, 30000, this.location.x - 10, this.zone.map.yPhysicInTop(this.location.x, this.location.y), plKill.id);
+        Service.gI().dropItemMap(this.zone, vang);
         }
         if (Util.isTrue(100, 100)) {
         ItemMap vang = new ItemMap(this.zone, 190, 30000, this.location.x - 20, this.zone.map.yPhysicInTop(this.location.x, this.location.y), plKill.id);
+        Service.gI().dropItemMap(this.zone, vang);
         }
         if (Util.isTrue(100, 100)) {
         ItemMap vang = new ItemMap(this.zone, 190, 30000, this.location.x - 40, this.zone.map.yPhysicInTop(this.location.x, this.location.y), plKill.id);
+        Service.gI().dropItemMap(this.zone, vang);
         }
         if (Util.isTrue(100, 100)) {
         ItemMap vang = new ItemMap(this.zone, 190, 30000, this.location.x + 10, this.zone.map.yPhysicInTop(this.location.x, this.location.y), plKill.id);
+        Service.gI().dropItemMap(this.zone, vang);
         }
         if (Util.isTrue(100, 100)) {
         ItemMap vang = new ItemMap(this.zone, 190, 30000, this.location.x + 20, this.zone.map.yPhysicInTop(this.location.x, this.location.y), plKill.id);
+        Service.gI().dropItemMap(this.zone, vang);
         }
         if (Util.isTrue(100, 100)) {
         ItemMap vang = new ItemMap(this.zone, 190, 30000, this.location.x + 40, this.zone.map.yPhysicInTop(this.location.x, this.location.y), plKill.id);
+        Service.gI().dropItemMap(this.zone, vang);
         }
     }
 

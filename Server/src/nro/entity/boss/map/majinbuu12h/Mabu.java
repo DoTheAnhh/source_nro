@@ -46,9 +46,11 @@ public class Mabu extends Boss {
                     this.location.x + (Util.nextInt(-50, 50) * i),
                     this.zone.map.yPhysicInTop(this.location.x, this.location.y - 24),
                     plKill.id);
-
+            // Gan chi so TRUOC khi tha: goi tin bao do roi mang theo ca chi
+            // so, tha truoc thi banh roi ra khong co phan tram nao.
             int param = plKill.fightMabu.pointPercent + 30;
             itemMap.addOptionParam(1, param);
+            Service.gI().dropItemMap(this.zone, itemMap);
         }
 
         plKill.fightMabu.changePoint((byte) 25);

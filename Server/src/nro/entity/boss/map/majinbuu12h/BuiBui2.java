@@ -58,6 +58,7 @@ public class BuiBui2 extends Boss {
                     this.zone.map.yPhysicInTop(this.location.x, this.location.y),
                     plKill.id);
             mayluyentap.addOptionParam(1, Util.nextInt(20, 60));
+            Service.gI().dropItemMap(this.zone, mayluyentap);
         }
 
         if (Util.isTrue(100, 100)) {
@@ -66,6 +67,7 @@ public class BuiBui2 extends Boss {
                     this.zone.map.yPhysicInTop(this.location.x, this.location.y),
                     plKill.id);
             mayluyentap.addOptionParam(1, Util.nextInt(20, 60));
+            Service.gI().dropItemMap(this.zone, mayluyentap);
         }
 
         if (Util.isTrue(100, 100)) {
@@ -74,6 +76,7 @@ public class BuiBui2 extends Boss {
                     this.zone.map.yPhysicInTop(this.location.x, this.location.y),
                     plKill.id);
             mayluyentap.addOptionParam(1, Util.nextInt(20, 60));
+            Service.gI().dropItemMap(this.zone, mayluyentap);
         }
 
         int[] offsets = {-10, -20, -40, 10, 20, 40};
@@ -83,6 +86,7 @@ public class BuiBui2 extends Boss {
                         this.location.x + offset,
                         this.zone.map.yPhysicInTop(this.location.x, this.location.y),
                         plKill.id);
+                Service.gI().dropItemMap(this.zone, vang);
             }
         }
     }
