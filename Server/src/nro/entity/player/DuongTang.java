@@ -104,8 +104,30 @@ public class DuongTang extends Player{
         if (master != null && master.isDie()) {
             return;
         }
+        // Dang ho tong thi BAM THEO chu; xong viec roi thi chi di loanh quanh.
+        //
+        // Truoc day khong ai goi followPlayer(), nen Duong Tang chi dung mot
+        // cho: nguoi choi co di dung map can den thi cung khong bao gio nhan
+        // duoc diem cong duc, vi doan tra thuong nam trong chinh ham do.
+        if (master != null && master.HoTongDuongTang) {
+            if (Util.canDoWithTime(lanCuoiBam, NHIP_BAM)) {
+                lanCuoiBam = System.currentTimeMillis();
+                followPlayer();
+            }
+            return;
+        }
         moveIdle();
     }
+
+    /**
+     * Cach nhau bao lau giua hai buoc bam theo chu, tinh bang mili giay.
+     *
+     * <p>Bam moi vong update thi Duong Tang giat lien tuc va goi
+     * <code>playerMove</code> hang chuc lan mot giay cho ca vung nhin thay.</p>
+     */
+    private static final int NHIP_BAM = 400;
+
+    private long lanCuoiBam;
     
     public void followPlayer() {
         followMaster(50);
@@ -113,8 +135,14 @@ public class DuongTang extends Player{
     
     private void followMaster(int dis) {
         if (isRun) {
-            Functions.sleep(1000);
+            // Bo qua nhip dau — KHONG ngu mot giay o day.
+            //
+            // Ham nay chay trong vong update chung, nen mot lenh sleep la ca
+            // vong lap dung hinh mot giay, keo theo moi nguoi choi trong khu.
             isRun = false;
+            return;
+        }
+        if (this.zone == null || this.zone.map == null) {
             return;
         }
         if (master != null && master.HoTongDuongTang && this.zone.map.mapId == this.MapHoTong) {

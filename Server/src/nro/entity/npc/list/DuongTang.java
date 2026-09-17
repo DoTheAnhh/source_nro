@@ -31,12 +31,14 @@ public class DuongTang extends Npc {
         if (canOpenNpc(player)) {
             switch (this.mapId) {
                 case 0:
+                    // Bon nut, dung thu tu ma confirmMenu ben duoi cho: 0 vao
+                    // Ngu Hanh Son, 1 mo bang ho tong, 2 tu choi, 3 doi diem
+                    // cong duc lay qua.
                     this.createOtherMenu(player, ConstNpc.BASE_MENU,
                             "A mi phò phò, thí chủ hãy giúp giải cứu đồ đệ của bần tăng đang bị\n"
-                            + "phong ấn tại ngũ hành hơn\n",
-                            "Đồng ý"
-//                            , "Nhiệm vụ\nhộ tống", "Từ chối", "Nhận thưởng"
-                    );
+                            + "phong ấn tại ngũ hành sơn\n",
+                            "Đồng ý", "Nhiệm vụ\nhộ tống",
+                            "Từ chối", "Nhận thưởng");
                     break;
                 case 123:
                     this.createOtherMenu(player, ConstNpc.BASE_MENU,
@@ -69,9 +71,13 @@ public class DuongTang extends Npc {
                                     break;
                                 }
                                 case 1: {
+                                    // Chi hai nut: bang nay khong lo phan
+                                    // thuong, phan do nam o nut "Nhan thuong"
+                                    // cua bang truoc. De nut thu ba o day thi
+                                    // bam vao khong co gi xay ra.
                                     this.createOtherMenu(player, 0,
                                             "A mi phò phò, Ngộ Không mau hộ tống sư phụ đi thỉnh chân kinh nào\n",
-                                            "Đồng ý", "Từ chối", "Nhận thưởng");
+                                            "Đồng ý", "Từ chối");
                                     break;
                                 }
                                 case 3: {
