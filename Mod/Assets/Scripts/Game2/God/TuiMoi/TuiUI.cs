@@ -1080,6 +1080,30 @@ namespace Game2.God
         /// <summary>Bề rộng và bề cao một ô túi — ô túi là chữ nhật ngang.</summary>
         private int oTuiNgang, oTuiDoc;
 
+        /// <summary>Mấy hàng ô hiện được cùng lúc — tính theo bề cao vùng.</summary>
+        private int soHangThay = TUI_SO_HANG;
+
+        /// <summary>Mốc bắt đầu màn hiện ô so le.</summary>
+        private long lucHienLuoi;
+
+        /// <summary>Khung hình TRƯỚC có vẽ lưới túi không.</summary>
+        private bool daVeLuoiTruoc;
+        private bool dangVeLuoi;
+
+        /// <summary>Ô sau chờ ô trước bấy nhiêu mili giây.</summary>
+        /// <remarks>
+        /// Trễ theo <b>đường chéo</b> (hàng cộng cột), không theo thứ tự ô:
+        /// theo thứ tự thì cả hàng đầu chạy xong mới tới hàng hai, nhìn như
+        /// một cái băng chuyền.
+        /// </remarks>
+        private const int TRE_MOI_BAC = 22;
+
+        /// <summary>Một ô hiện ra trong bấy nhiêu mili giây.</summary>
+        private const int THOI_GIAN_HIEN = 190;
+
+        /// <summary>Ô trồi lên bấy nhiêu điểm ảnh trong lúc hiện.</summary>
+        private const int TROI_LEN = 14;
+
         /// <summary>
         /// Bước nhảy giữa hai hàng ô trang bị.
         /// </summary>
@@ -1181,14 +1205,28 @@ namespace Game2.God
             // Tru LE_LUOI hai ben cho net vien khung: khong tru thi hang o ngoai
             // cung ve de len chinh net vien vua ve.
             oTuiNgang = (rongPhai - LE_LUOI * 2 - RONG_CUON) / TUI_SO_COT;
-            oTuiDoc = (caoNoiDung - LE_LUOI * 2) / TUI_SO_HANG;
             if (oTuiNgang < O_TOI_THIEU)
             {
                 oTuiNgang = O_TOI_THIEU;
             }
+            // Be cao o = BA PHAN NAM be rong.
+            //
+            // Truoc day be cao chia deu vung noi dung cho nam hang, nen o gan
+            // nhu vuong — ma o vuong ton chieu doc chang de lam gi: anh vat
+            // pham nam giua, phan tren duoi bo khong. O thap hon thi cung mot
+            // khung ay hien duoc nhieu hang hon.
+            oTuiDoc = oTuiNgang * 3 / 5;
             if (oTuiDoc < 14)
             {
                 oTuiDoc = 14;
+            }
+            // So hang hien duoc tinh NGUOC tu be cao vung, khong con la mot
+            // hang so: o thap di thi phai hien them hang, khong thi duoi luoi
+            // ho ra mot dai trong.
+            soHangThay = (caoNoiDung - LE_LUOI * 2) / oTuiDoc;
+            if (soHangThay < 1)
+            {
+                soHangThay = 1;
             }
         }
 
@@ -1213,6 +1251,8 @@ namespace Game2.God
                 return;
             }
             tinhBoCuc();
+            daVeLuoiTruoc = dangVeLuoi;
+            dangVeLuoi = false;
 
             g.setColor(MAU_DEN, 0.6f);
             g.fillRect(0, 0, GameCanvas.w, GameCanvas.h);
@@ -2009,7 +2049,7 @@ namespace Game2.God
         /// <summary>Bề cao khung lưới túi, làm tròn xuống bội của cỡ ô.</summary>
         private int caoLuoiTui()
         {
-            return TUI_SO_HANG * oTuiDoc + LE_LUOI * 2;
+            return soHangThay * oTuiDoc + LE_LUOI * 2;
         }
 
         private void veHanhTrang(mGraphics g)
@@ -2033,11 +2073,18 @@ namespace Game2.God
                 return;
             }
             gioiHanCuon(soHangTui());
-            int thay = TUI_SO_HANG;
+            int thay = soHangThay;
             if (thay < 1)
             {
                 thay = 1;
             }
+            if (!daVeLuoiTruoc)
+            {
+                // Luoi vua mo ra: chay lai man hien o tu dau.
+                lucHienLuoi = mSystem.currentTimeMillis();
+            }
+            dangVeLuoi = true;
+            long troi = mSystem.currentTimeMillis() - lucHienLuoi;
             for (int hang = cuon; hang < cuon + thay; hang++)
             {
                 for (int cot = 0; cot < TUI_SO_COT; cot++)
@@ -2047,9 +2094,26 @@ namespace Game2.God
                     {
                         break;
                     }
+                    // O cang xa goc tren trai cang vao muon. Bac dem theo hang
+                    // DANG THAY chu khong theo hang that: cuon xuong cuoi tui
+                    // roi mo lai thi hang dau tien dang nhin la bac 0.
+                    float t = (troi - (long) (cot + hang - cuon) * TRE_MOI_BAC)
+                            / (float) THOI_GIAN_HIEN;
+                    if (t <= 0f)
+                    {
+                        continue;
+                    }
+                    if (t > 1f)
+                    {
+                        t = 1f;
+                    }
+                    // Cham dan khi toi noi: (1-t)^2 di nhanh luc dau roi nhe
+                    // nhang dat xuong, con cong deu thi o nao cung nhu bi keo.
+                    float con = (1f - t) * (1f - t);
                     veMotOCN(g, tui[i],
                             xPhai + LE_LUOI + cot * oTuiNgang,
-                            yNoiDung + LE_LUOI + (hang - cuon) * oTuiDoc,
+                            yNoiDung + LE_LUOI + (hang - cuon) * oTuiDoc
+                                    + (int) (con * TROI_LEN),
                             oTuiNgang, oTuiDoc, "");
                 }
             }
@@ -8802,7 +8866,11 @@ namespace Game2.God
                 int n = (yThan + caoThan - yDauKyNang - 4) / CAO_DONG_KN;
                 return (n < 1) ? 1 : n;
             }
-            int m = TUI_SO_HANG;
+            // So hang cua luoi tui do be cao vung quyet dinh (xem tinhBoCuc),
+            // khong con la hang so: o thap di thi hien duoc nhieu hang hon, ma
+            // cuon van dem theo con so cu thi keo toi cuoi van con hang chua
+            // toi duoc.
+            int m = soHangThay;
             return (m < 1) ? 1 : m;
         }
 
