@@ -155,7 +155,60 @@ public final class TrungDeTuDAO {
                 + " VALUES (?, ?, 3, ?, ?, 1, ?, -1, 1, 0, 0, 0, 0, 0, 0, 0,"
                 + " -1, -1, -1, 0, -1, 1, -1)",
                 id, KIEU_DUNG_DUOC, ten, moTa, icon);
+        napVaoBoNho(id, ten, moTa, icon);
         return id;
+    }
+
+    /**
+     * Nối mẫu vật phẩm vừa thêm vào danh sách máy chủ đang giữ.
+     *
+     * <h3>Vì sao phải làm tay</h3>
+     *
+     * <p><code>Manager.ITEM_TEMPLATES</code> chỉ đọc CSDL <b>một lần</b> lúc khởi
+     * động. Thêm dòng vào bảng lúc máy chủ đang chạy thì nó nằm đó mà không ai
+     * thấy: bảng vật phẩm trên panel trống chỗ ấy, và người chơi cũng không
+     * dùng được. Đây đúng là việc mà nút "Thêm mẫu vật phẩm" trong panel làm
+     * (xem <code>ItemManagerPanel.themMauVatPham</code>).</p>
+     *
+     * <h3>Nối vào CUỐI, không xen giữa</h3>
+     *
+     * <p>Client tra bảng vật phẩm theo <b>vị trí</b> trong danh sách chứ không
+     * theo id. Id mới luôn là <code>MAX(id) + 1</code> nên nối vào cuối là vị trí
+     * khớp id; xen vào giữa thì mọi món phía sau lệch một ô.</p>
+     *
+     * <p>Lúc khởi động, hàm này chạy <b>trước</b> khi danh sách được nạp nên
+     * nó rỗng — bỏ qua, chính lượt nạp sẽ đọc luôn dòng vừa thêm.</p>
+     */
+    private static void napVaoBoNho(int id, String ten, String moTa, int icon) {
+        try {
+            java.util.List<nro.entity.template.ItemTemplate> ds
+                    = nro.server.Manager.ITEM_TEMPLATES;
+            if (ds == null || ds.isEmpty() || ds.size() != id) {
+                return;
+            }
+            nro.entity.template.ItemTemplate t
+                    = new nro.entity.template.ItemTemplate();
+            t.id = (short) id;
+            t.type = (byte) KIEU_DUNG_DUOC;
+            t.gender = 3;
+            t.name = ten;
+            t.description = moTa;
+            t.level = 1;
+            t.iconID = (short) icon;
+            t.part = -1;
+            t.isUpToUp = true;
+            t.strRequire = 0;
+            t.head = -1;
+            t.body = -1;
+            t.leg = -1;
+            t.isGender = -1;
+            t.dungDuoc = true;
+            ds.add(t);
+            nro.ui.LamMoi.bao(nro.ui.LamMoi.VAT_PHAM);
+        } catch (Exception boQua) {
+            // Khong noi duoc vao bo nho thi dong trong CSDL van con: lan khoi
+            // dong sau se nap. Khong dang lam hong ca luot dung vat pham.
+        }
     }
 
     /** Id vật phẩm còn trống — ngay sau id lớn nhất đang dùng. */
