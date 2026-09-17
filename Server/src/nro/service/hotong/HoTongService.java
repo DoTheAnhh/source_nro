@@ -207,17 +207,39 @@ public final class HoTongService {
         }
     }
 
+    /**
+     * Khu mà Đường Tăng luôn đi vào.
+     *
+     * <p>Mỗi bản đồ có nhiều khu, và người chơi qua cửa thì rơi vào khu nào là
+     * tuỳ lúc ấy khu nào còn chỗ. Cho ông ấy một khu <b>cố định</b> thì người
+     * chơi biết đường mà tìm; thả ngẫu nhiên thì hai người cùng ở một bản đồ
+     * mà chẳng bao giờ gặp nhau — đúng cảnh "qua map phát là mất hút".</p>
+     */
+    private static final int KHU_CUA_DUONG_TANG = 0;
+
     /** Tới cửa: qua bản đồ kế, hoặc xong việc nếu đó là cửa đích. */
     private void toiCua(DuongTang dt, WayPoint cua, int viTri, Player chu) {
         if (viTri >= TUYEN.length - 1) {
             thanhCong(chu);
             return;
         }
-        Zone z = MapService.gI().getMapWithRandZone(cua.goMap);
+        Zone z = MapService.gI().getZoneJoinByMapIdAndZoneId(dt, cua.goMap,
+                KHU_CUA_DUONG_TANG);
+        if (z == null) {
+            // Khong co khu 0 (du lieu ban do la) — lay dai mot khu con cho.
+            z = MapService.gI().getMapWithRandZone(cua.goMap);
+        }
         if (z == null) {
             return;
         }
         ChangeMapService.gI().changeMap(dt, z, cua.goX, cua.goY);
+        // Bao cho nguoi choi biet ong ay vua sang dau va o khu nao.
+        //
+        // Day la THONG BAO chu khong phai cau chat cua Duong Tang: khong co no
+        // thi nguoi choi qua cua, khong thay ai, va khong biet minh dang cham
+        // chan hay di nham huong.
+        Service.gI().sendThongBao(chu, "Đường Tăng đã sang "
+                + z.map.mapName + " (khu " + z.zoneId + ").");
     }
 
     /**
