@@ -1730,25 +1730,31 @@ namespace Game4.God
             // trong game — nguoi choi ngoai ban do dung thang tren nen dat.
             // Bo di thi khung xem truoc sach, chi con nguoi.
             //
-            // De tu dung BEN CANH su phu, lui ve mot ben va nho hon mot chut
-            // nho dung sau: dung chong len nhau thi hai hinh dinh lam mot.
-            Char deBenCanh = Char.myPetz();
-            bool coDe = deBenCanh != null && Char.myCharz().havePet
-                    && deBenCanh.cName != null && deBenCanh.cName.Length > 0;
-            int xSuPhu = xTrai + rongTrai / 2 + (coDe ? -14 : 0);
-            if (coDe)
+            // Con thu di theo dung BEN CANH, lui sang mot ben cho khoi chong.
+            var thuTheo = Char.myCharz().petFollow;
+            bool coThu = thuTheo != null;
+            int xSuPhu = xTrai + rongTrai / 2 + (coThu ? -12 : 0);
+            if (coThu)
             {
-                // Ve de TRUOC su phu: no dung sau nen phai bi che, khong thi
-                // nhin nhu no dung truoc ma lai nho hon.
+                // Muon dung duong ve cua chinh no: doi toa do, ve, roi tra lai.
+                //
+                // Ham paint cua no doc cmx/cmy — do la toa do MAN HINH, da tru
+                // camera. Goi thang SmallImage o day thi phai doan lai thu tu
+                // tham so, co anh nhieu khung hinh lai doan sai.
+                int xCu = thuTheo.cmx;
+                int yCu = thuTheo.cmy;
+                thuTheo.cmx = xSuPhu + 32;
+                thuTheo.cmy = yChan - 14;
                 try
                 {
-                    deBenCanh.paintCharBody(g, xSuPhu + 34, yChan - 2, 1,
-                            khungDungCho(), false);
+                    thuTheo.paint(g);
                 }
                 catch (System.Exception)
                 {
-                    // Anh bo phan chua tai xong: khung sau ve lai.
+                    // Anh chua tai xong: khung sau ve lai.
                 }
+                thuTheo.cmx = xCu;
+                thuTheo.cmy = yCu;
             }
             Char.myCharz().paintCharBody(g, xSuPhu, yChan - 4,
                     1, khungDungCho(), true);
