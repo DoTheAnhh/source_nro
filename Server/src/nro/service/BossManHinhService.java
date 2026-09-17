@@ -482,6 +482,14 @@ public class BossManHinhService {
         if (id <= BossID.TAP_SU_0 && id >= BossID.DOI_TRUONG_5) {
             return true;
         }
+        // CA MAP MA BU: Drabura, Bui Bui, Yacon, Ma bu, Goku, Ca dich,
+        // Super Bu — ca hai khung gio 12h va 14h.
+        //
+        // Chung cung nam lien mot dai id (-52 den -62), nen chan bang hai moc
+        // dau va cuoi cua dai thay vi liet ke muoi mot cai ten.
+        if (id <= BossID.DRABURA && id >= BossID.SUPERBU) {
+            return true;
+        }
         String ten = b.name;
         return ten != null && ten.contains("Pảy Pảy");
     }
