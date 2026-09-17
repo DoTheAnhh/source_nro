@@ -4440,6 +4440,16 @@ namespace Game6.God
             Service.gI().xinChiSoNhanVat(dsNguoi[i].id);
         }
 
+        /// <summary>Đóng bảng người, trả thân bảng về thẻ đang mở.</summary>
+        private void dongBangNguoi()
+        {
+            bangNguoi = 0;
+            dsNguoi.Clear();
+            nguoiChon = -1;
+            choDsNguoi = false;
+            idDangXem = -1;
+        }
+
         private NguoiDs nguoiDangXem()
         {
             return (nguoiChon >= 0 && nguoiChon < dsNguoi.Count)
@@ -4448,18 +4458,60 @@ namespace Game6.God
 
         // ---------------- Bo cuc ----------------
 
+        /// <summary>
+        /// Bảng này <b>tự chia cột</b>, không mượn bố cục của thẻ đang mở.
+        /// </summary>
+        /// <remarks>
+        /// <c>xTrai</c>/<c>xPhai</c> do <c>tinhBoCuc()</c> đặt theo thẻ đang
+        /// xem, mà thẻ "Chức năng" chỉ có MỘT cột rộng — mở bảng bạn bè từ đó
+        /// thì hai khung vẽ ra chồng lệch nhau, viền cắt ngang giữa bảng. Bảng
+        /// nào che trọn thân thì phải tự đo lấy chỗ của mình.
+        /// </remarks>
+        private int xTraiN()
+        {
+            return xRong();
+        }
+
+        private int wTraiN()
+        {
+            int w = (rongRong() - KHE_KHUNG) * 46 / 100;
+            return (w < 90) ? 90 : w;
+        }
+
+        private int xPhaiN()
+        {
+            return xTraiN() + wTraiN() + KHE_KHUNG;
+        }
+
+        private int wPhaiN()
+        {
+            return rongRong() - wTraiN() - KHE_KHUNG;
+        }
+
         /// <summary>Vùng cột danh sách bên trái.</summary>
         private int[] oCotDs()
         {
-            return new int[] { xTrai, yThan, rongTrai, caoThan };
+            return new int[] { xTraiN(), yThan, wTraiN(), caoThan };
         }
 
-        /// <summary>Vùng ba nút dưới cùng của cột phải.</summary>
+        /// <summary>Nút "Quay lại" ở đáy cột TRÁI.</summary>
+        /// <remarks>
+        /// Để ở cột trái vì đó là cột người chơi đang nhìn khi chưa chọn ai —
+        /// chưa chọn thì cột phải trống trơn, mà nút thoát lại nằm trong đúng
+        /// chỗ trống ấy thì tìm mãi không ra.
+        /// </remarks>
+        private int[] oNutVeN()
+        {
+            return new int[] { xTraiN() + 6, yThan + caoThan - 24,
+                wTraiN() - 12, 18 };
+        }
+
+        /// <summary>Vùng hai nút dưới cùng của cột phải.</summary>
         private int[] oNutNguoi(int i)
         {
-            int soNut = 3;
-            int w = (rongPhai - 12 - (soNut - 1) * 4) / soNut;
-            return new int[] { xPhai + 6 + i * (w + 4),
+            int soNut = 2;
+            int w = (wPhaiN() - 12 - (soNut - 1) * 4) / soNut;
+            return new int[] { xPhaiN() + 6 + i * (w + 4),
                 yThan + caoThan - 24, w, 18 };
         }
 
@@ -4473,9 +4525,11 @@ namespace Game6.God
 
         private void veCotDsNguoi(mGraphics g)
         {
-            int yND = veKhungCoTieuDe(g, xTrai, yThan, rongTrai, caoThan,
+            int xT = xTraiN();
+            int wT = wTraiN();
+            int yND = veKhungCoTieuDe(g, xT, yThan, wT, caoThan,
                     bangNguoi == 1 ? "Bạn bè" : "Kẻ thù", 0, MAU_DAI_CAM);
-            int yHet = yThan + caoThan - 4;
+            int yHet = oNutVeN()[1] - 4;
             int caoVung = yHet - yND - 2;
             int thay = caoVung / CAO_DONG_NGUOI;
             if (thay < 1)
@@ -4485,54 +4539,59 @@ namespace Game6.God
             if (choDsNguoi)
             {
                 mFont.tahoma_7.drawString(g, "Đang lấy danh sách…",
-                        xTrai + rongTrai / 2, yND + 10, mFont.CENTER);
+                        xT + wT / 2, yND + 10, mFont.CENTER);
+                veNutMotDong(g, oNutVeN(), "Quay lại");
                 return;
             }
             if (dsNguoi.Count == 0)
             {
                 mFont.tahoma_7.drawString(g, bangNguoi == 1
                         ? "Chưa có người bạn nào" : "Chưa có kẻ thù nào",
-                        xTrai + rongTrai / 2, yND + 10, mFont.CENTER);
+                        xT + wT / 2, yND + 10, mFont.CENTER);
+                veNutMotDong(g, oNutVeN(), "Quay lại");
                 return;
             }
             cuonNguoi = ganTrongKhoang(cuonNguoi, dsNguoi.Count - thay);
             bool coCuon = dsNguoi.Count > thay;
-            int wDong = rongTrai - 8 - (coCuon ? 7 : 0);
+            int wDong = wT - 8 - (coCuon ? 7 : 0);
 
-            g.setClip(xTrai, yND, rongTrai, caoVung);
+            g.setClip(xT, yND, wT, caoVung);
             for (int i = cuonNguoi; i < dsNguoi.Count && i - cuonNguoi < thay; i++)
             {
                 int y = yND + 2 + (i - cuonNguoi) * CAO_DONG_NGUOI;
                 NguoiDs n = dsNguoi[i];
                 bool chon = (i == nguoiChon);
                 g.setColor(chon ? MAU_THE_CON_CHON : MAU_O, chon ? 0.95f : 0.6f);
-                g.fillRect(xTrai + 4, y, wDong, CAO_DONG_NGUOI - 3, 4);
+                g.fillRect(xT + 4, y, wDong, CAO_DONG_NGUOI - 3, 4);
                 // Vach mau bao con dang trong game hay khong — mot cham nho o
                 // dau dong thi de nhin hon mot dong chu "Online" chiem cho.
                 g.setColor(n.online ? MAU_XANH : MAU_VIEN, 0.95f);
-                g.fillRect(xTrai + 6, y + 2, 3, CAO_DONG_NGUOI - 7, 1);
+                g.fillRect(xT + 6, y + 2, 3, CAO_DONG_NGUOI - 7, 1);
                 mFont.tahoma_7b_dark.drawString(g, catBot(n.ten, 18),
-                        xTrai + 13, y + 1, mFont.LEFT);
+                        xT + 13, y + 1, mFont.LEFT);
                 mFont mfSm = n.online ? mFont.tahoma_7b_green : mFont.tahoma_7_grey;
-                mfSm.drawString(g, n.sucManh, xTrai + 13, y + 12, mFont.LEFT);
+                mfSm.drawString(g, n.sucManh, xT + 13, y + 12, mFont.LEFT);
             }
             g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
             if (coCuon)
             {
-                veVachCuonTai(g, xTrai + rongTrai - 6, yND, caoVung,
+                veVachCuonTai(g, xT + wT - 6, yND, caoVung,
                         dsNguoi.Count, thay, cuonNguoi);
             }
+            veNutMotDong(g, oNutVeN(), "Quay lại");
         }
 
         private void veCotXemNguoi(mGraphics g)
         {
             NguoiDs n = nguoiDangXem();
-            int yND = veKhungCoTieuDe(g, xPhai, yThan, rongPhai, caoThan,
+            int xP = xPhaiN();
+            int wP = wPhaiN();
+            int yND = veKhungCoTieuDe(g, xP, yThan, wP, caoThan,
                     n == null ? "Thông tin" : catBot(n.ten, 20), 0, MAU_DAI_CAM);
             if (n == null)
             {
                 mFont.tahoma_7.drawString(g, "Chọn một người ở danh sách",
-                        xPhai + rongPhai / 2, yND + 12, mFont.CENTER);
+                        xP + wP / 2, yND + 12, mFont.CENTER);
                 return;
             }
             int yHet = oNutNguoi(0)[1] - 4;
@@ -4554,22 +4613,21 @@ namespace Game6.God
             {
                 caoXem = 46;
             }
-            int wXem = rongPhai - 12;
-            veKhungBo(g, xPhai + 6, yND + 2, wXem, caoXem, MAU_O_DO, 1f,
+            int wXem = wP - 12;
+            veKhungBo(g, xP + 6, yND + 2, wXem, caoXem, MAU_O_DO, 1f,
                     MAU_VIEN_O, 0.85f, 1);
-            g.setClip(xPhai + 7, yND + 3, wXem - 2, caoXem - 2);
-            veNguoiDs(g, xPhai + 6 + wXem / 2, yND + 2, caoXem, n);
+            g.setClip(xP + 7, yND + 3, wXem - 2, caoXem - 2);
+            veNguoiDs(g, xP + 6 + wXem / 2, yND + 2, caoXem, n);
             g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
             mFont mfTt = n.online ? mFont.tahoma_7b_green : mFont.tahoma_7_grey;
             mfTt.drawString(g, n.online ? "Đang trong game" : "Ngoại tuyến",
-                    xPhai + rongPhai / 2, yND + 2 + caoXem + 3, mFont.CENTER);
+                    xP + wP / 2, yND + 2 + caoXem + 3, mFont.CENTER);
 
-            veKhoiChiSo(g, xPhai + 6, yChiSo, rongPhai - 12, caoChiSo);
+            veKhoiChiSo(g, xP + 6, yChiSo, wP - 12, caoChiSo);
 
             veNutMotDong(g, oNutNguoi(0),
                     bangNguoi == 1 ? "Dịch chuyển" : "Trả thù");
             veNutMotDong(g, oNutNguoi(1), bangNguoi == 1 ? "Xoá bạn" : "Xoá");
-            veNutMotDong(g, oNutNguoi(2), "Quay lại");
         }
 
         /// <summary>Khung xem trước — dựng một <c>Char</c> tạm như bảng bang hội.</summary>
@@ -4600,15 +4658,24 @@ namespace Game6.God
 
         // ---------------- Cham ----------------
 
+        /// <summary>Mấy dòng hiện được cùng lúc — MỘT chỗ tính, ba chỗ dùng.</summary>
+        /// <remarks>
+        /// Vẽ, bắt chạm và kéo cuộn phải đếm ra cùng một con số. Ba chỗ tự
+        /// tính lấy thì chỉ cần lệch một dòng là bấm trúng người này lại mở
+        /// người kia.
+        /// </remarks>
+        private int soDongNguoiThay()
+        {
+            int caoVung = oNutVeN()[1] - 4 - (yThan + CAO_DAI_TD + KHE_KHUNG) - 2;
+            int n = caoVung / CAO_DONG_NGUOI;
+            return (n < 1) ? 1 : n;
+        }
+
         /// <summary>Kéo cuộn danh sách người.</summary>
         private void cuonDsNguoi()
         {
             int[] o = oCotDs();
-            int thay = (caoThan - CAO_DAI_TD - KHE_KHUNG - 6) / CAO_DONG_NGUOI;
-            if (thay < 1)
-            {
-                thay = 1;
-            }
+            int thay = soDongNguoiThay();
             int toiDa = dsNguoi.Count - thay;
             if (toiDa <= 0)
             {
@@ -4654,11 +4721,34 @@ namespace Game6.God
         /// <summary>Bắt chạm cho bảng người. Luôn nuốt cú chạm.</summary>
         private bool chamBangNguoi()
         {
-            if (cham2(oNutNguoi(2)))
+            // Nut X va dai the van phai an: bang nay che tron than, nuot sach
+            // moi cu cham thi dong bang cung khong duoc, doi the cung khong —
+            // dung nghia ket cung.
+            int[] oX = oNutX();
+            if (cham(oX[0], oX[1], oX[2], oX[3]))
             {
-                bangNguoi = 0;
-                dsNguoi.Clear();
-                nguoiChon = -1;
+                dongBangNguoi();
+                dong();
+                return true;
+            }
+            int wThe = rongMotThe();
+            for (int i = 0; i < TEN_THE.Length; i++)
+            {
+                if (cham(x0 + LE + i * wThe, yThe, wThe - 2, CAO_THE))
+                {
+                    dongBangNguoi();
+                    if (theChon != i)
+                    {
+                        cuon = 0;
+                        vaoThe(i);
+                    }
+                    theChon = i;
+                    return true;
+                }
+            }
+            if (cham2(oNutVeN()))
+            {
+                dongBangNguoi();
                 return true;
             }
             NguoiDs n = nguoiDangXem();
@@ -4692,11 +4782,11 @@ namespace Game6.God
             }
             // Cham mot dong trong danh sach.
             int yND = yThan + CAO_DAI_TD + KHE_KHUNG;
-            int thay = (caoThan - CAO_DAI_TD - KHE_KHUNG - 6) / CAO_DONG_NGUOI;
+            int thay = soDongNguoiThay();
             for (int i = cuonNguoi; i < dsNguoi.Count && i - cuonNguoi < thay; i++)
             {
                 int y = yND + 2 + (i - cuonNguoi) * CAO_DONG_NGUOI;
-                if (cham2(new int[] { xTrai + 4, y, rongTrai - 8,
+                if (cham2(new int[] { xTraiN() + 4, y, wTraiN() - 8,
                         CAO_DONG_NGUOI - 3 }))
                 {
                     chonNguoi(i);
