@@ -1,8 +1,9 @@
 namespace Game5.God
 {
     /// <summary>
-    /// Cột nút HUD ở mép phải: Chat, Cờ, Khu, Tab, Boss, Sự kiện, Phúc lợi,
-    /// Nhân vật, Trò chơi.
+    /// Hàng nút HUD ở góc trên phải: Chat, Cờ, Khu, Tab, Boss, Sự kiện, Phúc
+    /// lợi, Nhân vật, Trò chơi — xếp thành <b>hai hàng</b>, cộng nút ba gạch
+    /// đứng riêng một cột ngoài cùng.
     /// </summary>
     /// <remarks>
     /// <para><b>Một chỗ xếp cho tất cả.</b> Trước đây ba nút Cờ / Khu / Tab do
@@ -11,13 +12,15 @@ namespace Game5.God
     /// mỗi lần đổi lưới là phải sửa cả ba. Nay mọi nút hỏi đúng một hàm
     /// <see cref="oNut"/>.</para>
     ///
-    /// <para><b>Nút ba gạch đứng riêng một cột</b> ở góc trên phải và không nằm
-    /// trong danh sách này — nó là cái công tắc thu/mở cả cột.</para>
+    /// <para><b>Xếp từ PHẢI sang trái.</b> Nút số 0 (ô Chat) nằm sát nút ba
+    /// gạch, rồi lùi dần sang trái; hết một hàng thì xuống hàng dưới, cũng bắt
+    /// đầu từ mép phải. Nhờ vậy cụm nút luôn dính vào góc phải màn hình dù bớt
+    /// hay thêm nút.</para>
     ///
     /// <para><b>Thu mở trượt mượt.</b> <see cref="mo"/> chạy từ 0 tới 1 theo lối
     /// giảm dần (mỗi khung hình đi một phần quãng còn lại) nên nút trôi ra nhanh
-    /// lúc đầu rồi chậm dần khi tới chỗ — không giật cục như cộng đều. Lúc đang
-    /// thu, cả cột trượt lên nấp sau nút ba gạch.</para>
+    /// lúc đầu rồi chậm dần khi tới chỗ — không giật cục như cộng đều. Lúc thu,
+    /// mọi nút trượt <b>về đúng chỗ nút ba gạch</b> rồi nấp sau nó.</para>
     /// </remarks>
     public static class HudCot
     {
@@ -38,14 +41,17 @@ namespace Game5.God
         /// <summary>Bề cao một nút: icon 20 điểm cộng hàng chữ.</summary>
         public const int CAO = 32;
 
-        /// <summary>Khe dọc giữa hai nút.</summary>
+        /// <summary>Số nút mỗi hàng. Chín nút chia hai hàng: 5 trên, 4 dưới.</summary>
+        private const int SO_MOI_HANG = 5;
+
+        /// <summary>Khe giữa hai nút, cả ngang lẫn dọc.</summary>
         private const int KHE = 3;
 
-        /// <summary>Mép phải của cả cột, cách mép màn hình đúng bằng nút ba gạch.</summary>
-        private const int LE_PHAI = 7;
+        /// <summary>Mép phải của cả cụm, cách mép màn hình bấy nhiêu.</summary>
+        private const int LE_PHAI = 6;
 
-        /// <summary>Đỉnh nút đầu tiên — ngay dưới nút ba gạch.</summary>
-        private const int Y_DAU = 42;
+        /// <summary>Đỉnh hàng trên.</summary>
+        private const int Y_DAU = 6;
 
         /// <summary>Đang mở hay đang thu.</summary>
         public static bool dangMo = true;
@@ -73,7 +79,7 @@ namespace Game5.God
             mo += lech * 0.22f;
         }
 
-        /// <summary>Cột đã ra đủ để bấm được chưa.</summary>
+        /// <summary>Cụm đã ra đủ để bấm được chưa.</summary>
         public static bool bamDuoc()
         {
             return mo > 0.55f;
@@ -85,23 +91,42 @@ namespace Game5.God
             return mo > 0.02f;
         }
 
+        /// <summary>Vùng {x, y, rộng, cao} của nút ba gạch — riêng một cột ngoài cùng.</summary>
+        public static int[] oNutMenu()
+        {
+            return new int[] { GameCanvas.w - LE_PHAI - RONG, Y_DAU, RONG, CAO };
+        }
+
         /// <summary>Vùng {x, y, rộng, cao} của nút thứ <paramref name="i"/>.</summary>
-        /// <remarks>
-        /// Đã tính cả phần trượt: lúc thu, nút nằm chồng lên chỗ nút ba gạch.
-        /// </remarks>
+        /// <remarks>Đã tính cả phần trượt: lúc thu, nút chồng lên nút ba gạch.</remarks>
         public static int[] oNut(int i)
         {
-            int x = GameCanvas.w - LE_PHAI - RONG;
-            int yRaHan = Y_DAU + i * (CAO + KHE);
-            int yNap = Y_DAU - CAO - 8;
-            int y = (int) (yNap + (yRaHan - yNap) * mo);
+            int cot = i % SO_MOI_HANG;
+            int hang = i / SO_MOI_HANG;
+            // Mep phai cua hai hang: ngay ben trai nut ba gach.
+            int xPhai = GameCanvas.w - LE_PHAI - RONG - KHE;
+            int xRaHan = xPhai - RONG - cot * (RONG + KHE);
+            int yRaHan = Y_DAU + hang * (CAO + KHE);
+
+            int[] oMenu = oNutMenu();
+            int x = (int) (oMenu[0] + (xRaHan - oMenu[0]) * mo);
+            int y = (int) (oMenu[1] + (yRaHan - oMenu[1]) * mo);
             return new int[] { x, y, RONG, CAO };
         }
 
-        /// <summary>Mép dưới của cả cột khi đang mở — chỗ khác xếp tiếp từ đây.</summary>
+        /// <summary>Mép dưới của cả cụm khi đang mở — chỗ khác xếp tiếp từ đây.</summary>
         public static int mepDuoi()
         {
-            return Y_DAU + SO_NUT * (CAO + KHE);
+            int soHang = (SO_NUT + SO_MOI_HANG - 1) / SO_MOI_HANG;
+            return Y_DAU + soHang * (CAO + KHE);
+        }
+
+        /// <summary>Mép trái của cả cụm — bảng mục tiêu dừng trước chỗ này.</summary>
+        public static int mepTrai()
+        {
+            int cotCuoi = (SO_NUT < SO_MOI_HANG ? SO_NUT : SO_MOI_HANG) - 1;
+            int xPhai = GameCanvas.w - LE_PHAI - RONG - KHE;
+            return xPhai - RONG - cotCuoi * (RONG + KHE);
         }
     }
 }

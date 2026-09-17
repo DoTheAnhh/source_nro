@@ -515,13 +515,7 @@ namespace Game4.God
         /// <summary>
         /// Đường tâm ngang của nút ba gạch.
         /// </summary>
-        /// <remarks>
-        /// Giữ nguyên ở 19 — thẳng hàng với hàng trên của lưới 2×2 bên trái.
-        /// Đã thử dời xuống 35 cho nó nằm giữa hai hàng, nhưng chỗ cũ mới là chỗ
-        /// người chơi quen tay tìm tới.
-        /// </remarks>
-        /// <summary>Tâm dọc của nút ba gạch — giữa hàng nút trên (6..38).</summary>
-        private const int TAM_Y_BA_GACH = 22;
+        /// <summary>Cạnh nút bánh răng.</summary>
         private const int NUT_CANH = 30;
         /// <summary>Mau loe khi bam. 225225225 trong ma cu KHONG phai mau trang —
         /// giai ra la (108,170,9), tuc mau xanh la.</summary>
@@ -701,12 +695,6 @@ namespace Game4.God
             }
         }
 
-        /// <summary>Toạ độ tâm nút ba gạch — góc trên phải.</summary>
-        private static int xBaGach()
-        {
-            return GameCanvas.w - 22;
-        }
-
         /// <summary>Mã chạm riêng của nút ba gạch.</summary>
         private const int CHAM_BA_GACH = 995;
 
@@ -723,9 +711,8 @@ namespace Game4.God
         /// </remarks>
         private void veNutBaGach(mGraphics g)
         {
-            int x = xBaGach();
-            int nua = NUT_CANH / 2;
             bool dangBam = mScreen.keyTouch == CHAM_BA_GACH;
+            int[] o = HudCot.oNutMenu();
 
             // Cung mot kieu voi ca hang nut ben duoi: hinh o tren, ten o duoi.
             //
@@ -734,8 +721,8 @@ namespace Game4.God
             // lan la ca nam nut doi theo.
             // Khong con mang nen toi — ba vach tu co vien toi de doc duoc tren
             // moi nen ban do (xem GameScr.veNutHud).
-            GameScr.veNutHud(g, x - nua, TAM_Y_BA_GACH - nua, NUT_CANH,
-                    NUT_CANH, GameScr.ICON_BA_VACH, "Menu", dangBam, false);
+            GameScr.veNutHud(g, o[0], o[1], o[2], o[3],
+                    GameScr.ICON_BA_VACH, "Menu", dangBam, false);
         }
 
 
@@ -839,9 +826,10 @@ namespace Game4.God
             {
                 return true;
             }
+            int[] oMenu = HudCot.oNutMenu();
             if (!GameCanvas.isPointerMove
-                    && GameCanvas.isPointerHoldIn(xBaGach() - NUT_CANH / 2,
-                            TAM_Y_BA_GACH - NUT_CANH / 2, NUT_CANH, NUT_CANH))
+                    && GameCanvas.isPointerHoldIn(oMenu[0], oMenu[1], oMenu[2],
+                            oMenu[3]))
             {
                 mScreen.keyTouch = CHAM_BA_GACH;
                 if (GameCanvas.isPointerJustRelease && GameCanvas.isPointerClick)

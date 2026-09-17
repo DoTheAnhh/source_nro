@@ -120,8 +120,9 @@ namespace Game1
         /// </remarks>
         public static int mepTraiNutCo()
         {
-            return (coCommand != null && coCommand.w > 0)
-                    ? coCommand.x : (GameCanvas.w - 133);
+            // Mep trai cua CA CUM nut, khong phai cua rieng nut Co: cum gio hai
+            // hang, nut Co chi la mot o trong do.
+            return God.HudCot.mepTrai();
         }
 
         /// <summary>Xếp lại chỗ ba nút theo cột HUD.</summary>
