@@ -110,7 +110,8 @@ public final class HoTongService {
                     "Cờ đen đã bật — người khác có thể tấn công bạn suốt chuyến đi.");
         }
         Service.gI().sendThongBao(pl, "Hãy đi cùng Đường Tăng tới Đảo Kamê. "
-                + "Không được cách ông ấy quá " + c.khoangCachMap + " bản đồ.");
+                + "Giữa hai người mà có " + c.khoangCachMap
+                + " bản đồ là hỏng việc.");
         return null;
     }
 
@@ -241,6 +242,17 @@ public final class HoTongService {
     /**
      * Người chơi có còn đủ gần không — đếm theo <b>thứ tự trên tuyến</b>.
      *
+     * <h3>Đếm thế nào</h3>
+     *
+     * <p>{@code toiDa} là <b>số bản đồ phải đi qua</b> để từ chỗ người chơi
+     * tới chỗ Đường Tăng. Đủ số ấy là hỏng việc, chứ không phải hơn số ấy:
+     * đứng ở Làng Aru mà ông ấy đã sang Rừng nấm thì giữa hai người có ba bản
+     * đồ (Đồi hoa cúc, Thung lũng tre, Rừng nấm) — đúng ba, và thế là thất
+     * bại.</p>
+     *
+     * <p>Đứng giữa tuyến thì gần như không sợ: ở Thung lũng tre là với được cả
+     * Làng Aru lẫn Rừng xương.</p>
+     *
      * <p>Ở ngoài tuyến hẳn (chui vào nhà, vào map sự kiện) thì tính là quá xa:
      * không có cách nào đo khoảng cách giữa hai chỗ không nối với nhau.</p>
      */
@@ -257,7 +269,7 @@ public final class HoTongService {
         if (lech < 0) {
             lech = -lech;
         }
-        return lech <= toiDa;
+        return lech < toiDa;
     }
 
     // =====================================================================

@@ -217,6 +217,9 @@ public class SystemPanel extends JPanel {
         addRow(pCau, c, y++, "Thời gian hồi (phút):", fHtPhutHoi);
         y = ghiChuHang(pCau, c, y, "0 = không phải chờ");
         addRow(pCau, c, y++, "Cách xa tối đa (bản đồ):", fHtKhoangCach);
+        y = ghiChuHang(pCau, c, y,
+                "Số bản đồ giữa hai người; đủ chừng ấy là thất bại. Để 3: "
+                + "đứng Làng Aru mà Đường Tăng sang Rừng nấm là hỏng.");
         addRow(pCau, c, y++, "Mỗi bước cách nhau (ms):", fHtMsBuoc);
         addRow(pCau, c, y++, "Mỗi bước đi (điểm ảnh):", fHtBuocDiem);
         y = ghiChuHang(pCau, c, y,
