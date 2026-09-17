@@ -117,6 +117,16 @@ namespace Game5.God
                 ketThucNhanh("Đã dùng hết vật phẩm");
                 return;
             }
+            // Manh so suu tam da len cap toi da: dung NGAY.
+            //
+            // Cai chot "hai lan khong giam so luong" ben duoi van bat duoc, nhung
+            // phai cho hai nhip va an them hai loi tu choi cua may chu. Client
+            // vua co san cap cua tung the trong So suu tam nen biet truoc duoc.
+            if (SoSuuTamUI.theDaToiDa(idNhanh))
+            {
+                ketThucNhanh("Thẻ đã đạt cấp tối đa");
+                return;
+            }
             // Con hieu luc thi cho, KHONG tinh la mot lan that bai.
             if (buffConChay(iconNhanh))
             {

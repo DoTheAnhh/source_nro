@@ -1057,7 +1057,14 @@ public class InventoryService {
             boolean done = false;
             if (item.template.type >= 0 && item.template.type <= 5 || item.template.type == 32) {
                 Item itemBody = player.inventory.itemsBody.get(item.template.type == 32 ? 6 : item.template.type);
-                if (!itemBody.isNotNullItem()) {
+                // O trang bi DANG CO do thi DOI CHO, khong con doi phai trong.
+                //
+                // Ban cu chi mac khi o trang bi trong; o da co do thi mon
+                // trong ruong roi thang vao hanh trang, va nguoi choi phai
+                // thao do dang mac ra truoc roi moi mac duoc mon kia — trong
+                // nhu bam vao bi loi. Ba dong ngay duoi day da dat mon cu
+                // vao dung o vua lay ra, tuc doi cho von da lam duoc.
+                if (itemBody != null) {
                     if (item.template.gender == player.gender || item.template.gender == 3) {
                         long powerRequire = item.template.strRequire;
                         for (ItemOption io : item.itemOptions) {
@@ -1124,7 +1131,14 @@ public class InventoryService {
             boolean done = false;
             if (item.template.type >= 0 && item.template.type <= 5 || item.template.type == 32) {
                 Item itemBody = player.inventory.itemsBody.get(item.template.type == 32 ? 6 : item.template.type);
-                if (!itemBody.isNotNullItem()) {
+                // O trang bi DANG CO do thi DOI CHO, khong con doi phai trong.
+                //
+                // Ban cu chi mac khi o trang bi trong; o da co do thi mon
+                // trong ruong roi thang vao hanh trang, va nguoi choi phai
+                // thao do dang mac ra truoc roi moi mac duoc mon kia — trong
+                // nhu bam vao bi loi. Ba dong ngay duoi day da dat mon cu
+                // vao dung o vua lay ra, tuc doi cho von da lam duoc.
+                if (itemBody != null) {
                     if (item.template.gender == player.gender || item.template.gender == 3) {
                         long powerRequire = item.template.strRequire;
                         for (ItemOption io : item.itemOptions) {
@@ -1307,7 +1321,14 @@ public class InventoryService {
             boolean done = false;
             if ((item.template.type >= 0 && item.template.type <= 5) || item.template.type == 32) {
                 Item itemBody = player.inventory.itemsBody.get(item.template.type == 32 ? 6 : item.template.type);
-                if (!itemBody.isNotNullItem()) {
+                // O trang bi DANG CO do thi DOI CHO, khong con doi phai trong.
+                //
+                // Ban cu chi mac khi o trang bi trong; o da co do thi mon
+                // trong ruong roi thang vao hanh trang, va nguoi choi phai
+                // thao do dang mac ra truoc roi moi mac duoc mon kia — trong
+                // nhu bam vao bi loi. Ba dong ngay duoi day da dat mon cu
+                // vao dung o vua lay ra, tuc doi cho von da lam duoc.
+                if (itemBody != null) {
                     if (item.template.gender == player.gender || item.template.gender == 3) {
                         long powerRequire = item.template.strRequire;
                         for (ItemOption io : item.itemOptions) {

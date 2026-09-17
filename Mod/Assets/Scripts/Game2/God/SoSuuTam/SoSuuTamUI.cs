@@ -436,6 +436,30 @@ namespace Game2.God
             }
         }
 
+        /// <summary>Thẻ của vật phẩm này đã đạt cấp tối đa chưa.</summary>
+        /// <remarks>
+        /// Mã thẻ chính là mã vật phẩm góp vào nó, nên tra thẳng theo mã món.
+        /// Chưa mở sổ lần nào thì danh sách còn rỗng và hàm trả <c>false</c> —
+        /// lúc ấy chỗ gọi cứ theo đường cũ, không đoán bừa.
+        /// </remarks>
+        public static bool theDaToiDa(int idMon)
+        {
+            SoSuuTamUI ui = getInstance();
+            if (ui == null || ui.ds == null)
+            {
+                return false;
+            }
+            for (int i = 0; i < ui.ds.Count; i++)
+            {
+                The t = ui.ds[i];
+                if (t != null && t.id == idMon)
+                {
+                    return t.toiDa;
+                }
+            }
+            return false;
+        }
+
         private static List<The> docDanhSach(myReader r, bool khuonMoi)
         {
             int n = r.readShort();
