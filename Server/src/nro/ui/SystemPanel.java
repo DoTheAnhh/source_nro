@@ -341,9 +341,49 @@ public class SystemPanel extends JPanel {
             }
         }
         JTextField fId = new JTextField(cu == null ? "" : String.valueOf(cu.itemId), 8);
+        JLabel lblTen = new JLabel(cu == null ? "(chưa chọn)"
+                : htTenVatPham(cu.itemId));
+        // Hop tra cuu dung chung voi cac tab khac: hon hai nghin mau vat pham,
+        // go id tran thi khong co cach nao biet minh dang chon dung mon hay
+        // khong cho toi khi no roi ra tay nguoi choi.
+        JButton btChon = button("Chọn vật phẩm…", GREY, e -> {
+            int id = nro.ui.OptionPicker.chonVatPham(this,
+                    laySoAnToan(fId.getText()));
+            if (id >= 0) {
+                fId.setText(String.valueOf(id));
+                lblTen.setText(htTenVatPham(id));
+            }
+        });
+        fId.getDocument().addDocumentListener(
+                new javax.swing.event.DocumentListener() {
+            private void doi() {
+                lblTen.setText(htTenVatPham(laySoAnToan(fId.getText())));
+            }
+
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                doi();
+            }
+
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                doi();
+            }
+
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                doi();
+            }
+        });
         JTextField fMin = new JTextField(cu == null ? "1" : String.valueOf(cu.slMin), 8);
         JTextField fMax = new JTextField(cu == null ? "1" : String.valueOf(cu.slMax), 8);
-        JTextField fTl = new JTextField(cu == null ? "1000" : String.valueOf(cu.tiLe), 8);
+        // Nhap bang PHAN TRAM, luu bang phan nghin.
+        //
+        // Phan tram la thang ai cung doc duoc ngay; phan nghin thi phai nham
+        // trong dau moi biet 50 la 5%. Van luu phan nghin de con khai duoc
+        // nhung ti le le nhu 2,5%.
+        JTextField fTl = new JTextField(cu == null ? "100"
+                : gonSo(cu.tiLe / 10d), 8);
         javax.swing.JCheckBox cbBat = new javax.swing.JCheckBox("Bật",
                 cu == null || cu.bat);
         JTextField fGhi = new JTextField(cu == null ? "" : nz(cu.ghiChu), 24);
@@ -354,11 +394,17 @@ public class SystemPanel extends JPanel {
         c.anchor = GridBagConstraints.WEST;
         c.fill = GridBagConstraints.HORIZONTAL;
         int y = 0;
-        addRow(form, c, y++, "Mã vật phẩm:", fId);
+        JPanel hangId = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        hangId.setOpaque(false);
+        hangId.add(fId);
+        hangId.add(btChon);
+        addRowC(form, c, y++, "Vật phẩm:", hangId);
+        addRowC(form, c, y++, "", lblTen);
         addRow(form, c, y++, "Số lượng ít nhất:", fMin);
         addRow(form, c, y++, "Số lượng nhiều nhất:", fMax);
-        addRow(form, c, y++, "Tỉ lệ rơi (phần nghìn):", fTl);
-        y = ghiChuHang(form, c, y, "1000 = chắc chắn rơi, 50 = 5%");
+        addRow(form, c, y++, "Tỉ lệ rơi (%):", fTl);
+        y = ghiChuHang(form, c, y,
+                "100 = chắc chắn rơi. Nhập được số lẻ, ví dụ 2.5");
         addRow(form, c, y++, "Ghi chú:", fGhi);
         form.add(cbBat, c);
 
@@ -374,7 +420,12 @@ public class SystemPanel extends JPanel {
         moi.itemId = laySoAnToan(fId.getText());
         moi.slMin = laySoAnToan(fMin.getText());
         moi.slMax = laySoAnToan(fMax.getText());
-        moi.tiLe = laySoAnToan(fTl.getText());
+        try {
+            moi.tiLe = (int) Math.round(docSoThuc(fTl.getText(), "Tỉ lệ") * 10d);
+        } catch (IllegalArgumentException ex) {
+            note(WARN_RED, ex.getMessage());
+            return;
+        }
         moi.bat = cbBat.isSelected();
         moi.ghiChu = fGhi.getText().trim();
         String loi = nro.repository.dao.HoTongDAO.luuQua(moi);
