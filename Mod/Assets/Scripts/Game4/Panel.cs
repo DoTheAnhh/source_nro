@@ -3566,7 +3566,16 @@ namespace Game4
             }
             if (isnewInventory && isTabInven())
             {
-                int buoc = oTui();
+                // Mot nac banh xe di NUA O, khong phai tron mot o.
+                //
+                // Nhay tron mot o thi moi nac la mot hang bien mat va mot hang
+                // hien ra — mat luon cam giac dang truot, va rat de lo mat mon
+                // dang tim. Nua o thi van thay hang cu trong khi hang moi vao.
+                int buoc = oTui() / 2;
+                if (buoc < 8)
+                {
+                    buoc = 8;
+                }
                 cmtoY -= a * buoc;
                 int tran = gioiHanCuonTui();
                 if (cmtoY > tran)
@@ -3773,16 +3782,17 @@ namespace Game4
                         pointerDownLastX[num2] = pointerDownLastX[num2 - 1];
                     }
                     pointerDownLastX[0] = GameCanvas.py;
+                    int tranKeo = tranCuon();
                     cmtoY -= num;
                     if (cmtoY < 0)
                     {
                         cmtoY = 0;
                     }
-                    if (cmtoY > cmyLim)
+                    if (cmtoY > tranKeo)
                     {
-                        cmtoY = cmyLim;
+                        cmtoY = tranKeo;
                     }
-                    if (cmy < 0 || cmy > cmyLim)
+                    if (cmy < 0 || cmy > tranKeo)
                     {
                         num /= 2;
                     }
@@ -4793,14 +4803,15 @@ namespace Game4
             }
             if (cmRun != 0 && !pointerIsDowning)
             {
+                int tranQt = tranCuon();
                 cmtoY += cmRun / 100;
                 if (cmtoY < 0)
                 {
                     cmtoY = 0;
                 }
-                else if (cmtoY > cmyLim)
+                else if (cmtoY > tranQt)
                 {
-                    cmtoY = cmyLim;
+                    cmtoY = tranQt;
                 }
                 else
                 {
@@ -4949,6 +4960,8 @@ namespace Game4
     
         public void paint(mGraphics g)
         {
+            // Xoa o dau moi khung hinh; paintInventory se bat lai neu no chay.
+            dangVeLuoiTui = false;
             g.translate(-g.getTranslateX(), -g.getTranslateY() + mGraphics.addYWhenOpenKeyBoard);
             g.translate(-cmx, 0);
             g.translate(X, Y);
@@ -6755,6 +6768,28 @@ namespace Game4
         /// <summary>Số cột ô của tab "Hành trang".</summary>
         private const int TUI_SO_COT = 6;
 
+        /// <summary>Số hàng ô muốn thấy cùng lúc, không phải cuộn.</summary>
+        /// <remarks>
+        /// Ô vuông nên bề rộng cột quyết định cỡ ô; nhưng cột hẹp mà vùng cao
+        /// thì chỉ hiện được bốn hàng rưỡi, còn cột rộng thì ô to quá. Chặn
+        /// thêm theo bề cao để luôn thấy đủ sáu hàng.
+        /// </remarks>
+        private const int TUI_SO_HANG = 6;
+
+        /// <summary>Khung hình vừa rồi bảng này có vẽ lưới ô vuông không.</summary>
+        /// <remarks>
+        /// <para><c>isTabInven()</c> liệt kê theo <c>type</c> và số thẻ, mà
+        /// danh sách ấy sót vài bảng cũng vẽ lưới — bảng chọn đồ đưa NPC, bảng
+        /// cất vào rương. Ở những bảng đó lưới hiện ra nhưng cú chạm lại đi
+        /// theo đường DANH SÁCH, tính dòng cao 24 điểm trên một lưới ô gần 50
+        /// điểm: bấm nửa dưới ô thì trúng, nửa trên thì trượt.</para>
+        ///
+        /// <para>Cờ này ghi lại sự thật đơn giản hơn mọi danh sách: khung hình
+        /// vừa rồi có vẽ lưới hay không. Đặt lúc vẽ, đọc lúc bắt chạm của
+        /// khung sau — mà hai khung liền nhau thì bảng không đổi kiểu.</para>
+        /// </remarks>
+        private bool dangVeLuoiTui;
+
         /// <summary>Số ô dọc của cột trang bị bên trái.</summary>
         private const int TB_SO_HANG = 5;
 
@@ -6844,6 +6879,14 @@ namespace Game4
         private int oTui()
         {
             int o = (rongVungTui() - 2) / TUI_SO_COT;
+            int caoVung = yScroll + hScroll - yOTui();
+            int theoCao = caoVung / TUI_SO_HANG;
+            if (theoCao > 0 && theoCao < o)
+            {
+                // Vung thap hon la co so hang, lay theo be cao — sau hang phai
+                // thay het, khong thi cuon vai diem la mat nguyen mot hang.
+                o = theoCao;
+            }
             return (o < 16) ? 16 : o;
         }
 
@@ -7231,6 +7274,21 @@ namespace Game4
                     y + o / 2 + 1, mFont.CENTER);
         }
 
+        /// <summary>
+        /// Mức cuộn tối đa của bảng lúc này.
+        /// </summary>
+        /// <remarks>
+        /// Lưới ô vuông và danh sách đo bằng hai thước khác nhau:
+        /// <c>cmyLim</c> tính theo dòng 24 điểm của danh sách, còn lưới thì
+        /// theo số hàng ô. Dùng nhầm thước là kéo lưới xuống được vài điểm rồi
+        /// bị giật ngược lên, hoặc kéo tuột quá cuối rồi treo ở khoảng trắng.
+        /// </remarks>
+        private int tranCuon()
+        {
+            return (isnewInventory && isTabInven())
+                    ? gioiHanCuonTui() : cmyLim;
+        }
+
         /// <summary>Bao nhiêu điểm cuộn được ở tab "Hành trang".</summary>
         private int gioiHanCuonTui()
         {
@@ -7305,6 +7363,7 @@ namespace Game4
             bool flag = true;
             if (flag && isnewInventory)
             {
+                dangVeLuoiTui = true;
                 veTuiMoi(g);
             }
             if (flag && isnewInventory)
@@ -13019,6 +13078,12 @@ namespace Game4
         /// </remarks>
         private bool isTabInven()
         {
+            if (dangVeLuoiTui)
+            {
+                // Dang ve luoi thi moi thu khac phai theo luoi, du bang nay co
+                // nam trong danh sach ben duoi hay khong.
+                return true;
+            }
             switch (type)
             {
             case 0:

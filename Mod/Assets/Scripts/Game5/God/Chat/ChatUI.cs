@@ -682,31 +682,13 @@ namespace Game5.God
             }
             if (thuGon)
             {
-                // Thu gon ve SAT MEP PHAI cua khung chat.
-                //
-                // Truoc day no nam giua man hinh, tuc giua khung chat luc mo
-                // ra — bam thu gon la cai nut nhay tu goc phai vao chinh
-                // giua, bam mo lai thi nhay nguoc ra. Neo vao mep phai thi
-                // nut dung yen mot cho o ca hai trang thai.
-                int xg = xKhung() + rongKhung() - O_THU_GON - LE;
-                int yg = GameCanvas.h - O_THU_GON - 5;
-                GameScr.veNenBangHud(g, xg, yg, O_THU_GON, O_THU_GON);
-                g.setColor(0xFFE9A3, 1f);
-                for (int i = 0; i < 3; i++)
-                {
-                    g.fillRect(xg + 4, yg + 4 + i * 4, O_THU_GON - 8, 2);
-                }
-                if (coTinChuaDoc() && nhipNhay())
-                {
-                    // Thu gon roi van phai biet co tin moi: cham do o goc nut.
-                    g.setColor(0xFF4A3C, 1f);
-                    g.fillRect(xg + O_THU_GON - 7, yg + 2, 5, 5, 3);
-                }
-                oThuGon = new int[] { xg, yg, O_THU_GON, O_THU_GON };
+                // Luc thu gon, cai nut KHONG ve o day nua — xem veNutThuGon(),
+                // goi tu chuoi ve hang nut HUD, tuc nam duoi moi bang.
                 oThe = new int[0][];
                 oGo = new int[0];
                 return;
             }
+            oThuGon = new int[0];
 
             // Khung dang mo o the nao thi the do coi nhu da doc.
             danhDauDaDoc(theChon);
@@ -1048,6 +1030,48 @@ namespace Game5.God
             return GameCanvas.currentScreen == GameScr.instance;
         }
 
+        /// <summary>Khung chat đang thu gọn thành một cái nút.</summary>
+        public bool dangThuGon()
+        {
+            return thuGon;
+        }
+
+        /// <summary>
+        /// Vẽ cái nút của khung chat lúc thu gọn — <b>ở lớp dưới cùng</b>.
+        /// </summary>
+        /// <remarks>
+        /// <para>Khung chat lúc <b>mở</b> phải nằm trên mọi bảng, không thì mở
+        /// bảng ra là mất hút chỗ đang đọc. Nhưng lúc <b>thu gọn</b> nó chỉ còn
+        /// một cái nút nhỏ, mà cái nút ấy nổi trên mặt bảng thì vừa che vừa
+        /// nhận nhầm cú bấm dành cho bảng.</para>
+        ///
+        /// <para>Nên lúc thu gọn, nút vẽ cùng lượt với hàng nút HUD — trong
+        /// <c>GameScr.paint</c>, tức trước mọi bảng — còn lúc mở thì cả khung
+        /// vẫn vẽ ở cuối <c>GameCanvas.paint</c> như cũ.</para>
+        /// </remarks>
+        public void veNutThuGon(mGraphics g)
+        {
+            if (!choHien() || !thuGon)
+            {
+                return;
+            }
+            int xg = xKhung() + rongKhung() - O_THU_GON - LE;
+            int yg = GameCanvas.h - O_THU_GON - 5;
+            GameScr.veNenBangHud(g, xg, yg, O_THU_GON, O_THU_GON);
+            g.setColor(0xFFE9A3, 1f);
+            for (int i = 0; i < 3; i++)
+            {
+                g.fillRect(xg + 4, yg + 4 + i * 4, O_THU_GON - 8, 2);
+            }
+            if (coTinChuaDoc() && nhipNhay())
+            {
+                // Thu gon roi van phai biet co tin moi: cham do o goc nut.
+                g.setColor(0xFF4A3C, 1f);
+                g.fillRect(xg + O_THU_GON - 7, yg + 2, 5, 5, 3);
+            }
+            oThuGon = new int[] { xg, yg, O_THU_GON, O_THU_GON };
+        }
+
         // ==================================================================
         //  Cham
         // ==================================================================
@@ -1077,6 +1101,16 @@ namespace Game5.God
         {
             if (!choHien())
             {
+                return false;
+            }
+            if (thuGon && (GameCanvas.panel != null && GameCanvas.panel.isShow
+                    || GameCanvas.menu != null && GameCanvas.menu.showMenu
+                    || GameCanvas.currentDialog != null
+                    || God.ClientManager.coManPhuDangMo()))
+            {
+                // Dang thu gon va co bang che len: cu cham do la cua bang, dung
+                // nuot. Luc MO thi khung chat van an cham nhu cu — no nam tren
+                // cung va nguoi choi dang doc no.
                 return false;
             }
             // Cuon bang banh xe khi con tro nam trong khung — xet truoc ca nha

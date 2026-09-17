@@ -619,6 +619,9 @@ namespace Game2.God
             veNamNutMoi(g);
             GameScr.veOChat(g);
             TabControll.veHangNut(g);
+            // Nut cua khung chat luc THU GON cung nam o lop nay: bang nao mo
+            // ra cung de len duoc no.
+            ChatUI.getInstance().veNutThuGon(g);
         }
 
         /// <summary>Năm nút vừa dọn từ popup MENU ra hàng nút HUD.</summary>
