@@ -1724,13 +1724,33 @@ namespace Game5.God
             int giuaKhoi = yLuoiTB + (SO_HANG_COT - 1) * buocOTrangBi() / 2;
             int yChan = giuaKhoi + CAO_NHAN_VAT / 2;
 
-            // Be dung ve TRUOC nhan vat, nhan vat truoc cac o.
+            // KHONG con be dung.
             //
-            // Ve o truoc thi anh nhan vat de len khung o hai ben, o dang chon mat
-            // vien vang va nhin nhu khong chon duoc.
-            veBeDung(g, xTrai + rongTrai / 2, yChan,
-                    Math.min(rongTrai - o * 2 - 8, 90));
-            Char.myCharz().paintCharBody(g, xTrai + rongTrai / 2, yChan - 4,
+            // Cai be la mot mang mau dac nam duoi chan, va no khong co that
+            // trong game — nguoi choi ngoai ban do dung thang tren nen dat.
+            // Bo di thi khung xem truoc sach, chi con nguoi.
+            //
+            // De tu dung BEN CANH su phu, lui ve mot ben va nho hon mot chut
+            // nho dung sau: dung chong len nhau thi hai hinh dinh lam mot.
+            Char deBenCanh = Char.myPetz();
+            bool coDe = deBenCanh != null && Char.myCharz().havePet
+                    && deBenCanh.cName != null && deBenCanh.cName.Length > 0;
+            int xSuPhu = xTrai + rongTrai / 2 + (coDe ? -14 : 0);
+            if (coDe)
+            {
+                // Ve de TRUOC su phu: no dung sau nen phai bi che, khong thi
+                // nhin nhu no dung truoc ma lai nho hon.
+                try
+                {
+                    deBenCanh.paintCharBody(g, xSuPhu + 34, yChan - 2, 1,
+                            khungDungCho(), false);
+                }
+                catch (System.Exception)
+                {
+                    // Anh bo phan chua tai xong: khung sau ve lai.
+                }
+            }
+            Char.myCharz().paintCharBody(g, xSuPhu, yChan - 4,
                     1, khungDungCho(), true);
 
             if (mac == null)
@@ -2114,6 +2134,9 @@ namespace Game5.God
             }
             long gio = mSystem.currentTimeMillis();
             int soHang = soHangTui();
+            // Cat ca vung luoi mot lan: hang ve them va hang dang troi deu co
+            // the tho ra ngoai vien khung.
+            g.setClip(xPhai + 1, yNoiDung + 1, rongPhai - 2, caoNoiDung - 2);
             if (mocHang == null || mocHang.Length < soHang)
             {
                 int n = (soHang < 1) ? 1 : soHang;
@@ -2138,7 +2161,12 @@ namespace Game5.God
                 }
             }
             dangVeLuoi = true;
-            for (int hang = cuon; hang < cuon + thay; hang++)
+            // Phan le cua cuon, doi ra diem anh: luoi troi lien tuc theo tay
+            // chu khong nhay tung hang.
+            int lechLe = (int) (duCuon * oTuiDoc);
+            // Ve them MOT hang nua: luoi dang troi do nen hang duoi cung chi
+            // ho ra mot phan, khong ve thi day khung trong ra mot dai.
+            for (int hang = cuon; hang <= cuon + thay; hang++)
             {
                 for (int cot = 0; cot < TUI_SO_COT; cot++)
                 {
@@ -2175,7 +2203,8 @@ namespace Game5.God
                     // nhang dat xuong, con cong deu thi o nao cung nhu bi keo.
                     float con = (1f - t) * (1f - t);
                     int xO = xPhai + LE_LUOI + cot * oTuiNgang;
-                    int yO = yNoiDung + LE_LUOI + (hang - cuon) * oTuiDoc;
+                    int yO = yNoiDung + LE_LUOI + (hang - cuon) * oTuiDoc
+                            - lechLe;
                     // LO DAN THEO CHIEU DOC.
                     //
                     // Cat o bang mot khung cao dan tu tren xuong, nen o hien ra
@@ -2202,6 +2231,7 @@ namespace Game5.God
                     }
                 }
             }
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
             if (soHangTui() > thay)
             {
                 veVachCuon(g, xPhai + rongPhai - RONG_CUON + 2, yNoiDung,
@@ -6179,7 +6209,7 @@ namespace Game5.God
             // o xep hai mep nhu cua su phu nen giua moi la dung cho.
             int xAnh = x + w / 2;
             int yChan = y0d + caoD / 2 + CAO_NHAN_VAT / 2;
-            veBeDung(g, xAnh, yChan, 70);
+            // Khong ve be dung — xem ghi chu o khung xem truoc cua su phu.
             // Doi so cuoi la false: KHONG ve do deo lung.
             //
             // paintCharBody ve co bang khi truyen true, va no lay tu truong `bag`
@@ -8738,7 +8768,19 @@ namespace Game5.God
             if (GameCanvas.pXYScrollMouse != 0
                     && trongVungCuon(GameCanvas.pxMouse, GameCanvas.pyMouse))
             {
-                cuon += GameCanvas.pXYScrollMouse > 0 ? -1 : 1;
+                if (dangVeLuoi)
+                {
+                    // Luoi o: mot nac di NUA hang, va phan le duoc giu lai —
+                    // nen hang moi lo ra dan dan chu khong nhay ra tron mot
+                    // hang moi nac. Danh sach thuong van di tron mot dong: o
+                    // do mot dong la mot muc, nua dong khong co nghia gi.
+                    duCuon += GameCanvas.pXYScrollMouse > 0 ? -0.5f : 0.5f;
+                    apDuCuon();
+                }
+                else
+                {
+                    cuon += GameCanvas.pXYScrollMouse > 0 ? -1 : 1;
+                }
             }
             if (GameCanvas.isPointerDown)
             {
@@ -8799,8 +8841,9 @@ namespace Game5.God
                 }
                 else
                 {
+                    // GIU phan le: xoa no la luoi giat mot cai ve dung hang
+                    // ngay khi vua dung tay — nhin nhu bi nam cham hut.
                     vanTocCuon = 0f;
-                    duCuon = 0f;
                 }
             }
             int truoc = cuon;
