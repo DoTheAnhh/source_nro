@@ -1238,6 +1238,56 @@ namespace Game3
     		}
     	}
     
+    	/// <summary>
+    	/// Vẽ một ảnh vào đúng ô <paramref name="w"/>×<paramref name="h"/>, co giãn cho vừa.
+    	/// </summary>
+    	/// <remarks>
+    	/// <para><c>drawRegion</c> vẽ đúng cỡ gốc của ảnh, nên một hàng icon lấy từ
+    	/// kho icon có cái 12 điểm có cái 37 điểm — nhìn ra một hàng lổn nhổn. Hàm
+    	/// này kéo mọi ảnh về cùng một ô.</para>
+    	///
+    	/// <para>Đi qua <c>GUI.DrawTexture</c> với <c>StretchToFill</c>, đúng cách
+    	/// mà <c>fillRect</c> bo góc đang dùng — nên nó tôn trọng cả
+    	/// <c>translate</c> lẫn vùng <c>clip</c> hiện hành.</para>
+    	/// </remarks>
+    	public void veAnhVuaO(Image image, int x, int y, int w, int h)
+    	{
+    		if (image == null || image.texture == null || w <= 0 || h <= 0)
+    		{
+    			return;
+    		}
+    		float px = (float)(x * zoomLevel);
+    		float py = (float)(y * zoomLevel);
+    		int pw = w * zoomLevel;
+    		int ph = h * zoomLevel;
+    		if (isTranslate)
+    		{
+    			px += (float)translateX;
+    			py += (float)translateY;
+    		}
+    		int cx = 0;
+    		int cy = 0;
+    		if (isClip)
+    		{
+    			cx = clipX;
+    			cy = clipY;
+    			int cw = clipW;
+    			int ch = clipH;
+    			if (isTranslate)
+    			{
+    				cx += clipTX;
+    				cy += clipTY;
+    			}
+    			GUI.BeginGroup(new Rect((float)cx, (float)cy, (float)cw, (float)ch));
+    		}
+    		GUI.DrawTexture(new Rect(px - (float)cx, py - (float)cy, pw, ph),
+    				image.texture, ScaleMode.StretchToFill, true);
+    		if (isClip)
+    		{
+    			GUI.EndGroup();
+    		}
+    	}
+
     	public void drawImageSimple(Image image, int x, int y)
     	{
     		x *= zoomLevel;

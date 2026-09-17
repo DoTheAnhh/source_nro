@@ -2639,6 +2639,7 @@ public class Service {
                 msg.writer().writeLong(pl.nPoint.dame);
                 msg.writer().writeShort(pl.nPoint.tlSDCM);
                 msg.writer().writeShort(pl.nPoint.crit);
+                msg.writer().writeInt(pl.nPoint.def);
             } else {
                 long[] cs = chiSoTrongCSDL(id);
                 if (cs == null) {
@@ -2652,6 +2653,7 @@ public class Service {
                     msg.writer().writeLong(cs[2]);
                     msg.writer().writeShort((int) cs[3]);
                     msg.writer().writeShort((int) cs[4]);
+                    msg.writer().writeInt((int) cs[5]);
                 }
             }
             nguoiXem.sendMessage(msg);
@@ -2676,12 +2678,12 @@ public class Service {
      * <code>PlayerDAO</code>, cột <code>data_point</code>): ô 13 là sức đánh, ô 14 là HP
      * tối đa, ô 15 là KI tối đa. Đọc ra là đúng bằng lúc họ đăng xuất.</p>
      *
-     * <p>Ô 16 và 17 giữ sát thương chí mạng và tỉ lệ chí mạng, thêm vào sau
-     * nên nhân vật chưa lưu lại lần nào kể từ bản có hai ô ấy thì <b>chưa</b>
-     * có — lúc đó trả về -1 và bảng bên client hiện dấu gạch cho riêng hai
-     * dòng đó. Đăng nhập rồi thoát một lần là có.</p>
+     * <p>Ô 16, 17 và 18 giữ sát thương chí mạng, tỉ lệ chí mạng và giáp — thêm
+     * vào sau, nên nhân vật chưa lưu lại lần nào kể từ bản có ba ô ấy thì
+     * <b>chưa</b> có: trả về -1 và bảng bên client hiện dấu gạch cho riêng mấy
+     * dòng đó. Nhân vật ấy đăng nhập một lần là máy chủ ghi đủ.</p>
      *
-     * @return <code>{hpMax, mpMax, dame, sdcm, crit}</code> hoặc
+     * @return <code>{hpMax, mpMax, dame, sdcm, crit, giap}</code> hoặc
      *         <code>null</code> nếu không đọc được
      */
     /** Đọc một ô JSON thành số; hỏng hay rỗng thì lấy giá trị dự phòng. */
@@ -2718,7 +2720,8 @@ public class Service {
             long mpMax = Long.parseLong(String.valueOf(ds.get(15)));
             long sdcm = (ds.size() > 16) ? doSo(ds.get(16), -1) : -1;
             long crit = (ds.size() > 17) ? doSo(ds.get(17), -1) : -1;
-            return new long[]{hpMax, mpMax, dame, sdcm, crit};
+            long giap = (ds.size() > 18) ? doSo(ds.get(18), -1) : -1;
+            return new long[]{hpMax, mpMax, dame, sdcm, crit, giap};
         } catch (Exception ex) {
             Logger.logException(Service.class, ex,
                     "Lỗi đọc chỉ số trong CSDL của nhân vật " + id);

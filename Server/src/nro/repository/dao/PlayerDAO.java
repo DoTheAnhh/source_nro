@@ -868,6 +868,9 @@ public class PlayerDAO {
                     // chen giua la lech het.
                     dataArray.add(player.nPoint.tlSDCM);
                     dataArray.add(player.nPoint.crit);
+                    // O 18: giap. Cung ly do voi hai o tren — day la con so sau
+                    // trang bi va set, khong tinh lai duoc tu defg goc o o 8.
+                    dataArray.add(player.nPoint.def);
                     String point = dataArray.toJSONString();
                     dataArray.clear();
 

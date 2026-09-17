@@ -3906,9 +3906,10 @@ namespace Game4
                                 long sdNg = msg.reader().readLong();
                                 int sdcmNg = msg.reader().readShort();
                                 int cmNg = msg.reader().readShort();
+                                int giapNg = msg.reader().readInt();
                                 God.TuiUI.getInstance().nhanChiSoNhanVat(
                                         idNguoi, hpNg, kiNg, sdNg, sdcmNg, cmNg,
-                                        trangThai == 1);
+                                        giapNg, trangThai == 1);
                             }
                             else
                             {

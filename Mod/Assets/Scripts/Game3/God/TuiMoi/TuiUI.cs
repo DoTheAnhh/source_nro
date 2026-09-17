@@ -3986,14 +3986,16 @@ namespace Game3.God
         private long sdNguoiXem;
         private int sdcmNguoiXem;
         private int cmNguoiXem;
+        private int giapNguoiXem;
 
         /// <summary>Người đang xem có online không — số liệu sống hay lấy từ CSDL.</summary>
         private bool nguoiDangOnline;
 
         /// <summary>Máy chủ trả về chỉ số của một nhân vật.</summary>
         public void nhanChiSoNhanVat(int id, long hp, long ki, long sd,
-                int sdcm, int cm, bool dangOnline)
+                int sdcm, int cm, int giap, bool dangOnline)
         {
+            giapNguoiXem = giap;
             idChiSo = id;
             coChiSo = true;
             choChiSo = false;
@@ -4439,25 +4441,30 @@ namespace Game3.God
             // mang thi khong luu nen gui -1.
             string sdcm = (ro && sdcmNguoiXem >= 0) ? (sdcmNguoiXem + "%") : "—";
             string cm = (ro && cmNguoiXem >= 0) ? (cmNguoiXem + "%") : "—";
+            string giap = (ro && giapNguoiXem >= 0)
+                    ? NinjaUtil.getMoneys(giapNguoiXem) : "—";
 
             int yA = yD;
             yA = veDongTT(g, x, wCot, yA, "HP", hp, mFont.tahoma_7b_red);
             yA = veDongTT(g, x, wCot, yA, "KI", ki, mFont.tahoma_7b_blue);
-            veDongTT(g, x, wCot, yA, "Tỉ lệ CM", cm, mFont.tahoma_7b_dark);
+            veDongTT(g, x, wCot, yA, "Giáp", giap, mFont.tahoma_7b_dark);
 
             int yB = yD;
             yB = veDongTT(g, xCot2, wCot, yB, "Sức đánh", sd,
                     mFont.tahoma_7b_green);
-            veDongTT(g, xCot2, wCot, yB, "SDCM", sdcm, mFont.tahoma_7b_dark);
+            yB = veDongTT(g, xCot2, wCot, yB, "SDCM", sdcm, mFont.tahoma_7b_dark);
+            veDongTT(g, xCot2, wCot, yB, "Tỉ lệ CM", cm, mFont.tahoma_7b_dark);
+            // Ghi chu nam ngay tren dai tieu de: sau khi them dong Giap thi hai
+            // cot da kin ba hang, khong con cho o duoi.
             if (!ro)
             {
-                mFont.tahoma_7_grey.drawString(g, "(không lấy được chỉ số)",
-                        xCot2, yB + 15, mFont.LEFT);
+                mFont.tahoma_7_grey.drawString(g, "(không lấy được)",
+                        x + w - 4, y + 3, mFont.RIGHT);
             }
             else if (!nguoiDangOnline)
             {
-                mFont.tahoma_7_grey.drawString(g, "(số liệu lúc đăng xuất)",
-                        xCot2, yB + 15, mFont.LEFT);
+                mFont.tahoma_7_grey.drawString(g, "(lúc đăng xuất)",
+                        x + w - 4, y + 3, mFont.RIGHT);
             }
         }
 

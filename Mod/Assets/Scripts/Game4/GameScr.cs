@@ -6562,26 +6562,27 @@ namespace Game4
     	//  Nut HUD: icon that o tren, ten o duoi
     	// ==================================================================
 
-    	/// <summary>Lá cờ vàng — nút "Cờ".</summary>
-    	public const int ICON_CO = 2326;
+    	/// <summary>Lá cờ — nút "Cờ".</summary>
+    	public const int ICON_CO = 13806;
 
     	/// <summary>Bảng gỗ — nút "Khu"; số khu vẽ thẳng lên bảng.</summary>
     	public const int ICON_KHU = 561;
 
-    	/// <summary>Thẻ hai mũi tên đổi chỗ — nút "Tab".</summary>
+    	/// <summary>Gương mặt nhân vật — nút "Tab".</summary>
     	/// <remarks>
-    	/// Hai mũi tên xoay vòng là dấu hiệu "đổi chỗ" quen thuộc, hợp với việc
-    	/// nút này làm: nhảy qua lại giữa các tab. Ứng viên còn lại là 3783 (sách
-    	/// dịch chuyển) — sáng và rõ hơn ở cỡ nhỏ nhất, nhưng đọc ra "dịch chuyển"
-    	/// chứ không phải "đổi tab".
+    	/// Mỗi tab là một nhân vật đang đăng nhập, nên cái mặt đọc ra ngay là
+    	/// "đổi người". Số tab đã nằm ngay dưới icon.
     	/// </remarks>
-    	public const int ICON_TAB = 15767;
+    	public const int ICON_TAB = 268;
 
     	/// <summary>Loa to — ô "Chat".</summary>
     	public const int ICON_CHAT = 13619;
 
     	/// <summary>Không có icon: nút tự vẽ ba vạch (nút menu).</summary>
     	public const int ICON_BA_VACH = -1;
+
+    	/// <summary>Cạnh ô icon của hàng nút HUD — cả năm nút chung một cỡ.</summary>
+    	public const int CANH_ICON_HUD = 20;
 
     	public static void veNutHud(mGraphics g, int x, int y, int w, int h,
     			int maIcon, string nhan, bool dangBam, bool nenToi)
@@ -6608,6 +6609,17 @@ namespace Game4
     			int maIcon, string nhan, string soTrenIcon, bool dangBam,
     			bool nenToi)
     	{
+    		veNutHud(g, x, y, w, h, maIcon, nhan, soTrenIcon, dangBam, nenToi, null);
+    	}
+
+    	/// <param name="anh">
+    	/// Ảnh của chính client dùng thay icon máy chủ — ô Chat lấy đúng bong bóng
+    	/// chat mà game vẫn dùng. Có ảnh thì <c>maIcon</c> bị bỏ qua.
+    	/// </param>
+    	public static void veNutHud(mGraphics g, int x, int y, int w, int h,
+    			int maIcon, string nhan, string soTrenIcon, bool dangBam,
+    			bool nenToi, Image anh)
+    	{
     		if (nenToi)
     		{
     			g.setColor(0x14100C, dangBam ? 0.88f : 0.72f);
@@ -6625,10 +6637,16 @@ namespace Game4
 
     		bool coChu = nhan != null && nhan.Length > 0;
     		int yIcon = y + (coChu ? h / 2 - 4 : h / 2);
-    		if (maIcon >= 0)
+    		if (anh != null)
     		{
-    			SmallImage.drawSmallImage(g, maIcon, x + w / 2, yIcon, 0,
-    					mGraphics.VCENTER | mGraphics.HCENTER);
+    			int canh = CANH_ICON_HUD;
+    			g.veAnhVuaO(anh, x + w / 2 - canh / 2, yIcon - canh / 2, canh, canh);
+    		}
+    		else if (maIcon >= 0)
+    		{
+    			// MOI ICON MOT CO: kho icon co cai 12 diem co cai 37 diem, ve dung
+    			// co goc thi hang nut lon nhon.
+    			SmallImage.veIconVuaO(g, maIcon, x + w / 2, yIcon, CANH_ICON_HUD);
     		}
     		else
     		{
@@ -6927,8 +6945,8 @@ namespace Game4
     			// bong bong chu R nghia la gi.
     			bool dangBam = mScreen.keyTouch == 15 || mScreen.keyMouse == 15;
     			int yVe = yC + mGraphics.addYWhenOpenKeyBoard;
-    			veNutHud(g, xC, yVe, W_CHAT, H_CHAT, ICON_CHAT, "Chat", dangBam,
-    					false);
+    			veNutHud(g, xC, yVe, W_CHAT, H_CHAT, ICON_BA_VACH, "Chat", null,
+    					dangBam, false, imgChat);
     			// Ten "Chat" do chinh veNutHud ve, khong ve them o day nua.
     			//
     			// Khong co cham do bao tin moi: khung chat lon nam ngay canh nut

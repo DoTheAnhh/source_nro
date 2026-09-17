@@ -152,6 +152,55 @@ namespace Game4
     		}
     	}
     
+    	/// <summary>
+    	/// Vẽ một icon vào ô vuông cạnh <paramref name="canh"/>, <b>giữ tỉ lệ</b>.
+    	/// </summary>
+    	/// <remarks>
+    	/// <para>Icon trong kho mỗi cái một cỡ — lá cờ 12 điểm, tấm bảng 37 điểm —
+    	/// nên xếp cạnh nhau thành hàng nút thì cái to cái bé. Hàm này kéo tất cả
+    	/// về cùng một ô, cạnh dài nhất vừa đúng ô.</para>
+    	///
+    	/// <para>Ảnh của icon chỉ có sau khi tải xong. Chưa có thì xin tải rồi vẽ
+    	/// tạm bằng đường cũ (đúng cỡ gốc) — khung hình sau là vừa ô.</para>
+    	/// </remarks>
+    	public static void veIconVuaO(mGraphics g, int id, int xGiua, int yGiua,
+    			int canh)
+    	{
+    		Small s = (imgNew != null && id >= 0 && id < imgNew.Length)
+    				? imgNew[id] : null;
+    		if (s == null || s.img == null || mGraphics.getImageWidth(s.img) <= 1)
+    		{
+    			if (s == null)
+    			{
+    				createImage(id);
+    			}
+    			drawSmallImage(g, id, xGiua, yGiua, 0,
+    					mGraphics.VCENTER | mGraphics.HCENTER);
+    			return;
+    		}
+    		int w = mGraphics.getImageWidth(s.img);
+    		int h = mGraphics.getImageHeight(s.img);
+    		int rong = canh;
+    		int cao = canh;
+    		if (w > h)
+    		{
+    			cao = canh * h / w;
+    		}
+    		else if (h > w)
+    		{
+    			rong = canh * w / h;
+    		}
+    		if (rong < 1)
+    		{
+    			rong = 1;
+    		}
+    		if (cao < 1)
+    		{
+    			cao = 1;
+    		}
+    		g.veAnhVuaO(s.img, xGiua - rong / 2, yGiua - cao / 2, rong, cao);
+    	}
+
     	public static void drawSmallImage(mGraphics g, int id, int x, int y, int transform, int anchor)
     	{
     		if (imgbig == null)
