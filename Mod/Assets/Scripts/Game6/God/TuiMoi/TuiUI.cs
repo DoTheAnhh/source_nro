@@ -1092,11 +1092,22 @@ namespace Game6.God
 
         /// <summary>Ô sau chờ ô trước bấy nhiêu mili giây.</summary>
         /// <remarks>
-        /// Trễ theo <b>đường chéo</b> (hàng cộng cột), không theo thứ tự ô:
-        /// theo thứ tự thì cả hàng đầu chạy xong mới tới hàng hai, nhìn như
-        /// một cái băng chuyền.
+        /// <para>Trễ theo <b>từng ô một</b>, đi lần lượt trái sang phải rồi
+        /// xuống hàng — không phải theo hàng, cũng không theo đường chéo. Cả
+        /// hàng sáu ô vào cùng lúc thì mắt chỉ thấy sáu mảng nhảy ra, còn đi
+        /// từng ô thì thành một vệt chạy liên tục.</para>
+        ///
+        /// <para>Khoảng trễ <b>tính ra từ số ô</b> để tổng thời gian không đổi
+        /// — xem <see cref="TONG_VAO"/>.</para>
         /// </remarks>
-        private const int TRE_MOI_BAC = 22;
+        /// <summary>Cả lưới vào hết trong bấy nhiêu mili giây.</summary>
+        /// <remarks>
+        /// <para>Giữ <b>tổng</b> cố định chứ không giữ khoảng trễ cố định: lưới
+        /// nhiều ô thì các ô vào sát nhau hơn, lưới ít ô thì thưa ra, nhưng
+        /// nhìn từ ngoài thì lần nào cũng xong trong chừng ấy thời gian. Để
+        /// trễ cố định thì cửa sổ rộng — nhiều ô hơn — lại chờ lâu hơn hẳn.</para>
+        /// </remarks>
+        private const int TONG_VAO = 260;
 
         /// <summary>Một ô hiện ra trong bấy nhiêu mili giây.</summary>
         private const int THOI_GIAN_HIEN = 190;
@@ -2085,6 +2096,8 @@ namespace Game6.God
             }
             dangVeLuoi = true;
             long troi = mSystem.currentTimeMillis() - lucHienLuoi;
+            int soO = thay * TUI_SO_COT;
+            float tre = (soO > 1) ? (TONG_VAO / (float) (soO - 1)) : 0f;
             for (int hang = cuon; hang < cuon + thay; hang++)
             {
                 for (int cot = 0; cot < TUI_SO_COT; cot++)
@@ -2097,8 +2110,10 @@ namespace Game6.God
                     // O cang xa goc tren trai cang vao muon. Bac dem theo hang
                     // DANG THAY chu khong theo hang that: cuon xuong cuoi tui
                     // roi mo lai thi hang dau tien dang nhin la bac 0.
-                    float t = (troi - (long) (cot + hang - cuon) * TRE_MOI_BAC)
-                            / (float) THOI_GIAN_HIEN;
+                    // Thu tu VAO: dem tung o theo cho dang nhin thay, trai sang
+                    // phai roi xuong hang.
+                    int thuTu = (hang - cuon) * TUI_SO_COT + cot;
+                    float t = (troi - thuTu * tre) / (float) THOI_GIAN_HIEN;
                     if (t <= 0f)
                     {
                         continue;

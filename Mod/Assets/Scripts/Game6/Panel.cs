@@ -3832,7 +3832,15 @@ namespace Game6
             // Khong thoat thi doan duoi van chay: no dat waitToPerform = 2 khi
             // dang co mot o duoc chon, nen bam vao tab lai mo menu vat pham cua
             // o cu — tab khong doi, ma lai bat ra mot menu khong ai goi.
-            if (isnewInventory && isTabInven() && GameCanvas.py < yOTui())
+            // Nhuong cho O truoc: chi coi la bam dai tab khi diem cham KHONG
+            // trung o nao ca.
+            //
+            // Bien giua dai tab va hang o dau tien sai lech vai diem la ca nua
+            // tren cua hang mot rot vao nhanh nay va khong lam gi — con nguoi
+            // choi thi thay "bam nua tren khong an".
+            if (isnewInventory && isTabInven() && GameCanvas.py < yOTui()
+                    && oTuiTaiDiem(GameCanvas.px, GameCanvas.py) < 0
+                    && oTrangBiTaiDiem(GameCanvas.px, GameCanvas.py) < 0)
             {
                 setNewSelected(0, true);
                 waitToPerform = -1;
@@ -6807,12 +6815,20 @@ namespace Game6
 
         /// <summary>Ô sau chờ ô trước bấy nhiêu mili giây.</summary>
         /// <remarks>
-        /// Trễ theo <b>đường chéo</b> (hàng cộng cột) chứ không theo thứ tự ô:
-        /// trễ theo thứ tự thì cả hàng đầu chạy xong mới tới hàng hai, nhìn
-        /// như một cái băng chuyền; theo đường chéo thì lưới mở ra từ góc
-        /// trên trái toả xuống, giống cách người ta đưa mắt đọc.
+        /// <para>Trễ theo <b>từng ô một</b>, trái sang phải rồi xuống hàng.
+        /// Cả hàng vào cùng lúc thì mắt chỉ thấy vài mảng nhảy ra; đi từng ô
+        /// thì thành một vệt chạy liên tục.</para>
+        ///
+        /// <para>Khoảng trễ tính ra từ số ô để tổng thời gian không đổi.</para>
         /// </remarks>
-        private const int TRE_MOI_BAC = 22;
+        /// <summary>Cả lưới vào hết trong bấy nhiêu mili giây.</summary>
+        /// <remarks>
+        /// <para>Giữ <b>tổng</b> cố định chứ không giữ khoảng trễ cố định: lưới
+        /// nhiều ô thì các ô vào sát nhau hơn, lưới ít ô thì thưa ra, nhưng
+        /// nhìn từ ngoài thì lần nào cũng xong trong chừng ấy thời gian. Để
+        /// trễ cố định thì cửa sổ rộng — nhiều ô hơn — lại chờ lâu hơn hẳn.</para>
+        /// </remarks>
+        private const int TONG_VAO = 260;
 
         /// <summary>Một ô hiện ra trong bấy nhiêu mili giây.</summary>
         private const int THOI_GIAN_HIEN = 190;
@@ -7282,8 +7298,22 @@ namespace Game6
             {
                 // Luoi vua mo ra: chay lai man hien o tu dau.
                 lucHienLuoi = mSystem.currentTimeMillis();
+                // VA ve dau danh sach.
+                //
+                // cmy duoc khoi phuc tu lan mo truoc (cmyLast), nen bang mo ra
+                // o giua chung: hang tren cung bi cat ngang, va nua tren cua no
+                // nam TREN dinh vung o — bam vao do thi roi vao nhanh "bam dai
+                // tab", tuc khong co gi xay ra. Dung la loi "hang mot chi bam
+                // duoc nua duoi".
+                cmy = 0;
+                cmtoY = 0;
+                cmRun = 0;
             }
             long troi = mSystem.currentTimeMillis() - lucHienLuoi;
+            int caoVungO = yScroll + hScroll - yOTui();
+            int hangThayDuoc = (cao > 0) ? (caoVungO / cao + 1) : 1;
+            int soO = hangThayDuoc * TUI_SO_COT;
+            float tre = (soO > 1) ? (TONG_VAO / (float) (soO - 1)) : 0f;
 
             g.setClip(xVungTui(), yOTui(), rongVungTui(),
                     yScroll + hScroll - yOTui());
@@ -7310,8 +7340,9 @@ namespace Game6
                 {
                     hangThay = 0;
                 }
-                float t = (troi - (long) (cot + hangThay) * TRE_MOI_BAC)
-                        / (float) THOI_GIAN_HIEN;
+                // Thu tu VAO: dem tung o theo cho dang nhin thay.
+                int thuTu = hangThay * TUI_SO_COT + cot;
+                float t = (troi - thuTu * tre) / (float) THOI_GIAN_HIEN;
                 if (t <= 0f)
                 {
                     continue;
@@ -7334,10 +7365,14 @@ namespace Game6
         private int oTuiTaiDiem(int px, int py)
         {
             int o = oTui();
+            int cao = caoOTui();
             int cot = (px - xVungTui()) / o;
-            int hang = (py + cmy - yOTui()) / caoOTui();
-            if (cot < 0 || cot >= TUI_SO_COT || hang < 0 || py < yOTui())
-            {
+            int hang = (py + cmy - yOTui()) / cao;
+            // Chap nhan diem nam cao hon dinh vung mot chut: hang dau co the
+            // dang bi cat ngang vi luoi cuon do, va phan bi cat ay van la o.
+            // Qua nua o thi thoi — cho ay la dai tab that.
+            if (cot < 0 || cot >= TUI_SO_COT || hang < 0
+                    || py < yOTui() - cao / 2) {
                 return -1;
             }
             int i = hang * TUI_SO_COT + cot;
