@@ -11077,7 +11077,18 @@ namespace Game1
                 for (int i = 0; i < GameCanvas.panel.vItemCombine.size(); i++)
                 {
                     Item item3 = (Item)GameCanvas.panel.vItemCombine.elementAt(i);
-                    if (item3.template.id == item2.template.id)
+                    // Chan theo O TRONG HANH TRANG, khong theo ma vat pham.
+                    //
+                    // Ban cu so template.id, tuc hai mon CUNG LOAI nam o hai o
+                    // khac nhau cung bi coi la mot. The la khong bo duoc ba mon
+                    // Huy Diet cung loai vao khung ghep — ma "Nang cap set kich
+                    // hoat" doi dung ba mon, nen bam "Nang cap" khong bao gio
+                    // du dieu kien. Cac cong thuc khac can nhieu mon giong nhau
+                    // (nhap ngoc rong, nhap da) cung vuong dung cho nay.
+                    //
+                    // So bang indexUI: moi o mot so, nen chi chan dung viec bo
+                    // CUNG MOT O vao hai lan.
+                    if (item3 == item2 || item3.indexUI == item2.indexUI)
                     {
                         GameCanvas.startOKDlg(mResources.already_has_item);
                         return;
