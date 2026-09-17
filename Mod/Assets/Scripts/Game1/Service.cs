@@ -1047,6 +1047,34 @@ namespace Game1
     		}
     	}
     
+    	/// <summary>Xin chỉ số của một nhân vật cho bảng "Thông tin thành viên".</summary>
+    	/// <remarks>
+    	/// Client không có sẵn HP / KI / sức đánh của người khác: mấy con số ấy là
+    	/// kết quả tính cả trang bị, set và hiệu ứng đang chạy, chỉ máy chủ biết.
+    	/// Máy chủ trả lời bằng chính mã gói này.
+    	/// </remarks>
+    	public void xinChiSoNhanVat(int id)
+    	{
+    		Message message = null;
+    		try
+    		{
+    			message = new Message((sbyte)116);
+    			message.writer().writeInt(id);
+    			session.sendMessage(message);
+    		}
+    		catch (Exception ex)
+    		{
+    			Cout.println(ex.Message + ex.StackTrace);
+    		}
+    		finally
+    		{
+    			if (message != null)
+    			{
+    				message.cleanup();
+    			}
+    		}
+    	}
+
     	public void charMove()
     	{
     		// Co dich chuyen tuc thoi TU TAT sau hai giay.

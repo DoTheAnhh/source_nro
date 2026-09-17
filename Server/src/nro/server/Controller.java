@@ -304,6 +304,10 @@ public class Controller implements IMessageHandler {
                 // Khong doc gi, khong tra loi gi. Viec duy nhat cua no la lam
                 // cho socket co byte di qua, de han doc cua may chu va cac bo
                 // dinh tuyen tren duong khong coi ket noi nay la da chet.
+                case 116:
+                    // Bang "Thong tin thanh vien" hoi chi so cua mot nhan vat.
+                    Service.gI().guiChiSoNhanVat(player, _msg.reader().readInt());
+                    break;
                 case 122:
                     break;
 

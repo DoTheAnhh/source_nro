@@ -2603,6 +2603,53 @@ public class Service {
         }
     }
 
+    /**
+     * Mã gói <b>chỉ số của một nhân vật</b> cho bảng "Thông tin thành viên".
+     *
+     * <p>Dùng chung cho cả hai chiều: client gửi 116 kèm id để hỏi, máy chủ trả
+     * lời cũng bằng 116.</p>
+     */
+    public static final int GOI_CHI_SO_NHAN_VAT = 116;
+
+    /**
+     * Gửi chỉ số của nhân vật <code>id</code> cho người đang xem.
+     *
+     * <h3>Chỉ người đang online mới có chỉ số</h3>
+     *
+     * <p>HP, KI, sức đánh cuối cùng là kết quả của <code>calPoint()</code> —
+     * cần cả trang bị, set, item thời gian và hiệu ứng đang chạy. Người offline
+     * thì máy chủ chỉ có mấy con số gốc trong CSDL, tính ra sẽ <b>sai</b> so với
+     * lúc họ online. Nên offline thì trả cờ "không có" và client hiện dấu gạch,
+     * thay vì bày một con số bịa.</p>
+     */
+    public void guiChiSoNhanVat(Player nguoiXem, int id) {
+        if (nguoiXem == null) {
+            return;
+        }
+        Message msg = null;
+        try {
+            Player pl = Client.gI().getPlayerByID(id);
+            boolean co = pl != null && pl.nPoint != null;
+            msg = new Message(GOI_CHI_SO_NHAN_VAT);
+            msg.writer().writeInt(id);
+            msg.writer().writeByte(co ? 1 : 0);
+            if (co) {
+                msg.writer().writeLong(pl.nPoint.hpMax);
+                msg.writer().writeLong(pl.nPoint.mpMax);
+                msg.writer().writeLong(pl.nPoint.dame);
+                msg.writer().writeShort(pl.nPoint.tlSDCM);
+                msg.writer().writeShort(pl.nPoint.crit);
+            }
+            nguoiXem.sendMessage(msg);
+        } catch (Exception e) {
+            Logger.logException(Service.class, e);
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
+    }
+
     public void setPos(Player player, int x, int y) {
         player.location.x = x;
         player.location.y = y;

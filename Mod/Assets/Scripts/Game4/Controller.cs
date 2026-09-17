@@ -3891,6 +3891,28 @@ namespace Game4
                             }
                         }
                         break;
+                    case 116:
+                        {
+                            // Chi so cua mot nhan vat, cho bang "Thong tin
+                            // thanh vien" cua the Bang hoi.
+                            int idNguoi = msg.reader().readInt();
+                            bool coChiSo = msg.reader().readUnsignedByte() == 1;
+                            if (coChiSo)
+                            {
+                                long hpNg = msg.reader().readLong();
+                                long kiNg = msg.reader().readLong();
+                                long sdNg = msg.reader().readLong();
+                                int sdcmNg = msg.reader().readShort();
+                                int cmNg = msg.reader().readShort();
+                                God.TuiUI.getInstance().nhanChiSoNhanVat(
+                                        idNguoi, hpNg, kiNg, sdNg, sdcmNg, cmNg);
+                            }
+                            else
+                            {
+                                God.TuiUI.getInstance().khongCoChiSoNhanVat(idNguoi);
+                            }
+                        }
+                        break;
                     case 126:
                         {
                             // Bang cach tinh moc cua cac set kich hoat.
