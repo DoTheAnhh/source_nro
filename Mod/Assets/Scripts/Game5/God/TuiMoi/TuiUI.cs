@@ -53,6 +53,9 @@ namespace Game5.God
         /// <summary>Cột phải, từ trên xuống.</summary>
         private static readonly int[] O_PHAI = { 5, 6, 8, 9, 7 };
 
+        /// <summary>Ô "Pet" trong danh sách ô trang bị — xem <see cref="TEN_O"/>.</summary>
+        private const int O_PET = 7;
+
         /// <summary>Hàng dưới: sách và chân mệnh, hai ô liền nhau ở giữa.</summary>
         private static readonly int[] O_DUOI = { 10, 11 };
 
@@ -1768,10 +1771,16 @@ namespace Game5.God
             // trong game — nguoi choi ngoai ban do dung thang tren nen dat.
             // Bo di thi khung xem truoc sach, chi con nguoi.
             //
-            // Con thu di theo dung BEN CANH, lui sang mot ben cho khoi chong.
+            // Nguoi choi LUON dung chinh giua; con pet dung ben TRAI.
+            //
+            // Va chi ve khi o "Pet" that su co do: petFollow con song sot lai
+            // sau khi thao pet ra, nen hoi mot minh no thi con thu van dung day
+            // trong khi o da trong.
+            int xSuPhu = xTrai + rongTrai / 2;
             var thuTheo = Char.myCharz().petFollow;
-            bool coThu = thuTheo != null;
-            int xSuPhu = xTrai + rongTrai / 2 + (coThu ? -12 : 0);
+            bool coThu = thuTheo != null && mac != null
+                    && O_PET < mac.Length && mac[O_PET] != null
+                    && mac[O_PET].template != null;
             if (coThu)
             {
                 // Muon dung duong ve cua chinh no: doi toa do, ve, roi tra lai.
@@ -1781,7 +1790,7 @@ namespace Game5.God
                 // tham so, co anh nhieu khung hinh lai doan sai.
                 int xCu = thuTheo.cmx;
                 int yCu = thuTheo.cmy;
-                thuTheo.cmx = xSuPhu + 32;
+                thuTheo.cmx = xSuPhu - 30;
                 thuTheo.cmy = yChan - 14;
                 try
                 {
