@@ -11,11 +11,26 @@ import nro.service.combine.CombineService;
 
 public class TinhAnTrangBi {
 
+    /**
+     * Món nào ấn được: đồ <b>Thần Linh</b>, <b>Huỷ Diệt</b> và <b>set kích
+     * hoạt</b>.
+     *
+     * <p>Bản cũ chỉ xét <code>isDTL()</code> và <code>isDHD()</code> — hai hàm đó đọc
+     * <code>template.level</code> (13 và 14). Đồ set kích hoạt do Bà Hạt Mít nâng ra
+     * mang mẫu đồ bậc khác, không rơi vào hai mức ấy, nên bỏ vào là nhận ngay
+     * "Vật phẩm này không thể hóa ấn" — Tinh Ấn, Nguyệt Ấn, Nhật Ấn đều không
+     * làm được trên bộ đồ mạnh nhất của người chơi.</p>
+     *
+     * <p>Đồ set kích hoạt nhận ra bằng option nhận diện của set (xem
+     * <code>SetBonusDAO.laDoSetKichHoat</code>), nên set nào khai thêm trên panel
+     * cũng ấn được ngay.</p>
+     */
     private static boolean isTrangBiAn(Item item) {
         if (item == null || !item.isNotNullItem()) {
             return false;
         }
-        return item.isDTL() || item.isDHD();
+        return item.isDTL() || item.isDHD()
+                || nro.repository.dao.SetBonusDAO.laDoSetKichHoat(item);
     }
 
     public static void showInfoCombine(Player player) {
@@ -48,7 +63,10 @@ public class TinhAnTrangBi {
             return;
         }
 
-        String loaiTrangBi = item.isDTL() ? "thần linh" : (item.isDHD() ? "hủy diệt" : "này");
+        String loaiTrangBi = item.isDTL() ? "thần linh"
+                : (item.isDHD() ? "hủy diệt"
+                : (nro.repository.dao.SetBonusDAO.laDoSetKichHoat(item)
+                        ? "set kích hoạt" : "này"));
 
         String npcSay = item.template.name + "\n|2|";
         for (ItemOption io : item.itemOptions) {

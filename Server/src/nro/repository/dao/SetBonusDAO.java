@@ -512,6 +512,45 @@ public class SetBonusDAO {
      * {@code SetClothes} nữa; các trường đó vẫn còn trong lớp nhưng luôn bằng 0
      * và không ai cập nhật chúng.</p>
      */
+    /**
+     * Món đồ này có phải <b>đồ set kích hoạt</b> không.
+     *
+     * <p>Nhận ra bằng chính những option mà set dùng để nhận diện — cùng bộ
+     * option đã khai ở tab "Set kích hoạt" của panel. Nhờ vậy set nào admin
+     * thêm sau này cũng tự được tính, không phải sửa mã.</p>
+     *
+     * <p>Chỉ xét set đang <b>bật</b>: set đã tắt thì món mang option của nó
+     * cũng không còn tác dụng gì.</p>
+     */
+    public static boolean laDoSetKichHoat(nro.entity.item.Item item) {
+        if (item == null || !item.isNotNullItem() || item.itemOptions == null) {
+            return false;
+        }
+        java.util.Set<Integer> idSet = new java.util.HashSet<>();
+        for (DinhNghia d : dinhNghia().values()) {
+            if (d == null || !d.active || d.optionIds == null) {
+                continue;
+            }
+            for (String p : d.optionIds.split(",")) {
+                try {
+                    idSet.add(Integer.parseInt(p.trim()));
+                } catch (NumberFormatException boQua) {
+                    // Dong cau hinh hong: bo qua rieng option do.
+                }
+            }
+        }
+        if (idSet.isEmpty()) {
+            return false;
+        }
+        for (nro.entity.item.ItemOption io : item.itemOptions) {
+            if (io != null && io.optionTemplate != null
+                    && idSet.contains(io.optionTemplate.id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static int soMonDangMac(SetClothes sc, String setKey) {
         if (sc == null) {
             return 0;
