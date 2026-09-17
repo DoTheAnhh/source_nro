@@ -7,6 +7,7 @@ import nro.core.util.FormatStyle;
 import nro.core.util.Util;
 import nro.entity.boss.Boss;
 import nro.entity.boss.BossData;
+import nro.entity.boss.BossID;
 import nro.entity.boss.TypeAppear;
 import nro.entity.player.Player;
 import nro.entity.template.ItemTemplate;
@@ -410,6 +411,9 @@ public class BossManHinhService {
                 continue;
             }
             try {
+                if (boQuaTrongDanhSach(b)) {
+                    continue;
+                }
                 if (dangSong(b) || tuHoiSinhDuoc(b)) {
                     ra.add(b);
                 }
@@ -456,6 +460,32 @@ public class BossManHinhService {
      * rỗng — người chơi thấy "Chưa có boss nào" và bấm lại được, hơn là gói không
      * bao giờ tới và nút Boss trông như nút chết.</p>
      */
+    /**
+     * Những boss <b>không</b> bày trong màn danh sách boss.
+     *
+     * <p>Tàu Pảy Pảy và cả lũ boss hành tinh Yardrat bị bỏ hẳn: chúng là boss
+     * của nhiệm vụ và của khu luyện tập, ra vào liên tục, nên nằm trong danh
+     * sách chỉ làm loãng những con người chơi thật sự đi săn.</p>
+     *
+     * <p>Lọc theo <b>id</b> chứ không theo tên: tên hiện ra có thể đổi (đánh
+     * số bản, thêm hậu tố), còn id thì cố định trong <code>BossID</code>. Vẫn xét
+     * thêm tên cho Tàu Pảy Pảy vì con này có mấy bản dựng riêng trong
+     * <code>BossesData</code> dùng chung một cái tên.</p>
+     */
+    private boolean boQuaTrongDanhSach(Boss b) {
+        int id = (int) b.id;
+        if (id == BossID.TAUPAYPAY || id == BossID.BOSS_TASK_TAUPAYPAY) {
+            return true;
+        }
+        // Boss hanh tinh Yardrat: Tap su, Tan binh, Chien binh, Doi truong.
+        // Chung nam lien mot dai id trong BossID.
+        if (id <= BossID.TAP_SU_0 && id >= BossID.DOI_TRUONG_5) {
+            return true;
+        }
+        String ten = b.name;
+        return ten != null && ten.contains("Pảy Pảy");
+    }
+
     private List<Boss> chupDanhSach() {
         for (int lan = 0; lan < 2; lan++) {
             try {

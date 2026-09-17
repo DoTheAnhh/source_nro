@@ -588,8 +588,7 @@ public class SystemPanel extends JPanel {
             = new java.util.HashSet<>(java.util.Arrays.asList(
                     ConfigDAO.BAO_TRI, ConfigDAO.DANG_KY_TU_DONG,
                     ConfigDAO.MO_PANEL_KHI_DUNG_PASS, ConfigDAO.DOI_TV_BAT,
-                    ConfigDAO.GHI_LICH_SU_VP, ConfigDAO.HIEN_TEN_MAP,
-                    nro.repository.dao.VongQuayDAO.KHOA_DUNG_PANEL));
+                    ConfigDAO.GHI_LICH_SU_VP, ConfigDAO.HIEN_TEN_MAP));
 
     /** Việc cần chạy lại mỗi lần nạp quy ước, để ô tích khớp với ô chữ. */
     private final java.util.List<Runnable> dongBoQuyUoc = new ArrayList<>();
@@ -6529,20 +6528,8 @@ public class SystemPanel extends JPanel {
 
         JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
         nut.setOpaque(false);
-        JCheckBox oDung = new JCheckBox("Máy chủ dùng bảng này",
-                ConfigDAO.on(nro.repository.dao.VongQuayDAO.KHOA_DUNG_PANEL));
-        oDung.setOpaque(false);
-        oDung.addActionListener(e -> {
-            ConfigDAO.set(nro.repository.dao.VongQuayDAO.KHOA_DUNG_PANEL,
-                    oDung.isSelected() ? "1" : "0");
-            ConfigDAO.reload();
-            capNhatNhanVongQuay();
-            note(oDung.isSelected() ? WARN_RED : OK_GREEN, oDung.isSelected()
-                    ? "ĐÃ BẬT — vòng quay nay lấy quà từ bảng này. Soát lại từng "
-                    + "dòng trước khi để người chơi quay."
-                    : "Đã tắt — vòng quay quay về danh sách trong mã như cũ.");
-        });
-        nut.add(oDung);
+        // Khong con o tich "May chu dung bang nay": vong quay CHI con lay qua
+        // tu bang nay, danh sach viet cung trong ma da bi bo han.
         nut.add(button("Sửa dòng đang chọn", ACCENT, e -> suaVongQuayDialog(false)));
         nut.add(button("Thêm dòng quà", OK_GREEN, e -> suaVongQuayDialog(true)));
         nut.add(button("Bật các dòng đã chọn", new Color(90, 140, 90),
@@ -6550,12 +6537,9 @@ public class SystemPanel extends JPanel {
         nut.add(button("Tắt các dòng đã chọn", new Color(150, 120, 60),
                 e -> batTatVongQuay(false)));
         nut.add(button("Xoá các dòng đã chọn", WARN_RED, e -> xoaDongVongQuay()));
-        nut.add(button("Bổ sung từ mã nguồn", new Color(60, 130, 120),
-                e -> boSungVongQuay()));
         nut.add(button("Tách mỗi món một dòng", new Color(70, 120, 150),
                 e -> tachTungMonVongQuay()));
-        nut.add(button("Gieo lại từ mã nguồn", new Color(120, 90, 160),
-                e -> gieoLaiVongQuay()));
+        nut.add(button("XOÁ TOÀN BỘ QUÀ", WARN_RED, e -> xoaTatCaVongQuay()));
         nut.add(button("Tải lại", GREY, e -> napBangVongQuay()));
 
         vqNhan = nhan("");
@@ -6577,18 +6561,10 @@ public class SystemPanel extends JPanel {
         if (vqNhan == null) {
             return;
         }
-        boolean dung = ConfigDAO.on(nro.repository.dao.VongQuayDAO.KHOA_DUNG_PANEL);
         vqNhan.setText("<html><body style='width:900px'>"
-                + (dung
-                        ? "<b style='color:#c0392b'>ĐANG BẬT</b> — vòng quay lấy quà "
-                        + "từ bảng này."
-                        : "<b style='color:#c0392b'>ĐANG TẮT</b> — vòng quay vẫn chạy "
-                        + "theo danh sách viết trong mã, bảng này chưa có tác dụng "
-                        + "gì. Tắt sẵn vì bản gieo đầu tiên <b>ra sai món</b>: id vật "
-                        + "phẩm trong mã cũ được tra theo <i>vị trí</i> trong bảng "
-                        + "mẫu, mà bảng mẫu đã đổi từ lúc đoạn mã ấy được viết — nên "
-                        + "chép nguyên id sang đây cho ra một danh sách quà khác hẳn "
-                        + "thứ người chơi vẫn nhận. Soát lại từng dòng rồi hãy bật.")
+                + "Vòng quay Thượng Đế lấy quà <b>chỉ từ bảng này</b>. Bảng trống "
+                + "thì người chơi quay ra vàng an ủi, nên thêm quà trước khi mở "
+                + "vòng quay cho người chơi."
                 + "<br><br>"
                 + "<b>Mỗi dòng là một phần quay.</b> Cột <i>Loại</i> cho biết món "
                 + "đó là pet, đeo lưng hay cải trang; <i>Chỉ số kèm theo</i> ghi "
@@ -6617,20 +6593,26 @@ public class SystemPanel extends JPanel {
      *
      * <p>Dùng khi đã sửa lung tung và muốn về mốc ban đầu để soát lại từ đầu.</p>
      */
-    private void gieoLaiVongQuay() {
+    /**
+     * Xoá <b>toàn bộ</b> kho quà vòng quay.
+     *
+     * <p>Kho quà nay chỉ có những gì người quản trị tự thêm, nên xoá sạch là
+     * xoá thật — không có danh sách gốc nào mọc lại.</p>
+     */
+    private void xoaTatCaVongQuay() {
         if (JOptionPane.showConfirmDialog(this,
-                "Xoá sạch bảng rồi gieo lại từ danh sách trong mã?\n\n"
-                + "Mọi dòng đang có — kể cả dòng bạn tự thêm — sẽ mất.",
-                "Gieo lại kho quà", JOptionPane.YES_NO_OPTION,
+                "XOÁ TOÀN BỘ quà của vòng quay Thượng Đế?\n\n"
+                + "Mọi dòng trong bảng sẽ mất, không lấy lại được.\n"
+                + "Bảng trống thì người chơi quay chỉ ra vàng an ủi.",
+                "Xoá toàn bộ kho quà", JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
             return;
         }
-        for (nro.repository.dao.VongQuayDAO.Qua q
-                : nro.repository.dao.VongQuayDAO.danhSach()) {
-            nro.repository.dao.VongQuayDAO.xoa(q.id);
-        }
+        int n = nro.repository.dao.VongQuayDAO.xoaTatCa();
         napBangVongQuay();
-        note(OK_GREEN, "Đã gieo lại kho quà từ danh sách trong mã.");
+        note(n >= 0 ? OK_GREEN : WARN_RED, n >= 0
+                ? ("Đã xoá " + n + " dòng quà.")
+                : "Không xoá được — xem log máy chủ.");
     }
 
     /** Tên vật phẩm của một dòng: một món thì tên thẳng, nhiều món thì gộp. */
@@ -6788,21 +6770,6 @@ public class SystemPanel extends JPanel {
      * trong bảng đang trống thì được điền, dòng nào đã có thì giữ nguyên. Khác
      * hẳn "Gieo lại từ mã nguồn" — nút kia xoá sạch rồi chép lại từ đầu.</p>
      */
-    private void boSungVongQuay() {
-        if (JOptionPane.showConfirmDialog(this,
-                "Điền chỉ số và hạn dùng CÒN THIẾU theo danh sách trong mã?\n\n"
-                + "Dòng nào đã có chỉ số thì giữ nguyên, không đụng tới.",
-                "Bổ sung từ mã nguồn", JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
-            return;
-        }
-        int sua = nro.repository.dao.VongQuayDAO.boSungTuMaNguon();
-        napBangVongQuay();
-        note(sua > 0 ? OK_GREEN : GREY, sua > 0
-                ? ("Đã bổ sung " + sua + " dòng.")
-                : "Không dòng nào thiếu — bảng đã đầy đủ so với mã nguồn.");
-    }
-
     private void tachTungMonVongQuay() {
         java.util.List<nro.repository.dao.VongQuayDAO.Qua> chon = vqDangChon();
         if (chon.isEmpty()) {

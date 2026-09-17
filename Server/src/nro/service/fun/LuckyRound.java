@@ -30,14 +30,6 @@ public class LuckyRound {
 
     public static final short THOI_VANG_ID = 457;
 
-    private static final int PERMANENT_EXPIRE_CHANCE = 5;
-
-    private static final int[] ITEM_C2_LIST = {1150, 1151, 1152, 1153, 1154};
-    private static final int[] ITEM_ADD_LIST = {2431, 2432};
-
-    private static final int ID_613 = 613;
-    private static final int[] ITEM_OPTION93_GROUP = {1947, 1654, 1810, 1107, 1633};
-
     private static LuckyRound instance;
 
     public static LuckyRound gI() {
@@ -251,10 +243,12 @@ public class LuckyRound {
      * từng dòng trên panel.</p>
      */
     public List<Item> getListItemLuckyRound(Player player, int num, boolean vip) {
+        // Qua CHI lay tu bang o panel (tab "Vong quay Thuong De").
+        //
+        // Danh sach qua viet cung trong ma da bi bo han: moi lan muon them hay
+        // bot mot mon deu phai sua ma roi dung may chu, va hai nguon qua song
+        // song thi khong ai biet nguoi choi dang quay trung cai nao.
         List<Item> list = new ArrayList<>();
-        boolean theoPanel = nro.repository.dao.ConfigDAO.on(
-                nro.repository.dao.VongQuayDAO.KHOA_DUNG_PANEL);
-        List<Supplier<Item>> itemPool = theoPanel ? null : buildItemPool(vip);
 
         for (int i = 0; i < num; i++) {
             Item it = null;
@@ -262,11 +256,7 @@ public class LuckyRound {
 
             if (success) {
                 for (int attempt = 0; attempt < 5 && it == null; attempt++) {
-                    if (theoPanel) {
-                        it = nro.repository.dao.VongQuayDAO.boc(vip);
-                    } else if (!itemPool.isEmpty()) {
-                        it = itemPool.get(Util.nextInt(itemPool.size())).get();
-                    }
+                    it = nro.repository.dao.VongQuayDAO.boc(vip);
                 }
             }
 
@@ -281,136 +271,4 @@ public class LuckyRound {
         return list;
     }
 
-    private void addEventItemMultipleTimes(List<Supplier<Item>> pool, Supplier<Item> supplier, int times) {
-        for (int i = 0; i < times; i++) {
-            pool.add(supplier);
-        }
-    }
-
-    private void addWeighted(List<Supplier<Item>> pool, Supplier<Item> supplier, int weight) {
-        for (int i = 0; i < weight; i++) {
-            pool.add(supplier);
-        }
-    }
-
-    private List<Supplier<Item>> buildItemPool(boolean vip) {
-        List<Supplier<Item>> pool = new ArrayList<>();
-
-        pool.add(() -> ItemService.gI().createNewItem((short) 18));
-        pool.add(() -> createItemWithOptions(1143, new int[][]{{30, 0}}));
-        addWeighted(pool, () -> createItemWithOptions(1173, new int[][]{{30, 0}}), 1);
-
-        if (vip) {
-            pool.add(() -> createRandomItem(new int[]{1150, 1151, 1152, 1153, 1154}, 86));
-            pool.add(() -> createRandomItem(new int[]{1404, 1405, 1406, 1407, 1409, 1410, 1411, 1412, 1413}, 87));
-            pool.add(() -> createItemWithOptions(1408, new int[][]{{87, 0}}));
-            pool.add(() -> createItemWithOptions(2062, new int[][]{{87, 0}}));
-            pool.add(() -> createItemWithOptions(2069, new int[][]{{87, 0}}));
-            pool.add(() -> createItemWithOptionsMulti(new int[]{840, 841, 842, 859, 956}, new int[][]{{87, 0}, {30, 0}}));
-            pool.add(() -> createRandomItem(new int[]{1517, 1518}, 87));
-        } else {
-            pool.add(() -> createRandomItem(new int[]{18, 19, 20}));
-            pool.add(() -> createRandomItem(new int[]{381, 382, 383, 384, 385}, 86));
-            pool.add(() -> createSpecialItem(new int[][]{{220, 68}, {221, 70}, {222, 69}, {223, 71}, {224, 67}}));
-            pool.add(() -> createSpecialItemWithValue(new int[][]{
-                {441, 95}, {442, 96}, {443, 97}, {444, 98}, {445, 99}, {446, 100}, {447, 101}
-            }));
-            pool.add(() -> createRandomItem(new int[]{2063, 2064, 2065, 2066, 2067, 2068}, 87));
-            addWeighted(pool, () -> createRandomItemNoOption(ITEM_C2_LIST), 3);
-            addWeighted(pool, () -> createRandomItemNoOption(ITEM_ADD_LIST), 2);
-            addWeighted(pool, this::createItem613, 2);
-            addWeighted(pool, this::createOption93GroupItem, 3);
-        }
-
-
-
-
-
-
-
-
-
-        return pool;
-    }
-
-    private void addExpireOption93(Item item, int min, int max) {
-        if (Util.isTrue(PERMANENT_EXPIRE_CHANCE, 100)) {
-            return;
-        }
-
-        int v = Util.nextInt(min, max + 1);
-        item.itemOptions.add(new ItemOption(93, v));
-    }
-
-    private Item createItem613() {
-        Item item = ItemService.gI().createNewItem((short) ID_613);
-
-        item.itemOptions.add(new ItemOption(30, 0));
-
-        item.itemOptions.add(new ItemOption(50, Util.nextInt(20, 31)));
-        item.itemOptions.add(new ItemOption(77, Util.nextInt(20, 31)));
-        item.itemOptions.add(new ItemOption(103, Util.nextInt(20, 31)));
-        item.itemOptions.add(new ItemOption(101, Util.nextInt(30, 71)));
-
-        addExpireOption93(item, 1, 5);
-
-        return item;
-    }
-
-    private Item createOption93GroupItem() {
-        int id = ITEM_OPTION93_GROUP[Util.nextInt(ITEM_OPTION93_GROUP.length)];
-        Item item = ItemService.gI().createNewItem((short) id);
-
-        item.itemOptions.add(new ItemOption(30, 0));
-
-        item.itemOptions.add(new ItemOption(50, Util.nextInt(8, 15)));
-        item.itemOptions.add(new ItemOption(77, Util.nextInt(8, 15)));
-        item.itemOptions.add(new ItemOption(103, Util.nextInt(8, 15)));
-
-        addExpireOption93(item, 1, 5);
-
-        return item;
-    }
-
-    // ===== Basic creators =====
-    private Item createItemWithOptions(int id, int[][] options) {
-        Item item = ItemService.gI().createNewItem((short) id);
-
-        for (int[] opt : options) {
-            item.itemOptions.add(new ItemOption(opt[0], opt[1]));
-        }
-
-        return item;
-    }
-
-    private Item createRandomItem(int[] itemIds, int optionId) {
-        int itemid = itemIds[Util.nextInt(itemIds.length)];
-        return createItemWithOptions(itemid, new int[][]{{optionId, 0}});
-    }
-
-    private Item createRandomItem(int[] itemIds) {
-        int itemid = itemIds[Util.nextInt(itemIds.length)];
-        return ItemService.gI().createNewItem((short) itemid);
-    }
-
-    private Item createRandomItemNoOption(int[] itemIds) {
-        int itemid = itemIds[Util.nextInt(itemIds.length)];
-        return ItemService.gI().createNewItem((short) itemid);
-    }
-
-    private Item createItemWithOptionsMulti(int[] itemIds, int[][] options) {
-        int itemid = itemIds[Util.nextInt(itemIds.length)];
-        return createItemWithOptions(itemid, options);
-    }
-
-    private Item createSpecialItem(int[][] data) {
-        int[] entry = data[Util.nextInt(data.length)];
-        return createItemWithOptions(entry[0], new int[][]{{entry[1], 0}});
-    }
-
-    private Item createSpecialItemWithValue(int[][] data) {
-        int[] entry = data[Util.nextInt(data.length)];
-        int value = (entry[1] == 98 || entry[1] == 99) ? 3 : 5;
-        return createItemWithOptions(entry[0], new int[][]{{entry[1], value}});
-    }
 }
