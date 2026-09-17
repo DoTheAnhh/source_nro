@@ -1086,6 +1086,29 @@ namespace Game5.God
         /// <summary>Mốc bắt đầu màn hiện ô so le.</summary>
         private long lucHienLuoi;
 
+        /// <summary>Lúc từng hàng bắt đầu hiện; 0 là chưa hiện lần nào.</summary>
+        /// <remarks>
+        /// <para>Nhớ theo <b>hàng thật</b> chứ không theo chỗ trên màn hình:
+        /// cuộn qua rồi cuộn lại thì hàng cũ hiện ngay, không diễn lại từ
+        /// đầu.</para>
+        ///
+        /// <para>Nhờ mốc riêng từng hàng mà hàng vừa lọt vào tầm mắt lúc cuộn
+        /// cũng vào <b>từng ô một</b> chứ không bật ra nguyên hàng.</para>
+        /// </remarks>
+        private long[] mocHang;
+
+        /// <summary>Khoảng trễ giữa hai ô của từng hàng, tính bằng mili giây.</summary>
+        /// <remarks>
+        /// Hai trường hợp khác nhau nên phải nhớ riêng: lúc mở cả lưới thì trễ
+        /// tính ngược từ số ô để giữ tổng thời gian, còn hàng lọt vào lúc cuộn
+        /// chỉ có sáu ô nên dùng khoảng trễ rộng hơn — không thì sáu ô vào
+        /// trong ba phần trăm giây, mắt không kịp thấy là chúng vào lần lượt.
+        /// </remarks>
+        private float[] treHang;
+
+        /// <summary>Trễ giữa hai ô của một hàng vừa cuộn tới.</summary>
+        private const int TRE_TRONG_HANG = 26;
+
         /// <summary>Khung hình TRƯỚC có vẽ lưới túi không.</summary>
         private bool daVeLuoiTruoc;
         private bool dangVeLuoi;
@@ -2089,15 +2112,32 @@ namespace Game5.God
             {
                 thay = 1;
             }
-            if (!daVeLuoiTruoc)
+            long gio = mSystem.currentTimeMillis();
+            int soHang = soHangTui();
+            if (mocHang == null || mocHang.Length < soHang)
             {
-                // Luoi vua mo ra: chay lai man hien o tu dau.
-                lucHienLuoi = mSystem.currentTimeMillis();
+                int n = (soHang < 1) ? 1 : soHang;
+                mocHang = new long[n];
+                treHang = new float[n];
             }
-            dangVeLuoi = true;
-            long troi = mSystem.currentTimeMillis() - lucHienLuoi;
             int soO = thay * TUI_SO_COT;
             float tre = (soO > 1) ? (TONG_VAO / (float) (soO - 1)) : 0f;
+            if (!daVeLuoiTruoc)
+            {
+                // Luoi vua mo: quen het, roi xep cac hang dang thay NOI TIEP
+                // nhau thanh mot vet chay lien tuc.
+                lucHienLuoi = gio;
+                for (int k = 0; k < mocHang.Length; k++)
+                {
+                    mocHang[k] = 0L;
+                }
+                for (int k = cuon; k < cuon + thay && k < mocHang.Length; k++)
+                {
+                    mocHang[k] = gio + (long) ((k - cuon) * TUI_SO_COT * tre);
+                    treHang[k] = tre;
+                }
+            }
+            dangVeLuoi = true;
             for (int hang = cuon; hang < cuon + thay; hang++)
             {
                 for (int cot = 0; cot < TUI_SO_COT; cot++)
@@ -2107,13 +2147,22 @@ namespace Game5.God
                     {
                         break;
                     }
-                    // O cang xa goc tren trai cang vao muon. Bac dem theo hang
-                    // DANG THAY chu khong theo hang that: cuon xuong cuoi tui
-                    // roi mo lai thi hang dau tien dang nhin la bac 0.
-                    // Thu tu VAO: dem tung o theo cho dang nhin thay, trai sang
-                    // phai roi xuong hang.
-                    int thuTu = (hang - cuon) * TUI_SO_COT + cot;
-                    float t = (troi - thuTu * tre) / (float) THOI_GIAN_HIEN;
+                    // Hang nay bat dau hien luc nao.
+                    //
+                    // Chua co moc tuc la no vua lot vao tam mat do CUON: cho
+                    // vao ngay tu bay gio, va cac o trong hang van lan luot
+                    // tung cai chu khong bat ra ca hang.
+                    if (hang >= mocHang.Length)
+                    {
+                        continue;
+                    }
+                    if (mocHang[hang] == 0L)
+                    {
+                        mocHang[hang] = gio;
+                        treHang[hang] = TRE_TRONG_HANG;
+                    }
+                    float t = ((gio - mocHang[hang]) - cot * treHang[hang])
+                            / (float) THOI_GIAN_HIEN;
                     if (t <= 0f)
                     {
                         continue;
@@ -2125,11 +2174,32 @@ namespace Game5.God
                     // Cham dan khi toi noi: (1-t)^2 di nhanh luc dau roi nhe
                     // nhang dat xuong, con cong deu thi o nao cung nhu bi keo.
                     float con = (1f - t) * (1f - t);
-                    veMotOCN(g, tui[i],
-                            xPhai + LE_LUOI + cot * oTuiNgang,
-                            yNoiDung + LE_LUOI + (hang - cuon) * oTuiDoc
-                                    + (int) (con * TROI_LEN),
+                    int xO = xPhai + LE_LUOI + cot * oTuiNgang;
+                    int yO = yNoiDung + LE_LUOI + (hang - cuon) * oTuiDoc;
+                    // LO DAN THEO CHIEU DOC.
+                    //
+                    // Cat o bang mot khung cao dan tu tren xuong, nen o hien ra
+                    // nhu bi mot lan song quet qua chu khong phai bat ra nguyen
+                    // hinh. Cong them mot doan troi nho phia duoi cho no co da.
+                    //
+                    // Khung cat phai NAM TRONG vung luoi: cat rong hon thi o
+                    // hang cuoi ve tran ra ngoai vien khung.
+                    int caoLo = (int) (t * oTuiDoc);
+                    if (caoLo < 1)
+                    {
+                        caoLo = 1;
+                    }
+                    if (t < 1f)
+                    {
+                        g.setClip(xO, yO, oTuiNgang, caoLo);
+                    }
+                    veMotOCN(g, tui[i], xO,
+                            yO + (int) (con * TROI_LEN),
                             oTuiNgang, oTuiDoc, "");
+                    if (t < 1f)
+                    {
+                        g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+                    }
                 }
             }
             if (soHangTui() > thay)
@@ -6407,7 +6477,7 @@ namespace Game5.God
             new int[] { 2, 3, 12 },
             new int[] { 1, 7, 4, 9 },
             new int[] { 19, 6, 8 },
-            new int[] { 100003, 200001, 200002, 100001, 100002, 16, 17 }
+            new int[] { 100003, 200001, 200002, 100001, 16, 17, 100002 }
         };
 
         /// <summary>Mã riêng của bảng này, không phải mã mod hay mã game.</summary>
@@ -6423,8 +6493,11 @@ namespace Game5.God
             new string[] { "Tự Động Hồi Sinh", "Auto Nhặt", "Auto Up Đệ",
                 "Auto Login" },
             new string[] { "Thông tin đệ tử", "D.s Nhân Vật", "Giảm Đồ Họa" },
+            // "Dang xuat" xep CUOI CUNG: no la muc duy nhat ket thuc phien
+            // choi, de lan giua may muc cai dat thi som muon co nguoi bam
+            // nham.
             new string[] { "Sổ sưu tầm", "Bạn bè", "Kẻ thù", "Đổi cờ",
-                "Đăng xuất", "Cấu hình Voice", "Âm thanh" }
+                "Cấu hình Voice", "Âm thanh", "Đăng xuất" }
         };
 
         // Thẻ con thứ tư đổi từ "Màn khác" sang "Hệ thống".
