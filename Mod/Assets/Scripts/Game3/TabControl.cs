@@ -279,7 +279,9 @@ namespace Game3
             // So khu doc thang tu ban do dang dung, khong giu mot ban sao rieng:
             // giu ban sao thi doi khu xong nut van ghi so cu cho toi khi co ai
             // nho cap nhat no.
-            khuCommand.caption = "Khu " + TileMap.zoneID;
+            // So khu in THANG len tam bang go cua icon, chu duoi chi con "Khu".
+            khuCommand.caption = "Khu";
+            khuCommand.soTrenIcon = TileMap.zoneID + "";
             khuCommand.paint(g);
             coCommand.paint(g);
             paintTab(g);

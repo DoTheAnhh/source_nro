@@ -6559,114 +6559,131 @@ namespace Game4
     	/// </remarks>
     	/// <summary>Khung nút nhanh, ô vuông.</summary>
     	// ==================================================================
-    	//  Nut HUD: icon tren, ten duoi
+    	//  Nut HUD: icon that o tren, ten o duoi
     	// ==================================================================
 
-    	public const int NUT_CO = 0;
-    	public const int NUT_KHU = 1;
-    	public const int NUT_TAB = 2;
-    	public const int NUT_CHAT = 3;
-    	public const int NUT_MENU = 4;
+    	/// <summary>Lá cờ vàng — nút "Cờ".</summary>
+    	public const int ICON_CO = 2326;
+
+    	/// <summary>Bảng gỗ — nút "Khu"; số khu vẽ thẳng lên bảng.</summary>
+    	public const int ICON_KHU = 561;
+
+    	/// <summary>Sách dịch chuyển — nút "Tab".</summary>
+    	public const int ICON_TAB = 3783;
+
+    	/// <summary>Loa to — ô "Chat".</summary>
+    	public const int ICON_CHAT = 13619;
+
+    	/// <summary>Không có icon: nút tự vẽ ba vạch (nút menu).</summary>
+    	public const int ICON_BA_VACH = -1;
+
+    	public static void veNutHud(mGraphics g, int x, int y, int w, int h,
+    			int maIcon, string nhan, bool dangBam, bool nenToi)
+    	{
+    		veNutHud(g, x, y, w, h, maIcon, nhan, null, dangBam, nenToi);
+    	}
 
     	/// <summary>
-    	/// Nút của hàng HUD góc trên phải: <b>hình ở trên, tên ở dưới</b>.
+    	/// Nút của hàng HUD góc trên phải: <b>icon ở trên, tên ở dưới</b>.
     	/// </summary>
     	/// <remarks>
-    	/// <para>Bản trước dùng khung nút nhanh: vành đồng, viền kép, bốn đinh
-    	/// tán, lòng ô chuyển màu. Xếp bốn cái cạnh nhau thì cả góc màn hình
-    	/// thành một mảng kim loại bóng, chữ vàng nổi trên nền nâu — nhìn nặng và
-    	/// nhựa, mà bốn nút lại giống hệt nhau nên phải đọc chữ mới biết cái nào
-    	/// là cái nào.</para>
+    	/// <para><b>Icon là ảnh thật trong kho icon của máy chủ</b> chứ không phải
+    	/// hình vẽ bằng mã. Cả game dùng chung một bộ icon vẽ sẵn; hàng nút vẽ tay
+    	/// lấy thì nét thô và lạc hẳn ra.</para>
     	///
-    	/// <para>Kiểu này bỏ hẳn phần khung: chỉ một mảng tối mờ bo góc đủ tách
-    	/// nút khỏi nền bản đồ, bên trên là <b>hình vẽ riêng của từng nút</b> —
-    	/// lá cờ, quả cầu khu, hai thẻ chồng nhau, bong bóng chat, ba vạch — bên
-    	/// dưới là tên. Nhìn một cái biết ngay nút nào, và góc màn hình nhẹ hẳn.
-    	/// Hình vẽ bằng mã nên nét ở mọi mức phóng, không phải làm bốn bản PNG.</para>
+    	/// <para><b>Không nền</b>, trừ nút ba gạch. Bốn nút kia chỉ còn icon và
+    	/// chữ nổi thẳng trên bản đồ, nên chữ phải có viền tối bốn phía — nền bản
+    	/// đồ sáng tối bất kỳ màu nào.</para>
     	/// </remarks>
+    	/// <param name="maIcon">Mã icon máy chủ, hoặc <c>ICON_BA_VACH</c>.</param>
+    	/// <param name="soTrenIcon">Số in giữa icon, ví dụ số khu. Có thể null.</param>
+    	/// <param name="nenToi">Có vẽ mảng nền tối phía sau hay không.</param>
     	public static void veNutHud(mGraphics g, int x, int y, int w, int h,
-    			int loai, string nhan, bool dangBam)
+    			int maIcon, string nhan, string soTrenIcon, bool dangBam,
+    			bool nenToi)
     	{
-    		// Nen: mot mang toi mo. Dam hon mot chut khi bam, khong phong to,
-    		// khong doi mau — nut nhay len khi bam la kieu cua trang web.
-    		g.setColor(0x14100C, dangBam ? 0.88f : 0.62f);
-    		g.fillRect(x, y, w, h, 6);
-    		// Mot net sang rat mong o canh tren, thay cho ca bo vien: du de mep
-    		// nut tach khoi nen map sang.
-    		g.setColor(0xFFFFFF, dangBam ? 0.20f : 0.10f);
-    		g.fillRect(x + 2, y, w - 4, 1);
+    		if (nenToi)
+    		{
+    			g.setColor(0x14100C, dangBam ? 0.88f : 0.72f);
+    			g.fillRect(x, y, w, h, 6);
+    			g.setColor(0xFFFFFF, dangBam ? 0.20f : 0.10f);
+    			g.fillRect(x + 2, y, w - 4, 1);
+    		}
+    		else if (dangBam)
+    		{
+    			// Bo nen roi thi van can mot dau hieu "dang bam": mot quang sang
+    			// mo sau icon.
+    			g.setColor(0xFFFFFF, 0.16f);
+    			g.fillRect(x + 2, y + 1, w - 4, h - 2, 6);
+    		}
 
-    		int mau = dangBam ? 0xFFFFFF : 0xF0D7A4;
-    		veHinhNutHud(g, loai, x + w / 2, y + 10, mau);
+    		bool coChu = nhan != null && nhan.Length > 0;
+    		int yIcon = y + (coChu ? h / 2 - 4 : h / 2);
+    		if (maIcon >= 0)
+    		{
+    			SmallImage.drawSmallImage(g, maIcon, x + w / 2, yIcon, 0,
+    					mGraphics.VCENTER | mGraphics.HCENTER);
+    		}
+    		else
+    		{
+    			// Ba vach cua nut menu: kho icon khong co hinh nao nhu vay.
+    			g.setColor(dangBam ? 0xFFFFFF : 0xF7E3C6, 1f);
+    			for (int i = -1; i <= 1; i++)
+    			{
+    				g.fillRect(x + w / 2 - 7, yIcon + i * 5 - 1, 14, 2, 1);
+    			}
+    		}
 
-    		if (nhan == null || nhan.Length == 0)
+    		if (soTrenIcon != null && soTrenIcon.Length > 0)
+    		{
+    			// So in GIUA icon — bang go cua nut Khu la mot cai bien bao, so khu
+    			// nam tren bien thi doc mot cai la ra, khoi mang xuong hang chu.
+    			veSoTrenIcon(g, soTrenIcon, x + w / 2, yIcon);
+    		}
+
+    		if (!coChu)
     		{
     			return;
     		}
-    		// Ten co mot net toi phia sau: nen map co the sang bat ky mau nao.
-    		int yChu = y + h - 11;
-    		mFont.tahoma_7b_dark.drawString(g, nhan, x + w / 2 + 1, yChu + 1,
-    				mFont.CENTER);
-    		(dangBam ? mFont.tahoma_7b_white : mFont.tahoma_7b_yellow)
-    				.drawString(g, nhan, x + w / 2, yChu, mFont.CENTER);
+    		veChuVienToi(g, nhan, x + w / 2, y + h - 10,
+    				dangBam ? mFont.tahoma_7b_white : mFont.tahoma_7b_yellow);
     	}
 
-    	/// <summary>Hình của từng nút, vẽ quanh tâm (<paramref name="cx"/>, <paramref name="cy"/>).</summary>
-    	/// <remarks>
-    	/// Mỗi hình gói trong ô 16×14 để bốn nút cao bằng nhau. Vẽ bằng những
-    	/// hình chữ nhật bo góc — cùng bộ nét với phần HUD còn lại.
-    	/// </remarks>
-    	public static void veHinhNutHud(mGraphics g, int loai, int cx, int cy,
-    			int mau)
+    	/// <summary>Số in giữa icon, chữ tối trên nền sáng của icon.</summary>
+    	private static void veSoTrenIcon(mGraphics g, string so, int xGiua,
+    			int yGiua)
     	{
-    		g.setColor(mau, 1f);
-    		switch (loai)
+    		int y = yGiua - mFont.tahoma_7b_dark.getHeight() / 2;
+    		for (int dx = -1; dx <= 1; dx++)
     		{
-    		case NUT_CO:
-    			// Can co dung, la co bay sang phai: cac vach ngan dan thanh mui nhon.
-    			g.fillRect(cx - 6, cy - 7, 2, 14, 1);
-    			for (int i = 0; i < 6; i++)
+    			for (int dy = -1; dy <= 1; dy++)
     			{
-    				g.fillRect(cx - 4, cy - 7 + i, 10 - i, 1);
+    				if (dx != 0 || dy != 0)
+    				{
+    					mFont.tahoma_7b_white.drawString(g, so, xGiua + dx,
+    							y + dy, mFont.CENTER);
+    				}
     			}
-    			break;
-    		case NUT_KHU:
-    			// Qua cau: vong tron rong, co mot duong xich dao.
-    			g.fillRect(cx - 7, cy - 7, 14, 14, 7);
-    			g.setColor(0x14100C, 1f);
-    			g.fillRect(cx - 5, cy - 5, 10, 10, 5);
-    			g.setColor(mau, 1f);
-    			g.fillRect(cx - 5, cy - 1, 10, 2);
-    			g.fillRect(cx - 1, cy - 5, 2, 10);
-    			break;
-    		case NUT_TAB:
-    			// Hai the chong nhau, the sau lo ra o goc tren trai.
-    			g.setColor(mau, 0.55f);
-    			g.fillRect(cx - 7, cy - 7, 11, 9, 2);
-    			g.setColor(mau, 1f);
-    			g.fillRect(cx - 4, cy - 4, 11, 11, 2);
-    			g.setColor(0x14100C, 1f);
-    			g.fillRect(cx - 2, cy - 2, 7, 7, 1);
-    			break;
-    		case NUT_CHAT:
-    			// Bong bong chat: than bo goc va mot cai duoi o goc trai duoi.
-    			g.fillRect(cx - 8, cy - 7, 16, 11, 3);
-    			g.fillRect(cx - 6, cy + 3, 5, 4, 1);
-    			g.setColor(0x14100C, 1f);
-    			// Ba cham chu, cho ra bong bong loi thoai chu khong phai o vuong.
-    			for (int i = -1; i <= 1; i++)
-    			{
-    				g.fillRect(cx - 1 + i * 4, cy - 2, 2, 2, 1);
-    			}
-    			break;
-    		default:
-    			// Ba vach.
-    			for (int i = -1; i <= 1; i++)
-    			{
-    				g.fillRect(cx - 7, cy + i * 5 - 1, 14, 2, 1);
-    			}
-    			break;
     		}
+    		mFont.tahoma_7b_dark.drawString(g, so, xGiua, y, mFont.CENTER);
+    	}
+
+    	/// <summary>Chữ có viền tối bốn phía — đọc được trên mọi nền bản đồ.</summary>
+    	private static void veChuVienToi(mGraphics g, string chu, int xGiua,
+    			int y, mFont mf)
+    	{
+    		for (int dx = -1; dx <= 1; dx++)
+    		{
+    			for (int dy = -1; dy <= 1; dy++)
+    			{
+    				if (dx != 0 || dy != 0)
+    				{
+    					mFont.tahoma_7b_dark.drawString(g, chu, xGiua + dx,
+    							y + dy, mFont.CENTER);
+    				}
+    			}
+    		}
+    		mf.drawString(g, chu, xGiua, y, mFont.CENTER);
     	}
 
     	public static void veKhungNutNhanh(mGraphics g, int x, int y, int canh,
@@ -6904,7 +6921,8 @@ namespace Game4
     			// bong bong chu R nghia la gi.
     			bool dangBam = mScreen.keyTouch == 15 || mScreen.keyMouse == 15;
     			int yVe = yC + mGraphics.addYWhenOpenKeyBoard;
-    			veNutHud(g, xC, yVe, W_CHAT, H_CHAT, NUT_CHAT, "Chat", dangBam);
+    			veNutHud(g, xC, yVe, W_CHAT, H_CHAT, ICON_CHAT, "Chat", dangBam,
+    					false);
     			// Ten "Chat" do chinh veNutHud ve, khong ve them o day nua.
     			//
     			// Khong co cham do bao tin moi: khung chat lon nam ngay canh nut

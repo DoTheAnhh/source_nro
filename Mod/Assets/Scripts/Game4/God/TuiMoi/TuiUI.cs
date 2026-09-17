@@ -3987,13 +3987,17 @@ namespace Game4.God
         private int sdcmNguoiXem;
         private int cmNguoiXem;
 
+        /// <summary>Người đang xem có online không — số liệu sống hay lấy từ CSDL.</summary>
+        private bool nguoiDangOnline;
+
         /// <summary>Máy chủ trả về chỉ số của một nhân vật.</summary>
         public void nhanChiSoNhanVat(int id, long hp, long ki, long sd,
-                int sdcm, int cm)
+                int sdcm, int cm, bool dangOnline)
         {
             idChiSo = id;
             coChiSo = true;
             choChiSo = false;
+            nguoiDangOnline = dangOnline;
             hpNguoiXem = hp;
             kiNguoiXem = ki;
             sdNguoiXem = sd;
@@ -4321,7 +4325,7 @@ namespace Game4.God
             veKhungBo(g, xTr, yND + 2, wTr, caoXem, MAU_O_DO, 1f,
                     MAU_VIEN_O, 0.85f, 1);
             g.setClip(xTr + 1, yND + 3, wTr - 2, caoXem - 2);
-            veNguoiXemTruoc(g, xTr + wTr / 2, yND + 2 + caoXem - 10);
+            veNguoiXemTruoc(g, xTr + wTr / 2, yND + 2, caoXem);
             g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
             veChuChay(g, mFont.tahoma_7b_dark, tvXem.name, xTr + 3,
                     yND + 2 + caoXem + 3, wTr - 6);
@@ -4368,12 +4372,19 @@ namespace Game4.God
         /// thành viên không gửi mã đeo lưng; để 0 thì hàm vẽ đi xin ảnh đeo lưng
         /// số 0 mỗi khung hình.
         /// </remarks>
-        private void veNguoiXemTruoc(mGraphics g, int xGiua, int yChan)
+        private void veNguoiXemTruoc(mGraphics g, int xGiua, int yDinh, int cao)
         {
             if (tvXem == null)
             {
                 return;
             }
+            // Can GIUA o, khong dat chan sat day.
+            //
+            // paintCharBody neo theo CHAN, nen phai cong nua chieu cao nhan vat
+            // vao giua o. `ch` la chieu cao that, chinh ham ve tinh lai moi
+            // khung hinh; khung dau tien lay 32 mac dinh roi tu dung ngay sau.
+            int caoNguoi = (nguoiVe != null && nguoiVe.ch > 0) ? nguoiVe.ch : 32;
+            int yChan = yDinh + cao / 2 + caoNguoi / 2;
             try
             {
                 if (nguoiVe == null)
@@ -4424,8 +4435,10 @@ namespace Game4.God
             string hp = ro ? NinjaUtil.getMoneys(hpNguoiXem) : "—";
             string ki = ro ? NinjaUtil.getMoneys(kiNguoiXem) : "—";
             string sd = ro ? NinjaUtil.getMoneys(sdNguoiXem) : "—";
-            string sdcm = ro ? (sdcmNguoiXem + "%") : "—";
-            string cm = ro ? (cmNguoiXem + "%") : "—";
+            // Nguoi offline: may chu doc ba con so da luu, con hai ti le chi
+            // mang thi khong luu nen gui -1.
+            string sdcm = (ro && sdcmNguoiXem >= 0) ? (sdcmNguoiXem + "%") : "—";
+            string cm = (ro && cmNguoiXem >= 0) ? (cmNguoiXem + "%") : "—";
 
             int yA = yD;
             yA = veDongTT(g, x, wCot, yA, "HP", hp, mFont.tahoma_7b_red);
@@ -4438,7 +4451,12 @@ namespace Game4.God
             veDongTT(g, xCot2, wCot, yB, "SDCM", sdcm, mFont.tahoma_7b_dark);
             if (!ro)
             {
-                mFont.tahoma_7_grey.drawString(g, "(người này đang ngoại tuyến)",
+                mFont.tahoma_7_grey.drawString(g, "(không lấy được chỉ số)",
+                        xCot2, yB + 15, mFont.LEFT);
+            }
+            else if (!nguoiDangOnline)
+            {
+                mFont.tahoma_7_grey.drawString(g, "(số liệu lúc đăng xuất)",
                         xCot2, yB + 15, mFont.LEFT);
             }
         }

@@ -2629,16 +2629,29 @@ public class Service {
         Message msg = null;
         try {
             Player pl = Client.gI().getPlayerByID(id);
-            boolean co = pl != null && pl.nPoint != null;
             msg = new Message(GOI_CHI_SO_NHAN_VAT);
             msg.writer().writeInt(id);
-            msg.writer().writeByte(co ? 1 : 0);
-            if (co) {
+            if (pl != null && pl.nPoint != null) {
+                // Dang online: so lieu song, day du.
+                msg.writer().writeByte(1);
                 msg.writer().writeLong(pl.nPoint.hpMax);
                 msg.writer().writeLong(pl.nPoint.mpMax);
                 msg.writer().writeLong(pl.nPoint.dame);
                 msg.writer().writeShort(pl.nPoint.tlSDCM);
                 msg.writer().writeShort(pl.nPoint.crit);
+            } else {
+                long[] cs = chiSoTrongCSDL(id);
+                if (cs == null) {
+                    msg.writer().writeByte(0);
+                } else {
+                    // Lay tu CSDL: dung ba con so da luu, hai ti le thi khong.
+                    msg.writer().writeByte(2);
+                    msg.writer().writeLong(cs[0]);
+                    msg.writer().writeLong(cs[1]);
+                    msg.writer().writeLong(cs[2]);
+                    msg.writer().writeShort(-1);
+                    msg.writer().writeShort(-1);
+                }
             }
             nguoiXem.sendMessage(msg);
         } catch (Exception e) {
@@ -2646,6 +2659,59 @@ public class Service {
         } finally {
             if (msg != null) {
                 msg.cleanup();
+            }
+        }
+    }
+
+    /**
+     * HP tối đa, KI tối đa và sức đánh của một nhân vật <b>đang offline</b>,
+     * đọc thẳng từ CSDL.
+     *
+     * <h3>Vì sao đọc chứ không tính lại</h3>
+     *
+     * <p>Tính lại cần cả trang bị, set, vật phẩm thời gian và hiệu ứng đang
+     * chạy — tức phải dựng lại gần như cả nhân vật. Nhưng ba con số cuối cùng
+     * ấy <b>đã được lưu sẵn</b> mỗi lần nhân vật được ghi xuống (xem
+     * <code>PlayerDAO</code>, cột <code>data_point</code>): ô 13 là sức đánh, ô 14 là HP
+     * tối đa, ô 15 là KI tối đa. Đọc ra là đúng bằng lúc họ đăng xuất.</p>
+     *
+     * <p>Hai tỉ lệ chí mạng và sát thương chí mạng không nằm trong cột ấy nên
+     * người offline không có; bảng bên client hiện dấu gạch cho riêng hai dòng
+     * đó.</p>
+     *
+     *  <code>{hpMax, mpMax, dame</code>} hoặc <code>null</code> nếu không đọc được
+     */
+    private long[] chiSoTrongCSDL(int id) {
+        nro.repository.CrisResultSet rs = null;
+        try {
+            rs = nro.repository.ConnectDB.executeQuery(
+                    "SELECT data_point FROM player WHERE id = " + id);
+            if (!rs.next()) {
+                return null;
+            }
+            String chuoi = rs.getString("data_point");
+            if (chuoi == null || chuoi.isEmpty()) {
+                return null;
+            }
+            org.json.simple.JSONArray ds = (org.json.simple.JSONArray)
+                    org.json.simple.JSONValue.parse(chuoi);
+            if (ds == null || ds.size() <= 15) {
+                return null;
+            }
+            long dame = Long.parseLong(String.valueOf(ds.get(13)));
+            long hpMax = Long.parseLong(String.valueOf(ds.get(14)));
+            long mpMax = Long.parseLong(String.valueOf(ds.get(15)));
+            return new long[]{hpMax, mpMax, dame};
+        } catch (Exception ex) {
+            Logger.logException(Service.class, ex,
+                    "Lỗi đọc chỉ số trong CSDL của nhân vật " + id);
+            return null;
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.dispose();
+                } catch (Exception boQua) {
+                }
             }
         }
     }

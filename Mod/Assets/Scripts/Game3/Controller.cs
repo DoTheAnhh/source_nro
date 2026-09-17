@@ -3896,8 +3896,10 @@ namespace Game3
                             // Chi so cua mot nhan vat, cho bang "Thong tin
                             // thanh vien" cua the Bang hoi.
                             int idNguoi = msg.reader().readInt();
-                            bool coChiSo = msg.reader().readUnsignedByte() == 1;
-                            if (coChiSo)
+                            // 0 khong co, 1 dang online (day du), 2 doc tu CSDL
+                            // (thieu hai ti le chi mang).
+                            int trangThai = msg.reader().readUnsignedByte();
+                            if (trangThai != 0)
                             {
                                 long hpNg = msg.reader().readLong();
                                 long kiNg = msg.reader().readLong();
@@ -3905,7 +3907,8 @@ namespace Game3
                                 int sdcmNg = msg.reader().readShort();
                                 int cmNg = msg.reader().readShort();
                                 God.TuiUI.getInstance().nhanChiSoNhanVat(
-                                        idNguoi, hpNg, kiNg, sdNg, sdcmNg, cmNg);
+                                        idNguoi, hpNg, kiNg, sdNg, sdcmNg, cmNg,
+                                        trangThai == 1);
                             }
                             else
                             {

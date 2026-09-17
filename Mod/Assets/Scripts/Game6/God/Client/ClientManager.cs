@@ -648,8 +648,11 @@ namespace Game6.God
             // Nut nay von da phang san, nhung de rieng mot minh khong ten thi
             // no lac ra giua bon nut co ten. Ve chung mot ham thi sua kieu mot
             // lan la ca nam nut doi theo.
+            // Nut nay GIU mang nen toi: kho icon khong co hinh nao cho no, chi
+            // co ba vach ve tay — de tran tren ban do thi ba vach lan vao canh
+            // la va mai nha, khong con doc ra la mot cai nut.
             GameScr.veNutHud(g, x - nua, TAM_Y_BA_GACH - nua, NUT_CANH,
-                    NUT_CANH, GameScr.NUT_MENU, "Menu", dangBam);
+                    NUT_CANH, GameScr.ICON_BA_VACH, "Menu", dangBam, true);
         }
 
 

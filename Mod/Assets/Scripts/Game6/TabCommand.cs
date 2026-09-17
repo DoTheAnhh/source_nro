@@ -31,15 +31,18 @@ namespace Game6
             {
                 if (caption.StartsWith("Cờ"))
                 {
-                    return GameScr.NUT_CO;
+                    return GameScr.ICON_CO;
                 }
                 if (caption.StartsWith("Khu"))
                 {
-                    return GameScr.NUT_KHU;
+                    return GameScr.ICON_KHU;
                 }
             }
-            return GameScr.NUT_TAB;
+            return GameScr.ICON_TAB;
         }
+
+        /// <summary>Số in giữa icon, ví dụ số khu đang đứng. Rỗng thì không in.</summary>
+        public string soTrenIcon;
 
         /// <summary>
         /// Nút Cờ / Khu / Tab: <b>hình ở trên, tên ở dưới</b>.
@@ -51,7 +54,8 @@ namespace Game6
         /// </remarks>
         public override void paint(mGraphics g)
         {
-            GameScr.veNutHud(g, x, y, w, h, hinhNut(), caption, isFocus);
+            GameScr.veNutHud(g, x, y, w, h, hinhNut(), caption, soTrenIcon,
+                    isFocus, false);
         }
     
         public override bool isPointerInside()
