@@ -228,14 +228,14 @@ public class DuongTang extends Npc {
                         case 0:
                             switch (select) {
                                 case 0: {
-                                    if (!player.inventory.itemsBody.get(5).isNotNullItem()) {
-                                        Service.gI().sendThongBao(player, "Bạn phải mặc cải trang Tôn Ngộ Không thì mới có thể hộ tống!");
-                                        return;
-                                    }
-                                    if (player.inventory.itemsBody.get(5).template.id != (544 + (byte) player.gender)) {
-                                        Service.gI().sendThongBao(player, "Bạn phải mặc cải trang Tôn Ngộ Không thì mới có thể hộ tống!");
-                                        return;
-                                    }
+                                    // KHONG doi mac cai trang Ton Ngo Khong nua.
+                                    //
+                                    // Bo cai trang ay gan nhu khong ai con giu,
+                                    // nen dieu kien do bien ca nhiem vu thanh
+                                    // thu khong the lam — trong khi phan thuong
+                                    // cua no lai la cai trang. Vong Kim Co van
+                                    // phai co: chinh no dem diem cong duc, va no
+                                    // la thu bi tru mot luot moi lan hoan thanh.
                                     if (InventoryService.gI().findItemBag(player, 543) == null) {
                                         Service.gI().sendThongBao(player, "Bạn không có Vòng Kim Cô!");
                                         return;

@@ -3565,16 +3565,14 @@ namespace Game1
             }
             if (isnewInventory && isTabInven())
             {
-                // Mot nac banh xe di NUA O, khong phai tron mot o.
+                // Mot nac banh xe di mot quang CO DINH tinh bang diem anh, chu
+                // khong phai mot o hay nua o.
                 //
-                // Nhay tron mot o thi moi nac la mot hang bien mat va mot hang
-                // hien ra — mat luon cam giac dang truot, va rat de lo mat mon
-                // dang tim. Nua o thi van thay hang cu trong khi hang moi vao.
-                int buoc = oTui() / 2;
-                if (buoc < 8)
-                {
-                    buoc = 8;
-                }
+                // Quang tinh theo o thi moi nac la nua hang hoac ca hang bien
+                // mat — du co troi muot thi van thanh tung nac ro rang. Quang
+                // nho va deu, cong voi phan troi dan ben tren, cho ra mot mach
+                // cuon lien tuc: lan nhanh thi no chay nhanh, lan cham thi cham.
+                int buoc = BUOC_LAN;
                 cmtoY -= a * buoc;
                 int tran = gioiHanCuonTui();
                 if (cmtoY > tran)
@@ -4812,6 +4810,14 @@ namespace Game1
                 {
                     cmtoY = tranQt;
                 }
+                else if (isnewInventory && isTabInven())
+                {
+                    // Luoi o vuong: de khoi easing ben duoi keo cmy theo, chu
+                    // KHONG gan thang. Gan thang nghia la moi khung hinh nhay
+                    // dung cmRun/100 diem, ma cmRun giam theo cap so nhan — hai
+                    // khung dau nhay vai chuc diem roi dung khuc, nhin nhu giat
+                    // chu khong ra troi.
+                }
                 else
                 {
                     cmy = cmtoY;
@@ -4824,10 +4830,26 @@ namespace Game1
             }
             if (cmy != cmtoY && !pointerIsDowning)
             {
-                cmvy = cmtoY - cmy << 2;
-                cmdy += cmvy;
-                cmy += cmdy >> 4;
-                cmdy &= 15;
+                // Moi khung hinh di MOT PHAN TU quang con lai, va it nhat mot
+                // diem anh.
+                //
+                // Ban cu: cmvy = (cmtoY - cmy) * 4; cmdy += cmvy;
+                // cmy += cmdy >> 4; cmdy &= 15. Cong thuc ay giu phan le trong
+                // cmdy, nhung ngay sau do lai cat cmdy xuong con bon bit — nen
+                // khi quang con lai duoi bon diem thi cmvy < 16, cmy khong
+                // nhuc nhich mot diem nao, va phan le vua cong vao cung bi cat
+                // mat. Ket qua: cuon khong bao gio toi dung dich, luon treo lai
+                // vai diem — lan them mot nac la no cong don roi bat ra mot cai,
+                // dung cai giat ma nguoi choi thay.
+                int lech = cmtoY - cmy;
+                int buoc = lech / 4;
+                if (buoc == 0)
+                {
+                    buoc = (lech > 0) ? 1 : -1;
+                }
+                cmy += buoc;
+                cmdy = 0;
+                cmvy = 0;
             }
             cmyLast[currentTabIndex] = cmy;
         }
@@ -6766,13 +6788,13 @@ namespace Game1
         /// <summary>Số cột ô của tab "Hành trang".</summary>
         private const int TUI_SO_COT = 6;
 
-        /// <summary>Số hàng ô muốn thấy cùng lúc, không phải cuộn.</summary>
+        /// <summary>Một nấc lăn chuột đi bao nhiêu điểm ảnh.</summary>
         /// <remarks>
-        /// Ô vuông nên bề rộng cột quyết định cỡ ô; nhưng cột hẹp mà vùng cao
-        /// thì chỉ hiện được bốn hàng rưỡi, còn cột rộng thì ô to quá. Chặn
-        /// thêm theo bề cao để luôn thấy đủ sáu hàng.
+        /// Đúng bằng bước lăn của danh sách (rương đồ ở nhà): một dòng 12 điểm.
+        /// Quãng nhỏ như vậy cộng với phần trôi dần cho ra một mạch cuộn liền —
+        /// lăn nhanh thì chạy nhanh, lăn chậm thì chậm.
         /// </remarks>
-        private const int TUI_SO_HANG = 6;
+        private const int BUOC_LAN = 12;
 
         /// <summary>Khung hình vừa rồi bảng này có vẽ lưới ô vuông không.</summary>
         /// <remarks>
@@ -6876,15 +6898,13 @@ namespace Game1
         /// <summary>Bề rộng một ô của tab "Hành trang".</summary>
         private int oTui()
         {
+            // Co o CHI theo be rong cot, khong ep cho vua so hang.
+            //
+            // Ep cho vua sau hang thi o phai nho lai, va luoi hanh trang o bang
+            // Nhan vat trong khac han chinh no luc mo ruong — cung mot thu do
+            // ma hai cho hai co. Hang cuoi bi cat ngang khi cuon la binh thuong,
+            // dung la dau hieu cho biet phia duoi con nua.
             int o = (rongVungTui() - 2) / TUI_SO_COT;
-            int caoVung = yScroll + hScroll - yOTui();
-            int theoCao = caoVung / TUI_SO_HANG;
-            if (theoCao > 0 && theoCao < o)
-            {
-                // Vung thap hon la co so hang, lay theo be cao — sau hang phai
-                // thay het, khong thi cuon vai diem la mat nguyen mot hang.
-                o = theoCao;
-            }
             return (o < 16) ? 16 : o;
         }
 
