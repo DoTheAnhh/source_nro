@@ -221,6 +221,9 @@ public class ItemManagerPanel extends JPanel {
 
     private boolean catalogReady;
 
+    /** Bề rộng cột "Phát vật phẩm", tính bằng điểm ảnh. */
+    private static final int RONG_COT_PHAT = 470;
+
     public ItemManagerPanel() {
         setLayout(new BorderLayout(8, 8));
         setBackground(Color.WHITE);
@@ -231,9 +234,20 @@ public class ItemManagerPanel extends JPanel {
         title.setForeground(ACCENT);
         add(title, BorderLayout.NORTH);
 
+        // Cot phai CHi rong bang cai form phat do can, phan con lai danh het
+        // cho danh sach vat pham.
+        //
+        // Truoc day be rong chia theo kich thuoc ua thich cua hai ben, ma ben
+        // phai co bang chi so nen no doi gan nua man hinh — trong khi danh sach
+        // ben trai moi la thu phai doc, va no bi bop den muc cot "Mo ta" chi
+        // con vai chu. resizeWeight = 1 nghia la phong to cua so bao nhieu thi
+        // phan them ay ve het ben trai.
+        JComponent cotPhai = buildGive();
+        cotPhai.setPreferredSize(new Dimension(RONG_COT_PHAT, 0));
+        cotPhai.setMinimumSize(new Dimension(320, 0));
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                buildCatalog(), buildGive());
-        split.setResizeWeight(0.55);
+                buildCatalog(), cotPhai);
+        split.setResizeWeight(1.0);
         split.setBorder(null);
 
         JTabbedPane tab = new JTabbedPane();
