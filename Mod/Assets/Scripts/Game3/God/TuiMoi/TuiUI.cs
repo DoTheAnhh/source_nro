@@ -2180,9 +2180,13 @@ namespace Game3.God
             }
             long gio = mSystem.currentTimeMillis();
             int soHang = soHangTui();
-            // Cat ca vung luoi mot lan: hang ve them va hang dang troi deu co
-            // the tho ra ngoai vien khung.
-            g.setClip(xPhai + 1, yNoiDung + 1, rongPhai - 2, caoNoiDung - 2);
+            // Cat ca vung luoi: hang ve them va hang dang troi deu co the tho
+            // ra ngoai vien khung.
+            int vungX = xPhai + 1;
+            int vungY = yNoiDung + 1;
+            int vungW = rongPhai - 2;
+            int vungH = caoNoiDung - 2;
+            g.setClip(vungX, vungY, vungW, vungH);
             if (mocHang == null || mocHang.Length < soHang)
             {
                 int n = (soHang < 1) ? 1 : soHang;
@@ -2267,14 +2271,34 @@ namespace Game3.God
                     }
                     if (t < 1f)
                     {
-                        g.setClip(xO, yO, oTuiNgang, caoLo);
+                        // GIAO cua khung lo va vung luoi, khong phai mot minh
+                        // khung lo.
+                        //
+                        // setClip thay han vung cat cu, nen dat mot minh khung
+                        // o la bo luon rao cua ca luoi: o dang lo o hang cuoi
+                        // ve tran xuong duoi vien khung — dung cai "load ra
+                        // ngoai border" nhin thay.
+                        int x1 = (xO > vungX) ? xO : vungX;
+                        int y1 = (yO > vungY) ? yO : vungY;
+                        int x2 = (xO + oTuiNgang < vungX + vungW)
+                                ? (xO + oTuiNgang) : (vungX + vungW);
+                        int y2 = (yO + caoLo < vungY + vungH)
+                                ? (yO + caoLo) : (vungY + vungH);
+                        if (x2 <= x1 || y2 <= y1)
+                        {
+                            // O nam tron ngoai vung thay: khong ve gi ca.
+                            continue;
+                        }
+                        g.setClip(x1, y1, x2 - x1, y2 - y1);
                     }
                     veMotOCN(g, tui[i], xO,
                             yO + (int) (con * TROI_LEN),
                             oTuiNgang, oTuiDoc, "");
                     if (t < 1f)
                     {
-                        g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+                        // Tra ve VUNG LUOI, khong phai ca man hinh: tra ve ca
+                        // man thi nhung o ve sau do khong con rao nao.
+                        g.setClip(vungX, vungY, vungW, vungH);
                     }
                 }
             }
