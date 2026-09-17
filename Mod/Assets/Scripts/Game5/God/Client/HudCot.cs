@@ -135,13 +135,30 @@ namespace Game5.God
         {
             int cot = i % SO_MOI_HANG;
             int hang = i / SO_MOI_HANG;
-            int xRaHan = mepTrai() + cot * (RONG + KHE);
+            // Hang thieu nut thi day sang PHAI cho du, khong de ho ben phai.
+            //
+            // Chin nut chia hai hang: hang duoi chi co bon, va neu no bam mep
+            // trai thi cot ngoai cung ben phai hong mot o ngay duoi nut Menu —
+            // nhin nhu ca cum bi lech khoi goc man hinh.
+            int lui = SO_MOI_HANG - soNutCuaHang(hang);
+            int xRaHan = mepTrai() + (cot + lui) * (RONG + KHE);
             int yRaHan = Y_DAU + hang * (CAO + KHE);
 
             int[] oMenu = oNutMenu();
             int x = (int) (oMenu[0] + (xRaHan - oMenu[0]) * mo);
             int y = (int) (oMenu[1] + (yRaHan - oMenu[1]) * mo);
             return new int[] { x, y, RONG, CAO };
+        }
+
+        /// <summary>Hàng thứ <paramref name="hang"/> có mấy nút.</summary>
+        private static int soNutCuaHang(int hang)
+        {
+            int con = SO_NUT - hang * SO_MOI_HANG;
+            if (con > SO_MOI_HANG)
+            {
+                return SO_MOI_HANG;
+            }
+            return (con < 1) ? 1 : con;
         }
 
         /// <summary>Mép dưới của cả cụm khi đang mở — chỗ khác xếp tiếp từ đây.</summary>
