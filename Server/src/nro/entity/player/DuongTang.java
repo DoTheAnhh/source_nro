@@ -98,7 +98,18 @@ public class DuongTang extends Player{
                 this.dispose();
             }
         }
-        if (master != null && master.zone != null && (this.zone == null || this.zone != master.zone)) {
+        // Chi nhay theo chu khi CHUA o ban do nao — tuc lan dau vua duoc goi ra.
+        //
+        // Dang ho tong thi TUYET DOI khong bam theo: ong ay di het lo trinh da
+        // dinh, tu ban do nay sang ban do khac bang chinh cua di. Nhay theo chu
+        // thi nguoi choi chi viec chay thang toi Dao Kame roi doi — ca nhiem vu
+        // thanh mot cu dich chuyen, va "cach qua ba ban do" khong con nghia gi.
+        //
+        // Ngoai luc ho tong, ong ay van theo chu nhu cu.
+        if (master != null && master.zone != null && this.zone == null) {
+            joinMapMaster();
+        } else if (master != null && master.zone != null
+                && !master.HoTongDuongTang && this.zone != master.zone) {
             joinMapMaster();
         }
         if (master != null && master.isDie()) {
