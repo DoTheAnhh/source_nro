@@ -856,6 +856,18 @@ public class PlayerDAO {
                     dataArray.add(dame);
                     dataArray.add(hpmax);
                     dataArray.add(kimax);
+                    // O 16 va 17: sat thuong chi mang va ti le chi mang.
+                    //
+                    // Hai so nay la KET QUA cuoi cung sau trang bi, set va hieu
+                    // ung — khong tinh lai duoc tu may con so goc. Luu san thi
+                    // bang "Thong tin thanh vien" doc duoc chi so day du cua ca
+                    // nguoi dang offline; truoc day hai dong ay danh de trong.
+                    //
+                    // THEM VAO CUOI mang, khong chen giua: moi cho khac doc
+                    // data_point bang CHI SO (TopDAO, cac bang top bang hoi...),
+                    // chen giua la lech het.
+                    dataArray.add(player.nPoint.tlSDCM);
+                    dataArray.add(player.nPoint.crit);
                     String point = dataArray.toJSONString();
                     dataArray.clear();
 

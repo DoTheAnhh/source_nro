@@ -2644,13 +2644,14 @@ public class Service {
                 if (cs == null) {
                     msg.writer().writeByte(0);
                 } else {
-                    // Lay tu CSDL: dung ba con so da luu, hai ti le thi khong.
+                    // Lay tu CSDL — day du, tru khi nhan vat chua luu lai lan
+                    // nao ke tu ban co hai o moi (luc do hai ti le bang -1).
                     msg.writer().writeByte(2);
                     msg.writer().writeLong(cs[0]);
                     msg.writer().writeLong(cs[1]);
                     msg.writer().writeLong(cs[2]);
-                    msg.writer().writeShort(-1);
-                    msg.writer().writeShort(-1);
+                    msg.writer().writeShort((int) cs[3]);
+                    msg.writer().writeShort((int) cs[4]);
                 }
             }
             nguoiXem.sendMessage(msg);
@@ -2675,12 +2676,26 @@ public class Service {
      * <code>PlayerDAO</code>, cột <code>data_point</code>): ô 13 là sức đánh, ô 14 là HP
      * tối đa, ô 15 là KI tối đa. Đọc ra là đúng bằng lúc họ đăng xuất.</p>
      *
-     * <p>Hai tỉ lệ chí mạng và sát thương chí mạng không nằm trong cột ấy nên
-     * người offline không có; bảng bên client hiện dấu gạch cho riêng hai dòng
-     * đó.</p>
+     * <p>Ô 16 và 17 giữ sát thương chí mạng và tỉ lệ chí mạng, thêm vào sau
+     * nên nhân vật chưa lưu lại lần nào kể từ bản có hai ô ấy thì <b>chưa</b>
+     * có — lúc đó trả về -1 và bảng bên client hiện dấu gạch cho riêng hai
+     * dòng đó. Đăng nhập rồi thoát một lần là có.</p>
      *
-     *  <code>{hpMax, mpMax, dame</code>} hoặc <code>null</code> nếu không đọc được
+     * @return <code>{hpMax, mpMax, dame, sdcm, crit}</code> hoặc
+     *         <code>null</code> nếu không đọc được
      */
+    /** Đọc một ô JSON thành số; hỏng hay rỗng thì lấy giá trị dự phòng. */
+    private static long doSo(Object o, long duPhong) {
+        if (o == null) {
+            return duPhong;
+        }
+        try {
+            return Long.parseLong(String.valueOf(o).trim());
+        } catch (NumberFormatException boQua) {
+            return duPhong;
+        }
+    }
+
     private long[] chiSoTrongCSDL(int id) {
         nro.repository.CrisResultSet rs = null;
         try {
@@ -2701,7 +2716,9 @@ public class Service {
             long dame = Long.parseLong(String.valueOf(ds.get(13)));
             long hpMax = Long.parseLong(String.valueOf(ds.get(14)));
             long mpMax = Long.parseLong(String.valueOf(ds.get(15)));
-            return new long[]{hpMax, mpMax, dame};
+            long sdcm = (ds.size() > 16) ? doSo(ds.get(16), -1) : -1;
+            long crit = (ds.size() > 17) ? doSo(ds.get(17), -1) : -1;
+            return new long[]{hpMax, mpMax, dame, sdcm, crit};
         } catch (Exception ex) {
             Logger.logException(Service.class, ex,
                     "Lỗi đọc chỉ số trong CSDL của nhân vật " + id);

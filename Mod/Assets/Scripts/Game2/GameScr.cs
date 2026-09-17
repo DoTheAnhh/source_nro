@@ -6568,8 +6568,14 @@ namespace Game2
     	/// <summary>Bảng gỗ — nút "Khu"; số khu vẽ thẳng lên bảng.</summary>
     	public const int ICON_KHU = 561;
 
-    	/// <summary>Sách dịch chuyển — nút "Tab".</summary>
-    	public const int ICON_TAB = 3783;
+    	/// <summary>Thẻ hai mũi tên đổi chỗ — nút "Tab".</summary>
+    	/// <remarks>
+    	/// Hai mũi tên xoay vòng là dấu hiệu "đổi chỗ" quen thuộc, hợp với việc
+    	/// nút này làm: nhảy qua lại giữa các tab. Ứng viên còn lại là 3783 (sách
+    	/// dịch chuyển) — sáng và rõ hơn ở cỡ nhỏ nhất, nhưng đọc ra "dịch chuyển"
+    	/// chứ không phải "đổi tab".
+    	/// </remarks>
+    	public const int ICON_TAB = 15767;
 
     	/// <summary>Loa to — ô "Chat".</summary>
     	public const int ICON_CHAT = 13619;
