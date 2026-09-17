@@ -4981,6 +4981,7 @@ namespace Game1
         public void paint(mGraphics g)
         {
             // Xoa o dau moi khung hinh; paintInventory se bat lai neu no chay.
+            daVeLuoiKhungTruoc = dangVeLuoiTui;
             dangVeLuoiTui = false;
             g.translate(-g.getTranslateX(), -g.getTranslateY() + mGraphics.addYWhenOpenKeyBoard);
             g.translate(-cmx, 0);
@@ -6796,6 +6797,27 @@ namespace Game1
         /// </remarks>
         private const int BUOC_LAN = 12;
 
+        /// <summary>Mốc bắt đầu màn hiện ô, hoặc 0 nếu chưa chạy lần nào.</summary>
+        private long lucHienLuoi;
+
+        /// <summary>Khung hình TRƯỚC có vẽ lưới không — để biết lưới vừa mở.</summary>
+        private bool daVeLuoiKhungTruoc;
+
+        /// <summary>Ô sau chờ ô trước bấy nhiêu mili giây.</summary>
+        /// <remarks>
+        /// Trễ theo <b>đường chéo</b> (hàng cộng cột) chứ không theo thứ tự ô:
+        /// trễ theo thứ tự thì cả hàng đầu chạy xong mới tới hàng hai, nhìn
+        /// như một cái băng chuyền; theo đường chéo thì lưới mở ra từ góc
+        /// trên trái toả xuống, giống cách người ta đưa mắt đọc.
+        /// </remarks>
+        private const int TRE_MOI_BAC = 22;
+
+        /// <summary>Một ô hiện ra trong bấy nhiêu mili giây.</summary>
+        private const int THOI_GIAN_HIEN = 190;
+
+        /// <summary>Ô trồi lên bấy nhiêu điểm ảnh trong lúc hiện.</summary>
+        private const int TROI_LEN = 14;
+
         /// <summary>Khung hình vừa rồi bảng này có vẽ lưới ô vuông không.</summary>
         /// <remarks>
         /// <para><c>isTabInven()</c> liệt kê theo <c>type</c> và số thẻ, mà
@@ -6906,6 +6928,20 @@ namespace Game1
             // dung la dau hieu cho biet phia duoi con nua.
             int o = (rongVungTui() - 2) / TUI_SO_COT;
             return (o < 16) ? 16 : o;
+        }
+
+        /// <summary>
+        /// Bề cao một ô túi — <b>ba phần năm</b> bề rộng.
+        /// </summary>
+        /// <remarks>
+        /// Ô vuông tốn chiều dọc mà chẳng để làm gì: ảnh vật phẩm nằm giữa,
+        /// phần trên dưới bỏ không. Ô thấp hơn thì cùng một khung hiện được
+        /// nhiều hàng hơn, mà ảnh vẫn đủ chỗ.
+        /// </remarks>
+        private int caoOTui()
+        {
+            int h = oTui() * 3 / 5;
+            return (h < 14) ? 14 : h;
         }
 
         /// <summary>Đỉnh vùng ô, ngay dưới dải tab.</summary>
@@ -7238,22 +7274,56 @@ namespace Game1
         {
             Item[] tui = Char.myCharz().arrItemBag;
             int o = oTui();
+            int cao = caoOTui();
             nTableItem = tui.Length;
+            if (!daVeLuoiKhungTruoc)
+            {
+                // Luoi vua mo ra: chay lai man hien o tu dau.
+                lucHienLuoi = mSystem.currentTimeMillis();
+            }
+            long troi = mSystem.currentTimeMillis() - lucHienLuoi;
 
             g.setClip(xVungTui(), yOTui(), rongVungTui(),
                     yScroll + hScroll - yOTui());
             for (int i = 0; i < tui.Length; i++)
             {
-                int x = xVungTui() + (i % TUI_SO_COT) * o;
-                int y = yOTui() + (i / TUI_SO_COT) * o - cmy;
+                int cot = i % TUI_SO_COT;
+                int hang = i / TUI_SO_COT;
+                int x = xVungTui() + cot * o;
+                int y = yOTui() + hang * cao - cmy;
                 // Bo qua o nam ngoai vung thay: ve het ca ngan o moi khung hinh
                 // la tut khung hinh han.
-                if (y + o < yOTui() || y > yScroll + hScroll)
+                if (y + cao < yOTui() || y > yScroll + hScroll)
                 {
                     continue;
                 }
-                veMotO(g, tui[i], x, y, o,
-                        i == sellectInventory && newSelected == 1, "", -1);
+                // Man hien so le: o cang xa goc tren trai cang vao muon.
+                //
+                // Bac tinh theo HANG THAY DUOC chu khong theo hang that: cuon
+                // xuong cuoi tui roi mo lai thi hang dau tien dang nhin la bac
+                // 0, khong phai bac thu hai muoi — cho o ay khong phai cho ba
+                // phan tu giay moi hien.
+                int hangThay = hang - (cmy / (cao > 0 ? cao : 1));
+                if (hangThay < 0)
+                {
+                    hangThay = 0;
+                }
+                float t = (troi - (long) (cot + hangThay) * TRE_MOI_BAC)
+                        / (float) THOI_GIAN_HIEN;
+                if (t <= 0f)
+                {
+                    continue;
+                }
+                if (t > 1f)
+                {
+                    t = 1f;
+                }
+                // Cham dan khi toi noi: (1-t)^2 di nhanh luc dau roi nhe nhang
+                // dat xuong, con cong deu thi o nao cung nhu dang bi keo.
+                float con = (1f - t) * (1f - t);
+                int yVe = y + (int) (con * TROI_LEN);
+                veMotOCao(g, tui[i], x, yVe, o, cao,
+                        i == sellectInventory && newSelected == 1, "");
             }
             g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
         }
@@ -7263,7 +7333,7 @@ namespace Game1
         {
             int o = oTui();
             int cot = (px - xVungTui()) / o;
-            int hang = (py + cmy - yOTui()) / o;
+            int hang = (py + cmy - yOTui()) / caoOTui();
             if (cot < 0 || cot >= TUI_SO_COT || hang < 0 || py < yOTui())
             {
                 return -1;
@@ -7320,7 +7390,7 @@ namespace Game1
             // nen cu tinh theo luoi tui.
             int cotCu = cotHienTai;
             cotHienTai = 0;
-            int o = oTui();
+            int o = caoOTui();
             cotHienTai = cotCu;
             int soHang = (Char.myCharz().arrItemBag.Length + TUI_SO_COT - 1)
                     / TUI_SO_COT;
@@ -7338,15 +7408,27 @@ namespace Game1
         private void veMotO(mGraphics g, Item it, int x, int y, int o,
                 bool dangChon, string ten, int oMac)
         {
+            veMotOCao(g, it, x, y, o, o, dangChon, ten);
+        }
+
+        /// <summary>Một ô đồ, cho phép rộng và cao khác nhau.</summary>
+        /// <remarks>
+        /// Ô của hành trang nay thấp hơn rộng, nên mọi thứ bên trong phải neo
+        /// theo <paramref name="cao"/> chứ không suy ra từ cạnh: ảnh vẫn nằm
+        /// giữa ô, còn số lượng vẫn dính đáy phải.
+        /// </remarks>
+        private void veMotOCao(mGraphics g, Item it, int x, int y, int rong,
+                int cao, bool dangChon, string ten)
+        {
             // Ô bo góc, viền nâu, nền sẫm hơn nền bảng.
             //
             // Ảnh vật phẩm phần lớn màu sáng nên nền ô phải sẫm, không thì món
             // nào cũng chìm vào nền kem. Ô đang chọn đổi sang nền cam và viền đậm
             // thay vì chỉ sáng hơn một chút như bản cũ.
             g.setColor(MAU_VIEN_BANG, dangChon ? 0.95f : 0.55f);
-            g.fillRect(x, y, o, o, 5);
+            g.fillRect(x, y, rong, cao, 5);
             g.setColor(dangChon ? MAU_THE_CHON : MAU_O_TUI, 1f);
-            g.fillRect(x + 1, y + 1, o - 2, o - 2, 4);
+            g.fillRect(x + 1, y + 1, rong - 2, cao - 2, 4);
 
             if (it == null || it.template == null)
             {
@@ -7357,12 +7439,12 @@ namespace Game1
                 // bảng dừng ngay tại đó.
                 if (ten != null && ten.Length > 0)
                 {
-                    veTenO(g, ten, x, y, o);
+                    veTenO(g, ten, x, y, cao);
                 }
                 return;
             }
-            SmallImage.drawSmallImage(g, it.template.iconID, x + o / 2,
-                    y + o / 2, 0, 3);
+            SmallImage.drawSmallImage(g, it.template.iconID, x + rong / 2,
+                    y + cao / 2, 0, 3);
             if (it.quantity > 1)
             {
                 // Chu DEN tren nen sang: chu vang tren nen vang cua o thi doc
@@ -7370,8 +7452,8 @@ namespace Game1
                 string so = string.Empty + it.quantity;
                 int rongChu = mFont.tahoma_7b_dark.getWidth(so);
                 g.setColor(16777215, 0.75f);
-                g.fillRect(x + o - rongChu - 4, y + o - 11, rongChu + 3, 10);
-                mFont.tahoma_7b_dark.drawString(g, so, x + o - 2, y + o - 10,
+                g.fillRect(x + rong - rongChu - 4, y + cao - 11, rongChu + 3, 10);
+                mFont.tahoma_7b_dark.drawString(g, so, x + rong - 2, y + cao - 10,
                         mFont.RIGHT);
             }
         }
