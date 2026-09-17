@@ -600,6 +600,9 @@ public class ConstNpc {
     /** Bang hoi lai truoc khi no trung de tu (Mabu / Cell / Berus). */
     public static final int NO_TRUNG_DE_TU = 2150;
 
+    /** Bang chon hanh tinh cho de sap no ra. */
+    public static final int CHON_HANH_TINH_DE_TU = 2151;
+
     //----------------------BONUS------------------------------------------   
     public static final int MENU_3 = 10005;
     public static final int MENU_4 = 10006;

@@ -88,12 +88,43 @@ public final class TrungDeTuService {
         return s.endsWith(".0") ? s.substring(0, s.length() - 2) : s;
     }
 
-    /** Người chơi chọn ở bảng xác nhận. */
+    /** Tên ba hành tinh, theo đúng thứ tự mã giới tính 0, 1, 2. */
+    private static final String[] TEN_HANH_TINH = {
+        "Trái Đất", "Namếc", "Xayda"
+    };
+
+    /**
+     * Đồng ý nở: hỏi tiếp <b>hành tinh</b> cho con đệ sắp ra.
+     *
+     * <p>Hỏi ở bước hai chứ không gộp vào bước một: bước một là chỗ báo con đệ
+     * cũ sẽ mất, nhét luôn ba nút hành tinh vào đó thì người chơi bấm chọn hành
+     * tinh mà không kịp đọc câu cảnh báo.</p>
+     */
     public void chon(Player pl, int select) {
-        Integer itemId = dangHoi.remove(pl.id);
+        Integer itemId = dangHoi.get(pl.id);
         if (select != 0 || itemId == null) {
+            dangHoi.remove(pl.id);
             return;
         }
+        byte loai = TrungDeTuDAO.loaiCuaVatPham(itemId);
+        if (loai < 0) {
+            dangHoi.remove(pl.id);
+            Service.gI().sendThongBao(pl, "Quả trứng này không còn dùng được.");
+            return;
+        }
+        String text = "|1|" + TrungDeTuDAO.tenTrung(loai) + "\n"
+                + "|0|Chọn hành tinh cho đệ tử sắp nở";
+        NpcService.gI().createMenuConMeo(pl, ConstNpc.CHON_HANH_TINH_DE_TU, -1,
+                text, "Trái\nĐất", "Namếc", "Xayda", "Từ chối");
+    }
+
+    /** Người chơi chọn hành tinh — tới đây mới nở thật. */
+    public void chonHanhTinh(Player pl, int select) {
+        Integer itemId = dangHoi.remove(pl.id);
+        if (itemId == null || select < 0 || select > 2) {
+            return;
+        }
+        byte hanhTinh = (byte) select;
         byte loai = TrungDeTuDAO.loaiCuaVatPham(itemId);
         if (loai < 0) {
             Service.gI().sendThongBao(pl, "Quả trứng này không còn dùng được.");
@@ -108,9 +139,10 @@ public final class TrungDeTuService {
         }
         InventoryService.gI().subQuantityItemsBag(pl, trung, 1);
         InventoryService.gI().sendItemBag(pl);
-        DetuService.gI().taoDeTuTuTrung(pl, loai);
+        DetuService.gI().taoDeTuTuTrung(pl, loai, hanhTinh);
         Service.gI().sendThongBao(pl, "Trứng đã nở! Bạn nhận được đệ tử "
-                + ConstDetu.tenLoai(loai) + ".");
+                + ConstDetu.tenLoai(loai) + " hành tinh "
+                + TEN_HANH_TINH[hanhTinh] + ".");
     }
 
     /** Tìm lại quả trứng trong hành trang theo mã vật phẩm. */

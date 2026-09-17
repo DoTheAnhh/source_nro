@@ -83,6 +83,11 @@ public class MenuController {
                 nro.service.detu.TrungDeTuService.gI().chon(player, select);
                 return;
             }
+            if (mucDangMo == ConstNpc.CHON_HANH_TINH_DE_TU) {
+                nro.service.detu.TrungDeTuService.gI()
+                        .chonHanhTinh(player, select);
+                return;
+            }
         }
         switch (npcId) {
 

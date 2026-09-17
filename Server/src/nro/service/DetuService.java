@@ -261,10 +261,10 @@ public class DetuService {
      * <p>Chạy trong luồng riêng và ngủ một giây trước khi chào: gói thông tin
      * đệ phải kịp tới client, không thì câu chào hiện trước cả con đệ.</p>
      */
-    public void taoDeTuTuTrung(Player player, byte loai) {
+    public void taoDeTuTuTrung(Player player, byte loai, byte hanhTinh) {
         new Thread(() -> {
             try {
-                dungDeTuChoNguoiChoi(player, loai);
+                dungDeTuChoNguoiChoi(player, loai, hanhTinh);
                 CheckPlayer(player);
                 Thread.sleep(1000);
                 Service.gI().chatJustForMe(player, player.Detu,
@@ -282,10 +282,12 @@ public class DetuService {
      *
      * <p>Không hỏi lại ở đây; chỗ gọi (vật phẩm trứng) đã hỏi rồi.</p>
      */
-    private void dungDeTuChoNguoiChoi(Player player, byte loai) {
+    private void dungDeTuChoNguoiChoi(Player player, byte loai, byte hanhTinh) {
         Detu pet = new Detu(player);
         pet.name = "$" + ConstDetu.tenLoai(loai);
-        pet.gender = (byte) Util.nextInt(0, 2);
+        // Hanh tinh do NGUOI CHOI chon luc no trung; ngoai khoang 0..2 thi boc.
+        pet.gender = (hanhTinh >= 0 && hanhTinh <= 2)
+                ? hanhTinh : (byte) Util.nextInt(0, 2);
         pet.id = Player.setIdForPet(pet, player.id);
         pet.typeDeTu = loai;
         pet.thuctinh = (byte) 0;

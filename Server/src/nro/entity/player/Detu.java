@@ -915,6 +915,55 @@ public class Detu extends Player {
      * {@code itemsBody.get(5)} không kiểm số ô — túi đệ tử đang có 7 ô nên
      * chưa vỡ, nhưng ở đây kiểm cho chắc.</p>
      */
+    /** Ba phần thân lấy từ cải trang của loại đệ; -1 là loại này không gắn. */
+    private short[] phanCuaLoai;
+    private long lucDocPhanLoai;
+
+    /**
+     * <b>Model gốc</b> của loại đệ này: 0 mũ, 1 thân, 2 chân.
+     *
+     * <h3>Mượn ba con số của một mẫu cải trang</h3>
+     *
+     * <p>Đây <b>không</b> phải cải trang đệ đang mặc ở ô 5. Mẫu cải trang chỉ
+     * là <b>nguồn</b> của ba con số phần thân — đệ mang hình đó sẵn, không tốn
+     * ô đồ nào và không cởi ra được.</p>
+     *
+     * <h3>Vì sao không ghi cứng ba con số</h3>
+     *
+     * <p>Mabư, U Bư, Kid Jiren... mỗi loại có ba con số viết thẳng trong mã,
+     * lại nằm rải ở ba hàm khác nhau. Đổi hình một loại là sửa mã rồi dựng lại
+     * máy chủ, mà sót một chỗ thì ra con đệ đầu người mình thú.</p>
+     *
+     * <p>Loại nào khai <code>cai_trang</code> trên panel thì lấy thẳng ba phần
+     * của mẫu ấy — trỏ sang cải trang khác là đổi được cả hình, không cần biết
+     * số phần thân là bao nhiêu.</p>
+     *
+     * <p>Nhớ tạm mười lăm giây: ba hàm vẽ hình được gọi rất dày.</p>
+     */
+    private short phanCaiTrangLoai(int phan) {
+        long gio = System.currentTimeMillis();
+        if (phanCuaLoai == null || gio - lucDocPhanLoai > 15_000L) {
+            lucDocPhanLoai = gio;
+            phanCuaLoai = new short[]{-1, -1, -1};
+            try {
+                int idCt = nro.repository.dao.DeTuDAO
+                        .loai(this.typeDeTu).caiTrang;
+                if (idCt > 0) {
+                    nro.entity.template.ItemTemplate t = nro.service.item
+                            .ItemService.gI().getTemplate((short) idCt);
+                    if (t != null) {
+                        phanCuaLoai[0] = (short) t.head;
+                        phanCuaLoai[1] = (short) t.body;
+                        phanCuaLoai[2] = (short) t.leg;
+                    }
+                }
+            } catch (Exception boQua) {
+                // Chua nap xong bang vat pham: lan sau doc lai.
+            }
+        }
+        return (phan < 0 || phan > 2) ? (short) -1 : phanCuaLoai[phan];
+    }
+
     private short muTuCaiTrang() {
         if (this.inventory == null || this.inventory.itemsBody == null
                 || this.inventory.itemsBody.size() <= 5) {
@@ -967,6 +1016,14 @@ public class Detu extends Player {
             if (part != -1) {
                 return (short) part;
             }
+        }
+        // Model goc cua loai de, khai tren panel.
+        //
+        // Dung SAU o cai trang — nguoi choi mac cai trang cho de thi phai thay
+        // cai trang do — nhung TRUOC nhanh doc ao/quan: mot con de mang hinh
+        // quai vat ma mac ao vao lai doi thanh than nguoi thi hong ca hinh.
+        if (!this.isTransform && phanCaiTrangLoai(0) != -1) {
+            return phanCaiTrangLoai(0);
         }
         if (this.IdBot == 1 && this.nPoint.power > 1_500_000 && this.master.isBot_New) {
             return 353;
@@ -1033,6 +1090,9 @@ public class Detu extends Player {
             if (body != -1) {
                 return (short) body;
             }
+        }
+        if (!this.isTransform && phanCaiTrangLoai(1) != -1) {
+            return phanCaiTrangLoai(1);
         }
         if (inventory.itemsBody.get(0).isNotNullItem()) {
             return inventory.itemsBody.get(0).template.part;
@@ -1102,6 +1162,9 @@ public class Detu extends Player {
             if (leg != -1) {
                 return (short) leg;
             }
+        }
+        if (!this.isTransform && phanCaiTrangLoai(2) != -1) {
+            return phanCaiTrangLoai(2);
         }
         if (inventory.itemsBody.get(1).isNotNullItem()) {
             return inventory.itemsBody.get(1).template.part;

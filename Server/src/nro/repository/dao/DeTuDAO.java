@@ -82,6 +82,7 @@ public class DeTuDAO {
                     + " ghi_chu VARCHAR(255) DEFAULT NULL,"
                     + " PRIMARY KEY (loai)"
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            themCotCaiTrang();
             dienSanNeuRong();
         } catch (Exception ex) {
             Logger.logException(DeTuDAO.class, ex, "Không tạo được bảng đệ tử");
@@ -104,6 +105,50 @@ public class DeTuDAO {
      * {@code ON DUPLICATE KEY}: hai cách đó chạy mỗi lần khởi động và sẽ ghi đè
      * lại những dòng quản trị đã sửa tay. Đã có dòng nào là bỏ qua hẳn.</p>
      */
+    /**
+     * Thêm cột {@code cai_trang} cho bảng đã tạo từ trước.
+     *
+     * <p>Bảng cũ không có cột này, mà {@code CREATE TABLE IF NOT EXISTS}
+     * không sửa bảng đã tồn tại — nên phải thêm riêng. Cột đã có thì câu lệnh
+     * báo lỗi trùng tên, và đó là chuyện bình thường, không phải hỏng.</p>
+     *
+     * <p>Lần đầu thêm thì gắn sẵn cải trang cho Cell và Bill. Chỉ làm đúng
+     * lúc cột vừa sinh ra: làm mỗi lần khởi động thì sẽ đè lên lựa chọn mà
+     * quản trị đã đổi trên panel.</p>
+     */
+    private static void themCotCaiTrang() {
+        try {
+            ConnectDB.executeUpdate("ALTER TABLE de_tu_loai"
+                    + " ADD COLUMN cai_trang INT(11) NOT NULL DEFAULT -1");
+        } catch (Exception daCo) {
+            // Cot da co san: khong phai loi.
+            return;
+        }
+        try {
+            ConnectDB.executeUpdate("UPDATE de_tu_loai SET cai_trang = ?"
+                    + " WHERE loai = ?", CT_CELL, (int) ConstDetuCell());
+            ConnectDB.executeUpdate("UPDATE de_tu_loai SET cai_trang = ?"
+                    + " WHERE loai = ?", CT_BILL, (int) ConstDetuBill());
+        } catch (Exception ex) {
+            Logger.logException(DeTuDAO.class, ex,
+                    "Không gắn được cải trang mặc định cho loại đệ");
+        }
+    }
+
+    /** Cải trang "CT Xên nhí" — hình của đệ Cell. */
+    private static final int CT_CELL = 1600;
+
+    /** Cải trang "Berus" — hình của đệ Bill. */
+    private static final int CT_BILL = 2001;
+
+    private static byte ConstDetuCell() {
+        return nro.core.consts.ConstDetu.CELL;
+    }
+
+    private static byte ConstDetuBill() {
+        return nro.core.consts.ConstDetu.BILL;
+    }
+
     private static void dienSanNeuRong() throws Exception {
         if (demDong("de_tu_chi_so") == 0) {
             luuChiSo(new ChiSo());
@@ -120,6 +165,10 @@ public class DeTuDAO {
                     "Hơn Mabư 5% (hơn thường 10,25%)");
             themLoai(7, "Bill", 115.7625d, 1_500_000L, true,
                     "Hơn Cell 5% (hơn thường 15,7625%)");
+            ConnectDB.executeUpdate("UPDATE de_tu_loai SET cai_trang = ?"
+                    + " WHERE loai = ?", CT_CELL, (int) ConstDetuCell());
+            ConnectDB.executeUpdate("UPDATE de_tu_loai SET cai_trang = ?"
+                    + " WHERE loai = ?", CT_BILL, (int) ConstDetuBill());
         }
     }
 
@@ -360,6 +409,16 @@ public class DeTuDAO {
         public boolean tuTrung;
         public boolean bat = true;
         public String ghiChu;
+
+        /**
+         * Vật phẩm cải trang dùng làm <b>hình dáng</b> cho loại đệ này.
+         *
+         * <p>-1 là không gắn: đệ giữ hình mặc định của nó. Lấy thẳng
+         * {@code head}, {@code body}, {@code leg} của mẫu cải trang, nên muốn
+         * đổi hình một loại đệ thì chỉ việc trỏ sang cải trang khác, không
+         * phải đi tìm ba con số phần thân.</p>
+         */
+        public int caiTrang = -1;
     }
 
     public static List<Loai> dsLoai() {
@@ -377,6 +436,7 @@ public class DeTuDAO {
                 l.tuTrung = rs.getBoolean("tu_trung");
                 l.bat = rs.getBoolean("bat");
                 l.ghiChu = rs.getStringOrNull("ghi_chu");
+                l.caiTrang = rs.getInt("cai_trang");
                 ra.add(l);
             }
         } catch (Exception ex) {
@@ -423,14 +483,15 @@ public class DeTuDAO {
         }
         try {
             ConnectDB.executeUpdate("INSERT INTO de_tu_loai"
-                    + " (loai, ten, he_so, suc_manh_dau, tu_trung, bat, ghi_chu)"
-                    + " VALUES (?, ?, ?, ?, ?, ?, ?)"
+                    + " (loai, ten, he_so, suc_manh_dau, tu_trung, bat, ghi_chu,"
+                    + " cai_trang)"
+                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
                     + " ON DUPLICATE KEY UPDATE ten = VALUES(ten),"
                     + " he_so = VALUES(he_so), suc_manh_dau = VALUES(suc_manh_dau),"
                     + " tu_trung = VALUES(tu_trung), bat = VALUES(bat),"
-                    + " ghi_chu = VALUES(ghi_chu)",
+                    + " ghi_chu = VALUES(ghi_chu), cai_trang = VALUES(cai_trang)",
                     l.loai, nz(l.ten), l.heSo, l.sucManhDau,
-                    l.tuTrung ? 1 : 0, l.bat ? 1 : 0, l.ghiChu);
+                    l.tuTrung ? 1 : 0, l.bat ? 1 : 0, l.ghiChu, l.caiTrang);
             return null;
         } catch (Exception ex) {
             Logger.logException(DeTuDAO.class, ex, "Lỗi lưu de_tu_loai");

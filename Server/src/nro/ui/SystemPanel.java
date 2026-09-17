@@ -13507,7 +13507,8 @@ public class SystemPanel extends JPanel {
 
     private final DefaultTableModel dtLoaiModel = new DefaultTableModel(
             new Object[]{"Mã", "Tên", "Hệ số %", "Hơn đệ thường",
-                "Sức mạnh khởi điểm", "Từ trứng", "Bật", "Ghi chú"}, 0) {
+                "Sức mạnh khởi điểm", "Từ trứng", "Model gốc", "Bật",
+                "Ghi chú"}, 0) {
         @Override
         public boolean isCellEditable(int r, int c) {
             return false;
@@ -13577,7 +13578,7 @@ public class SystemPanel extends JPanel {
         dtLoaiTable.setRowHeight(24);
         dtLoaiTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         dtLoaiTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        int[] wL = {45, 110, 70, 110, 140, 65, 45, 180};
+        int[] wL = {45, 110, 70, 110, 140, 65, 150, 45, 180};
         for (int i = 0; i < wL.length && i < dtLoaiTable.getColumnCount(); i++) {
             dtLoaiTable.getColumnModel().getColumn(i).setPreferredWidth(wL[i]);
         }
@@ -13648,6 +13649,28 @@ public class SystemPanel extends JPanel {
                 + "khởi động lại máy chủ.");
     }
 
+    /**
+     * Tên mẫu cải trang đang làm <b>model gốc</b> của một loại đệ.
+     *
+     * <p>Hiện tên chứ không chỉ hiện số: một mình con số thì phải sang tab vật
+     * phẩm tra mới biết đang gắn hình gì.</p>
+     */
+    private static String dtTenModel(int idVatPham) {
+        if (idVatPham <= 0) {
+            return "— mặc định —";
+        }
+        try {
+            nro.entity.template.ItemTemplate t = nro.service.item.ItemService
+                    .gI().getTemplate((short) idVatPham);
+            if (t != null && t.name != null) {
+                return t.name + " (" + idVatPham + ")";
+            }
+        } catch (Exception boQua) {
+            // Chua nap xong bang vat pham: hien mot minh con so.
+        }
+        return String.valueOf(idVatPham);
+    }
+
     /** Liệt kê ba quả trứng kèm mã vật phẩm đã cấp. */
     private void dtNapTrung() {
         StringBuilder s = new StringBuilder("<html>");
@@ -13694,7 +13717,8 @@ public class SystemPanel extends JPanel {
             dtLoaiModel.addRow(new Object[]{l.loai, nz(l.ten), gonSo(l.heSo),
                 (l.heSo >= 100 ? "+" : "") + gonSo(l.heSo - 100) + "%",
                 PlayerManagerPanel.fmt(l.sucManhDau),
-                l.tuTrung ? "có" : "", l.bat ? "có" : "", nz(l.ghiChu)});
+                l.tuTrung ? "có" : "", dtTenModel(l.caiTrang),
+                l.bat ? "có" : "", nz(l.ghiChu)});
         }
 
     }
@@ -13881,6 +13905,8 @@ public class SystemPanel extends JPanel {
                 cu != null && cu.tuTrung);
         javax.swing.JCheckBox cbBat = new javax.swing.JCheckBox("Bật",
                 cu == null || cu.bat);
+        JTextField fModel = new JTextField(
+                String.valueOf(cu == null ? -1 : cu.caiTrang), 8);
         JTextField fGhi = new JTextField(cu == null ? "" : nz(cu.ghiChu), 24);
         fMa.setEditable(them);
 
@@ -13896,6 +13922,10 @@ public class SystemPanel extends JPanel {
         y = ghiChuHang(form, c, y, "100 = như đệ thường, 105 = hơn 5%");
         addRow(form, c, y++, "Sức mạnh khởi điểm:", fSm);
         addRowC(form, c, y++, "", cbTrung);
+        addRow(form, c, y++, "Model gốc (id cải trang):", fModel);
+        y = ghiChuHang(form, c, y,
+                "-1 = giữ hình mặc định. Đệ mang sẵn hình của mẫu cải trang này,"
+                + " không chiếm ô đồ nào.");
         addRow(form, c, y++, "Ghi chú:", fGhi);
         form.add(cbBat, c);
 
@@ -13916,6 +13946,7 @@ public class SystemPanel extends JPanel {
         }
         moi.sucManhDau = laySoLonAnToan(fSm.getText());
         moi.tuTrung = cbTrung.isSelected();
+        moi.caiTrang = laySoAnToan(fModel.getText());
         moi.bat = cbBat.isSelected();
         moi.ghiChu = fGhi.getText().trim();
         String loi = nro.repository.dao.DeTuDAO.luuLoai(moi);
