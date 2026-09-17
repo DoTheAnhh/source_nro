@@ -277,8 +277,7 @@ public final class HoTongService {
         }
         ketThuc(chu);
         HoTongDAO.ghiLanCuoi((int) chu.id, System.currentTimeMillis());
-        Service.gI().sendThongBao(chu,
-                "Đường Tăng đã tới Đảo Kamê an toàn. Đa tạ thí chủ!");
+        Service.gI().sendThongBao(chu, "Hộ tống thành công!");
         traQua(chu);
     }
 
@@ -302,10 +301,14 @@ public final class HoTongService {
     //  Phần thưởng
     // =====================================================================
     /**
-     * Trả quà: vào <b>rương ở nhà</b>, rương đầy thì rơi xuống đất.
+     * Trả quà: vào thẳng <b>hành trang</b>, hành trang đầy thì rơi xuống đất.
      *
-     * <p>Rơi xuống đất có ghi tên chủ, nên người khác đi qua nhặt không được
-     * (xem {@code Zone.pickItem}).</p>
+     * <p>Không mở bảng nào cả — người chơi vừa đi xong một chặng dài, dí vào
+     * mặt họ một cái bảng để bấm đóng thì chỉ tổ phiền. Túi tự cập nhật, ai
+     * muốn xem thì tự mở.</p>
+     *
+     * <p>Đồ rơi xuống đất có ghi tên chủ, nên người khác đi qua nhặt không
+     * được (xem {@code Zone.pickItem}).</p>
      */
     private void traQua(Player chu) {
         List<HoTongDAO.Qua> ds = HoTongDAO.dsQua();
@@ -343,16 +346,19 @@ public final class HoTongService {
             if (it == null || it.template == null) {
                 return false;
             }
-            if (InventoryService.gI().addItemBox(chu, it)) {
-                InventoryService.gI().sendItemBox(chu);
-                Service.gI().sendThongBao(chu, "Rương đồ nhận được "
-                        + sl + " " + it.template.name + ".");
+            if (InventoryService.gI().addItemBag(chu, it)) {
+                // Chi gui lai tui, KHONG mo bang: mon moi tu hien trong hanh
+                // trang lan sau nguoi choi mo ra.
+                InventoryService.gI().sendItemBag(chu);
                 return true;
             }
             if (chu.zone != null) {
+                // Tui day thi tha xuong dat, co ghi ten chu. Cau nay VAN bao:
+                // do nam duoi chan chu khong vao tui, khong noi thi nguoi choi
+                // di thang va mat luon.
                 Service.gI().dropItemMap(chu.zone, new ItemMap(chu.zone, itemId,
                         sl, chu.location.x, chu.location.y, chu.id));
-                Service.gI().sendThongBao(chu, "Rương đã đầy — " + sl + " "
+                Service.gI().sendThongBao(chu, "Hành trang đầy — " + sl + " "
                         + it.template.name + " rơi xuống đất, chỉ bạn nhặt được.");
                 return true;
             }
