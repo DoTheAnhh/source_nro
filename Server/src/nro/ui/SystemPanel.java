@@ -13507,8 +13507,8 @@ public class SystemPanel extends JPanel {
 
     private final DefaultTableModel dtLoaiModel = new DefaultTableModel(
             new Object[]{"Mã", "Tên", "Hệ số %", "Hơn đệ thường",
-                "Sức mạnh khởi điểm", "Từ trứng", "Model gốc", "Bật",
-                "Ghi chú"}, 0) {
+                "HP sơ sinh (đã nhân hệ số)", "Sức mạnh khởi điểm",
+                "Từ trứng", "Model gốc", "Bật", "Ghi chú"}, 0) {
         @Override
         public boolean isCellEditable(int r, int c) {
             return false;
@@ -13578,7 +13578,7 @@ public class SystemPanel extends JPanel {
         dtLoaiTable.setRowHeight(24);
         dtLoaiTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         dtLoaiTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        int[] wL = {45, 110, 70, 110, 140, 65, 150, 45, 180};
+        int[] wL = {45, 110, 70, 110, 150, 140, 65, 150, 45, 180};
         for (int i = 0; i < wL.length && i < dtLoaiTable.getColumnCount(); i++) {
             dtLoaiTable.getColumnModel().getColumn(i).setPreferredWidth(wL[i]);
         }
@@ -13650,6 +13650,22 @@ public class SystemPanel extends JPanel {
     }
 
     /**
+     * Khoảng HP mà đệ sơ sinh loại này bốc ra, <b>đã nhân hệ số</b>.
+     *
+     * <p>Bày ra để khỏi phải tự nhân tay mà kiểm. Hai con đệ khác loại <b>không
+     * so trực tiếp được</b>: mỗi con bốc một số riêng trong khoảng này, mà
+     * khoảng thì rộng gấp mấy lần khoảng cách 5% giữa hai loại — con đệ thường
+     * bốc đẹp vẫn khoẻ hơn con Bill bốc xấu. Muốn thấy đúng 5% thì so hai
+     * <b>khoảng</b> ở cột này, không so hai con.</p>
+     */
+    private static String dtKhoangHp(nro.repository.dao.DeTuDAO.ChiSo t,
+            double heSoPhanTram) {
+        double h = heSoPhanTram / 100d;
+        return PlayerManagerPanel.fmt(Math.round(t.ssHpMin * h)) + " – "
+                + PlayerManagerPanel.fmt(Math.round(t.ssHpMax * h));
+    }
+
+    /**
      * Tên mẫu cải trang đang làm <b>model gốc</b> của một loại đệ.
      *
      * <p>Hiện tên chứ không chỉ hiện số: một mình con số thì phải sang tab vật
@@ -13716,6 +13732,7 @@ public class SystemPanel extends JPanel {
                 : nro.repository.dao.DeTuDAO.dsLoai()) {
             dtLoaiModel.addRow(new Object[]{l.loai, nz(l.ten), gonSo(l.heSo),
                 (l.heSo >= 100 ? "+" : "") + gonSo(l.heSo - 100) + "%",
+                dtKhoangHp(t, l.heSo),
                 PlayerManagerPanel.fmt(l.sucManhDau),
                 l.tuTrung ? "có" : "", dtTenModel(l.caiTrang),
                 l.bat ? "có" : "", nz(l.ghiChu)});
