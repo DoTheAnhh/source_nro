@@ -167,9 +167,8 @@ public class Input {
                             return;
                         }
 
-                        // Tìm thỏi vàng trong túi
-                        Item thoiVang = InventoryService.gI().findItemBag(player, (short) 457);
-                        if (thoiVang == null || thoiVang.quantity < soLuong) {
+                        // Dem CA thoi vang khoa, gop moi chong — xem KhoVang.
+                        if (nro.gameplay.minigame.KhoVang.demTatCa(player) < soLuong) {
                             Service.gI().sendThongBao(player, "Bạn không có đủ Thỏi vàng!");
                             return;
                         }
@@ -184,8 +183,7 @@ public class Input {
                         }
 
                         // Thực hiện quy đổi
-                        InventoryService.gI().subQuantityItemsBag(player, thoiVang, soLuong);
-                        InventoryService.gI().sendItemBag(player);
+                        nro.gameplay.minigame.KhoVang.tru(player, soLuong);
 
                         player.inventory.addRuby(rubyNhan);
                         Service.gI().sendMoney(player);
@@ -418,13 +416,13 @@ public class Input {
                         Service.gI().sendThongBao(player, "Số lượng bán phải lớn hơn 0!");
                         return;
                     }
-                    Item thoiVang = InventoryService.gI().findItemBag(player, (short) 457);
-                    if (thoiVang == null || thoiVang.quantity == 0) {
+                    long coThoiVang = nro.gameplay.minigame.KhoVang.demTatCa(player);
+                    if (coThoiVang <= 0) {
                         Service.gI().sendThongBao(player, "Bạn không có Thỏi vàng để bán!");
                         return;
                     }
-                    if (thoiVang.quantity < sltv) {
-                        Service.gI().sendThongBao(player, "Bạn chỉ có " + thoiVang.quantity + " Thỏi vàng. Không đủ để bán " + sltv + " thỏi!");
+                    if (coThoiVang < sltv) {
+                        Service.gI().sendThongBao(player, "Bạn chỉ có " + coThoiVang + " Thỏi vàng. Không đủ để bán " + sltv + " thỏi!");
                         return;
                     }
                     long costPerItem = 500_000_000L;
@@ -443,13 +441,12 @@ public class Input {
                         if (maxSellableQuantity < 1) {
                             Service.gI().sendThongBao(player, "Vàng sau khi bán sẽ vượt quá giới hạn. Bạn không thể bán thêm Thỏi vàng nào vào lúc này!");
                         } else {
-                            maxSellableQuantity = Math.min(maxSellableQuantity, thoiVang.quantity);
+                            maxSellableQuantity = (int) Math.min(maxSellableQuantity, coThoiVang);
                             Service.gI().sendThongBao(player, "Vàng sau khi bán sẽ vượt giới hạn. Bạn chỉ có thể bán tối đa " + maxSellableQuantity + " Thỏi vàng!");
                         }
                         return;
                     }
-                    InventoryService.gI().subQuantityItemsBag(player, thoiVang, sltv);
-                    InventoryService.gI().sendItemBag(player);
+                    nro.gameplay.minigame.KhoVang.tru(player, sltv);
                     player.inventory.gold += totalCost;
                     Service.gI().sendMoney(player);
                     Service.gI().sendThongBao(player, "Đã bán " + sltv + " Thỏi vàng, thu được " + Util.formatNumber(totalCost, FormatStyle.VIETNAMESE) + " vàng.");
@@ -1072,7 +1069,7 @@ public class Input {
                 case FIND_ACCOUNT: {
                     Player account = Client.gI().getPlayerByName(text[0]);
                     if (account != null) {
-                        int slthoivang = InventoryService.gI().findItemBag(account, (short) 457) == null ? 0 : InventoryService.gI().findItemBag(account, (short) 457).quantity;
+                        long slthoivang = nro.gameplay.minigame.KhoVang.demTatCa(account);
                         NpcService.gI().createMenuConMeo(player, ConstNpc.MENU_FIND_ACCOUNT, 24222, "|7|[ THÔNG TIN ACCOUNT ]\n"
                                 + "|0|ID Tài Khoản : " + account.getSession().userId + ", IP_ADDRESS : " + account.getSession().ipAddress + ", VERSION : " + account.getSession().version + "\n"
                                 + "|0|Tên Đăng Nhập : " + account.getSession().uu + "\n"

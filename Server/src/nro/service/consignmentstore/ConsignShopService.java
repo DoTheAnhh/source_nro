@@ -71,14 +71,17 @@ public class ConsignShopService {
         return listSort;
     }
     
+    /**
+     * Trừ thỏi vàng, tính cả bản khoá và gộp mọi chồng.
+     *
+     * <p>Bản cũ đòi <b>một chồng</b> đủ số: có 10 thỏi khoá và 500 thỏi thường
+     * thì mua món giá 300 vẫn trượt, vì không chồng nào một mình đủ 300.</p>
+     */
     private boolean SubThoiVang(Player pl, int quatity) {
-        for (Item item : pl.inventory.itemsBag) {
-            if (item.isNotNullItem() && item.template.id == 457 && item.quantity >= quatity) {
-                nro.service.inventory.InventoryService.gI().subQuantityItemsBag(pl, item, quatity);
-                return true;
-            }
+        if (nro.gameplay.minigame.KhoVang.demTatCa(pl) < quatity) {
+            return false;
         }
-        return false;
+        return nro.gameplay.minigame.KhoVang.tru(pl, quatity);
     }
     
     public void buyItem(Player pl, int id) {

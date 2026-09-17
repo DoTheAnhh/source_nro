@@ -1838,11 +1838,17 @@ public class UseItem {
     }
 
     public void usethoivang(Player player) {
+        // Chong nao cung dung duoc, khoa hay khong khoa.
         Item tv = null;
         for (Item item : player.inventory.itemsBag) {
             if (item.isNotNullItem() && item.template.id == 457) {
                 tv = item;
-                break;
+                if (InventoryService.gI().haveOption(item,
+                        nro.gameplay.minigame.KhoVang.OPTION_KHOA)) {
+                    // Uu tien tieu ban KHOA truoc, de dan vang thuong lai cho
+                    // nguoi choi con giao dich.
+                    break;
+                }
             }
         }
         if (tv != null) {

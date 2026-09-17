@@ -361,6 +361,8 @@ namespace Game3.God
         public void dong()
         {
             dangMo = false;
+            // Lan sau mo lai the Bang hoi thi lai xuong tin moi nhat.
+            soTinChatDaThay = -1;
             dongBangNguoi();
             hienHop = false;
             hienHopSo = false;
@@ -3937,6 +3939,12 @@ namespace Game3.God
         /// <summary>Bề cao một dòng chat bang.</summary>
         private const int CAO_DONG_CHAT = 26;
 
+        /// <summary>Số tin chat bang ở lần vẽ trước, để biết lúc nào có tin mới.</summary>
+        /// <remarks>
+        /// <c>-1</c> nghĩa là chưa vẽ lần nào — lần vẽ đầu cũng kéo xuống đáy.
+        /// </remarks>
+        private int soTinChatDaThay = -1;
+
         // ==================================================================
         //  Thao tac voi mot NGUOI: bang chon, va bang xem thong tin
         // ==================================================================
@@ -3981,11 +3989,21 @@ namespace Game3.God
         /// <para>Thành viên thường không có mục nào, nên bấm vào một dòng cũng
         /// không mở bảng chọn — không có gì trong đó để mở.</para>
         /// </remarks>
+        /// <remarks>
+        /// <b>Xem thông tin thì ai cũng được</b> — thành viên thường, người của
+        /// bang khác đang xem bang này, và cả xem chính mình. Chức vụ chỉ quyết
+        /// định những mục <i>làm gì đó</i> với người ta: phong chức và đuổi.
+        /// </remarks>
         private static int[] mucChoThanhVien(Member m)
         {
-            if (m == null || m.ID == Char.myCharz().charID)
+            if (m == null)
             {
                 return new int[0];
+            }
+            if (m.ID == Char.myCharz().charID)
+            {
+                // Chinh minh: xem duoc, nhung khong tu phong tu duoi.
+                return new int[] { TT_XEM };
             }
             int toi = Char.myCharz().role;
             if (toi == 0)
@@ -4005,7 +4023,7 @@ namespace Game3.God
             {
                 return new int[] { TT_XEM, TT_DUOI };
             }
-            return new int[0];
+            return new int[] { TT_XEM };
         }
 
         private static string tenMuc(int ma)
@@ -4093,7 +4111,12 @@ namespace Game3.God
         /// còn kéo lên được. Chia đều như các danh sách khác thì dòng "xin vào
         /// bang" cao gấp đôi sẽ làm cuộn hụt mất một quãng ở đáy.
         /// </remarks>
-        private void gioiHanCuonChat(int so, int cao)
+        /// <summary>Mức cuộn đưa dòng CUỐI xuống sát đáy khung.</summary>
+        /// <remarks>
+        /// Đếm ngược từ dòng cuối lên, cộng dồn bề cao thật của từng dòng —
+        /// dòng "xin vào bang" cao hơn dòng chat thường nên không chia đều được.
+        /// </remarks>
+        private int cuonDayChat(int so, int cao)
         {
             int con = cao;
             int i = so - 1;
@@ -4108,7 +4131,12 @@ namespace Game3.God
                 con -= h;
                 i--;
             }
-            int toiDa = i + 1;
+            return i + 1;
+        }
+
+        private void gioiHanCuonChat(int so, int cao)
+        {
+            int toiDa = cuonDayChat(so, cao);
             if (cuon > toiDa)
             {
                 cuon = toiDa;
@@ -4354,14 +4382,28 @@ namespace Game3.God
         /// </remarks>
         private bool chamDongThanhVien()
         {
-            MyVector ds = myMemberCuaToi();
+            return chamDongThanhVienTrong(myMemberCuaToi(),
+                    yThan + CAO_DAI_TD + KHE_KHUNG + 2, yThan + caoThan - 4,
+                    true);
+        }
+
+        /// <summary>Bấm một dòng trong một danh sách thành viên bất kỳ.</summary>
+        /// <param name="coQuyen">
+        /// Danh sách của <b>bang mình</b> thì mở bảng chọn thao tác theo chức vụ.
+        /// Danh sách của bang khác thì chỉ xem được, nên mở thẳng bảng thông tin.
+        /// </param>
+        /// <remarks>
+        /// Chỉ có đúng một mục (xem thông tin) thì mở thẳng bảng ấy, khỏi bắt
+        /// người chơi bấm qua một bảng chọn một-mục.
+        /// </remarks>
+        private bool chamDongThanhVienTrong(MyVector ds, int yDau, int yHet,
+                bool coQuyen)
+        {
             int so = (ds == null) ? 0 : ds.size();
             if (so == 0)
             {
                 return false;
             }
-            int yDau = yThan + CAO_DAI_TD + KHE_KHUNG + 2;
-            int yHet = yThan + caoThan - 4;
             int thay = (yHet - yDau) / CAO_DONG_TV;
             System.Collections.Generic.List<Member> dsXep = xepTheoChuc(ds);
             for (int i = cuon; i < dsXep.Count && i - cuon < thay; i++)
@@ -4371,11 +4413,14 @@ namespace Game3.God
                 {
                     continue;
                 }
-                // Khong co muc nao thi khong mo bang rong: thanh vien thuong
-                // bam vao dong nao cung khong ra gi, dung nhu ban noi.
-                if (mucChoThanhVien(dsXep[i]).Length > 0)
+                Member m = dsXep[i];
+                if (coQuyen && mucChoThanhVien(m).Length > 1)
                 {
-                    tvChon = dsXep[i];
+                    tvChon = m;
+                }
+                else
+                {
+                    lamMuc(TT_XEM, m);
                 }
                 return true;
             }
@@ -4420,6 +4465,17 @@ namespace Game3.God
                 mFont.tahoma_7.drawString(g, "Chưa có tin nhắn nào.",
                         xPhai + rongPhai / 2, yDau + 20, mFont.CENTER);
                 return;
+            }
+            // Co tin moi (hoac vua mo the) thi KEO THANG XUONG TIN MOI NHAT.
+            //
+            // Danh sach xep cu o tren, moi o duoi. Dung yen o dau danh sach thi
+            // nguoi choi khong thay dong vua nhan, ma phai tu keo xuong moi lan
+            // co ai nhan — khung chat lon ben ngoai von da tu keo xuong day roi.
+            // Muon doc lai tin cu thi van keo nguoc len binh thuong.
+            if (so != soTinChatDaThay)
+            {
+                soTinChatDaThay = so;
+                cuon = cuonDayChat(so, yHet - yDau);
             }
             gioiHanCuonChat(so, yHet - yDau);
             // Moi dong mot be cao rieng, nen cong don chu khong nhan chi so.
@@ -4490,8 +4546,11 @@ namespace Game3.God
                 {
                     return mFont.tahoma_7b_red;
                 }
+                // Pho bang XANH LA — dung mau voi danh sach thanh vien va voi
+                // dong "Pho bang" o khung thong tin, de ba cho khong day ra ba
+                // bo mau khac nhau.
                 return (m.role == 1)
-                        ? mFont.tahoma_7b_blue : mFont.tahoma_7b_dark;
+                        ? mFont.tahoma_7b_green : mFont.tahoma_7b_dark;
             }
             Clan cl = Char.myCharz().clan;
             if (cl != null && cl.leaderName != null && cl.leaderName == cm.playerName)
@@ -4913,6 +4972,15 @@ namespace Game3.God
             {
                 bangXem = null;
                 cuon = 0;
+                return true;
+            }
+            // The "Thanh vien" cua bang khac: bam mot dong la xem thong tin
+            // nguoi do. Khong o trong bang ho thi khong co thao tac nao khac.
+            if (theBangXemChon == 1
+                    && chamDongThanhVienTrong(
+                            (GameCanvas.panel == null) ? null : GameCanvas.panel.member,
+                            yND + 2 + CAO_THE_CON + 4, oNutXinVao()[1] - 4, false))
+            {
                 return true;
             }
             if (cham2(oNutXinVao()))

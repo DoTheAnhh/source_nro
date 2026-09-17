@@ -1733,7 +1733,55 @@ protected void autoResetBossBecauseNoHunter() {
     public void moveTo(int x, int y) {
         byte dir = (byte) (this.location.x - x < 0 ? 1 : -1);
         byte move = (byte) Util.nextInt(40, 60);
-        PlayerService.gI().playerMove(this, this.location.x + (dir == 1 ? move : -move), y + (Util.isTrue(3, 10) ? -50 : 0));
+        int xDi = this.location.x + (dir == 1 ? move : -move);
+        int yDi = y + (Util.isTrue(3, 10) ? -50 : 0);
+        PlayerService.gI().playerMove(this, xDi, khongDonTho(xDi, yDi));
+    }
+
+    /**
+     * Kéo một điểm đến ra khỏi <b>lòng đất</b>.
+     *
+     * <h3>Vì sao cần</h3>
+     *
+     * <p>Boss đuổi theo người chơi bằng cách lấy thẳng toạ độ của người ấy rồi
+     * dịch ngang vài chục điểm. Toạ độ ngang mới có thể rơi vào chỗ mặt đất
+     * <b>cao hơn</b> chỗ người chơi đang đứng — lúc đó điểm đến nằm lọt trong
+     * lòng đất, và boss chạy nhảy chìm nửa người dưới đất, có khi mất hút.</p>
+     *
+     * <p>Boss chỉ được đứng trên <b>mặt đất</b> hoặc bay <b>trên không</b>. Ô
+     * trống thì giữ nguyên điểm đến — bay vẫn bay bình thường; ô đặc thì dời
+     * lên tới ô trống gần nhất phía trên và đặt chân lên mặt ô đất ấy.</p>
+     *
+     * <p>Tìm không ra ô trống nào phía trên (cả cột là đất) thì trả về y cũ
+     * chứ không quăng boss lên đỉnh bản đồ.</p>
+     */
+    private int khongDonTho(int x, int y) {
+        try {
+            Map m = (this.zone == null) ? null : this.zone.map;
+            if (m == null || m.tileMap == null) {
+                return y;
+            }
+            int cot = x / 24;
+            int hang = y / 24;
+            if (hang < 0 || cot < 0 || hang >= m.tileMap.length
+                    || cot >= m.tileMap[hang].length) {
+                return y;
+            }
+            if (m.tileMap[hang][cot] == 0) {
+                // O trong: dang tren khong hoac dung tren mat dat, khong phai
+                // don tho.
+                return y;
+            }
+            for (int i = hang; i >= 0; i--) {
+                if (m.tileMap[i][cot] == 0) {
+                    // Dat chan len mat cua o dat ngay duoi o trong nay.
+                    return (i + 1) * 24;
+                }
+            }
+            return y;
+        } catch (Exception boQua) {
+            return y;
+        }
     }
 
     public void chat(String text) {
@@ -1905,7 +1953,8 @@ protected void autoResetBossBecauseNoHunter() {
         if (!isTeleport) {
             byte dir = (byte) (this.location.x - x < 0 ? 1 : -1);
             byte move = (byte) Util.nextInt(50, 100);
-            PlayerService.gI().playerMove(this, this.location.x + (dir == 1 ? move : -move), y);
+            int xDi = this.location.x + (dir == 1 ? move : -move);
+            PlayerService.gI().playerMove(this, xDi, khongDonTho(xDi, y));
         } else {
             ChangeMapService.gI().changeMapYardrat(this, this.zone, x, y);
         }

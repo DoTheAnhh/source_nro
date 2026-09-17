@@ -834,20 +834,33 @@ public class ShopService {
         return don;
     }
 
+    /**
+     * Trừ thỏi vàng để mua hàng.
+     *
+     * <h3>Tính CẢ thỏi vàng khoá</h3>
+     *
+     * <p>Thỏi vàng nằm trong hành trang dưới dạng nhiều chồng: bản khoá (có
+     * thuộc tính 30) và bản thường nằm ở hai ô khác nhau, và mỗi ô lại chỉ chứa
+     * tối đa một chồng. Bản cũ gọi <code>findItemBag</code> — hàm ấy trả về
+     * <b>chồng đầu tiên</b> — rồi so số lượng của mình chồng đó, nên ai có 10
+     * thỏi khoá nằm trước và 500 thỏi thường nằm sau thì mua gì cũng bị báo
+     * "không đủ Thỏi vàng".</p>
+     *
+     * <p>Nay đếm và trừ trên <b>toàn bộ</b> thỏi vàng trong hành trang. Khoá hay
+     * không khoá đều tiêu được như nhau; khoá chỉ khác ở chỗ không đem giao dịch
+     * được. Trừ bản khoá trước để vàng thường ở lại với người chơi.</p>
+     */
     public boolean truThoiVang(Player player, int soLuong) {
         if (soLuong <= 0) {
             return true;
         }
-        Item tv = InventoryService.gI().findItemBag(player, ID_THOI_VANG);
-        if (tv == null || !tv.isNotNullItem() || tv.quantity < soLuong) {
-            int dangCo = (tv != null && tv.isNotNullItem()) ? tv.quantity : 0;
+        long dangCo = nro.gameplay.minigame.KhoVang.demTatCa(player);
+        if (dangCo < soLuong) {
             Service.gI().sendThongBao(player, "Bạn không đủ Thỏi vàng — cần "
                     + soLuong + ", đang có " + dangCo + ".");
             return false;
         }
-        InventoryService.gI().subQuantityItemsBag(player, tv, soLuong);
-        InventoryService.gI().sendItemBag(player);
-        return true;
+        return nro.gameplay.minigame.KhoVang.tru(player, soLuong);
     }
     
     private boolean subIemByItemShopByUpdate(Player pl, ItemShop itemShop) {

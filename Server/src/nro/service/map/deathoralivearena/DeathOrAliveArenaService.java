@@ -33,9 +33,9 @@ public class DeathOrAliveArenaService {
     public void startChallenge(Player player) {
         Zone zone = getMapChallenge(112);
         if (zone != null) {
-            if (InventoryService.gI().findItemBag(player, 457) != null && InventoryService.gI().findItemBag(player, 457).quantity >= player.thoiVangVoDaiSinhTu) {
-                InventoryService.gI().subQuantityItemsBag(player, InventoryService.gI().findItemBag(player, 457), player.thoiVangVoDaiSinhTu);
-                InventoryService.gI().sendItemBag(player);
+            // Tinh CA thoi vang khoa, va gop moi chong — xem KhoVang.
+            if (nro.gameplay.minigame.KhoVang.demTatCa(player) >= player.thoiVangVoDaiSinhTu
+                    && nro.gameplay.minigame.KhoVang.tru(player, player.thoiVangVoDaiSinhTu)) {
                 player.thoiVangVoDaiSinhTu += 100;
                 player.lastTimePKVoDaiSinhTu = System.currentTimeMillis();
             } else {
