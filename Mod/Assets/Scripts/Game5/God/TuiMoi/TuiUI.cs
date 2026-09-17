@@ -1109,6 +1109,19 @@ namespace Game5.God
         /// <summary>Trễ giữa hai ô của một hàng vừa cuộn tới.</summary>
         private const int TRE_TRONG_HANG = 26;
 
+        /// <summary>Lúc từng dòng kỹ năng bắt đầu hiện; 0 là chưa hiện.</summary>
+        /// <remarks>
+        /// Cùng lối với lưới hành trang, chỉ khác là danh sách một cột nên
+        /// mỗi <b>dòng</b> là một bậc. Nhớ theo chỉ số kỹ năng thật, nên cuộn
+        /// qua rồi cuộn lại thì dòng cũ hiện ngay.
+        /// </remarks>
+        private long[] mocDongKn;
+        private bool daVeKnTruoc;
+        private bool dangVeKn;
+
+        /// <summary>Dòng sau chờ dòng trước bấy nhiêu mili giây.</summary>
+        private const int TRE_DONG_KN = 34;
+
         /// <summary>Quãng lưới còn phải trôi, tính bằng <b>hàng</b>.</summary>
         /// <remarks>
         /// <para>Một nấc lăn không dời lưới ngay mà cộng vào đây, rồi mỗi
@@ -1303,6 +1316,8 @@ namespace Game5.God
             tinhBoCuc();
             daVeLuoiTruoc = dangVeLuoi;
             dangVeLuoi = false;
+            daVeKnTruoc = dangVeKn;
+            dangVeKn = false;
 
             g.setColor(MAU_DEN, 0.6f);
             g.fillRect(0, 0, GameCanvas.w, GameCanvas.h);
@@ -2662,6 +2677,32 @@ namespace Game5.God
                 thay = 1;
             }
             gioiHanCuon(ds.Length);
+            long gioKn = mSystem.currentTimeMillis();
+            if (mocDongKn == null || mocDongKn.Length < ds.Length)
+            {
+                mocDongKn = new long[(ds.Length < 1) ? 1 : ds.Length];
+            }
+            if (!daVeKnTruoc)
+            {
+                // The vua mo: quen het roi xep cac dong dang thay noi tiep
+                // nhau, y nhu luoi hanh trang.
+                for (int k = 0; k < mocDongKn.Length; k++)
+                {
+                    mocDongKn[k] = 0L;
+                }
+                for (int k = cuon; k < cuon + thay && k < mocDongKn.Length; k++)
+                {
+                    mocDongKn[k] = gioKn + (long) ((k - cuon) * TRE_DONG_KN);
+                }
+            }
+            dangVeKn = true;
+            // Rao cua ca danh sach: dong dang lo ra khong duoc tran xuong duoi
+            // vien khung.
+            int knX = x + 1;
+            int knY = yNoiDungPhu() + 1;
+            int knW = w - 2;
+            int knH = caoNoiDungPhu() - 2;
+            g.setClip(knX, knY, knW, knH);
             for (int i = cuon; i < ds.Length && i - cuon < thay; i++)
             {
                 SkillTemplate mau = ds[i];
@@ -2671,6 +2712,45 @@ namespace Game5.God
                 }
                 int y = yDau + 3 + (i - cuon) * caoDong;
                 int cap = capDaHoc(mau.id);
+                // Dong nay bat dau hien luc nao; chua co moc tuc la no vua lot
+                // vao tam mat do cuon.
+                if (i >= mocDongKn.Length)
+                {
+                    continue;
+                }
+                if (mocDongKn[i] == 0L)
+                {
+                    mocDongKn[i] = gioKn;
+                }
+                float tKn = (gioKn - mocDongKn[i]) / (float) THOI_GIAN_HIEN;
+                if (tKn <= 0f)
+                {
+                    continue;
+                }
+                if (tKn > 1f)
+                {
+                    tKn = 1f;
+                }
+                if (tKn < 1f)
+                {
+                    // Lo dan theo chieu doc, cat trong rao cua danh sach.
+                    int caoLoKn = (int) (tKn * caoDong);
+                    if (caoLoKn < 1)
+                    {
+                        caoLoKn = 1;
+                    }
+                    int ky1 = (y > knY) ? y : knY;
+                    int ky2 = (y + caoLoKn < knY + knH)
+                            ? (y + caoLoKn) : (knY + knH);
+                    if (ky2 <= ky1)
+                    {
+                        continue;
+                    }
+                    g.setClip(knX, ky1, knW, ky2 - ky1);
+                    // Troi len mot doan roi dat xuong, giong o hanh trang.
+                    float conKn = (1f - tKn) * (1f - tKn);
+                    y += (int) (conKn * TROI_LEN);
+                }
 
                 veKhungBo(g, x + 4, y, w - 8, caoDong - 3,
                         MAU_O, cap > 0 ? 0.9f : 0.5f, MAU_VIEN, 0.45f, 1);
@@ -2700,7 +2780,13 @@ namespace Game5.God
                     mFont.tahoma_7.drawString(g, "chưa học", xChu, y + 18,
                             mFont.LEFT);
                 }
+                if (tKn < 1f)
+                {
+                    // Tra ve rao cua danh sach, khong phai ca man hinh.
+                    g.setClip(knX, knY, knW, knH);
+                }
             }
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
             if (ds.Length > thay)
             {
                 veVachCuon(g, x + w - 6, yNoiDungPhu(), caoNoiDungPhu(),
