@@ -330,6 +330,16 @@ public class ConsignShopService {
                 openShopKyGui(pl);
                 return;
             }
+            // Do "khong the giao dich" (thuoc tinh 30) thi cung khong ky gui duoc.
+            //
+            // Ky gui la mot duong giao dich: nguoi khac mua la mon do sang tay ho.
+            // Bo sot cho nay thi thoi vang khoa — tien thang cua moi tro choi — dem
+            // len cho ban la chuyen duoc cho nguoi khac.
+            if (it.haveOption(30)) {
+                Service.gI().sendThongBao(pl, "Vật phẩm không thể giao dịch, không thể ký gửi");
+                openShopKyGui(pl);
+                return;
+            }
             if (money <= 0 || quantity > it.quantity) {
                 Service.gI().sendThongBao(pl, "Có lỗi xảy ra");
                 openShopKyGui(pl);
