@@ -215,11 +215,11 @@ public class OngGohan extends Npc {
                         } else if (nro.service.ThanhVienService.duNap(player)) {
                             nro.service.ThanhVienService.mo(player, "đã nạp đủ 50K");
                             npcChat(player, "Mở thành viên FREE thành công!");
-                        } else if (nro.service.ThanhVienService.duMotThang(player)) {
-                            nro.service.ThanhVienService.mo(player, "đã chơi đủ 1 tháng");
+                        } else if (nro.service.ThanhVienService.duOnline(player)) {
+                            nro.service.ThanhVienService.mo(player, "đã online đủ 3 tuần");
                             npcChat(player, "Mở thành viên FREE thành công!");
                         } else {
-                            npcChat(player, "Chưa đủ điều kiện! Cần hoàn thành nhiệm vụ tiêu diệt Fide, hoặc nạp lần đầu 50K, hoặc chơi đủ 1 tháng.");
+                            npcChat(player, "Chưa đủ điều kiện! Cần hoàn thành nhiệm vụ tiêu diệt Fide, hoặc nạp lần đầu 50K, hoặc online đủ 3 tuần (đã online " + nro.service.ThanhVienService.tienDoOnline(player) + ").");
                         }
                     } else {
                         npcChat(player, "Bạn đã mở rồi!");
@@ -728,7 +728,8 @@ public class OngGohan extends Npc {
                 this.createOtherMenu(player, ConstNpc.MTVFREE,
                         "|7|Mở thành viên FREE"
                         + "\n|6|Cách 1: Nạp lần đầu 50K — tự mở ngay"
-                        + "\n|6|Cách 2: Chơi đủ 1 tháng — tự mở"
+                        + "\n|6|Cách 2: Tổng thời gian online đủ 3 tuần — tự mở"
+                        + "\n|6|(Đã online: " + nro.service.ThanhVienService.tienDoOnline(player) + ")"
                         + "\n|1|Cách 3: Hoàn thành nhiệm vụ tiêu diệt Fide rồi mở tại đây",
                         "Đồng ý", "Từ chối");
                 break;
@@ -766,7 +767,7 @@ public class OngGohan extends Npc {
                     sb.append("|7|Tổng nạp: ").append(tongNap).append(" VND\n");
 
                     if (!isActive) {
-                        sb.append("|1|Mở thành viên: nạp lần đầu 50K, chơi đủ 1 tháng,\n"
+                        sb.append("|1|Mở thành viên: nạp lần đầu 50K, online đủ 3 tuần,\n"
                                 + "hoặc hoàn thành nhiệm vụ tiêu diệt Fide rồi chọn MTV FREE.");
                     } else {
                         sb.append("|2|Bạn đã là thành viên! Hãy tận hưởng các quyền lợi đặc biệt.");
