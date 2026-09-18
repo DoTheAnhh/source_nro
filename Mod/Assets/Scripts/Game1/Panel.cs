@@ -3990,7 +3990,14 @@ namespace Game1
                 }
             }
             int num6 = 0;
-            if ((isTabInven() || type == 13) && GameCanvas.py < yScroll + 21)
+            // Dai tab cua ban DANH SACH cao 21 diem tinh tu yScroll. O luoi nhieu
+            // cot, luoi bat dau ngay yScroll + 2 nen nua tren HANG 1 rot vao dai
+            // nay: selected bi ep ve 0, menu mo ra coi la bam tab va nhay ve o
+            // dau, khong hien chi tiet mon. Diem cham trung mot o thi khong phai tab.
+            bool trungO = isnewInventory && isTabInven()
+                    && (oTuiTaiDiem(GameCanvas.px, GameCanvas.py) >= 0
+                        || oTrangBiTaiDiem(GameCanvas.px, GameCanvas.py) >= 0);
+            if ((isTabInven() || type == 13) && GameCanvas.py < yScroll + 21 && !trungO)
             {
                 selected = 0;
     
