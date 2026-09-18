@@ -416,9 +416,11 @@ public class Input {
                         Service.gI().sendThongBao(player, "Số lượng bán phải lớn hơn 0!");
                         return;
                     }
-                    long coThoiVang = nro.gameplay.minigame.KhoVang.demTatCa(player);
+                    // Chi ban duoc thoi THUONG: vang ban ra giao dich duoc, nen cho ban
+                    // thoi khoa la mot duong rua thoi khoa (tien thang tro choi).
+                    long coThoiVang = nro.gameplay.minigame.KhoVang.dem(player, false);
                     if (coThoiVang <= 0) {
-                        Service.gI().sendThongBao(player, "Bạn không có Thỏi vàng để bán!");
+                        Service.gI().sendThongBao(player, "Bạn không có Thỏi vàng thường để bán! (Thỏi vàng khoá không bán được)");
                         return;
                     }
                     if (coThoiVang < sltv) {
@@ -446,7 +448,10 @@ public class Input {
                         }
                         return;
                     }
-                    nro.gameplay.minigame.KhoVang.tru(player, sltv);
+                    if (!nro.gameplay.minigame.KhoVang.truThuong(player, sltv)) {
+                        Service.gI().sendThongBao(player, "Trừ Thỏi vàng thất bại!");
+                        return;
+                    }
                     player.inventory.gold += totalCost;
                     Service.gI().sendMoney(player);
                     Service.gI().sendThongBao(player, "Đã bán " + sltv + " Thỏi vàng, thu được " + Util.formatNumber(totalCost, FormatStyle.VIETNAMESE) + " vàng.");

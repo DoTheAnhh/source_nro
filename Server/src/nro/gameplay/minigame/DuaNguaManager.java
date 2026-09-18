@@ -74,12 +74,15 @@ public final class DuaNguaManager extends VongChoi {
         final Player nguoi;
         final long id;
         final String ten;
+        /** Địa chỉ mạng lúc đặt, để giới hạn số nick mỗi địa chỉ. */
+        final String ip;
         final long[] theoCon = new long[SO_NGUA];
 
         Cuoc(Player nguoi) {
             this.nguoi = nguoi;
             this.id = nguoi.id;
             this.ten = nguoi.name;
+            this.ip = (nguoi.getSession() != null) ? nguoi.getSession().ipAddress : null;
         }
 
         long tong() {
@@ -279,6 +282,22 @@ public final class DuaNguaManager extends VongChoi {
                             + TEN_NGUA[k] + ".");
                     return;
                 }
+            }
+        }
+        if (c == null && pl.getSession() != null && pl.getSession().ipAddress != null) {
+            // Nick moi vao van: chan mot dia chi mang dua ca tram nick vao ban.
+            String ip = pl.getSession().ipAddress;
+            int cungIp = 0;
+            for (Cuoc k : cuocs.values()) {
+                if (ip.equals(k.ip)) {
+                    cungIp++;
+                }
+            }
+            if (cungIp >= nro.gameplay.taixiu.TaiXiuManager.TOI_DA_NICK_MOT_IP) {
+                Service.gI().sendThongBao(pl, "Mỗi địa chỉ mạng chỉ được "
+                        + nro.gameplay.taixiu.TaiXiuManager.TOI_DA_NICK_MOT_IP
+                        + " nhân vật đặt cược mỗi ván!");
+                return;
             }
         }
         long oCon = (c == null) ? 0 : c.theoCon[con];

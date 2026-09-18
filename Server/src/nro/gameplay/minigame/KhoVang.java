@@ -131,6 +131,58 @@ public final class KhoVang {
     }
 
     /**
+     * Trừ <b>chỉ</b> thỏi vàng thường, không đụng tới bản khoá.
+     *
+     * <p>Dùng cho mọi đường biến thỏi vàng thành một thứ <i>giao dịch được</i> —
+     * bán lấy vàng, mua đồ ký gửi của người khác. Để bản khoá đi qua những đường
+     * ấy thì "không thể giao dịch" chỉ còn là chữ: thắng trò chơi ra thỏi khoá,
+     * đổi thành vàng, rồi đưa vàng cho nick khác.</p>
+     *
+     * @return {@code true} nếu trừ đủ
+     */
+    public static boolean truThuong(Player pl, long soThoi) {
+        if (pl == null || soThoi <= 0 || dem(pl, false) < soThoi) {
+            return false;
+        }
+        long can = soThoi;
+        List<Item> ds = new ArrayList<>();
+        for (Item it : pl.inventory.itemsBag) {
+            if (laThoiVang(it) && !InventoryService.gI().haveOption(it, OPTION_KHOA)) {
+                ds.add(it);
+            }
+        }
+        for (Item it : ds) {
+            if (can <= 0) {
+                break;
+            }
+            int tru = (int) Math.min(can, it.quantity);
+            InventoryService.gI().subQuantityItemsBag(pl, it, tru);
+            can -= tru;
+        }
+        InventoryService.gI().sendItemBag(pl);
+        return can == 0;
+    }
+
+    /**
+     * Trừ như {@link #tru}, và cho biết đã tiêu bao nhiêu thỏi <b>khoá</b>.
+     *
+     * <p>Cửa hàng cần con số này: đồ mua bằng thỏi khoá phải khoá theo, không
+     * thì mua một món rồi đem món đó giao dịch là rửa xong thỏi khoá.</p>
+     *
+     * @return số thỏi khoá đã dùng, hoặc {@code -1} nếu không đủ
+     */
+    public static long truDemKhoa(Player pl, long soThoi) {
+        if (pl == null || demTatCa(pl) < soThoi) {
+            return -1;
+        }
+        long khoaTruoc = dem(pl, true);
+        if (!tru(pl, soThoi)) {
+            return -1;
+        }
+        return khoaTruoc - dem(pl, true);
+    }
+
+    /**
      * Thêm thỏi vàng <b>khoá</b> vào hành trang.
      *
      * <p>Chia thành nhiều chồng nếu quá lớn: {@code Item.quantity} là số nguyên

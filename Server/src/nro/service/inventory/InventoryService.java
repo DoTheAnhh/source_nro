@@ -1942,6 +1942,12 @@ public class InventoryService {
                 if (!it.isNotNullItem() || it.template.id != itemAdd.template.id || it.quantity >= 100_000_000) {
                     continue;
                 }
+                // Do khoa (khong the giao dich) va do thuong khong gop chung mot
+                // chong: gop vao thi hoac ca chong bi khoa oan, hoac phan khoa
+                // thanh giao dich duoc.
+                if (hasOptionTemplateId(it, 30) != hasOptionTemplateId(itemAdd, 30)) {
+                    continue;
+                }
 
                 if (itemAdd.template.id == 1705) { // Không giới hạn số lượng
                     it.quantity += itemAdd.quantity;

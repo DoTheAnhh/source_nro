@@ -551,6 +551,9 @@ namespace Game1.God
         // ------------------------------------------------------------------
         private bool hienBaoKetQua;
         private bool thangVanRoi;
+
+        /// <summary>Ván vừa rồi được hoàn tròn vì cửa bên kia không có ai.</summary>
+        private bool hoanVanRoi;
         private long tienVanRoi;
         private long phienVanRoi;
 
@@ -761,8 +764,12 @@ namespace Game1.God
             if (cuaCuaToi >= 0)
             {
                 hienBaoKetQua = true;
+                // May chu gui: duong = tong nhan ve khi thang, am = so thoi THAT SU
+                // mat khi thua (phan hoan do lech cua khong tinh), 0 = hoan tron.
                 thangVanRoi = tienThang > 0;
-                tienVanRoi = tienThang > 0 ? tienThang : soThoiCuaToi;
+                hoanVanRoi = tienThang == 0;
+                tienVanRoi = tienThang > 0 ? tienThang
+                        : (tienThang < 0 ? -tienThang : soThoiCuaToi);
                 phienVanRoi = phien;
             }
 
@@ -4578,7 +4585,8 @@ namespace Game1.God
             g.setColor(0, 0.5f);
             g.fillRect(x0 + 2, y0 + 2, rong - 4, cao - 4, BO_GOC);
 
-            int mau = thangVanRoi ? rgb(0x3F, 0x9A, 0x4C) : rgb(0xB0, 0x3A, 0x2E);
+            int mau = thangVanRoi ? rgb(0x3F, 0x9A, 0x4C)
+                    : (hoanVanRoi ? rgb(0x8A, 0x7A, 0x5A) : rgb(0xB0, 0x3A, 0x2E));
             veQuang(g, x, y, w, h, thangVanRoi ? MAU_VANG : mau,
                     0.6f + 0.4f * nhip(600), 4);
             veKhungBo(g, x, y, w, h, MAU_NEN, 0.99f, MAU_VIEN, 1f, 2);
@@ -4587,7 +4595,7 @@ namespace Game1.God
             g.fillRect(x + 2, y + 2, w - 4, 22, BO_GOC);
             veChuyenSac(g, x + 2, y + 2, w - 4, 22, 5);
             mFont.tahoma_7b_white.drawString(g,
-                    thangVanRoi ? "BẠN THẮNG!" : "BẠN THUA",
+                    thangVanRoi ? "BẠN THẮNG!" : (hoanVanRoi ? "HOÀN TIỀN" : "BẠN THUA"),
                     x + w / 2, y + 7, mFont.CENTER);
 
             if (thangVanRoi)
@@ -4600,10 +4608,20 @@ namespace Game1.God
             mFont.tahoma_7b_dark.drawString(g, "Phiên " + phienVanRoi,
                     x + w / 2, y + 32, mFont.CENTER);
 
-            mFont mfT = thangVanRoi ? mFont.tahoma_7b_green : mFont.tahoma_7b_red;
-            mfT.drawString(g,
-                    (thangVanRoi ? "+" : "-") + tienVanRoi + " thỏi vàng",
-                    x + w / 2, y + 48, mFont.CENTER);
+            if (hoanVanRoi)
+            {
+                mFont.tahoma_7b_dark.drawString(g, "Cửa bên kia không có ai đặt",
+                        x + w / 2, y + 44, mFont.CENTER);
+                mFont.tahoma_7_grey.drawString(g, "Hoàn lại " + tienVanRoi + " thỏi vàng",
+                        x + w / 2, y + 56, mFont.CENTER);
+            }
+            else
+            {
+                mFont mfT = thangVanRoi ? mFont.tahoma_7b_green : mFont.tahoma_7b_red;
+                mfT.drawString(g,
+                        (thangVanRoi ? "+" : "-") + tienVanRoi + " thỏi vàng",
+                        x + w / 2, y + 48, mFont.CENTER);
+            }
 
             int[] n = oNutDongBao();
             veKhungBo(g, n[0], n[1], n[2], n[3], MAU_VANG, 1f, MAU_VIEN, 0.9f, 1);

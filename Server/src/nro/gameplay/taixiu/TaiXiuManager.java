@@ -39,6 +39,18 @@ import nro.service.item.ItemService;
  * trên nhân vật. Bản khoá là cùng vật phẩm đó có thuộc tính 30. Đặt cược trừ
  * khoá trước rồi mới tới thường; tiền trả về (cả gốc lẫn lãi) luôn là bản khoá,
  * nên vàng thường chỉ chảy ra chứ không chảy vào.</p>
+ *
+ * <h2>Cân cửa</h2>
+ *
+ * <p>Hai cửa ăn thua <b>với nhau</b>, nhà cái không bỏ tiền túi ra trả. Chỉ
+ * phần tiền bằng cửa ít hơn được tính; phần cửa đông vượt quá thì không có ai
+ * đối ứng nên <b>hoàn lại</b> — chia theo tỉ lệ tiền mỗi người đặt ở cửa ấy.
+ * Người thắng nhận {@link #TRA_X10}/10 lần phần được tính.</p>
+ *
+ * <p>Ví dụ Tài 1.000, Xỉu 300: bên Tài mỗi người chỉ được tính 30% tiền đặt,
+ * 70% hoàn. Xỉu thắng thì nhận 300 × 1,9; Tài thắng thì 300 của Tài nhận ×1,9.
+ * Cả hai trường hợp nhà cái thu 10% phần thắng và không bao giờ lỗ, dù một
+ * người đặt bao nhiêu hay lập bao nhiêu nick để dồn một cửa.</p>
  */
 public class TaiXiuManager {
 
@@ -61,8 +73,16 @@ public class TaiXiuManager {
     /** Mã thuộc tính đánh dấu vật phẩm đã khoá. */
     public static final int OPTION_KHOA = 30;
 
-    /** Trả 1.7 lần tiền cược: 1.0 là gốc, 0.7 là tiền thắng. */
-    public static final double TY_LE_THANG = 1.7;
+    /** Trả 1,9 lần phần được tính (nhân 10 để tính bằng số nguyên): nhà cái thu 10% tiền thắng. */
+    public static final long TRA_X10 = 19;
+
+    /**
+     * Số nhân vật tối đa cùng một địa chỉ mạng được đặt trong <b>một ván</b>.
+     *
+     * <p>Chặn một người lập hàng loạt nick dồn vào bàn. Để 3 chứ không 1 vì
+     * anh em, quán net dùng chung một địa chỉ.</p>
+     */
+    public static final int TOI_DA_NICK_MOT_IP = 3;
 
     /** Giây mỗi vòng đặt cược. */
     public static final int GIAY_DAT_CUOC = 30;
@@ -113,13 +133,22 @@ public class TaiXiuManager {
         /** Chép ra để luồng ghi lịch sử không phải chạm vào {@code Player}. */
         final long id;
         final String ten;
+        /** Địa chỉ mạng lúc đặt, để giới hạn số nick mỗi địa chỉ. */
+        final String ip;
         byte cua;
         long soThoi;
+        /** Phần được tính ăn thua — tính lúc chốt ván. */
+        long khop;
+        /** Phần cửa đông vượt quá, hoàn lại. */
+        long hoan;
+        /** Tổng thỏi trả về cho người này (thắng + hoàn). */
+        long nhan;
 
         Cuoc(Player nguoi, byte cua, long soThoi) {
             this.nguoi = nguoi;
             this.id = nguoi.id;
             this.ten = nguoi.name;
+            this.ip = ipCua(nguoi);
             this.cua = cua;
             this.soThoi = soThoi;
         }
@@ -275,6 +304,23 @@ public class TaiXiuManager {
         giaiDoan = GIAI_DOAN_KET_QUA;
         ketThucLuc = System.currentTimeMillis() + GIAY_KET_QUA * 1000L;
 
+        // Can cua: tinh phan duoc tinh va phan hoan cua tung nguoi TRUOC khi tra.
+        for (Cuoc c : cuocs.values()) {
+            long cuaMinh = c.cua == CUA_TAI ? tongTai : tongXiu;
+            long cuaKia = c.cua == CUA_TAI ? tongXiu : tongTai;
+            if (cuaMinh <= cuaKia) {
+                c.khop = c.soThoi;
+            } else {
+                // Lam tron XUONG: phan le thuoc ve hoan, khong ai duoc tinh qua
+                // so tien cua kia co.
+                c.khop = java.math.BigInteger.valueOf(c.soThoi)
+                        .multiply(java.math.BigInteger.valueOf(cuaKia))
+                        .divide(java.math.BigInteger.valueOf(cuaMinh)).longValue();
+            }
+            c.hoan = c.soThoi - c.khop;
+            c.nhan = (c.cua == ketQua && c.khop > 0 ? tinhTraVe(c.khop) : 0) + c.hoan;
+        }
+
         for (Cuoc c : cuocs.values()) {
             try {
                 traThuong(c, ketQua);
@@ -311,9 +357,15 @@ public class TaiXiuManager {
                 TaiXiuDAO.ghiPhien(soPhien, a, b, c, ketQua, tai, xiu,
                         banSao.size());
                 for (Cuoc cc : banSao) {
+                    if (cc.khop <= 0) {
+                        // Hoan tron, khong an thua gi: khong ghi vao lich su.
+                        continue;
+                    }
                     boolean thang = cc.cua == ketQua;
-                    TaiXiuDAO.ghiCuoc(soPhien, cc.id, cc.ten, cc.cua, cc.soThoi,
-                            ketQua, thang, thang ? tinhTraVe(cc.soThoi) : 0);
+                    // Ghi phan DUOC TINH, khong phai so dat: phan hoan khong phai
+                    // tien thua.
+                    TaiXiuDAO.ghiCuoc(soPhien, cc.id, cc.ten, cc.cua, cc.khop,
+                            ketQua, thang, thang ? tinhTraVe(cc.khop) : 0);
                 }
             } catch (Exception e) {
                 Logger.logException(TaiXiuManager.class, e);
@@ -333,17 +385,25 @@ public class TaiXiuManager {
                     + " (da roi game), cuoc " + c.soThoi + " thoi.\n");
             return;
         }
-        if (c.cua != ketQua) {
-            Service.gI().sendThongBao(pl, "Tài Xỉu: bạn thua "
-                    + c.soThoi + " thỏi vàng.");
+        String loi;
+        if (c.khop <= 0) {
+            loi = "Tài Xỉu: cửa bên kia không có ai đặt — hoàn lại "
+                    + c.hoan + " thỏi vàng khoá.";
+        } else if (c.cua != ketQua) {
+            loi = "Tài Xỉu: bạn thua " + c.khop + " thỏi vàng"
+                    + (c.hoan > 0 ? ", hoàn lại " + c.hoan + " thỏi do lệch cửa." : ".");
+        } else {
+            loi = "Tài Xỉu: bạn thắng! Nhận " + c.nhan + " thỏi vàng khoá"
+                    + (c.hoan > 0 ? " (có " + c.hoan + " thỏi hoàn do lệch cửa)." : ".");
+        }
+        if (c.nhan <= 0) {
+            Service.gI().sendThongBao(pl, loi);
             return;
         }
-        long traVe = tinhTraVe(c.soThoi);
-        if (themThoiVangKhoa(pl, traVe)) {
-            Service.gI().sendThongBao(pl, "Tài Xỉu: bạn thắng! Nhận "
-                    + traVe + " thỏi vàng khoá.");
+        if (themThoiVangKhoa(pl, c.nhan)) {
+            Service.gI().sendThongBao(pl, loi);
         } else {
-            Logger.error("[TaiXiu] Hanh trang day, khong tra duoc " + traVe
+            Logger.error("[TaiXiu] Hanh trang day, khong tra duoc " + c.nhan
                     + " thoi cho " + c.ten + ".\n");
             Service.gI().sendThongBao(pl,
                     "Tài Xỉu: bạn thắng nhưng hành trang đầy, không nhận được thưởng!");
@@ -390,6 +450,21 @@ public class TaiXiuManager {
             return;
         }
 
+        String ip = ipCua(pl);
+        if (ip != null) {
+            int cungIp = 0;
+            for (Cuoc c : cuocs.values()) {
+                if (ip.equals(c.ip)) {
+                    cungIp++;
+                }
+            }
+            if (cungIp >= TOI_DA_NICK_MOT_IP) {
+                Service.gI().sendThongBao(pl, "Mỗi địa chỉ mạng chỉ được "
+                        + TOI_DA_NICK_MOT_IP + " nhân vật đặt cược mỗi ván!");
+                return;
+            }
+        }
+
         long dangCoTrongTui = demThoiVang(pl, true) + demThoiVang(pl, false);
         if (dangCoTrongTui < soThoi) {
             Service.gI().sendThongBao(pl, "Bạn không đủ thỏi vàng!");
@@ -433,6 +508,25 @@ public class TaiXiuManager {
         nguoiXem.remove(pl.id);
         Cuoc c = cuocs.remove(pl.id);
         if (c == null) {
+            return;
+        }
+        if (giaiDoan == GIAI_DOAN_LAC) {
+            // Xuc xac da tung va da gui xuong client tu dau pha xoc bat. Hoan du
+            // o day thi ai biet minh thua chi can thoat game la lay lai tien. Chot
+            // luon theo ket qua that, dung luat can cua. Giu nguyen tong hai cua:
+            // phan duoc tinh cua nhung nguoi con lai da dua tren tong ay.
+            byte ketQua = ketQuaHienTai();
+            long cuaMinh = c.cua == CUA_TAI ? tongTai : tongXiu;
+            long cuaKia = c.cua == CUA_TAI ? tongXiu : tongTai;
+            long khop = cuaMinh <= cuaKia ? c.soThoi
+                    : java.math.BigInteger.valueOf(c.soThoi)
+                            .multiply(java.math.BigInteger.valueOf(cuaKia))
+                            .divide(java.math.BigInteger.valueOf(cuaMinh)).longValue();
+            long nhan = (c.cua == ketQua && khop > 0 ? tinhTraVe(khop) : 0)
+                    + (c.soThoi - khop);
+            themThoiVangKhoa(pl, nhan);
+            Logger.warning("[TaiXiu] " + c.ten + " roi game luc xoc bat, chot theo"
+                    + " ket qua: nhan " + nhan + " thoi vang khoa.\n");
             return;
         }
         if (c.cua == CUA_TAI) {
@@ -576,10 +670,22 @@ public class TaiXiuManager {
     /** Số thỏi thắng được của người đó ở ván vừa chốt, 0 nếu thua. */
     public long tienThangCuaVanVua(Player pl, byte ketQua) {
         Cuoc c = cuocs.get(pl.id);
-        if (c == null || c.cua != ketQua) {
+        if (c == null || c.khop <= 0) {
+            // Chua dat, hoac hoan tron (cua kia trong).
             return 0;
         }
-        return tinhTraVe(c.soThoi);
+        // Thang: tong thoi nhan ve (duong). Thua: so thoi THAT SU mat (am) — phan
+        // hoan do lech cua khong tinh la thua.
+        return c.cua == ketQua ? c.nhan : -c.khop;
+    }
+
+    /** Địa chỉ mạng của nhân vật, {@code null} nếu không có kết nối. */
+    private static String ipCua(Player pl) {
+        try {
+            return pl != null && pl.getSession() != null ? pl.getSession().ipAddress : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**
@@ -596,7 +702,9 @@ public class TaiXiuManager {
      * hai công thức riêng là sớm muộn cũng lệch nhau.</p>
      */
     private static long tinhTraVe(long soThoi) {
-        return (soThoi * 17 + 5) / 10;
+        // Lam tron XUONG: nhieu nguoi cung lam tron len thi nha cai co the tra
+        // quá phan cua thua — can cua moi dung la khong bao gio lo.
+        return soThoi * TRA_X10 / 10;
     }
 
     /** Người đang online trong danh sách xem, bỏ qua ai đã thoát. */
