@@ -3965,10 +3965,12 @@ namespace Game1
                                 boCs[12] = msg.reader().readInt();   // the luc toi da
                                 God.TuiUI.getInstance().nhanChiSoNhanVat(
                                         idNguoi, boCs, trangThai == 1);
+                                God.ChiSoMucTieuUI.nhanChiSo(idNguoi, boCs);
                             }
                             else
                             {
                                 God.TuiUI.getInstance().khongCoChiSoNhanVat(idNguoi);
+                                God.ChiSoMucTieuUI.khongCo(idNguoi);
                             }
                         }
                         break;

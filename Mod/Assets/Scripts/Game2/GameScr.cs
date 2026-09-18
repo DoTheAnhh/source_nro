@@ -8048,6 +8048,7 @@ namespace Game2
     	/// </remarks>
     	private void veKhungMucTieu(mGraphics g)
     	{
+    		God.ChiSoMucTieuUI.coKhungNguoi = false;
     		Char toi = Char.myCharz();
     		if (toi == null)
     		{
@@ -8097,6 +8098,7 @@ namespace Game2
     		{
     			// Nguoi choi khac cung dung DAU that, giong khung cua minh: avatar
     			// la chan dung co dinh theo hanh tinh nen ai cung nhu ai.
+    			God.ChiSoMucTieuUI.coKhungNguoi = true;
     			veBangMuc(g, toi.charFocus.cName, null, maAnhDau(toi.charFocus),
     					(long)toi.charFocus.cHP, (long)toi.charFocus.cHPFull);
     			return;
@@ -8430,6 +8432,7 @@ namespace Game2
     			xB = x0 + d + 7;
     		}
     		veTenChay(g, ten, xB, y0 + 3, wB);
+    		God.ChiSoMucTieuUI.datKhung(xBang, y0 + 2, rong, cao);
     		if (hpMax > 0L)
     		{
     			veThanhCoKhung(g, xB, y0 + 18, wB, 10, hp, hpMax,
@@ -8605,6 +8608,7 @@ namespace Game2
     		{
     			veKhungNguoiChoi(g, Char.myCharz());
     			veKhungMucTieu(g);
+    			God.ChiSoMucTieuUI.ve(g);
     			veBangBanDo(g);
     			// Bang nhiem vu KHONG ve o day nua — xem ClientManager.GUI.
     			//

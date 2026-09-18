@@ -763,6 +763,11 @@ namespace Game4.God
             {
                 return false;
             }
+            // Nut tron mo/thu bang chi so cua muc tieu dang chon.
+            if (ChiSoMucTieuUI.capNhatCham())
+            {
+                return true;
+            }
             // LAN CHUOT tren bang Nhiem vu.
             //
             // Xet truoc phan nha ngon: banh xe khong sinh ra su kien nha ngon

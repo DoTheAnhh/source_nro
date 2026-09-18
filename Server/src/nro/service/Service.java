@@ -2644,6 +2644,12 @@ public class Service {
         Message msg = null;
         try {
             Player pl = Client.gI().getPlayerByID(id);
+            if (pl == null && nguoiXem.zone != null) {
+                // Boss (va nguoi dung cung ban do) khong nam trong danh sach
+                // nguoi choi online: tim trong ban do cua nguoi dang xem, de bang
+                // chi so muc tieu xem duoc ca boss.
+                pl = nguoiXem.zone.getPlayerInMap(id);
+            }
             msg = new Message(GOI_CHI_SO_NHAN_VAT);
             msg.writer().writeInt(id);
             long[] cs;
