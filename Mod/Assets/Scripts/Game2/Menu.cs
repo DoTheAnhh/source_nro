@@ -393,7 +393,14 @@ namespace Game2
     			Command a = (Command)this.menuItems.elementAt(i);
     			Command b = (Command)moi.elementAt(i);
     			if (a == null || b == null || a.caption == null
-    					|| !a.caption.Equals(b.caption))
+    					|| !a.caption.Equals(b.caption)
+    					// Cung phai cung LENH va cung DOI TUONG gan vao lenh. Moi mon trong
+    					// ruong deu co dung mot nut "Lay ra": chi so nhan thi bam mon thu hai
+    					// ma menu cua mon dau van giu nguyen, va "Lay ra" lay mon dau (cai
+    					// rada) — trang bi thi mac luon. Chi so doi tuong khi ca hai la Item:
+    					// loai khac giu cach so cu, cho cho nao lo dung menu moi khung hinh.
+    					|| a.idAction != b.idAction
+    					|| (a.p is Item && b.p is Item && !object.ReferenceEquals(a.p, b.p)))
     			{
     				return false;
     			}

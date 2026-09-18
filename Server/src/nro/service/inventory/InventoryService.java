@@ -1053,64 +1053,18 @@ public class InventoryService {
             return;
         }
         Item item = player.inventory.itemsBox.get(index);
+        // "Lay ra" tu Ruong do chi bo vao HANH TRANG, ke ca trang bi.
+        //
+        // Ban truoc thay trang bi la mac thang vao nguoi (o dang co do thi doi
+        // cho): nguoi choi bam lay cai rada ra de cat thi thay no nhay len
+        // nguoi. Muon mac thi mac tu hanh trang nhu moi mon khac.
         if (item.isNotNullItem()) {
-            boolean done = false;
-            if (item.template.type >= 0 && item.template.type <= 5 || item.template.type == 32) {
-                Item itemBody = player.inventory.itemsBody.get(item.template.type == 32 ? 6 : item.template.type);
-                // O trang bi DANG CO do thi DOI CHO, khong con doi phai trong.
-                //
-                // Ban cu chi mac khi o trang bi trong; o da co do thi mon
-                // trong ruong roi thang vao hanh trang, va nguoi choi phai
-                // thao do dang mac ra truoc roi moi mac duoc mon kia — trong
-                // nhu bam vao bi loi. Ba dong ngay duoi day da dat mon cu
-                // vao dung o vua lay ra, tuc doi cho von da lam duoc.
-                if (itemBody != null) {
-                    if (item.template.gender == player.gender || item.template.gender == 3) {
-                        long powerRequire = item.template.strRequire;
-                        for (ItemOption io : item.itemOptions) {
-                            if (io.optionTemplate.id == 21) {
-                                powerRequire = io.param * 1000000000L;
-                                break;
-                            }
-                        }
-                        if (powerRequire <= player.nPoint.power) {
-                            player.inventory.itemsBody.set(item.template.type == 32 ? 6 : item.template.type, item);
-                            player.inventory.itemsBox.set(index, itemBody);
-                            updateSet(player, 127, 139);
-                            updateSet(player, 128, 140);
-                            updateSet(player, 129, 141);
-                            updateSet(player, 130, 142);
-                            updateSet(player, 131, 143);
-                            updateSet(player, 132, 144);
-                            updateSet(player, 133, 136);
-                            updateSet(player, 134, 137);
-                            updateSet(player, 135, 138);
-                            updateSet(player, 233, 234);
-                            updateSet(player, 250, 253);
-                            updateSet(player, 251, 254);
-                            updateSet(player, 252, 255);
-                            updateSet(player, 263, 264);
-                            updateSet(player, 265, 266);
-                            updateSet(player, 267, 268);
-                            updateSetNew(player, 241, 244, new int[]{242, 243, 244});
-                            updateSetNew(player, 237, 240, new int[]{238, 239, 240});
-                            updateSetNew(player, 245, 248, new int[]{246, 247, 248});
-                            done = true;
-                            sendItemBody(player);
-                            Service.gI().point(player);
-                            Service.gI().Send_Caitrang(player);
-                        }
-                    }
+            if (addItemBag(player, item)) {
+                if (item.quantity == 0) {
+                    Item sItem = ItemService.gI().createItemNull();
+                    player.inventory.itemsBox.set(index, sItem);
                 }
-            }
-            if (!done) {
-                if (addItemBag(player, item)) {
-                    if (item.quantity == 0) {
-                        Item sItem = ItemService.gI().createItemNull();
-                        player.inventory.itemsBox.set(index, sItem);
-                    }
-                    sendItemBag(player);
-                }
+                sendItemBag(player);
             }
             sortItems(player.inventory.itemsBox);
             sendItemBox(player);
