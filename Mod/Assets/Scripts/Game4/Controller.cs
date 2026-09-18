@@ -3925,6 +3925,16 @@ namespace Game4
                             }
                         }
                         break;
+                    case 105:
+                        {
+                            // Hinh con pet dang deo o o Pet: mu, than, chan.
+                            // Ca ba -1 la o Pet trong.
+                            short dauPet = msg.reader().readShort();
+                            short thanPet = msg.reader().readShort();
+                            short chanPet = msg.reader().readShort();
+                            God.TuiUI.datHinhPet(dauPet, thanPet, chanPet);
+                        }
+                        break;
                     case 116:
                         {
                             // Chi so cua mot nhan vat, cho bang "Thong tin

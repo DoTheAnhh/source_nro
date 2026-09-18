@@ -1973,7 +1973,14 @@ public class Service {
         }
     }
 
-    private void sendChangeFlag(Player pl, int index) throws IOException {
+    /**
+     * Doi co cua mot nhan vat va bao cho ca ban do.
+     *
+     * <p>Mo ra cho ngoai dung vi <code>changeFlag</code> con dung toi
+     * <code>iDMark</code> va de tu cua nhan vat — hai thu ma cac nhan vat do
+     * may chu dieu khien (nhu Duong Tang) co the khong co.</p>
+     */
+    public void sendChangeFlag(Player pl, int index) throws IOException {
         pl.cFlag = (byte) index;
 
         Message msg = new Message(-103);
@@ -2771,6 +2778,54 @@ public class Service {
                     rs.dispose();
                 } catch (Exception boQua) {
                 }
+            }
+        }
+    }
+
+    /** Gói báo hình dáng con pet đang đeo ở ô Pet. */
+    public static final int GOI_HINH_PET = 105;
+
+    /**
+     * Gửi cho chính người chơi ba phần thân của con pet đang đeo.
+     *
+     * <h3>Vì sao phải gửi riêng</h3>
+     *
+     * <p>Mẫu vật phẩm bên client chỉ có <code>part</code>, không có mũ/thân/chân
+     * — nên client không tự suy ra được con pet trông ra sao từ món đồ trong
+     * ô Pet. Khung xem trước trước đây lấy đại con thú theo sau
+     * (<code>petFollow</code>), mà đó là một thứ khác hẳn, nên hiện sai con.</p>
+     *
+     * <p>Ba số -1 là ô Pet đang trống. Gửi kèm mỗi lần gửi trang bị
+     * (<code>sendItemBody</code>), tức mỗi lần đeo/tháo và lúc đăng nhập.</p>
+     */
+    public void guiHinhPet(Player pl) {
+        if (pl == null || !pl.isPl()) {
+            return;
+        }
+        Message msg = null;
+        try {
+            short dau = -1;
+            short than = -1;
+            short chan = -1;
+            if (pl.inventory != null && pl.inventory.itemsBody != null
+                    && pl.inventory.itemsBody.size() > 7) {
+                nro.entity.item.Item it = pl.inventory.itemsBody.get(7);
+                if (it != null && it.isNotNullItem()) {
+                    dau = (short) it.template.head;
+                    than = (short) it.template.body;
+                    chan = (short) it.template.leg;
+                }
+            }
+            msg = new Message(GOI_HINH_PET);
+            msg.writer().writeShort(dau);
+            msg.writer().writeShort(than);
+            msg.writer().writeShort(chan);
+            pl.sendMessage(msg);
+        } catch (Exception e) {
+            Logger.logException(Service.class, e);
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
             }
         }
     }

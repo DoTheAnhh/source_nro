@@ -55,6 +55,12 @@ public final class HoTongService {
     /** Bản đồ nằm bên kia cửa đích — dùng để tìm đúng cửa ở bản đồ cuối. */
     private static final int MAP_DICH = 5;
 
+    /** Cờ đen trong hệ thống cờ — đánh được mọi người, kể cả cùng màu. */
+    private static final int CO_DEN = 8;
+
+    /** Cờ trắng: cờ mặc định, không đánh ai. */
+    private static final int CO_TRANG = 0;
+
     /** Đứng cách cửa trong bấy nhiêu điểm ảnh thì coi như đã tới. */
     private static final int GAN_CUA = 40;
 
@@ -106,9 +112,19 @@ public final class HoTongService {
             // Bat co den cho CA HAI: ai cung danh duoc nguoi ho tong lan chinh
             // Duong Tang, nen chuyen di thanh cuoc gianh nhau chu khong phai
             // mot vong dao choi. Co tu tat khi nhiem vu ket thuc.
-            PlayerService.gI().changeAndSendTypePK(pl, ConstPlayer.PK_ALL);
-            PlayerService.gI().changeAndSendTypePK(pl.Duongtang,
-                    ConstPlayer.PK_ALL);
+            //
+            // "Co den" la CO SO 8 cua he thong co (cFlag), khong phai typePk.
+            // Ban truoc doi typePk — mot co che PK khac han — nen tren dau
+            // ai cung khong hien co nao. Luat danh nhau theo co nam o
+            // SkillService: hai nguoi danh duoc nhau khi mot trong hai cam
+            // co 8, hoac hai co khac mau.
+            Service.gI().changeFlag(pl, CO_DEN);
+            try {
+                Service.gI().sendChangeFlag(pl.Duongtang, CO_DEN);
+            } catch (Exception ex) {
+                Logger.logException(HoTongService.class, ex,
+                        "Khong bat duoc co cho Duong Tang");
+            }
         }
         Service.gI().sendThongBao(pl, "Bắt đầu hộ tống");
         return null;
@@ -329,11 +345,11 @@ public final class HoTongService {
             chu.Duongtang.dispose();
             chu.Duongtang = null;
         }
-        if (chu.typePk == ConstPlayer.PK_ALL) {
-            // Co bat theo nhiem vu thi tat theo nhiem vu. Nguoi choi tu bat co
-            // tu truoc cung bi tat lay — thua con hon de ho mang co suot ngay
-            // vi mot chuyen di da xong.
-            PlayerService.gI().changeAndSendTypePK(chu, 0);
+        if (chu.cFlag == CO_DEN) {
+            // Co bat theo nhiem vu thi tat theo nhiem vu. Nguoi choi tu cam co
+            // den tu truoc cung bi ha lay — thua con hon de ho mang co suot
+            // ngay vi mot chuyen di da xong.
+            Service.gI().changeFlag(chu, CO_TRANG);
         }
     }
 

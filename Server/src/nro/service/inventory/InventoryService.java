@@ -1498,6 +1498,8 @@ public class InventoryService {
         // Sau đó mới gửi trang phục và cờ
         Service.gI().Send_Caitrang(player);
         Service.gI().sendFlagBag(player);
+        // Hinh con pet dang deo — cho khung xem truoc cua client.
+        Service.gI().guiHinhPet(player);
     }
 
     public void sendItemBox(Player player) {

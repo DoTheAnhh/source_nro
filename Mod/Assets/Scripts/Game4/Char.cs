@@ -6446,7 +6446,21 @@ namespace Game4
     		}
     		if (eDanhHieu != null)
     		{
+    			// Ve danh hieu tai CHO DANG VE nguoi, khong phai cho nguoi dang
+    			// dung tren ban do.
+    			//
+    			// eDanhHieu.x/y do update() dat theo toa do ngoai map, nen khi
+    			// ham nay duoc goi de ve o cho khac — khung xem truoc trong bang
+    			// nhan vat — danh hieu van nam o cho cu, lech han khoi dau. Dat
+    			// tam theo cx va cH_new cua lan ve nay roi tra lai, de ngoai ban
+    			// do van ve dung nhu truoc.
+    			int xDhCu = eDanhHieu.x;
+    			int yDhCu = eDanhHieu.y;
+    			eDanhHieu.x = cx;
+    			eDanhHieu.y = cH_new;
     			eDanhHieu.paint(g);
+    			eDanhHieu.x = xDhCu;
+    			eDanhHieu.y = yDhCu;
     		}
     		paintPKFlag(g);
     	}

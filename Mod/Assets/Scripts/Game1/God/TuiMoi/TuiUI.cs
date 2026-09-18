@@ -56,6 +56,28 @@ namespace Game1.God
         /// <summary>Ô "Pet" trong danh sách ô trang bị — xem <see cref="TEN_O"/>.</summary>
         private const int O_PET = 7;
 
+        /// <summary>Ba phần thân của con pet đang đeo; -1 là ô Pet trống.</summary>
+        /// <remarks>
+        /// Máy chủ gửi riêng (gói 105) vì mẫu vật phẩm bên client không có
+        /// mũ/thân/chân — không tự suy ra được con pet trông ra sao.
+        /// </remarks>
+        private static short petDau = -1, petThan = -1, petChan = -1;
+
+        /// <summary>Nhân vật dựng tạm để vẽ con pet, dựng lại khi đổi pet.</summary>
+        private static Char petVe;
+
+        /// <summary>Máy chủ báo hình con pet vừa đeo (hoặc vừa tháo).</summary>
+        public static void datHinhPet(short dau, short than, short chan)
+        {
+            if (dau != petDau || than != petThan || chan != petChan)
+            {
+                petVe = null;
+            }
+            petDau = dau;
+            petThan = than;
+            petChan = chan;
+        }
+
         /// <summary>Hàng dưới: sách và chân mệnh, hai ô liền nhau ở giữa.</summary>
         private static readonly int[] O_DUOI = { 10, 11 };
 
@@ -1777,31 +1799,32 @@ namespace Game1.God
             // sau khi thao pet ra, nen hoi mot minh no thi con thu van dung day
             // trong khi o da trong.
             int xSuPhu = xTrai + rongTrai / 2;
-            var thuTheo = Char.myCharz().petFollow;
-            bool coThu = thuTheo != null && mac != null
+            // Ve DUNG con pet dang deo o o Pet — hinh do may chu gui (goi
+            // 105). Ban truoc lay petFollow, mot con thu theo sau khac han,
+            // nen hien sai con. O Pet trong thi khong ve gi.
+            bool coThu = (petDau >= 0 || petThan >= 0) && mac != null
                     && O_PET < mac.Length && mac[O_PET] != null
                     && mac[O_PET].template != null;
             if (coThu)
             {
-                // Muon dung duong ve cua chinh no: doi toa do, ve, roi tra lai.
-                //
-                // Ham paint cua no doc cmx/cmy — do la toa do MAN HINH, da tru
-                // camera. Goi thang SmallImage o day thi phai doan lai thu tu
-                // tham so, co anh nhieu khung hinh lai doan sai.
-                int xCu = thuTheo.cmx;
-                int yCu = thuTheo.cmy;
-                thuTheo.cmx = xSuPhu - 30;
-                thuTheo.cmy = yChan - 14;
                 try
                 {
-                    thuTheo.paint(g);
+                    if (petVe == null)
+                    {
+                        petVe = new Char();
+                        petVe.head = petDau;
+                        petVe.body = petThan;
+                        petVe.leg = petChan;
+                        petVe.bag = -1;
+                        petVe.cName = string.Empty;
+                    }
+                    petVe.paintCharBody(g, xSuPhu - 30, yChan - 4, 1,
+                            khungDungCho(), false);
                 }
                 catch (System.Exception)
                 {
-                    // Anh chua tai xong: khung sau ve lai.
+                    // Anh bo phan chua tai xong: khung sau ve lai.
                 }
-                thuTheo.cmx = xCu;
-                thuTheo.cmy = yCu;
             }
             Char.myCharz().paintCharBody(g, xSuPhu, yChan - 4,
                     1, khungDungCho(), true);
