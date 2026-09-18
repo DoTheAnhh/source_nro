@@ -311,6 +311,8 @@ public final class Manager {
     // danh sach mau vat pham: nap xong moi them thi phai toi lan chay sau
     // may chu moi biet ba mon do.
     nro.repository.dao.TrungDeTuDAO.damBaoVatPham();
+    // Cai trang dung san trong ma (Berus Nhi...): cung ly do, truoc loadDatabase.
+    nro.repository.dao.CaiTrangDungSanDAO.damBao();
 
     this.loadDatabase();
 

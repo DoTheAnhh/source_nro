@@ -904,6 +904,17 @@ public class Detu extends Player {
             case ConstDetu.BLACK:
                 return 1914;
             default:
+                // Dung thu tu cua getHead(): loai khong ghi cung (Cell, Bill)
+                // thi cai trang dang mac truoc, roi toi model goc cua loai
+                // (Bill -> Berus Nhi...). Thieu nhanh nay thi tren ban do la
+                // Berus ma khung thong tin van mat de thuong.
+                short mu = muTuCaiTrang();
+                if (mu != -1) {
+                    return mu;
+                }
+                if (!this.isTransform && phanCaiTrangLoai(0) != -1) {
+                    return phanCaiTrangLoai(0);
+                }
                 return PET_ID[3][this.gender];
         }
     }

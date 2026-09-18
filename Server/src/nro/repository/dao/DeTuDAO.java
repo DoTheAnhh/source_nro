@@ -84,6 +84,7 @@ public class DeTuDAO {
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
             themCotCaiTrang();
             dienSanNeuRong();
+            doiBillSangBerusNhi();
         } catch (Exception ex) {
             Logger.logException(DeTuDAO.class, ex, "Không tạo được bảng đệ tử");
         }
@@ -128,7 +129,7 @@ public class DeTuDAO {
             ConnectDB.executeUpdate("UPDATE de_tu_loai SET cai_trang = ?"
                     + " WHERE loai = ?", CT_CELL, (int) ConstDetuCell());
             ConnectDB.executeUpdate("UPDATE de_tu_loai SET cai_trang = ?"
-                    + " WHERE loai = ?", CT_BILL, (int) ConstDetuBill());
+                    + " WHERE loai = ?", caiTrangBill(), (int) ConstDetuBill());
         } catch (Exception ex) {
             Logger.logException(DeTuDAO.class, ex,
                     "Không gắn được cải trang mặc định cho loại đệ");
@@ -138,8 +139,56 @@ public class DeTuDAO {
     /** Cải trang "CT Xên nhí" — hình của đệ Cell. */
     private static final int CT_CELL = 1600;
 
-    /** Cải trang "Berus" — hình của đệ Bill. */
-    private static final int CT_BILL = 2001;
+    /** Cải trang "Berus" (bản lớn) — hình cũ của đệ Bill, trước khi có Berus Nhí. */
+    private static final int CT_BILL_CU = 2001;
+
+    /**
+     * Hình mặc định của đệ Bill: Cải Trang Berus Nhí.
+     *
+     * <p>Id của nó cấp lúc chạy ({@link CaiTrangDungSanDAO}) nên phải tra, không
+     * ghi cứng. Tra không ra thì lùi về Berus bản lớn cho đệ khỏi trần trụi.</p>
+     */
+    private static int caiTrangBill() {
+        int id = CaiTrangDungSanDAO.idBerusNhi();
+        return id > 0 ? id : CT_BILL_CU;
+    }
+
+    private static final String KHOA_BILL_BERUS_NHI = "de_bill_berus_nhi";
+
+    /**
+     * Đổi hình đệ Bill từ Berus bản lớn sang Berus Nhí — <b>một lần</b>.
+     *
+     * <p>Máy nào cột {@code cai_trang} đã sinh từ trước thì đệ Bill đang trỏ
+     * 2001; mặc định mới chỉ vào được bảng lúc tạo, nên phải chuyển riêng.
+     * Chỉ đổi khi vẫn còn đúng giá trị cũ — quản trị đã chọn hình khác trên
+     * panel thì để nguyên. Ghi dấu vào {@code panel_config} để lần sau không
+     * làm lại: quản trị có cố ý trả về 2001 thì cũng không bị đổi lần nữa.</p>
+     */
+    private static void doiBillSangBerusNhi() {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery(
+                    "SELECT v FROM panel_config WHERE k = ?", KHOA_BILL_BERUS_NHI);
+            if (rs.next()) {
+                return;
+            }
+            int id = CaiTrangDungSanDAO.idBerusNhi();
+            if (id <= 0) {
+                // Chua co vat pham: khong ghi dau, lan khoi dong sau thu lai.
+                return;
+            }
+            ConnectDB.executeUpdate("UPDATE de_tu_loai SET cai_trang = ?"
+                    + " WHERE loai = ? AND cai_trang = ?",
+                    id, (int) ConstDetuBill(), CT_BILL_CU);
+            ConnectDB.executeUpdate("INSERT INTO panel_config (k, v) VALUES (?, '1')"
+                    + " ON DUPLICATE KEY UPDATE v = '1'", KHOA_BILL_BERUS_NHI);
+        } catch (Exception ex) {
+            Logger.logException(DeTuDAO.class, ex,
+                    "Không đổi được hình đệ Bill sang Berus Nhí");
+        } finally {
+            dong(rs);
+        }
+    }
 
     private static byte ConstDetuCell() {
         return nro.core.consts.ConstDetu.CELL;
@@ -168,7 +217,7 @@ public class DeTuDAO {
             ConnectDB.executeUpdate("UPDATE de_tu_loai SET cai_trang = ?"
                     + " WHERE loai = ?", CT_CELL, (int) ConstDetuCell());
             ConnectDB.executeUpdate("UPDATE de_tu_loai SET cai_trang = ?"
-                    + " WHERE loai = ?", CT_BILL, (int) ConstDetuBill());
+                    + " WHERE loai = ?", caiTrangBill(), (int) ConstDetuBill());
         }
     }
 
