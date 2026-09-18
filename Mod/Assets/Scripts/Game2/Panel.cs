@@ -3758,7 +3758,23 @@ namespace Game2
                     if (pointerDownTime > 5 && pointerDownFirstX == GameCanvas.py && !isDownWhenRunning)
                     {
                         pointerDownFirstX = -1000;
-                        selected = (cmtoY + GameCanvas.py - yScroll) / ITEM_HEIGHT;
+                        if (isnewInventory && isTabInven()
+                                && GameCanvas.py >= yOTui())
+                        {
+                            // LUOI O VUONG: selected theo O THAT, khong theo dong.
+                            //
+                            // Phep tinh dong ben duoi cho hang 1 cua luoi ra 0 —
+                            // ma selected == 0 o cac ham doFireX nghia la "bam dai
+                            // tab": chung goi setNewSelected, bo o dang chon va
+                            // nhay ve o dau, khong hien chi tiet mon. Hang 2 tro
+                            // xuong ra so >= 1 nen khong ai thay loi o do.
+                            selected = chonOTaiDiem() ? 1 : -1;
+                        }
+                        else
+                        {
+                            selected = (cmtoY + GameCanvas.py - yScroll) / ITEM_HEIGHT;
+                        }
+
                         if (selected >= currentListLength)
                         {
                             selected = -1;
