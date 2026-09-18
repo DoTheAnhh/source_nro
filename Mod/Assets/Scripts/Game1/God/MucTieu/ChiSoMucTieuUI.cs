@@ -31,7 +31,7 @@ namespace Game1.God
         private static int[] oNut = new int[0];
 
         private const int CO_NUT = 13;
-        private const int RONG_BANG = 124;
+        private const int RONG_BANG = 236;
         private const int CAO_DONG = 11;
 
         private static readonly string[] NHAN = {
@@ -129,7 +129,9 @@ namespace Game1.God
             }
 
             // ---- bang nho duoi khung
-            int soDong = NHAN.Length;
+            // Hai cot, moi cot mot nua so dong: trai HP/SD/chi mang/ST chi mang,
+            // phai ne/chinh xac/giap/hut HP.
+            int soDong = (NHAN.Length + 1) / 2;
             int cao = 6 + soDong * CAO_DONG + 4;
             int x = xKhung + wKhung / 2 - RONG_BANG / 2;
             if (x < 2)
@@ -164,16 +166,27 @@ namespace Game1.God
                 cs[5] < 0 ? "-" : NinjaUtil.getMoneys(cs[5]),
                 cs[10] < 0 ? "-" : cs[10] + "%"
             };
-            for (int i = 0; i < soDong; i++)
+            int rongCot = (RONG_BANG - 6) / 2;
+            for (int hang = 0; hang < soDong; hang++)
             {
-                int yd = y + 4 + i * CAO_DONG;
-                if (i % 2 == 1)
+                int yd = y + 4 + hang * CAO_DONG;
+                if (hang % 2 == 1)
                 {
                     g.setColor(0xFFFFFF, 0.05f);
                     g.fillRect(x + 3, yd, RONG_BANG - 6, CAO_DONG, 2);
                 }
-                mFont.tahoma_7_white.drawString(g, NHAN[i], x + 7, yd, mFont.LEFT);
-                mFont.tahoma_7b_yellow.drawString(g, giaTri[i], x + RONG_BANG - 7, yd,
+            }
+            // Vach chia hai cot.
+            g.setColor(0xC8913A, 0.5f);
+            g.fillRect(x + 3 + rongCot, y + 5, 1, cao - 10);
+            for (int i = 0; i < NHAN.Length; i++)
+            {
+                int cot = i / soDong;
+                int hang = i % soDong;
+                int xc = x + 3 + cot * rongCot;
+                int yd = y + 4 + hang * CAO_DONG;
+                mFont.tahoma_7_white.drawString(g, NHAN[i], xc + 5, yd, mFont.LEFT);
+                mFont.tahoma_7b_yellow.drawString(g, giaTri[i], xc + rongCot - 5, yd,
                         mFont.RIGHT);
             }
         }
