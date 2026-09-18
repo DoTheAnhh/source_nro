@@ -1675,6 +1675,10 @@ public class Controller implements IMessageHandler {
                 player.Detu.setClothes.setup();
             }
 
+            // Hinh con pet dang deo cho khung xem truoc. Truoc chi gui kem
+            // sendItemBody (luc deo/thao), ma dang nhap thi khong goi ham do,
+            // nen preview trong cho toi khi thao ra deo lai.
+            Service.gI().guiHinhPet(player);
             if (player.inventory.itemsBody.get(7).isNotNullItem()) {
                 new Thread(() -> {
                     try {

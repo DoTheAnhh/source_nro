@@ -436,11 +436,20 @@ public class DuongTang extends Player{
             if (this.zone.map.mapId == 51) {
                 this.totalDamageTaken += damage;
             }
-            this.nPoint.subHP(Util.CrisGH(damage));                
-            if (Util.isTrue(this.nPoint.tlBom, 100)) {
-                setBom(plAtt);
-            } else {
-                setDie(plAtt);
+            // Kep lai lan cuoi: cac buoc cong sat thuong theo hanh tinh o tren
+            // chay SAU lan kep dau ham, co the day len qua 1.
+            if (damage > 1) {
+                damage = 1;
+            }
+            this.nPoint.subHP(Util.CrisGH(damage));
+            // Chi chet khi HET mau. Ban truoc goi setDie ngay sau moi don, nen
+            // bi danh trung mot lan (hien -1) la chet luon du con 99 mau.
+            if (this.isDie()) {
+                if (Util.isTrue(this.nPoint.tlBom, 100)) {
+                    setBom(plAtt);
+                } else {
+                    setDie(plAtt);
+                }
             }
             return damage;
         } else {
