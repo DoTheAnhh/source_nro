@@ -103,11 +103,12 @@ public final class HoTongService {
         pl.HoTongDuongTang = true;
         pl.lastTimeDuongTang = System.currentTimeMillis();
         if (c.batCo) {
-            // Bat co den: ai cung danh duoc nguoi dang ho tong, nen chuyen di
-            // thanh cuoc giành nhau chu khong phai mot vong dao choi.
+            // Bat co den cho CA HAI: ai cung danh duoc nguoi ho tong lan chinh
+            // Duong Tang, nen chuyen di thanh cuoc gianh nhau chu khong phai
+            // mot vong dao choi. Co tu tat khi nhiem vu ket thuc.
             PlayerService.gI().changeAndSendTypePK(pl, ConstPlayer.PK_ALL);
-            Service.gI().sendThongBao(pl,
-                    "Cờ đen đã bật — người khác có thể tấn công bạn suốt chuyến đi.");
+            PlayerService.gI().changeAndSendTypePK(pl.Duongtang,
+                    ConstPlayer.PK_ALL);
         }
         Service.gI().sendThongBao(pl, "Bắt đầu hộ tống");
         return null;

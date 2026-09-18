@@ -619,15 +619,24 @@ public void createBlackPet(Player player) {
             pl.Duongtang.dispose();
         }
         pl.Duongtang = new DuongTang(pl);
-        pl.Duongtang.name = "Đường tăng";
+        // Ten mang theo nguoi dang ho tong.
+        //
+        // Ca may chu deu thay Duong Tang cua nguoi khac, nen chi mot chu
+        // "Duong tang" thi giua cho dong nguoi khong ai biet ong nao cua ai —
+        // ma biet la de tro thanh muc tieu, hoac de tranh ra.
+        pl.Duongtang.name = "Đường tăng (" + pl.name + " hộ tống)";
         pl.Duongtang.gender = pl.gender;
         pl.Duongtang.nPoint.tiemNang = 1;
         pl.Duongtang.nPoint.power = 1;
         pl.Duongtang.nPoint.limitPower = 1;
-        pl.Duongtang.nPoint.hpg = 1_000_000;
-        pl.Duongtang.nPoint.mpg = 1_000_000;
-        pl.Duongtang.nPoint.hp = 1_000_000;
-        pl.Duongtang.nPoint.mp = 1_000_000;
+        // Dung mot tram mau, va moi don chi an mot diem (xem
+        // DuongTang.injured): ai danh ong ay cung phai bo ra dung mot tram
+        // nhat, nen ke pha khong the mot phat ket lieu, ma nguoi ho tong cung
+        // khong the lo la.
+        pl.Duongtang.nPoint.hpg = 100;
+        pl.Duongtang.nPoint.mpg = 100;
+        pl.Duongtang.nPoint.hp = 100;
+        pl.Duongtang.nPoint.mp = 100;
         pl.Duongtang.nPoint.dameg = 1;
         pl.Duongtang.nPoint.defg = 1;
         pl.Duongtang.nPoint.critg = 1;

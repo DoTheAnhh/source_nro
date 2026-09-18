@@ -90,13 +90,14 @@ public class DuongTang extends Player{
         }
         super.update();
         if (this.isDie()) {
-            if (this != null && this.master != null){
-                Service.gI().sendThongBao(this.master, "Đường tăng đã chết\nNhiệm vụ hộ tống thất bại!");
-                Service.gI().hsChar(this, nPoint.hpMax, nPoint.mpMax);
-                ChangeMapService.gI().spaceShipArrive(this, (byte) 2, ChangeMapService.DEFAULT_SPACE_SHIP);
-                ChangeMapService.gI().exitMap(this);
-                this.dispose();
+            if (this.master != null) {
+                // Di qua HoTongService: chinh no lo tat co, don dep va bao
+                // mot cau duy nhat. Tu xu ly o day thi co den van con bat, va
+                // nguoi choi nhan hai cau bao khac nhau cho cung mot viec.
+                nro.service.hotong.HoTongService.gI()
+                        .thatBai(this.master, "Đường Tăng đã chết");
             }
+            return;
         }
         // Chi nhay theo chu khi CHUA o ban do nao — tuc lan dau vua duoc goi ra.
         //
@@ -128,6 +129,7 @@ public class DuongTang extends Player{
 
     /** Moc lan buoc gan nhat — nhip di do HoTongService quyet dinh. */
     public long lucBuocCuoi;
+
     
     /**
      * Hai ham <code>followPlayer</code> va <code>followMaster</code> da bo.
@@ -181,8 +183,22 @@ public class DuongTang extends Player{
         }
     }
     
+    /**
+     * Mỗi đòn chỉ ăn <b>một điểm</b> máu.
+     *
+     * <p>Đường Tăng chỉ có một trăm máu, mà một người chơi bình thường đánh một
+     * phát đã vài triệu sát thương. Không chặn thì ai đi ngang cũng kết liễu
+     * được ngay, và nhiệm vụ không còn gì để chơi.</p>
+     *
+     * <p>Một trăm máu và mỗi đòn một điểm nghĩa là phá hỏng một chuyến hộ
+     * tống phải trả đúng một trăm nhát đánh — đủ lâu để người hộ tống
+     * kịp can thiệp.</p>
+     */
     @Override
     public synchronized double injured(Player plAtt, double damage, boolean piercing, boolean isMobAttack) {
+        if (damage > 1) {
+            damage = 1;
+        }
         if (!this.isDie()) {
             if (plAtt != null && plAtt.playerSkill.skillSelect != null && !plAtt.isBoss && MapService.gI().isMapMaBu12H(this.zone.map.mapId)) {
                 switch (plAtt.playerSkill.skillSelect.template.id) {
