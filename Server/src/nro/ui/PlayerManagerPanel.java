@@ -114,14 +114,14 @@ public class PlayerManagerPanel extends JPanel {
     /** Bộ icon dùng cho bảng vật phẩm. x2 vừa mắt ở chiều cao dòng 32px. */
     private static final String ICON_DIR = "data/icon/x2/";
 
-    private static final Color ACCENT = new Color(0, 120, 215);
-    private static final Color OK_GREEN = new Color(34, 139, 34);
-    private static final Color WARN_RED = new Color(192, 57, 43);
-    private static final Color GREY = new Color(120, 120, 120);
+    private static final Color ACCENT = UiTheme.ACCENT;
+    private static final Color OK_GREEN = UiTheme.OK;
+    private static final Color WARN_RED = UiTheme.DANGER;
+    private static final Color GREY = UiTheme.TEXT_MUTED;
     /** Nền của nút đang bị khoá. */
-    private static final Color DISABLED_BG = new Color(200, 200, 200);
+    private static final Color DISABLED_BG = UiTheme.NUT_TAT;
     /** Màu chấm của người đang online. Đậm hơn OK_GREEN để nổi trên nền trắng. */
-    private static final Color ONLINE_GREEN = new Color(0, 170, 60);
+    private static final Color ONLINE_GREEN = UiTheme.OK;
 
     // ---------------------------------------------------------------- danh sách
     private final DefaultTableModel playerModel;
@@ -279,7 +279,7 @@ public class PlayerManagerPanel extends JPanel {
 
     public PlayerManagerPanel() {
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
+        setBackground(UiTheme.CARD);
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
         playerModel = new DefaultTableModel(
@@ -316,7 +316,7 @@ public class PlayerManagerPanel extends JPanel {
                     // xám cho người offline. Các cột còn lại chỉ đen/xám.
                     comp.setForeground(c == 0
                             ? (on ? ONLINE_GREEN : GREY)
-                            : (on ? Color.BLACK : GREY));
+                            : (on ? UiTheme.TEXT : GREY));
                 }
                 return comp;
             }
@@ -447,10 +447,10 @@ public class PlayerManagerPanel extends JPanel {
         act.add(button("Đặt nhiệm vụ", ACCENT, e -> doDatNhiemVu()));
         // KHÔNG dùng editButton: nút này chỉ đọc nhật ký trong CSDL nên xem
         // được cả người đang offline — mà đó mới là lúc hay cần xem nhất.
-        act.add(button("Lịch sử vật phẩm", new Color(120, 80, 170),
+        act.add(button("Lịch sử vật phẩm", UiTheme.NUT_TIM,
                 e -> moLichSuVatPham()));
         act.add(button("Lưu DB ngay", OK_GREEN, e -> doSaveNow()));
-        act.add(button("Xoá HẾT nhân vật", new Color(150, 30, 30), e -> doDeleteAll()));
+        act.add(button("Xoá HẾT nhân vật", UiTheme.DANGER_STRONG, e -> doDeleteAll()));
         p.add(act, BorderLayout.SOUTH);
         return p;
     }
@@ -645,7 +645,7 @@ public class PlayerManagerPanel extends JPanel {
         c.gridy = row++;
         c.gridx = 0;
         c.gridwidth = 4;
-        JLabel ghiChu = new JLabel("<html><span style='color:#777'>"
+        JLabel ghiChu = new JLabel("<html><span style='color:#9aa1ad'>"
                 + "Đệ tử có túi và ô trang bị <b>riêng</b> "
                 + "(<code>Detu.inventory</code>); tab <b>Đồ đang mặc</b> chỉ hiện "
                 + "đồ của chủ.<br>"
@@ -764,7 +764,7 @@ public class PlayerManagerPanel extends JPanel {
     private void khoaODeTu(boolean cho) {
         for (JTextField f : oDeTu()) {
             f.setEditable(cho);
-            f.setBackground(cho ? Color.WHITE : new Color(245, 245, 245));
+            f.setBackground(cho ? UiTheme.CARD : UiTheme.FIELD_DISABLED);
         }
         cbDtLoai.setEnabled(cho);
         cbDtTrangThai.setEnabled(cho);
@@ -839,7 +839,7 @@ public class PlayerManagerPanel extends JPanel {
         g.add(new JLabel(label), c);
         c.gridx = 1;
         value.setFont(new Font("Consolas", Font.BOLD, 12));
-        value.setForeground(new Color(180, 90, 0));
+        value.setForeground(UiTheme.ACCENT_TEXT);
         g.add(value, c);
         return row + 1;
     }
@@ -948,7 +948,7 @@ public class PlayerManagerPanel extends JPanel {
                 Object id = tb.getValueAt(r, 2);
                 boolean empty = id == null || "-".equals(String.valueOf(id));
                 if (!sel) {
-                    comp.setForeground(empty ? new Color(170, 170, 170) : Color.BLACK);
+                    comp.setForeground(empty ? UiTheme.TEXT_FAINT : UiTheme.TEXT);
                 }
                 return comp;
             }
@@ -984,6 +984,7 @@ public class PlayerManagerPanel extends JPanel {
         b.setFocusPainted(false);
         b.setFont(new Font("Segoe UI", Font.BOLD, 12));
         b.setBorder(new EmptyBorder(6, 14, 6, 14));
+        ServerGuiUtils.toNut(b, bg);
         b.addActionListener(a);
         return b;
     }
@@ -1382,7 +1383,7 @@ public class PlayerManagerPanel extends JPanel {
     private void setEditable(boolean on) {
         for (JTextField f : allFields) {
             f.setEditable(on);
-            f.setBackground(on ? Color.WHITE : new Color(245, 245, 245));
+            f.setBackground(on ? UiTheme.CARD : UiTheme.FIELD_DISABLED);
         }
         // allFields co ca o cua de tu. Vong tren vua mo het theo trang thai
         // online; o de tu con doi hoi CO de tu that, nen khoa lai o day.
@@ -2965,7 +2966,7 @@ public class PlayerManagerPanel extends JPanel {
         p.setBorder(new EmptyBorder(8, 8, 8, 8));
         p.add(new JLabel("Quyền của " + selectedRow.name + " (tài khoản " + accId + "):"));
         p.add(cb);
-        p.add(new JLabel("<html><span style='color:#777'>"
+        p.add(new JLabel("<html><span style='color:#9aa1ad'>"
                 + "<b>Admin</b> — toàn quyền (is_admin + isFounder)<br>"
                 + "<b>Colab</b> — cộng tác viên (isQuanTriVien)<br>"
                 + "<b>User</b> — người chơi thường<br><br>"
@@ -3168,7 +3169,7 @@ public class PlayerManagerPanel extends JPanel {
 
     private static javax.swing.border.Border titled(String t) {
         return BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(210, 210, 210)), t);
+                BorderFactory.createLineBorder(UiTheme.LINE), t);
     }
 
     /**

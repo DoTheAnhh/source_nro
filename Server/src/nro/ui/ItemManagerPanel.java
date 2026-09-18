@@ -73,10 +73,10 @@ import nro.service.item.ItemService;
  */
 public class ItemManagerPanel extends JPanel {
 
-    private static final Color ACCENT = new Color(0, 120, 215);
-    private static final Color OK_GREEN = new Color(40, 160, 70);
-    private static final Color WARN_RED = new Color(200, 60, 60);
-    private static final Color GREY = new Color(120, 120, 120);
+    private static final Color ACCENT = UiTheme.ACCENT;
+    private static final Color OK_GREEN = UiTheme.OK;
+    private static final Color WARN_RED = UiTheme.DANGER;
+    private static final Color GREY = UiTheme.TEXT_MUTED;
 
     /**
      * Số dòng tối đa đổ ra bảng một lần.
@@ -226,7 +226,7 @@ public class ItemManagerPanel extends JPanel {
 
     public ItemManagerPanel() {
         setLayout(new BorderLayout(8, 8));
-        setBackground(Color.WHITE);
+        setBackground(UiTheme.CARD);
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
         JLabel title = new JLabel("Quản Lý Vật Phẩm");
@@ -713,7 +713,7 @@ public class ItemManagerPanel extends JPanel {
         pSoO.add(fSoOSao);
         pSao.add(pSoO, BorderLayout.WEST);
         fSaoGan.setEditable(false);
-        fSaoGan.setBackground(new Color(245, 245, 245));
+        fSaoGan.setBackground(UiTheme.FIELD_DISABLED);
         veTomTatSao();
         pSao.add(fSaoGan, BorderLayout.CENTER);
         JButton btnChonSao = button("Chọn sao…", ACCENT, e -> chonSaoDialog());
@@ -763,7 +763,7 @@ public class ItemManagerPanel extends JPanel {
             }
         }));
         optBtn.add(button("Xoá hết", GREY, e -> optModel.setRowCount(0)));
-        optBtn.add(button("Chỉ số gốc", new Color(120, 90, 160),
+        optBtn.add(button("Chỉ số gốc", UiTheme.NUT_TIM,
                 e -> dienChiSoSanCo(true)));
         // Do khoa: mot o tich thay vi bat nguoi dung nho id 30.
         optBtn.add(OptionPicker.nutThemTacDung(optTable));
@@ -1393,10 +1393,10 @@ public class ItemManagerPanel extends JPanel {
         sb.append("<b>").append(esc(t.name)).append("</b>  [id=").append(id)
                 .append("]<br><br>");
         if (dung.isEmpty()) {
-            sb.append("<span style='color:#1a7f37'>Không có chỗ nào đang dùng "
+            sb.append("<span style='color:#4ade80'>Không có chỗ nào đang dùng "
                     + "món này.</span><br><br>");
         } else {
-            sb.append("<span style='color:#b00020'><b>Đang có: ")
+            sb.append("<span style='color:#ff7070'><b>Đang có: ")
                     .append(esc(nro.repository.dao.MauVatPhamDAO.moTaChoDung(dung)))
                     .append("</b></span><br><br>");
         }
@@ -1666,7 +1666,7 @@ public class ItemManagerPanel extends JPanel {
                 l.setHorizontalTextPosition(JLabel.CENTER);
                 l.setVerticalTextPosition(JLabel.BOTTOM);
                 l.setOpaque(true);
-                l.setBackground(sel ? new Color(0xCCE4FF) : Color.WHITE);
+                l.setBackground(sel ? UiTheme.SELECTION : UiTheme.CARD);
                 l.setBorder(new EmptyBorder(4, 2, 4, 2));
                 return l;
             }
@@ -1804,7 +1804,7 @@ public class ItemManagerPanel extends JPanel {
         c.gridx = 0;
         c.gridy = y;
         c.gridwidth = 2;
-        form.add(new JLabel("<html><span style='color:#666'>"
+        form.add(new JLabel("<html><span style='color:#9aa1ad'>"
                 + "ID do máy chủ tự cấp và <b>không sửa được</b> — client tra bảng vật phẩm "
                 + "theo thứ tự nên id phải liên tục.<br>"
                 + "Máy chủ tự đẩy dữ liệu mới cho client."
@@ -1958,7 +1958,7 @@ public class ItemManagerPanel extends JPanel {
         c.gridy = y++;
         c.gridwidth = 2;
         form.add(lblPart, c);
-        form.add(new JLabel("<html><span style='color:#777'>"
+        form.add(new JLabel("<html><span style='color:#9aa1ad'>"
                 + "<b>Head / Body / Leg</b> trỏ vào bảng <code>part</code> — bộ ảnh vẽ "
                 + "nhân vật khi mặc món này. Áo dùng Body, quần dùng Leg, cải trang dùng "
                 + "cả ba.<br><code>-1</code> là không đổi phần đó.<br>"
@@ -2133,7 +2133,7 @@ public class ItemManagerPanel extends JPanel {
         p.add(new JLabel("Mô tả của \"" + t.name + "\" (id " + t.id + "):"),
                 BorderLayout.NORTH);
         p.add(ServerGuiUtils.cuon(ta), BorderLayout.CENTER);
-        p.add(new JLabel("<html><span style='color:#777'>Sửa xong nhớ bấm "
+        p.add(new JLabel("<html><span style='color:#9aa1ad'>Sửa xong nhớ bấm "
                 + "tự đẩy dữ liệu mới cho client, nhưng người chơi "
                 + "vẫn thấy mô tả cũ.</span></html>"), BorderLayout.SOUTH);
 
@@ -2177,7 +2177,7 @@ public class ItemManagerPanel extends JPanel {
 
     private static javax.swing.border.Border titled(String t) {
         return BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(215, 215, 215)), t);
+                BorderFactory.createLineBorder(UiTheme.LINE), t);
     }
 
     private static JButton button(String text, Color bg, java.awt.event.ActionListener a) {
@@ -2187,6 +2187,7 @@ public class ItemManagerPanel extends JPanel {
         b.setFocusPainted(false);
         b.setFont(new Font("Segoe UI", Font.BOLD, 12));
         b.setBorder(new EmptyBorder(6, 14, 6, 14));
+        ServerGuiUtils.toNut(b, bg);
         b.addActionListener(a);
         return b;
     }
@@ -2412,7 +2413,7 @@ public class ItemManagerPanel extends JPanel {
 
         String congGi = o == null ? ""
                 : "+" + o.param + " " + OptionPicker.tenChiSo(o.optionTemplate.id);
-        the.add(new JLabel("<html><b>" + t.name + "</b><br><span style='color:#666'>"
+        the.add(new JLabel("<html><b>" + t.name + "</b><br><span style='color:#9aa1ad'>"
                 + congGi + "</span></html>"), BorderLayout.CENTER);
 
         JPanel buoc = new JPanel(new FlowLayout(FlowLayout.RIGHT, 3, 6));
@@ -2457,10 +2458,10 @@ public class ItemManagerPanel extends JPanel {
             bot.setEnabled(n > 0);
             them.setEnabled(conCho);
             day.setEnabled(conCho);
-            the.setBackground(n > 0 ? new Color(255, 248, 225) : Color.WHITE);
+            the.setBackground(n > 0 ? UiTheme.WARM_BG : UiTheme.CARD);
             the.setBorder(javax.swing.BorderFactory.createCompoundBorder(
                     javax.swing.BorderFactory.createLineBorder(
-                            n > 0 ? new Color(230, 160, 40) : new Color(222, 227, 234), 2, true),
+                            n > 0 ? UiTheme.ACCENT : UiTheme.LINE, 2, true),
                     new EmptyBorder(4, 6, 4, 6)));
         });
         return the;
@@ -2518,7 +2519,7 @@ public class ItemManagerPanel extends JPanel {
             } else {
                 lblTong.setText("Đã chọn " + t + " / " + oToiDa + " ô"
                         + (t == oToiDa ? " — đủ" : " — còn " + (oToiDa - t) + " ô trống"));
-                lblTong.setForeground(t == oToiDa ? OK_GREEN : new Color(40, 60, 90));
+                lblTong.setForeground(t == oToiDa ? OK_GREEN : UiTheme.TEXT);
             }
             for (Runnable r : veLai) {
                 r.run();
@@ -2527,7 +2528,7 @@ public class ItemManagerPanel extends JPanel {
 
         JPanel cot = new JPanel();
         cot.setLayout(new javax.swing.BoxLayout(cot, javax.swing.BoxLayout.Y_AXIS));
-        cot.setBackground(Color.WHITE);
+        cot.setBackground(UiTheme.CARD);
         cot.setBorder(new EmptyBorder(6, 8, 8, 8));
         // Xep theo nhom cho de tim: Ngoc Rong, Sao pha le, con lai.
         String[][] nhom = {{"Ngọc Rồng", "Ngọc Rồng"}, {"Sao pha lê", "Sao pha lê"}, {"Khác", null}};
@@ -2547,7 +2548,7 @@ public class ItemManagerPanel extends JPanel {
             }
             JLabel tieuDe = new JLabel(n[0]);
             tieuDe.setFont(new Font("Segoe UI", Font.BOLD, 13));
-            tieuDe.setForeground(new Color(0, 120, 215));
+            tieuDe.setForeground(UiTheme.ACCENT);
             tieuDe.setBorder(new EmptyBorder(8, 2, 4, 0));
             tieuDe.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
             luoi.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
@@ -2557,7 +2558,7 @@ public class ItemManagerPanel extends JPanel {
 
         JPanel dau = new JPanel(new BorderLayout(8, 0));
         dau.setBorder(new EmptyBorder(8, 8, 6, 8));
-        dau.add(new JLabel("<html><span style='color:#777'>Bấm <b>+</b> / <b>−</b> để "
+        dau.add(new JLabel("<html><span style='color:#9aa1ad'>Bấm <b>+</b> / <b>−</b> để "
                 + "chọn, <b>Đầy</b> để lấp hết ô còn trống bằng loại đó. Tổng không vượt "
                 + "số ô sao.</span></html>"), BorderLayout.NORTH);
         JPanel hangTong = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 4));
@@ -2852,7 +2853,7 @@ public class ItemManagerPanel extends JPanel {
                 o.setHorizontalTextPosition(JLabel.CENTER);
                 o.setVerticalTextPosition(JLabel.BOTTOM);
                 o.setOpaque(true);
-                o.setBackground(sel ? new Color(0xCCE4FF) : Color.WHITE);
+                o.setBackground(sel ? UiTheme.SELECTION : UiTheme.CARD);
                 o.setBorder(new EmptyBorder(4, 2, 4, 2));
                 return o;
             }

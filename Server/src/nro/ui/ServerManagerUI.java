@@ -632,55 +632,31 @@ public class ServerManagerUI extends JFrame {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                     RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                    RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+            int w = getWidth();
+            int h = getHeight();
 
-            veNgocRong(g2, 22, 22, 34);
+            // Anh cam rat nhe loang tu goc trai, noi voi quang cua qua cau.
+            g2.setPaint(new java.awt.GradientPaint(0, 0, new Color(0xFF, 0x8C, 0x1A, 28),
+                    w * 0.7f, 0, new Color(0xFF, 0x8C, 0x1A, 0)));
+            g2.fillRect(0, 0, w, h - 1);
 
-            g2.setColor(Color.WHITE);
-            g2.setFont(UiTheme.ui(Font.BOLD, 17));
-            g2.drawString("DoTheAnh", 68, 34);
+            LogoNgocRong.ve(g2, 18, (h - 40) / 2f, 40, true);
 
-            g2.setColor(UiTheme.TEXT_MUTED_DARK);
-            g2.setFont(UiTheme.ui(Font.PLAIN, 10));
-            g2.drawString(giaNhan("SERVER CONTROL"), 68, 51);
+            g2.setColor(UiTheme.TEXT_ON_DARK);
+            g2.setFont(UiTheme.ui(Font.BOLD, 18));
+            g2.drawString("DoTheAnh", 70, 36);
+
+            g2.setColor(UiTheme.ACCENT_TEXT);
+            g2.setFont(UiTheme.ui(Font.BOLD, 9));
+            g2.drawString(giaNhan("SERVER CONTROL"), 71, 53);
+
+            // Vach cam ngan duoi chan dai, thay cho duong ke xam.
+            g2.setColor(UiTheme.ACCENT);
+            g2.fillRect(18, h - 2, 40, 2);
 
             g2.dispose();
-        }
-
-        /** Ngọc rồng bốn sao: quả cầu cam, bốn ngôi sao đỏ. */
-        private void veNgocRong(Graphics2D g2, int x, int y, int d) {
-            g2.setColor(new Color(0xFF, 0xA8, 0x3A));
-            g2.fill(new Ellipse2D.Float(x, y, d, d));
-            // Vệt sáng chéo trên, cho quả cầu ra khối thay vì một đĩa phẳng.
-            g2.setColor(new Color(255, 255, 255, 90));
-            g2.fill(new Ellipse2D.Float(x + d * 0.18f, y + d * 0.14f,
-                    d * 0.34f, d * 0.24f));
-            g2.setColor(new Color(0xD8, 0x3A, 0x1E));
-            float r = d * 0.115f;
-            float cx = x + d / 2f;
-            float cy = y + d / 2f;
-            float k = d * 0.19f;
-            veSao(g2, cx - k, cy - k, r);
-            veSao(g2, cx + k, cy - k, r);
-            veSao(g2, cx - k, cy + k, r);
-            veSao(g2, cx + k, cy + k, r);
-        }
-
-        /** Một ngôi sao năm cánh, tâm tại (cx, cy), bán kính ngoài r. */
-        private void veSao(Graphics2D g2, float cx, float cy, float r) {
-            Path2D p = new Path2D.Float();
-            for (int i = 0; i < 10; i++) {
-                double goc = -Math.PI / 2 + i * Math.PI / 5;
-                float bk = (i % 2 == 0) ? r : r * 0.42f;
-                float px = cx + (float) (Math.cos(goc) * bk);
-                float py = cy + (float) (Math.sin(goc) * bk);
-                if (i == 0) {
-                    p.moveTo(px, py);
-                } else {
-                    p.lineTo(px, py);
-                }
-            }
-            p.closePath();
-            g2.fill(p);
         }
 
         /** Chèn khoảng trắng giữa các chữ cho dòng phụ đề trông thưa hơn. */
@@ -859,7 +835,7 @@ public class ServerManagerUI extends JFrame {
     public ServerManagerUI() {
         super("Server Control Panel - Do The Anh");
         CUA_SO = this;
-        setIconImage(createAppIconImage());
+        setIconImages(LogoNgocRong.boBieuTuong());
         ServerGuiUtils.setupTheme();
         initUI();
         startServerProcesses();
@@ -869,50 +845,6 @@ public class ServerManagerUI extends JFrame {
                 triggerRestartProcess();
             }
         }));
-    }
-
-    private Image createAppIconImage() {
-        int size = 64;
-        BufferedImage image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = image.createGraphics();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-        g2.setColor(new Color(0, 120, 215));
-        g2.fill(new RoundRectangle2D.Double(4, 4, 56, 56, 16, 16));
-        g2.setColor(Color.WHITE);
-        g2.fill(new RoundRectangle2D.Double(10, 10, 44, 44, 8, 8));
-        g2.setColor(new Color(52, 152, 219, 50));
-        Path2D area = new Path2D.Double();
-        area.moveTo(15, 45);
-        area.lineTo(22, 38);
-        area.lineTo(29, 42);
-        area.lineTo(38, 28);
-        area.lineTo(38, 45);
-        area.closePath();
-        g2.fill(area);
-        g2.setColor(new Color(41, 128, 185));
-        g2.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        Path2D line = new Path2D.Double();
-        line.moveTo(15, 45);
-        line.lineTo(22, 38);
-        line.lineTo(29, 42);
-        line.lineTo(38, 28);
-        g2.draw(line);
-        g2.setColor(new Color(46, 204, 113));
-        g2.fill(new Ellipse2D.Double(43, 16, 6, 6));
-        g2.setColor(new Color(243, 156, 18));
-        g2.fill(new Ellipse2D.Double(43, 26, 6, 6));
-        g2.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        g2.setColor(new Color(189, 195, 199));
-        g2.drawLine(40, 38, 50, 38);
-        g2.setColor(new Color(52, 73, 94));
-        g2.fill(new Ellipse2D.Double(42, 36, 4, 4));
-        g2.setColor(new Color(189, 195, 199));
-        g2.drawLine(40, 45, 50, 45);
-        g2.setColor(new Color(52, 73, 94));
-        g2.fill(new Ellipse2D.Double(47, 43, 4, 4));
-        g2.dispose();
-        return image;
     }
 
     public void triggerRestartProcess() {
@@ -936,7 +868,7 @@ public class ServerManagerUI extends JFrame {
 
     private void initUI() {
         setLayout(new BorderLayout());
-        setBackground(new Color(245, 245, 245));
+        setBackground(UiTheme.CONTENT_BG);
 
         // Toàn bộ panel cũ đã bị gỡ (xem docs/04-PANEL-MOI.md).
         // Giờ chỉ còn một mục duy nhất; giữ lại cơ chế sidebar + CardLayout để
@@ -1134,6 +1066,7 @@ public class ServerManagerUI extends JFrame {
     }
 
     public static void main(String[] args) {
+        ServerGuiUtils.setupTheme();
         EventQueue.invokeLater(ServerManagerUI::new);
     }
 }

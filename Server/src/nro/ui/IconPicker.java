@@ -53,9 +53,9 @@ public final class IconPicker {
                 : new JDialog((java.awt.Dialog) owner, "Chọn ảnh", true);
 
         final JPanel luoi = new JPanel(new GridLayout(0, 12, 4, 4));
-        luoi.setBackground(Color.WHITE);
+        luoi.setBackground(UiTheme.CARD);
         final JLabel lblDem = new JLabel();
-        lblDem.setForeground(new Color(110, 110, 110));
+        lblDem.setForeground(UiTheme.TEXT_MUTED);
 
         // Bat dau tu vung quanh id dang dung de nhin thay no ngay.
         final int[] tuId = {Math.max(0, idCu - 24)};
@@ -84,7 +84,7 @@ public final class IconPicker {
                 b.setVerticalTextPosition(SwingConstants.BOTTOM);
                 b.setHorizontalTextPosition(SwingConstants.CENTER);
                 b.setFont(new Font("Segoe UI", Font.PLAIN, 9));
-                b.setBackground(id == idCu ? new Color(255, 240, 200) : Color.WHITE);
+                b.setBackground(id == idCu ? UiTheme.WARM_BG : UiTheme.CARD);
                 b.setPreferredSize(new Dimension(56, 62));
                 b.addActionListener(e -> {
                     ketQua[0] = idNay;
@@ -134,7 +134,7 @@ public final class IconPicker {
 
         JScrollPane sc = ServerGuiUtils.cuon(luoi);
         sc.getVerticalScrollBar().setUnitIncrement(24);
-        sc.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
+        sc.setBorder(BorderFactory.createLineBorder(UiTheme.LINE));
 
         JPanel south = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 6));
         JButton huy = new JButton("Huỷ");

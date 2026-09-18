@@ -36,11 +36,11 @@ import nro.server.ServerManager;
  */
 public class AccountPanel extends JPanel {
 
-    private static final Color ACCENT = new Color(0, 120, 215);
-    private static final Color OK_GREEN = new Color(40, 160, 70);
-    private static final Color WARN_RED = new Color(200, 60, 60);
-    private static final Color GREY = new Color(120, 120, 120);
-    private static final Color DO_DAM = new Color(150, 30, 30);
+    private static final Color ACCENT = UiTheme.ACCENT;
+    private static final Color OK_GREEN = UiTheme.OK;
+    private static final Color WARN_RED = UiTheme.DANGER;
+    private static final Color GREY = UiTheme.TEXT_MUTED;
+    private static final Color DO_DAM = UiTheme.DANGER_STRONG;
 
     private final DefaultTableModel model = new DefaultTableModel(
             new Object[]{"ID", "Tên đăng nhập", "Mật khẩu", "Quyền", "Nhân vật",
@@ -65,7 +65,7 @@ public class AccountPanel extends JPanel {
 
     public AccountPanel() {
         setLayout(new BorderLayout(8, 8));
-        setBackground(Color.WHITE);
+        setBackground(UiTheme.CARD);
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
         JLabel title = new JLabel("Quản Lý Tài Khoản");
@@ -127,7 +127,7 @@ public class AccountPanel extends JPanel {
         act.add(button("Sửa tài khoản", ACCENT, e -> suaTaiKhoan()));
         act.add(button("Xoá tài khoản này", WARN_RED, e -> xoaMot()));
         act.add(button("Xoá HẾT tài khoản", DO_DAM, e -> xoaHet(false)));
-        act.add(button("Xoá hết, GIỮ Admin", new Color(190, 110, 40), e -> xoaHet(true)));
+        act.add(button("Xoá hết, GIỮ Admin", UiTheme.NUT_NAU, e -> xoaHet(true)));
         bot.add(act, BorderLayout.NORTH);
         lblStatus.setForeground(GREY);
         bot.add(lblStatus, BorderLayout.SOUTH);
@@ -513,6 +513,7 @@ public class AccountPanel extends JPanel {
         b.setFocusPainted(false);
         b.setFont(new Font("Segoe UI", Font.BOLD, 12));
         b.setBorder(new EmptyBorder(6, 14, 6, 14));
+        ServerGuiUtils.toNut(b, bg);
         b.addActionListener(a);
         return b;
     }

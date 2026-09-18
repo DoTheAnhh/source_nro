@@ -1,6 +1,6 @@
 package nro.ui;
 
-import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.FlatDarkLaf;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
@@ -31,10 +31,26 @@ public class ServerGuiUtils {
         return null;
     }
 
-    public static void setupTheme() {
+    private static boolean daDatGiaoDien;
+
+    /**
+     * Bật giao diện tối, nhấn cam, cho mọi cửa sổ của bảng điều khiển.
+     *
+     * <p>Gọi <b>trước</b> khi tạo cửa sổ đầu tiên: FlatLaf chỉ tự vẽ thanh tiêu
+     * đề (tối, cùng tông) cho những {@code JFrame} tạo ra sau khi Look and Feel
+     * đã đặt. Gọi lại lần nữa thì bỏ qua.</p>
+     */
+    public static synchronized void setupTheme() {
+        if (daDatGiaoDien) {
+            return;
+        }
+        daDatGiaoDien = true;
         try {
-            // Sử dụng FlatLaf cho giao diện phẳng hiện đại
-            UIManager.setLookAndFeel(new FlatLightLaf());
+            // Thanh tieu de do FlatLaf ve (Windows 10/11): cung tong toi voi noi
+            // dung thay vi thanh trang cua he dieu hanh.
+            System.setProperty("flatlaf.useWindowDecorations", "true");
+            System.setProperty("flatlaf.menuBarEmbedded", "true");
+            UIManager.setLookAndFeel(new FlatDarkLaf());
             // --- Phong chu ---
             // Segoe UI Variable la phong he thong cua Windows 11, net hon han
             // Dialog mac dinh cua Java o man hinh phan giai cao. Khong co thi
@@ -44,8 +60,31 @@ public class ServerGuiUtils {
                 UIManager.put("defaultFont", phong);
             }
 
+            // --- Nen ba bac ---
+            // Panel, o nhap, bang deu lay tu UiTheme de moi man cung mot tong.
+            UIManager.put("Panel.background", UiTheme.CARD);
+            UIManager.put("control", UiTheme.CARD);
+            UIManager.put("RootPane.background", UiTheme.CONTENT_BG);
+            UIManager.put("Viewport.background", UiTheme.CARD);
+            UIManager.put("ScrollPane.background", UiTheme.CARD);
+            UIManager.put("TextField.background", UiTheme.FIELD);
+            UIManager.put("FormattedTextField.background", UiTheme.FIELD);
+            UIManager.put("PasswordField.background", UiTheme.FIELD);
+            UIManager.put("TextArea.background", UiTheme.FIELD);
+            UIManager.put("TextPane.background", UiTheme.FIELD);
+            UIManager.put("EditorPane.background", UiTheme.FIELD);
+            UIManager.put("Spinner.background", UiTheme.FIELD);
+            UIManager.put("ComboBox.background", UiTheme.FIELD);
+            UIManager.put("ComboBox.buttonBackground", UiTheme.FIELD);
+            UIManager.put("ComboBox.popupBackground", UiTheme.CARD_ALT);
+            UIManager.put("TextField.inactiveBackground", UiTheme.FIELD_DISABLED);
+            UIManager.put("TextArea.inactiveBackground", UiTheme.FIELD_DISABLED);
+            UIManager.put("TextComponent.selectionBackground", UiTheme.SELECTION);
+            UIManager.put("TextComponent.selectionForeground", UiTheme.TEXT_ON_DARK);
+            UIManager.put("Label.foreground", UiTheme.TEXT);
+            UIManager.put("Label.disabledForeground", UiTheme.TEXT_FAINT);
+
             // --- Bo goc ---
-            // To hon ban truoc mot chut: 10 o nut cao 30 nhin gan nhu vuong.
             UIManager.put("Component.arc", 12);
             UIManager.put("Button.arc", 14);
             UIManager.put("TextComponent.arc", 12);
@@ -53,86 +92,117 @@ public class ServerGuiUtils {
             UIManager.put("ProgressBar.arc", 999);
 
             // --- Vien va vung nhan ---
-            // Vien mong lai va vung sang quanh o dang go hep lai: vien day lam
-            // cac o nhin nang ne, va bang nay co hang chuc o canh nhau.
+            // Vien mong va vung sang quanh o dang go hep: bang nay co hang chuc o
+            // canh nhau, vien day lam ca man nhin nang ne.
             UIManager.put("Component.focusWidth", 1);
             UIManager.put("Component.innerFocusWidth", 1);
             UIManager.put("Component.borderWidth", 1);
 
             // --- Nut ---
-            // Nut co chieu cao toi thieu va le rong hai ben. Truoc day nut om
-            // sat chu nen hang nut nhin chat cung.
-            // 72 chu khong phai 88: hang cong cu cua man Nguoi choi co san
-            // mot nut, hai o tich va mot o go — nut rong 88 la ca hang day ra
-            // khoi be ngang va de len tieu de.
+            // 72 chu khong phai 88: hang cong cu cua man Nguoi choi co san mot
+            // nut, hai o tich va mot o go — nut rong 88 la ca hang day ra khoi
+            // be ngang va de len tieu de.
             UIManager.put("Button.minimumWidth", 72);
             UIManager.put("Button.margin", new java.awt.Insets(6, 16, 6, 16));
+            UIManager.put("Button.background", UiTheme.CARD_ALT);
+            UIManager.put("Button.borderColor", UiTheme.LINE);
             UIManager.put("Button.hoverBorderColor", UiTheme.ACCENT);
+            UIManager.put("Button.default.background", UiTheme.ACCENT);
+            UIManager.put("Button.default.foreground", java.awt.Color.WHITE);
+            UIManager.put("Button.default.borderColor", UiTheme.ACCENT);
 
             // --- Thanh cuon ---
-            // Khong ve nut mui ten hai dau: chung chiem cho ma khong ai bam,
-            // va lam thanh cuon trong nang. Con lai la mot thanh tron mem.
-            UIManager.put("ScrollBar.width", 13);
+            // Khong ve nut mui ten hai dau: chung chiem cho ma khong ai bam.
+            UIManager.put("ScrollBar.width", 12);
             UIManager.put("ScrollBar.thumbArc", 999);
             UIManager.put("ScrollBar.trackArc", 999);
             UIManager.put("ScrollBar.thumbInsets", new java.awt.Insets(2, 2, 2, 2));
-            UIManager.put("ScrollBar.track", new java.awt.Color(0xF2, 0xF4, 0xF7));
-            UIManager.put("ScrollBar.thumb", new java.awt.Color(0xC9, 0xD0, 0xD9));
+            UIManager.put("ScrollBar.track", UiTheme.CARD);
+            UIManager.put("ScrollBar.thumb", new java.awt.Color(0x3A, 0x3F, 0x48));
             UIManager.put("ScrollBar.hoverThumbColor", UiTheme.ACCENT);
             UIManager.put("ScrollBar.showButtons", false);
 
             // --- The ---
-            // The cao hon va co nen khi tro chuot di qua, de biet cho nao bam
-            // duoc. Bo vien khung noi dung vi cua so da co khung ngoai roi.
-            UIManager.put("TabbedPane.tabHeight", 32);
-            UIManager.put("TabbedPane.tabInsets", new java.awt.Insets(4, 14, 4, 14));
-            UIManager.put("TabbedPane.selectedBackground", java.awt.Color.WHITE);
-            UIManager.put("TabbedPane.hoverColor", new java.awt.Color(0xF0, 0xF2, 0xF5));
+            UIManager.put("TabbedPane.tabHeight", 34);
+            UIManager.put("TabbedPane.tabInsets", new java.awt.Insets(4, 16, 4, 16));
+            UIManager.put("TabbedPane.background", UiTheme.CARD);
+            UIManager.put("TabbedPane.selectedBackground", UiTheme.CARD_ALT);
+            UIManager.put("TabbedPane.hoverColor", new java.awt.Color(0x28, 0x2B, 0x32));
+            UIManager.put("TabbedPane.foreground", UiTheme.TEXT_MUTED);
+            UIManager.put("TabbedPane.selectedForeground", UiTheme.TEXT_ON_DARK);
             UIManager.put("TabbedPane.contentSeparatorHeight", 1);
+            UIManager.put("TabbedPane.contentAreaColor", UiTheme.LINE);
             UIManager.put("TabbedPane.showTabSeparators", false);
+            UIManager.put("TabbedPane.underlineColor", UiTheme.ACCENT);
+            UIManager.put("TabbedPane.inactiveUnderlineColor", UiTheme.ACCENT_DIM);
+            UIManager.put("TabbedPane.tabSelectionHeight", 3);
+            UIManager.put("TabbedPane.focusColor", new java.awt.Color(0, 0, 0, 0));
 
-            // --- Hop thoai va chu goi y ---
-            UIManager.put("ToolTip.background", new java.awt.Color(0x2B, 0x31, 0x3B));
-            UIManager.put("ToolTip.foreground", java.awt.Color.WHITE);
+            // --- Hop thoai, chu goi y, khung ---
+            UIManager.put("ToolTip.background", new java.awt.Color(0x2A, 0x2E, 0x36));
+            UIManager.put("ToolTip.foreground", UiTheme.TEXT_ON_DARK);
             UIManager.put("OptionPane.showIcon", true);
+            UIManager.put("OptionPane.background", UiTheme.CARD);
             UIManager.put("SplitPane.dividerSize", 6);
+            UIManager.put("SplitPane.background", UiTheme.CONTENT_BG);
             UIManager.put("SplitPaneDivider.gripDotCount", 3);
-            UIManager.put("TitledBorder.titleColor", UiTheme.ACCENT);
+            UIManager.put("SplitPaneDivider.gripColor", UiTheme.TEXT_FAINT);
+            UIManager.put("TitledBorder.titleColor", UiTheme.ACCENT_TEXT);
+            UIManager.put("Separator.foreground", UiTheme.LINE);
+            UIManager.put("TitlePane.background", UiTheme.SIDEBAR_HEADER);
+            UIManager.put("TitlePane.inactiveBackground", UiTheme.SIDEBAR_HEADER);
+            UIManager.put("TitlePane.foreground", UiTheme.TEXT_ON_DARK);
+            UIManager.put("TitlePane.inactiveForeground", UiTheme.TEXT_MUTED_DARK);
+            UIManager.put("TitlePane.embeddedForeground", UiTheme.TEXT_MUTED_DARK);
 
             // --- Mau nhan ---
             // FlatLaf mac dinh nhan mau xanh. Doi sang cam cua UiTheme de moi
             // thu duoc chon (dong bang, o dang go, o tich) cung mot mau voi
-            // vach chon o thanh ben - khong thi hai nua cua so nhan hai mau
-            // khac nhau.
-            UIManager.put("Component.focusColor", UiTheme.ACCENT);
+            // vach chon o thanh ben.
+            UIManager.put("Component.accentColor", UiTheme.ACCENT);
+            UIManager.put("Component.focusColor", UiTheme.ACCENT_DIM);
             UIManager.put("Component.focusedBorderColor", UiTheme.ACCENT);
             UIManager.put("Component.borderColor", UiTheme.LINE);
-            UIManager.put("Button.default.borderColor", UiTheme.ACCENT);
+            UIManager.put("Component.disabledBorderColor", UiTheme.LINE_SOFT);
             UIManager.put("CheckBox.icon.checkmarkColor", java.awt.Color.WHITE);
+            UIManager.put("CheckBox.icon.background", UiTheme.FIELD);
+            UIManager.put("CheckBox.icon.borderColor", UiTheme.LINE);
             UIManager.put("CheckBox.icon.selectedBackground", UiTheme.ACCENT);
             UIManager.put("CheckBox.icon.selectedBorderColor", UiTheme.ACCENT);
             UIManager.put("ProgressBar.foreground", UiTheme.ACCENT);
-            UIManager.put("TabbedPane.underlineColor", UiTheme.ACCENT);
-            UIManager.put("TabbedPane.focusColor", new java.awt.Color(0, 0, 0, 0));
+            UIManager.put("ProgressBar.background", UiTheme.FIELD);
+            UIManager.put("Slider.thumbColor", UiTheme.ACCENT);
+            UIManager.put("Slider.trackValueColor", UiTheme.ACCENT);
 
             // --- Bang ---
             // Ke soc chan chim va duong ke ngang: bang cua panel nay rong toi
             // 15 cot, khong co soc thi mat de bam nham dong khi doc ngang.
+            UIManager.put("Table.background", UiTheme.CARD);
+            UIManager.put("Table.foreground", UiTheme.TEXT);
             UIManager.put("Table.showHorizontalLines", true);
-            UIManager.put("Table.gridColor", UiTheme.LINE);
-            UIManager.put("Table.alternateRowColor", new java.awt.Color(0xFA, 0xFB, 0xFC));
-            UIManager.put("Table.selectionBackground", new java.awt.Color(0xFF, 0xEC, 0xD9));
-            UIManager.put("Table.selectionForeground", UiTheme.TEXT);
-            UIManager.put("Table.rowHeight", 26);
-            UIManager.put("TableHeader.height", 30);
-            UIManager.put("TableHeader.background", new java.awt.Color(0xF7, 0xF8, 0xFA));
+            UIManager.put("Table.gridColor", UiTheme.LINE_SOFT);
+            UIManager.put("Table.alternateRowColor", UiTheme.CARD_ALT);
+            UIManager.put("Table.selectionBackground", UiTheme.SELECTION);
+            UIManager.put("Table.selectionForeground", UiTheme.TEXT_ON_DARK);
+            UIManager.put("Table.selectionInactiveBackground", new java.awt.Color(0x38, 0x2A, 0x1B));
+            UIManager.put("Table.selectionInactiveForeground", UiTheme.TEXT);
+            UIManager.put("Table.rowHeight", 28);
+            UIManager.put("TableHeader.height", 32);
+            UIManager.put("TableHeader.background", new java.awt.Color(0x19, 0x1B, 0x20));
+            UIManager.put("TableHeader.foreground", UiTheme.TEXT_MUTED);
             UIManager.put("TableHeader.separatorColor", UiTheme.LINE);
-            UIManager.put("TableHeader.bottomSeparatorColor", UiTheme.LINE);
+            UIManager.put("TableHeader.bottomSeparatorColor", UiTheme.ACCENT_DIM);
 
             // --- Danh sach va menu ---
-            UIManager.put("List.selectionBackground", new java.awt.Color(0xFF, 0xEC, 0xD9));
-            UIManager.put("List.selectionForeground", UiTheme.TEXT);
+            UIManager.put("List.background", UiTheme.CARD);
+            UIManager.put("List.selectionBackground", UiTheme.SELECTION);
+            UIManager.put("List.selectionForeground", UiTheme.TEXT_ON_DARK);
+            UIManager.put("PopupMenu.background", UiTheme.CARD_ALT);
             UIManager.put("PopupMenu.borderColor", UiTheme.LINE);
+            UIManager.put("MenuItem.selectionBackground", UiTheme.SELECTION);
+            UIManager.put("Menu.selectionBackground", UiTheme.SELECTION);
+            UIManager.put("Tree.background", UiTheme.CARD);
+            UIManager.put("Tree.selectionBackground", UiTheme.SELECTION);
         } catch (Exception e) {
             System.err.println("Failed to initialize LaF: " + e.getMessage());
         }
@@ -162,9 +232,9 @@ public class ServerGuiUtils {
 
     public static TitledBorder createSectionBorder(String title) {
         return BorderFactory.createTitledBorder(
-            new LineBorder(new Color(220, 220, 220)), title,
+            new LineBorder(UiTheme.LINE, 1, true), title,
             TitledBorder.LEFT, TitledBorder.TOP,
-            new Font("Segoe UI", Font.BOLD, 12), Color.DARK_GRAY
+            new Font("Segoe UI", Font.BOLD, 12), UiTheme.ACCENT_TEXT
         );
     }
 
@@ -174,8 +244,55 @@ public class ServerGuiUtils {
         b.setForeground(fg);
         b.setFocusPainted(false);
         b.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        b.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        toNut(b, bg);
         return b;
+    }
+
+    /**
+     * Làm một nút lệnh có màu cho hợp nền tối: bo góc, không viền, chữ trắng.
+     *
+     * <p>Các hàm {@code button(...)} của từng panel gắn {@code EmptyBorder} để
+     * nới lề — viền ấy thay mất viền của FlatLaf nên nút vẽ thành khối vuông
+     * vức. Ở đây trả lại viền FlatLaf rồi nới lề bằng {@code margin}.</p>
+     *
+     * <p>Màu truyền vào được quy về tông nút (xem {@link #nenNut}): các panel
+     * dùng chung một hằng cho chữ xám lẫn nút xám, mà xám sáng thì hợp chữ
+     * nhưng làm nền cho chữ trắng thì không đọc nổi.</p>
+     */
+    public static void toNut(JButton b, Color nen) {
+        Color c = nenNut(nen);
+        b.setBackground(c);
+        b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
+        b.setBorder(UIManager.getBorder("Button.border"));
+        b.setMargin(new Insets(6, 14, 6, 14));
+        String hex = String.format("#%02x%02x%02x", c.getRed(), c.getGreen(), c.getBlue());
+        b.putClientProperty("FlatLaf.style", "arc: 12; borderColor: " + hex
+                + "; focusedBorderColor: " + hex + "; hoverBorderColor: " + hex);
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    }
+
+    /** Màu nền nút cho nền tối, từ màu mà panel truyền vào. */
+    public static Color nenNut(Color c) {
+        if (c == null) {
+            return UiTheme.NUT_TAT;
+        }
+        if (c.equals(UiTheme.TEXT_MUTED) || c.equals(UiTheme.TEXT_FAINT)) {
+            return new Color(0x47, 0x4D, 0x57);
+        }
+        if (c.equals(UiTheme.OK)) {
+            return UiTheme.NUT_XANH_LA;
+        }
+        if (c.equals(UiTheme.DANGER)) {
+            return new Color(0xC6, 0x42, 0x42);
+        }
+        if (c.equals(UiTheme.ACCENT)) {
+            return new Color(0xE3, 0x7B, 0x12);
+        }
+        if (c.equals(UiTheme.WARN)) {
+            return UiTheme.NUT_NAU;
+        }
+        return c;
     }
 
     public static JLabel createStyledLabel(String text, int size, boolean bold) {

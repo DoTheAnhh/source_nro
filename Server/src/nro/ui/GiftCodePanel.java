@@ -42,16 +42,16 @@ import nro.repository.dao.GiftCodeDAO;
  */
 public class GiftCodePanel extends JPanel {
 
-    private static final Color ACCENT = new Color(0, 120, 215);
-    private static final Color OK_GREEN = new Color(40, 160, 70);
-    private static final Color WARN_RED = new Color(200, 60, 60);
-    private static final Color GREY = new Color(120, 120, 120);
+    private static final Color ACCENT = UiTheme.ACCENT;
+    private static final Color OK_GREEN = UiTheme.OK;
+    private static final Color WARN_RED = UiTheme.DANGER;
+    private static final Color GREY = UiTheme.TEXT_MUTED;
 
     private final JLabel lblStatus = new JLabel(" ");
 
     public GiftCodePanel() {
         setLayout(new BorderLayout(8, 8));
-        setBackground(Color.WHITE);
+        setBackground(UiTheme.CARD);
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
         JLabel title = new JLabel("Quản Lý GiftCode");
@@ -108,7 +108,7 @@ public class GiftCodePanel extends JPanel {
         act.add(button("Sửa mã", ACCENT, e -> giftDialog(false)));
         act.add(button("Xoá mã", WARN_RED, e -> giftDelete()));
         act.add(button("Cho dùng lại", GREY, e -> giftResetUsers()));
-        act.add(button("Xoá HẾT mã", new Color(150, 30, 30), e -> giftDeleteAll()));
+        act.add(button("Xoá HẾT mã", UiTheme.DANGER_STRONG, e -> giftDeleteAll()));
         act.add(button("Tải lại", GREY, e -> loadGift()));
         JLabel tip = new JLabel("  (nháy đúp vào một dòng để sửa)");
         tip.setForeground(GREY);
@@ -273,7 +273,7 @@ public class GiftCodePanel extends JPanel {
         c.gridx = 0;
         c.gridy = 5;
         c.gridwidth = 2;
-        JLabel hintTime = new JLabel("<html><span style='color:#777'>"
+        JLabel hintTime = new JLabel("<html><span style='color:#9aa1ad'>"
                 + "Thời gian dạng <code>yyyy-MM-dd HH:mm:ss</code>. "
                 + "<b>Tổng số lượt</b> là của cả máy chủ; <b>mỗi người nhập tối đa</b> "
                 + "là của riêng từng nhân vật (1 = như cũ).<br>"
@@ -776,12 +776,13 @@ public class GiftCodePanel extends JPanel {
         b.setFocusPainted(false);
         b.setFont(new Font("Segoe UI", Font.BOLD, 12));
         b.setBorder(new EmptyBorder(6, 14, 6, 14));
+        ServerGuiUtils.toNut(b, bg);
         b.addActionListener(a);
         return b;
     }
 
     private static javax.swing.border.Border titled(String t) {
         return BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(215, 215, 215)), t);
+                BorderFactory.createLineBorder(UiTheme.LINE), t);
     }
 }

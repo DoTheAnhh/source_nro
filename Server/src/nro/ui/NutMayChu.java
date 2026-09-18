@@ -58,7 +58,7 @@ public class NutMayChu extends JPanel {
 
         JButton nutDong = new JButton("Đóng máy chủ");
         trangThaiNut(nutDong);
-        nutDong.setBackground(new Color(70, 74, 82));
+        nutDong.setBackground(UiTheme.NUT_TAT);
         nutDong.addActionListener(e -> dongMayChu());
         giua.add(nutDong);
         add(giua, BorderLayout.CENTER);

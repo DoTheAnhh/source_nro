@@ -207,7 +207,7 @@ public final class OChonTacDung extends JButton {
         t.getColumnModel().getColumn(2).setPreferredWidth(330);
         t.getColumnModel().getColumn(3).setPreferredWidth(150);
         final JLabel dem = new JLabel();
-        dem.setForeground(new java.awt.Color(120, 120, 120));
+        dem.setForeground(UiTheme.TEXT_MUTED);
 
         final Runnable loc = () -> {
             String nhom = lNhom.getSelectedIndex() <= 0 ? null : lNhom.getSelectedValue();
@@ -316,7 +316,7 @@ public final class OChonTacDung extends JButton {
         nut.add(bHuy);
         nut.add(bOk);
 
-        JLabel goiY = new JLabel("<html><span style='color:#777'>Nháy đúp hoặc Enter để chọn. "
+        JLabel goiY = new JLabel("<html><span style='color:#9aa1ad'>Nháy đúp hoặc Enter để chọn. "
                 + "Nhóm <b>Hiệu ứng phụ</b> có thêm ô <b>thời gian (giây)</b> và <b>tỉ lệ</b> "
                 + "ngay trên cùng dòng.</span></html>");
         goiY.setBorder(new EmptyBorder(0, 8, 0, 8));

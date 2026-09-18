@@ -717,7 +717,7 @@ public final class OptionPicker {
             }
         });
         final javax.swing.JLabel dem = new javax.swing.JLabel();
-        dem.setForeground(new java.awt.Color(120, 120, 120));
+        dem.setForeground(UiTheme.TEXT_MUTED);
         Runnable timKiem = () -> {
             String key = q.getText().trim().toLowerCase();
             m.setRowCount(0);
@@ -837,7 +837,7 @@ public final class OptionPicker {
         javax.swing.JLabel goiY = new javax.swing.JLabel(
                 "  Nháy đúp để chọn một dòng — giữ Ctrl hoặc Shift để chọn nhiều "
                 + "rồi bấm Chọn.");
-        goiY.setForeground(new java.awt.Color(120, 120, 120));
+        goiY.setForeground(UiTheme.TEXT_MUTED);
         javax.swing.JPanel nam = new javax.swing.JPanel(new java.awt.BorderLayout(6, 0));
         nam.add(goiY, java.awt.BorderLayout.CENTER);
         javax.swing.JPanel nut = new javax.swing.JPanel(
@@ -929,7 +929,7 @@ public final class OptionPicker {
         t.getColumnModel().getColumn(1).setPreferredWidth(430);
 
         final javax.swing.JLabel dem = new javax.swing.JLabel();
-        dem.setForeground(new java.awt.Color(120, 120, 120));
+        dem.setForeground(UiTheme.TEXT_MUTED);
         final Runnable loc = () -> {
             String key = q.getText().trim().toLowerCase();
             m.setRowCount(0);
@@ -1079,7 +1079,7 @@ public final class OptionPicker {
 
         javax.swing.JPanel giaiThich = new javax.swing.JPanel(new java.awt.BorderLayout());
         giaiThich.add(chiDanhDau, java.awt.BorderLayout.WEST);
-        javax.swing.JLabel note = new javax.swing.JLabel("<html><span style='color:#777'>"
+        javax.swing.JLabel note = new javax.swing.JLabel("<html><span style='color:#9aa1ad'>"
                 + "Đây là chỉ số <b>nhận diện</b> set — chỉ để biết món nào thuộc set. "
                 + "<b>Tác dụng</b> của set khai riêng ở bảng chỉ số (chọn loại + điền số).<br>"
                 + "Chỉ số kiểu <code>$(5 món +100% HP)</code> chỉ là <i>dòng chữ mô tả</i> "

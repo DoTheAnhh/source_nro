@@ -350,6 +350,7 @@ public class ServerManager {
 
         if (!headless) {
             Logger.system("SERVER", "Khởi động ServerManagerUI");
+            nro.ui.ServerGuiUtils.setupTheme();
             new nro.ui.ServerManagerUI().setVisible(true);
         } else {
             Logger.system("SERVER", "Chế độ headless — bỏ qua giao diện Swing");

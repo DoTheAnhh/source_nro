@@ -52,10 +52,10 @@ import nro.repository.dao.HeSoTnsmDAO;
  */
 public class SystemPanel extends JPanel {
 
-    private static final Color ACCENT = new Color(0, 120, 215);
-    private static final Color OK_GREEN = new Color(40, 160, 70);
-    private static final Color WARN_RED = new Color(200, 60, 60);
-    private static final Color GREY = new Color(120, 120, 120);
+    private static final Color ACCENT = UiTheme.ACCENT;
+    private static final Color OK_GREEN = UiTheme.OK;
+    private static final Color WARN_RED = UiTheme.DANGER;
+    private static final Color GREY = UiTheme.TEXT_MUTED;
 
     private final JLabel lblStatus = new JLabel(" ");
 
@@ -64,7 +64,7 @@ public class SystemPanel extends JPanel {
 
     public SystemPanel() {
         setLayout(new BorderLayout(8, 8));
-        setBackground(Color.WHITE);
+        setBackground(UiTheme.CARD);
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
         JLabel title = new JLabel("Cấu Hình Hệ Thống");
@@ -638,7 +638,7 @@ public class SystemPanel extends JPanel {
         nut.setOpaque(false);
         nut.add(button("Thêm thông báo", OK_GREEN, e -> suaThongBao(true)));
         nut.add(button("Sửa", ACCENT, e -> suaThongBao(false)));
-        nut.add(button("Bật / tắt", new Color(120, 90, 160), e -> batTatThongBao()));
+        nut.add(button("Bật / tắt", UiTheme.NUT_TIM, e -> batTatThongBao()));
         nut.add(button("Lên", GREY, e -> doiChoThongBao(-1)));
         nut.add(button("Xuống", GREY, e -> doiChoThongBao(1)));
         nut.add(button("Xoá", WARN_RED, e -> xoaThongBao()));
@@ -1027,9 +1027,9 @@ public class SystemPanel extends JPanel {
      */
     private void themTheQuyUoc(JPanel cot, String ten, java.util.List<String> khoa) {
         JPanel the = new JPanel(new BorderLayout(0, 6));
-        the.setBackground(Color.WHITE);
+        the.setBackground(UiTheme.CARD);
         the.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(222, 227, 234), 1, true),
+                BorderFactory.createLineBorder(UiTheme.LINE, 1, true),
                 new EmptyBorder(10, 14, 12, 14)));
         the.setAlignmentX(LEFT_ALIGNMENT);
 
@@ -1037,7 +1037,7 @@ public class SystemPanel extends JPanel {
         tieuDe.setFont(new Font("Segoe UI", Font.BOLD, 14));
         tieuDe.setForeground(ACCENT);
         tieuDe.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(236, 239, 243)),
+                BorderFactory.createMatteBorder(0, 0, 1, 0, UiTheme.LINE_SOFT),
                 new EmptyBorder(0, 0, 6, 0)));
         the.add(tieuDe, BorderLayout.NORTH);
 
@@ -2258,7 +2258,7 @@ public class SystemPanel extends JPanel {
         c.gridx = 0;
         c.gridy = 17;
         c.gridwidth = 2;
-        JLabel hint = new JLabel("<html><span style='color:#777'>"
+        JLabel hint = new JLabel("<html><span style='color:#9aa1ad'>"
                 + "Tỉ lệ <code>1</code> nghĩa là <b>1%</b> — trung bình 100 lần boss chết "
                 + "thì rơi một lần. Cần hiếm hơn thì gõ số thập phân: <code>0.05</code>.<br>"
                 + "<b>Đồ Thần Linh ngẫu nhiên</b>: mỗi lần rơi bốc lại trong 13 món "
@@ -2457,7 +2457,7 @@ public class SystemPanel extends JPanel {
         c.gridx = 0;
         c.gridy = 2;
         c.gridwidth = 2;
-        form.add(new JLabel("<html><span style='color:#777'>"
+        form.add(new JLabel("<html><span style='color:#9aa1ad'>"
                 + "Tạo thêm <b>bản sao</b> của loại boss đã có — hữu ích khi muốn cùng "
                 + "một con boss xuất hiện ở nhiều khu.<br>"
                 + "Một <i>loại</i> boss mới cần viết lớp Java, không tạo từ panel được.<br>"
@@ -2633,7 +2633,7 @@ public class SystemPanel extends JPanel {
         c.gridx = 0;
         c.gridy = y++;
         c.gridwidth = 2;
-        form.add(new JLabel("<html><span style='color:#777'>"
+        form.add(new JLabel("<html><span style='color:#9aa1ad'>"
                 + "<b>Hệ số</b> nhận số thập phân: <code>0.5</code> là còn một nửa, "
                 + "<code>10</code> là gấp mười. Để <code>1</code> là y như gốc.<br><br>"
                 + "Đây là hệ số <b>chung cho mọi bản đồ</b>, và nó <b>nhân lên trên</b> "
@@ -2653,7 +2653,7 @@ public class SystemPanel extends JPanel {
         nam.setOpaque(false);
         nam.add(button("Lưu", OK_GREEN, e -> luuTiLe()));
         nam.add(button("Tải lại", GREY, e -> napTiLe()));
-        nam.add(button("Về mặc định", new Color(120, 90, 160), e -> macDinhTiLe()));
+        nam.add(button("Về mặc định", UiTheme.NUT_TIM, e -> macDinhTiLe()));
 
         wrap.add(form, BorderLayout.NORTH);
         wrap.add(nam, BorderLayout.CENTER);
@@ -2727,7 +2727,7 @@ public class SystemPanel extends JPanel {
         nut.add(button("Tải lại", GREY, e -> napBacGiam()));
         nut.add(button("Thêm bậc", ACCENT, e -> themBacGiam()));
         nut.add(button("Xoá bậc", WARN_RED, e -> xoaBacGiam()));
-        nut.add(button("Về mặc định", new Color(120, 90, 160), e -> {
+        nut.add(button("Về mặc định", UiTheme.NUT_TIM, e -> {
             if (JOptionPane.showConfirmDialog(this,
                     "Xoá sạch bảng rồi gieo lại mười một bậc gốc?",
                     "Về mặc định", JOptionPane.YES_NO_OPTION,
@@ -2917,7 +2917,7 @@ public class SystemPanel extends JPanel {
      */
     private int oQuyDoi(JPanel form, GridBagConstraints c, int y, String khoa) {
         JLabel l = new JLabel();
-        l.setForeground(new Color(120, 90, 160));
+        l.setForeground(UiTheme.NUT_TIM);
         nhanQuyDoi.put(khoa, l);
         JTextField f = oTiLe.get(khoa);
         if (f != null) {
@@ -3047,7 +3047,7 @@ public class SystemPanel extends JPanel {
         JButton b = nutBat.get(khoa);
         if (b != null) {
             b.setText(bat ? "BẬT" : "TẮT");
-            b.setBackground(bat ? OK_GREEN : new Color(150, 150, 150));
+            ServerGuiUtils.toNut(b, bat ? OK_GREEN : UiTheme.NUT_TAT);
         }
     }
 
@@ -3364,11 +3364,11 @@ public class SystemPanel extends JPanel {
         locBot.setOpaque(false);
         locBot.add(button("+ Thêm set mới", OK_GREEN, e -> setDinhNghiaDialog(true)));
         locBot.add(button("Bật", ACCENT, e -> datBatSet(true)));
-        locBot.add(button("Tắt", new Color(150, 110, 40), e -> datBatSet(false)));
+        locBot.add(button("Tắt", UiTheme.NUT_NAU, e -> datBatSet(false)));
         locBot.add(button("Xoá set", WARN_RED, e -> setDinhNghiaXoa()));
-        locBot.add(button("Áp kiểu dòng mô tả", new Color(120, 90, 160),
+        locBot.add(button("Áp kiểu dòng mô tả", UiTheme.NUT_TIM,
                 e -> apKieuDongMoTa()));
-        locBot.add(button("Xuất Excel", new Color(30, 120, 90),
+        locBot.add(button("Xuất Excel", UiTheme.NUT_XANH_LA,
                 e -> setXuatExcel()));
 
         JPanel trai = new JPanel(new BorderLayout(0, 4));
@@ -3409,13 +3409,13 @@ public class SystemPanel extends JPanel {
         JPanel duoiTen = new JPanel(new BorderLayout(0, 2));
         duoiTen.setOpaque(false);
         duoiTen.add(lblTacDung, BorderLayout.NORTH);
-        JLabel ghiChuSet = new JLabel("<html><span style='color:#777'>"
+        JLabel ghiChuSet = new JLabel("<html><span style='color:#9aa1ad'>"
                 + "Hệ set viết cứng cũ đã bỏ hẳn — mọi hiệu ứng set trong game "
                 + "lấy từ đúng bảng này.</span></html>");
         duoiTen.add(ghiChuSet, BorderLayout.SOUTH);
         phaiTop.add(duoiTen, BorderLayout.SOUTH);
 
-        JLabel hint = new JLabel("<html><span style='color:#777'>"
+        JLabel hint = new JLabel("<html><span style='color:#9aa1ad'>"
                 + "Dòng <b>mã nguồn</b> là hiệu ứng viết sẵn — chỉ xem. Muốn đổi thì "
                 + "bấm <b>Chép chỉ số gốc xuống</b> rồi sửa số.<br>"
                 + "Ô <b>Thay thế hẳn</b> tắt: dòng cấu hình <i>cộng thêm</i> vào mã nguồn. "
@@ -3501,7 +3501,7 @@ public class SystemPanel extends JPanel {
         lblGoc.setText("  " + nro.repository.dao.SetBonusDAO.tenSet(key)
                 + "   —   " + nro.repository.dao.SetBonusDAO.hanhTinh(key)
                 + "   —   " + n + " dòng chỉ số");
-        lblTacDung.setText("<html><span style='color:#555'>Mặc đủ set thì được: <b>"
+        lblTacDung.setText("<html><span style='color:#9aa1ad'>Mặc đủ set thì được: <b>"
                 + tomTatTacDung(key) + "</b></span></html>");
         note(GREY, "Set " + nro.repository.dao.SetBonusDAO.tenSet(key)
                 + ": " + n + " dòng chỉ số.");
@@ -3547,7 +3547,7 @@ public class SystemPanel extends JPanel {
             oChon.setSelectedIndex(OChonTacDung.timHoacThem(ds, cu.loai, cu.thamSo) + 1);
         }
         final JLabel lDonVi = new JLabel(" ");
-        lDonVi.setForeground(new Color(120, 120, 120));
+        lDonVi.setForeground(UiTheme.TEXT_MUTED);
         Runnable capNhat = () -> {
             OChonTacDung.LuaChon x = oChon.getLuaChon();
             nro.repository.dao.LoaiChiSo.Loai l = x == null ? null
@@ -3591,7 +3591,7 @@ public class SystemPanel extends JPanel {
         c.gridx = 0;
         c.gridy = 9;
         c.gridwidth = 2;
-        form.add(new JLabel("<html><span style='color:#777'>"
+        form.add(new JLabel("<html><span style='color:#9aa1ad'>"
                 + "Bấm ô <b>Tác dụng</b> để chọn theo nhóm hoặc gõ tìm (không cần dấu).<br>"
                 + "Hiệu ứng phụ (thiêu đốt, làm chậm, gây choáng…) khai trọn trong một dòng: "
                 + "giá trị + thời gian + tỉ lệ.<br>"
@@ -3773,7 +3773,7 @@ public class SystemPanel extends JPanel {
         }
         JTextField fNhanDien = new JTextField(24);
         fNhanDien.setEditable(false);
-        fNhanDien.setBackground(new Color(245, 245, 245));
+        fNhanDien.setBackground(UiTheme.FIELD_DISABLED);
         Runnable veNhanDien = () -> fNhanDien.setText(idNhanDien[0] < 0
                 ? "(chưa chọn)"
                 : idNhanDien[0] + " — " + OptionPicker.tenChiSo(idNhanDien[0]));
@@ -3934,7 +3934,7 @@ public class SystemPanel extends JPanel {
             g.gridy = 0;
             JLabel h = new JLabel(dauCot[i]);
             h.setFont(new Font("Segoe UI", Font.BOLD, 11));
-            h.setForeground(new Color(120, 120, 120));
+            h.setForeground(UiTheme.TEXT_MUTED);
             bang.add(h, g);
         }
         int hang = 1;
@@ -4030,7 +4030,7 @@ public class SystemPanel extends JPanel {
         c.gridx = 0;
         c.gridy = y;
         c.gridwidth = 2;
-        form.add(new JLabel("<html><span style='color:#777'>"
+        form.add(new JLabel("<html><span style='color:#9aa1ad'>"
                 + "<b>Dòng chữ in trên món đồ</b>: chỉ cần gõ <i>nội dung</i>, phần "
                 + "\"2 món:\" panel tự thêm — không thì bốn dòng xếp cạnh nhau người chơi "
                 + "không biết dòng nào ứng với mấy món. Để trống thì không in mốc đó. "
@@ -5011,7 +5011,7 @@ public class SystemPanel extends JPanel {
         c.gridy = 10;
         form.add(nutCap, c);
         c.gridy = 11;
-        form.add(new JLabel("<html><span style='color:#777'>"
+        form.add(new JLabel("<html><span style='color:#9aa1ad'>"
                 + "<b>Cách tốn KI</b> quyết định cột <b>KI dùng</b> nghĩa là gì: "
                 + "số KI cố định, hay phần trăm KI tối đa.<br>"
                 + "<b>Sức mạnh yêu cầu</b> là mốc sức mạnh để học được cấp đó. "
@@ -5185,7 +5185,7 @@ public class SystemPanel extends JPanel {
         c.gridx = 0;
         c.gridy = 12;
         c.gridwidth = 2;
-        form.add(new JLabel("<html><span style='color:#777'>"
+        form.add(new JLabel("<html><span style='color:#9aa1ad'>"
                 + "Hai tham số là <b>khoảng</b> — máy chủ bốc ngẫu nhiên trong "
                 + "khoảng đó khi tạo nội tại cho người chơi.<br>"
                 + "Chọn hành tinh <b>3 — Tất cả</b> thì nội tại vào chung cả ba "
@@ -5541,7 +5541,7 @@ public class SystemPanel extends JPanel {
         nut.add(button("Xoá danh hiệu", WARN_RED, e -> xoaDanhHieu()));
         nut.add(button("Cấp cho nhân vật…", OK_GREEN, e -> capDanhHieuDialog()));
         nut.add(button("Thu hồi của nhân vật…", WARN_RED, e -> thuHoiDanhHieuDialog()));
-        nut.add(button("Cách nhận…", new Color(120, 90, 160), e -> cachNhanDialog()));
+        nut.add(button("Cách nhận…", UiTheme.NUT_TIM, e -> cachNhanDialog()));
         nut.add(button("Tải lại", GREY, e -> napBangDanhHieu()));
 
         root.add(nhan("Danh hiệu — cột \"Chỉ số\" là các dòng cộng thêm khi đeo. "
@@ -6773,12 +6773,12 @@ public class SystemPanel extends JPanel {
         // tu bang nay, danh sach viet cung trong ma da bi bo han.
         nut.add(button("Sửa dòng đang chọn", ACCENT, e -> suaVongQuayDialog(false)));
         nut.add(button("Thêm dòng quà", OK_GREEN, e -> suaVongQuayDialog(true)));
-        nut.add(button("Bật các dòng đã chọn", new Color(90, 140, 90),
+        nut.add(button("Bật các dòng đã chọn", UiTheme.NUT_XANH_LA,
                 e -> batTatVongQuay(true)));
-        nut.add(button("Tắt các dòng đã chọn", new Color(150, 120, 60),
+        nut.add(button("Tắt các dòng đã chọn", UiTheme.NUT_NAU,
                 e -> batTatVongQuay(false)));
         nut.add(button("Xoá các dòng đã chọn", WARN_RED, e -> xoaDongVongQuay()));
-        nut.add(button("Tách mỗi món một dòng", new Color(70, 120, 150),
+        nut.add(button("Tách mỗi món một dòng", UiTheme.NUT_XANH,
                 e -> tachTungMonVongQuay()));
         nut.add(button("XOÁ TOÀN BỘ QUÀ", WARN_RED, e -> xoaTatCaVongQuay()));
         nut.add(button("Tải lại", GREY, e -> napBangVongQuay()));
@@ -7537,7 +7537,7 @@ public class SystemPanel extends JPanel {
         nut.setOpaque(false);
         nut.add(button("Lưu các dòng đã sửa", OK_GREEN, e -> luuBangTop()));
         nut.add(button("Tải lại", GREY, e -> napBangTop()));
-        nut.add(button("Xoá kỷ lục dòng đang chọn", new Color(120, 90, 160),
+        nut.add(button("Xoá kỷ lục dòng đang chọn", UiTheme.NUT_TIM,
                 e -> xoaMotDongTop()));
         nut.add(button("XOÁ TOÀN BỘ BẢNG", WARN_RED, e -> xoaToanBoTop()));
 
@@ -7721,7 +7721,7 @@ public class SystemPanel extends JPanel {
         nut.setOpaque(false);
         nut.add(button("Lưu các dòng đã sửa", OK_GREEN, e -> luuBangWhis()));
         nut.add(button("Tải lại", GREY, e -> napBangWhis()));
-        nut.add(button("Xoá kỷ lục dòng đang chọn", new Color(120, 90, 160),
+        nut.add(button("Xoá kỷ lục dòng đang chọn", UiTheme.NUT_TIM,
                 e -> xoaMotDongWhis()));
         nut.add(button("XOÁ TOÀN BỘ BẢNG", WARN_RED, e -> xoaToanBoWhis()));
 
@@ -7973,10 +7973,10 @@ public class SystemPanel extends JPanel {
         nut.add(button("Lưu nhiệm vụ đang chọn", OK_GREEN, e -> luuNhiemVuDangChon()));
         nut.add(button("Tải lại", GREY, e -> napBangNhiemVuChinh()));
         nut.add(button("Thêm nhiệm vụ", ACCENT, e -> themNhiemVu()));
-        nut.add(button("Thêm bước vào cuối", new Color(120, 90, 160),
+        nut.add(button("Thêm bước vào cuối", UiTheme.NUT_TIM,
                 e -> themBuocCuoi()));
-        nut.add(button("▲ Lên", new Color(90, 120, 170), e -> doiChoBuoc(-1)));
-        nut.add(button("▼ Xuống", new Color(90, 120, 170), e -> doiChoBuoc(1)));
+        nut.add(button("▲ Lên", UiTheme.NUT_XANH, e -> doiChoBuoc(-1)));
+        nut.add(button("▼ Xuống", UiTheme.NUT_XANH, e -> doiChoBuoc(1)));
         nut.add(button("Xoá bước đang chọn", WARN_RED, e -> xoaBuocDangChon()));
 
         root.add(nhan("Nhiệm vụ chính tuyến: mỗi nhiệm vụ là một dãy <b>bước</b> "
@@ -8287,7 +8287,7 @@ public class SystemPanel extends JPanel {
         nut.setOpaque(false);
         nut.add(button("Lưu bảng", OK_GREEN, e -> luuBangNoiTai()));
         nut.add(button("Tải lại", GREY, e -> napBangNoiTai()));
-        nut.add(button("Sửa dòng đang chọn", new Color(90, 120, 170), e -> suaNoiTaiDialog()));
+        nut.add(button("Sửa dòng đang chọn", UiTheme.NUT_XANH, e -> suaNoiTaiDialog()));
         nut.add(button("Thêm nội tại", ACCENT, e -> themDongNoiTai()));
         nut.add(button("Xoá dòng đang chọn", WARN_RED, e -> xoaDongNoiTai()));
 
@@ -8638,7 +8638,7 @@ public class SystemPanel extends JPanel {
         nut.setOpaque(false);
         nut.add(button("Lưu bảng", OK_GREEN, e -> luuBangSao()));
         nut.add(button("Tải lại", GREY, e -> napBangSao()));
-        nut.add(button("Về mặc định", new Color(120, 90, 160), e -> {
+        nut.add(button("Về mặc định", UiTheme.NUT_TIM, e -> {
             String loi = nro.repository.dao.TiLeSaoDAO.datLaiMacDinh();
             napBangSao();
             note(loi == null ? OK_GREEN : WARN_RED,
@@ -8742,7 +8742,7 @@ public class SystemPanel extends JPanel {
         nut.setOpaque(false);
         nut.add(button("Lưu bảng", OK_GREEN, e -> luuBangKichHoat()));
         nut.add(button("Tải lại", GREY, e -> napBangKichHoat()));
-        nut.add(button("Về mặc định", new Color(120, 90, 160), e -> {
+        nut.add(button("Về mặc định", UiTheme.NUT_TIM, e -> {
             String loi = nro.repository.dao.TiLeKichHoatDAO.datLaiMacDinh();
             napBangKichHoat();
             note(loi == null ? OK_GREEN : WARN_RED,
@@ -10052,7 +10052,7 @@ public class SystemPanel extends JPanel {
         c.gridx = 0;
         c.gridy = 5;
         c.gridwidth = 2;
-        form.add(nhan("<html><span style='color:#777'>"
+        form.add(nhan("<html><span style='color:#9aa1ad'>"
                 + "<b>Đếm theo</b> quyết định con số \"Tích luỹ\" hiện trong game:<br>"
                 + "Sức mạnh · Nhiệm vụ chính (id) · Sát thương 30 giây (máy đo sức mạnh)<br>"
                 + "Số phút online (máy chủ tự cộng) · Tự đặt (quản trị tự nhập cho từng người)"
@@ -10264,7 +10264,7 @@ public class SystemPanel extends JPanel {
         c.gridx = 0;
         c.gridy = 5;
         c.gridwidth = 3;
-        form.add(nhan("<html><span style='color:#777'>Chỉ số viết như đồ rơi boss: "
+        form.add(nhan("<html><span style='color:#9aa1ad'>Chỉ số viết như đồ rơi boss: "
                 + "<code>50=5,77=10</code> — để trống là không gắn gì.</span></html>"), c);
 
         if (JOptionPane.showConfirmDialog(this, form,
@@ -11659,7 +11659,7 @@ public class SystemPanel extends JPanel {
         c.gridx = 0;
         c.gridy = 4;
         c.gridwidth = 2;
-        form.add(new JLabel("<html><span style='color:#777'>"
+        form.add(new JLabel("<html><span style='color:#9aa1ad'>"
                 + "Id phải trong <b>0..127</b> — client đọc id này bằng một byte "
                 + "có dấu.<br>"
                 + "Ảnh hào quang nằm ở <code>data/img_by_name/x1..x4/"
@@ -11789,7 +11789,7 @@ public class SystemPanel extends JPanel {
         c.gridx = 0;
         c.gridy = 4;
         c.gridwidth = 2;
-        form.add(new JLabel("<html><span style='color:#777'>"
+        form.add(new JLabel("<html><span style='color:#9aa1ad'>"
                 + "Hai ô <b>Tìm</b> lọc theo tên hoặc id — danh sách cải trang "
                 + "có hơn 500 mục.<br>"
                 + "Mặc cải trang này là hào quang hiện sau lưng ngay.<br>"
@@ -12411,7 +12411,7 @@ public class SystemPanel extends JPanel {
         bCap.add(button("Thêm cấp", OK_GREEN, e -> btSuaCap(true)));
         bCap.add(button("Sửa cấp", ACCENT, e -> btSuaCap(false)));
         bCap.add(button("Xoá cấp", WARN_RED, e -> btXoaCap()));
-        bCap.add(button("Dựng sẵn 5 cấp", new Color(0, 140, 80),
+        bCap.add(button("Dựng sẵn 5 cấp", UiTheme.NUT_XANH_LA,
                 e -> btDungSan()));
         bCap.add(button("Tải lại", GREY, e -> btLoadCap()));
         pCap.add(bCap, BorderLayout.SOUTH);
@@ -12995,7 +12995,7 @@ public class SystemPanel extends JPanel {
         bCap.add(button("Thêm cấp", OK_GREEN, e -> cmSuaCap(true)));
         bCap.add(button("Sửa cấp", ACCENT, e -> cmSuaCap(false)));
         bCap.add(button("Xoá cấp", WARN_RED, e -> cmXoaCap()));
-        bCap.add(button("Dựng sẵn 8 cấp", new Color(0, 140, 80),
+        bCap.add(button("Dựng sẵn 8 cấp", UiTheme.NUT_XANH_LA,
                 e -> cmDungSan()));
         bCap.add(button("Tải lại", GREY, e -> cmLoadCap()));
         pCap.add(bCap, BorderLayout.SOUTH);
@@ -13810,7 +13810,7 @@ public class SystemPanel extends JPanel {
         JPanel bTran = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
         bTran.setOpaque(false);
         bTran.add(button("Lưu chỉ số", OK_GREEN, e -> dtLuuTran()));
-        bTran.add(button("Dựng sẵn tất cả", new Color(0, 140, 80),
+        bTran.add(button("Dựng sẵn tất cả", UiTheme.NUT_XANH_LA,
                 e -> dtDungSan()));
         bTran.add(button("Tải lại", GREY, e -> dtLoadTatCa()));
         pTran.add(bTran, c);
@@ -14312,7 +14312,7 @@ public class SystemPanel extends JPanel {
         top.add(lblCheck);
         root.add(top, BorderLayout.NORTH);
 
-        JLabel hint = new JLabel("<html><span style='color:#777'>"
+        JLabel hint = new JLabel("<html><span style='color:#9aa1ad'>"
                 + "Đây là lỗi <b>dữ liệu</b>, không phải lỗi mã nguồn — máy chủ không có "
                 + "cách nào tự sửa vì không có sẵn hình.<br>"
                 + "Cách xử lý: import phần dữ liệu còn thiếu vào bảng <code>part</code>, "
@@ -14386,13 +14386,14 @@ public class SystemPanel extends JPanel {
         b.setFocusPainted(false);
         b.setFont(new Font("Segoe UI", Font.BOLD, 12));
         b.setBorder(new EmptyBorder(6, 14, 6, 14));
+        ServerGuiUtils.toNut(b, bg);
         b.addActionListener(a);
         return b;
     }
 
     private static javax.swing.border.Border titled(String t) {
         return BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(215, 215, 215)), t);
+                BorderFactory.createLineBorder(UiTheme.LINE), t);
     }
 
     /**
@@ -14853,7 +14854,7 @@ public class SystemPanel extends JPanel {
         nut.setOpaque(false);
         nut.add(button("Tạo boss từ cải trang", OK_GREEN,
                 e -> taoBossTuCaiTrang(this)));
-        nut.add(button("Thêm vào game", new Color(0, 140, 80),
+        nut.add(button("Thêm vào game", UiTheme.NUT_XANH_LA,
                 e -> bdThemVaoGame()));
         nut.add(button("Sửa số liệu", ACCENT, e -> bdSua()));
         nut.add(button("Sửa số con", ACCENT, e -> bdSuaSoCon()));
@@ -17130,7 +17131,7 @@ public class SystemPanel extends JPanel {
         nut.add(button("Tạo nhóm", OK_GREEN, e -> nhomSua(true)));
         nut.add(button("Sửa nhóm", ACCENT, e -> nhomSua(false)));
         nut.add(button("Chọn boss cho nhóm…", ACCENT, e -> nhomChonBoss()));
-        nut.add(button("Hồi sinh cả nhóm", new Color(0, 140, 80),
+        nut.add(button("Hồi sinh cả nhóm", UiTheme.NUT_XANH_LA,
                 e -> nhomHoiSinhTatCa()));
         nut.add(button("Xoá nhóm", WARN_RED, e -> nhomXoa()));
         nut.add(button("Tải lại", GREY, e -> napNhom()));
@@ -17227,7 +17228,7 @@ public class SystemPanel extends JPanel {
         c.gridx = 0;
         c.gridy = y;
         c.gridwidth = 2;
-        form.add(new JLabel("<html><span style=.color:#777.>"
+        form.add(new JLabel("<html><span style=.color:#9aa1ad.>"
                 + "Tắt <b>cùng khu</b> thì nhóm chỉ đồng bộ <i>giờ</i> hồi sinh, "
                 + "mỗi con vẫn tự chọn khu riêng.<br>"
                 + "Bật thì con lên trước chọn khu, những con còn lại vào đúng "

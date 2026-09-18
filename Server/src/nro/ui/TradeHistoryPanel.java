@@ -51,10 +51,10 @@ import nro.repository.dao.HistoryTransactionDAO;
  */
 public class TradeHistoryPanel extends JPanel {
 
-    private static final Color ACCENT = new Color(0, 120, 215);
-    private static final Color OK_GREEN = new Color(40, 160, 70);
-    private static final Color WARN_RED = new Color(200, 60, 60);
-    private static final Color GREY = new Color(120, 120, 120);
+    private static final Color ACCENT = UiTheme.ACCENT;
+    private static final Color OK_GREEN = UiTheme.OK;
+    private static final Color WARN_RED = UiTheme.DANGER;
+    private static final Color GREY = UiTheme.TEXT_MUTED;
 
     private static final java.text.SimpleDateFormat NGAY =
             new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -86,7 +86,7 @@ public class TradeHistoryPanel extends JPanel {
 
     public TradeHistoryPanel() {
         setLayout(new BorderLayout(0, 6));
-        setBackground(Color.WHITE);
+        setBackground(UiTheme.CARD);
         setBorder(new EmptyBorder(12, 16, 12, 16));
 
         JLabel title = new JLabel("Lịch Sử Giao Dịch");
@@ -423,6 +423,7 @@ public class TradeHistoryPanel extends JPanel {
         b.setForeground(Color.WHITE);
         b.setFocusPainted(false);
         b.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
+        ServerGuiUtils.toNut(b, bg);
         b.addActionListener(a);
         return b;
     }

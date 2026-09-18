@@ -60,10 +60,10 @@ import nro.server.Manager;
  */
 final class HeSoTnsmTab extends JPanel {
 
-    private static final Color XANH = new Color(0, 120, 215);
-    private static final Color XANH_LA = new Color(40, 160, 70);
-    private static final Color DO = new Color(200, 60, 60);
-    private static final Color XAM = new Color(120, 120, 120);
+    private static final Color XANH = UiTheme.ACCENT;
+    private static final Color XANH_LA = UiTheme.OK;
+    private static final Color DO = UiTheme.DANGER;
+    private static final Color XAM = UiTheme.TEXT_MUTED;
 
     private static final int C_ID = 0;
     private static final int C_TEN = 1;
@@ -155,7 +155,7 @@ final class HeSoTnsmTab extends JPanel {
         JPanel tren = new JPanel();
         tren.setLayout(new BoxLayout(tren, BoxLayout.Y_AXIS));
         tren.setOpaque(false);
-        tren.add(canTrai(new JLabel("<html><span style='color:#666'>Mỗi đòn đánh quái nhận "
+        tren.add(canTrai(new JLabel("<html><span style='color:#9aa1ad'>Mỗi đòn đánh quái nhận "
                 + "<b>tiềm năng gốc (tab 1) × hệ số của nhóm bản đồ</b>, rồi mới tới bùa, "
                 + "thẻ, vật phẩm trong game. Mọi nhóm luôn bật. Ô để trống là 0. Rê chuột "
                 + "lên tiêu đề cột để xem giải thích.</span></html>")));
@@ -174,7 +174,7 @@ final class HeSoTnsmTab extends JPanel {
         nutDuoi.add(nut("Lưu bảng", XANH_LA, this::luuBang));
         nutDuoi.add(nut("Tải lại", XAM, this::napBang));
         nutDuoi.add(nut("Thêm nhóm", XANH, this::themNhom));
-        nutDuoi.add(nut("Về mặc định", new Color(120, 90, 160), this::veMacDinh));
+        nutDuoi.add(nut("Về mặc định", UiTheme.NUT_TIM, this::veMacDinh));
         duoi.add(nutDuoi, BorderLayout.WEST);
         trangThai.setBorder(new EmptyBorder(0, 10, 0, 0));
         duoi.add(trangThai, BorderLayout.CENTER);
@@ -420,6 +420,7 @@ final class HeSoTnsmTab extends JPanel {
         b.setFocusPainted(false);
         b.setBorder(new EmptyBorder(6, 12, 6, 12));
         b.setOpaque(true);
+        ServerGuiUtils.toNut(b, nen);
         b.addActionListener(e -> viec.run());
         return b;
     }
@@ -437,7 +438,7 @@ final class HeSoTnsmTab extends JPanel {
             Component o = super.getTableCellRendererComponent(t, v, chon, tieuDiem, r, c);
             boolean khoa = chiDe(t.convertRowIndexToModel(r));
             if (!chon) {
-                o.setBackground(khoa ? new Color(238, 238, 238) : t.getBackground());
+                o.setBackground(khoa ? UiTheme.FIELD_DISABLED : t.getBackground());
             }
             o.setForeground(khoa ? XAM : t.getForeground());
             setToolTipText(khoa ? "Nhóm chỉ đệ tử — sư phụ tự đánh luôn nhận 0" : null);
@@ -462,7 +463,7 @@ final class HeSoTnsmTab extends JPanel {
             Graphics2D g = (Graphics2D) g0.create();
             g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                     RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-            g.setColor(new Color(240, 243, 247));
+            g.setColor(UiTheme.CARD);
             g.fillRect(0, 0, getWidth(), getHeight());
             g.setFont(getFont());
             FontMetrics fm = g.getFontMetrics();
@@ -487,12 +488,12 @@ final class HeSoTnsmTab extends JPanel {
                 if (x0 < 0) {
                     continue;
                 }
-                g.setColor(new Color(214, 228, 244));
+                g.setColor(UiTheme.WARM_BG);
                 g.fillRect(x0, 0, x1 - x0, getHeight());
-                g.setColor(new Color(176, 196, 222));
+                g.setColor(UiTheme.ACCENT_DIM);
                 g.drawRect(x0, 0, x1 - x0 - 1, getHeight() - 1);
                 String s = (String) n[2];
-                g.setColor(new Color(24, 58, 110));
+                g.setColor(UiTheme.ACCENT_TEXT);
                 int tx = x0 + Math.max(4, (x1 - x0 - fm.stringWidth(s)) / 2);
                 g.drawString(s, tx, (getHeight() + fm.getAscent() - fm.getDescent()) / 2);
             }

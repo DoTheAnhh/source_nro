@@ -42,10 +42,10 @@ import nro.repository.dao.TnGocDAO;
  */
 final class TnGocTab extends JPanel {
 
-    private static final Color XANH = new Color(0, 120, 215);
-    private static final Color XANH_LA = new Color(40, 160, 70);
-    private static final Color DO = new Color(200, 60, 60);
-    private static final Color XAM = new Color(120, 120, 120);
+    private static final Color XANH = UiTheme.ACCENT;
+    private static final Color XANH_LA = UiTheme.OK;
+    private static final Color DO = UiTheme.DANGER;
+    private static final Color XAM = UiTheme.TEXT_MUTED;
 
     /** {khoá quy ước, số gốc của game, chữ đứng bên phải ô nhập}. */
     private static final Object[][] THAM_SO = {
@@ -115,7 +115,7 @@ final class TnGocTab extends JPanel {
                 + "trong bảng), rồi chia 100.<br>"
                 + "&nbsp;③ Mỗi cấp sức mạnh người chơi cao hơn quái thì bớt, thấp hơn "
                 + "thì thêm. Ít nhất luôn được 1.<br>"
-                + "<span style='color:#666'>Ví dụ: quái 10.000 máu, 5% tiềm năng, đòn "
+                + "<span style='color:#9aa1ad'>Ví dụ: quái 10.000 máu, 5% tiềm năng, đòn "
                 + "1.000 sát thương (10% máu), cùng cấp → 10 × 10.000 × 5% ÷ 100 = "
                 + "<b>50</b>.<br>"
                 + "Sau số gốc này mới tới hệ số bản đồ (tab 2), bùa, thẻ, vật phẩm, "
@@ -141,7 +141,7 @@ final class TnGocTab extends JPanel {
         nut.setOpaque(false);
         nut.add(nut("Lưu", XANH_LA, this::luu));
         nut.add(nut("Tải lại", XAM, this::nap));
-        nut.add(nut("Về số gốc của game", new Color(120, 90, 160), this::veMacDinh));
+        nut.add(nut("Về số gốc của game", UiTheme.NUT_TIM, this::veMacDinh));
         duoi.add(nut, BorderLayout.WEST);
         trangThai.setBorder(new EmptyBorder(0, 10, 0, 0));
         duoi.add(trangThai, BorderLayout.CENTER);
@@ -362,6 +362,7 @@ final class TnGocTab extends JPanel {
         b.setFocusPainted(false);
         b.setBorder(new EmptyBorder(6, 12, 6, 12));
         b.setOpaque(true);
+        ServerGuiUtils.toNut(b, nen);
         b.addActionListener(e -> viec.run());
         return b;
     }

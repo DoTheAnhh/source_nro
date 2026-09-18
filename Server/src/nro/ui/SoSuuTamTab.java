@@ -51,10 +51,10 @@ import nro.service.item.ItemService;
  */
 final class SoSuuTamTab extends JPanel {
 
-    private static final Color XANH = new Color(0, 120, 215);
-    private static final Color XANH_LA = new Color(40, 160, 70);
-    private static final Color DO = new Color(200, 60, 60);
-    private static final Color XAM = new Color(120, 120, 120);
+    private static final Color XANH = UiTheme.ACCENT;
+    private static final Color XANH_LA = UiTheme.OK;
+    private static final Color DO = UiTheme.DANGER;
+    private static final Color XAM = UiTheme.TEXT_MUTED;
 
     private static final String[] TEN_HANG = {
         "Hạng 1", "Hạng 2", "Hạng 3", "Hạng 4", "Hạng 5", "Hạng 6", "Hạng 7"};

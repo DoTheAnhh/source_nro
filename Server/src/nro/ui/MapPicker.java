@@ -41,8 +41,8 @@ import nro.repository.dao.MapShopDAO;
  */
 public final class MapPicker {
 
-    private static final Color OK_GREEN = new Color(40, 160, 70);
-    private static final Color GREY = new Color(120, 120, 120);
+    private static final Color OK_GREEN = UiTheme.OK;
+    private static final Color GREY = UiTheme.TEXT_MUTED;
 
     private MapPicker() {
     }
@@ -285,7 +285,7 @@ public final class MapPicker {
             dlg.dispose();
         }));
 
-        JLabel goi = new JLabel("<html><span style='color:#777'>"
+        JLabel goi = new JLabel("<html><span style='color:#9aa1ad'>"
                 + "Tích nhiều bản đồ thì mỗi lần hồi sinh boss chọn ngẫu nhiên một cái.<br>"
                 + "Bỏ tích hết = <b>giữ nguyên</b> map gốc viết trong mã nguồn, "
                 + "không phải \"boss không mọc ở đâu cả\".<br>"
@@ -317,6 +317,7 @@ public final class MapPicker {
         b.setForeground(Color.WHITE);
         b.setFocusPainted(false);
         b.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
+        ServerGuiUtils.toNut(b, bg);
         b.addActionListener(a);
         return b;
     }

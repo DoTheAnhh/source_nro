@@ -52,10 +52,10 @@ import nro.server.Manager;
  */
 public class MapShopPanel extends JPanel {
 
-    private static final Color ACCENT = new Color(0, 120, 215);
-    private static final Color OK_GREEN = new Color(40, 160, 70);
-    private static final Color WARN_RED = new Color(200, 60, 60);
-    private static final Color GREY = new Color(120, 120, 120);
+    private static final Color ACCENT = UiTheme.ACCENT;
+    private static final Color OK_GREEN = UiTheme.OK;
+    private static final Color WARN_RED = UiTheme.DANGER;
+    private static final Color GREY = UiTheme.TEXT_MUTED;
 
     private final JLabel lblStatus = new JLabel(" ");
 
@@ -104,7 +104,7 @@ public class MapShopPanel extends JPanel {
 
     public MapShopPanel() {
         setLayout(new BorderLayout(8, 8));
-        setBackground(Color.WHITE);
+        setBackground(UiTheme.CARD);
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
         JLabel title = new JLabel("Quản Lý Bản Đồ");
@@ -259,8 +259,8 @@ public class MapShopPanel extends JPanel {
         nut.add(button("Thêm cổng", OK_GREEN, e -> congDialog(true)));
         nut.add(button("Sửa cổng", ACCENT, e -> congDialog(false)));
         nut.add(button("Xoá cổng", WARN_RED, e -> xoaCong()));
-        nut.add(button("Nối hai chiều…", new Color(70, 120, 150), e -> noiHaiChieu()));
-        nut.add(button("Soát cổng toàn máy chủ", new Color(120, 90, 160),
+        nut.add(button("Nối hai chiều…", UiTheme.NUT_XANH, e -> noiHaiChieu()));
+        nut.add(button("Soát cổng toàn máy chủ", UiTheme.NUT_TIM,
                 e -> soatCong()));
         p.add(nut, BorderLayout.SOUTH);
         return p;
@@ -700,7 +700,7 @@ public class MapShopPanel extends JPanel {
         c.gridy = 4;
         c.gridwidth = 2;
         int soHong = MapShopDAO.soNpcHong();
-        form.add(new JLabel("<html><span style='color:#777'>"
+        form.add(new JLabel("<html><span style='color:#9aa1ad'>"
                 + "Y mặt đất thường là <code>336</code>.<br>"
                 + "<b>Mượn hình</b>: NPC giữ nguyên menu, cửa hàng, nhiệm vụ — chỉ đổi "
                 + "hình. Có hiệu lực <b>ngay</b>, người chơi vào lại bản đồ là thấy.<br>"
@@ -844,7 +844,7 @@ public class MapShopPanel extends JPanel {
         top.add(button("Đổi tên thẻ", ACCENT, e -> tabDialog(false)));
         top.add(button("Xoá thẻ", WARN_RED, e -> tabXoa()));
         top.add(button("Cửa hàng...", GREY, e -> shopDialog()));
-        top.add(button("Sửa để hiện giá", new Color(120, 90, 160), e -> suaDeHienGia()));
+        top.add(button("Sửa để hiện giá", UiTheme.NUT_TIM, e -> suaDeHienGia()));
         top.add(button("Xoá cửa hàng", WARN_RED, e -> shopXoa()));
         p.add(top, BorderLayout.NORTH);
 
@@ -1601,7 +1601,7 @@ public class MapShopPanel extends JPanel {
         c.gridx = 0;
         c.gridy = 3;
         c.gridwidth = 2;
-        p.add(new JLabel("<html><span style='color:#777'>"
+        p.add(new JLabel("<html><span style='color:#9aa1ad'>"
                 + "<b>Bán thường</b>: trả bằng tiền theo cột \"Bán theo\" của từng món.<br>"
                 + "<b>Đổi bằng vật phẩm</b>: trả bằng món khác, xác định bởi cột "
                 + "<code>icon_spec</code>."
@@ -1939,7 +1939,7 @@ public class MapShopPanel extends JPanel {
         c.gridx = 0;
         c.gridy = 6;
         c.gridwidth = 2;
-        form.add(new JLabel("<html><span style='color:#777'>"
+        form.add(new JLabel("<html><span style='color:#9aa1ad'>"
                 + "Đây là <b>mẫu NPC dùng chung</b> — đổi là đổi cho mọi bản đồ có NPC này.<br>"
                 + "Đặt <code>-1</code> nghĩa là không có phần đó.<br>"
                 + "Part id phải có thật trong bảng <code>part</code>, nếu không client "
@@ -2058,13 +2058,14 @@ public class MapShopPanel extends JPanel {
         b.setFocusPainted(false);
         b.setFont(new Font("Segoe UI", Font.BOLD, 12));
         b.setBorder(new EmptyBorder(6, 14, 6, 14));
+        ServerGuiUtils.toNut(b, bg);
         b.addActionListener(a);
         return b;
     }
 
     private static javax.swing.border.Border titled(String t) {
         return BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(215, 215, 215)), t);
+                BorderFactory.createLineBorder(UiTheme.LINE), t);
     }
 
     /** {@link DocumentListener} chỉ cần một hành động cho cả ba loại thay đổi. */
