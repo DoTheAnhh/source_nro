@@ -914,14 +914,6 @@ public class Player implements Runnable {
     public Detu Detu;
 
     /**
-     * Lần trả tiền cửa hàng vừa rồi có tiêu thỏi vàng khoá không.
-     *
-     * <p>Cửa hàng đặt cờ này lúc trừ tiền, rồi đọc ngay sau khi tạo món đồ: có
-     * dùng thỏi khoá thì món đồ khoá theo. Không lưu xuống cơ sở dữ liệu.</p>
-     */
-    public transient boolean muaBangThoiKhoa;
-
-    /**
      * Hào quang người chơi tự chọn, {@code -1} là không chọn gì.
      *
      * <p>Lưu ở cột {@code player.aura_chon}. Chỉ nhận id có

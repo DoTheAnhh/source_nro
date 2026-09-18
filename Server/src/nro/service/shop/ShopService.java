@@ -741,7 +741,6 @@ public class ShopService {
     }
 
     private boolean subMoneyByItemShop(Player player, ItemShop is) {
-        player.muaBangThoiKhoa = false;
         int gold = 0;
         int gem = 0;
         int ruby = 0;
@@ -760,7 +759,7 @@ public class ShopService {
                 even = is.cost;
                 break;
             case COST_THOI_VANG:
-                return truThoiVangMua(player, is.cost);
+                return truThoiVang(player, is.cost);
             case COST_SAN_BOSS:
                 return truDiemSanBoss(player, is.cost);
             default:
@@ -868,50 +867,8 @@ public class ShopService {
         }
         return nro.gameplay.minigame.KhoVang.tru(player, soLuong);
     }
-
-    /**
-     * Trả tiền <b>mua đồ</b> bằng thỏi vàng, và ghi lại có dùng thỏi khoá không.
-     *
-     * <p>Tách khỏi <code>truThoiVang</code>: hàm kia còn được NPC gọi để thu phí
-     * dịch vụ, không sinh ra món đồ nào để khoá.</p>
-     */
-    private boolean truThoiVangMua(Player player, int soLuong) {
-        if (soLuong <= 0) {
-            return true;
-        }
-        long dangCo = nro.gameplay.minigame.KhoVang.demTatCa(player);
-        if (dangCo < soLuong) {
-            Service.gI().sendThongBao(player, "Bạn không đủ Thỏi vàng — cần "
-                    + soLuong + ", đang có " + dangCo + ".");
-            return false;
-        }
-        long khoa = nro.gameplay.minigame.KhoVang.truDemKhoa(player, soLuong);
-        player.muaBangThoiKhoa = khoa > 0;
-        return khoa >= 0;
-    }
-
-    /**
-     * Món mua bằng thỏi vàng khoá thì cũng <b>không thể giao dịch</b>.
-     *
-     * <p>Tiền thắng mọi trò chơi là thỏi khoá. Để món mua bằng thỏi khoá giao
-     * dịch được thì chỉ cần mua một món rồi đưa cho nick khác là thỏi khoá đã
-     * thành của người khác. Trả một phần bằng thỏi khoá cũng tính là khoá.</p>
-     *
-     * <p>Không xoá cờ ở đây: có chỗ tạo lại món đồ sau khi tạo lần đầu (đổi
-     * sang mã khác), nên có thể gọi hai lần. Cờ được xoá ở đầu mỗi lần trả
-     * tiền.</p>
-     */
-    private static Item khoaTheoTien(Player player, Item item) {
-        if (player != null && player.muaBangThoiKhoa && item != null
-                && item.itemOptions != null
-                && !InventoryService.gI().haveOption(item, 30)) {
-            item.itemOptions.add(new ItemOption(30, 0));
-        }
-        return item;
-    }
     
     private boolean subIemByItemShopByUpdate(Player pl, ItemShop itemShop) {
-        pl.muaBangThoiKhoa = false;
         boolean isBuy = false;
         if (itemShop.typeSell == COST_SAN_BOSS) {
             return truDiemSanBoss(pl, itemShop.cost);
@@ -1018,7 +975,7 @@ public class ShopService {
         if (!subMoneyByItemShop(player, is)) {
             return;
         }
-        InventoryService.gI().addItemBag(player, khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is)));
+        InventoryService.gI().addItemBag(player, ItemService.gI().createItemFromItemShop(is));
         InventoryService.gI().sendItemBag(player);
         opendShop(player, shop.tagName, true);
     }
@@ -1070,7 +1027,7 @@ public class ShopService {
         }
         player.clan.updateClanBasicInfo();
         player.clan.updateClanDataCharms(player.clan.id, player.clan.BuaTriTue, player.clan.BuaManhMe, player.clan.BuaDaTrau);
-        InventoryService.gI().addItemBag(player, khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is)));
+        InventoryService.gI().addItemBag(player, ItemService.gI().createItemFromItemShop(is));
         InventoryService.gI().sendItemBag(player);
         Service.gI().sendThongBao(player, "Bạn đã mua thành công " + is.temp.name);
         opendShop(player, shop.tagName, true);
@@ -1131,7 +1088,7 @@ public class ShopService {
                 return;
             }
         }
-        Item item = khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is));
+        Item item = ItemService.gI().createItemFromItemShop(is);
         item = buyMagicPean(player, listDauThan, item);
         if (item.template.id == 1523 || item.template.id == 1524) {
             item = ItemService.gI().createNewItem((short) 521);
@@ -1151,7 +1108,6 @@ public class ShopService {
                 return;
             }
         }
-        khoaTheoTien(player, item);
         InventoryService.gI().addItemBag(player, item);
         InventoryService.gI().sendItemBag(player);
         // Nhiệm vụ danh hiệu loại "mua vật phẩm" — đây là đường mua thường,
@@ -1163,7 +1119,6 @@ public class ShopService {
     }
 
     private boolean subIemByItemShop(Player pl, ItemShop itemShop) {
-        pl.muaBangThoiKhoa = false;
         boolean isBuy = false;
         if (itemShop.typeSell == COST_SAN_BOSS) {
             return truDiemSanBoss(pl, itemShop.cost);
@@ -1660,7 +1615,7 @@ public class ShopService {
             Service.gI().sendThongBao(player, "Không thể thực hiện");
             return;
         }
-        Item item = khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is));
+        Item item = ItemService.gI().createItemFromItemShop(is);
         if (InventoryService.gI().getCountEmptyBag(player) < 1) {
             Service.gI().sendThongBao(player, "Hàng trang đã đầy, cần một ô trống trong hành trang");
             return;
@@ -1822,7 +1777,7 @@ public class ShopService {
                 return true;
             }
             if (subMoneyByItemShop(player, itemShop)) {
-                Item item = khoaTheoTien(player, ItemService.gI().createItemFromItemShop(itemShop));
+                Item item = ItemService.gI().createItemFromItemShop(itemShop);
                 InventoryService.gI().addItemBag(player, item);
                 nro.service.badges.BadgesTaskService.tangTheoLoai(player,
                         nro.entity.badges.BadgesTaskTemplate.MUA_VAT_PHAM,
@@ -1915,7 +1870,7 @@ public class ShopService {
         if (pointExchange > 0) {
             if (evPoint >= pointExchange) {
                 player.event.subHakaiPoint(pointExchange);
-                InventoryService.gI().addItemBag(player, khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is)));
+                InventoryService.gI().addItemBag(player, ItemService.gI().createItemFromItemShop(is));
                 InventoryService.gI().sendItemBag(player);
                 Service.gI().sendThongBao(player, "Bạn đã đổi thành công " + ItemService.gI().createItemFromItemShop(is).template.name);
                 opendShop(player, shop.tagName, true);
@@ -1964,7 +1919,7 @@ public class ShopService {
         if (!daTra) {
             return;
         }
-        Item mon = khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is));
+        Item mon = ItemService.gI().createItemFromItemShop(is);
         InventoryService.gI().addItemBag(player, mon);
         InventoryService.gI().sendItemBag(player);
         Service.gI().sendMoney(player);
@@ -2025,7 +1980,7 @@ public class ShopService {
         if (pointExchange > 0) {
             if (evPoint >= pointExchange) {
                 player.event.subLunaNewYearPoint(pointExchange);
-                InventoryService.gI().addItemBag(player, khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is)));
+                InventoryService.gI().addItemBag(player, ItemService.gI().createItemFromItemShop(is));
                 InventoryService.gI().sendItemBag(player);
                 Service.gI().sendThongBao(player, "Bạn đã đổi thành công " + ItemService.gI().createItemFromItemShop(is).template.name);
                 opendShop(player, shop.tagName, true);
@@ -2050,7 +2005,7 @@ public class ShopService {
         if (!subIemByItemShopByUpdate(player, is)) {
             return;
         }
-        Item item = khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is));
+        Item item = ItemService.gI().createItemFromItemShop(is);
         if (item.template.id == 543) {
             if (!InventoryService.gI().findItemVongKimCo(player)) {
                 item = ItemService.gI().createNewItem((short) 543);
@@ -2160,7 +2115,7 @@ public class ShopService {
         if (pointExchange > 0) {
             if (evPoint >= pointExchange) {
                 player.event.subChristMasPoint(pointExchange);
-                InventoryService.gI().addItemBag(player, khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is)));
+                InventoryService.gI().addItemBag(player, ItemService.gI().createItemFromItemShop(is));
                 InventoryService.gI().sendItemBag(player);
                 Service.gI().sendThongBao(player, "Bạn đã đổi thành công " + ItemService.gI().createItemFromItemShop(is).template.name);
                 opendShop(player, shop.tagName, true);
@@ -2191,7 +2146,7 @@ public class ShopService {
         if (pointExchange > 0) {
             if (evPoint >= pointExchange) {
                 player.event.subHalloweenPoint(pointExchange);
-                InventoryService.gI().addItemBag(player, khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is)));
+                InventoryService.gI().addItemBag(player, ItemService.gI().createItemFromItemShop(is));
                 InventoryService.gI().sendItemBag(player);
                 Service.gI().sendThongBao(player, "Bạn đã đổi thành công " + ItemService.gI().createItemFromItemShop(is).template.name);
                 opendShop(player, shop.tagName, true);
@@ -2222,7 +2177,7 @@ public class ShopService {
         if (pointExchange > 0) {
             if (evPoint >= pointExchange) {
                 player.event.subInternationalWomensDayPoint(pointExchange);
-                InventoryService.gI().addItemBag(player, khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is)));
+                InventoryService.gI().addItemBag(player, ItemService.gI().createItemFromItemShop(is));
                 InventoryService.gI().sendItemBag(player);
                 Service.gI().sendThongBao(player, "Bạn đã đổi thành công " + ItemService.gI().createItemFromItemShop(is).template.name);
                 opendShop(player, shop.tagName, true);
@@ -2253,7 +2208,7 @@ public class ShopService {
         if (pointExchange > 0) {
             if (evPoint >= pointExchange) {
                 player.event.subTrungThuPoint(pointExchange);
-                InventoryService.gI().addItemBag(player, khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is)));
+                InventoryService.gI().addItemBag(player, ItemService.gI().createItemFromItemShop(is));
                 InventoryService.gI().sendItemBag(player);
                 Service.gI().sendThongBao(player, "Bạn đã đổi thành công " + ItemService.gI().createItemFromItemShop(is).template.name);
                 opendShop(player, shop.tagName, true);
@@ -2376,7 +2331,7 @@ public class ShopService {
                         break;
                 }
                 InventoryService.gI().subQuantityItemsBag(player, DuoiKhi, is.cost);
-                InventoryService.gI().addItemBag(player, khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is)));
+                InventoryService.gI().addItemBag(player, ItemService.gI().createItemFromItemShop(is));
                 InventoryService.gI().sendItemBag(player);
                 Service.gI().sendThongBao(player, "Bạn đã đổi thành công " + ItemService.gI().createItemFromItemShop(is).template.name);
                 player.event.addTrungThuPoint(1);
@@ -2487,7 +2442,7 @@ public class ShopService {
                         break;
                 }
                 InventoryService.gI().subQuantityItemsBag(player, Carot, is.cost);
-                InventoryService.gI().addItemBag(player, khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is)));
+                InventoryService.gI().addItemBag(player, ItemService.gI().createItemFromItemShop(is));
                 InventoryService.gI().sendItemBag(player);
                 Service.gI().sendThongBao(player, "Bạn đã đổi thành công " + ItemService.gI().createItemFromItemShop(is).template.name);
                 player.event.addTrungThuPoint(1);
@@ -2521,7 +2476,7 @@ public class ShopService {
         if (pointExchange > 0) {
             if (evPoint >= pointExchange) {
                 player.event.subHungVuongPoint(pointExchange);
-                InventoryService.gI().addItemBag(player, khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is)));
+                InventoryService.gI().addItemBag(player, ItemService.gI().createItemFromItemShop(is));
                 InventoryService.gI().sendItemBag(player);
                 Service.gI().sendThongBao(player, "Bạn đã đổi thành công " + ItemService.gI().createItemFromItemShop(is).template.name);
                 opendShop(player, shop.tagName, true);
@@ -2551,7 +2506,7 @@ public class ShopService {
                 return;
             }
         }
-        Item item = khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is));
+        Item item = ItemService.gI().createItemFromItemShop(is);
         InventoryService.gI().addItemBag(player, item);
         InventoryService.gI().sendItemBag(player);
         Service.gI().sendThongBao(player, "Bạn đã mua thành công " + item.template.name);
@@ -2578,7 +2533,7 @@ public class ShopService {
         if (pointExchange > 0) {
             if (evPoint >= pointExchange) {
                 player.event.subBlackFridayPoint(pointExchange);
-                InventoryService.gI().addItemBag(player, khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is)));
+                InventoryService.gI().addItemBag(player, ItemService.gI().createItemFromItemShop(is));
                 InventoryService.gI().sendItemBag(player);
                 Service.gI().sendThongBao(player, "Bạn đã đổi thành công " + ItemService.gI().createItemFromItemShop(is).template.name);
                 opendShop(player, shop.tagName, true);
@@ -2602,7 +2557,7 @@ public class ShopService {
         if (!subIemByItemShopByUpdate(player, is)) {
             return;
         }
-        Item item = khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is));
+        Item item = ItemService.gI().createItemFromItemShop(is);
         InventoryService.gI().addItemBag(player, item);
         InventoryService.gI().sendItemBag(player);
         player.DuaTopMuaSamBlackFriday += is.cost;
@@ -2662,7 +2617,7 @@ public class ShopService {
         if (pointExchange > 0) {
             if (evPoint >= pointExchange) {
                 player.event.sub20_10Point(pointExchange);
-                InventoryService.gI().addItemBag(player, khoaTheoTien(player, ItemService.gI().createItemFromItemShop(is)));
+                InventoryService.gI().addItemBag(player, ItemService.gI().createItemFromItemShop(is));
                 InventoryService.gI().sendItemBag(player);
                 Service.gI().sendThongBao(player, "Bạn đã đổi thành công " + ItemService.gI().createItemFromItemShop(is).template.name);
                 opendShop(player, shop.tagName, true);
