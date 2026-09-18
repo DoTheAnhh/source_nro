@@ -313,6 +313,9 @@ public final class Manager {
     nro.repository.dao.TrungDeTuDAO.damBaoVatPham();
     // Cai trang dung san trong ma (Berus Nhi...): cung ly do, truoc loadDatabase.
     nro.repository.dao.CaiTrangDungSanDAO.damBao();
+    // Bang de tu (va doi hinh de Bill sang Berus Nhi) ngay luc khoi dong, de
+    // dong log hien ra luc boot thay vi luc ai do goi de lan dau.
+    nro.repository.dao.DeTuDAO.damBaoBang();
 
     this.loadDatabase();
 

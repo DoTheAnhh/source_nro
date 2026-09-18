@@ -153,16 +153,22 @@ public class DeTuDAO {
         return id > 0 ? id : CT_BILL_CU;
     }
 
-    private static final String KHOA_BILL_BERUS_NHI = "de_bill_berus_nhi";
+    /**
+     * Dấu "đã đổi" — bản 2.
+     *
+     * <p>Bản 1 ({@code de_bill_berus_nhi}) chỉ đổi khi đệ Bill còn trỏ đúng
+     * 2001, lệch một chút là bỏ qua mà vẫn ghi dấu, và đệ vẫn mang hình Berus
+     * lớn. Đổi tên khoá để máy nào đã ghi dấu bản 1 cũng chạy lại bản này.</p>
+     */
+    private static final String KHOA_BILL_BERUS_NHI = "de_bill_berus_nhi_2";
 
     /**
-     * Đổi hình đệ Bill từ Berus bản lớn sang Berus Nhí — <b>một lần</b>.
+     * Đổi hình đệ Bill sang Berus Nhí — <b>một lần</b>, không điều kiện.
      *
-     * <p>Máy nào cột {@code cai_trang} đã sinh từ trước thì đệ Bill đang trỏ
-     * 2001; mặc định mới chỉ vào được bảng lúc tạo, nên phải chuyển riêng.
-     * Chỉ đổi khi vẫn còn đúng giá trị cũ — quản trị đã chọn hình khác trên
-     * panel thì để nguyên. Ghi dấu vào {@code panel_config} để lần sau không
-     * làm lại: quản trị có cố ý trả về 2001 thì cũng không bị đổi lần nữa.</p>
+     * <p>Chủ máy chủ đã chốt đệ Bill phải là Berus Nhí, nên không dò giá trị
+     * cũ nữa: có vật phẩm là ghi đè. Ghi dấu vào {@code panel_config} để lần
+     * sau không làm lại — sau đó quản trị chọn hình khác trên panel thì giữ
+     * nguyên lựa chọn ấy.</p>
      */
     private static void doiBillSangBerusNhi() {
         CrisResultSet rs = null;
@@ -175,13 +181,15 @@ public class DeTuDAO {
             int id = CaiTrangDungSanDAO.idBerusNhi();
             if (id <= 0) {
                 // Chua co vat pham: khong ghi dau, lan khoi dong sau thu lai.
+                Logger.warning("Đệ Bill: chưa tìm thấy Cải Trang Berus Nhí, để lần sau\n");
                 return;
             }
             ConnectDB.executeUpdate("UPDATE de_tu_loai SET cai_trang = ?"
-                    + " WHERE loai = ? AND cai_trang = ?",
-                    id, (int) ConstDetuBill(), CT_BILL_CU);
+                    + " WHERE loai = ?", id, (int) ConstDetuBill());
             ConnectDB.executeUpdate("INSERT INTO panel_config (k, v) VALUES (?, '1')"
                     + " ON DUPLICATE KEY UPDATE v = '1'", KHOA_BILL_BERUS_NHI);
+            Logger.success("Đệ Bill mang hình Cải Trang Berus Nhí (vật phẩm "
+                    + id + ")\n");
         } catch (Exception ex) {
             Logger.logException(DeTuDAO.class, ex,
                     "Không đổi được hình đệ Bill sang Berus Nhí");
