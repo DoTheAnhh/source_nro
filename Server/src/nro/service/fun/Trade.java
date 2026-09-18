@@ -92,6 +92,18 @@ public class Trade {
     public void addItemTrade(Player pl, byte index, int quantity) {
         if (pl.getSession().actived) {
             if (index == -1) {
+                // Han muc vang giao dich moi ngay (ca dua lan nhan). Bao ngay luc dat
+                // vang cho nguoi choi biet; lan kiem that nam o startTrade.
+                if (quantity > 0 && !laGiaoDichBot()) {
+                    long con = nro.repository.dao.GiaoDichVangDAO.conLai(pl.id);
+                    if (quantity > con) {
+                        Service.gI().sendThongBao(pl, "Hôm nay bạn chỉ còn giao dịch được "
+                                + nro.core.util.Util.numberToMoney(con) + " vàng (tối đa "
+                                + nro.core.util.Util.numberToMoney(nro.repository.dao.GiaoDichVangDAO.GIOI_HAN_NGAY)
+                                + " vàng mỗi ngày).");
+                        quantity = 0;
+                    }
+                }
                 if (pl.equals(this.player1)) {
                     goldTrade1 = quantity;
                 } else {
@@ -339,8 +351,34 @@ public class Trade {
         }
     }
 
+    /** Giao dịch với nhân vật máy (bot) thì không tính hạn mức vàng. */
+    private boolean laGiaoDichBot() {
+        return player2 != null && (player2.isBot || player2.isBot_Event);
+    }
+
     private void startTrade() {
         byte tradeStatus = SUCCESS;
+
+        // Han muc vang giao dich moi ngay: tong vang di qua giao dich nay tinh cho
+        // CA HAI ben — ben dua va ben nhan. Chi tinh ben dua thi tram nick phu,
+        // moi nick dua du han muc, la nick chinh nhan ve gap tram.
+        long vangQua = (long) goldTrade1 + (long) goldTrade2;
+        if (vangQua > 0 && !laGiaoDichBot()) {
+            long con1 = nro.repository.dao.GiaoDichVangDAO.conLai(player1.id);
+            long con2 = nro.repository.dao.GiaoDichVangDAO.conLai(player2.id);
+            if (vangQua > con1 || vangQua > con2) {
+                String loi = "Vượt hạn mức giao dịch "
+                        + nro.core.util.Util.numberToMoney(nro.repository.dao.GiaoDichVangDAO.GIOI_HAN_NGAY)
+                        + " vàng mỗi ngày (" + player1.name + " còn "
+                        + nro.core.util.Util.numberToMoney(con1) + ", " + player2.name + " còn "
+                        + nro.core.util.Util.numberToMoney(con2) + ").";
+                Service.getInstance().sendThongBao(player1, loi);
+                Service.getInstance().sendThongBao(player2, loi);
+                closeTab();
+                dispose();
+                return;
+            }
+        }
 
         if (player1.inventory.gold + goldTrade2 > Inventory.LIMIT_GOLD) {
             tradeStatus = FAIL_MAX_GOLD_PLAYER1;
@@ -375,6 +413,10 @@ public class Trade {
                     player2.inventory.gold += goldTrade1;
                     player1.inventory.gold -= goldTrade1;
                     player2.inventory.gold -= goldTrade2;
+                    if (vangQua > 0 && !laGiaoDichBot()) {
+                        nro.repository.dao.GiaoDichVangDAO.cong(player1.id, vangQua);
+                        nro.repository.dao.GiaoDichVangDAO.cong(player2.id, vangQua);
+                    }
 
                     player1.inventory.itemsBag = itemsBag1;
                     player2.inventory.itemsBag = itemsBag2;

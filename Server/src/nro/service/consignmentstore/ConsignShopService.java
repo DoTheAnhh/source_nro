@@ -78,12 +78,10 @@ public class ConsignShopService {
      * thì mua món giá 300 vẫn trượt, vì không chồng nào một mình đủ 300.</p>
      */
     private boolean SubThoiVang(Player pl, int quatity) {
-        // Chi thoi THUONG: mua do ky gui la tra tien cho nguoi khac, tuc la mot
-        // lan giao dich. Thoi khoa (tien thang tro choi) khong di duong nay.
-        if (nro.gameplay.minigame.KhoVang.dem(pl, false) < quatity) {
+        if (nro.gameplay.minigame.KhoVang.demTatCa(pl) < quatity) {
             return false;
         }
-        return nro.gameplay.minigame.KhoVang.truThuong(pl, quatity);
+        return nro.gameplay.minigame.KhoVang.tru(pl, quatity);
     }
     
     public void buyItem(Player pl, int id) {
@@ -102,7 +100,7 @@ public class ConsignShopService {
             if (SubThoiVang(pl, it.goldSell)) {
                 isBuy = true;
             } else {
-                Service.gI().sendThongBao(pl, "Bạn không đủ thỏi vàng thường để mua (thỏi vàng khoá không dùng mua ký gửi)");
+                Service.gI().sendThongBao(pl, "Bạn không đủ thỏi vàng để mua vật phẩm");
                 isBuy = false;
             }
         } else if (it.gemSell > 0) {
