@@ -795,7 +795,7 @@ public class Boss extends Player implements IBoss {
                 if (d.chiMotMon && d.daCoMon(this.playerReward)) {
                     continue;
                 }
-                if (!Util.isTrue(d.rateNum, d.rateDen)) {
+                if (!Util.isTrueMayMan(this.playerReward, d.rateNum, d.rateDen)) {
                     continue;
                 }
                 int sl = d.qtyMax > d.qtyMin ? Util.nextInt(d.qtyMin, d.qtyMax) : d.qtyMin;

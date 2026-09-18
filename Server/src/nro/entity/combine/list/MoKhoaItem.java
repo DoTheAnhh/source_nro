@@ -88,7 +88,7 @@ public class MoKhoaItem {
                 return;
             }
 
-            if (Util.isTrue(30, 100)) {
+            if (Util.isTrueMayMan(player, 30, 100)) {
                  CombineService.gI().sendEffectSuccessCombine(player);
                 List<Integer> idOptionHacHoa = Arrays.asList(30);
 

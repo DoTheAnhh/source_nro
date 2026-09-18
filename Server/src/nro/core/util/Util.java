@@ -302,6 +302,47 @@ public class Util {
      */
     public static final double BUOC_MAY_MAN_GIAM = 0.0025d;
 
+    /**
+     * Hệ số may mắn của <b>một người chơi</b>: chỉ số may mắn theo
+     * {@link #heSoMayMan(double)}, nhân thêm 1,33 nếu đang dùng cỏ bốn lá.
+     *
+     * <p>Đệ tử đánh đòn cuối thì lấy may mắn của sư phụ — đồ rơi về sư phụ.</p>
+     */
+    public static double heSoMayMan(nro.entity.player.Player pl) {
+        nro.entity.player.Player p = pl;
+        if (p instanceof nro.entity.player.Detu
+                && ((nro.entity.player.Detu) p).master != null) {
+            p = ((nro.entity.player.Detu) p).master;
+        }
+        if (p == null || p.nPoint == null) {
+            return 1d;
+        }
+        double heSo = heSoMayMan(p.nPoint.tlMayman);
+        if (p.itemTime != null && p.itemTime.isUseCoBonLa) {
+            heSo *= 1.33d;
+        }
+        return heSo;
+    }
+
+    /**
+     * Bốc tỉ lệ {@code tiLe / mau} có tính may mắn của người chơi.
+     *
+     * <p>May mắn <b>nhân vào tỉ lệ gốc</b>: tỉ lệ 50% với 50 may mắn thành 75%;
+     * 0,05% với 30 may mắn thành 0,065%. Dùng chung cho đồ rơi (quái, boss, set
+     * kích hoạt) và mọi lần đập đồ / nâng cấp, để cùng một con số may mắn có
+     * cùng một nghĩa ở mọi nơi.</p>
+     */
+    public static boolean isTrueMayMan(nro.entity.player.Player pl, double tiLe, double mau) {
+        if (tiLe <= 0 || mau <= 0) {
+            return false;
+        }
+        double tiLeMoi = tiLe * heSoMayMan(pl);
+        if (tiLeMoi >= mau) {
+            return true;
+        }
+        return java.util.concurrent.ThreadLocalRandom.current().nextDouble() * mau < tiLeMoi;
+    }
+
     public static double heSoMayMan(double tyLeMayMan) {
         if (tyLeMayMan <= 0) {
             return 1d;

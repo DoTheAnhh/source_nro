@@ -189,7 +189,7 @@ public class PhaLeHoaTrangBi {
             num = i + 1;
             player.inventory.gold -= gold;
             player.inventory.gem -= gem;
-            if (bocTheoPhanTram(bac.tiLe)) {
+            if (bocTheoPhanTram(bac.tiLe * Util.heSoMayMan(player))) {
                 success = true;
                 break;
             }

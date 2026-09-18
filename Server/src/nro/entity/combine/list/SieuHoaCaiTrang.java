@@ -157,7 +157,7 @@ public class SieuHoaCaiTrang {
 
                 InventoryService.gI().subQuantityItemsBag(player, manhCaiTrang, player.combine.DaNangcap);
 
-                if (Util.isTrue(tiLe, 100)) {
+                if (Util.isTrueMayMan(player, tiLe, 100)) {
                     Item newCaiTrang = ItemService.gI().createNewItem((short) (caiTrang.template.id));
                     for (ItemOption io : caiTrang.itemOptions) {
                         newCaiTrang.itemOptions.add(new ItemOption(io.optionTemplate.id, io.param));

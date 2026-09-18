@@ -95,7 +95,7 @@ public class GiaHanVatPham {
                     }
                 }
             }
-            if (Util.isTrue(50, 100)) {
+            if (Util.isTrueMayMan(player, 50, 100)) {
                 for (ItemOption itopt : tbiHSD.itemOptions) {
                     if (itopt.optionTemplate.id == 93) {
                         itopt.param += Util.nextInt(3, 7);

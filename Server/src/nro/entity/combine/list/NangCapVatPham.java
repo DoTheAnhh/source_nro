@@ -213,7 +213,7 @@ public class NangCapVatPham {
                     "Không có Đá Bảo Vệ trong hành trang.");
             return false;
         }
-        if (Util.isTrue(getRatio(level), 100)) {
+        if (Util.isTrueMayMan(player, getRatio(level), 100)) {
             for (ItemOption io : trangBi.itemOptions) {
                 if (io.isOptionCanUpgrade()) {
                     io.param += (io.param * 10 / 100);

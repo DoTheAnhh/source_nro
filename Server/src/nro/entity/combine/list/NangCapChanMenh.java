@@ -153,7 +153,7 @@ public class NangCapChanMenh {
 
             // Mau so 100 vi bang luu PHAN TRAM THAT. Ban cu so voi 200, nen so
             // 35 trong ma thuc ra la 17,5% — doc bang khong ai doan ra.
-            if (Util.isTrue(tilechanmenh, 100)) {
+            if (Util.isTrueMayMan(player, tilechanmenh, 100)) {
                 success = true;
                 break;
             }

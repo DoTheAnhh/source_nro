@@ -1045,17 +1045,6 @@ public class Mob {
     /** Nhân cả hai vế lên trước khi làm tròn, để hệ số nhỏ hơn 1 không mất. */
     private static final long THANG_ROI = 1_000_000L;
 
-    /**
-     * Gieo tỉ lệ rơi, phần triệu.
-     *
-     * <p>Không còn hệ số chung nào nhân vào đây nữa: tỉ lệ của từng món đã khai
-     * riêng ở tab "Đồ rơi từ quái". Có thêm một hệ số nhân đè lên thì con số
-     * ghi trong bảng không còn là con số thật, mà chẳng ai nhớ nổi đang nhân
-     * mấy.</p>
-     */
-    private static boolean roiTheoTiLe(int tuSo, int mauSo) {
-        return Util.isTrue(tuSo, mauSo);
-    }
 
     private void dropGold(Player player, Mob mob, List<ItemMap> list, Zone zone, int x, int y) {
         Attribute at = ServerManager.gI().getAttributeManager().find(ConstAttribute.VANG);
@@ -1065,7 +1054,7 @@ public class Mob {
         }
         goldAmount = goldAmount + (this.percent_gold - 1);
         double playerBonus = 1.0 + player.nPoint.tlGold / 100.0;
-        double totalGold = goldAmount * playerBonus;
+        double totalGold = goldAmount * playerBonus * Util.heSoMayMan(player);
         if (at != null && !at.isExpired()) {
             totalGold *= at.getValue() / 100.0;
         }
@@ -1277,7 +1266,7 @@ public class Mob {
             if (tuSo <= 0) {
                 continue;
             }
-            if (!roiTheoTiLe((int) Math.min(Integer.MAX_VALUE, tuSo), 1_000_000)) {
+            if (!Util.isTrueMayMan(player, tuSo, 1_000_000)) {
                 continue;
             }
             int sl = d.soLuongMax > d.soLuongMin

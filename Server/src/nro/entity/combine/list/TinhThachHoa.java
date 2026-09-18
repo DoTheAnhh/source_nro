@@ -143,7 +143,7 @@ public class TinhThachHoa {
                 player.inventory.gold -= gold;
                 player.inventory.gem -= gem;
                 InventoryService.gI().subQuantityItemsBag(player, manhCaiTrang, player.combine.DaNangcap);
-                if (Util.isTrue(tiLe, 100)) {
+                if (Util.isTrueMayMan(player, tiLe, 100)) {
                     Item newCaiTrang = ItemService.gI().createNewItem((short) (caiTrang.template.id));
 
                     // Copy các chỉ số từ bông tai cũ sang bông tai mới

@@ -93,7 +93,7 @@ public class NangCapKichHoatVip {
             return;
         }
         player.inventory.gold -= COST;
-        boolean success = Util.isTrue(70, 100);
+        boolean success = Util.isTrueMayMan(player, 70, 100);
         if (!success) {
            
             CombineService.gI().sendEffectFailCombine(player);

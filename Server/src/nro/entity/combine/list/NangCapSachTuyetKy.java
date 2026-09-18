@@ -60,7 +60,7 @@ public class NangCapSachTuyetKy {
         if (sachTuyetKy == null || kimBamGiay == null) {
             return;
         }
-        if (Util.isTrue(10, 100)) {
+        if (Util.isTrueMayMan(player, 10, 100)) {
             switch (sachTuyetKy.template.id) {
                 case 1044:
                     sachTuyetKy.template = ItemService.gI().getTemplate(1278);

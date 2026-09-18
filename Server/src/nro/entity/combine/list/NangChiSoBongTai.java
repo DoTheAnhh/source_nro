@@ -144,7 +144,7 @@ public class NangChiSoBongTai {
             return;
         }
 
-        if (Util.isTrue(50, 100)) {
+        if (Util.isTrueMayMan(player, 50, 100)) {
             int option;
             int param;
             // Be chi so khai tren panel (tab "Bong tai") thang so viet cung.

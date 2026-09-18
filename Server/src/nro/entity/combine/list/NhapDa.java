@@ -82,7 +82,7 @@ public class NhapDa {
         }
 
         // ✅ Random 1 trong 5 loại đá quý
-        if (Util.isTrue(SUCCESS_RATE, 100)) {
+        if (Util.isTrueMayMan(player, SUCCESS_RATE, 100)) {
             short randStone = STONE_IDS[Util.nextInt(0, STONE_IDS.length - 1)];
 
             // Trừ nguyên liệu

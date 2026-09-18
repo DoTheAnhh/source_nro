@@ -68,7 +68,7 @@ public class NangCapDoHuyDiet {
         player.inventory.gold -= GOLD_REQUIRE;
         Service.gI().sendMoney(player);
 
-        if (Util.isTrue(SUCCESS_RATE, 100)) {
+        if (Util.isTrueMayMan(player, SUCCESS_RATE, 100)) {
             // ✅ Thành công → tạo đồ Huỷ Diệt cùng loại
             short idNew = (short) (650 + (thanLinh.template.id - 555)); // Map Thần Linh → Huỷ Diệt
             Item huyDiet = ItemService.gI().otphd(idNew, 1);

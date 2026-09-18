@@ -118,7 +118,7 @@ public class NangCapSaoPhaLe {
             player.inventory.gold -= 100_000_000;
             InventoryService.gI().subQuantityItemsBag(player, hematite, 1);
             InventoryService.gI().subQuantityItemsBag(player, saoPhaLeC1, 1);
-            if (Util.isTrue(50, 100)) {
+            if (Util.isTrueMayMan(player, 50, 100)) {
                 thanhCong = true;
                 break;
             }
@@ -185,7 +185,7 @@ public class NangCapSaoPhaLe {
             return;
         }
         CombineService.gI().baHatMit.npcChat(player, "Bư cô lô, ba cô la, bư ra bư zô...");
-        if (Util.isTrue(50, 100)) {
+        if (Util.isTrueMayMan(player, 50, 100)) {
             Item saoPhaLeC2 = saoPhaLeC1.cloneItem();
             saoPhaLeC2.quantity = 1;
             saoPhaLeC2.template = ItemService.gI().getTemplate(saoPhaLeC1.template.id + 975);

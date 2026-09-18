@@ -191,7 +191,7 @@ public class CongThucDoiService {
         }
         CombineService.gI().sendAddItemCombine(player, ConstNpc.BA_HAT_MIT, dangCo);
 
-        boolean thanhCong = Util.isTrue(ct.tyLe, 100);
+        boolean thanhCong = Util.isTrueMayMan(player, ct.tyLe, 100);
         if (thanhCong) {
             traThuong(player, ct);
             for (int i = 0; i < ct.nguyenLieu.size(); i++) {

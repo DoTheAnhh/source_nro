@@ -355,7 +355,7 @@ public class DapDoAoHoa {
                             option = io;
                         }
                     }
-                    if (Util.isTrue(player.combine.ratioCombine, 100)) {
+                    if (Util.isTrueMayMan(player, player.combine.ratioCombine, 100)) {
                         if (option == null) {
                             Service.gI().sendThongBao(player, "Chỉ số không hợp lệ để nâng cấp");
                         } else {

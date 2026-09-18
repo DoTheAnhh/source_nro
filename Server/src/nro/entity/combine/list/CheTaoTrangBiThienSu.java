@@ -99,7 +99,7 @@ public class CheTaoTrangBiThienSu {
             int ratioCT = congThuc.isCongThucVip() ? 35 : 25;
             int ratio = ratioDNC + ratioCT;
             if (manhThienSu.quantity >= 999 && player.inventory.gold >= 200_000_000) {
-                if (Util.isTrue(ratio, 100)) {
+                if (Util.isTrueMayMan(player, ratio, 100)) {
                     // Trung da may man -> boc trong 25..35%, tuc luon o phan tren
                     // cua khoang. Khong trung -> boc 0..(25..35), tuc ca khoang.
                     //

@@ -102,7 +102,7 @@ public class CuongHoaLoSaoPhaLe {
         }
 
         CombineService.gI().baHatMit.npcChat(player, "Bư cô lô, ba cô la, bư ra bư zô...");
-        if (Util.isTrue(
+        if (Util.isTrueMayMan(player, 
                 50, 100)) {
             if (starCuongHoa == 8) {
                 trangBi.addOptionParam(228, 8);

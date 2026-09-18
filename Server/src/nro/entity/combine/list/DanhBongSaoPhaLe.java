@@ -81,7 +81,7 @@ public class DanhBongSaoPhaLe {
             return;
         }
         CombineService.gI().baHatMit.npcChat(player, "Bư cô lô, ba cô la, bư ra bư zô...");
-        if (Util.isTrue(30, 100)) {
+        if (Util.isTrueMayMan(player, 30, 100)) {
             Item saoPhaLeLapLanh = saoPhaLeC2.cloneItem();
             saoPhaLeLapLanh.quantity = 1;
             int tempId = saoPhaLeC2.template.id == 964 ? 1433 : saoPhaLeC2.template.id == 965 ? 1434 : saoPhaLeC2.template.id + 10;

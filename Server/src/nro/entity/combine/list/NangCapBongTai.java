@@ -212,7 +212,7 @@ public class NangCapBongTai {
             player.inventory.gold -= 500_000_000;
             player.inventory.subRuby(20);
 
-            if (Util.isTrue(20, 100)) {
+            if (Util.isTrueMayMan(player, 20, 100)) {
                 Item btc2 = ItemService.gI().createNewItem((short) BT2);
                 btc2.itemOptions.add(new ItemOption(72, 2));
                 InventoryService.gI().subQuantityItemsBag(player, bongTai, 1);
@@ -253,7 +253,7 @@ public class NangCapBongTai {
             player.inventory.gold -= 2_000_000_000;
             player.inventory.subRuby(50);
 
-            if (Util.isTrue(10, 100)) {
+            if (Util.isTrueMayMan(player, 10, 100)) {
                 // ✅ Nâng cấp tại chỗ: chỉ đổi id template từ BT2 sang BT3, giữ nguyên option
                 bongTai.template = ItemService.gI().getTemplate((short) BT3);
                 InventoryService.gI().subQuantityItemsBag(player, manhVo, 999);

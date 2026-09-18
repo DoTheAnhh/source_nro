@@ -229,7 +229,7 @@ public class NhapNgocRong {
 
             int thanhCong = 0;
             for (int i = 0; i < soLan; i++) {
-                if (Util.isTrue(50, 100)) {
+                if (Util.isTrueMayMan(player, 50, 100)) {
                     thanhCong++;
                 }
             }

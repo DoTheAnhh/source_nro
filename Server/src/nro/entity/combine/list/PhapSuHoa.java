@@ -105,7 +105,7 @@ public class PhapSuHoa {
                 }
             }
 
-            if (Util.isTrue(player.combine.ratioCombine, 30)) {
+            if (Util.isTrueMayMan(player, player.combine.ratioCombine, 30)) {
                 CombineService.gI().sendEffectSuccessCombine(player);
                 List<Integer> idOptionHacHoa = Arrays.asList(0, 6, 7, 47);
                 int randomOption = idOptionHacHoa.get(Util.nextInt(0, 3));
