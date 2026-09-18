@@ -2220,6 +2220,9 @@ namespace Game4
                                         continue;
                                     }
                                     Char.myCharz().arrItemBox[m] = new Item();
+                                    // Chi so THAT cua o ruong: lenh "Lay ra" gui chinh so nay len may chu.
+                                    // Thieu dong nay thi moi mon deu mang 0 -> lay mon nao cung ra mon o dau.
+                                    Char.myCharz().arrItemBox[m].indexUI = m;
                                     Char.myCharz().arrItemBox[m].template = ItemTemplates.get(num21);
                                     Char.myCharz().arrItemBox[m].quantity = msg.reader().readInt();
                                     Char.myCharz().arrItemBox[m].info = msg.reader().readUTF();

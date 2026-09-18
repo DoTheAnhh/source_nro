@@ -11402,8 +11402,20 @@ namespace Game1
                 // Lay o THAT tu chinh mon gan vao lenh, khong suy tu `selected` va
                 // `newSelected` — hai bien ay doi theo cham va theo cot.
                 Item monLay = p as Item;
-                Service.gI().getItem(BOX_BAG, (sbyte)((monLay != null)
-                        ? monLay.indexUI : selected - 1));
+                // Tim vi tri THAT cua mon trong ruong theo chinh doi tuong, khong
+                // tin indexUI: mot duong nap ruong tung khong gan indexUI, moi mon
+                // mang 0 va bam mon nao cung lay ra mon o dau (cai rada).
+                int oRuong = -1;
+                Item[] ruong = Char.myCharz().arrItemBox;
+                if (monLay != null && ruong != null)
+                {
+                    oRuong = System.Array.IndexOf(ruong, monLay);
+                }
+                if (oRuong < 0)
+                {
+                    oRuong = (monLay != null) ? monLay.indexUI : selected - 1;
+                }
+                Service.gI().getItem(BOX_BAG, (sbyte)oRuong);
             }
             if (idAction == 1001)
             {
