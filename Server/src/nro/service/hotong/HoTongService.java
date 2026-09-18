@@ -119,12 +119,10 @@ public final class HoTongService {
             // SkillService: hai nguoi danh duoc nhau khi mot trong hai cam
             // co 8, hoac hai co khac mau.
             Service.gI().changeFlag(pl, CO_DEN);
-            try {
-                Service.gI().sendChangeFlag(pl.Duongtang, CO_DEN);
-            } catch (Exception ex) {
-                Logger.logException(HoTongService.class, ex,
-                        "Khong bat duoc co cho Duong Tang");
-            }
+            // Duong Tang luc nay chua dung o ban do nao, bao ra luc nay la bao
+            // vao khoang khong. Chi gan so co; joinMapMaster se bao lai ngay
+            // khi ong ay vua vao ban do.
+            pl.Duongtang.cFlag = CO_DEN;
         }
         Service.gI().sendThongBao(pl, "Bắt đầu hộ tống");
         return null;
@@ -232,6 +230,26 @@ public final class HoTongService {
      */
     private static final int KHU_CUA_DUONG_TANG = 0;
 
+    /**
+     * Báo lại cờ của Đường Tăng cho cả bản đồ ông ấy vừa vào.
+     *
+     * <p>Cờ chỉ được báo cho những ai đang ở <b>cùng bản đồ</b> lúc đổi cờ.
+     * Lúc nhận nhiệm vụ ông ấy còn chưa đứng ở đâu cả, và mỗi lần sang bản đồ
+     * mới là một nhóm người khác — không báo lại thì không ai thấy cờ, và phía
+     * client cũng không cho chọn ông ấy làm mục tiêu.</p>
+     */
+    public static void guiLaiCo(DuongTang dt) {
+        if (dt == null || dt.zone == null || dt.cFlag == 0) {
+            return;
+        }
+        try {
+            Service.gI().sendChangeFlag(dt, dt.cFlag);
+        } catch (Exception ex) {
+            Logger.logException(HoTongService.class, ex,
+                    "Khong bao duoc co cua Duong Tang");
+        }
+    }
+
     /** Tới cửa: qua bản đồ kế, hoặc xong việc nếu đó là cửa đích. */
     private void toiCua(DuongTang dt, WayPoint cua, int viTri, Player chu) {
         if (viTri >= TUYEN.length - 1) {
@@ -248,6 +266,7 @@ public final class HoTongService {
             return;
         }
         ChangeMapService.gI().changeMap(dt, z, cua.goX, cua.goY);
+        guiLaiCo(dt);
         // Bao cho nguoi choi biet ong ay vua sang dau va o khu nao.
         //
         // Day la THONG BAO chu khong phai cau chat cua Duong Tang: khong co no

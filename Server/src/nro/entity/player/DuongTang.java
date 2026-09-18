@@ -63,6 +63,9 @@ public class DuongTang extends Player{
         }
         ChangeMapService.gI().goToMap(this, master.zone);
         this.zone.load_Me_To_Another(this);
+        // Bao co ngay khi vua vao: luc nhan nhiem vu ong ay chua o dau ca nen
+        // lan doi co do khong toi duoc ai.
+        nro.service.hotong.HoTongService.guiLaiCo(this);
         // Duong Tang khong noi gi ca: moi cau chat cua ong ay la mot bong bong
         // che mat ban do va che luon chinh ong ay, ma nguoi choi thi chi can
         // biet phai bam theo.

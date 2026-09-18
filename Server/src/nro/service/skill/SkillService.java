@@ -2369,7 +2369,26 @@ public class SkillService {
     }
 
     public boolean canAttackPlayer2(Player p1, Player p2) {
-        if (p1.isPetFollow || p2.isPetFollow || p1.isDuongTang || p2.isDuongTang || (p1 instanceof NonInteractiveNPC) || (p2 instanceof NonInteractiveNPC)) {
+        // Duong Tang KHONG danh ai, nhung Duong Tang DANG HO TONG thi bi danh
+        // duoc — theo dung luat co ben duoi, nhu mot nguoi choi.
+        //
+        // Truoc day chan cung moi Duong Tang, nen du ong ay cam co den thi
+        // cung khong ai cham vao duoc, va phan "giu Duong Tang khoi bi pha" cua
+        // nhiem vu khong co gi de giu.
+        boolean p2LaDuongTangHoTong = p2.isDuongTang
+                && p2 instanceof nro.entity.player.DuongTang
+                && ((nro.entity.player.DuongTang) p2).master != null
+                && ((nro.entity.player.DuongTang) p2).master.HoTongDuongTang;
+        if (p1.isPetFollow || p2.isPetFollow || p1.isDuongTang
+                || (p2.isDuongTang && !p2LaDuongTangHoTong)
+                || (p1 instanceof NonInteractiveNPC) || (p2 instanceof NonInteractiveNPC)) {
+            return false;
+        }
+        if (p2LaDuongTangHoTong
+                && (p1 == ((nro.entity.player.DuongTang) p2).master
+                || p1 == ((nro.entity.player.DuongTang) p2).master.Detu)) {
+            // Nguoi ho tong (va de tu cua ho, cung cam co den) khong danh
+            // Duong Tang cua chinh minh.
             return false;
         }
         if (p1.typePk == ConstPlayer.PK_ALL || p2.typePk == ConstPlayer.PK_ALL) {

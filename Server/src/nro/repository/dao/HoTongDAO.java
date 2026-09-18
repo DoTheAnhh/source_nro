@@ -60,7 +60,7 @@ public final class HoTongDAO {
          * được họ, nên hộ tống thành chuyện phải giành nhau. Tắt thì đi yên ả.
          * Cờ tự tắt khi nhiệm vụ kết thúc, dù thành hay bại.</p>
          */
-        public boolean batCo = false;
+        public boolean batCo = true;
     }
 
     /** Một dòng phần thưởng. */
@@ -91,7 +91,7 @@ public final class HoTongDAO {
                     + " khoang_cach_map INT(11) NOT NULL DEFAULT 3,"
                     + " ms_moi_buoc INT(11) NOT NULL DEFAULT 700,"
                     + " buoc_diem_anh INT(11) NOT NULL DEFAULT 40,"
-                    + " bat_co TINYINT(1) NOT NULL DEFAULT 0,"
+                    + " bat_co TINYINT(1) NOT NULL DEFAULT 1,"
                     + " PRIMARY KEY (id)"
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
             ConnectDB.executeUpdate("CREATE TABLE IF NOT EXISTS ho_tong_qua ("
@@ -113,10 +113,36 @@ public final class HoTongDAO {
             if (demDong("ho_tong_cau_hinh") == 0) {
                 luuCauHinh(new CauHinh());
             }
+            batCoMotLan();
         } catch (Exception ex) {
             daTaoBang = false;
             Logger.logException(HoTongDAO.class, ex,
                     "Không dựng được bảng hộ tống");
+        }
+    }
+
+    /**
+     * Bật cờ đen cho bảng cấu hình đã tạo từ bản trước — <b>đúng một lần</b>.
+     *
+     * <p>Bản đầu tạo bảng với ô bật cờ để <b>tắt</b>, nên hộ tống chạy mà
+     * không ai cầm cờ, trong khi cả nhiệm vụ được thiết kế quanh chuyện bị
+     * đánh cướp. Thêm một cột đánh dấu để lượt sửa này chỉ chạy một lần: sau
+     * đó quản trị tắt đi trên panel thì nó giữ nguyên là tắt.</p>
+     */
+    private static void batCoMotLan() {
+        try {
+            ConnectDB.executeUpdate("ALTER TABLE ho_tong_cau_hinh"
+                    + " ADD COLUMN da_bat_co_mac_dinh TINYINT(1) NOT NULL DEFAULT 0");
+        } catch (Exception daCo) {
+            // Cot da co san — lan nay khong phai lan dau.
+        }
+        try {
+            ConnectDB.executeUpdate("UPDATE ho_tong_cau_hinh SET bat_co = 1,"
+                    + " da_bat_co_mac_dinh = 1 WHERE id = 1"
+                    + " AND da_bat_co_mac_dinh = 0");
+        } catch (Exception ex) {
+            Logger.logException(HoTongDAO.class, ex,
+                    "Không bật được cờ mặc định cho hộ tống");
         }
     }
 
