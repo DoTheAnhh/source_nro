@@ -2145,6 +2145,53 @@ public class Service {
         "Cần đạt sức mạnh 60tỷ để mở"
     };
 
+    /** Gói nhẹ: chỉ số đệ tử, cho khung đệ và bảng Chỉ số cập nhật liên tục. */
+    public static final int GOI_CHI_SO_DE_TU = 110;
+
+    /**
+     * Chỉ riêng <b>con số</b> của đệ tử, không hình, không đồ, không kỹ năng.
+     *
+     * <h3>Vì sao không đẩy {@link #showInfoPet} cho nhanh</h3>
+     *
+     * <p>Gói -107 nặng (chữ mô tả từng món đồ), và client khi nhận thì
+     * {@code InfoDlg.hide()} rồi {@code clearMyPet()} — đẩy mỗi giây là tắt mọi
+     * hộp thoại đang hiện và dựng lại đệ liên tục. Gói này chỉ ghi đè các ô số.</p>
+     *
+     * <p>Thứ tự là giao kèo với client ({@code Controller}, case 110).</p>
+     */
+    public void guiChiSoDeTu(Player pl) {
+        if (pl == null || pl.Detu == null || pl.Detu.nPoint == null) {
+            return;
+        }
+        nro.entity.player.NPoint n = pl.Detu.nPoint;
+        Message msg = null;
+        try {
+            msg = new Message(GOI_CHI_SO_DE_TU);
+            msg.writer().writeLong(n.power);
+            msg.writer().writeLong(n.tiemNang);
+            msg.writer().writeLong(n.hp);
+            msg.writer().writeLong(n.hpMax);
+            msg.writer().writeInt((int) Math.min(Integer.MAX_VALUE, n.mp));
+            msg.writer().writeInt((int) Math.min(Integer.MAX_VALUE, n.mpMax));
+            msg.writer().writeInt((int) Math.min(Integer.MAX_VALUE, n.dame));
+            msg.writer().writeInt(n.def);
+            msg.writer().writeInt(n.crit);
+            msg.writer().writeInt(n.tlSDCM);
+            msg.writer().writeInt(n.stamina);
+            msg.writer().writeInt(n.maxStamina);
+            msg.writer().writeByte(pl.Detu.getStatus());
+            msg.writer().writeUTF(pl.Detu.getNameThuctinh(pl.Detu.thuctinh)
+                    + pl.Detu.getStrLevel());
+            pl.sendMessage(msg);
+        } catch (Exception e) {
+            Logger.logException(Service.class, e);
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
+    }
+
     public void showInfoPet(Player pl) {
         if (pl != null && pl.Detu != null) {
             Message msg;

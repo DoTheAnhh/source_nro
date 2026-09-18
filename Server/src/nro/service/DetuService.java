@@ -236,7 +236,7 @@ public class DetuService {
             pet.playerSkill.skills.add(SkillUtil.createEmptySkill());
         }
         pet.nPoint.setFullHpMp();
-        player.Detu = pet;
+        thayDe(player, pet);
     }
     // =====================================================================
     //  De tu no ra tu trung — danh cho NGUOI CHOI
@@ -301,7 +301,70 @@ public class DetuService {
             pet.playerSkill.skills.add(SkillUtil.createEmptySkill());
         }
         pet.nPoint.setFullHpMp();
-        player.Detu = pet;
+        thayDe(player, pet);
+    }
+
+    /**
+     * Đặt con đệ mới thay con đang có, và bắt client vẽ lại <b>ngay</b>.
+     *
+     * <h3>Vì sao trước đây phải tách/hợp thể mới thấy đệ mới</h3>
+     *
+     * <p>Đệ mới mang <b>cùng id</b> với đệ cũ, mà client khi nhận gói thêm nhân
+     * vật (-5) thì bỏ qua nếu trên map đã có nhân vật trùng id. Nở trứng không
+     * hề gỡ đệ cũ khỏi map, nên con cũ nằm đó và gói của con mới bị bỏ. Hợp thể
+     * thì gỡ đệ (-6), tách ra thì thêm lại — lúc ấy mới ra hình mới.</p>
+     *
+     * <h3>Thứ tự</h3>
+     *
+     * <ol>
+     *   <li>Đang hợp thể với con cũ thì tách, cho sư phụ về lại hình mình.</li>
+     *   <li>Gỡ con cũ khỏi map và huỷ nó.</li>
+     *   <li>Gửi -6 cho id đệ xuống cả khu — kể cả khi máy chủ tưởng con cũ đã
+     *       đi rồi (đường Satan gỡ trước, nhưng một lượt update dở dang có thể
+     *       đã đưa nó quay lại).</li>
+     *   <li><b>Rồi mới</b> gán đệ mới: vòng update của sư phụ thấy đệ chưa có
+     *       zone sẽ tự {@code joinMapMaster()}, gói -5 tới sau gói -6 nên client
+     *       dựng nhân vật mới với hình mới.</li>
+     * </ol>
+     */
+    private void thayDe(Player player, Detu moi) {
+        Detu cu = player.Detu;
+        if (cu != null && cu != moi) {
+            try {
+                if (player.fusion != null
+                        && player.fusion.typeFusion != ConstPlayer.NON_FUSION) {
+                    cu.unFusion();
+                }
+                ChangeMapService.gI().exitMap(cu);
+                cu.dispose();
+            } catch (Exception e) {
+                Logger.logException(DetuService.class, e);
+            }
+        }
+        xoaDeTrenClient(player, moi.id);
+        player.Detu = moi;
+        // Bang de tu / khung de tren client giu hinh va chi so cua con cu cho
+        // toi lan hoi sau — gui luon ban cua con moi.
+        Service.gI().showInfoPet(player);
+    }
+
+    /** Gửi gói xoá nhân vật (-6) cho id đệ tới mọi người trong khu của sư phụ. */
+    private static void xoaDeTrenClient(Player player, long idDe) {
+        if (player.zone == null) {
+            return;
+        }
+        nro.net.io.Message msg = null;
+        try {
+            msg = new nro.net.io.Message(-6);
+            msg.writer().writeInt((int) idDe);
+            Service.gI().sendMessAllPlayerInMap(player.zone, msg);
+        } catch (Exception e) {
+            Logger.logException(DetuService.class, e);
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
     }
 
 //-------------------------------CREATE DETU------------------------------------
@@ -579,7 +642,7 @@ public void createBlackPet(Player player) {
             pet.playerSkill.skills.add(SkillUtil.createEmptySkill());
         }
         pet.nPoint.setFullHpMp();
-        player.Detu = pet;
+        thayDe(player, pet);
         if (isUbu || isKidJiren || isKidBill) {
             player.pointfusion.setHpFusion(30);
             player.pointfusion.setMpFusion(30);

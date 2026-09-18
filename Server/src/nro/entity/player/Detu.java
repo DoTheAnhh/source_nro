@@ -387,13 +387,58 @@ public class Detu extends Player {
     private long lastTimeMoveAtHome;
     private byte directAtHome = -1;
     
+    private long lucGuiChiSo;
+    private long dauChiSoDaGui;
+
+    /**
+     * Đẩy chỉ số đệ xuống client sư phụ — mỗi giây một lần, và chỉ khi có đổi.
+     *
+     * <p>Đang up thì sức mạnh, tiềm năng, máu nhích liên tục; trước đây client
+     * chỉ biết khi tự hỏi lại (năm giây một lần, hoặc lúc mở bảng). Gói gửi là
+     * gói nhẹ {@code Service.guiChiSoDeTu}, đứng yên thì không gửi gì.</p>
+     */
+    private void guiChiSoNeuDoi() {
+        if (!master.isPl() || master.getSession() == null) {
+            return;
+        }
+        long bayGio = System.currentTimeMillis();
+        if (bayGio - lucGuiChiSo < 1000) {
+            return;
+        }
+        lucGuiChiSo = bayGio;
+        long dau = nPoint.power;
+        dau = dau * 31 + nPoint.tiemNang;
+        dau = dau * 31 + nPoint.hp;
+        dau = dau * 31 + nPoint.hpMax;
+        dau = dau * 31 + nPoint.mp;
+        dau = dau * 31 + nPoint.mpMax;
+        dau = dau * 31 + nPoint.dame;
+        dau = dau * 31 + nPoint.def;
+        dau = dau * 31 + nPoint.crit;
+        dau = dau * 31 + nPoint.tlSDCM;
+        dau = dau * 31 + nPoint.stamina;
+        dau = dau * 31 + nPoint.maxStamina;
+        dau = dau * 31 + status;
+        if (dau == dauChiSoDaGui) {
+            return;
+        }
+        dauChiSoDaGui = dau;
+        Service.gI().guiChiSoDeTu(master);
+    }
+
     @Override
     public void update() {
         try {
-            if (this.master != null && this.master.zone != null) {
+            // master.Detu == this: con de vua bi thay (no trung, doi de) co the
+            // van dang chay do mot luot update tren luong cua su phu. Khong chan
+            // thi no thay minh mat zone, joinMapMaster() lai voi HINH CU — va
+            // client bo qua goi them nhan vat cua con de moi vi trung id.
+            if (this.master != null && this.master.Detu == this
+                    && this.master.zone != null) {
                 super.update();
                 increasePoint(); //cộng chỉ số
                 updatePower();
+                guiChiSoNeuDoi();
                 if (this.isDie()) {
                     if (System.currentTimeMillis() - lastTimeDie > Util.nextInt(40000, 50000)) {
                         Service.gI().hsChar(this, nPoint.hpMax, nPoint.mpMax);
@@ -1446,8 +1491,10 @@ public class Detu extends Player {
 
     @Override
     public void dispose() {
+        // Dua CHINH con de ra khoi ban do. Truoc day viet exitMap(master): de
+        // con dung tren map luc bi huy thi su phu bi day ra khoi map.
         if (zone != null) {
-            ChangeMapService.gI().exitMap(master);
+            ChangeMapService.gI().exitMap(this);
         }
         this.mobAttack = null;
         this.master = null;

@@ -3938,6 +3938,46 @@ namespace Game3
                             God.TuiUI.datHinhPet(dauPet, thanPet, chanPet);
                         }
                         break;
+                    case 110:
+                        {
+                            // Chi so de tu, may chu day moi giay khi co doi
+                            // (Service.guiChiSoDeTu). Chi ghi de cac o so — khong
+                            // dung toi hinh, do, ky nang, va khong tat hop thoai
+                            // nhu goi -107. Thu tu la giao keo voi may chu.
+                            long smDe = msg.reader().readLong();
+                            long tnDe = msg.reader().readLong();
+                            long hpDe = msg.reader().readLong();
+                            long hpMaxDe = msg.reader().readLong();
+                            int mpDe = msg.reader().readInt();
+                            int mpMaxDe = msg.reader().readInt();
+                            int sdDe = msg.reader().readInt();
+                            int giapDe = msg.reader().readInt();
+                            int cmDe = msg.reader().readInt();
+                            int sdcmDe = msg.reader().readInt();
+                            int tlDe = msg.reader().readInt();
+                            int tlMaxDe = msg.reader().readInt();
+                            sbyte ttDe = msg.reader().readByte();
+                            string capDe = msg.reader().readUTF();
+                            if (Char.myCharz().havePet)
+                            {
+                                Char de = Char.myPetz();
+                                de.cPower = smDe;
+                                de.cTiemNang = tnDe;
+                                de.cHP = hpDe;
+                                de.cHPFull = hpMaxDe;
+                                de.cMP = mpDe;
+                                de.cMPFull = mpMaxDe;
+                                de.cDamFull = sdDe;
+                                de.cDefull = giapDe;
+                                de.cCriticalFull = cmDe;
+                                de.cCritDameFull = sdcmDe;
+                                de.cStamina = tlDe;
+                                de.cMaxStamina = (short)tlMaxDe;
+                                de.petStatus = ttDe;
+                                de.currStrLevel = capDe;
+                            }
+                        }
+                        break;
                     case 116:
                         {
                             // Chi so cua mot nhan vat, cho bang "Thong tin
