@@ -80,7 +80,7 @@ namespace Game4.God
         private const int DV_GIAY_KQ = 7;
 
         /// <summary>Hệ số trả ×10 — chỉ để bày ra, máy chủ mới là bên trả.</summary>
-        private const int DV_HE_SO_X10 = 46;
+        private const int DV_HE_SO_X10 = 45;
 
         private const long DV_TOI_DA_MOI_CON = 500;
         private const long DV_TOI_DA_MOT_VAN = 1500;
@@ -442,6 +442,25 @@ namespace Game4.God
         //  Gom tiền
         // ==================================================================
 
+        /// <summary>Con đã đặt trong ván này, -1 nếu chưa đặt con nào.</summary>
+        /// <remarks>
+        /// Mỗi ván chỉ một con — máy chủ chặn con thứ hai. Rải khắp các con thì
+        /// ván nào cũng "thắng" một chút mà thua thì mất cả mấy cửa, trò chơi mất
+        /// hết hồi hộp.
+        /// </remarks>
+        private static int dvConDaDat()
+        {
+            God.MiniGame m = God.MiniGame.gI();
+            for (int i = 0; i < DV_SO_VIT; i++)
+            {
+                if (m.dnCuaToi[i] > 0L)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
         private bool dvChoDat()
         {
             return God.MiniGame.gI().dnGiaiDoan == 0;
@@ -520,10 +539,17 @@ namespace Game4.God
             }
             dvDungDuong();
             int ms = dvMsDua();
+            int daDat = dvConDaDat();
+            if (daDat >= 0 && dvChoDat())
+            {
+                // Moi van mot con: da dat con nao thi chi con cong them vao con do.
+                dvChon = daDat;
+            }
 
             int x = x0 + LE;
             int w = rong - LE * 2;
-            int yTren = y0 + CAO_TIEU_DE + CAO_THE + 8;
+            // Duoi hang the con (Dat cuoc / Lich su cua toi / Lich su may chu).
+            int yTren = yNoiDung() - 2;
             int yDuoi = y0 + cao - LE;
             int h = yDuoi - yTren;
 
@@ -613,7 +639,9 @@ namespace Game4.God
             string so = dvSo(m.tongThoi);
             int rongSo = mFont.tahoma_7b_dark.getWidth(so);
             mFont.tahoma_7b_dark.drawString(g, so, x + w, y + 3, mFont.RIGHT);
-            SmallImage.drawSmallImage(g, ICON_THOI_VANG, x + w - rongSo - 9, y + 8, 0,
+            // Tam icon cach mep chu nua be ngang icon (~22) cong mot khe: dat sat
+            // hon thi thoi vang de len chu so dau tien.
+            SmallImage.drawSmallImage(g, ICON_THOI_VANG, x + w - rongSo - 16, y + 8, 0,
                     mGraphics.VCENTER | mGraphics.HCENTER);
 
             // Lich su con thang, giua so phien va dong ho.
@@ -1254,9 +1282,12 @@ namespace Game4.God
         private void veLoiMoiDatCuoc(mGraphics g, int x, int y, int w, int h)
         {
             God.MiniGame m = God.MiniGame.gI();
-            string chu = dvChon < 0
-                    ? "Chọn một chú vịt bên dưới để đặt cược"
-                    : "Xuất phát sau " + m.dnGiay + " giây — vịt về nhất ăn x4,6";
+            int daDat = dvConDaDat();
+            string chu = daDat >= 0
+                    ? "Bạn đã đặt " + TEN_VIT[daDat] + " — xuất phát sau " + m.dnGiay + " giây"
+                    : dvChon < 0
+                    ? "Chọn một chú vịt — mỗi ván đặt được một con"
+                    : "Xuất phát sau " + m.dnGiay + " giây — vịt về nhất ăn x4,5";
             int rc = mFont.tahoma_7b_white.getWidth(chu) + 18;
             int xc = x + w / 2 - rc / 2;
             int yc = y + h - 22;
@@ -1305,7 +1336,7 @@ namespace Game4.God
             int xc = xb + 84;
             int yc = yb + 24;
             mFont.tahoma_7b_red.drawString(g, TEN_VIT[nhat], xc, yc, mFont.LEFT);
-            mFont.tahoma_7_grey.drawString(g, "Trả x4,6 tiền cược", xc, yc + 12, mFont.LEFT);
+            mFont.tahoma_7_grey.drawString(g, "Trả x4,5 tiền cược", xc, yc + 12, mFont.LEFT);
             string nhiBa = "Nhì: " + TEN_NGAN_VIT[m.dnThuTu[1]]
                     + "   Ba: " + TEN_NGAN_VIT[m.dnThuTu[2]];
             mFont.tahoma_7b_dark.drawString(g, nhiBa, xc, yc + 24, mFont.LEFT);
@@ -1374,8 +1405,9 @@ namespace Game4.God
                 int canh = coAnh ? mFont.LEFT : mFont.CENTER;
                 if (coAnh)
                 {
-                    int khung = chon ? 1 + (int) ((bayGio / 110L + i) % 6)
-                            : ((bayGio / 700L + i) % 2 == 0 ? 0 : 7);
+                    // Dung yen: khung 0. Cho chay lien tuc thi nam the cung nhuc
+                    // nhich, mat dan het su chu y khoi khung canh dua.
+                    const int khung = 0;
                     g.setClip(xt + 2, y + 15, rt - 4, h - 17);
                     veMotVit(g, i, khung, xt + 25, y + h - 1);
                     g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
@@ -1391,7 +1423,7 @@ namespace Game4.God
                 {
                     buocDong = 9;
                 }
-                mFont.tahoma_7b_red.drawString(g, "x4,6", xChu, yc, canh);
+                mFont.tahoma_7b_red.drawString(g, "x4,5", xChu, yc, canh);
                 mFont.tahoma_7_grey.drawString(g, "Tổng " + dvSo(m.dnTongCon[i]), xChu,
                         yc + buocDong, canh);
                 long cuaToi = m.dnCuaToi[i];
@@ -1410,9 +1442,16 @@ namespace Game4.God
                 {
                     veVienChay(g, xt, y, rt, h, MAU_VANG);
                 }
+                int daDat = dvConDaDat();
                 if (!dvChoDat() && !thang)
                 {
                     g.setColor(0x000000, 0.10f);
+                    g.fillRect(xt, y, rt, h, BO_GOC);
+                }
+                else if (dvChoDat() && daDat >= 0 && daDat != i)
+                {
+                    // Da dat con khac: the nay khoa trong van nay.
+                    g.setColor(0x3A2A1A, 0.42f);
                     g.fillRect(xt, y, rt, h, BO_GOC);
                 }
             }
@@ -1497,6 +1536,122 @@ namespace Game4.God
         }
 
         // ==================================================================
+        //  Hai thẻ lịch sử
+        // ==================================================================
+
+        /// <summary>Số dòng của thẻ lịch sử đang mở, cho nút sang trang.</summary>
+        /// <remarks>
+        /// Hai danh sách trong <c>MiniGame</c> dùng chung cho mọi trò, nên phải xem
+        /// <c>lsCuaTro</c>: còn là của trò khác thì coi như chưa có gì.
+        /// </remarks>
+        private int dvSoDongLs()
+        {
+            God.MiniGame m = God.MiniGame.gI();
+            if (m.lsCuaTro != God.MiniGame.TRO_DUA_NGUA)
+            {
+                return 0;
+            }
+            return the2 == THE2_LS_TOI ? m.lsToi.Count : m.lsServer.Count;
+        }
+
+        /// <summary>Huy hiệu màu của con vịt kèm tên ngắn, cho một ô bảng.</summary>
+        private static void veTenVitO(mGraphics g, int x, int y, int con)
+        {
+            if (con < 0 || con >= DV_SO_VIT)
+            {
+                mFont.tahoma_7_grey.drawString(g, "?", x, y, mFont.LEFT);
+                return;
+            }
+            veHuyHieuVit(g, x + 5, y + 6, 10, con, false);
+            mFont.tahoma_7b_dark.drawString(g, TEN_NGAN_VIT[con], x + 13, y, mFont.LEFT);
+        }
+
+        /// <summary>Cột theo tỉ lệ bề ngang, để bảng hẹp vẫn không đè chữ.</summary>
+        private int[] dvCot(params int[] phanNghin)
+        {
+            int w = rong - LE * 2;
+            int[] x = new int[phanNghin.Length];
+            for (int i = 0; i < x.Length; i++)
+            {
+                x[i] = w * phanNghin[i] / 1000;
+            }
+            return x;
+        }
+
+        private void veLsToiVit(mGraphics g)
+        {
+            God.MiniGame m = God.MiniGame.gI();
+            int[] xCot = dvCot(0, 170, 400, 540, 780);
+            veNenLs(g, new string[] { "Phiên", "Vịt đặt", "Cược", "Về nhất",
+                    "Thắng/Thua" }, xCot);
+            int tong = dvSoDongLs();
+            if (tong == 0)
+            {
+                mFont.tahoma_7_grey.drawString(g, "Bạn chưa đặt cuộc đua nào.",
+                        x0 + rong / 2, yNoiDung() + 40, mFont.CENTER);
+                veNutTrang(g, 0);
+                return;
+            }
+            int moiTrang = soDongMotTrang();
+            int dau = trang * moiTrang;
+            for (int i = 0; i < moiTrang && dau + i < tong; i++)
+            {
+                God.MiniGame.DongLsToi d = m.lsToi[dau + i];
+                int[] o = oDongLs(i);
+                g.setColor(d.thang ? 0xD8F0C8 : (i % 2 == 0 ? 0xFFFFFF : 0xE8D6B8),
+                        d.thang ? 0.6f : 0.35f);
+                g.fillRect(o[0], o[1], o[2], o[3], 3);
+                mFont.tahoma_7b_dark.drawString(g, "#" + d.phien, o[0] + xCot[0] + 2,
+                        o[1] + 2, mFont.LEFT);
+                veTenVitO(g, o[0] + xCot[1], o[1] + 2, d.cua);
+                mFont.tahoma_7b_dark.drawString(g, dvSo(d.soThoi), o[0] + xCot[2],
+                        o[1] + 2, mFont.LEFT);
+                veTenVitO(g, o[0] + xCot[3], o[1] + 2, d.ketQua);
+                (d.thang ? mFont.tahoma_7b_green : mFont.tahoma_7b_red).drawString(g,
+                        d.thang ? "+" + dvSo(d.tienThang) : "-" + dvSo(d.soThoi),
+                        o[0] + xCot[4], o[1] + 2, mFont.LEFT);
+            }
+            veNutTrang(g, tong);
+        }
+
+        private void veLsServerVit(mGraphics g)
+        {
+            God.MiniGame m = God.MiniGame.gI();
+            int[] xCot = dvCot(0, 150, 300, 450, 600, 760, 900);
+            veNenLs(g, new string[] { "Phiên", "Nhất", "Nhì", "Ba", "Tổng cược",
+                    "Đã trả", "Người" }, xCot);
+            int tong = dvSoDongLs();
+            if (tong == 0)
+            {
+                mFont.tahoma_7_grey.drawString(g, "Chưa có cuộc đua nào được ghi.",
+                        x0 + rong / 2, yNoiDung() + 40, mFont.CENTER);
+                veNutTrang(g, 0);
+                return;
+            }
+            int moiTrang = soDongMotTrang();
+            int dau = trang * moiTrang;
+            for (int i = 0; i < moiTrang && dau + i < tong; i++)
+            {
+                God.MiniGame.DongLsServer d = m.lsServer[dau + i];
+                int[] o = oDongLs(i);
+                g.setColor(i % 2 == 0 ? 0xFFFFFF : 0xE8D6B8, 0.35f);
+                g.fillRect(o[0], o[1], o[2], o[3], 3);
+                mFont.tahoma_7b_dark.drawString(g, "#" + d.phien, o[0] + xCot[0] + 2,
+                        o[1] + 2, mFont.LEFT);
+                veTenVitO(g, o[0] + xCot[1], o[1] + 2, d.kq1);
+                veTenVitO(g, o[0] + xCot[2], o[1] + 2, d.kq2);
+                veTenVitO(g, o[0] + xCot[3], o[1] + 2, d.kq3);
+                mFont.tahoma_7_blue.drawString(g, dvSo(d.tongCuoc), o[0] + xCot[4],
+                        o[1] + 2, mFont.LEFT);
+                mFont.tahoma_7_red.drawString(g, dvSo(d.tongTra), o[0] + xCot[5],
+                        o[1] + 2, mFont.LEFT);
+                mFont.tahoma_7b_dark.drawString(g, d.soNguoi + string.Empty,
+                        o[0] + xCot[6], o[1] + 2, mFont.LEFT);
+            }
+            veNutTrang(g, tong);
+        }
+
+        // ==================================================================
         //  Chạm
         // ==================================================================
 
@@ -1509,6 +1664,12 @@ namespace Game4.God
                 if (o == null || !cham(o[0], o[1], o[2], o[3]))
                 {
                     continue;
+                }
+                int daDat = dvConDaDat();
+                if (daDat >= 0 && daDat != i)
+                {
+                    GameScr.info1.addInfo("Mỗi ván chỉ đặt một con — bạn đã chọn " + TEN_VIT[daDat], 0);
+                    return;
                 }
                 if (dvChoDat() && dvChon != i)
                 {

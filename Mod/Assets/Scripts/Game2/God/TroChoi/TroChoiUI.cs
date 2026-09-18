@@ -1061,7 +1061,7 @@ namespace Game2.God
             veNutDong(g, x0 + rong - 24, y0 + 5);
 
             veDaiTheTro(g);
-            if (the == THE_TAI_XIU)
+            if (the == THE_TAI_XIU || the == THE_DUA_NGUA)
             {
                 for (int i = 0; i < TEN_THE_2.Length; i++)
                 {
@@ -1075,7 +1075,18 @@ namespace Game2.God
             }
             else if (the == THE_DUA_NGUA)
             {
-                veDuaVit(g);
+                if (the2 == THE2_LS_TOI)
+                {
+                    veLsToiVit(g);
+                }
+                else if (the2 == THE2_LS_SERVER)
+                {
+                    veLsServerVit(g);
+                }
+                else
+                {
+                    veDuaVit(g);
+                }
             }
             else if (the != THE_TAI_XIU)
             {
@@ -5484,7 +5495,7 @@ namespace Game2.God
                     return true;
                 }
             }
-            if (the == THE_TAI_XIU)
+            if (the == THE_TAI_XIU || the == THE_DUA_NGUA)
             {
                 for (int i = 0; i < TEN_THE_2.Length; i++)
                 {
@@ -5505,7 +5516,14 @@ namespace Game2.God
             }
             if (the == THE_DUA_NGUA)
             {
-                chamDuaVit();
+                if (the2 == THE2_DAT_CUOC)
+                {
+                    chamDuaVit();
+                }
+                else
+                {
+                    chamTrang();
+                }
                 GameCanvas.clearAllPointerEvent();
                 return true;
             }
@@ -5583,6 +5601,18 @@ namespace Game2.God
             trang = 0;
             // Xin lai moi lan mo the: lich su doi sau moi van, giu ban cu thi
             // nguoi choi vua choi xong mo ra khong thay van vua roi.
+            if (the == THE_DUA_NGUA)
+            {
+                if (i == THE2_LS_TOI)
+                {
+                    God.MiniGame.gI().xinLsToi(God.MiniGame.TRO_DUA_NGUA);
+                }
+                else if (i == THE2_LS_SERVER)
+                {
+                    God.MiniGame.gI().xinLsServer(God.MiniGame.TRO_DUA_NGUA);
+                }
+                return;
+            }
             if (i == THE2_LS_TOI)
             {
                 Service.gI().taiXiuXinLichSuToi();
@@ -5595,7 +5625,8 @@ namespace Game2.God
 
         private bool chamTrang()
         {
-            int tongDong = the2 == THE2_LS_TOI ? lsToi.Count : lsServer.Count;
+            int tongDong = the == THE_DUA_NGUA ? dvSoDongLs()
+                    : (the2 == THE2_LS_TOI ? lsToi.Count : lsServer.Count);
             int moiTrang = soDongMotTrang();
             int soTrang = (tongDong + moiTrang - 1) / moiTrang;
             for (int k = 0; k < 2; k++)

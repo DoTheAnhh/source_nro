@@ -81,6 +81,50 @@ public final class MiniGameDAO {
         } catch (Exception ex) {
             Logger.logException(MiniGameDAO.class, ex, "Loi tao bang mini game");
         }
+        tachLichSuDuaNgua();
+    }
+
+    /** Mã trò cất lịch sử Đua Ngựa cũ — không trò nào đọc tới. */
+    public static final int TRO_DUA_NGUA_CU = 102;
+
+    /**
+     * Đổi lịch sử Đua Ngựa cũ sang mã cất đi, <b>đúng một lần</b>.
+     *
+     * <p>Đua Vịt dùng lại mã trò 2 của Đua Ngựa. Để nguyên thì số phiên nối
+     * tiếp số của ngựa (hàng vạn phên) và lịch sử còn những con số 6 — con ngựa
+     * thứ sáu mà đua vịt không có. Chuyển sang mã khác chứ không xoá: số liệu
+     * tiền cược cũ vẫn còn để tra.</p>
+     *
+     * <p>Ghi dấu vào bảng <code>mg_da_chuyen</code> để không chạy lại: chạy lại sau
+     * khi đua vịt đã có phiên thì cất luôn lịch sử vịt.</p>
+     */
+    private static void tachLichSuDuaNgua() {
+        final String dau = "dua_vit_tach_ngua";
+        CrisResultSet rs = null;
+        try {
+            ConnectDB.executeUpdate("CREATE TABLE IF NOT EXISTS mg_da_chuyen ("
+                    + " ten VARCHAR(64) NOT NULL,"
+                    + " luc BIGINT(20) NOT NULL DEFAULT 0,"
+                    + " PRIMARY KEY (ten)"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            rs = ConnectDB.executeQuery(
+                    "SELECT ten FROM mg_da_chuyen WHERE ten = ?", dau);
+            if (rs.next()) {
+                return;
+            }
+            ConnectDB.executeUpdate("UPDATE mg_phien SET tro = ? WHERE tro = 2",
+                    TRO_DUA_NGUA_CU);
+            ConnectDB.executeUpdate("UPDATE mg_cuoc SET tro = ? WHERE tro = 2",
+                    TRO_DUA_NGUA_CU);
+            ConnectDB.executeUpdate(
+                    "INSERT INTO mg_da_chuyen (ten, luc) VALUES (?, ?)",
+                    dau, System.currentTimeMillis());
+        } catch (Exception ex) {
+            Logger.logException(MiniGameDAO.class, ex,
+                    "Khong tach duoc lich su Dua Ngua cu");
+        } finally {
+            dong(rs);
+        }
     }
 
     /** Số phiên lớn nhất đã ghi của một trò, để đếm tiếp chứ không quay về 1. */

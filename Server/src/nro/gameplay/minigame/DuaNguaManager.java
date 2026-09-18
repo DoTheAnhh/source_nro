@@ -19,8 +19,8 @@ import nro.service.Service;
  *
  * <h2>Luật</h2>
  *
- * <p>Năm con cơ hội <b>bằng nhau</b>, mỗi con một phần năm. Trả về 4,6× tiền
- * cược — công bằng là 5×, phần chênh là lợi thế nhà cái, khoảng 8 phần trăm.</p>
+ * <p>Năm con cơ hội <b>bằng nhau</b>, mỗi con một phần năm. Trả về 4,5× tiền
+ * cược — công bằng là 5×, phần chênh là lợi thế nhà cái, đúng 10 phần trăm.</p>
  *
  * <h2>Đường đua do máy chủ dựng sẵn</h2>
  *
@@ -62,8 +62,8 @@ public final class DuaNguaManager extends VongChoi {
     public static final long TOI_DA_MOI_CON = 500;
     public static final long TOI_DA_MOT_VAN = 1500;
 
-    /** Trả 4,6× tiền cược. Nhân 10 để tính bằng số nguyên. */
-    private static final long NHAN_X10 = 46;
+    /** Trả 4,5× tiền cược. Nhân 10 để tính bằng số nguyên. */
+    private static final long NHAN_X10 = 45;
 
     /** Cùng thứ tự với <code>TEN_VIT</code> và bộ sprite <code>dv_*</code> bên client. */
     public static final String[] TEN_NGUA = {
@@ -267,6 +267,20 @@ public final class DuaNguaManager extends VongChoi {
             return;
         }
         Cuoc c = cuocs.get(pl.id);
+        if (c != null) {
+            // MOT con moi van. Rai tien len ca bon, nam con thi ty le "thang"
+            // len 80, 100 phan tram: lai moi van mot chut, thua mot van la mat
+            // ca bon cua — ve lau dai van lo dung phan loi the nha cai, nhung
+            // ca tro choi thanh mot chuoi thang vat vanh khong con gi hoi hop.
+            // Cong them vao dung con da chon thi van duoc.
+            for (int k = 0; k < SO_NGUA; k++) {
+                if (k != con && c.theoCon[k] > 0) {
+                    Service.gI().sendThongBao(pl, "Mỗi ván chỉ được đặt một con vịt! Bạn đã chọn "
+                            + TEN_NGUA[k] + ".");
+                    return;
+                }
+            }
+        }
         long oCon = (c == null) ? 0 : c.theoCon[con];
         long caVan = (c == null) ? 0 : c.tong();
         if (oCon + soThoi > TOI_DA_MOI_CON) {
