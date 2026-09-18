@@ -123,14 +123,16 @@ public class SetBonusDAO {
         LOAI.put("chinh_xac", "Chính xác + % (xuyên né đòn)");
         LOAI.put("xuyen_giap", "Xuyên giáp + %");
         LOAI.put("xuyen_giap_cm", "Xuyên giáp khi chí mạng + %");
-        LOAI.put("bom_pct", "Sát thương Tự sát + %");
+        LOAI.put("bom_pct", "Tỉ lệ phát nổ khi chết + %");
         LOAI.put("hp_hoi_pct", "HP hồi mỗi 30 giây + % (tối đa 100)");
         LOAI.put("ki_hoi_pct", "KI hồi mỗi 30 giây + % (tối đa 100)");
         LOAI.put("fix_stun", "Giảm thời gian bị choáng + % (khi đang bật khiên)");
         LOAI.put("tai_tao_pct", "Hồi phục từ Tái tạo năng lượng + %");
         LOAI.put("hoi_chieu_pct", "Giảm thời gian hồi chiêu + %");
         LOAI.put("hoi_chieu_skill_pct",
-                "Giam thoi gian hoi chieu mot chieu + % (dien id chieu vao Tham so)");
+                "Giảm thời gian hồi chiêu một chiêu + % (chọn chiêu)");
+        LOAI.put("skill_power_pct",
+                "Hiệu lực chiêu + % (lượng hồi Trị Thương, % máu Huýt Sáo, % Biến Khỉ, hồi Tái Tạo)");
         LOAI.put("choang_pct", "Thời gian choáng Dịch chuyển tức thời + %");
         LOAI.put("choang_tdhs_pct", "Thời gian choáng Thái Dương Hạ San + %");
         LOAI.put("ne_don_pct", "Né đòn + % (bằng ne_don, tên rõ hơn)");
@@ -205,14 +207,14 @@ public class SetBonusDAO {
             case "chinh_xac": than = dau + giaTri + "% chính xác"; break;
             case "xuyen_giap": than = dau + giaTri + "% xuyên giáp"; break;
             case "xuyen_giap_cm": than = dau + giaTri + "% xuyên giáp khi chí mạng"; break;
-            case "bom_pct": than = dau + giaTri + "% sát thương Tự sát"; break;
+            case "bom_pct": than = dau + giaTri + "% tỉ lệ phát nổ khi chết"; break;
             case "hp_hoi_pct": than = dau + giaTri + "% HP hồi mỗi 30 giây"; break;
             case "ki_hoi_pct": than = dau + giaTri + "% KI hồi mỗi 30 giây"; break;
             case "fix_stun": than = dau + giaTri + "% giảm thời gian bị choáng"; break;
             case "tai_tao_pct": than = dau + giaTri + "% hồi phục từ Tái tạo năng lượng"; break;
             case "hoi_chieu_pct": than = dau + giaTri + "% giảm thời gian hồi chiêu"; break;
             case "hoi_chieu_skill_pct":
-                than = dau + giaTri + "% giam hoi chieu "
+                than = dau + giaTri + "% giảm hồi chiêu "
                         + CHIEU.getOrDefault(thamSo, "id " + thamSo);
                 break;
             case "choang_pct":
@@ -287,6 +289,10 @@ public class SetBonusDAO {
                 than = dau + giaTri + "% thời gian hiệu ứng phụ của "
                         + CHIEU.getOrDefault(thamSo, "id " + thamSo);
                 break;
+            case "skill_power_pct":
+                than = dau + giaTri + "% hiệu lực chiêu "
+                        + CHIEU.getOrDefault(thamSo, "id " + thamSo);
+                break;
             case "lam_moi_pct":
                 than = dau + giaTri + "% làm mới chiêu "
                         + CHIEU.getOrDefault(thamSo, "id " + thamSo);
@@ -296,6 +302,12 @@ public class SetBonusDAO {
                 break;
         }
         return soMon + " món: " + than;
+    }
+
+    public static String moTaChiSo(int soMon, String loai, long giaTri,
+            int thamSo, int tiLeKichHoat, int thoiGian) {
+        String moTa = moTaChiSo(soMon, loai, giaTri, thamSo, tiLeKichHoat);
+        return thoiGian > 0 ? moTa + " trong " + thoiGian + " giây" : moTa;
     }
 
     public static String moTaChiSo(int soMon, String loai, long giaTri,
@@ -373,6 +385,12 @@ public class SetBonusDAO {
          * (0 Dragon, 1 Kamejoko, 2 Demon, 3 Masenko, 4 Galick, 5 Antomic…).
          */
         public int thamSo;
+        /**
+         * Thời gian (giây) của <b>hiệu ứng phụ</b> — thiêu đốt, làm chậm, gây
+         * choáng… 0 = thời gian gốc (5 giây, choáng 2 giây). Gom vào cùng dòng
+         * với giá trị và tỉ lệ để khai một hiệu ứng chỉ cần một dòng.
+         */
+        public int thoiGian;
         public boolean active = true;
         public String ghiChu;
     }
@@ -384,6 +402,7 @@ public class SetBonusDAO {
     public static void reload() {
         nro.repository.schema.LuocDoPanel.damBao();
         vaCotTiLeKichHoat();
+        gopLoaiTrung();
         Map<String, List<Bonus>> ds = new HashMap<>();
         CrisResultSet rs = null;
         try {
@@ -396,6 +415,7 @@ public class SetBonusDAO {
                 b.loai = rs.getString("loai");
                 b.giaTri = rs.getLong("gia_tri");
                 b.tiLeKichHoat = rs.getInt("ti_le_kich_hoat");
+                b.thoiGian = rs.getInt("thoi_gian");
                 b.thamSo = rs.getInt("tham_so");
                 b.active = true;
                 b.ghiChu = rs.getStringOrNull("ghi_chu");
@@ -666,6 +686,7 @@ public class SetBonusDAO {
                 b.loai = rs.getString("loai");
                 b.giaTri = rs.getLong("gia_tri");
                 b.tiLeKichHoat = rs.getInt("ti_le_kich_hoat");
+                b.thoiGian = rs.getInt("thoi_gian");
                 b.thamSo = rs.getInt("tham_so");
                 b.active = rs.getBoolean("active");
                 b.ghiChu = rs.getStringOrNull("ghi_chu");
@@ -700,6 +721,9 @@ public class SetBonusDAO {
                 && (b.giaTri < 0 || b.giaTri > 100)) {
             return "Ti le chi mang mot ky nang phai nam trong khoang 0..100%.";
         }
+        if (b.thoiGian < 0 || b.thoiGian > 3600) {
+            return "Thời gian hiệu ứng phải từ 0 đến 3600 giây.";
+        }
         if ("skill_duration_pct".equals(b.loai) && b.giaTri < 0) {
             return "Thoi gian tac dung chi duoc tang tu 0% tro len.";
         }
@@ -707,15 +731,16 @@ public class SetBonusDAO {
             if (b.id > 0) {
                 ConnectDB.executeUpdate(
                         "UPDATE set_bonus SET set_key = ?, so_mon = ?, loai = ?, gia_tri = ?,"
-                        + " ti_le_kich_hoat = ?, tham_so = ?, active = ?, ghi_chu = ? WHERE id = ?",
-                        b.setKey, b.soMon, b.loai, b.giaTri, b.tiLeKichHoat, b.thamSo,
-                        b.active ? 1 : 0, b.ghiChu, b.id);
+                        + " ti_le_kich_hoat = ?, thoi_gian = ?, tham_so = ?, active = ?, ghi_chu = ?"
+                        + " WHERE id = ?",
+                        b.setKey, b.soMon, b.loai, b.giaTri, b.tiLeKichHoat,
+                        Math.max(0, b.thoiGian), b.thamSo, b.active ? 1 : 0, b.ghiChu, b.id);
             } else {
                 ConnectDB.executeUpdate(
-                        "INSERT INTO set_bonus (set_key, so_mon, loai, gia_tri, ti_le_kich_hoat, tham_so,"
-                        + " active, ghi_chu) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                        b.setKey, b.soMon, b.loai, b.giaTri, b.tiLeKichHoat, b.thamSo,
-                        b.active ? 1 : 0, b.ghiChu);
+                        "INSERT INTO set_bonus (set_key, so_mon, loai, gia_tri, ti_le_kich_hoat,"
+                        + " thoi_gian, tham_so, active, ghi_chu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        b.setKey, b.soMon, b.loai, b.giaTri, b.tiLeKichHoat,
+                        Math.max(0, b.thoiGian), b.thamSo, b.active ? 1 : 0, b.ghiChu);
             }
             reload();
             return null;
@@ -802,11 +827,92 @@ public class SetBonusDAO {
             ConnectDB.executeUpdate("ALTER TABLE set_bonus ADD COLUMN IF NOT EXISTS"
                     + " ti_le_kich_hoat INT NOT NULL DEFAULT 100 AFTER gia_tri");
             ConnectDB.executeUpdate("ALTER TABLE set_bonus MODIFY loai VARCHAR(40) NOT NULL");
+            ConnectDB.executeUpdate("ALTER TABLE set_bonus ADD COLUMN IF NOT EXISTS"
+                    + " thoi_gian INT NOT NULL DEFAULT 0 AFTER ti_le_kich_hoat");
         } catch (Exception ex) {
             daVaCotTiLeKichHoat = false;
             Logger.logException(SetBonusDAO.class, ex,
                     "Không thêm được cột tỉ lệ kích hoạt cho set_bonus");
         }
+    }
+
+    /**
+     * Đổi các mã trùng nghĩa sang một mã duy nhất.
+     *
+     * <p>Mỗi cặp dưới đây là <b>cùng một tác dụng</b> dưới hai mã — panel hiện
+     * cả hai nên người dùng không biết chọn cái nào. Giữ mã có chọn chiêu (tổng
+     * quát hơn), đổi mã riêng lẻ sang nó. Câu lệnh tự nhiên chạy lại được: đổi
+     * xong thì không còn dòng nào khớp.</p>
+     *
+     * <ul>
+     *   <li>né đòn: {@code ne_don_pct} → {@code ne_don}</li>
+     *   <li>sát thương QCKK: {@code qckk_pct} → sát thương chiêu 10</li>
+     *   <li>sát thương Đẻ Trứng: {@code detrung_dame_pct} → sát thương chiêu 12</li>
+     *   <li>choáng DCTT: {@code choang_pct} → thời gian tác dụng chiêu 20</li>
+     *   <li>choáng TDHS: {@code choang_tdhs_pct} → thời gian tác dụng chiêu 6</li>
+     *   <li>hồi Tái Tạo: {@code tai_tao_pct} → hiệu lực chiêu 8</li>
+     * </ul>
+     */
+    private static void gopLoaiTrung() {
+        String[][] doiMa = {
+            {"ne_don_pct", "ne_don", "0"},
+            {"qckk_pct", "skill_pct", "10"},
+            {"detrung_dame_pct", "skill_pct", "12"},
+            {"choang_pct", "skill_duration_pct", "20"},
+            {"choang_tdhs_pct", "skill_duration_pct", "6"},
+            {"tai_tao_pct", "skill_power_pct", "8"},
+        };
+        for (String[] d : doiMa) {
+            try {
+                ConnectDB.executeUpdate(
+                        "UPDATE set_bonus SET loai = ?, tham_so = ? WHERE loai = ?",
+                        d[1], Integer.parseInt(d[2]), d[0]);
+            } catch (Exception ex) {
+                Logger.logException(SetBonusDAO.class, ex,
+                        "Không gộp được mã " + d[0] + " sang " + d[1]);
+            }
+        }
+    }
+
+    /** Các loại hiệu ứng phụ có ô thời gian (trừ gây choáng — tính riêng). */
+    private static final String[] LOAI_HIEU_UNG = {"skill_burn_hp_pct",
+        "skill_slow_pct", "skill_attack_slow_pct", "skill_weaken_pct"};
+
+    /**
+     * Thời gian hiệu ứng phụ khai ngay trong dòng set (mili giây), 0 nếu không
+     * dòng nào khai.
+     *
+     * <p>Lấy <b>dài nhất</b> trong các dòng đang hưởng của chiêu này: hai set
+     * cùng gây thiêu đốt thì hiệu ứng kéo theo dòng lâu hơn.</p>
+     *
+     * @param choang {@code true} lấy thời gian choáng (dòng gây choáng),
+     *               {@code false} lấy thời gian các hiệu ứng còn lại
+     */
+    public static int thoiGianHieuUngMs(nro.entity.player.Player player, int idChieu,
+            boolean choang) {
+        if (player == null) {
+            return 0;
+        }
+        ensureLoaded();
+        int dai = 0;
+        for (String setKey : cacSet()) {
+            for (Bonus b : mocDangHuong(player.setClothes, setKey)) {
+                if (b.thamSo != idChieu || b.thoiGian <= 0) {
+                    continue;
+                }
+                boolean laChoang = "skill_stun_chance_pct".equals(b.loai);
+                boolean laKhac = false;
+                for (String l : LOAI_HIEU_UNG) {
+                    if (l.equals(b.loai)) {
+                        laKhac = true;
+                    }
+                }
+                if ((choang && laChoang) || (!choang && laKhac)) {
+                    dai = Math.max(dai, b.thoiGian * 1000);
+                }
+            }
+        }
+        return dai;
     }
 
     private static void vaCotHanhTinh() {

@@ -12,7 +12,7 @@ public final class DeTrung extends Mob {
 
     private Player player;
     private final long lastTimeSpawn;
-    private final int timeSurvive;
+    private int timeSurvive;
 
     public DeTrung(Player player) {
         super();
@@ -28,10 +28,38 @@ public final class DeTrung extends Mob {
         this.point.hp = this.point.maxHp;
         this.zone = player.zone;
         this.lastTimeSpawn = System.currentTimeMillis();
+        this.timeSurviveGoc = SkillUtil.getTimeSurviveMobMe(level);
         this.timeSurvive = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
-                player, nro.entity.skill.Skill.DE_TRUNG,
-                SkillUtil.getTimeSurviveMobMe(level));
+                player, nro.entity.skill.Skill.DE_TRUNG, this.timeSurviveGoc);
+        this.phanTramLucNo = phanTramDoHienTai();
         spawn();
+    }
+
+    /** Thời gian sống của pet theo chiêu, chưa cộng set/đồ. */
+    private int timeSurviveGoc;
+
+    /** Phần trăm sát thương pet từ set/đồ lúc trứng nở. */
+    private int phanTramLucNo;
+
+    /** Phần trăm sát thương pet từ set/đồ đang mặc. */
+    private int phanTramDoHienTai() {
+        if (player == null) {
+            return 0;
+        }
+        return nro.repository.dao.SetBonusDAO.phanTramSkill(player,
+                nro.entity.skill.Skill.DE_TRUNG)
+                + nro.repository.dao.SetBonusDAO.tongTheoLoai(player, "detrung_dame_pct");
+    }
+
+    /**
+     * Tính lại thời gian sống theo đồ <b>đang mặc</b> — gọi mỗi lần chủ tính
+     * lại chỉ số (mặc/cởi đồ).
+     */
+    public void tinhLaiTheoDo() {
+        if (player != null && timeSurviveGoc > 0) {
+            this.timeSurvive = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
+                    player, nro.entity.skill.Skill.DE_TRUNG, timeSurviveGoc);
+        }
     }
 
     @Override
@@ -75,6 +103,12 @@ public final class DeTrung extends Mob {
             return 0;
         }
         long dame = Util.CrisGH(this.point.dame);
+        // Sat thuong pet theo do DANG mac, khong chot luc no: mac set +50%, no
+        // trung roi coi ra thi cu tiep theo tut ve dung muc khong set.
+        int nay = phanTramDoHienTai();
+        if (nay != phanTramLucNo) {
+            dame = Util.CrisGH(dame * (100D + nay) / Math.max(1D, 100D + phanTramLucNo));
+        }
         int themCrit = nro.repository.dao.SetBonusDAO.phanTramChiMangSkill(
                 player, nro.entity.skill.Skill.DE_TRUNG);
         int tiLeCrit = Math.max(0, Math.min(100, player.nPoint.crit + themCrit));

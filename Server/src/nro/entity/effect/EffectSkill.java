@@ -111,12 +111,16 @@ public class EffectSkill {
     public boolean isShielding;
     public long lastTimeShieldUp;
     public int timeShield;
+    /** Thời gian khiên của chiêu, <b>chưa</b> cộng set/đồ — để tính lại khi thay đồ. */
+    public int timeShieldGoc;
 
     //biến khỉ
     public boolean isMonkey;
     public byte levelMonkey;
     public long lastTimeUpMonkey;
     public int timeMonkey;
+    /** Thời gian khỉ của chiêu, <b>chưa</b> cộng set/đồ — để tính lại khi thay đồ. */
+    public int timeMonkeyGoc;
     
     //Use Skill Monkey
     public boolean isUseSkillMonkey;
@@ -224,6 +228,36 @@ public class EffectSkill {
     
     public boolean isBodyChangeTechnique;
     
+    /**
+     * Tính lại thời gian khỉ và khiên theo đồ <b>đang mặc</b>.
+     *
+     * <p>Trước đây hai con số này chốt cứng lúc dùng chiêu: mặc set x5 thời
+     * gian khỉ, biến khỉ, rồi cởi set ra vẫn khỉ đủ x5. Nay giữ thời gian gốc
+     * của chiêu và mỗi lần tính lại chỉ số (mặc/cởi đồ nào cũng chạy) thì cộng
+     * lại phần của set/đồ theo đúng mốc đang mặc. Đã quá hạn mới thì hết ngay ở
+     * nhịp kế tiếp.</p>
+     */
+    public void tinhLaiTheoDo() {
+        if (player == null) {
+            return;
+        }
+        if (isMonkey && timeMonkeyGoc > 0) {
+            timeMonkey = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
+                    player, nro.entity.skill.Skill.BIEN_KHI, timeMonkeyGoc);
+        }
+        if (isShielding && timeShieldGoc > 0) {
+            int moi = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
+                    player, nro.entity.skill.Skill.KHIEN_NANG_LUONG, timeShieldGoc);
+            if (moi != timeShield) {
+                timeShield = moi;
+                long con = lastTimeShieldUp + moi - System.currentTimeMillis();
+                // Icon dem gio khien tren man hinh phai khop thoi gian moi.
+                nro.service.item.ItemTimeService.gI().sendItemTime(player, 3784,
+                        (int) Math.max(0, con / 1000));
+            }
+        }
+    }
+
     public EffectSkill(Player player) {
         this.player = player;
     }

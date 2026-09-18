@@ -766,6 +766,7 @@ public class ItemManagerPanel extends JPanel {
         optBtn.add(button("Chỉ số gốc", new Color(120, 90, 160),
                 e -> dienChiSoSanCo(true)));
         // Do khoa: mot o tich thay vi bat nguoi dung nho id 30.
+        optBtn.add(OptionPicker.nutThemTacDung(optTable));
         optBtn.add(OptionPicker.oKhoaChoBang(optModel, 3));
         opts.add(optBtn, BorderLayout.SOUTH);
         root.add(opts, BorderLayout.CENTER);

@@ -380,6 +380,19 @@ public class NPoint {
             this.player.Detu.nPoint.setPointWhenWearClothes();
         }
         this.setPointWhenWearClothes();
+        // Thoi gian khi/khien va pet De Trung tinh theo do DANG mac: coi set ra
+        // la giam ngay, khong giu muc luc dung chieu.
+        try {
+            if (this.player.effectSkill != null) {
+                this.player.effectSkill.tinhLaiTheoDo();
+            }
+            if (this.player.DeTrung != null) {
+                this.player.DeTrung.tinhLaiTheoDo();
+            }
+        } catch (Exception boQua) {
+            // Tinh lai hieu ung chi la phan phu; loi o day khong duoc lam hong
+            // viec tinh chi so.
+        }
     }
 
     /**
@@ -1692,6 +1705,9 @@ public class NPoint {
         if (this.player.effectSkill.isMonkey) {
             if (!laDeDangHopThe()) {
                 int percent = SkillUtil.getPercentHpMonkey(player.effectSkill.levelMonkey);
+                // Hieu luc chieu Bien Khi (skill_power_pct).
+                percent += percent * nro.repository.dao.SetBonusDAO.tongTheoChieu(
+                        this.player, "skill_power_pct", Skill.BIEN_KHI) / 100;
                 hpMax += (hpMax * percent / 100);
                 ghiHp("Biến khỉ", hpMax);
             }
@@ -2683,6 +2699,9 @@ if (hasFull5NhatAn()) {
         if (this.player.effectSkill.isMonkey) {
             if (!laDeDangHopThe()) {
                 int percent = SkillUtil.getPercentDameMonkey(player.effectSkill.levelMonkey);
+                // Hieu luc chieu Bien Khi (skill_power_pct).
+                percent += percent * nro.repository.dao.SetBonusDAO.tongTheoChieu(
+                        this.player, "skill_power_pct", Skill.BIEN_KHI) / 100;
                 dame += (dame * percent / 100);
                 ghiSd("Biến khỉ +" + percent + "% sức đánh", dame,
                         "Tính theo levelMonkey; bỏ qua khi đệ đang hợp thể.");
@@ -4763,7 +4782,10 @@ private boolean hasFull5NhatAn() {
                     long mpRecovered = mpMax / 100 * tiLeHoiPhuc;
                     // Set co the tang luong hoi phuc khi gong (loai tai_tao_pct).
                     int tlTaiTao = nro.repository.dao.SetBonusDAO.phanTramLoai(
-                            player.setClothes, "tai_tao_pct");
+                            player.setClothes, "tai_tao_pct")
+                            // Ma moi: hieu luc chieu Tai Tao (skill_power_pct).
+                            + nro.repository.dao.SetBonusDAO.tongTheoChieu(
+                                    player, "skill_power_pct", Skill.TAI_TAO_NANG_LUONG);
                     if (tlTaiTao != 0) {
                         hpRecovered += hpRecovered * tlTaiTao / 100;
                         mpRecovered += mpRecovered * tlTaiTao / 100;

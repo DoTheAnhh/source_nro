@@ -65,6 +65,11 @@ public final class OptionPicker {
                             || "(khong co)".equals(t.name)) {
                         continue;
                     }
+                    // Chi so trung tac dung voi mot id nho hon (sau khi gop ma):
+                    // do cu van mang id nay nen khong xoa, chi khong hien de chon.
+                    if (nro.repository.dao.TrangBiBonusDAO.laOptionTrung(t.id)) {
+                        continue;
+                    }
                     out.add(new Opt(t.id, t.name));
                 }
             }
@@ -348,7 +353,7 @@ public final class OptionPicker {
             List<Opt> khop = new java.util.ArrayList<>();
             for (Opt x : ds) {
                 if (khoa.isEmpty()
-                        || boDau(x.name).contains(khoa)
+                        || nro.repository.dao.LoaiChiSo.khop(x.name, go)
                         || String.valueOf(x.id).startsWith(khoa)) {
                     khop.add(x);
                 }
@@ -471,6 +476,17 @@ public final class OptionPicker {
             }
         });
 
+        // Chuot phai vao bang: them tac dung theo chieu bang hop chon co nhom +
+        // tim kiem, mot lan dien du cac dong (gia tri, ti le, thoi gian).
+        if (table.getModel() instanceof javax.swing.table.DefaultTableModel) {
+            javax.swing.JPopupMenu menu = new javax.swing.JPopupMenu();
+            javax.swing.JMenuItem mi = new javax.swing.JMenuItem(
+                    "Thêm tác dụng chiêu (chọn theo nhóm / tìm)…");
+            mi.addActionListener(e -> themTacDungVaoBang(table));
+            menu.add(mi);
+            table.setComponentPopupMenu(menu);
+        }
+
         // Gan bo loc SAU khi editor da duoc dat: bo loc can chinh co dangLoc ma
         // editor o tren doc, nen thu tu nay bat buoc.
         gocLoc(cb, dangLoc);
@@ -499,6 +515,122 @@ public final class OptionPicker {
                 return comp;
             }
         });
+    }
+
+    /** Nút "Thêm tác dụng chiêu…" đặt cạnh một bảng chỉ số của đồ. */
+    public static javax.swing.JButton nutThemTacDung(final JTable bang) {
+        javax.swing.JButton b = new javax.swing.JButton("Thêm tác dụng chiêu…");
+        b.setToolTipText("Chọn theo nhóm hoặc gõ tìm (không cần dấu); hiệu ứng phụ điền "
+                + "giá trị, tỉ lệ và thời gian một lần");
+        b.addActionListener(e -> themTacDungVaoBang(bang));
+        return b;
+    }
+
+    /**
+     * Thêm một tác dụng vào bảng chỉ số của món đồ.
+     *
+     * <h3>Một lần chọn, đủ các dòng</h3>
+     *
+     * <p>Chỉ số trên đồ mỗi dòng chỉ mang một con số, nên một hiệu ứng phụ trên
+     * đồ nằm ở tới ba dòng: giá trị, tỉ lệ kích hoạt, thời gian. Hộp này hỏi cả
+     * ba rồi tự thêm đủ dòng đúng id — không phải đi tìm ba chỉ số rời.</p>
+     *
+     * <p>Thời gian trên đồ tính theo phần trăm so với thời gian gốc (5 giây, gây
+     * choáng 2 giây), nên số giây gõ vào được đổi ra phần trăm. Tỉ lệ và thời
+     * gian trên đồ áp chung cho mọi hiệu ứng phụ của chiêu đó.</p>
+     */
+    public static void themTacDungVaoBang(JTable bang) {
+        if (!(bang.getModel() instanceof javax.swing.table.DefaultTableModel)) {
+            return;
+        }
+        if (bang.isEditing()) {
+            bang.getCellEditor().stopCellEditing();
+        }
+        javax.swing.table.DefaultTableModel m =
+                (javax.swing.table.DefaultTableModel) bang.getModel();
+        List<OChonTacDung.LuaChon> ds = OChonTacDung.tatCa(true);
+        if (ds.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(bang,
+                    "Chưa có chỉ số tác dụng nào cho đồ — khởi động lại máy chủ để tạo.");
+            return;
+        }
+        int i = OChonTacDung.hop(bang, ds, -1, false);
+        if (i < 0) {
+            return;
+        }
+        OChonTacDung.LuaChon x = ds.get(i);
+        nro.repository.dao.LoaiChiSo.Loai l = nro.repository.dao.LoaiChiSo.get(x.ma);
+        javax.swing.JTextField fGiaTri = new javax.swing.JTextField("10", 8);
+        javax.swing.JTextField fTiLe = new javax.swing.JTextField("100", 8);
+        javax.swing.JTextField fGiay = new javax.swing.JTextField(8);
+        javax.swing.JPanel form = new javax.swing.JPanel(new java.awt.GridLayout(0, 2, 6, 6));
+        form.add(new javax.swing.JLabel("Tác dụng:"));
+        form.add(new javax.swing.JLabel(x.nhan));
+        form.add(new javax.swing.JLabel("Giá trị (" + (l == null ? "%" : l.donVi) + "):"));
+        form.add(fGiaTri);
+        if (x.coThoiGian) {
+            form.add(new javax.swing.JLabel("Tỉ lệ kích hoạt (%):"));
+            form.add(fTiLe);
+            form.add(new javax.swing.JLabel("Thời gian (giây, trống = gốc):"));
+            form.add(fGiay);
+        }
+        if (javax.swing.JOptionPane.showConfirmDialog(bang, form, "Thêm tác dụng",
+                javax.swing.JOptionPane.OK_CANCEL_OPTION, javax.swing.JOptionPane.PLAIN_MESSAGE)
+                != javax.swing.JOptionPane.OK_OPTION) {
+            return;
+        }
+        int giaTri;
+        int tiLe;
+        int giay;
+        try {
+            giaTri = Integer.parseInt(fGiaTri.getText().trim());
+            tiLe = x.coThoiGian ? Integer.parseInt(fTiLe.getText().trim()) : 100;
+            String g = fGiay.getText().trim();
+            giay = (!x.coThoiGian || g.isEmpty()) ? 0 : Integer.parseInt(g);
+        } catch (NumberFormatException ex) {
+            javax.swing.JOptionPane.showMessageDialog(bang, "Giá trị, tỉ lệ, thời gian phải là số nguyên.");
+            return;
+        }
+        int idChinh = nro.repository.dao.TrangBiBonusDAO.optionCua(x.ma, x.chieu);
+        if (idChinh < 0) {
+            idChinh = nro.repository.dao.TrangBiBonusDAO.optionCua(x.ma, -1);
+        }
+        themDong(m, idChinh, giaTri);
+        if (x.coThoiGian && tiLe > 0 && tiLe < 100) {
+            int idTiLe = nro.repository.dao.TrangBiBonusDAO.optionCua(
+                    "skill_debuff_chance_pct", x.chieu);
+            if (idTiLe >= 0) {
+                themDong(m, idTiLe, tiLe);
+            }
+        }
+        if (x.coThoiGian && giay > 0) {
+            int goc = "skill_stun_chance_pct".equals(x.ma) ? 2000 : 5000;
+            int phanTram = (giay * 1000 - goc) * 100 / goc;
+            int idGiay = nro.repository.dao.TrangBiBonusDAO.optionCua(
+                    "skill_debuff_duration_pct", x.chieu);
+            if (phanTram > 0 && idGiay >= 0) {
+                themDong(m, idGiay, phanTram);
+            }
+        }
+    }
+
+    /**
+     * Thêm một dòng (id, giá trị) vào bảng chỉ số, đủ số cột của bảng.
+     *
+     * <p>Cột "Ngẫu nhiên tới" (bảng đồ rơi/shop) nhận cùng giá trị để ra số cố
+     * định; cột khác để trống.</p>
+     */
+    private static void themDong(javax.swing.table.DefaultTableModel m, int id, int giaTri) {
+        Object[] dong = new Object[m.getColumnCount()];
+        dong[0] = String.valueOf(id);
+        if (dong.length > 1) {
+            dong[1] = String.valueOf(giaTri);
+        }
+        for (int c = 2; c < dong.length; c++) {
+            String ten = String.valueOf(m.getColumnName(c)).toLowerCase();
+            dong[c] = ten.contains("tới") || ten.contains("max") ? String.valueOf(giaTri) : "";
+        }
+        m.addRow(dong);
     }
 
     /**
@@ -600,7 +732,8 @@ public final class OptionPicker {
                                 .equals(cbLoai.getSelectedItem())) {
                     continue;
                 }
-                if (!key.isEmpty() && !tp.name.toLowerCase().contains(key)
+                // Khong dau, nhieu tu: "ao than" ra "Áo thần linh".
+                if (!key.isEmpty() && !nro.repository.dao.LoaiChiSo.khop(tp.name, key)
                         && !String.valueOf(tp.id).equals(key)) {
                     continue;
                 }
@@ -804,7 +937,7 @@ public final class OptionPicker {
                 if (chiDanhDau.isSelected() && !laDanhDauSet(o.name)) {
                     continue;
                 }
-                if (!key.isEmpty() && !o.name.toLowerCase().contains(key)
+                if (!key.isEmpty() && !nro.repository.dao.LoaiChiSo.khop(o.name, key)
                         && !String.valueOf(o.id).equals(key)) {
                     continue;
                 }

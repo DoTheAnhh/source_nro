@@ -37,8 +37,9 @@ public final class TrangBiBonusDAO {
         try {
             gieo("troi_giam_giap_pct", Skill.TROI,
                     "Khi trói giảm #% giáp mục tiêu");
-            gieo("detrung_dame_pct", Skill.DE_TRUNG,
-                    "Sát thương pet Đẻ Trứng +#%");
+            // Sat thuong De Trung: mot ma duy nhat la sat thuong chieu 12. Ma cu
+            // detrung_dame_pct doi sang ma do (xem gopMaTrung) — khong gieo lai.
+            gopMaTrung();
             gieo("skill_crit_pct", Skill.DE_TRUNG,
                     "Tỉ lệ chí mạng pet Đẻ Trứng +#%");
             gieo("skill_sdcm_pct", Skill.DE_TRUNG,
@@ -87,6 +88,16 @@ public final class TrangBiBonusDAO {
             }
             gieo("skill_pct", Skill.DE_TRUNG, "Sát thương kỹ năng Đẻ Trứng +#%");
 
+            // Chieu khong gay sat thuong cung co chi so rieng: thoi gian tac dung
+            // (choang, ngu, troi, khien, bien khi…) va hieu luc (luong hoi, % mau).
+            for (int id : LoaiChiSo.CHIEU_THOI_GIAN) {
+                gieo("skill_duration_pct", id, tenChuan("skill_duration_pct", id));
+            }
+            for (int id : LoaiChiSo.CHIEU_HIEU_LUC) {
+                gieo("skill_power_pct", id, tenChuan("skill_power_pct", id));
+            }
+            chuanHoaTen();
+
             int[] nhieuMucTieu = {Skill.DRAGON, Skill.KAMEJOKO, Skill.DEMON,
                 Skill.MASENKO, Skill.GALICK, Skill.ANTOMIC, Skill.KAIOKEN,
                 Skill.MAKANKOSAPPO, Skill.SOCOLA,
@@ -112,6 +123,127 @@ public final class TrangBiBonusDAO {
                     "Không gieo được option bonus trang bị");
         }
         reload();
+    }
+
+    /** Đổi mã cũ trùng nghĩa sang mã chung (xem {@code SetBonusDAO.gopLoaiTrung}). */
+    private static void gopMaTrung() {
+        try {
+            ConnectDB.executeUpdate("UPDATE trang_bi_bonus SET loai = 'skill_pct', tham_so = ?"
+                    + " WHERE loai = 'detrung_dame_pct'", (int) Skill.DE_TRUNG);
+        } catch (Exception ex) {
+            Logger.logException(TrangBiBonusDAO.class, ex, "Không gộp được mã Đẻ Trứng");
+        }
+    }
+
+    /**
+     * Tên chuẩn của một chỉ số theo chiêu — chữ in lên món đồ.
+     *
+     * <p>Mẫu {@code "<Chiêu>: <tác dụng>"}: chiêu đứng đầu nên mọi chỉ số của một
+     * chiêu nằm liền nhau khi sắp theo tên, và gõ tên chiêu là ra đủ. Bản cũ lấy
+     * nguyên nhãn panel "Trái Đất — Kamejoko" chèn vào giữa câu, in lên đồ thành
+     * "Sát thương Trái Đất — Kamejoko +5%".</p>
+     */
+    public static String tenChuan(String loai, int thamSo) {
+        String ch = LoaiChiSo.tenChieu(thamSo);
+        switch (loai) {
+            case "skill_pct": return ch + ": +#% sát thương";
+            case "skill_crit_pct": return ch + ": +#% tỉ lệ chí mạng";
+            case "skill_sdcm_pct": return ch + ": +#% sát thương chí mạng";
+            case "skill_xuyen_giap_pct": return ch + ": +#% xuyên giáp";
+            case "skill_burn_hp_pct": return ch + ": thiêu đốt #% HP tối đa mỗi giây";
+            case "skill_slow_pct": return ch + ": làm chậm #% tốc chạy mục tiêu";
+            case "skill_attack_slow_pct": return ch + ": làm chậm #% tốc ra đòn mục tiêu";
+            case "skill_weaken_pct": return ch + ": giảm #% sát thương mục tiêu";
+            case "skill_stun_chance_pct": return ch + ": #% tỉ lệ gây choáng";
+            case "skill_debuff_chance_pct": return ch + ": #% tỉ lệ gây hiệu ứng phụ";
+            case "skill_debuff_duration_pct": return ch + ": +#% thời gian hiệu ứng phụ";
+            case "skill_target_add": return ch + ": thêm # mục tiêu";
+            case "skill_cast_speed_pct": return ch + ": +#% tốc độ ra đòn";
+            case "skill_duration_pct": return ch + ": +#% thời gian tác dụng";
+            case "skill_power_pct": return ch + ": +#% hiệu lực";
+            case "hoi_chieu_skill_pct": return ch + ": giảm #% hồi chiêu";
+            case "lam_moi_pct": return ch + ": #% tỉ lệ làm mới";
+            case "troi_giam_giap_pct": return "Trói: giảm #% giáp mục tiêu";
+            case "dame_boss_pct": return "+#% sát thương lên Boss";
+            default: return null;
+        }
+    }
+
+    /**
+     * Đặt lại tên mọi chỉ số theo chiêu cho đúng mẫu {@link #tenChuan}.
+     *
+     * <p>Chỉ đổi dòng đang khác tên, nên từ lần khởi động thứ hai trở đi không
+     * làm gì. Id giữ nguyên — đồ người chơi đang cầm chỉ đổi chữ.</p>
+     */
+    private static void chuanHoaTen() {
+        CrisResultSet rs = null;
+        List<Object[]> can = new ArrayList<>();
+        try {
+            rs = ConnectDB.executeQuery("SELECT option_id, loai, tham_so FROM trang_bi_bonus");
+            while (rs.next()) {
+                can.add(new Object[]{rs.getInt("option_id"), rs.getString("loai"),
+                    rs.getInt("tham_so")});
+            }
+        } catch (Exception ex) {
+            Logger.logException(TrangBiBonusDAO.class, ex, "Không đọc được trang_bi_bonus");
+            return;
+        } finally {
+            dispose(rs);
+        }
+        for (Object[] o : can) {
+            int id = (Integer) o[0];
+            String ten = tenChuan((String) o[1], (Integer) o[2]);
+            if (ten == null) {
+                continue;
+            }
+            String cu = null;
+            try {
+                if (nro.server.Manager.ITEM_OPTION_TEMPLATES != null
+                        && id < nro.server.Manager.ITEM_OPTION_TEMPLATES.size()) {
+                    cu = nro.server.Manager.ITEM_OPTION_TEMPLATES.get(id).name;
+                }
+            } catch (Exception boQua) {
+                // Bang chua nap: doi thang.
+            }
+            if (!ten.equals(cu)) {
+                ChiSoOptionDAO.doiTen(id, ten);
+            }
+        }
+    }
+
+    /**
+     * Chỉ số này có <b>trùng tác dụng</b> với một chỉ số id nhỏ hơn không.
+     *
+     * <p>Sau khi gộp mã, hai chỉ số khác id có thể cùng một tác dụng (đồ cũ vẫn
+     * mang id cũ nên không xoá được). Ô chọn chỉ số ẩn id lớn hơn để không hiện
+     * hai dòng giống hệt nhau.</p>
+     */
+    public static boolean laOptionTrung(int optionId) {
+        ensureLoaded();
+        CauHinh c = THEO_OPTION.get(optionId);
+        if (c == null) {
+            return false;
+        }
+        for (CauHinh k : THEO_OPTION.values()) {
+            if (k.optionId < optionId && k.thamSo == c.thamSo
+                    && k.loai != null && k.loai.equals(c.loai)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Id chỉ số trên đồ ứng với một tác dụng + chiêu, {@code -1} nếu chưa có. */
+    public static int optionCua(String loai, int thamSo) {
+        ensureLoaded();
+        int nho = -1;
+        for (CauHinh k : THEO_OPTION.values()) {
+            if (k.thamSo == thamSo && loai != null && loai.equals(k.loai)
+                    && (nho < 0 || k.optionId < nho)) {
+                nho = k.optionId;
+            }
+        }
+        return nho;
     }
 
     private static void gieo(String loai, int thamSo, String ten) throws Exception {

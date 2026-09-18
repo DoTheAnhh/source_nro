@@ -35,7 +35,7 @@ public final class HieuUngPhuKyNangService {
         if (tiLe > 0 && !Util.isTrue(Math.min(100, tiLe), 100)) {
             return;
         }
-        int thoiGian = thoiGian(nguon, id, THOI_GIAN_GOC);
+        int thoiGian = thoiGian(nguon, id, false);
         boolean doiToc = cham > dich.effectSkill.giamTocChayKyNang;
         dich.effectSkill.isDebuffKyNang = true;
         dich.effectSkill.lastTimeDebuffKyNang = System.currentTimeMillis();
@@ -53,7 +53,7 @@ public final class HieuUngPhuKyNangService {
                 dich.effectSkill.giamSatThuongKyNang, Math.min(95, yeu));
         if (choang > 0 && Util.isTrue(Math.min(100, choang), 100)) {
             EffectSkillService.gI().startStun(dich, System.currentTimeMillis(),
-                    thoiGian(nguon, id, THOI_GIAN_CHOANG_GOC));
+                    thoiGian(nguon, id, true));
         }
         if (doiToc && dich.nPoint != null) {
             dich.nPoint.calPoint();
@@ -81,7 +81,7 @@ public final class HieuUngPhuKyNangService {
         dich.effectSkill.isDebuffKyNang = true;
         dich.effectSkill.lastTimeDebuffKyNang = System.currentTimeMillis();
         dich.effectSkill.timeDebuffKyNang = Math.max(dich.effectSkill.timeDebuffKyNang,
-                thoiGian(nguon, id, THOI_GIAN_GOC));
+                thoiGian(nguon, id, false));
         if (dot >= dich.effectSkill.thieuDotHpPct) {
             dich.effectSkill.thieuDotHpPct = dot;
             dich.effectSkill.nguoiGayDebuffKyNang = nguon;
@@ -94,7 +94,7 @@ public final class HieuUngPhuKyNangService {
                 dich.effectSkill.giamSatThuongKyNang, Math.min(95, yeu));
         if (choang > 0 && Util.isTrue(Math.min(100, choang), 100)) {
             dich.effectSkill.startStun(System.currentTimeMillis(),
-                    thoiGian(nguon, id, THOI_GIAN_CHOANG_GOC));
+                    thoiGian(nguon, id, true));
         }
     }
 
@@ -212,7 +212,14 @@ public final class HieuUngPhuKyNangService {
         return Math.max(0, SetBonusDAO.tongTheoChieuKichHoat(p, loai, id));
     }
 
-    private static int thoiGian(Player p, int id, int goc) {
+    /**
+     * Thời gian hiệu ứng: lấy thời gian khai ngay trong dòng set nếu có, không
+     * thì thời gian gốc (5 giây, choáng 2 giây); rồi cộng phần trăm từ đồ.
+     */
+    private static int thoiGian(Player p, int id, boolean choang) {
+        int trongDong = SetBonusDAO.thoiGianHieuUngMs(p, id, choang);
+        int goc = trongDong > 0 ? trongDong
+                : (choang ? THOI_GIAN_CHOANG_GOC : THOI_GIAN_GOC);
         int pct = lay(p, "skill_debuff_duration_pct", id);
         long ra = goc + (long) goc * pct / 100L;
         return ra > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) ra;

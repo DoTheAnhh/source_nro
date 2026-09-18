@@ -1136,6 +1136,9 @@ public class SkillService {
                 break;
             case Skill.HUYT_SAO:
                 int tileHP = SkillUtil.getPercentHPHuytSao(player.playerSkill.skillSelect.point);
+                // Hieu luc chieu (skill_power_pct): tang % mau Huyt Sao cho ca nhom.
+                tileHP += tileHP * nro.repository.dao.SetBonusDAO.tongTheoChieu(
+                        player, "skill_power_pct", Skill.HUYT_SAO) / 100;
                 int timeHuytSao = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
                         player, Skill.HUYT_SAO, 30000);
                 if (player.zone != null) {
@@ -1363,6 +1366,9 @@ public class SkillService {
         if (player.playerSkill.skillSelect.template.id == Skill.TRI_THUONG) {
             List<Player> players = new ArrayList<>();
             int percentTriThuong = SkillUtil.getPercentTriThuong(player.playerSkill.skillSelect.point);
+            // Hieu luc chieu (skill_power_pct): tang luong hoi cua Tri Thuong.
+            percentTriThuong += percentTriThuong * nro.repository.dao.SetBonusDAO.tongTheoChieu(
+                    player, "skill_power_pct", Skill.TRI_THUONG) / 100;
             int point = player.playerSkill.skillSelect.point;
             if (canHsPlayer(player, plTarget)) {
                 players.add(plTarget);

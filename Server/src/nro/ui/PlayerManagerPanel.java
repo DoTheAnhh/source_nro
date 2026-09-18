@@ -2182,6 +2182,7 @@ public class PlayerManagerPanel extends JPanel {
         optWrap.add(ServerGuiUtils.cuon(tOpt), BorderLayout.CENTER);
         JPanel optBtn = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
         optBtn.add(button("Thêm", OK_GREEN, e -> mOpt.addRow(new Object[]{"0", "0"})));
+        optBtn.add(OptionPicker.nutThemTacDung(tOpt));
         optBtn.add(button("Xoá", WARN_RED, e -> {
             int k = tOpt.getSelectedRow();
             if (k >= 0) {
