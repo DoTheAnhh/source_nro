@@ -356,6 +356,21 @@ public final class HoTongService {
         traQua(chu);
     }
 
+    /**
+     * Người chơi có đang bị khoá cờ vì hộ tống không.
+     *
+     * <p>Cờ đen do nhiệm vụ bật thì chỉ nhiệm vụ được hạ: xong hoặc thất bại.
+     * Cho tự hạ giữa đường thì chỉ cần hạ cờ là không ai đánh được nữa, và
+     * phần bị cướp của hộ tống mất hết ý nghĩa.</p>
+     *
+     * <p>Nhận ra bằng cờ của Đường Tăng: ông ấy chỉ cầm cờ khi nhiệm vụ bật cờ,
+     * nên nếu quản trị tắt cờ trên panel thì người chơi vẫn đổi cờ tự do.</p>
+     */
+    public static boolean khoaCo(Player pl) {
+        return pl != null && pl.HoTongDuongTang && pl.Duongtang != null
+                && pl.Duongtang.cFlag == CO_DEN;
+    }
+
     /** Dọn dẹp chung cho cả hai kết cục. */
     private void ketThuc(Player chu) {
         chu.HoTongDuongTang = false;

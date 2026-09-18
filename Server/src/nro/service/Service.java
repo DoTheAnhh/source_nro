@@ -1943,6 +1943,10 @@ public class Service {
     public static final int[] flagIconId = {2761, 2330, 2323, 2327, 2326, 2324, 2329, 2328, 2331, 4386, 4385, 2325};
 
     public void openFlagUI(Player pl) {
+        if (nro.service.hotong.HoTongService.khoaCo(pl)) {
+            sendThongBao(pl, "Đang hộ tống, không thể đổi cờ");
+            return;
+        }
         Message msg;
         try {
             msg = new Message(-103);
@@ -2040,6 +2044,10 @@ public class Service {
     }
 
     public void chooseFlag(Player pl, int index) {
+        if (nro.service.hotong.HoTongService.khoaCo(pl)) {
+            sendThongBao(pl, "Đang hộ tống, không thể đổi cờ");
+            return;
+        }
         if (MapService.gI().isMapBlackBallWar(pl.zone.map.mapId)
                 || MapService.gI().isMapMaBu12H(pl.zone.map.mapId)
                 || MapService.gI().isMapPVP(pl.zone.map.mapId)
