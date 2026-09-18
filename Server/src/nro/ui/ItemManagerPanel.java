@@ -2250,8 +2250,7 @@ public class ItemManagerPanel extends JPanel {
                     String.valueOf(y.setKey));
         });
         for (nro.repository.dao.SetBonusDAO.DinhNghia d : ds) {
-            String ht = d.hanhTinh == null || d.hanhTinh.trim().isEmpty()
-                    ? nro.repository.dao.SetBonusDAO.KHAC : d.hanhTinh.trim();
+            String ht = nro.repository.dao.SetBonusDAO.hanhTinh(d.setKey);
             cbSet.addItem(d.ten + "  —  " + ht);
             maSet.add(d.setKey);
         }

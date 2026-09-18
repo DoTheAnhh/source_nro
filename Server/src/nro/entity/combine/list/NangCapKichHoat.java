@@ -262,7 +262,7 @@ public class NangCapKichHoat {
             case 2:
                 return "Xayda";
             default:
-                return SetBonusDAO.KHAC;
+                return SetBonusDAO.CHUNG;
         }
     }
 
@@ -282,8 +282,7 @@ public class NangCapKichHoat {
             if (d.optionIds == null || d.optionIds.trim().isEmpty()) {
                 continue;
             }
-            String cua = (d.hanhTinh == null || d.hanhTinh.trim().isEmpty())
-                    ? SetBonusDAO.KHAC : d.hanhTinh.trim();
+            String cua = SetBonusDAO.hanhTinh(d.setKey);
             if (cua.equals(ht) || SetBonusDAO.laDungChung(cua)) {
                 ra.add(d);
             }

@@ -3373,7 +3373,7 @@ public class SystemPanel extends JPanel {
 
         // ---------------- bên trái: danh sách set ----------------
         cbHanhTinh.addItem("Tất cả");
-        for (String h : nro.repository.dao.SetBonusDAO.CAC_HANH_TINH) {
+        for (String h : nro.repository.dao.SetBonusDAO.HANH_TINH_PANEL) {
             cbHanhTinh.addItem(h);
         }
         cbHanhTinh.addActionListener(e -> napDanhSachSet());
@@ -3822,10 +3822,9 @@ public class SystemPanel extends JPanel {
                     : boTienTo(OptionPicker.tenChiSo(idCu)), 26));
         }
         JComboBox<String> cbHt = new JComboBox<>(
-                nro.repository.dao.SetBonusDAO.CAC_HANH_TINH);
-        cbHt.setSelectedItem(them ? "Trái Đất"
-                : (cu.hanhTinh == null || cu.hanhTinh.trim().isEmpty()
-                        ? nro.repository.dao.SetBonusDAO.KHAC : cu.hanhTinh.trim()));
+                nro.repository.dao.SetBonusDAO.HANH_TINH_PANEL);
+        cbHt.setSelectedItem(them ? nro.repository.dao.SetBonusDAO.CHUNG
+                : nro.repository.dao.SetBonusDAO.hanhTinh(cu.setKey));
 
         // ---------- chỉ số nhận diện ----------
         final int[] idNhanDien = {-1};

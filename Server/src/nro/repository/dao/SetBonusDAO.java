@@ -582,7 +582,16 @@ public class SetBonusDAO {
      * của người chơi.</p>
      */
     public static final String[] CAC_HANH_TINH = {"Trái Đất", "Namếc",
-        "Xayda", CHUNG, KHAC};
+        "Xayda", CHUNG};
+
+    /**
+     * Bốn lựa chọn hành tinh <b>hiện trên panel</b>, theo thứ tự người dùng muốn.
+     *
+     * <p>Tách khỏi {@link #CAC_HANH_TINH}: mảng kia phải giữ ba ô đầu đúng thứ tự
+     * mã hệ để tra theo {@code gender}. "Khác" đã bỏ — set cũ để "Khác" hay để
+     * trống được coi là "Chung" (và được đổi hẳn trong cơ sở dữ liệu).</p>
+     */
+    public static final String[] HANH_TINH_PANEL = {CHUNG, "Trái Đất", "Xayda", "Namếc"};
 
     /**
      * Nhãn hành tinh này có nghĩa là <b>mọi hệ đều dùng được</b> không.
@@ -596,6 +605,7 @@ public class SetBonusDAO {
             return true;
         }
         String t = ht.trim();
+        // "Khác" cũ = Chung.
         return CHUNG.equals(t) || KHAC.equals(t);
     }
 
@@ -608,8 +618,9 @@ public class SetBonusDAO {
      */
     public static String hanhTinh(String setKey) {
         DinhNghia d = dinhNghia().get(setKey);
-        if (d == null || d.hanhTinh == null || d.hanhTinh.trim().isEmpty()) {
-            return KHAC;
+        if (d == null || d.hanhTinh == null || d.hanhTinh.trim().isEmpty()
+                || KHAC.equals(d.hanhTinh.trim())) {
+            return CHUNG;
         }
         return d.hanhTinh.trim();
     }
@@ -816,6 +827,11 @@ public class SetBonusDAO {
             // dat, va cung la muc de hieu nhat khi moi nhin vao mot set.
             ConnectDB.executeUpdate("ALTER TABLE set_kich_hoat ADD COLUMN IF NOT EXISTS"
                     + " cach_tinh_moc TINYINT NOT NULL DEFAULT 2");
+            // Bo muc "Khac": set de Khac hoac de trong thanh "Chung". Chay lai
+            // khong sao — khong con dong nao khop thi khong doi gi.
+            ConnectDB.executeUpdate("UPDATE set_kich_hoat SET hanh_tinh = ?"
+                    + " WHERE hanh_tinh IS NULL OR TRIM(hanh_tinh) = '' OR hanh_tinh = ?",
+                    CHUNG, KHAC);
         } catch (Exception ex) {
             Logger.logException(SetBonusDAO.class, ex,
                     "Không thêm được cột hanh_tinh — set tự tạo sẽ nằm ở mục Khác");
@@ -1228,7 +1244,6 @@ public class SetBonusDAO {
         }
         String heCuaNguoiChoi = gender >= 0 && gender < 3 ? CAC_HANH_TINH[gender] : null;
         List<int[]> hopHe = new ArrayList<>();
-        List<int[]> dungChung = new ArrayList<>();
         for (DinhNghia d : dinhNghia().values()) {
             if (!d.active || d.optionIds == null) {
                 continue;
@@ -1248,15 +1263,14 @@ public class SetBonusDAO {
             for (int i = 0; i < mang.length; i++) {
                 mang[i] = ids.get(i);
             }
+            // Hanh tinh rieng: chi he do roi. Chung: moi he deu roi.
             String ht = hanhTinh(d.setKey);
             if (heCuaNguoiChoi == null || heCuaNguoiChoi.equals(ht)
                     || CHUNG.equals(ht)) {
                 hopHe.add(mang);
-            } else if (KHAC.equals(ht)) {
-                dungChung.add(mang);
             }
         }
-        List<int[]> nguon = !hopHe.isEmpty() ? hopHe : dungChung;
+        List<int[]> nguon = hopHe;
         if (nguon.isEmpty()) {
             return null;
         }
