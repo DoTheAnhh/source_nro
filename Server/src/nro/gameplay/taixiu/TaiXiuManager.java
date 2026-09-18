@@ -73,8 +73,12 @@ public class TaiXiuManager {
     /** Mã thuộc tính đánh dấu vật phẩm đã khoá. */
     public static final int OPTION_KHOA = 30;
 
-    /** Trả 1,9 lần phần được tính (nhân 10 để tính bằng số nguyên): nhà cái thu 10% tiền thắng. */
-    public static final long TRA_X10 = 19;
+    /**
+     * Trả 1,7 lần tiền cược (nhân 10 để tính bằng số nguyên) — luật cũ.
+     *
+     * <p>Lúc bật cân cửa thì dùng 19 (x1,9, nhà cái thu 10% tiền thắng).</p>
+     */
+    public static final long TRA_X10 = 17;
 
     /**
      * Số nhân vật tối đa cùng một địa chỉ mạng được đặt trong <b>một ván</b>.
@@ -304,19 +308,22 @@ public class TaiXiuManager {
         giaiDoan = GIAI_DOAN_KET_QUA;
         ketThucLuc = System.currentTimeMillis() + GIAY_KET_QUA * 1000L;
 
-        // Can cua: tinh phan duoc tinh va phan hoan cua tung nguoi TRUOC khi tra.
+        // TAM TAT can cua (hoan phan lech cua) — dang chay luat cu: ca so dat
+        // deu duoc tinh, thang nhan x1,7, khong hoan gi. Muon bat lai thi bo
+        // comment khoi duoi va xoa hai dong "khop = soThoi / hoan = 0".
         for (Cuoc c : cuocs.values()) {
-            long cuaMinh = c.cua == CUA_TAI ? tongTai : tongXiu;
-            long cuaKia = c.cua == CUA_TAI ? tongXiu : tongTai;
-            if (cuaMinh <= cuaKia) {
-                c.khop = c.soThoi;
-            } else {
-                // Lam tron XUONG: phan le thuoc ve hoan, khong ai duoc tinh qua
-                // so tien cua kia co.
-                c.khop = java.math.BigInteger.valueOf(c.soThoi)
-                        .multiply(java.math.BigInteger.valueOf(cuaKia))
-                        .divide(java.math.BigInteger.valueOf(cuaMinh)).longValue();
-            }
+            // long cuaMinh = c.cua == CUA_TAI ? tongTai : tongXiu;
+            // long cuaKia = c.cua == CUA_TAI ? tongXiu : tongTai;
+            // if (cuaMinh <= cuaKia) {
+            //     c.khop = c.soThoi;
+            // } else {
+            //     // Lam tron XUONG: phan le thuoc ve hoan, khong ai duoc tinh qua
+            //     // so tien cua kia co.
+            //     c.khop = java.math.BigInteger.valueOf(c.soThoi)
+            //             .multiply(java.math.BigInteger.valueOf(cuaKia))
+            //             .divide(java.math.BigInteger.valueOf(cuaMinh)).longValue();
+            // }
+            c.khop = c.soThoi;
             c.hoan = c.soThoi - c.khop;
             c.nhan = (c.cua == ketQua && c.khop > 0 ? tinhTraVe(c.khop) : 0) + c.hoan;
         }
@@ -516,12 +523,14 @@ public class TaiXiuManager {
             // luon theo ket qua that, dung luat can cua. Giu nguyen tong hai cua:
             // phan duoc tinh cua nhung nguoi con lai da dua tren tong ay.
             byte ketQua = ketQuaHienTai();
-            long cuaMinh = c.cua == CUA_TAI ? tongTai : tongXiu;
-            long cuaKia = c.cua == CUA_TAI ? tongXiu : tongTai;
-            long khop = cuaMinh <= cuaKia ? c.soThoi
-                    : java.math.BigInteger.valueOf(c.soThoi)
-                            .multiply(java.math.BigInteger.valueOf(cuaKia))
-                            .divide(java.math.BigInteger.valueOf(cuaMinh)).longValue();
+            // TAM TAT can cua — xem chotVan.
+            // long cuaMinh = c.cua == CUA_TAI ? tongTai : tongXiu;
+            // long cuaKia = c.cua == CUA_TAI ? tongXiu : tongTai;
+            // long khop = cuaMinh <= cuaKia ? c.soThoi
+            //         : java.math.BigInteger.valueOf(c.soThoi)
+            //                 .multiply(java.math.BigInteger.valueOf(cuaKia))
+            //                 .divide(java.math.BigInteger.valueOf(cuaMinh)).longValue();
+            long khop = c.soThoi;
             long nhan = (c.cua == ketQua && khop > 0 ? tinhTraVe(khop) : 0)
                     + (c.soThoi - khop);
             themThoiVangKhoa(pl, nhan);
@@ -702,9 +711,11 @@ public class TaiXiuManager {
      * hai công thức riêng là sớm muộn cũng lệch nhau.</p>
      */
     private static long tinhTraVe(long soThoi) {
-        // Lam tron XUONG: nhieu nguoi cung lam tron len thi nha cai co the tra
-        // quá phan cua thua — can cua moi dung la khong bao gio lo.
-        return soThoi * TRA_X10 / 10;
+        // Luat cu: x1,7, lam tron nua len. Khi bat lai can cua (x1,9) thi dung
+        // lam tron XUONG: nhieu nguoi cung lam tron len thi nha cai co the tra
+        // qua phan cua thua.
+        // return soThoi * TRA_X10 / 10;
+        return (soThoi * TRA_X10 + 5) / 10;
     }
 
     /** Người đang online trong danh sách xem, bỏ qua ai đã thoát. */
