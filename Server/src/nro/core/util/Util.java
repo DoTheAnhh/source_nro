@@ -343,6 +343,35 @@ public class Util {
         return java.util.concurrent.ThreadLocalRandom.current().nextDouble() * mau < tiLeMoi;
     }
 
+    /**
+     * Chữ tỉ lệ cho bảng nâng cấp: tỉ lệ gốc, và tỉ lệ sau may mắn nếu có.
+     *
+     * <p>Ví dụ {@code "50% (may mắn: 75%)"}; không có may mắn thì chỉ
+     * {@code "50%"}. Tỉ lệ sau may mắn chặn ở 100%.</p>
+     *
+     * @param tiLe tử số của tỉ lệ gốc
+     * @param mau  mẫu số (100 nếu tỉ lệ đã là phần trăm)
+     */
+    public static String chuTiLeMayMan(nro.entity.player.Player pl, double tiLe, double mau) {
+        double goc = mau <= 0 ? 0 : tiLe * 100d / mau;
+        double heSo = heSoMayMan(pl);
+        String sGoc = soPhanTram(goc) + "%";
+        if (heSo <= 1.0000001d || goc <= 0) {
+            return sGoc;
+        }
+        return sGoc + " (may mắn: " + soPhanTram(Math.min(100d, goc * heSo)) + "%)";
+    }
+
+    /** Số phần trăm gọn: bỏ phần lẻ nếu tròn, không thì giữ tối đa hai chữ số. */
+    private static String soPhanTram(double v) {
+        if (Math.abs(v - Math.round(v)) < 0.005) {
+            return String.valueOf(Math.round(v));
+        }
+        String s = String.format(java.util.Locale.US, "%.2f", v);
+        s = s.replaceAll("0+$", "").replaceAll("\\.$", "");
+        return s.replace('.', ',');
+    }
+
     public static double heSoMayMan(double tyLeMayMan) {
         if (tyLeMayMan <= 0) {
             return 1d;

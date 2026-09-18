@@ -43,7 +43,7 @@ public class DanhBongSaoPhaLe {
         text.append(ConstFont.BOLD_BLUE).append("Đánh bóng sao pha lê cấp 2\n");
         text.append(saoPhaLeC2.quantity >= 2 ? ConstFont.BOLD_GREEN : ConstFont.BOLD_RED).append("Cần 2 ").append(saoPhaLeC2.template.name).append("\n");
         text.append(ConstFont.BOLD_GREEN).append("Cần 1 Đá mài\n");
-        text.append(ConstFont.BOLD_GREEN).append("Tỉ lệ thành công: 30%\n");
+        text.append(ConstFont.BOLD_GREEN).append("Tỉ lệ thành công: ").append(Util.chuTiLeMayMan(player, 30, 100)).append("\n");
         text.append(player.inventory.gold >= 100_000_000 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED).append("Cần 100 Tr vàng\n");
         if (player.inventory.gold < 100_000_000) {
             CombineService.gI().baHatMit.createOtherMenu(player, ConstNpc.IGNORE_MENU, text.toString(), "Còn thiếu\n" + Util.formatNumber(100_000_000 - player.inventory.gold, FormatStyle.VIETNAMESE) + " vàng");

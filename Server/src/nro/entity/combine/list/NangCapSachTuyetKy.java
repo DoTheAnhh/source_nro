@@ -33,7 +33,7 @@ public class NangCapSachTuyetKy {
         StringBuilder text = new StringBuilder();
         text.append(ConstFont.BOLD_BLUE).append("Nâng cấp sách tuyệt kỹ\n");
         text.append(kimBamGiay.quantity >= 10 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED).append("Cần 10 Kìm bấm giấy\n");
-        text.append(ConstFont.BOLD_BLUE).append("Tỉ lệ thành công: 10%\n");
+        text.append(ConstFont.BOLD_BLUE).append("Tỉ lệ thành công: ").append(Util.chuTiLeMayMan(player, 10, 100)).append("\n");
         text.append(ConstFont.BOLD_BLUE).append("Nâng cấp thất bại sẽ mất 10 Kìm bấm giấy");
         if (kimBamGiay.quantity < 10) {
             CombineService.gI().baHatMit.createOtherMenu(player, ConstNpc.IGNORE_MENU, text.toString(),

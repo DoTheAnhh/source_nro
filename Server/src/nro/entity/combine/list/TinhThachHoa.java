@@ -88,7 +88,7 @@ public class TinhThachHoa {
                         for (ItemOption io : caiTrang.itemOptions) {
                             npcSay += io.getOptionString() + "\n";
                         }
-                        npcSay += "|7|Tỉ lệ thành công: " + getTiLeNangcapTinhThach(star) + "%" + "\n";
+                        npcSay += "|7|Tỉ lệ thành công: " + Util.chuTiLeMayMan(player, getTiLeNangcapTinhThach(star), 100) + "\n";
                         npcSay += "|1|Cần " + Util.formatNumber(getDaNangcapTinhThach(star), FormatStyle.VIETNAMESE) + " Tinh Thạch ";
                         CombineService.gI().baHatMit.createOtherMenu(player, ConstNpc.MENU_START_COMBINE, npcSay,
                                 "Nâng cấp");

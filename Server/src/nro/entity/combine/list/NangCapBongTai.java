@@ -89,7 +89,7 @@ public class NangCapBongTai {
         if (type == 1) {
             // Nâng BT1 -> BT2
             text.append(ConstFont.BOLD_BLUE).append("Bông tai Porata [+2]\n\n");
-            text.append(ConstFont.BOLD_BLUE).append("Tỉ lệ thành công: 20%\n");
+            text.append(ConstFont.BOLD_BLUE).append("Tỉ lệ thành công: ").append(Util.chuTiLeMayMan(player, 20, 100)).append("\n");
             text.append(quantityManhVo >= 99 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED)
                     .append("Cần 99 Mảnh vỡ bông tai\n");
             text.append(player.inventory.gold >= 500_000_000 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED)
@@ -100,7 +100,7 @@ public class NangCapBongTai {
         } else {
             // Nâng BT2 -> BT3
             text.append(ConstFont.BOLD_BLUE).append("Bông tai Porata [+3]\n\n");
-            text.append(ConstFont.BOLD_BLUE).append("Tỉ lệ thành công: 10%\n");
+            text.append(ConstFont.BOLD_BLUE).append("Tỉ lệ thành công: ").append(Util.chuTiLeMayMan(player, 10, 100)).append("\n");
             text.append(quantityManhVo >= 999 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED)
                     .append("Cần 999 Mảnh bông tai cấp 3\n");
             text.append(player.inventory.gold >= 2_000_000_000 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED)

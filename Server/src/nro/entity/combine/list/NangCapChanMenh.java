@@ -68,7 +68,7 @@ public class NangCapChanMenh {
             String npcSay = "Trang sức sau khi nâng cấp là: " + CombineUtil.getNameNangcapChanmenh(level) + "\n"
                     + "|0|Sau khi nâng cấp sẽ được trang sức mạnh hơn\n";
 
-            npcSay += "|0|Tỉ lệ thành công: " + tilechanmenh + "%\n";
+            npcSay += "|0|Tỉ lệ thành công: " + Util.chuTiLeMayMan(player, tilechanmenh, 100) + "\n";
 
             if (TinhTheQuantity >= CombineUtil.getMaQuaiVaTinhTheNangcapChanmenh(level)
                     && MaQuaiQuantity >= CombineUtil.getMaQuaiVaTinhTheNangcapChanmenh(level)) {

@@ -60,7 +60,7 @@ public class CheTaoTrangBiThienSu {
             text.append(manhThienSu.quantity >= 999 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED).append("Mảnh ghép ").append(manhThienSu.quantity).append("/999 (Thất bại -99 mảnh ghép)\n");
             text.append(ConstFont.BOLD_BLUE).append(daNangCap != null ? daNangCap.template.name : "Không dùng đá nâng cấp").append(" (thêm ").append(ratioDNC).append("% tỉ lệ thành công)\n");
             text.append(ConstFont.BOLD_BLUE).append(daMayMan != null ? daMayMan.template.name : "Không dùng đá may mắn").append(" (thêm ").append(ratioDMM).append("% tỉ lệ tối đa các chỉ số)\n");
-            text.append(ConstFont.BOLD_BLUE).append("Tỉ lệ thành công: ").append(ratioDNC + ratioCT).append("%\n");
+            text.append(ConstFont.BOLD_BLUE).append("Tỉ lệ thành công: ").append(Util.chuTiLeMayMan(player, ratioDNC + ratioCT, 100)).append("\n");
             text.append(player.inventory.gold >= 200_000_000 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED).append("Phí nâng cấp: 200 triệu vàng");
             if (manhThienSu.quantity < 999 || player.inventory.gold < 200_000_000) {
                 CombineService.gI().whis.createOtherMenu(player, ConstNpc.IGNORE_MENU, text.toString(), "Từ chối");

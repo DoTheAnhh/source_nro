@@ -63,7 +63,7 @@ public class NangChiSoBongTai {
         }
 
         int soManh = soLuongThat(manhHonBongTai);
-        text.append(ConstFont.BOLD_BLUE).append("Tỉ lệ thành công: 50%\n");
+        text.append(ConstFont.BOLD_BLUE).append("Tỉ lệ thành công: ").append(Util.chuTiLeMayMan(player, 50, 100)).append("\n");
         text.append(soManh >= 99 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED)
             .append("Cần 99 Mảnh hồn bông tai (đang có ").append(soManh).append(")\n");
         text.append(daXanhLam.quantity >= 1 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED)

@@ -52,7 +52,7 @@ public class CuongHoaLoSaoPhaLe {
         text.append(ConstFont.BOLD_BLUE).append("Ô Sao Pha lê thứ ").append(starCuongHoa).append("\n");
         text.append(ConstFont.BOLD_GREEN).append("Cần 1 Hematite\n");
         text.append(ConstFont.BOLD_GREEN).append(trangBi.template.name).append("\n");
-        text.append(ConstFont.BOLD_GREEN).append("Tỉ lệ thành công: 50%\n");
+        text.append(ConstFont.BOLD_GREEN).append("Tỉ lệ thành công: ").append(Util.chuTiLeMayMan(player, 50, 100)).append("\n");
         text.append(player.inventory.getGemAndRuby() >= 50 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED).append("Cần 50 ngọc");
         if (player.inventory.getGemAndRuby() < 50) {
             CombineService.gI().baHatMit.createOtherMenu(player, ConstNpc.IGNORE_MENU, text.toString(), "Còn thiếu\n" + Util.formatNumber(50 - player.inventory.getGemAndRuby(), FormatStyle.VIETNAMESE) + " ngọc");

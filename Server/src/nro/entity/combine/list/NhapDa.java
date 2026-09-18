@@ -52,7 +52,7 @@ public class NhapDa {
         String info = "Ghép " + FRAG_REQUIRE + " mảnh Đá vụn + 1 Bình nước phép\n"
                 + "→ nhận ngẫu nhiên 1 trong 5 loại Đá quý:\n"
                 + "• Đá Lục bảo\n• Đá Saphia\n• Đá Ruby\n• Đá Titan\n• Đá Thạch anh tím\n"
-                + "Tỉ lệ thành công: " + SUCCESS_RATE + "%.";
+                + "Tỉ lệ thành công: " + Util.chuTiLeMayMan(player, SUCCESS_RATE, 100) + ".";
         CombineService.gI().baHatMit.createOtherMenu(player, ConstNpc.MENU_START_COMBINE,
                 info, "Ghép", "Huỷ");
     }

@@ -44,7 +44,7 @@ public class GiaHanVatPham {
             }
             npcSay += "\n|0|Sau khi gia hạn + ~ 3 - 7 ngày\n";
 
-            npcSay += "|0|Tỉ lệ thành công: 100%" + "\n";
+            npcSay += "|0|Tỉ lệ thành công: " + Util.chuTiLeMayMan(player, 50, 100) + "\n";
             if (player.inventory.ruby > 1000) {
                 npcSay += "|2|Cần 1000 hồng ngọc";
                 CombineService.gI().baHatMit.createOtherMenu(player, ConstNpc.MENU_START_COMBINE, npcSay,

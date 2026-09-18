@@ -44,7 +44,7 @@ public class MoKhoaItem {
                             }
                         }
                         npcSay += "|2|Sau khi mở khóa Item của bạn sẽ thành Item gd được \n|7|"
-                                + "\n|7|Tỉ lệ thành công: " + 30 + "%\n"
+                                + "\n|7|Tỉ lệ thành công: " + Util.chuTiLeMayMan(player, 30, 100) + "\n"
                                 + "Cần " + Util.formatNumber(2000, FormatStyle.VIETNAMESE) + " hồng ngọc";
 
                         CombineService.gI().baHatMit.createOtherMenu(player, ConstNpc.MENU_START_COMBINE,

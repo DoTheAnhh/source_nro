@@ -111,7 +111,7 @@ public class NhapNgocRong {
                     .append(loNuocPhep == null ? ConstFont.BOLD_RED : ConstFont.BOLD_GREEN)
                     .append("Cần 1 Lọ nước phép mỗi lần\n")
                     .append(ConstFont.BOLD_BLUE)
-                    .append("Tỉ lệ thành công: 50%");
+                    .append("Tỉ lệ thành công: ").append(Util.chuTiLeMayMan(player, 50, 100));
 
             if (loNuocPhep == null || player.inventory.gold < VANG_MOI_LAN_SIEU_CAP) {
                 CombineService.gI().baHatMit.createOtherMenu(

@@ -59,7 +59,7 @@ public class CongThucDoiService {
                     .append("/").append(nl[1]).append("\n");
         }
         text.append(du ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED)
-                .append("Tỉ lệ thành công: ").append(ct.tyLe).append("%\n");
+                .append("Tỉ lệ thành công: ").append(Util.chuTiLeMayMan(player, ct.tyLe, 100)).append("\n");
         if (!ct.haoKhiThatBai.isEmpty()) {
             text.append(ConstFont.BOLD_RED).append("Thất bại mất ");
             for (int i = 0; i < ct.haoKhiThatBai.size(); i++) {
@@ -140,7 +140,7 @@ public class CongThucDoiService {
                     .append("/").append(nl[1]).append("\n");
         }
         text.append(du ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED)
-                .append("Tỉ lệ thành công: ").append(ct.tyLe).append("%\n");
+                .append("Tỉ lệ thành công: ").append(Util.chuTiLeMayMan(player, ct.tyLe, 100)).append("\n");
         if (!ct.haoKhiThatBai.isEmpty()) {
             text.append(ConstFont.BOLD_RED).append("Thất bại mất ");
             for (int i = 0; i < ct.haoKhiThatBai.size(); i++) {

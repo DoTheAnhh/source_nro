@@ -43,7 +43,7 @@ public class NangCapSaoPhaLe {
         text.append(ConstFont.BOLD_BLUE).append("Nâng cấp Sao Pha lê lên cấp 2\n");
         text.append(ConstFont.BOLD_GREEN).append("Cần 1 Hematite\n");
         text.append(ConstFont.BOLD_GREEN).append("Cần 1 ").append(saoPhaLeC1.template.name).append("\n");
-        text.append(ConstFont.BOLD_GREEN).append("Tỉ lệ thành công: 50%\n");
+        text.append(ConstFont.BOLD_GREEN).append("Tỉ lệ thành công: ").append(Util.chuTiLeMayMan(player, 50, 100)).append("\n");
         text.append(player.inventory.gold >= 100_000_000 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED).append("Cần 100 Tr vàng\n");
         text.append(player.inventory.getGemAndRuby() >= 50 ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED).append("Cần 50 ngọc");
         if (player.inventory.getGemAndRuby() < 50) {

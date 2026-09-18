@@ -247,7 +247,7 @@ public class DapDoAoHoa {
                     }
                     npcSay += "|2|Sau khi ảo hóa trang bị (+" + (level + 1) + ")\n|7|"
                             + option.replaceAll("#", String.valueOf(param))
-                            + "\n|7|Tỉ lệ thành công: " + player.combine.ratioCombine + "%\n"
+                            + "\n|7|Tỉ lệ thành công: " + Util.chuTiLeMayMan(player, player.combine.ratioCombine, 100) + "\n"
                             + (player.combine.countDaQuy > itemDNC.quantity ? "|7|" : "|1|")
                             + "Cần " + player.combine.countDaQuy + " " + itemDNC.template.name
                             + "\n" + (player.combine.goldCombine > player.inventory.gold ? "|7|" : "|1|")

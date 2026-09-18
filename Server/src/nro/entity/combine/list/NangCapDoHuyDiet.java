@@ -40,7 +40,7 @@ public class NangCapDoHuyDiet {
 
         String info = "Sử dụng 1 món Thần Linh và " + Util.formatNumber(GOLD_REQUIRE, FormatStyle.VIETNAMESE) + " vàng\n"
                 + "để rèn thành Huỷ Diệt cùng loại và hành tinh.\n"
-                + "Tỉ lệ thành công: " + SUCCESS_RATE + "%.\n"
+                + "Tỉ lệ thành công: " + Util.chuTiLeMayMan(player, SUCCESS_RATE, 100) + ".\n"
                 + "Thất bại chỉ trừ vàng, không mất đồ!";
         CombineService.gI().baHatMit.createOtherMenu(player, ConstNpc.MENU_START_COMBINE,
                 info, "Nâng cấp", "Huỷ");

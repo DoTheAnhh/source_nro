@@ -52,7 +52,7 @@ public class PhapSuHoa {
                         }
                         player.combine.ratioCombine = 100;
                         npcSay += "|2|Sau khi nâng cấp sẽ cộng 1 chỉ số pháp sư ngẫu nhiên \n|7|"
-                                + "\n|7|Tỉ lệ thành công: " + player.combine.ratioCombine + "%\n"
+                                + "\n|7|Tỉ lệ thành công: " + Util.chuTiLeMayMan(player, player.combine.ratioCombine, 30) + "\n"
                                 + "Cần " + Util.formatNumber(2000000000, FormatStyle.VIETNAMESE) + " vàng";
 
                         CombineService.gI().baHatMit.createOtherMenu(player, ConstNpc.MENU_START_COMBINE,

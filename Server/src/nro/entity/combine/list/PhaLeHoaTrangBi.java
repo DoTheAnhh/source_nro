@@ -97,7 +97,7 @@ public class PhaLeHoaTrangBi {
         text.append(ConstFont.BOLD_GREEN).append("★").append(star)
                 .append(" → ★").append(star + 1).append("\n");
         text.append(ConstFont.BOLD_BLUE).append("Tỉ lệ thành công: ")
-                .append(TiLeSaoDAO.tiLeChu(star)).append("%\n");
+                .append(Util.chuTiLeMayMan(player, TiLeSaoDAO.tiLe(star), 100)).append("\n");
         text.append(player.inventory.gold < gold ? ConstFont.BOLD_RED : ConstFont.BOLD_BLUE)
                 .append("Mỗi lần: ").append(Util.soCham(gold)).append(" vàng\n");
         text.append(player.inventory.gem < gem ? ConstFont.BOLD_RED : ConstFont.BOLD_BLUE)

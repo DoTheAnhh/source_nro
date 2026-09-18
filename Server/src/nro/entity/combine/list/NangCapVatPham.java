@@ -97,7 +97,7 @@ public class NangCapVatPham {
         text.append(ConstFont.BOLD_DARK).append(trangBi.getOptionInfoUpgrade()).append("\n");
         text.append(ConstFont.BOLD_BLUE).append("Sau khi nâng cấp [+").append(level + 1).append("]\n");
         text.append(ConstFont.BOLD_GREEN).append(trangBi.getOptionInfoUpgradeFinal()).append("\n");
-        text.append(ConstFont.BOLD_BLUE).append("Tỉ lệ thành công: ").append(getRatio(level)).append("%\n");
+        text.append(ConstFont.BOLD_BLUE).append("Tỉ lệ thành công: ").append(Util.chuTiLeMayMan(player, getRatio(level), 100)).append("\n");
         text.append(daNangCap.quantity >= da ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED).append("Cần ").append(da).append(" ").append(daNangCap.template.name).append("\n");
         text.append(player.inventory.gold >= gold ? ConstFont.BOLD_BLUE : ConstFont.BOLD_RED).append("Cần ").append(Util.formatNumber(gold, FormatStyle.VIETNAMESE)).append(" vàng");
         if (canUseDBV) {

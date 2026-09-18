@@ -96,7 +96,7 @@ public class SieuHoaCaiTrang {
                     npcSay += io.getOptionString() + "\n";
                 }
 
-                npcSay += "|7|Tỉ lệ thành công: " + getTiLeNangcapSieuHoa(star) + "%\n";
+                npcSay += "|7|Tỉ lệ thành công: " + Util.chuTiLeMayMan(player, getTiLeNangcapSieuHoa(star), 100) + "\n";
                 npcSay += "|7|Cần: " + Util.formatNumber(10_000_000_000L, FormatStyle.VIETNAMESE)
                         + " vàng\n";
                 npcSay += "|7|Cần " + Util.formatNumber(getDaNangcapSieuHoa(star), FormatStyle.VIETNAMESE)
