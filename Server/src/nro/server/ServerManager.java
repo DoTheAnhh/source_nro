@@ -556,6 +556,16 @@ public class ServerManager {
 
         BossManager.gI().loadBoss();
         Manager.MAPS.forEach(nro.entity.map.Map::initBoss);
+        // Giap theo HP: doc bang moc trong CSDL roi GHI giap vao boss_config /
+        // boss_data, xong ap lai cho cac con dang co.
+        nro.repository.dao.BossDAO.ghiGiapTheoHp(BossManager.gI().getBosses());
+        for (nro.entity.boss.Boss b : new java.util.ArrayList<>(BossManager.gI().getBosses())) {
+            try {
+                b.apLaiChiSoPhu();
+            } catch (Exception boQua) {
+                // Mot con hong khong duoc chan ca luot khoi dong.
+            }
+        }
 
         new Thread(BossManager.gI(), "Update boss").start();
         new Thread(YardartManager.gI(), "Update yardart boss").start();

@@ -702,4 +702,190 @@ public class BossDAO {
         }
     }
 
+    // =====================================================================
+    //  Giáp theo HP — bảng nằm trong CSDL
+    // =====================================================================
+
+    /**
+     * Bảng {@code boss_giap_theo_hp}: boss có HP <b>từ</b> {@code hp_tu} trở lên thì
+     * giáp là {@code giap}. Xét từ mốc cao xuống, lấy mốc đầu tiên HP đạt tới —
+     * HP nằm giữa hai mốc theo mốc thấp hơn. Dưới mốc thấp nhất thì không đụng.
+     *
+     * <p>Không viết cứng con số nào trong mã: sửa mốc chỉ cần sửa bảng rồi khởi
+     * động lại máy chủ.</p>
+     */
+    private static final List<long[]> BANG_GIAP = new ArrayList<>();
+    private static volatile boolean daNapBangGiap;
+
+    /** Mốc gieo lần đầu khi bảng còn trống: {HP từ, giáp}. */
+    private static final long[][] MOC_GIEO = {
+        {500_000_000L, 5000}, {450_000_000L, 4000}, {400_000_000L, 3000},
+        {350_000_000L, 2000}, {300_000_000L, 1000}, {250_000_000L, 500},
+        {200_000_000L, 200},
+    };
+
+    /** Tạo bảng (gieo mốc nếu trống) và nạp vào bộ nhớ. */
+    public static synchronized void napBangGiap() {
+        CrisResultSet rs = null;
+        try {
+            ConnectDB.executeUpdate("CREATE TABLE IF NOT EXISTS boss_giap_theo_hp ("
+                    + " hp_tu BIGINT(20) NOT NULL,"
+                    + " giap INT(11) NOT NULL,"
+                    + " PRIMARY KEY (hp_tu)"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            rs = ConnectDB.executeQuery("SELECT COUNT(*) AS n FROM boss_giap_theo_hp");
+            boolean trong = rs.next() && rs.getInt("n") == 0;
+            dispose(rs);
+            rs = null;
+            if (trong) {
+                for (long[] m : MOC_GIEO) {
+                    ConnectDB.executeUpdate(
+                            "INSERT INTO boss_giap_theo_hp (hp_tu, giap) VALUES (?, ?)",
+                            m[0], (int) m[1]);
+                }
+            }
+            List<long[]> moi = new ArrayList<>();
+            rs = ConnectDB.executeQuery(
+                    "SELECT hp_tu, giap FROM boss_giap_theo_hp ORDER BY hp_tu DESC");
+            while (rs.next()) {
+                moi.add(new long[]{rs.getLong("hp_tu"), rs.getInt("giap")});
+            }
+            synchronized (BANG_GIAP) {
+                BANG_GIAP.clear();
+                BANG_GIAP.addAll(moi);
+            }
+            daNapBangGiap = true;
+        } catch (Exception ex) {
+            Logger.logException(BossDAO.class, ex, "Không nạp được bảng giáp theo HP");
+        } finally {
+            dispose(rs);
+        }
+    }
+
+    /** Giáp theo HP (đọc bảng trong CSDL), {@code -1} nếu HP dưới mốc thấp nhất. */
+    public static int giapTheoHp(long hp) {
+        if (!daNapBangGiap) {
+            napBangGiap();
+        }
+        synchronized (BANG_GIAP) {
+            for (long[] m : BANG_GIAP) {
+                if (hp >= m[0]) {
+                    return (int) m[1];
+                }
+            }
+        }
+        return -1;
+    }
+
+    /** HP lớn nhất ghi trong một chuỗi "1000,2000,…" hoặc một số. */
+    private static long hpLonNhat(String chuoi) {
+        long lon = 0;
+        if (chuoi == null) {
+            return 0;
+        }
+        for (String p : chuoi.split("[,;\\s]+")) {
+            try {
+                lon = Math.max(lon, Long.parseLong(p.trim().replace(".", "")));
+            } catch (NumberFormatException boQua) {
+                // Phan khong phai so: bo qua.
+            }
+        }
+        return lon;
+    }
+
+    /**
+     * <b>Ghi</b> giáp theo HP vào CSDL cho mọi boss đang có — gọi lúc khởi động.
+     *
+     * <ul>
+     *   <li>Boss đang chạy: cột {@code giap} của {@code boss_config} (thêm dòng
+     *       nếu chưa có). HP lấy HP lớn nhất trong các cấp của con đó.</li>
+     *   <li>Mẫu boss trên panel: cột {@code giap} của {@code boss_data}.</li>
+     * </ul>
+     *
+     * <p>Chỉ ghi khi bảng mốc <b>khác</b> lần ghi trước (hoặc lần đầu): sửa bảng
+     * mốc là lần khởi động sau ghi lại hết; còn giáp sửa tay cho một con trên
+     * panel thì được giữ tới khi bảng mốc đổi.</p>
+     */
+    public static void ghiGiapTheoHp(List<nro.entity.boss.Boss> bosses) {
+        napBangGiap();
+        StringBuilder dau = new StringBuilder("giap_boss:");
+        synchronized (BANG_GIAP) {
+            for (long[] m : BANG_GIAP) {
+                dau.append(m[0]).append('=').append(m[1]).append(';');
+            }
+        }
+        String khoa = dau.length() > 64 ? "giap_boss:" + Integer.toHexString(dau.toString().hashCode())
+                : dau.toString();
+        CrisResultSet rs = null;
+        try {
+            ConnectDB.executeUpdate("CREATE TABLE IF NOT EXISTS mg_da_chuyen ("
+                    + " ten VARCHAR(64) NOT NULL, luc BIGINT(20) NOT NULL DEFAULT 0,"
+                    + " PRIMARY KEY (ten)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            rs = ConnectDB.executeQuery("SELECT ten FROM mg_da_chuyen WHERE ten = ?", khoa);
+            if (rs.next()) {
+                return;
+            }
+            dispose(rs);
+            rs = null;
+            int soBoss = 0;
+            if (bosses != null) {
+                java.util.Set<Integer> daGhi = new java.util.HashSet<>();
+                for (nro.entity.boss.Boss b : new ArrayList<>(bosses)) {
+                    if (b == null || b.data == null || !daGhi.add((int) b.id)) {
+                        continue;
+                    }
+                    // Moi cap mot muc giap. Chi ghi mot con so cho ca con khi MOI
+                    // cap cung mot muc; boss nhieu cap khac muc thi de trong, luc
+                    // xuat hien tung cap tu lay muc cua minh tu bang trong CSDL.
+                    int giap = Integer.MIN_VALUE;
+                    boolean khacMuc = false;
+                    for (nro.entity.boss.BossData d : b.data) {
+                        if (d == null || d.getHp() == null) {
+                            continue;
+                        }
+                        for (long h : d.getHp()) {
+                            int g = giapTheoHp(h);
+                            if (giap == Integer.MIN_VALUE) {
+                                giap = g;
+                            } else if (giap != g) {
+                                khacMuc = true;
+                            }
+                        }
+                    }
+                    if (khacMuc || giap < 0) {
+                        continue;
+                    }
+                    ConnectDB.executeUpdate("INSERT INTO boss_config (boss_id, giap, active)"
+                            + " VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE giap = VALUES(giap)",
+                            (int) b.id, giap);
+                    soBoss++;
+                }
+            }
+            int soMau = 0;
+            rs = ConnectDB.executeQuery("SELECT ma, hp FROM boss_data");
+            List<Object[]> mau = new ArrayList<>();
+            while (rs.next()) {
+                mau.add(new Object[]{rs.getString("ma"), rs.getStringOrNull("hp")});
+            }
+            dispose(rs);
+            rs = null;
+            for (Object[] m : mau) {
+                int giap = giapTheoHp(hpLonNhat((String) m[1]));
+                if (giap >= 0) {
+                    ConnectDB.executeUpdate("UPDATE boss_data SET giap = ? WHERE ma = ?",
+                            giap, m[0]);
+                    soMau++;
+                }
+            }
+            ConnectDB.executeUpdate("INSERT INTO mg_da_chuyen (ten, luc) VALUES (?, ?)",
+                    khoa, System.currentTimeMillis());
+            reload();
+            Logger.success("Đã ghi giáp theo HP: " + soBoss + " boss, " + soMau
+                    + " mẫu boss\n");
+        } catch (Exception ex) {
+            Logger.logException(BossDAO.class, ex, "Không ghi được giáp theo HP");
+        } finally {
+            dispose(rs);
+        }
+    }
 }

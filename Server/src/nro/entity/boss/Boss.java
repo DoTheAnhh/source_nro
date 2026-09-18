@@ -256,8 +256,24 @@ public class Boss extends Player implements IBoss {
      * Bản thân ba trường {@code *Boss} không bị {@code calPoint} xoá, nên boss lên
      * cấp hay hồi sinh vẫn giữ được.</p>
      */
+    /** Áp lại giáp / né / chính xác từ CSDL cho con boss đang có — sau khi ghi giáp mới. */
+    public void apLaiChiSoPhu() {
+        if (this.data == null || this.currentLevel < 0 || this.currentLevel >= this.data.length) {
+            return;
+        }
+        apChiSoPhuTuCSDL(this.data[this.currentLevel]);
+        this.nPoint.calPoint();
+    }
+
     private void apChiSoPhuTuCSDL(BossData data) {
         try {
+            // Lop 0: giap theo HP cua CHINH lan xuat hien nay (moi cap mot HP
+            // nen moi cap mot giap). Hai lop duoi — so go tren panel — van
+            // thang neu co dat.
+            // Bang moc nam trong CSDL (boss_giap_theo_hp), khong viet cung. Dat
+            // CA khi khong co moc (-1): giap cua cap truoc khong duoc dinh sang
+            // cap sau co HP thap hon.
+            this.nPoint.giapBoss = nro.repository.dao.BossDAO.giapTheoHp(this.nPoint.hpg);
             // Lop 1: so cua MAU, go o tab "2. So lieu" (bang boss_data).
             if (data != null) {
                 if (data.getGiap() >= 0) {
