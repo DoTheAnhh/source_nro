@@ -12,30 +12,28 @@ import nro.service.MiniGameService;
 import nro.service.Service;
 
 /**
- * Bàn <b>Đua Ngựa</b> — sáu con, đặt một con, con nào về nhất thì ăn.
+ * Bàn <b>Đua Vịt</b> — năm con vịt, đặt một con, con nào về nhất thì ăn.
+ *
+ * <p>Trước là Đua Ngựa sáu con; giữ nguyên tên lớp và mã trò (2) để không đổi giao
+ * thức hay lịch sử trong cơ sở dữ liệu.</p>
  *
  * <h2>Luật</h2>
  *
- * <p>Sáu con cơ hội <b>bằng nhau</b>, mỗi con một phần sáu. Trả về 5,5× tiền
- * cược — công bằng là 6×, phần chênh là lợi thế nhà cái, khoảng 8 phần trăm.</p>
- *
- * <p>Cơ hội bằng nhau chứ không đặt tỉ lệ khác nhau cho từng con: tỉ lệ khác
- * nhau thì phải công bố, mà công bố xong thì người chơi chỉ việc luôn đặt con
- * lợi nhất. Bằng nhau thì chọn con nào cũng là chọn theo sở thích, và đó mới là
- * chỗ vui của trò đua.</p>
+ * <p>Năm con cơ hội <b>bằng nhau</b>, mỗi con một phần năm. Trả về 4,6× tiền
+ * cược — công bằng là 5×, phần chênh là lợi thế nhà cái, khoảng 8 phần trăm.</p>
  *
  * <h2>Đường đua do máy chủ dựng sẵn</h2>
  *
- * <p>Máy chủ bốc con thắng <b>trước</b>, rồi dựng một <i>thứ tự về đích</i> cho
- * cả sáu con và gửi xuống. Client chỉ chạy hoạt hình theo thứ tự ấy.</p>
- *
- * <p>Làm ngược lại — client tự chạy đua rồi báo lên ai thắng — thì kết quả nằm
- * trong tay máy người chơi, tức là không nằm trong tay ai cả.</p>
+ * <p>Máy chủ xáo <i>thứ tự về đích</i> ngay đầu pha bơi và gửi xuống. Client chỉ
+ * dựng hoạt hình theo thứ tự ấy (gieo theo số phiên, nên ai xem cũng thấy cùng một
+ * cuộc đua). Để client tự chạy đua rồi báo ai thắng thì kết quả nằm trong tay
+ * máy người chơi.</p>
  *
  * <h2>Nhịp</h2>
  *
- * <p>25 giây đặt, 10 giây đua, 4 giây xem kết quả. Mười giây đua là dài nhất
- * trong các trò ở đây, vì đây là trò duy nhất có gì để xem trong lúc chờ.</p>
+ * <p>30 giây đặt, 30 giây bơi, 7 giây xem kết quả. Ba mươi giây bơi khớp
+ * <code>DV_GIAY_DUA</code> bên client — client xếp con về chậm nhất tới đích trước
+ * giây thứ 29.</p>
  */
 public final class DuaNguaManager extends VongChoi {
 
@@ -50,12 +48,12 @@ public final class DuaNguaManager extends VongChoi {
 
     public static final int MA_TRO = MiniGameService.TRO_DUA_NGUA;
 
-    /** Số ngựa. */
-    public static final int SO_NGUA = 6;
+    /** Số vịt. Khớp <code>DN_SO_NGUA</code> bên client. */
+    public static final int SO_NGUA = 5;
 
-    public static final int GIAY_DAT_CUOC = 25;
-    public static final int GIAY_DUA = 10;
-    public static final int GIAY_KET_QUA = 4;
+    public static final int GIAY_DAT_CUOC = 30;
+    public static final int GIAY_DUA = 30;
+    public static final int GIAY_KET_QUA = 7;
 
     public static final byte GD_DAT_CUOC = 0;
     public static final byte GD_DUA = 1;
@@ -64,11 +62,12 @@ public final class DuaNguaManager extends VongChoi {
     public static final long TOI_DA_MOI_CON = 500;
     public static final long TOI_DA_MOT_VAN = 1500;
 
-    /** Trả 5,5× tiền cược. Nhân 10 để tính bằng số nguyên. */
-    private static final long NHAN_X10 = 55;
+    /** Trả 4,6× tiền cược. Nhân 10 để tính bằng số nguyên. */
+    private static final long NHAN_X10 = 46;
 
+    /** Cùng thứ tự với <code>TEN_VIT</code> và bộ sprite <code>dv_*</code> bên client. */
     public static final String[] TEN_NGUA = {
-        "Hồng Hài", "Bạch Vân", "Thanh Long", "Hắc Phong", "Kim Mao", "Xích Diện"
+        "Vịt Goku", "Vịt Naruto", "Vịt Sasuke", "Vịt Vegeta", "Vịt Bulma"
     };
 
     private static final class Cuoc {
@@ -208,18 +207,18 @@ public final class DuaNguaManager extends VongChoi {
             return ve;
         }
         if (ve <= 0) {
-            Service.gI().sendThongBao(pl, "Đua Ngựa: " + TEN_NGUA[thang]
+            Service.gI().sendThongBao(pl, "Đua Vịt: " + TEN_NGUA[thang]
                     + " về nhất. Bạn thua " + c.tong() + " thỏi vàng.");
             return 0;
         }
         if (KhoVang.themKhoa(pl, ve)) {
-            Service.gI().sendThongBao(pl, "Đua Ngựa: " + TEN_NGUA[thang]
+            Service.gI().sendThongBao(pl, "Đua Vịt: " + TEN_NGUA[thang]
                     + " về nhất — bạn nhận " + ve + " thỏi vàng khoá!");
         } else {
             Logger.error("[DuaNgua] Hanh trang day, khong tra duoc " + ve
                     + " thoi cho " + c.ten + ".\n");
             Service.gI().sendThongBao(pl,
-                    "Đua Ngựa: bạn thắng nhưng hành trang đầy, không nhận được thưởng!");
+                    "Đua Vịt: bạn thắng nhưng hành trang đầy, không nhận được thưởng!");
         }
         return ve;
     }
@@ -314,6 +313,17 @@ public final class DuaNguaManager extends VongChoi {
         long hoan = c.tong();
         for (int con = 0; con < SO_NGUA; con++) {
             tongTheoCon[con] -= c.theoCon[con];
+        }
+        if (giaiDoan != GD_DAT_CUOC) {
+            // Dang boi: KHONG hoan. Thu tu ve dich da gui xuong client tu dau pha
+            // boi, nen hoan o day thi ai dat thua chi can thoat game la lay lai
+            // tien. Chot luon theo ket qua da dinh: trung thi tra ngay bay gio,
+            // truot thi mat nhu moi nguoi.
+            long dat = c.theoCon[conThang()];
+            if (dat > 0) {
+                KhoVang.themKhoa(pl, traVe(dat));
+            }
+            return;
         }
         if (hoan > 0) {
             KhoVang.themKhoa(pl, hoan);

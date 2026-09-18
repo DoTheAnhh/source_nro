@@ -90,8 +90,9 @@ namespace Game6.God
         public readonly List<sbyte> xdLichSu = new List<sbyte>();
         public long xdMocKetQua;
 
-        // ---- Đua Ngựa ----
-        public const int DN_SO_NGUA = 6;
+        // ---- Đua Vịt (mã trò cũ Đua Ngựa) ----
+        /// <summary>Số vịt. Khớp <c>DuaNguaManager.SO_NGUA</c> bên máy chủ.</summary>
+        public const int DN_SO_NGUA = 5;
         public long dnPhien;
         public sbyte dnGiaiDoan;
         public int dnGiay;
@@ -102,6 +103,8 @@ namespace Game6.God
         public readonly List<sbyte> dnLichSu = new List<sbyte>();
         /// <summary>Mốc lúc pha đua bắt đầu, để chạy hoạt hình chạy đua.</summary>
         public long dnMocBatDauDua;
+        /// <summary>Mốc nhận gói trạng thái/nhịp gần nhất, để suy giờ chính xác từ số giây làm tròn.</summary>
+        public long dnMocNhan;
 
         // ---- Đào Vàng ----
         public const int DV_SO_O = 25;
@@ -562,6 +565,7 @@ namespace Game6.God
                 sbyte gdCu = dnGiaiDoan;
                 dnGiaiDoan = msg.reader().readByte();
                 dnGiay = msg.reader().readInt();
+                dnMocNhan = mSystem.currentTimeMillis();
                 for (int i = 0; i < DN_SO_NGUA; i++)
                 {
                     dnTongCon[i] = msg.reader().readLong();
@@ -589,6 +593,7 @@ namespace Game6.God
             {
                 dnGiaiDoan = msg.reader().readByte();
                 dnGiay = msg.reader().readInt();
+                dnMocNhan = mSystem.currentTimeMillis();
                 for (int i = 0; i < DN_SO_NGUA; i++)
                 {
                     dnTongCon[i] = msg.reader().readLong();

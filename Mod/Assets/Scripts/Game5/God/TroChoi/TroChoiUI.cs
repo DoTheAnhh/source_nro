@@ -40,7 +40,7 @@ namespace Game5.God
     ///       thì máy yếu rung chậm như phim quay chậm.</li>
     /// </list>
     /// </remarks>
-    public class TroChoiUI
+    public partial class TroChoiUI
     {
         private static TroChoiUI instance;
 
@@ -413,20 +413,19 @@ namespace Game5.God
         /// của riêng Tài Xỉu nên không có chỗ nào đặt trò thứ hai.</para>
         /// </remarks>
         /// <remarks>
-        /// Thứ tự này là thứ tự <b>đã làm xong</b>: Tài Xỉu và Câu Cá chơi được
-        /// nên đứng trước, bốn trò còn lại vẫn là "Sắp có" nên đẩy về sau. Người
-        /// mở bảng lên gặp ngay hai trò chơi được, không phải cuộn qua bốn tab
-        /// trống.
+        /// Thứ tự này là thứ tự <b>đã làm xong</b>: Tài Xỉu, Câu Cá, Đua Vịt chơi
+        /// được nên đứng trước, các trò còn "Sắp có" đẩy về sau. Người mở bảng
+        /// lên gặp ngay ba trò chơi được, không phải cuộn qua mấy tab trống.
         /// </remarks>
         private static readonly string[] TEN_THE = {
-            "Tài Xỉu", "Câu Cá", "Bầu Cua", "Xóc Đĩa",
-            "Đua Ngựa", "Đào Vàng", "Cao Thấp"
+            "Tài Xỉu", "Câu Cá", "Đua Vịt", "Bầu Cua",
+            "Xóc Đĩa", "Đào Vàng", "Cao Thấp"
         };
         private const int THE_TAI_XIU = 0;
         private const int THE_CAU_CA = 1;
-        private const int THE_BAU_CUA = 2;
-        private const int THE_XOC_DIA = 3;
-        private const int THE_DUA_NGUA = 4;
+        private const int THE_DUA_NGUA = 2;
+        private const int THE_BAU_CUA = 3;
+        private const int THE_XOC_DIA = 4;
         private const int THE_DAO_VANG = 5;
         private const int THE_CAO_THAP = 6;
         private int the;
@@ -439,9 +438,9 @@ namespace Game5.God
         private static readonly int[] MA_TRO_CUA_THE = {
             -1,
             God.MiniGame.TRO_CAU_CA,
+            God.MiniGame.TRO_DUA_NGUA,
             God.MiniGame.TRO_BAU_CUA,
             God.MiniGame.TRO_XOC_DIA,
-            God.MiniGame.TRO_DUA_NGUA,
             God.MiniGame.TRO_DAO_VANG,
             God.MiniGame.TRO_CAO_THAP
         };
@@ -1073,6 +1072,10 @@ namespace Game5.God
             if (the == THE_CAU_CA)
             {
                 veCauCa(g);
+            }
+            else if (the == THE_DUA_NGUA)
+            {
+                veDuaVit(g);
             }
             else if (the != THE_TAI_XIU)
             {
@@ -5498,6 +5501,12 @@ namespace Game5.God
             {
                 // Da xu ly o tren, truoc cai chan "chi khi vua tha ngon". Den
                 // day thi chi con viec nuot cu cham cho khoi lot xuong man choi.
+                return true;
+            }
+            if (the == THE_DUA_NGUA)
+            {
+                chamDuaVit();
+                GameCanvas.clearAllPointerEvent();
                 return true;
             }
             if (the != THE_TAI_XIU)
