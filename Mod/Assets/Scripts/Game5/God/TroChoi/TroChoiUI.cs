@@ -4885,19 +4885,25 @@ namespace Game5.God
             // cao, doc ra ro han.
             bool veTong = (bieuDoNao == 0);
             int phanVe = h - 20 - (veTong ? 0 : (CAO_NUT_XX + 4));
-            int yVe = y + 14;
-            int caoVe = phanVe;
+            // Chua le tren duoi bang nua cham lon nhat (cham tong 16): truoc day
+            // cham hang tren cung de len dong "Phien gan nhat" va chu "Tung con".
+            int yVe = y + 24;
+            int caoVe = phanVe - 18;
 
             int leTrai = 22;
             int xVe = x + leTrai;
             int wVe = w - leTrai - 8;
+            // Cham dau va cham cuoi thut vao mot khoang, khong bi cat nua ngoai
+            // mep luoi.
+            int xDiem0 = xVe + LE_DIEM;
+            int wDiem = wVe - LE_DIEM * 2;
 
             // Chi ve nhung van GAN NHAT vua man, khong nhoi het sau chuc van.
             //
             // Sau chuc cham tren nam tram pixel la moi cham cach nhau tam tam
             // pixel — cac vong tron de len nhau va con so ben trong doc khong
             // ra. Muon xem het thi con the "Bang", o day uu tien nhin duoc.
-            int n = wVe / BUOC_TOI_THIEU + 1;
+            int n = wDiem / BUOC_TOI_THIEU + 1;
             if (n > lsServer.Count)
             {
                 n = lsServer.Count;
@@ -4906,7 +4912,7 @@ namespace Game5.God
             {
                 n = lsServer.Count < 2 ? lsServer.Count : 2;
             }
-            int buoc = n > 1 ? wVe / (n - 1) : wVe;
+            float buoc = n > 1 ? (float) wDiem / (n - 1) : 0f;
 
             // Dong dau: van gan nhat.
             DongLsServer m = lsServer[0];
@@ -4921,14 +4927,18 @@ namespace Game5.God
             mFont.tahoma_7_grey.drawString(g,
                     veTong ? "Tổng" : "Từng con", x + 18, y + 1, mFont.LEFT);
 
-            veLuoi(g, xVe, yVe, wVe, caoVe);
-
-            // Vach doc mo danh dau tung van, cho de doi chieu.
-            g.setColor(0xFFFFFF, 0.05f);
-            for (int i = 0; i < n; i += 2)
+            // Soc doc: moi van mot dai, TAM dai trung dung cot cham. Truoc day
+            // soc va muoi vach doc chia deu be ngang, khong khop cot cham nao.
+            g.setClip(xVe, yVe - 10, wVe, caoVe + 20);
+            for (int i = 0; i < n; i++)
             {
-                g.fillRect(xVe + i * buoc - buoc / 2, yVe, buoc, caoVe);
+                int trai = (int) (xDiem0 + (i - 0.5f) * buoc);
+                int phai = (int) (xDiem0 + (i + 0.5f) * buoc);
+                g.setColor(0xFFFFFF, i % 2 == 0 ? 0.05f : 0.015f);
+                g.fillRect(trai, yVe - 10, phai - trai, caoVe + 20);
             }
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+            veLuoi(g, xVe, yVe, wVe, caoVe);
 
             if (veTong)
             {
@@ -4946,13 +4956,13 @@ namespace Game5.God
                 {
                     DongLsServer a = lsServer[n - 1 - i];
                     DongLsServer b = lsServer[n - 2 - i];
-                    g.drawLine(xVe + i * buoc, yTong(a, yVe, caoVe),
-                            xVe + (i + 1) * buoc, yTong(b, yVe, caoVe));
+                    g.veDoanThang(xDiem0 + i * buoc, yTong(a, yVe, caoVe),
+                            xDiem0 + (i + 1) * buoc, yTong(b, yVe, caoVe), 1.5f);
                 }
                 for (int i = 0; i < n; i++)
                 {
                     DongLsServer d = lsServer[n - 1 - i];
-                    int cx = xVe + i * buoc;
+                    int cx = (int) (xDiem0 + i * buoc);
                     int cy = yTong(d, yVe, caoVe);
                     int co = 16;
                     g.setColor(0x000000, 0.35f);
@@ -4986,18 +4996,22 @@ namespace Game5.God
                 {
                     int va = matThu(lsServer[n - 1 - i], k);
                     int vb = matThu(lsServer[n - 2 - i], k);
-                    g.drawLine(xVe + i * buoc, yMat(va, yVe, caoVe),
-                            xVe + (i + 1) * buoc, yMat(vb, yVe, caoVe));
+                    g.veDoanThang(xDiem0 + i * buoc, yMat(va, yVe, caoVe),
+                            xDiem0 + (i + 1) * buoc, yMat(vb, yVe, caoVe), 1.5f);
                 }
                 for (int i = 0; i < n; i++)
                 {
                     int v = matThu(lsServer[n - 1 - i], k);
-                    int cx = xVe + i * buoc;
+                    int cx = (int) (xDiem0 + i * buoc);
                     int cy = yMat(v, yVe, caoVe);
+                    // Cham tron TAM dung (cx, cy): co le thi lech nua diem, nen
+                    // dung co chan.
                     g.setColor(0x000000, 0.32f);
-                    g.fillRect(cx - 4, cy - 4, 11, 11, 6);
+                    g.fillRect(cx - 5, cy - 4, 10, 10, 5);
                     g.setColor(mau, 1f);
-                    g.fillRect(cx - 5, cy - 5, 11, 11, 6);
+                    g.fillRect(cx - 5, cy - 5, 10, 10, 5);
+                    g.setColor(0xFFFFFF, 0.35f);
+                    g.fillRect(cx - 3, cy - 4, 5, 3, 2);
                 }
             }
 
@@ -5050,6 +5064,9 @@ namespace Game5.God
         /// </remarks>
         private const int BUOC_TOI_THIEU = 22;
 
+        /// <summary>Chấm đầu và chấm cuối biểu đồ thụt vào bấy nhiêu, để không bị cắt ở mép.</summary>
+        private const int LE_DIEM = 10;
+
         /// <summary>Ô nút "Xí ngầu k" ở đáy biểu đồ.</summary>
         private int[] oNutXucXac(int k)
         {
@@ -5087,14 +5104,13 @@ namespace Game5.God
         /// <summary>Lưới kẻ mờ làm nền cho biểu đồ.</summary>
         private static void veLuoi(mGraphics g, int x, int y, int w, int h)
         {
+            // Chi vach NGANG, dat dung cac muc gia tri (moi nhan truc mot vach).
+            // Vach doc chia muoi phan deu khong khop cot cham nao nen bo; moi van
+            // da co soc rieng.
             g.setColor(rgb(0xA8, 0x6E, 0x3C), 0.35f);
             for (int i = 0; i <= 5; i++)
             {
                 g.fillRect(x, y + i * h / 5, w, 1);
-            }
-            for (int i = 0; i <= 10; i++)
-            {
-                g.fillRect(x + i * w / 10, y, 1, h);
             }
         }
 

@@ -489,6 +489,70 @@ namespace Game1
     		GUIUtility.RotateAroundPivot(0f - num3, vector);
     	}
     
+    	/// <summary>
+    	/// Đoạn thẳng có <b>độ dày</b>, theo màu và độ trong đang đặt.
+    	/// </summary>
+    	/// <remarks>
+    	/// <para>Viết riêng thay vì sửa <c>drawLine</c> vì hàm cũ đang được nhiều
+    	/// chỗ dùng. Hàm cũ có ba lỗi: đoạn nằm ngang hay thẳng đứng bị nhân zoom
+    	/// <b>hai lần</b> (nhân một lần rồi gọi <c>fillRect</c> vốn tự nhân thêm) nên
+    	/// vẽ lạc sang chỗ khác; đoạn chéo luôn mỏng đúng một điểm ảnh màn hình; và
+    	/// màu bỏ qua độ trong.</para>
+    	///
+    	/// <para>Toạ độ và độ dày tính bằng đơn vị logic, như mọi hàm vẽ khác.</para>
+    	/// </remarks>
+    	public void veDoanThang(float x1, float y1, float x2, float y2, float day)
+    	{
+    		float z = zoomLevel;
+    		x1 *= z;
+    		y1 *= z;
+    		x2 *= z;
+    		y2 *= z;
+    		float dayPx = day * z;
+    		if (dayPx < 1f)
+    		{
+    			dayPx = 1f;
+    		}
+    		if (isTranslate)
+    		{
+    			x1 += translateX;
+    			y1 += translateY;
+    			x2 += translateX;
+    			y2 += translateY;
+    		}
+    		float dx = x2 - x1;
+    		float dy = y2 - y1;
+    		float dai = Mathf.Sqrt(dx * dx + dy * dy);
+    		if (dai < 0.5f)
+    		{
+    			return;
+    		}
+    		float goc = Mathf.Atan2(dy, dx) * 57.29578f;
+    		Texture2D texture2D = anhMauHienTai();
+    		int cx = 0;
+    		int cy = 0;
+    		if (isClip)
+    		{
+    			cx = clipX;
+    			cy = clipY;
+    			if (isTranslate)
+    			{
+    				cx += clipTX;
+    				cy += clipTY;
+    			}
+    			GUI.BeginGroup(new Rect(cx, cy, clipW, clipH));
+    		}
+    		Vector2 dau = new Vector2(x1 - cx, y1 - cy);
+    		Matrix4x4 maTranCu = GUI.matrix;
+    		GUIUtility.RotateAroundPivot(goc, dau);
+    		GUI.DrawTexture(new Rect(dau.x, dau.y - dayPx / 2f, dai, dayPx), texture2D);
+    		GUI.matrix = maTranCu;
+    		if (isClip)
+    		{
+    			GUI.EndGroup();
+    		}
+    	}
+
     	public Color setColorMiniMap(int rgb)
     	{
     		int num = rgb & 0xFF;
