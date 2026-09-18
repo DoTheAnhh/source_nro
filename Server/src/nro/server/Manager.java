@@ -466,6 +466,8 @@ public final class Manager {
     nro.gameplay.minigame.NhipMiniGame.gI()
             .dangKy(nro.gameplay.minigame.DuaNguaManager.gI());
     nro.gameplay.minigame.NhipMiniGame.gI().batDau();
+    // Tu mo thanh vien cho nguoi dang online: nap du 50K hoac du 1 thang.
+    nro.service.ThanhVienService.batDau();
 
     new NonInteractiveNPC().initNonInteractiveNPC();
 

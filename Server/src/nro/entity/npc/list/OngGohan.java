@@ -207,24 +207,19 @@ public class OngGohan extends Npc {
             case ConstNpc.MTVFREE:
                 if (select == 0) {
                     if (!player.getSession().actived) {
-                        boolean quaNhiemVu = (player.playerTask != null
-                                && player.playerTask.taskMain != null
-                                // Xong nhiem vu Tieu doi sat thu (nhiem vu 22): da giet
-                                // du bon ten — toi buoc bao cao (buoc 4) — hoac da qua han.
-                                && (player.playerTask.taskMain.id > 22
-                                    || (player.playerTask.taskMain.id == 22
-                                        && player.playerTask.taskMain.index >= 4)));
-
-                        final int CAN_VND = 20_000;
-                        boolean duVnd = player.getSession().tongnap >= CAN_VND;
-
-                        if (quaNhiemVu || duVnd) {
-                            player.getSession().actived = true;
-                            PlayerDAO.MuaThanhVien(player, 0);
-                            Service.gI().sendMoney(player);
+                        // Ba duong mo thanh vien — xem ThanhVienService. Hai duong
+                        // nap 50K va du 1 thang tu mo; o day xet ca ba cho chac.
+                        if (nro.service.ThanhVienService.xongNhiemVuFide(player)) {
+                            nro.service.ThanhVienService.mo(player, "hoàn thành nhiệm vụ Fide");
+                            npcChat(player, "Mở thành viên FREE thành công!");
+                        } else if (nro.service.ThanhVienService.duNap(player)) {
+                            nro.service.ThanhVienService.mo(player, "đã nạp đủ 50K");
+                            npcChat(player, "Mở thành viên FREE thành công!");
+                        } else if (nro.service.ThanhVienService.duMotThang(player)) {
+                            nro.service.ThanhVienService.mo(player, "đã chơi đủ 1 tháng");
                             npcChat(player, "Mở thành viên FREE thành công!");
                         } else {
-                            npcChat(player, "Chưa đủ điều kiện! Cần hoàn thành nhiệm vụ Tiểu đội sát thủ hoặc nạp lần đầu 20K VND.");
+                            npcChat(player, "Chưa đủ điều kiện! Cần hoàn thành nhiệm vụ tiêu diệt Fide, hoặc nạp lần đầu 50K, hoặc chơi đủ 1 tháng.");
                         }
                     } else {
                         npcChat(player, "Bạn đã mở rồi!");
@@ -732,8 +727,9 @@ public class OngGohan extends Npc {
             case 3:
                 this.createOtherMenu(player, ConstNpc.MTVFREE,
                         "|7|Mở thành viên FREE"
-                        + "\n|6|Yêu cầu hoàn thành nhiệm vụ Tiểu đội sát thủ"
-                        + "\n|1|OR NẠP lần đầu sẽ được mở FREE",
+                        + "\n|6|Cách 1: Nạp lần đầu 50K — tự mở ngay"
+                        + "\n|6|Cách 2: Chơi đủ 1 tháng — tự mở"
+                        + "\n|1|Cách 3: Hoàn thành nhiệm vụ tiêu diệt Fide rồi mở tại đây",
                         "Đồng ý", "Từ chối");
                 break;
 
@@ -770,7 +766,8 @@ public class OngGohan extends Npc {
                     sb.append("|7|Tổng nạp: ").append(tongNap).append(" VND\n");
 
                     if (!isActive) {
-                        sb.append("|1|Hãy nạp lần đầu để mở quyền thành viên!");
+                        sb.append("|1|Mở thành viên: nạp lần đầu 50K, chơi đủ 1 tháng,\n"
+                                + "hoặc hoàn thành nhiệm vụ tiêu diệt Fide rồi chọn MTV FREE.");
                     } else {
                         sb.append("|2|Bạn đã là thành viên! Hãy tận hưởng các quyền lợi đặc biệt.");
                     }

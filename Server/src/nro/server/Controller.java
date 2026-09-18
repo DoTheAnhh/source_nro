@@ -1622,6 +1622,8 @@ public class Controller implements IMessageHandler {
             PlayerService.gI().sendCurrentStamina(player);
             Service.gI().sendNangDong(player);
             Service.gI().sendHavePet(player);
+            // Nap du 50K hoac tai khoan du 1 thang: mo thanh vien ngay luc vao.
+            nro.service.ThanhVienService.kiemTraTuDong(player);
             Service.gI().sendTopRank(player);
             // KHONG phat thu hang Sieu Hang o day nua.
             //
