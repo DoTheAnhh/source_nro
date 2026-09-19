@@ -2951,11 +2951,13 @@ namespace Game1
                     case -26:
                         ServerListScreen.testConnect = 2;
                         GameCanvas.debug("SA2", 2);
-                        GameCanvas.startOKDlg(msg.reader().readUTF());
+                        string chuBaoOK26 = msg.reader().readUTF();
+                        GameCanvas.startOKDlg(chuBaoOK26);
                         InfoDlg.hide();
                         LoginScr.isContinueToLogin = false;
                         Char.isLoadingMap = false;
-                        if (GameCanvas.currentScreen == GameCanvas.loginScr)
+                        if (GameCanvas.currentScreen == GameCanvas.loginScr
+                            && !GameCanvas.loginScr.giuFormKhiBao(chuBaoOK26))
                         {
                             GameCanvas.serverScreen.switchToMe();
                         }

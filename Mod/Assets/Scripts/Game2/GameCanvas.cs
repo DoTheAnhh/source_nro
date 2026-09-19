@@ -692,7 +692,10 @@ namespace Game2
     			// phim hien, nen no khong can duoc day them. Ma neu van day thi
     			// hong: hop ve o mot cho, con cham lai bi lech 94 diem, hai nut
     			// OK / Dong bam khong trung.
-    			if (TouchScreenKeyboard.visible && !God.HopNhapChu.getInstance().dangMo)
+    			//
+    			// Man dang nhap cung vay: form tu day len tren ban phim (LoginScr.tinhBoCuc).
+    			if (TouchScreenKeyboard.visible && !God.HopNhapChu.getInstance().dangMo
+    				&& !(currentScreen is LoginScr))
     			{
     				timeOpenKeyBoard++;
     				if (timeOpenKeyBoard > ((!Main.isWindowsPhone) ? 10 : 5))

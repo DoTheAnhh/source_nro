@@ -138,9 +138,6 @@ namespace Game4
     	/// này vào đó thì Enter mở đổi mật khẩu thay vì đăng nhập.</remarks>
     	private Command cmdDoiMatKhau;
 
-    	/// <summary>Mật khẩu mới vừa gõ ở bước một, chờ gõ lại ở bước hai.</summary>
-    	private string mkMoiTam = string.Empty;
-
     	/// <summary>Đang hiện mật khẩu dạng chữ thường.</summary>
     	private bool hienMatKhau;
 
@@ -273,10 +270,10 @@ namespace Game4
     			cmdDoiMatKhau.x = GameCanvas.w / 2 - rongNut / 2;
     			cmdFogetPass.x = GameCanvas.w / 2 + rongNut / 2 + 6;
     		}
-    		center = cmdOK;
-    		left = cmdFogetPass;
+    		// Form tu ve nut va tu tinh bo cuc (xem veForm).
+    		khoiTaoFormMoi();
     	}
-    
+    	
     	public static void getServerLink()
     	{
     		try
@@ -319,6 +316,13 @@ namespace Game4
     	public override void switchToMe()
     	{
     		isRegistering = false;
+    		// Mo lai man dang nhap (dang xuat, doi may chu...) thi ve che do Dang
+    		// nhap — tru khi vua bam Dang ky: SoundMn goi actRegister TRUOC
+    		// switchToMe, ServerListScreen goi SAU, nen can moc thoi gian.
+    		if (cheDo != CD_DANG_NHAP && mSystem.currentTimeMillis() - mocMoDangKy > 1000L)
+    		{
+    			datCheDo(CD_DANG_NHAP);
+    		}
     		SoundMn.gI().stopAll();
     		tfUser.isFocus = true;
     		tfPass.isFocus = false;
@@ -403,6 +407,12 @@ namespace Game4
     		if (text != null)
     		{
     			GameCanvas.startOKDlg(text);
+    			return;
+    		}
+
+    		if (!matGo.Equals(tfPass2 == null ? matGo : tfPass2.getText()))
+    		{
+    			GameCanvas.startOKDlg("Hai ô mật khẩu không khớp nhau, hãy gõ lại.");
     			return;
     		}
     		GameCanvas.msgdlg.setInfo(
@@ -618,26 +628,7 @@ namespace Game4
     				lastTimeLogin = currTimeLogin;
     			}
     		}
-    		if (isLogin2 && !isRes)
-    		{
-    			tfUser.name = ((mResources.language != 2) ? (mResources.phone + "/") : string.Empty) + mResources.email;
-    			tfPass.name = mResources.password;
-    			tfUser.isPaintCarret = false;
-    			tfPass.isPaintCarret = false;
-    			tfUser.update();
-    			tfPass.update();
-    		}
-    		else
-    		{
-    			tfUser.name = ((mResources.language != 2) ? (mResources.phone + "/") : string.Empty) + mResources.email;
-    			tfPass.name = mResources.password;
-    			tfUser.update();
-    			tfPass.update();
-    		}
-    		if (TouchScreenKeyboard.visible)
-    		{
-    			mGraphics.addYWhenOpenKeyBoard = 50;
-    		}
+    		capNhatO();
     		for (int i = 0; i < Effect2.vEffect2.size(); i++)
     		{
     			Effect2 effect = (Effect2)Effect2.vEffect2.elementAt(i);
@@ -683,43 +674,6 @@ namespace Game4
     		{
     			doChangeTip();
     		}
-    		if (isLogin2 && !isRes)
-    		{
-    			tfUser.isPaintCarret = false;
-    			tfPass.isPaintCarret = false;
-    			tfUser.update();
-    			tfPass.update();
-    		}
-    		else
-    		{
-    			tfUser.name = ((mResources.language != 2) ? (mResources.phone + "/") : string.Empty) + mResources.email;
-    			tfPass.name = mResources.password;
-    			tfUser.update();
-    			tfPass.update();
-    		}
-    		if (GameCanvas.isTouch)
-    		{
-    			if (isRes)
-    			{
-    				center = cmdRes;
-    				left = cmdBackFromRegister;
-    			}
-    			else
-    			{
-    				center = cmdOK;
-    				left = cmdFogetPass;
-    			}
-    		}
-    		else if (isRes)
-    		{
-    			center = cmdRes;
-    			left = cmdBackFromRegister;
-    		}
-    		else
-    		{
-    			center = cmdOK;
-    			left = cmdFogetPass;
-    		}
     		if (!Main.isPC && !TouchScreenKeyboard.visible && !Main.isMiniApp && !Main.isWindowsPhone)
     		{
     			string text = tfUser.getText().ToLower().Trim();
@@ -756,13 +710,13 @@ namespace Game4
     
     	public override void keyPress(int keyCode)
     	{
-    		if (tfUser.isFocus)
+    		foreach (TField t in oCuaCheDo())
     		{
-    			tfUser.keyPressed(keyCode);
-    		}
-    		else if (tfPass.isFocus)
-    		{
-    			tfPass.keyPressed(keyCode);
+    			if (t.isFocus)
+    			{
+    				t.keyPressed(keyCode);
+    				break;
+    			}
     		}
     		base.keyPress(keyCode);
     	}
@@ -797,51 +751,7 @@ namespace Game4
     		}
     		if (GameCanvas.currentDialog == null)
     		{
-    			int h = 105;
-    			int w = ((GameCanvas.w < 200) ? 160 : 180);
-    			PopUp.paintPopUp(g, xLog, yLog - 10, w, h, -1, true);
-    			if (GameCanvas.h > 160 && imgTitle != null)
-    			{
-    				g.drawImage(imgTitle, GameCanvas.hw, 60, 3);
-    			}
-    			GameCanvas.debug("PLG4", 1);
-    			int num2 = 4;
-    			int num3 = num2 * 32 + 23 + 33;
-    			if (num3 >= GameCanvas.w)
-    			{
-    				num2--;
-    				num3 = num2 * 32 + 23 + 33;
-    			}
-    			xLog = GameCanvas.w / 2 - num3 / 2;
-    			tfUser.x = xLog + 10;
-    			tfUser.y = yLog + 20;
-    			tfPass.x = xLog + 10;
-    			tfPass.y = yLog + 55;
-    			tfUser.paint(g);
-    			tfPass.paint(g);
-    			// TField.paint de lai vung cat (clip) dung bang khung chu cua o mat
-    			// khau — khong mo lai thi nut an / hien va nut Doi M.khau bi cat mat.
-    			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-    			if (!isRes)
-    			{
-    				veNutMatKhau(g);
-    				if (cmdDoiMatKhau != null && cmdDoiMatKhau.y > 0)
-    				{
-    					cmdDoiMatKhau.paint(g);
-    				}
-    			}
-    			int num4 = 0;
-    			if (GameCanvas.w >= 176)
-    			{
-    				num4 = 50;
-    			}
-    			else
-    			{
-    				mFont.tahoma_7b_green2.drawString(g, mResources.acc + ":", tfUser.x - 35, tfUser.y + 7, 0);
-    				mFont.tahoma_7b_green2.drawString(g, mResources.pwd + ":", tfPass.x - 35, tfPass.y + 7, 0);
-    				mFont.tahoma_7b_green2.drawString(g, mResources.server + ":" + serverName, GameCanvas.w / 2, tfPass.y + 32, 2);
-    				num4 = 0;
-    			}
+    			veForm(g);
     		}
     		veDongTacGia(g);
     		base.paint(g);
@@ -864,140 +774,600 @@ namespace Game4
     
     	public override void updateKey()
     	{
-    		if (GameCanvas.isTouch)
-    		{
-    			if (cmdCallHotline != null && cmdCallHotline.isPointerPressInside())
-    			{
-    				cmdCallHotline.performAction();
-    			}
-    		}
-    		else if (mSystem.clientType == 1 && GameCanvas.keyPressed[13])
-    		{
-    			GameCanvas.keyPressed[13] = false;
-    			cmdCallHotline.performAction();
-    		}
     		if (isContinueToLogin)
     		{
     			return;
     		}
-    		if (!GameCanvas.isTouch)
+    		// Len / xuong (hoac Tab) chuyen o, vong quanh cac o cua che do dang hien.
+    		bool len = GameCanvas.keyPressed[(!Main.isPC) ? 2 : 21];
+    		bool xuong = GameCanvas.keyPressed[(!Main.isPC) ? 8 : 22] || GameCanvas.keyPressed[16];
+    		if ((len || xuong) && !(isLogin2 && cheDo == CD_DANG_NHAP))
     		{
-    			if (tfUser.isFocus)
+    			TField[] os = oCuaCheDo();
+    			int dang = -1;
+    			for (int i = 0; i < os.Length; i++)
     			{
-    				right = tfUser.cmdClear;
+    				if (os[i].isFocus)
+    				{
+    					dang = i;
+    				}
     			}
-    			else
+    			int toi = (dang < 0) ? 0 : ((dang + (len ? os.Length - 1 : 1)) % os.Length);
+    			for (int i = 0; i < os.Length; i++)
     			{
-    				right = tfPass.cmdClear;
+    				os[i].setFocus(i == toi);
     			}
-    		}
-    		if (GameCanvas.keyPressed[(!Main.isPC) ? 2 : 21])
-    		{
-    			focus--;
-    			if (focus < 0)
-    			{
-    				focus = 1;
-    			}
-    		}
-    		else if (GameCanvas.keyPressed[(!Main.isPC) ? 8 : 22] || GameCanvas.keyPressed[16])
-    		{
-    			focus++;
-    			if (focus > 1)
-    			{
-    				focus = 0;
-    			}
-    		}
-    		if (GameCanvas.keyPressed[(!Main.isPC) ? 2 : 21] || GameCanvas.keyPressed[(!Main.isPC) ? 8 : 22] || GameCanvas.keyPressed[16])
-    		{
+    			focus = toi;
     			GameCanvas.clearKeyPressed();
-    			if (!isLogin2 || isRes)
+    		}
+    		// Enter tren may tinh = nut chinh cua che do (Dang nhap / Dang ky / Doi).
+    		if (Main.isPC && GameCanvas.keyPressed[25])
+    		{
+    			GameCanvas.keyPressed[25] = false;
+    			int id = nutChinh();
+    			if (id >= 0)
     			{
-    				if (focus == 1)
-    				{
-    					tfUser.isFocus = false;
-    					tfPass.isFocus = true;
-    				}
-    				else if (focus == 0)
-    				{
-    					tfUser.isFocus = true;
-    					tfPass.isFocus = false;
-    				}
-    				else
-    				{
-    					tfUser.isFocus = false;
-    					tfPass.isFocus = false;
-    				}
+    				perform(id, null);
     			}
     		}
-    		if (GameCanvas.isTouch)
-    		{
-    			if (isRes)
-    			{
-    				center = cmdRes;
-    				left = cmdBackFromRegister;
-    			}
-    			else
-    			{
-    				center = cmdOK;
-    				left = cmdFogetPass;
-    			}
-    		}
-    		else if (isRes)
-    		{
-    			center = cmdRes;
-    			left = cmdBackFromRegister;
-    		}
-    		else
-    		{
-    			center = cmdOK;
-    			left = cmdFogetPass;
-    		}
-    		// Nut nho cuoi o mat khau: an / hien. Nam NGOAI vung 40 diem quanh mep
-    		// phai o nhap — vung ay la nut xoa het chu cua TField.
-    		if (!isRes && wNutMat > 0 && GameCanvas.isPointerJustRelease
-    			&& GameCanvas.isPointerHoldIn(xNutMat, yNutMat, wNutMat, wNutMat))
-    		{
-    			hienMatKhau = !hienMatKhau;
-    			tfPass.setIputType(hienMatKhau ? TField.INPUT_TYPE_ANY : TField.INPUT_TYPE_PASSWORD);
-    			tfPass.setText(tfPass.getText());
-    			GameCanvas.clearAllPointerEvent();
-    		}
-    		if (!isRes && cmdDoiMatKhau != null && cmdDoiMatKhau.y > 0 && cmdDoiMatKhau.isPointerPressInside())
-    		{
-    			cmdDoiMatKhau.performAction();
-    		}
-    		if (GameCanvas.isPointerJustRelease && (!isLogin2 || isRes))
-    		{
-    			if (GameCanvas.isPointerHoldIn(tfUser.x, tfUser.y, tfUser.width, tfUser.height))
-    			{
-    				focus = 0;
-    			}
-    			else if (GameCanvas.isPointerHoldIn(tfPass.x, tfPass.y, tfPass.width, tfPass.height))
-    			{
-    				focus = 1;
-    			}
-    		}
-    		if (Main.isPC && GameCanvas.keyPressed[(!Main.isPC) ? 5 : 25] && right != null)
-    		{
-    			right.performAction();
-    		}
+    		chamForm();
     		base.updateKey();
     		GameCanvas.clearKeyPressed();
     	}
-    
-    	/// <summary>Nút nhỏ cuối ô mật khẩu: bấm để ẩn / hiện mật khẩu.</summary>
-    	private void veNutMatKhau(mGraphics g)
-    	{
-    		wNutMat = tfPass.height;
-    		xNutMat = tfPass.x + tfPass.width + 22;
-    		yNutMat = tfPass.y;
-    		g.setColor(0x8B5A2B);
-    		g.fillRect(xNutMat, yNutMat, wNutMat, wNutMat);
-    		g.setColor(0xF3D9A8);
-    		g.fillRect(xNutMat + 1, yNutMat + 1, wNutMat - 2, wNutMat - 2);
-    		mFont.tahoma_7b_dark.drawString(g, hienMatKhau ? "Ẩn" : "Hiện", xNutMat + wNutMat / 2,
-    			yNutMat + wNutMat / 2 - 6, mFont.CENTER);
-    	}
+
+
+        // =====================================================================
+        //  FORM DANG NHAP / DANG KY / DOI MAT KHAU / QUEN MAT KHAU
+        // =====================================================================
+        //
+        // Ban cu dat o nhap va nut theo so co dinh tinh MOT LAN luc dung man
+        // (khung rong 180 nhung o nhap tinh theo 184, nut "Hien" tho ra ngoai
+        // khung, nut lay rong chuan 68 nen tran tren may hep). Tren dien thoai,
+        // bat ban phim hay xoay man hinh la cac thu lech nhau — "vo UI".
+        //
+        // Nay bo cuc TINH LAI MOI KHUNG HINH tu GameCanvas.w/h: khung vua man,
+        // o nhap va nut deu nam trong khung, nut chia deu be ngang. Ban phim dien
+        // thoai dang bat thi khung day len de o dang go khong bi che.
+
+        private const int CD_DANG_NHAP = 0;
+        private const int CD_DANG_KY = 1;
+        private const int CD_DOI_MK = 2;
+        private const int CD_QUEN_MK = 3;
+
+        /// <summary>Che do dang hien.</summary>
+        private int cheDo = CD_DANG_NHAP;
+
+        /// <summary>Luc actRegister bat che do dang ky (xem switchToMe).</summary>
+        private long mocMoDangKy;
+
+        /// <summary>Nhap lai mat khau (dang ky).</summary>
+        private TField tfPass2;
+
+        /// <summary>Mat khau moi va nhap lai (doi mat khau).</summary>
+        private TField tfMkMoi;
+        private TField tfMkMoi2;
+
+        private int xForm;
+        private int yForm;
+        private int wForm;
+        private int hForm;
+
+        /// <summary>Nut cua form vua ve: x, y, w, h, idAction.</summary>
+        private readonly System.Collections.Generic.List<int[]> oNutForm =
+                new System.Collections.Generic.List<int[]>();
+
+        private void khoiTaoFormMoi()
+        {
+            tfPass2 = taoOMatKhau("Nhập lại mật khẩu");
+            tfMkMoi = taoOMatKhau("Mật khẩu mới");
+            tfMkMoi2 = taoOMatKhau("Nhập lại mật khẩu mới");
+            // Form tu ve nut cua minh. Ba o nut mem cu (trai / giua / phai) ve
+            // chong len form o cho khac nhau tuy man — bo han.
+            center = null;
+            left = null;
+            right = null;
+        }
+
+        private static TField taoOMatKhau(string ten)
+        {
+            TField t = new TField();
+            t.setIputType(TField.INPUT_TYPE_PASSWORD);
+            t.name = ten;
+            t.height = mScreen.ITEM_HEIGHT + 2;
+            return t;
+        }
+
+        /// <summary>Doi che do, don cac o cua che do moi.</summary>
+        private void datCheDo(int cd)
+        {
+            cheDo = cd;
+            isRes = cd == CD_DANG_KY;
+            if (tfPass2 == null)
+            {
+                khoiTaoFormMoi();
+            }
+            tfPass2.setText(string.Empty);
+            tfMkMoi.setText(string.Empty);
+            tfMkMoi2.setText(string.Empty);
+            apDungHienMk();
+            foreach (TField t in tatCaO())
+            {
+                t.isFocus = false;
+            }
+            center = null;
+            left = null;
+            right = null;
+        }
+
+        private TField[] tatCaO()
+        {
+            return new TField[] { tfUser, tfPass, tfPass2, tfMkMoi, tfMkMoi2 };
+        }
+
+        /// <summary>Cac o cua che do dang hien, theo thu tu tu tren xuong.</summary>
+        private TField[] oCuaCheDo()
+        {
+            if (tfPass2 == null)
+            {
+                khoiTaoFormMoi();
+            }
+            switch (cheDo)
+            {
+                case CD_DANG_KY:
+                    return new TField[] { tfUser, tfPass, tfPass2 };
+                case CD_DOI_MK:
+                    return new TField[] { tfUser, tfPass, tfMkMoi, tfMkMoi2 };
+                case CD_QUEN_MK:
+                    return new TField[] { tfUser };
+                default:
+                    return new TField[] { tfUser, tfPass };
+            }
+        }
+
+        private string[] nhanCuaCheDo()
+        {
+            switch (cheDo)
+            {
+                case CD_DANG_KY:
+                    return new string[] { "Tài khoản", "Mật khẩu", "Nhập lại mật khẩu" };
+                case CD_DOI_MK:
+                    return new string[] { "Tài khoản", "Mật khẩu hiện tại", "Mật khẩu mới",
+                        "Nhập lại mật khẩu mới" };
+                case CD_QUEN_MK:
+                    return new string[] { "Tài khoản" };
+                default:
+                    return new string[] { "Tài khoản", "Mật khẩu" };
+            }
+        }
+
+        private string tieuDeCheDo()
+        {
+            switch (cheDo)
+            {
+                case CD_DANG_KY:
+                    return "ĐĂNG KÝ TÀI KHOẢN";
+                case CD_DOI_MK:
+                    return "ĐỔI MẬT KHẨU";
+                case CD_QUEN_MK:
+                    return "QUÊN MẬT KHẨU";
+                default:
+                    return "ĐĂNG NHẬP";
+            }
+        }
+
+        /// <summary>
+        /// Hang nut cua che do: moi hang mot mang { chu, chu ngan, idAction, chinh }.
+        /// </summary>
+        private object[][][] nutCuaCheDo()
+        {
+            switch (cheDo)
+            {
+                case CD_DANG_KY:
+                    return new object[][][] {
+                        new object[][] {
+                            new object[] { "Đăng ký", "Đăng ký", 2002, true },
+                            new object[] { "Quay lại", "Quay lại", 2200, false } } };
+                case CD_DOI_MK:
+                    return new object[][][] {
+                        new object[][] {
+                            new object[] { "Đổi mật khẩu", "Đổi MK", 2101, true },
+                            new object[] { "Quay lại", "Quay lại", 2200, false } } };
+                case CD_QUEN_MK:
+                    return new object[][][] {
+                        new object[][] {
+                            new object[] { "Liên hệ admin", "Liên hệ", 1005, true },
+                            new object[] { "Quay lại", "Quay lại", 2200, false } } };
+                default:
+                    return new object[][][] {
+                        new object[][] {
+                            new object[] { "Đăng nhập", "Đăng nhập", 2008, true },
+                            new object[] { "Đăng ký", "Đăng ký", 2201, false } },
+                        new object[][] {
+                            new object[] { "Đổi mật khẩu", "Đổi MK", 2202, false },
+                            new object[] { "Quên mật khẩu", "Quên MK", 2203, false } } };
+            }
+        }
+
+        /// <summary>Dong chu giai thich cua che do Quen mat khau.</summary>
+        private static readonly string[] CHU_QUEN_MK = {
+            "Tài khoản không gắn email hay số điện thoại,",
+            "nên admin sẽ kiểm tra và cấp lại mật khẩu.",
+            "Bấm Liên hệ admin, gửi tên tài khoản của bạn."
+        };
+
+        private const int DE_TRONG = 12;
+        private const int CAO_NUT = 24;
+        private const int CAO_TIEU_DE_FORM = 20;
+
+        /// <summary>O mat khau duoc gan nut an / hien (o mat khau dau tien).</summary>
+        private TField oCoNutMat()
+        {
+            return cheDo == CD_QUEN_MK ? null : tfPass;
+        }
+
+        /// <summary>Tinh vi tri khung, o nhap va nut — goi moi khung hinh.</summary>
+        private void tinhBoCuc()
+        {
+            TField[] os = oCuaCheDo();
+            int fh = mScreen.ITEM_HEIGHT + 2;
+            bool coNhan = GameCanvas.h >= 280;
+            int caoO = (coNhan ? 12 : 0) + fh + 7;
+            object[][][] nut = nutCuaCheDo();
+            int caoChu = cheDo == CD_QUEN_MK ? CHU_QUEN_MK.Length * 12 + 6 : 0;
+
+            int w = Math.min(GameCanvas.w - 16, 264);
+            if (w < 170)
+            {
+                w = GameCanvas.w - 4;
+            }
+            int h = 8 + CAO_TIEU_DE_FORM + os.Length * caoO + caoChu + 2
+                    + nut.Length * (CAO_NUT + 6) + 4;
+            int x = (GameCanvas.w - w) / 2;
+            int y;
+            bool banPhim = !Main.isPC && TouchScreenKeyboard.visible;
+            if (banPhim)
+            {
+                // Ban phim chiem nua duoi man: day khung len sat tren, va neu o
+                // dang go van nam thap thi day them cho no hien tren ban phim.
+                y = 6;
+                // Chieu cao ban phim that (diem anh -> diem logic). Mot so may
+                // Android tra 0: khi do lay 60% man, ban phim ngang thuong co vay.
+                int caoPhim = 0;
+                try
+                {
+                    caoPhim = (int)(TouchScreenKeyboard.area.height / mGraphics.zoomLevel);
+                }
+                catch (Exception)
+                {
+                }
+                if (caoPhim <= 0 || caoPhim > GameCanvas.h * 3 / 4)
+                {
+                    caoPhim = GameCanvas.h * 60 / 100;
+                }
+                for (int i = 0; i < os.Length; i++)
+                {
+                    if (os[i].isFocus)
+                    {
+                        int day = y + 8 + CAO_TIEU_DE_FORM + (i + 1) * caoO;
+                        int tran = GameCanvas.h - caoPhim - 4;
+                        if (day > tran)
+                        {
+                            y -= day - tran;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                int duoiLogo = (imgTitle != null && GameCanvas.h > 220)
+                        ? 60 + imgTitle.getHeight() / 2 + 8 : 8;
+                y = Math.max(duoiLogo, (GameCanvas.h - h) / 2 + 20);
+                if (y + h > GameCanvas.h - 30)
+                {
+                    y = Math.max(4, GameCanvas.h - 30 - h);
+                }
+            }
+            // Khung PopUp ghep bang o 10 diem: canh le khong chia het cho 10
+            // thi o cuoi ve lan ra ngoai goc khung (vet rang cua o mep).
+            w = 20 + (w - 20) / 10 * 10;
+            h = 20 + (h - 20 + 9) / 10 * 10;
+            x = (GameCanvas.w - w) / 2;
+            xForm = x;
+            yForm = y;
+            wForm = w;
+            hForm = h;
+
+            // O nhap.
+            int yc = y + 8 + CAO_TIEU_DE_FORM;
+            TField coMat = oCoNutMat();
+            wNutMat = 0;
+            for (int i = 0; i < os.Length; i++)
+            {
+                TField t = os[i];
+                t.height = fh;
+                t.x = x + DE_TRONG;
+                t.y = yc + (coNhan ? 12 : 0);
+                t.width = w - DE_TRONG * 2;
+                if (t == coMat)
+                {
+                    // Nut an / hien sat mep phai khung. Chua 22 diem giua o nhap va
+                    // nut: vung 20 diem quanh mep phai o nhap la nut XOA chu cua
+                    // TField, dat nut vao do thi bam an / hien lai xoa sach.
+                    wNutMat = fh;
+                    xNutMat = x + w - DE_TRONG - wNutMat;
+                    yNutMat = t.y;
+                    t.width = xNutMat - 22 - t.x;
+                }
+                yc += caoO;
+            }
+
+            // Nut.
+            oNutForm.Clear();
+            int yn = yc + caoChu + 2;
+            for (int hang = 0; hang < nut.Length; hang++)
+            {
+                int k = nut[hang].Length;
+                int bw = (w - DE_TRONG * 2 - (k - 1) * 6) / k;
+                for (int i = 0; i < k; i++)
+                {
+                    oNutForm.Add(new int[] { x + DE_TRONG + i * (bw + 6), yn, bw, CAO_NUT,
+                        (int)nut[hang][i][2], hang, i });
+                }
+                yn += CAO_NUT + 6;
+            }
+        }
+
+        private void veForm(mGraphics g)
+        {
+            tinhBoCuc();
+            TField[] os = oCuaCheDo();
+            string[] nhan = nhanCuaCheDo();
+            bool coNhan = GameCanvas.h >= 280;
+
+            // Logo chi ve khi con cho phia tren khung, khong de len form.
+            if (imgTitle != null && GameCanvas.h > 220
+                    && yForm >= 60 + imgTitle.getHeight() / 2 + 4)
+            {
+                g.drawImage(imgTitle, GameCanvas.hw, 60, 3);
+            }
+
+            PopUp.paintPopUp(g, xForm, yForm, wForm, hForm, -1, true);
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+
+            // Tieu de + gach chan.
+            mFont.tahoma_7b_dark.drawString(g, tieuDeCheDo(), xForm + wForm / 2, yForm + 9,
+                    mFont.CENTER);
+            g.setColor(0xB07A3E, 0.6f);
+            g.fillRect(xForm + DE_TRONG, yForm + 8 + CAO_TIEU_DE_FORM - 3, wForm - DE_TRONG * 2, 1);
+
+            for (int i = 0; i < os.Length; i++)
+            {
+                if (coNhan)
+                {
+                    mFont.tahoma_7_grey.drawString(g, nhan[i], os[i].x + 2, os[i].y - 12,
+                            mFont.LEFT);
+                }
+                os[i].paint(g);
+                // TField.paint de lai vung cat bang khung chu cua no.
+                g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+            }
+
+            if (wNutMat > 0)
+            {
+                veNutForm(g, xNutMat, yNutMat, wNutMat, wNutMat,
+                        hienMatKhau ? "Ẩn" : "Hiện", false);
+            }
+
+            if (cheDo == CD_QUEN_MK)
+            {
+                int yc = os[os.Length - 1].y + os[os.Length - 1].height + 8;
+                for (int i = 0; i < CHU_QUEN_MK.Length; i++)
+                {
+                    mFont.tahoma_7_grey.drawString(g, CHU_QUEN_MK[i], xForm + wForm / 2,
+                            yc + i * 12, mFont.CENTER);
+                }
+            }
+
+            object[][][] nut = nutCuaCheDo();
+            foreach (int[] o in oNutForm)
+            {
+                object[] n = nut[o[5]][o[6]];
+                string chu = (string)n[0];
+                if (mFont.tahoma_7b_white.getWidth(chu) + 10 > o[2])
+                {
+                    chu = (string)n[1];
+                }
+                veNutForm(g, o[0], o[1], o[2], o[3], chu, (bool)n[3]);
+            }
+        }
+
+        /// <summary>Mot nut cua form: vien nau, than cam (nut chinh) hoac kem.</summary>
+        private static void veNutForm(mGraphics g, int x, int y, int w, int h, string chu,
+                bool chinh)
+        {
+            bool dangNhan = GameCanvas.isPointerDown && GameCanvas.isPointerHoldIn(x, y, w, h);
+            g.setColor(0x000000, 0.25f);
+            g.fillRect(x + 1, y + 2, w, h, 6);
+            g.setColor(0x7A3F12, 1f);
+            g.fillRect(x, y, w, h, 6);
+            int mau = chinh ? (dangNhan ? 0xC96A1C : 0xF08A2A) : (dangNhan ? 0xD9B27A : 0xF3D9A8);
+            g.setColor(mau, 1f);
+            g.fillRect(x + 1, y + 1, w - 2, h - 2, 5);
+            g.setColor(0xFFFFFF, dangNhan ? 0.08f : 0.22f);
+            g.fillRect(x + 3, y + 2, w - 6, h / 2 - 2, 4);
+            if (chinh)
+            {
+                mFont.tahoma_7b_dark.drawString(g, chu, x + w / 2 + 1, y + h / 2 - 5, mFont.CENTER);
+                mFont.tahoma_7b_white.drawString(g, chu, x + w / 2, y + h / 2 - 6, mFont.CENTER);
+            }
+            else
+            {
+                mFont.tahoma_7b_dark.drawString(g, chu, x + w / 2, y + h / 2 - 6, mFont.CENTER);
+            }
+        }
+
+        /// <summary>Doi mat khau: kiem tra ca bon o roi gui mot lan.</summary>
+        private void doDoiMatKhau()
+        {
+            string tk = tfUser.getText().Trim();
+            string cu = tfPass.getText().Trim();
+            string moi = tfMkMoi.getText().Trim();
+            string lai = tfMkMoi2.getText().Trim();
+            if (tk.Length == 0 || cu.Length == 0)
+            {
+                GameCanvas.startOKDlg("Nhập tài khoản và mật khẩu hiện tại.");
+                return;
+            }
+            if (moi.Length < 5)
+            {
+                GameCanvas.startOKDlg("Mật khẩu mới phải có ít nhất 5 ký tự.");
+                return;
+            }
+            string loi = loiChuThuongVaSo(moi, mResources.matKhauChu);
+            if (loi != null)
+            {
+                GameCanvas.startOKDlg(loi);
+                return;
+            }
+            if (!moi.Equals(lai))
+            {
+                GameCanvas.startOKDlg("Hai ô mật khẩu mới không khớp nhau.");
+                return;
+            }
+            if (moi.Equals(cu))
+            {
+                GameCanvas.startOKDlg("Mật khẩu mới phải khác mật khẩu hiện tại.");
+                return;
+            }
+            GameCanvas.startWaitDlg();
+            GameCanvas.connect();
+            Service.gI().setClientType();
+            Service.gI().doiMatKhau(tk, cu, moi);
+        }
+
+        /// <summary>Nut chinh cua che do dang hien (phim Enter tren may tinh).</summary>
+        private int nutChinh()
+        {
+            foreach (object[][] hang in nutCuaCheDo())
+            {
+                foreach (object[] n in hang)
+                {
+                    if ((bool)n[3])
+                    {
+                        return (int)n[2];
+                    }
+                }
+            }
+            return -1;
+        }
+
+        /// <summary>Bam cham cho form: nut an / hien va cac nut. Tra true khi da nuot.</summary>
+        private bool chamForm()
+        {
+            if (!GameCanvas.isPointerJustRelease)
+            {
+                return false;
+            }
+            if (wNutMat > 0 && GameCanvas.isPointerHoldIn(xNutMat, yNutMat, wNutMat, wNutMat))
+            {
+                hienMatKhau = !hienMatKhau;
+                apDungHienMk();
+                GameCanvas.clearAllPointerEvent();
+                return true;
+            }
+            foreach (int[] o in oNutForm)
+            {
+                if (GameCanvas.isPointerHoldIn(o[0], o[1], o[2], o[3]))
+                {
+                    GameCanvas.clearAllPointerEvent();
+                    SoundMn.gI().buttonClick();
+                    perform(o[4], null);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>An / hien ap cho MOI o mat khau, khong rieng o dau.</summary>
+        private void apDungHienMk()
+        {
+            foreach (TField t in new TField[] { tfPass, tfPass2, tfMkMoi, tfMkMoi2 })
+            {
+                if (t != null)
+                {
+                    t.setIputType(hienMatKhau ? TField.INPUT_TYPE_ANY : TField.INPUT_TYPE_PASSWORD);
+                    t.setText(t.getText());
+                }
+            }
+        }
+
+        /// <summary>Cap nhat cac o cua che do dang hien — moi khung mot lan.</summary>
+        private void capNhatO()
+        {
+            if (tfPass2 == null)
+            {
+                khoiTaoFormMoi();
+            }
+            tfUser.name = "Tên tài khoản";
+            tfPass.name = cheDo == CD_DOI_MK ? "Mật khẩu hiện tại" : "Mật khẩu";
+            // Dang nhap bang tai khoan ao (isLogin2) thi hai o chi de xem.
+            bool chiXem = isLogin2 && cheDo == CD_DANG_NHAP;
+            foreach (TField t in oCuaCheDo())
+            {
+                t.update();
+                if (chiXem)
+                {
+                    t.isPaintCarret = false;
+                }
+            }
+            center = null;
+            left = null;
+            right = null;
+        }
+
+        /// <summary>
+        /// Controller hoi truoc khi day sang man chon may chu vi co thong bao
+        /// (goi -26). Dang ky / doi mat khau loi thi GIU form de nguoi choi sua
+        /// lai o sai — ban cu day di mat, phai go lai tu dau.
+        /// </summary>
+        public bool giuFormKhiBao(string thongBao)
+        {
+            if (cheDo == CD_DOI_MK)
+            {
+                if (thongBao != null && thongBao.StartsWith("Đổi mật khẩu thành công"))
+                {
+                    // Xong: ve man dang nhap, o mat khau dien san mat khau moi.
+                    string moi = tfMkMoi.getText().Trim();
+                    datCheDo(CD_DANG_NHAP);
+                    tfPass.setText(moi);
+                }
+                return true;
+            }
+            return cheDo == CD_DANG_KY;
+        }
+
+        /// <summary>Mo trang lien he admin (link web cua may chu).</summary>
+        private static void moLienHe()
+        {
+            string link = ServerListScreen.linkweb;
+            if (link == null || link.Trim().Length == 0)
+            {
+                GameCanvas.startOKDlg("Hãy liên hệ admin qua fanpage / nhóm của máy chủ để lấy lại mật khẩu.");
+                return;
+            }
+            link = link.Trim();
+            if (!link.StartsWith("http"))
+            {
+                link = "http://" + link;
+            }
+            try
+            {
+                GameMidlet.instance.platformRequest(link);
+            }
+            catch (Exception)
+            {
+            }
+        }
 
     	public void resetLogo()
     	{
@@ -1064,19 +1434,13 @@ namespace Game4
     		case 10021:
     			actRegisterLeft();
     			break;
-    		case 1003:
-    			GameCanvas.startOKDlg("Hỏi admin đi cu !");
-    			break;
-    		case 1005:
-    			try
-    			{
-    				GameMidlet.instance.platformRequest("http://ngocrongonline.com");
-    				break;
-    			}
-    			catch (Exception)
-    			{
-    				break;
-    			}
+    	case 1003:
+    	case 2203:
+    		datCheDo(CD_QUEN_MK);
+    		break;
+    	case 1005:
+    		moLienHe();
+    		break;
     		case 10041:
     			Rms.saveRMSInt("lowGraphic", 0);
     			GameCanvas.startOK(mResources.plsRestartGame, 8885, null);
@@ -1116,41 +1480,21 @@ namespace Game4
     				GameCanvas.serverScreen.show2();
     			}
     			break;
-    		case 2101:
-    			// Doi mat khau: tai khoan va mat khau HIEN TAI lay tu hai o dang nhap,
-    			// roi hoi mat khau moi hai lan.
-    			if (tfUser.getText().Trim().Length == 0 || tfPass.getText().Trim().Length == 0)
-    			{
-    				GameCanvas.startOKDlg("Nhập tài khoản và mật khẩu HIỆN TẠI vào hai ô, rồi bấm Đổi M.khẩu.");
-    				break;
-    			}
-    			GameCanvas.inputDlg.show("Mật khẩu mới (ít nhất 5 ký tự)", new Command(mResources.OK, this, 2102, null), TField.INPUT_TYPE_PASSWORD);
-    			break;
-    		case 2102:
-    			mkMoiTam = GameCanvas.inputDlg.tfInput.getText().Trim();
-    			if (mkMoiTam.Length < 5)
-    			{
-    				GameCanvas.endDlg();
-    				GameCanvas.startOKDlg("Mật khẩu mới phải có ít nhất 5 ký tự.");
-    				break;
-    			}
-    			GameCanvas.inputDlg.show("Nhập lại mật khẩu mới", new Command(mResources.OK, this, 2103, null), TField.INPUT_TYPE_PASSWORD);
-    			break;
-    		case 2103:
-    		{
-    			string nhapLai = GameCanvas.inputDlg.tfInput.getText().Trim();
-    			GameCanvas.endDlg();
-    			if (!nhapLai.Equals(mkMoiTam))
-    			{
-    				GameCanvas.startOKDlg("Hai lần nhập mật khẩu mới không khớp.");
-    				break;
-    			}
-    			GameCanvas.startWaitDlg();
-    			GameCanvas.connect();
-    			Service.gI().setClientType();
-    			Service.gI().doiMatKhau(tfUser.getText().Trim(), tfPass.getText().Trim(), mkMoiTam);
-    			break;
-    		}
+    	case 2101:
+    		doDoiMatKhau();
+    		break;
+    	case 2200:
+    		datCheDo(CD_DANG_NHAP);
+    		setUserPass();
+    		break;
+    	case 2201:
+    		datCheDo(CD_DANG_KY);
+    		tfUser.setText(string.Empty);
+    		tfPass.setText(string.Empty);
+    		break;
+    	case 2202:
+    		datCheDo(CD_DOI_MK);
+    		break;
     		case 4000:
     			doRegister(tfUser.getText());
     			break;
@@ -1164,16 +1508,19 @@ namespace Game4
     			doLogin();
     			return;
     		}
-    		isRes = false;
+    		if (cheDo != CD_DANG_NHAP)
+    		{
+    			datCheDo(CD_DANG_NHAP);
+    		}
     		tfPass.isFocus = false;
     		tfUser.isFocus = true;
-    		left = cmdMenu;
     	}
-    
+    	
     	public void actRegister()
     	{
     		GameCanvas.endDlg();
-    		isRes = true;
+    		datCheDo(CD_DANG_KY);
+    		mocMoDangKy = mSystem.currentTimeMillis();
     		tfPass.isFocus = false;
     		tfUser.isFocus = true;
     	}
