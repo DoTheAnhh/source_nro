@@ -241,24 +241,26 @@ namespace Game6.God
             int xs = x + rung;
             sbOSan = new int[] { x, y, w, h };
 
-            // Khung: vien muc mong, bai co mot mau voi soc cat xen ke — khong
-            // chuyen sac, khong hoa trang tri.
-            g.setColor(0x000000, 0.10f);
-            g.fillRect(xs, y + 2, w, h, BO_GOC + 1);
-            g.setColor(rgb(0x4E, 0x7A, 0x34), 1f);
-            g.fillRect(xs, y, w, h, BO_GOC + 1);
-            g.setColor(SB_CO, 1f);
-            g.fillRect(xs + 1, y + 1, w - 2, h - 2, BO_GOC);
-            g.setClip(xs + 1, y + 1, w - 2, h - 2);
-            const int SOC = 26;
-            g.setColor(SB_CO_SOC, 1f);
-            for (int k = 1; k * SOC < w; k += 2)
+            // Khung go hai lop, trong la tranh bai co ve san (ngon co, soc cat,
+            // hoa nho, vien toi). Thieu tranh thi to co phang co soc.
+            g.setColor(0x000000, 0.20f);
+            g.fillRect(xs, y + 3, w, h, 10);
+            g.setColor(rgb(0x5B, 0x3A, 0x1C), 1f);
+            g.fillRect(xs, y, w, h, 10);
+            g.setColor(rgb(0xB9, 0x86, 0x4E), 1f);
+            g.fillRect(xs + 2, y + 2, w - 4, h - 4, 9);
+            g.setClip(xs + 4, y + 4, w - 8, h - 8);
+            if (!veTranh(g, "sb_san", xs + 4, y + 4, w - 8, h - 8))
             {
-                g.fillRect(xs + k * SOC, y + 1, SOC, h - 2);
+                g.setColor(SB_CO, 1f);
+                g.fillRect(xs + 4, y + 4, w - 8, h - 8);
+                const int SOC = 26;
+                g.setColor(SB_CO_SOC, 1f);
+                for (int k = 1; k * SOC < w; k += 2)
+                {
+                    g.fillRect(xs + 4 + k * SOC, y + 4, SOC, h - 8);
+                }
             }
-            // Bong mem o mep tren, cho san lom xuong duoi mat bang.
-            g.setColor(0x000000, 0.10f);
-            g.fillRect(xs + 1, y + 1, w - 2, 3);
             g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 
             // Luoi 3 x 3 ho — tinh vua het chieu cao, hang duoi khong bi cat.
@@ -351,18 +353,17 @@ namespace Game6.God
             int rm = o[2];
             int cm = o[3];
 
-            // U dat: bong nga xuong co, than dat, gờ sang mong o phia tren.
-            g.setColor(0x000000, 0.14f);
-            g.fillRect(tamX - rm / 2 - 6, tamY - cm / 2 + 2, rm + 12, cm + 6, (cm + 6) / 2);
-            g.setColor(SB_DAT, 1f);
-            g.fillRect(tamX - rm / 2 - 6, tamY - cm / 2 - 3, rm + 12, cm + 7, (cm + 7) / 2);
-            g.setColor(SB_DAT_SANG, 1f);
-            g.fillRect(tamX - rm / 2 - 3, tamY - cm / 2 - 3, rm + 6, 3, 2);
-            // Mieng ho, toi dan vao trong.
-            g.setColor(SB_LO, 1f);
-            g.fillRect(tamX - rm / 2, tamY - cm / 2, rm, cm, cm / 2);
-            g.setColor(0x000000, 0.35f);
-            g.fillRect(tamX - rm / 2 + 3, tamY - cm / 2, rm - 6, cm / 2, cm / 4);
+            // U dat + mieng ho: tranh ve san (soi, go sang, long ho sau dan).
+            // Mieng ho trong tranh rong 208/320 be ngang anh, tam o giua anh.
+            int wHo = rm * 320 / 208;
+            int hHo = wHo * 150 / 320;
+            if (!veTranh(g, "sb_ho", tamX - wHo / 2, tamY - hHo / 2, wHo, hHo))
+            {
+                g.setColor(SB_DAT, 1f);
+                g.fillRect(tamX - rm / 2 - 6, tamY - cm / 2 - 3, rm + 12, cm + 7, (cm + 7) / 2);
+                g.setColor(SB_LO, 1f);
+                g.fillRect(tamX - rm / 2, tamY - cm / 2, rm, cm, cm / 2);
+            }
 
             // Con dang trong ho nay (neu co).
             int loai = -1;
@@ -405,10 +406,13 @@ namespace Game6.God
                 g.setClip(o[4], o[5] - 8, o[6], tamY - o[5] + 9);
                 if (loai == SB_LOAI_VANG)
                 {
-                    // Saibaman vang: mot vong sang am sau lung, dap theo nhip.
+                    // Saibaman vang: quang sang vang sau lung, dap theo nhip.
                     float nhipV = 0.6f + 0.4f * UnityEngine.Mathf.Sin(bayGio / 140f);
-                    g.setColor(MAU_VANG, 0.55f * nhipV * troi);
-                    g.fillRect(tamX - 20, yChan - 48, 40, 40, 20);
+                    if (!veTranhMo(g, "tc_quang_vang", tamX - 30, yChan - 58, 60, 60, nhipV * troi))
+                    {
+                        g.setColor(MAU_VANG, 0.55f * nhipV * troi);
+                        g.fillRect(tamX - 20, yChan - 48, 40, 40, 20);
+                    }
                 }
                 int cf = (int) (bayGio / 320L % 2);
                 bool daVe;
@@ -431,9 +435,6 @@ namespace Game6.God
                 }
             }
 
-            // Mep truoc cua ho, de len chan con vat.
-            g.setColor(SB_DAT_SANG, 1f);
-            g.fillRect(tamX - rm / 2 + 2, tamY + cm / 2 - 2, rm - 4, 3, 1);
 
             // Nhan diem o man cho.
             if (!sbDangBan() && !sbHienKQ() && i >= 3 && i <= 5)
@@ -564,12 +565,23 @@ namespace Game6.God
                     continue;
                 }
                 float t = d / 700f;
-                if (d < 200L && h.loai != 3)
+                if (d < 220L && h.loai != 3)
                 {
-                    float u = d / 200f;
-                    int co = 12 + (int) (30 * u);
-                    g.setColor(h.loai == 2 ? SB_DO : 0xFFFFFF, 0.5f * (1f - u));
-                    g.fillRect(h.x - co / 2, h.y - co / 2, co, co, co / 2);
+                    // Chop no hinh sao no to roi mo di, bua go dap xuong trong
+                    // 160ms dau. Do la chop do khi lo dap Bulma.
+                    float u = d / 220f;
+                    int co = 26 + (int) (18 * u);
+                    if (!veTranhMo(g, h.loai == 2 ? "sb_no_do" : "sb_no", h.x - co / 2, h.y - co / 2,
+                            co, co, 1f - u * 0.8f))
+                    {
+                        g.setColor(h.loai == 2 ? SB_DO : 0xFFFFFF, 0.5f * (1f - u));
+                        g.fillRect(h.x - co / 2, h.y - co / 2, co, co, co / 2);
+                    }
+                    if (d < 160L)
+                    {
+                        int lech = (int) (6 * (1f - d / 160f));
+                        veTranh(g, "sb_bua", h.x + 4 + lech, h.y - 34 - lech, 40, 40);
+                    }
                 }
                 else if (h.loai == 3 && d < 180L)
                 {
@@ -583,7 +595,8 @@ namespace Game6.God
                 {
                     continue;
                 }
-                int yc = h.y - 12 - (int) (24 * t);
+                // Chu diem bay len phia tren, tach khoi bua va chop no.
+                int yc = h.y - 30 - (int) (24 * t);
                 mFont f = h.loai == 2 ? mFont.tahoma_7b_red
                         : (h.loai == 1 ? mFont.tahoma_7b_yellow : mFont.tahoma_7b_white);
                 veChuNoi(g, f, h.chu, h.x, yc, mFont.CENTER);
@@ -670,7 +683,14 @@ namespace Game6.God
             int rn = (rb - 26) / 2;
             sbONutChoiLai = new int[] { xb + 10, yn, rn, 22 };
             sbONutDongKQ = new int[] { xb + 16 + rn, yn, rn, 22 };
-            veNutChinh(g, sbONutChoiLai, "Chơi lại", sbChoiDuoc() == null, MAU_CHON);
+            if (sbChoiDuoc() == null)
+            {
+                veNutVang(g, sbONutChoiLai, "Chơi lại");
+            }
+            else
+            {
+                veNutChinh(g, sbONutChoiLai, "Chơi lại", false, MAU_CHON);
+            }
             veNutPhu(g, sbONutDongKQ, "Đóng", true);
         }
 
@@ -856,8 +876,14 @@ namespace Game6.God
 
             string lyDo = sbChoiDuoc();
             sbONutBatDau = new int[] { x + 8, yNut, w - 16, CAO_NUT };
-            veNutChinh(g, sbONutBatDau, lyDo ?? ("Bắt đầu  ·  " + m.sbVe + " thỏi"), lyDo == null,
-                    MAU_CHON);
+            if (lyDo == null)
+            {
+                veNutVang(g, sbONutBatDau, "BẮT ĐẦU  ·  " + m.sbVe + " thỏi");
+            }
+            else
+            {
+                veNutChinh(g, sbONutBatDau, lyDo, false, MAU_CHON);
+            }
         }
 
         /// <summary>Dấu tích trong vòng tròn xanh — vẽ bằng hình, font không có ký tự này.</summary>
