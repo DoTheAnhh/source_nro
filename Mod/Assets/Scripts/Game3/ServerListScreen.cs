@@ -415,36 +415,146 @@ namespace Game3
     			}
     			else
     			{
-    				int num4 = GameCanvas.hh - 15 * cmd.Length - 15;
-    				if (num4 < 25)
-    				{
-    					num4 = 25;
-    				}
-    				if (LoginScr.imgTitle != null)
-    				{
-    					g.drawImage(LoginScr.imgTitle, GameCanvas.hw, num4, 3);
-    				}
-    				for (int i = 0; i < cmd.Length; i++)
-    				{
-    					cmd[i].paint(g);
-    				}
-    				g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-    				if (testConnect == -1)
-    				{
-    					if (GameCanvas.gameTick % 20 > 10)
-    					{
-    						g.drawRegion(GameScr.imgRoomStat, 0, 14, 7, 7, 0, (GameCanvas.w - mFont.tahoma_7b_dark.getWidth(cmd[2 + nCmdPlay].caption) >> 1) - 10, cmd[2 + nCmdPlay].y + 10, 0);
-    					}
-    				}
-    				else
-    				{
-    					g.drawRegion(GameScr.imgRoomStat, 0, testConnect * 7, 7, 7, 0, (GameCanvas.w - mFont.tahoma_7b_dark.getWidth(cmd[2 + nCmdPlay].caption) >> 1) - 10, cmd[2 + nCmdPlay].y + 9, 0);
-    				}
+    			boCucNut();
+    			if (veLogoDs && LoginScr.imgTitle != null)
+    			{
+    				g.drawImage(LoginScr.imgTitle, xLogoDs, yLogoDs, 3);
+    			}
+    			for (int i = 0; i < cmd.Length; i++)
+    			{
+    				cmd[i].paint(g);
+    			}
+    			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+    			veChamMayChu(g);
     			}
     		}
     		base.paint(g);
     	}
     
+        // =====================================================================
+        //  BO CUC NUT MAN CHON TAI KHOAN / MAY CHU
+        // =====================================================================
+        //
+        // Ban cu dat nut MOT LAN trong initCommand theo GameCanvas.hh, con logo
+        // tinh rieng o paint: man thap (dien thoai nam ngang) thi logo de len nut,
+        // xoay / doi kich thuoc cua so thi nut nam lech cho ve. Nay tinh lai MOI
+        // KHUNG HINH: logo + cot nut canh giua trong phan man con trong; khong du
+        // cao thi chia hai cot, van khong du nua thi bo logo.
+
+        private int xLogoDs;
+        private int yLogoDs;
+        private bool veLogoDs;
+
+        private const int CAO_NUT_DS = 24;
+        private const int KHE_NUT_DS = 7;
+
+        private void boCucNut()
+        {
+            if (cmd == null || cmd.Length == 0)
+            {
+                return;
+            }
+            int n = cmd.Length;
+            int caoLogo = (LoginScr.imgTitle != null) ? LoginScr.imgTitle.getHeight() : 0;
+            // Chua cho dong link web / phien ban o goc tren, chu "xoa du lieu" o duoi.
+            int tren = 26;
+            int duoi = (cmdDeleteRMS != null) ? 20 : 8;
+            int con = GameCanvas.h - tren - duoi;
+
+            int bw1 = Math.max(160, Math.min(GameCanvas.w - 40, 240));
+            int cao1 = n * CAO_NUT_DS + (n - 1) * KHE_NUT_DS;
+            int hang2 = (n + 1) / 2;
+            int cao2 = hang2 * CAO_NUT_DS + (hang2 - 1) * KHE_NUT_DS;
+            int bw2 = Math.min((GameCanvas.w - 36) / 2, 200);
+            bool duHaiCot = bw2 >= 130;
+
+            int soCot;
+            bool coLogo;
+            if (caoLogo > 0 && caoLogo + 10 + cao1 <= con)
+            {
+                soCot = 1;
+                coLogo = true;
+            }
+            else if (duHaiCot && caoLogo > 0 && caoLogo + 10 + cao2 <= con)
+            {
+                soCot = 2;
+                coLogo = true;
+            }
+            else
+            {
+                coLogo = false;
+                soCot = (cao1 <= con || !duHaiCot) ? 1 : 2;
+            }
+            int caoNut = soCot == 1 ? cao1 : cao2;
+            int khoi = (coLogo ? caoLogo + 10 : 0) + caoNut;
+            int y = tren + Math.max(0, (con - khoi) / 2);
+            veLogoDs = coLogo;
+            xLogoDs = GameCanvas.hw;
+            yLogoDs = y + caoLogo / 2;
+            if (coLogo)
+            {
+                y += caoLogo + 10;
+            }
+            int bw = soCot == 1 ? bw1 : bw2;
+            for (int i = 0; i < n; i++)
+            {
+                if (cmd[i] == null)
+                {
+                    continue;
+                }
+                int hang = soCot == 1 ? i : i / 2;
+                int cot = soCot == 1 ? 0 : i % 2;
+                int xNut;
+                if (soCot == 1 || (i == n - 1 && n % 2 == 1))
+                {
+                    // Nut le cuoi cua kieu hai cot thi dat giua.
+                    xNut = (GameCanvas.w - bw) / 2;
+                }
+                else
+                {
+                    xNut = GameCanvas.hw + (cot == 0 ? -6 - bw : 6);
+                }
+                cmd[i].x = xNut;
+                cmd[i].y = y + hang * (CAO_NUT_DS + KHE_NUT_DS);
+                cmd[i].w = bw;
+                cmd[i].hw = bw / 2;
+                cmd[i].h = CAO_NUT_DS;
+            }
+            if (cmdDeleteRMS != null)
+            {
+                cmdDeleteRMS.x = GameCanvas.w - 78;
+                cmdDeleteRMS.y = GameCanvas.h - 26;
+            }
+            if (cmdDownload != null && GameCanvas.isTouch)
+            {
+                cmdDownload.x = GameCanvas.w / 2 - mScreen.cmdW / 2;
+                cmdDownload.y = GameCanvas.hh + 65;
+            }
+        }
+
+        /// <summary>Cham trang thai ket noi, dat sat truoc chu cua nut "May chu".</summary>
+        private void veChamMayChu(mGraphics g)
+        {
+            int k = 2 + nCmdPlay;
+            if (k >= cmd.Length || cmd[k] == null)
+            {
+                return;
+            }
+            Command c = cmd[k];
+            int xc = c.x + (c.w - mFont.tahoma_7b_dark.getWidth(c.caption)) / 2 - 10;
+            if (testConnect == -1)
+            {
+                if (GameCanvas.gameTick % 20 > 10)
+                {
+                    g.drawRegion(GameScr.imgRoomStat, 0, 14, 7, 7, 0, xc, c.y + 9, 0);
+                }
+            }
+            else
+            {
+                g.drawRegion(GameScr.imgRoomStat, 0, testConnect * 7, 7, 7, 0, xc, c.y + 9, 0);
+            }
+        }
+
     	public void selectServer()
     	{
     		flagServer = 30;
@@ -519,6 +629,8 @@ namespace Game3
     				cmd[i].isFocus = false;
     			}
     		}
+    		// Dat lai nut truoc updateKey de vung cham khop voi hinh.
+    		boCucNut();
     		GameScr.cmx++;
     		if (!loadScreen && (bigOk || percent == 100))
     		{
@@ -615,7 +727,7 @@ namespace Game3
     		{
     			if (GameCanvas.keyPressed[8])
     			{
-    				int num = ((mGraphics.zoomLevel <= 1) ? 4 : 2);
+    				int num = cmd.Length - 1;
     				GameCanvas.keyPressed[8] = false;
     				selected++;
     				if (selected > num)
@@ -626,7 +738,7 @@ namespace Game3
     			}
     			if (GameCanvas.keyPressed[2])
     			{
-    				int num2 = ((mGraphics.zoomLevel <= 1) ? 4 : 2);
+    				int num2 = cmd.Length - 1;
     				GameCanvas.keyPressed[2] = false;
     				selected--;
     				if (selected < 0)
