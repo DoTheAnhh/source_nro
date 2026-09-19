@@ -1483,7 +1483,15 @@ namespace Game4.God
                 {
                     chu = "Huỷ";
                 }
-                veChip(g, dvONut[k], chu, bam);
+                // Muc so tien: chip casino ve san, cung bo voi Tai Xiu. Chip tron
+                // can giua o, nho hon mot chut so voi o bam.
+                int coChip = h + 4;
+                if (k >= DV_MUC.Length || !veTranhMo(g, "tc_chip" + DV_MUC[k],
+                        xn + rNho / 2 - coChip / 2, y + h / 2 - coChip / 2, coChip, coChip,
+                        bam ? 1f : 0.45f))
+                {
+                    veChip(g, dvONut[k], chu, bam);
+                }
                 xn += rNho + khe;
             }
             int kDat = soNho;
@@ -1506,7 +1514,14 @@ namespace Game4.God
             {
                 nhan = "ĐẶT " + dvSo(dvTienCho);
             }
-            veNutChinh(g, dvONut[kDat], nhan, datDuoc, MAU_CHON);
+            if (datDuoc)
+            {
+                veNutVang(g, dvONut[kDat], nhan);
+            }
+            else
+            {
+                veNutChinh(g, dvONut[kDat], nhan, false, MAU_CHON);
+            }
         }
 
         // ==================================================================

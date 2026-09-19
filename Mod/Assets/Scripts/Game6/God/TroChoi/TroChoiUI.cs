@@ -3458,12 +3458,27 @@ namespace Game6.God
             int y = yNoiDung();
             int w = rong - LE * 2;
             int h = y0 + cao - LE - y;
-            veKhungBo(g, x - 3, y - 3, w + 6, h + 3, MAU_THE, 0.6f,
-                    MAU_VIEN, 0.45f, 1);
-            mFont.tahoma_7b_dark.drawString(g, "Sắp có", x + w / 2,
-                    y + h / 2 - 14, mFont.CENTER);
-            mFont.tahoma_7_grey.drawString(g, "Trò chơi này chưa mở.",
-                    x + w / 2, y + h / 2 + 2, mFont.CENTER);
+            // Cung mat ban dem vien vang nhu Tai Xiu: tro chua mo van nam trong
+            // cung mot bo giao dien, khong thanh mot o trong lac loai.
+            g.setColor(0x000000, 0.18f);
+            g.fillRect(x, y + 3, w, h, 12);
+            g.setColor(TX_VIEN_VANG, 1f);
+            g.fillRect(x, y, w, h, 12);
+            g.veDaiDoc(x + 2, y + 2, w - 4, h - 4, 10, TX_BAN_TREN, TX_BAN_DUOI);
+            g.setClip(x + 2, y + 2, w - 4, h - 4);
+            veTranh(g, "tc_den", x + w / 2 - 160, y + h / 2 - h, 320, h * 2);
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+            string ten = the >= 0 && the < TEN_THE.Length ? TEN_THE[the] : string.Empty;
+            int giua = y + h / 2;
+            veTranhMo(g, "tc_quang_vang", x + w / 2 - 60, giua - 70, 120, 120, 0.35f + 0.15f * nhip(1200));
+            mFont.tahoma_7b_yellow.drawString(g, ten.ToUpper(), x + w / 2, giua - 20,
+                    mFont.CENTER);
+            int rb = mFont.tahoma_7b_dark.getWidth("SẮP RA MẮT") + 20;
+            g.veDaiDoc(x + w / 2 - rb / 2, giua - 2, rb, 18, 9, TX_VANG_SANG, TX_VANG_TOI);
+            mFont.tahoma_7b_dark.drawString(g, "SẮP RA MẮT", x + w / 2, giua - 2 + 9 - 6,
+                    mFont.CENTER);
+            mFont.tahoma_7_white.drawString(g, "Trò chơi này đang được hoàn thiện.",
+                    x + w / 2, giua + 24, mFont.CENTER);
         }
 
         // ------------------------------------------------------------------
