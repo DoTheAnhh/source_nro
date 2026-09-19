@@ -113,6 +113,10 @@ public final class MiniGameService {
         try {
             byte tro = msg.reader().readByte();
             byte viec = msg.reader().readByte();
+            // Xem thi ai cung xem duoc; dat cuoc / bat dau van phai la thanh vien.
+            if (viec == LEN_HANH_DONG && !ThanhVienService.duocChoiMiniGame(pl)) {
+                return;
+            }
             switch (tro) {
                 case TRO_BAU_CUA:
                     bauCuaNhanViec(pl, viec, msg);

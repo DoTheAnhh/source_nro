@@ -73,6 +73,10 @@ public class TaiXiuService {
                     guiTrangThai(pl);
                     break;
                 case LEN_DAT_CUOC: {
+                    // Dat cuoc chi danh cho thanh vien (xem ThanhVienService).
+                    if (!ThanhVienService.duocChoiMiniGame(pl)) {
+                        break;
+                    }
                     byte cua = msg.reader().readByte();
                     long soThoi = msg.reader().readLong();
                     TaiXiuManager.gI().datCuoc(pl, cua, soThoi);

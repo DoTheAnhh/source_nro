@@ -127,6 +127,27 @@ public final class ThanhVienService {
         return (daOnlineMs(pl) / 3_600_000L) + " / " + (ONLINE_DE_MO_MS / 3_600_000L) + " giờ";
     }
 
+    /**
+     * Minigame (Tài Xỉu, Đua Vịt, Câu Cá...) chỉ dành cho thành viên.
+     *
+     * <p>Chặn nick mới tạo hàng loạt vào cược: muốn chơi phải nạp đủ 50K hoặc
+     * online đủ 3 tuần. Người chưa là thành viên vẫn mở bảng xem được, chỉ
+     * không đặt cược / bắt đầu ván được.</p>
+     *
+     * @return {@code true} khi được chơi; không thì đã báo lý do cho người chơi
+     */
+    public static boolean duocChoiMiniGame(Player pl) {
+        if (pl == null || pl.getSession() == null) {
+            return false;
+        }
+        if (pl.getSession().actived) {
+            return true;
+        }
+        Service.gI().sendThongBao(pl, "Trò chơi chỉ dành cho thành viên! Mở thành viên: nạp đủ 50K "
+                + "hoặc online đủ 3 tuần (" + tienDoOnline(pl) + ").");
+        return false;
+    }
+
     /** Mở thành viên và lưu xuống cơ sở dữ liệu. */
     public static void mo(Player pl, String lyDo) {
         if (pl == null || pl.getSession() == null || pl.getSession().actived) {
