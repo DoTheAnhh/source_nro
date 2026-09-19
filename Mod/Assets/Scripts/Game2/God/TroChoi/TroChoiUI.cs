@@ -418,16 +418,17 @@ namespace Game2.God
         /// lên gặp ngay ba trò chơi được, không phải cuộn qua mấy tab trống.
         /// </remarks>
         private static readonly string[] TEN_THE = {
-            "Tài Xỉu", "Câu Cá", "Đua Vịt", "Bầu Cua",
-            "Xóc Đĩa", "Đào Vàng", "Cao Thấp"
+            "Tài Xỉu", "Câu Cá", "Đua Vịt", "Đập Saibaman",
+            "Bầu Cua", "Xóc Đĩa", "Đào Vàng", "Cao Thấp"
         };
         private const int THE_TAI_XIU = 0;
         private const int THE_CAU_CA = 1;
         private const int THE_DUA_NGUA = 2;
-        private const int THE_BAU_CUA = 3;
-        private const int THE_XOC_DIA = 4;
-        private const int THE_DAO_VANG = 5;
-        private const int THE_CAO_THAP = 6;
+        // THE_DAP_SAIBAMAN = 3 nam trong DapSaibaman.cs.
+        private const int THE_BAU_CUA = 4;
+        private const int THE_XOC_DIA = 5;
+        private const int THE_DAO_VANG = 6;
+        private const int THE_CAO_THAP = 7;
         private int the;
 
         /// <summary>Mã trò gửi lên máy chủ, ứng với từng thẻ tầng 1.</summary>
@@ -439,6 +440,7 @@ namespace Game2.God
             -1,
             God.MiniGame.TRO_CAU_CA,
             God.MiniGame.TRO_DUA_NGUA,
+            God.MiniGame.TRO_DAP_SAIBAMAN,
             God.MiniGame.TRO_BAU_CUA,
             God.MiniGame.TRO_XOC_DIA,
             God.MiniGame.TRO_DAO_VANG,
@@ -652,6 +654,18 @@ namespace Game2.God
         // ------------------------------------------------------------------
         public void moRa()
         {
+            // Dang dap Saibaman do (hoac cho cham diem) thi mo thang vao the do.
+            if (sbDangBan())
+            {
+                the = THE_DAP_SAIBAMAN;
+                the2 = THE2_DAT_CUOC;
+                trang = 0;
+                hienBaoKetQua = false;
+                dangMo = true;
+                cuonToiTheDangMo();
+                God.MiniGame.gI().moBang(God.MiniGame.TRO_DAP_SAIBAMAN);
+                return;
+            }
             // Đang câu dở thì mở thẳng vào thẻ Câu Cá.
             //
             // Lượt câu chạy tiếp ở phía sau khi bảng đóng (xem capNhatNen), nên
@@ -1068,11 +1082,12 @@ namespace Game2.God
             veNutDong(g, x0 + rong - 24, y0 + 5);
 
             veDaiTheTro(g);
-            if (the == THE_TAI_XIU || the == THE_DUA_NGUA)
+            if (coThe2())
             {
-                for (int i = 0; i < TEN_THE_2.Length; i++)
+                string[] ten2 = tenThe2();
+                for (int i = 0; i < ten2.Length; i++)
                 {
-                    veMotThe(g, oThe2(i), TEN_THE_2[i], i == the2);
+                    veMotThe(g, oThe2(i), ten2[i], i == the2);
                 }
             }
 
@@ -1093,6 +1108,21 @@ namespace Game2.God
                 else
                 {
                     veDuaVit(g);
+                }
+            }
+            else if (the == THE_DAP_SAIBAMAN)
+            {
+                if (the2 == THE2_LS_TOI)
+                {
+                    veLsToiSb(g);
+                }
+                else if (the2 == THE2_LS_SERVER)
+                {
+                    veTopSb(g);
+                }
+                else
+                {
+                    veDapSaibaman(g);
                 }
             }
             else if (the != THE_TAI_XIU)
@@ -1856,6 +1886,9 @@ namespace Game2.God
         /// </remarks>
         public void capNhatNen()
         {
+            // Van Dap Saibaman chay theo dong ho: het gio thi bao ket qua ke ca
+            // khi bang dang dong.
+            sbCapNhat();
             if (!cauCaDangChay())
             {
                 return;
@@ -5485,6 +5518,14 @@ namespace Game2.God
                 }
             }
 
+            // Dap Saibaman bat cu CHAM XUONG, nen cung phai nam truoc cai chan
+            // "chi khi vua tha ngon" ngay duoi.
+            if (the == THE_DAP_SAIBAMAN && the2 == THE2_DAT_CUOC && !hienBaoKetQua
+                    && sbChamDap())
+            {
+                return true;
+            }
+
             if (!GameCanvas.isPointerJustRelease)
             {
                 return true;
@@ -5529,7 +5570,7 @@ namespace Game2.God
                     return true;
                 }
             }
-            if (the == THE_TAI_XIU || the == THE_DUA_NGUA)
+            if (coThe2())
             {
                 for (int i = 0; i < TEN_THE_2.Length; i++)
                 {
@@ -5546,6 +5587,19 @@ namespace Game2.God
             {
                 // Da xu ly o tren, truoc cai chan "chi khi vua tha ngon". Den
                 // day thi chi con viec nuot cu cham cho khoi lot xuong man choi.
+                return true;
+            }
+            if (the == THE_DAP_SAIBAMAN)
+            {
+                if (the2 == THE2_DAT_CUOC)
+                {
+                    chamSb();
+                }
+                else
+                {
+                    chamTrang();
+                }
+                GameCanvas.clearAllPointerEvent();
                 return true;
             }
             if (the == THE_DUA_NGUA)
@@ -5635,6 +5689,22 @@ namespace Game2.God
             trang = 0;
             // Xin lai moi lan mo the: lich su doi sau moi van, giu ban cu thi
             // nguoi choi vua choi xong mo ra khong thay van vua roi.
+            if (the == THE_DAP_SAIBAMAN)
+            {
+                if (i == THE2_LS_TOI)
+                {
+                    God.MiniGame.gI().xinLsToi(God.MiniGame.TRO_DAP_SAIBAMAN);
+                }
+                else if (i == THE2_LS_SERVER)
+                {
+                    God.MiniGame.gI().xinLsServer(God.MiniGame.TRO_DAP_SAIBAMAN);
+                }
+                else
+                {
+                    God.MiniGame.gI().moBang(God.MiniGame.TRO_DAP_SAIBAMAN);
+                }
+                return;
+            }
             if (the == THE_DUA_NGUA)
             {
                 if (i == THE2_LS_TOI)
@@ -5659,7 +5729,8 @@ namespace Game2.God
 
         private bool chamTrang()
         {
-            int tongDong = the == THE_DUA_NGUA ? dvSoDongLs()
+            int tongDong = the == THE_DAP_SAIBAMAN ? sbSoDongLs()
+                    : the == THE_DUA_NGUA ? dvSoDongLs()
                     : (the2 == THE2_LS_TOI ? lsToi.Count : lsServer.Count);
             int moiTrang = soDongMotTrang();
             int soTrang = (tongDong + moiTrang - 1) / moiTrang;

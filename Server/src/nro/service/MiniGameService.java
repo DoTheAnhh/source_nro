@@ -6,6 +6,7 @@ import nro.entity.player.Player;
 import nro.gameplay.minigame.BauCuaManager;
 import nro.gameplay.minigame.CaoThapManager;
 import nro.gameplay.minigame.CauCaManager;
+import nro.gameplay.minigame.DapSaibamanManager;
 import nro.gameplay.minigame.DaoVangManager;
 import nro.gameplay.minigame.DuaNguaManager;
 import nro.gameplay.minigame.XocDiaManager;
@@ -73,6 +74,7 @@ public final class MiniGameService {
     public static final byte TRO_DAO_VANG = 3;
     public static final byte TRO_CAO_THAP = 4;
     public static final byte TRO_CAU_CA = 5;
+    public static final byte TRO_DAP_SAIBAMAN = 6;
 
     // ---- việc, chiều lên ----
     private static final byte LEN_MO_BANG = 0;
@@ -135,6 +137,9 @@ public final class MiniGameService {
                     break;
                 case TRO_CAU_CA:
                     cauCaNhanViec(pl, viec, msg);
+                    break;
+                case TRO_DAP_SAIBAMAN:
+                    sbNhanViec(pl, viec, msg);
                     break;
                 default:
                     // Ma tro la: bo qua trong im lang. Client cu hon may chu
@@ -872,5 +877,217 @@ public final class MiniGameService {
                 msg.cleanup();
             }
         }
+    }
+
+    // ==================================================================
+    //  Đập Saibaman
+    // ==================================================================
+
+    /** Riêng Đập Saibaman: lịch trồi của một ván mới. */
+    private static final byte XUONG_SB_VAN_MOI = 5;
+
+    /** Riêng Đập Saibaman: bảng xếp hạng hôm nay (thay cho lịch sử phiên chung). */
+    private static final byte XUONG_SB_TOP = 6;
+
+    private void sbNhanViec(Player pl, byte viec, Message msg) throws Exception {
+        DapSaibamanManager m = DapSaibamanManager.gI();
+        switch (viec) {
+            case LEN_MO_BANG:
+                sbGuiTrangThai(pl);
+                break;
+            case LEN_HANH_DONG: {
+                // Byte viec con: 0 vao van, 1 bao ket qua.
+                byte viecCon = msg.reader().readByte();
+                if (viecCon == 0) {
+                    m.batDau(pl);
+                } else {
+                    // Doc HET goi truoc khi xu ly: bo giua chung la lech luong.
+                    int n = msg.reader().readShort();
+                    if (n < 0 || n > 400) {
+                        return;
+                    }
+                    int[] chiSo = new int[n];
+                    int[] luc = new int[n];
+                    for (int i = 0; i < n; i++) {
+                        chiSo[i] = msg.reader().readShort();
+                        luc[i] = msg.reader().readInt();
+                    }
+                    m.baoKetQua(pl, chiSo, luc);
+                }
+                break;
+            }
+            case LEN_XIN_LS_TOI:
+                sbDocRoiGui(pl, true);
+                break;
+            case LEN_XIN_LS_SERVER:
+                sbDocRoiGui(pl, false);
+                break;
+            default:
+                break;
+        }
+    }
+
+    /** Ghi một món quà: mã, icon, số lượng, tên. */
+    private static void sbGhiQua(Message msg, int itemId, int soLuong) throws Exception {
+        nro.entity.template.ItemTemplate tp = null;
+        try {
+            tp = nro.service.item.ItemService.gI().getTemplate(itemId);
+        } catch (Exception ignored) {
+        }
+        msg.writer().writeShort(itemId);
+        msg.writer().writeShort(tp != null ? tp.iconID : -1);
+        msg.writer().writeInt(soLuong);
+        msg.writer().writeUTF(tp != null ? tp.name : ("Vật phẩm " + itemId));
+    }
+
+    /**
+     * Trạng thái mở bảng: giá vé, lượt còn, bảng điểm, bảng mốc quà.
+     *
+     * <p>Mọi con số đi từ DB xuống, client không giữ bản sao nào: sửa bảng
+     * <code>mg_saibaman_moc</code> là màn chơi đổi theo, không dựng lại client.</p>
+     */
+    public void sbGuiTrangThai(Player pl) {
+        if (pl == null) {
+            return;
+        }
+        Message msg = null;
+        try {
+            int daChoi = nro.repository.dao.DapSaibamanDAO.soVanHomNay(pl.id);
+            List<nro.repository.dao.DapSaibamanDAO.Moc> ds
+                    = nro.repository.dao.DapSaibamanDAO.moc();
+            msg = new Message(MA_GOI);
+            msg.writer().writeByte(TRO_DAP_SAIBAMAN);
+            msg.writer().writeByte(XUONG_TRANG_THAI);
+            msg.writer().writeInt((int) DapSaibamanManager.ve());
+            msg.writer().writeInt(daChoi);
+            msg.writer().writeInt(DapSaibamanManager.luotNgay());
+            msg.writer().writeInt(DapSaibamanManager.giay());
+            msg.writer().writeShort(DapSaibamanManager.diem(DapSaibamanManager.LOAI_THUONG));
+            msg.writer().writeShort(DapSaibamanManager.diem(DapSaibamanManager.LOAI_VANG));
+            msg.writer().writeShort(DapSaibamanManager.diem(DapSaibamanManager.LOAI_BULMA));
+            msg.writer().writeLong(KhoVang.dem(pl, true));
+            msg.writer().writeLong(KhoVang.dem(pl, false));
+            int soMoc = Math.min(ds.size(), 20);
+            msg.writer().writeByte(soMoc);
+            long tranThoi = Math.max(0, DapSaibamanManager.ve() - 1);
+            for (int i = 0; i < soMoc; i++) {
+                nro.repository.dao.DapSaibamanDAO.Moc mc = ds.get(i);
+                msg.writer().writeInt(mc.diem);
+                int soQua = Math.min(mc.qua.size(), 10);
+                msg.writer().writeByte(soQua);
+                for (int k = 0; k < soQua; k++) {
+                    nro.repository.dao.DapSaibamanDAO.Qua q = mc.qua.get(k);
+                    int sl = q.soLuong;
+                    if (q.itemId == KhoVang.ID_THOI_VANG) {
+                        // Hien dung so se nhan: tran thoi vang ap ca o day.
+                        sl = (int) Math.min(sl, tranThoi);
+                    }
+                    sbGhiQua(msg, q.itemId, sl);
+                }
+            }
+            pl.sendMessage(msg);
+        } catch (Exception e) {
+            Logger.logException(MiniGameService.class, e);
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
+    }
+
+    /** Lịch trồi của ván vừa mở, kèm số thỏi sau khi trừ vé. */
+    public void sbGuiVanMoi(Player pl, DapSaibamanManager.Van v, int vanThu) {
+        if (pl == null) {
+            return;
+        }
+        Message msg = null;
+        try {
+            msg = new Message(MA_GOI);
+            msg.writer().writeByte(TRO_DAP_SAIBAMAN);
+            msg.writer().writeByte(XUONG_SB_VAN_MOI);
+            msg.writer().writeInt(DapSaibamanManager.giay());
+            msg.writer().writeInt(vanThu);
+            msg.writer().writeShort(v.t.length);
+            for (int i = 0; i < v.t.length; i++) {
+                msg.writer().writeInt(v.t[i]);
+                msg.writer().writeShort(v.song[i]);
+                msg.writer().writeByte(v.ho[i]);
+                msg.writer().writeByte(v.loai[i]);
+            }
+            msg.writer().writeLong(KhoVang.dem(pl, true));
+            msg.writer().writeLong(KhoVang.dem(pl, false));
+            pl.sendMessage(msg);
+        } catch (Exception e) {
+            Logger.logException(MiniGameService.class, e);
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
+    }
+
+    /**
+     * Kết quả ván: điểm <b>máy chủ tính</b>, mốc đạt, quà đã phát.
+     *
+     * @param chiMoc thứ tự mốc trong bảng, -1 là chưa tới mốc nào
+     */
+    public void sbGuiKetQua(Player pl, int diem, int chiMoc, List<int[]> qua) {
+        if (pl == null) {
+            return;
+        }
+        Message msg = null;
+        try {
+            msg = new Message(MA_GOI);
+            msg.writer().writeByte(TRO_DAP_SAIBAMAN);
+            msg.writer().writeByte(XUONG_KET_QUA);
+            msg.writer().writeInt(diem);
+            msg.writer().writeByte(chiMoc);
+            msg.writer().writeByte(qua.size());
+            for (int[] q : qua) {
+                sbGhiQua(msg, q[0], q[1]);
+            }
+            msg.writer().writeLong(KhoVang.dem(pl, true));
+            msg.writer().writeLong(KhoVang.dem(pl, false));
+            pl.sendMessage(msg);
+        } catch (Exception e) {
+            Logger.logException(MiniGameService.class, e);
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
+    }
+
+    /** Lịch sử của tôi / bảng xếp hạng hôm nay, đọc trên luồng riêng. */
+    private void sbDocRoiGui(Player pl, boolean cuaToi) {
+        Thread t = new Thread(() -> {
+            Message msg = null;
+            try {
+                List<nro.repository.dao.DapSaibamanDAO.Dong> ds = cuaToi
+                        ? nro.repository.dao.DapSaibamanDAO.lichSuCuaToi(pl.id)
+                        : nro.repository.dao.DapSaibamanDAO.topHomNay();
+                msg = new Message(MA_GOI);
+                msg.writer().writeByte(TRO_DAP_SAIBAMAN);
+                msg.writer().writeByte(cuaToi ? XUONG_LS_TOI : XUONG_SB_TOP);
+                msg.writer().writeByte(ds.size());
+                for (nro.repository.dao.DapSaibamanDAO.Dong d : ds) {
+                    msg.writer().writeLong(d.van);
+                    msg.writer().writeUTF(d.ten == null ? "" : d.ten);
+                    msg.writer().writeInt(d.diem);
+                    msg.writer().writeInt(d.moc);
+                    msg.writer().writeLong(d.thoi);
+                    msg.writer().writeLong(d.luc);
+                }
+                pl.sendMessage(msg);
+            } catch (Exception e) {
+                Logger.logException(MiniGameService.class, e);
+            } finally {
+                if (msg != null) {
+                    msg.cleanup();
+                }
+            }
+        }, "Dap Saibaman doc lich su");
+        t.setDaemon(true);
+        t.start();
     }
 }

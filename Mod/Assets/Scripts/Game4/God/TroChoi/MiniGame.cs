@@ -44,7 +44,8 @@ namespace Game4.God
         public const sbyte TRO_DAO_VANG = 3;
         public const sbyte TRO_CAO_THAP = 4;
         public const sbyte TRO_CAU_CA = 5;
-        public const int SO_TRO = 6;
+        public const sbyte TRO_DAP_SAIBAMAN = 6;
+        public const int SO_TRO = 7;
 
         // ---- việc, chiều lên ----
         public const sbyte LEN_MO_BANG = 0;
@@ -160,6 +161,88 @@ namespace Game4.God
         public int ccRongVung = 26;
         public int ccTienTrinhDau = 30;
         public int ccThuongCan;
+
+        // ---- Đập Saibaman ----
+        //
+        // Mọi con số (vé, lượt, điểm, mốc quà) đều do máy chủ gửi xuống từ DB.
+        public int sbVe = 2;
+        public int sbDaChoi;
+        public int sbLuotNgay = 20;
+        public int sbGiay = 30;
+        public int sbDiemThuong = 10;
+        public int sbDiemVang = 30;
+        public int sbDiemBulma = -30;
+
+        public class SbQua
+        {
+            public int itemId;
+            public int icon;
+            public int soLuong;
+            public string ten;
+        }
+
+        public class SbMoc
+        {
+            public int diem;
+            public readonly List<SbQua> qua = new List<SbQua>();
+        }
+
+        public readonly List<SbMoc> sbMoc = new List<SbMoc>();
+
+        /// <summary>Đang có ván (đã nhận lịch trồi, chưa báo kết quả).</summary>
+        public bool sbDangChoi;
+        /// <summary>Đã báo kết quả, đang chờ máy chủ chấm.</summary>
+        public bool sbChoKetQua;
+        public long sbMocBaoKetQua;
+        public long sbMocBatDau;
+        public int sbDaiMs = 30000;
+        public int[] sbT = new int[0];
+        public int[] sbSong = new int[0];
+        public int[] sbHo = new int[0];
+        public int[] sbLoai = new int[0];
+        /// <summary>Mili giây đập trúng của từng con, -1 là chưa đập.</summary>
+        public int[] sbLucDap = new int[0];
+
+        public bool sbCoKetQua;
+        public int sbDiemKQ;
+        public int sbMocKQ = -1;
+        public readonly List<SbQua> sbQuaKQ = new List<SbQua>();
+        public long sbMocKetQua;
+
+        public class SbDong
+        {
+            public long van;
+            public string ten;
+            public int diem;
+            public int moc;
+            public long thoi;
+            public long luc;
+        }
+
+        public readonly List<SbDong> sbLsToi = new List<SbDong>();
+        public readonly List<SbDong> sbTop = new List<SbDong>();
+
+        /// <summary>Điểm của một loại con.</summary>
+        public int sbDiemLoai(int loai)
+        {
+            return loai == 1 ? sbDiemVang : (loai == 2 ? sbDiemBulma : sbDiemThuong);
+        }
+
+        /// <summary>Điểm tạm của ván đang chơi, tính tại máy chỉ để hiện.</summary>
+        /// <remarks>Máy chủ chấm lại từ đầu theo lịch của nó; con số này chỉ để
+        /// người chơi thấy điểm nhảy lúc đập.</remarks>
+        public int sbDiemTam()
+        {
+            int d = 0;
+            for (int i = 0; i < sbLucDap.Length && i < sbLoai.Length; i++)
+            {
+                if (sbLucDap[i] >= 0)
+                {
+                    d += sbDiemLoai(sbLoai[i]);
+                }
+            }
+            return d < 0 ? 0 : d;
+        }
 
         // ---- lịch sử chung, dùng lại cho mọi trò ----
         public class DongLsToi
@@ -371,6 +454,59 @@ namespace Game4.God
             gui(TRO_CAU_CA, LEN_HANH_DONG, new byte[] { 0, (byte) tam });
         }
 
+        /// <summary>Đập Saibaman: mua vé vào ván mới (byte việc con 0).</summary>
+        public void sbBatDau()
+        {
+            gui(TRO_DAP_SAIBAMAN, LEN_HANH_DONG, new byte[] { 0 });
+        }
+
+        /// <summary>
+        /// Đập Saibaman: báo các cú đập trúng (byte việc con 1).
+        /// </summary>
+        /// <remarks>
+        /// Chỉ gửi <b>con số mấy, mili giây thứ mấy</b> — không gửi điểm. Máy chủ
+        /// soát từng cú theo lịch của nó rồi tự chấm.
+        /// </remarks>
+        public void sbBaoKetQua()
+        {
+            Message message = null;
+            try
+            {
+                int n = 0;
+                for (int i = 0; i < sbLucDap.Length; i++)
+                {
+                    if (sbLucDap[i] >= 0)
+                    {
+                        n++;
+                    }
+                }
+                message = new Message(MA_GOI);
+                message.writer().writeByte(TRO_DAP_SAIBAMAN);
+                message.writer().writeByte(LEN_HANH_DONG);
+                message.writer().writeByte(1);
+                message.writer().writeShort((short) n);
+                for (int i = 0; i < sbLucDap.Length; i++)
+                {
+                    if (sbLucDap[i] >= 0)
+                    {
+                        message.writer().writeShort((short) i);
+                        message.writer().writeInt(sbLucDap[i]);
+                    }
+                }
+                Session_ME.gI().sendMessage(message);
+            }
+            catch (System.Exception)
+            {
+            }
+            finally
+            {
+                if (message != null)
+                {
+                    message.cleanup();
+                }
+            }
+        }
+
         /// <summary>Báo kết quả vật lộn. Byte việc con 1.</summary>
         /// <remarks>
         /// Máy chủ <b>xét lại</b> báo cáo này: nó biết con nào đang treo và biết
@@ -419,6 +555,9 @@ namespace Game4.God
                         break;
                     case TRO_CAU_CA:
                         docCauCa(msg, viec);
+                        break;
+                    case TRO_DAP_SAIBAMAN:
+                        docSaibaman(msg, viec);
                         break;
                 }
             }
@@ -703,6 +842,135 @@ namespace Game4.God
             else
             {
                 docLichSuChung(msg, viec);
+            }
+        }
+
+        private static SbQua docQua(Message msg)
+        {
+            SbQua q = new SbQua();
+            q.itemId = msg.reader().readShort();
+            q.icon = msg.reader().readShort();
+            q.soLuong = msg.reader().readInt();
+            q.ten = msg.reader().readUTF();
+            return q;
+        }
+
+        private static List<SbDong> docDongSb(Message msg)
+        {
+            List<SbDong> ds = new List<SbDong>();
+            int n = msg.reader().readUnsignedByte();
+            for (int i = 0; i < n; i++)
+            {
+                SbDong d = new SbDong();
+                d.van = msg.reader().readLong();
+                d.ten = msg.reader().readUTF();
+                d.diem = msg.reader().readInt();
+                d.moc = msg.reader().readInt();
+                d.thoi = msg.reader().readLong();
+                d.luc = msg.reader().readLong();
+                ds.Add(d);
+            }
+            return ds;
+        }
+
+        private void docSaibaman(Message msg, int viec)
+        {
+            if (viec == 0)
+            {
+                sbVe = msg.reader().readInt();
+                sbDaChoi = msg.reader().readInt();
+                sbLuotNgay = msg.reader().readInt();
+                sbGiay = msg.reader().readInt();
+                sbDiemThuong = msg.reader().readShort();
+                sbDiemVang = msg.reader().readShort();
+                sbDiemBulma = msg.reader().readShort();
+                thoiKhoa = msg.reader().readLong();
+                thoiThuong = msg.reader().readLong();
+                int soMoc = msg.reader().readUnsignedByte();
+                List<SbMoc> ds = new List<SbMoc>();
+                for (int i = 0; i < soMoc; i++)
+                {
+                    SbMoc mc = new SbMoc();
+                    mc.diem = msg.reader().readInt();
+                    int soQua = msg.reader().readUnsignedByte();
+                    for (int k = 0; k < soQua; k++)
+                    {
+                        mc.qua.Add(docQua(msg));
+                    }
+                    ds.Add(mc);
+                }
+                sbMoc.Clear();
+                sbMoc.AddRange(ds);
+            }
+            else if (viec == 5)
+            {
+                int giay = msg.reader().readInt();
+                int vanThu = msg.reader().readInt();
+                int n = msg.reader().readShort();
+                int[] t = new int[n];
+                int[] song = new int[n];
+                int[] ho = new int[n];
+                int[] loai = new int[n];
+                for (int i = 0; i < n; i++)
+                {
+                    t[i] = msg.reader().readInt();
+                    song[i] = msg.reader().readShort();
+                    ho[i] = msg.reader().readByte();
+                    loai[i] = msg.reader().readByte();
+                }
+                thoiKhoa = msg.reader().readLong();
+                thoiThuong = msg.reader().readLong();
+                // Doc HET goi roi moi doi trang thai.
+                sbGiay = giay;
+                sbDaiMs = giay * 1000;
+                sbDaChoi = vanThu;
+                sbT = t;
+                sbSong = song;
+                sbHo = ho;
+                sbLoai = loai;
+                sbLucDap = new int[n];
+                for (int i = 0; i < n; i++)
+                {
+                    sbLucDap[i] = -1;
+                }
+                sbCoKetQua = false;
+                sbChoKetQua = false;
+                sbDangChoi = true;
+                sbMocBatDau = mSystem.currentTimeMillis();
+                TroChoiUI.getInstance().sbVanMoi();
+            }
+            else if (viec == 2)
+            {
+                int diem = msg.reader().readInt();
+                int moc = msg.reader().readByte();
+                int n = msg.reader().readUnsignedByte();
+                List<SbQua> qua = new List<SbQua>();
+                for (int i = 0; i < n; i++)
+                {
+                    qua.Add(docQua(msg));
+                }
+                thoiKhoa = msg.reader().readLong();
+                thoiThuong = msg.reader().readLong();
+                sbDiemKQ = diem;
+                sbMocKQ = moc;
+                sbQuaKQ.Clear();
+                sbQuaKQ.AddRange(qua);
+                sbCoKetQua = true;
+                sbChoKetQua = false;
+                sbDangChoi = false;
+                sbMocKetQua = mSystem.currentTimeMillis();
+            }
+            else if (viec == 3)
+            {
+                List<SbDong> ds = docDongSb(msg);
+                sbLsToi.Clear();
+                sbLsToi.AddRange(ds);
+            }
+            else if (viec == 6)
+            {
+                List<SbDong> ds = docDongSb(msg);
+                sbTop.Clear();
+                sbTop.AddRange(ds);
             }
         }
     }

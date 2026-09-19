@@ -330,6 +330,7 @@ public class Client implements Runnable {
             nro.gameplay.minigame.DaoVangManager.gI().nguoiChoiRoiGame(player);
             nro.gameplay.minigame.CaoThapManager.gI().nguoiChoiRoiGame(player);
             nro.gameplay.minigame.CauCaManager.gI().nguoiChoiRoiGame(player);
+            nro.gameplay.minigame.DapSaibamanManager.gI().nguoiChoiRoiGame(player);
         } catch (Exception e) {
             nro.core.log.Logger.logException(Client.class, e);
         }
