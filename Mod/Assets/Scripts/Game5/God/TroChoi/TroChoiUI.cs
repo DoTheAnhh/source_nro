@@ -937,53 +937,11 @@ namespace Game5.God
             return y0 + cao - LE - yNoiDung();
         }
 
-        /// <summary>Đỉnh của hàng đĩa và hai ô cửa (dưới hàng thông tin).</summary>
-        private int yBan()
-        {
-            return yNoiDung() + 22;
-        }
-
-        /// <summary>Thẻ cửa Tài (trái) hoặc Xỉu (phải), cao bằng cái đĩa.</summary>
-        private int[] oCua(bool tai)
-        {
-            int rongO = (rong - LE * 2 - coDia() - 28) / 2;
-            int x = tai ? x0 + LE : x0 + rong - LE - rongO;
-            return new int[] { x, yBan(), rongO, coDia() };
-        }
-
         /// <summary>Bề ngang nút HUỶ — chỉ ba chữ nên không cần rộng.</summary>
         private const int RONG_NUT_HUY = 44;
 
         /// <summary>Chiều cao hàng nút trong ô cửa.</summary>
         private const int CAO_NUT_CUA = 22;
-
-        /// <summary>Nút đặt — neo ở đáy thẻ cửa, cùng hàng với nút Huỷ.</summary>
-        private int[] oNutDat(bool tai)
-        {
-            int[] o = oCua(tai);
-            return new int[] {
-                o[0] + 10, o[1] + o[3] - CAO_NUT_CUA - 10,
-                o[2] - 20 - RONG_NUT_HUY - 6, CAO_NUT_CUA };
-        }
-
-        private int[] oNutHuy(bool tai)
-        {
-            int[] o = oCua(tai);
-            return new int[] {
-                o[0] + o[2] - 10 - RONG_NUT_HUY, o[1] + o[3] - CAO_NUT_CUA - 10,
-                RONG_NUT_HUY, CAO_NUT_CUA };
-        }
-
-        /// <summary>Chip số tiền thứ <paramref name="i"/> ở hàng dưới cùng.</summary>
-        private int[] oMuc(int i)
-        {
-            int soNut = MUC.Length + 2;
-            int rongNut = (rong - LE * 2 - 6 * (soNut - 1)) / soNut;
-            return new int[] {
-                x0 + LE + i * (rongNut + 6),
-                yBan() + coDia() + 8,
-                rongNut, 24 };
-        }
 
         // ------------------------------------------------------------------
         //  Vẽ
@@ -3511,31 +3469,6 @@ namespace Game5.God
         // ------------------------------------------------------------------
         //  Thẻ Tài Xỉu
         // ------------------------------------------------------------------
-        private void veTaiXiu(mGraphics g)
-        {
-            int y = yNoiDung();
-            // Hang thong tin: so phien | trang thai | cau gan day.
-            mFont.tahoma_7_grey.drawString(g, "Phiên", x0 + LE, y + 2, mFont.LEFT);
-            mFont.tahoma_7b_dark.drawString(g, "#" + phien,
-                    x0 + LE + mFont.tahoma_7_grey.getWidth("Phiên") + 4, y + 2, mFont.LEFT);
-            veDongHo(g, x0 + rong / 2, y);
-            veDaiLichSu(g, x0 + rong - LE, y);
-
-            veCua(g, true);
-            veCua(g, false);
-            veSanXucXac(g, x0 + rong / 2, yBan());
-
-            // Chip chi bam duoc khi da chon cua: chua chon thi ca hang nhat di,
-            // chinh no noi "chon cua truoc".
-            bool bamDuoc = choDatCuoc() && cuaChon >= 0;
-            for (int i = 0; i < MUC.Length + 2; i++)
-            {
-                string chu = i < MUC.Length ? "+" + MUC[i]
-                        : (i == MUC.Length ? "Tất tay" : "Nhập số");
-                veChip(g, oMuc(i), chu, bamDuoc);
-            }
-        }
-
         /// <summary>Đồng hồ đếm ngược, nhấp nháy khi sắp hết giờ.</summary>
         private void veDongHo(mGraphics g, int giua, int y)
         {
@@ -3571,18 +3504,6 @@ namespace Game5.God
             int w = 164;
             int x = giua - w / 2;
             veTheDem(g, x, y, w, nhan, mau);
-
-            // Vach tien do mong ngay duoi, doc bang liec mat.
-            int dai = DAI_PHA[pha < 0 || pha > 2 ? 0 : pha];
-            float con = dai <= 0 ? 0f : (float) giay / dai;
-            if (con > 1f)
-            {
-                con = 1f;
-            }
-            g.setColor(MAU_LOM, 1f);
-            g.fillRect(x + 8, y + 18, w - 16, 2, 1);
-            g.setColor(MAU_CHON, 1f);
-            g.fillRect(x + 8, y + 18, (int) ((w - 16) * con), 2, 1);
         }
 
         private int tongXucXac()
@@ -3620,139 +3541,6 @@ namespace Game5.God
             return t < chuKy ? (float) t / chuKy : 1f - (float) (t - chuKy) / chuKy;
         }
 
-        private void veCua(mGraphics g, bool tai)
-        {
-            int[] o = oCua(tai);
-            int mau = tai ? MAU_TAI_SANG : MAU_XIU_SANG;
-            bool daDatCuaNay = daDatVanNay() && (cuaCuaToi == CUA_TAI) == tai;
-            bool laCuaChon = cuaChon >= 0 && (cuaChon == CUA_TAI) == tai;
-            bool biet = daBietKetQua() && ketQuaVan >= 0;
-            bool thang = biet && (ketQuaVan == CUA_TAI) == tai;
-            bool thua = biet && !thang;
-            bool noiBat = laCuaChon || daDatCuaNay || thang;
-
-            // The: bong manh, vien (day hon va mang mau cua khi duoc chon /
-            // thang), than giay. Mau cua chi phu mot lop rat nhat len than.
-            g.setColor(0x000000, 0.10f);
-            g.fillRect(o[0], o[1] + 2, o[2], o[3], BO_GOC + 1);
-            if (noiBat)
-            {
-                g.setColor(mau, 1f);
-                g.fillRect(o[0] - 1, o[1] - 1, o[2] + 2, o[3] + 2, BO_GOC + 2);
-                g.setColor(MAU_THE, 1f);
-                g.fillRect(o[0] + 1, o[1] + 1, o[2] - 2, o[3] - 2, BO_GOC);
-                g.setColor(mau, thang ? 0.13f : 0.06f);
-                g.fillRect(o[0] + 1, o[1] + 1, o[2] - 2, o[3] - 2, BO_GOC);
-            }
-            else
-            {
-                g.setColor(MAU_VIEN, 0.55f);
-                g.fillRect(o[0], o[1], o[2], o[3], BO_GOC + 1);
-                g.setColor(MAU_THE, 1f);
-                g.fillRect(o[0] + 1, o[1] + 1, o[2] - 2, o[3] - 2, BO_GOC);
-            }
-            // Dai mau cua tren dinh the — danh tinh cua o, doc duoc tu xa.
-            g.setClip(o[0] + 1, o[1] + 1, o[2] - 2, 4);
-            g.setColor(mau, 1f);
-            g.fillRect(o[0] + 1, o[1] + 1, o[2] - 2, 12, BO_GOC);
-            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-
-            int giua = o[0] + o[2] / 2;
-            bool rongRai = o[3] >= 128;
-            int yTen = o[1] + 11;
-            (tai ? mFont.tahoma_7b_blue : mFont.tahoma_7b_red).drawString(g,
-                    tai ? "TÀI" : "XỈU", giua, yTen, mFont.CENTER);
-            int yTong = yTen + 16;
-            if (rongRai)
-            {
-                mFont.tahoma_7_grey.drawString(g, tai ? "Tổng 11 - 18" : "Tổng 3 - 10",
-                        giua, yTen + 12, mFont.CENTER);
-                yTong = yTen + 30;
-            }
-            if (thang)
-            {
-                // Nhan THANG goc phai tren.
-                int rb = mFont.tahoma_7b_white.getWidth("THẮNG") + 12;
-                g.setColor(mau, 1f);
-                g.fillRect(o[0] + o[2] - rb - 8, o[1] + 10, rb, 14, 7);
-                mFont.tahoma_7b_white.drawString(g, "THẮNG", o[0] + o[2] - 8 - rb / 2,
-                        o[1] + 11, mFont.CENTER);
-            }
-
-            // Tong cuoc cua cua: ranh chim, icon + so can giua ca cum.
-            int wTam = o[2] - 20;
-            g.setColor(MAU_LOM, 1f);
-            g.fillRect(o[0] + 10, yTong, wTam, 20, 5);
-            string soTien = dvSo(tai ? tongTai : tongXiu);
-            int wSo = mFont.tahoma_7b_dark.getWidth(soTien);
-            int wCum = 16 + 4 + wSo;
-            int xCum = giua - wCum / 2;
-            SmallImage.drawSmallImage(g, ICON_THOI_VANG, xCum + 8, yTong + 10, 0,
-                    mGraphics.VCENTER | mGraphics.HCENTER);
-            mFont.tahoma_7b_dark.drawString(g, soTien, xCum + 20, yTong + 4, mFont.LEFT);
-
-            // Dong cua nguoi choi — chi khi con cho.
-            string dong = null;
-            mFont fDong = mFont.tahoma_7_grey;
-            if (daDatCuaNay)
-            {
-                dong = "Bạn đã đặt " + dvSo(soThoiCuaToi);
-                fDong = mFont.tahoma_7b_green;
-            }
-            else if (laCuaChon && choDatCuoc())
-            {
-                dong = tienCho > 0 ? "Đang chọn " + dvSo(tienCho) : "Chọn số thỏi bên dưới";
-                fDong = tienCho > 0 ? mFont.tahoma_7b_dark : mFont.tahoma_7_grey;
-            }
-            else if (choDatCuoc() && !daDatVanNay())
-            {
-                dong = "Chạm để chọn cửa";
-            }
-            int dinhNut = oNutDat(tai)[1];
-            if (dong != null && dinhNut - (yTong + 20) >= 14)
-            {
-                fDong.drawString(g, dong, giua, (yTong + 20 + dinhNut) / 2 - 6, mFont.CENTER);
-            }
-
-            veNutXacNhan(g, tai, laCuaChon);
-            veNutHuy(g, tai, laCuaChon);
-
-            if (thua)
-            {
-                // Cua thua lui ve sau: mot lop giay mo phu len.
-                g.setColor(MAU_NEN, 0.5f);
-                g.fillRect(o[0], o[1], o[2], o[3], BO_GOC + 1);
-            }
-        }
-
-        /// <summary>
-        /// Nút XÁC NHẬN của một cửa — bấm là gói tin rời máy.
-        /// </summary>
-        /// <remarks>
-        /// Chỉ sáng khi cửa này đang được chọn <b>và</b> đã gom được số dương.
-        /// Xác nhận một số 0 thì máy chủ cũng bỏ qua, nhưng để nút sáng lên rồi
-        /// bấm không thấy gì xảy ra là kiểu hỏng khó chịu nhất.
-        /// </remarks>
-        private void veNutXacNhan(mGraphics g, bool tai, bool laCuaChon)
-        {
-            int[] n = oNutDat(tai);
-            bool bamDuoc = choDatCuoc() && laCuaChon && tienCho > 0;
-            string nhan;
-            if (daDatVanNay())
-            {
-                nhan = "ĐÃ CHỐT";
-            }
-            else if (pha != PHA_DAT_CUOC)
-            {
-                nhan = "CHỜ VÁN SAU";
-            }
-            else
-            {
-                nhan = bamDuoc ? "ĐẶT " + dvSo(tienCho) : "ĐẶT CƯỢC";
-            }
-            veNutChinh(g, n, nhan, bamDuoc, tai ? MAU_TAI_SANG : MAU_XIU_SANG);
-        }
-
         /// <summary>
         /// Nền một nút trong ô cửa.
         /// </summary>
@@ -3767,21 +3555,6 @@ namespace Game5.God
             veNutChinh(g, n, string.Empty, bat, mau);
         }
 
-        /// <summary>
-        /// Nút HUỶ của một cửa — xoá số đang gom.
-        /// </summary>
-        /// <remarks>
-        /// Chỉ dùng được <b>trước khi xác nhận</b>. Xác nhận rồi thì tiền đã ra
-        /// khỏi hành trang và nằm trong ván đang chạy; huỷ được lúc đó thì
-        /// người ta chỉ việc chờ tới lúc gần mở bát rồi rút cược nào đang thua.
-        /// </remarks>
-        private void veNutHuy(mGraphics g, bool tai, bool laCuaChon)
-        {
-            int[] n = oNutHuy(tai);
-            bool bamDuoc = choDatCuoc() && laCuaChon && tienCho > 0;
-            veNutPhu(g, n, "Huỷ", bamDuoc);
-        }
-
         // ------------------------------------------------------------------
         //  Đĩa và bát — góc nhìn từ trên xuống
         // ------------------------------------------------------------------
@@ -3791,34 +3564,6 @@ namespace Game5.God
 
         /// <summary>Đĩa nhỏ hơn mức này thì ba con xúc xắc chồng lên nhau.</summary>
         private const int CO_DIA_TOI_THIEU = 84;
-
-        /// <summary>
-        /// Đường kính cái đĩa — <b>co lại khi bảng không đủ cao</b>.
-        /// </summary>
-        /// <remarks>
-        /// <para>Mọi thứ trong thẻ Tài Xỉu xếp từ trên xuống theo con số cố định:
-        /// đĩa 150, rồi 38 điểm tới dòng cược, rồi 18 nữa tới dải lịch sử. Cộng
-        /// lại vừa khít chiều cao tối đa 330 của bảng — nên cửa sổ thấp hơn một
-        /// chút là phần đuôi tụt hẳn ra ngoài đáy bảng và bị cắt.</para>
-        ///
-        /// <para>Tính ngược từ chỗ trống thật thì đĩa tự nhỏ lại và cả cái đuôi
-        /// luôn nằm trong bảng, dù cửa sổ cao bao nhiêu.</para>
-        /// </remarks>
-        private int coDia()
-        {
-            // Tru het nhung gi co dinh quanh cai dia: hang thong tin 22 o tren,
-            // 8 diem khe va hang chip cao 24 o duoi.
-            int con = (y0 + cao - LE) - yNoiDung() - 22 - 8 - 24;
-            if (con > CO_DIA_TOI_DA)
-            {
-                con = CO_DIA_TOI_DA;
-            }
-            if (con < CO_DIA_TOI_THIEU)
-            {
-                con = CO_DIA_TOI_THIEU;
-            }
-            return con;
-        }
 
         /// <summary>
         /// Đường kính cái bát úp trên đĩa — <b>luôn nhỏ hơn đĩa một vành</b>.
@@ -3988,70 +3733,6 @@ namespace Game5.God
             g.fillRect(tamX - co / 2, tamY - co / 2, co, co, co / 2);
         }
 
-        /// <summary>Tâm đĩa trên màn hình.</summary>
-        private int tamDiaX()
-        {
-            return x0 + rong / 2;
-        }
-
-        private int tamDiaY(int yKhung)
-        {
-            return yKhung + coDia() / 2;
-        }
-
-        /// <summary>
-        /// Đĩa nhìn từ trên xuống, ba con xúc xắc, và cái bát úp lên.
-        /// </summary>
-        /// <remarks>
-        /// <para><b>Thứ tự vẽ là đĩa → xúc xắc → bát.</b> Bát vẽ sau cùng nên nó
-        /// che xúc xắc; nặn bát lệch sang bên nào thì hở ra bên đó.</para>
-        ///
-        /// <para>Vùng vẽ cắt theo <b>ô vuông ngoại tiếp đĩa</b> chứ không cắt
-        /// tròn — <c>setClip</c> chỉ nhận hình chữ nhật. Không sao vì đĩa và bát
-        /// đều nằm gọn trong ô đó; cắt chỉ để xúc xắc không văng ra ngoài.</para>
-        /// </remarks>
-        private void veSanXucXac(mGraphics g, int giua, int y)
-        {
-            capNhatNan();
-
-            int tx = tamDiaX();
-            int ty = tamDiaY(y);
-
-            veDia(g, tx, ty);
-
-            g.setClip(tx - coDia() / 2, ty - coDia() / 2, coDia(), coDia());
-            veBaXucXac(g, tx, ty);
-            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-
-            veCaiBat(g, tx, ty);
-
-            // Hat sang bung ra dung luc bat vua bat khoi dia.
-            if (daMoHan)
-            {
-                long troiMo = mSystem.currentTimeMillis() - mocMoHan;
-                if (troiMo < 700)
-                {
-                    veHatSang(g, tx, ty, 10, coDia() / 2 + 16, MAU_VANG,
-                            0.9f * (1f - troiMo / 700f), 700);
-                }
-            }
-
-            if (daBietKetQua())
-            {
-                long troi = mSystem.currentTimeMillis() - mocBietKetQua();
-                if (troi >= 0 && troi < 450)
-                {
-                    veTron(g, tx, ty, coDia(), 0xFFFFFF, 0.5f * (1f - troi / 450f));
-                }
-                int wT = 74;
-                g.setColor(0x000000, 0.55f);
-                g.fillRect(tx - wT / 2, ty + coDia() / 2 - 20, wT, 16, 8);
-                mFont.tahoma_7b_yellow.drawString(g, "Tổng " + tongXucXac(), tx,
-                        ty + coDia() / 2 - 17, mFont.CENTER);
-            }
-
-        }
-
         /// <summary>
         /// Đĩa gỗ nhìn từ trên: các vòng đồng tâm, vành có khía, lòng lõm.
         /// </summary>
@@ -4083,125 +3764,6 @@ namespace Game5.God
             veTron(g, tx, ty - 2, coDia() - 22, 0x000000, 0.22f);
             veTron(g, tx, ty + 3, coDia() - 26, 0xFFFFFF, 0.05f);
             veTron(g, tx - 9, ty - 10, coDia() - 44, 0xFFFFFF, 0.045f);
-        }
-
-        private void veBaXucXac(mGraphics g, int tx, int ty)
-        {
-            int banKinh = banKinhXucXac();
-            int canh = canhXX();
-            // Ba dinh tam giac: mot tren, hai duoi.
-            xDinh[0] = tx;
-            yDinh[0] = ty - banKinh + 2;
-            xDinh[1] = tx - banKinh - 1;
-            yDinh[1] = ty + banKinh - canh / 4;
-            xDinh[2] = tx + banKinh + 1;
-            yDinh[2] = ty + banKinh - canh / 4;
-
-            bool rung = pha == PHA_LAC && !choNan();
-            for (int i = 0; i < 3; i++)
-            {
-                int dx = 0;
-                int dy = 0;
-                int mat = xucXac[i];
-                if (mat < 1 || mat > 6)
-                {
-                    mat = 1;
-                }
-                if (rung)
-                {
-                    // Bat con up kin nen chang ai thay mat nao — doi mat lien tuc
-                    // va nay quanh cho, lech pha ba con cho khoi nhu mot khoi.
-                    long t = mSystem.currentTimeMillis();
-                    mat = (int) (((t / 70) + i * 3) % 6) + 1;
-                    dx = (int) ((nhip(250 + i * 40) - 0.5f) * 13);
-                    dy = (int) ((nhip(180 + i * 55) - 0.5f) * 13);
-
-                    // Hai bong mo o vi tri vai phan nghin giay TRUOC: mat ghep
-                    // lai thanh vet nhoe, ra cam giac dang van that nhanh.
-                    for (int b = 1; b <= 2; b++)
-                    {
-                        int bx = (int) ((nhipLui(250 + i * 40, b * 55) - 0.5f) * 13);
-                        int by = (int) ((nhipLui(180 + i * 55, b * 55) - 0.5f) * 13);
-                        veBongXucXac(g, xDinh[i] - canh / 2 + bx,
-                                yDinh[i] - canh / 2 + by, canh, 0.20f / b);
-                    }
-                }
-                veMotXucXac(g, xDinh[i] - canh / 2 + dx,
-                        yDinh[i] - canh / 2 + dy, canh, mat, rung);
-            }
-        }
-
-        /// <summary>
-        /// Cái bát úp nhìn từ trên xuống.
-        /// </summary>
-        /// <remarks>
-        /// Nhìn từ trên thì bát là một khối vòm tròn: vành ngoài tối, càng vào
-        /// giữa càng sáng, cộng một vệt sáng lệch và cái núm ở đỉnh. Bốn vòng
-        /// tròn đồng tâm là đủ để mắt đọc ra khối cầu.
-        /// </remarks>
-        private void veCaiBat(mGraphics g, int txDia, int tyDia)
-        {
-            if (pha == PHA_KET_QUA)
-            {
-                return;
-            }
-            float ro = doRoCuaBat();
-            if (ro <= 0f)
-            {
-                return;
-            }
-
-            int tx = txDia + (int) nanX;
-            int ty = tyDia + (int) nanY;
-
-            // Rung khi con up kin.
-            if (pha == PHA_LAC && !choNan())
-            {
-                tx += (int) ((nhip(105) - 0.5f) * 8);
-                ty += (int) ((nhip(85) - 0.5f) * 8);
-            }
-
-            // Da bo bong do den duoi cai bat.
-            //
-            // Bat gio gan bang ca cai dia, nen vong bong lech ra khong con roi
-            // len mat dia nua ma tho han ra ngoai vanh vang — doc ra thanh mot
-            // vien den bao quanh, chu khong ra bong.
-
-            // Vom bat: cang vao giua cang sang, bon vong la du de mat doc ra
-            // khoi cau. Vanh ngoai cung mau vang lam nep.
-            veTron(g, tx, ty, coBat(), MAU_VANG, 0.75f * ro);
-            veTron(g, tx, ty, coBat() - 3, rgb(0x5E, 0x37, 0x18), ro);
-            veTron(g, tx, ty, coBat() - 9, rgb(0x8E, 0x58, 0x28), ro);
-            veTron(g, tx, ty, coBat() - 28, rgb(0xA8, 0x6C, 0x33), ro);
-            veTron(g, tx, ty, coBat() - 54, rgb(0xBE, 0x7E, 0x3E), ro);
-
-            // Vet men bong lech len goc trai — mat can mot huong sang de doc
-            // ra khoi tron, du dang nhin tu tren xuong.
-            veTron(g, tx - coBat() / 5, ty - coBat() / 5, coBat() / 3, 0xFFFFFF, 0.16f * ro);
-
-            // Num o dinh bat.
-            veTron(g, tx, ty, 15, 0x000000, 0.18f * ro);
-            veTron(g, tx, ty, 13, rgb(0xD8, 0x9B, 0x4E), ro);
-            veTron(g, tx, ty, 6, MAU_VANG, 0.95f * ro);
-            veTron(g, tx - 2, ty - 2, 3, 0xFFFFFF, 0.7f * ro);
-
-            // Anh sang hat ra tu duoi vanh bat khi da nhac len khoi tam.
-            float xa = UnityEngine.Mathf.Sqrt(nanX * nanX + nanY * nanY);
-            if (xa > 4f)
-            {
-                float m = xa / NGUONG_MO;
-                if (m > 1f)
-                {
-                    m = 1f;
-                }
-                veTron(g, txDia, tyDia, coBat() + 16, MAU_VANG, 0.16f * m * ro);
-            }
-
-            if (choNan() && !daMoHan)
-            {
-                // Vong sang nhac rang cai bat nay keo duoc.
-                veVongNo(g, tx, ty, coBat() - 10, coBat() + 22, MAU_VANG, 1400);
-            }
         }
 
         /// <summary>Đã tới quãng cho người chơi nặn chưa.</summary>
@@ -4473,87 +4035,9 @@ namespace Game5.God
         /// </remarks>
         private const int LE_VIEN = 2;
 
-        /// <summary>
-        /// Cầu gần đây ở góc phải hàng thông tin — ván mới nhất nằm sát phải.
-        /// </summary>
-        private void veDaiLichSu(mGraphics g, int xPhai, int y)
-        {
-            int n = lichSuNhanh.Count;
-            if (n == 0)
-            {
-                return;
-            }
-            const int co = 12;
-            const int khe = 3;
-            // Khong lan sang vien trang thai o giua.
-            int trai = x0 + rong / 2 + 82 + 8;
-            int toiDa = (xPhai - trai) / (co + khe);
-            if (n > toiDa)
-            {
-                n = toiDa;
-            }
-            for (int i = 0; i < n; i++)
-            {
-                int xc = xPhai - co - i * (co + khe);
-                int yc = y + 2;
-                bool tai = lichSuNhanh[i] == CUA_TAI;
-                if (i == 0)
-                {
-                    g.setColor(MAU_TIEU_DE, 1f);
-                    g.fillRect(xc - 2, yc - 2, co + 4, co + 4, (co + 4) / 2);
-                }
-                g.setColor(tai ? MAU_TAI_SANG : MAU_XIU_SANG, 1f);
-                g.fillRect(xc, yc, co, co, co / 2);
-                mFont.tahoma_7b_white.drawString(g, tai ? "T" : "X", xc + co / 2, yc,
-                        mFont.CENTER);
-            }
-        }
-
         // ------------------------------------------------------------------
         //  Bảng báo thắng thua
         // ------------------------------------------------------------------
-        private void veBaoKetQua(mGraphics g)
-        {
-            int w = 220;
-            int h = 100;
-            int x = x0 + (rong - w) / 2;
-            int y = y0 + (cao - h) / 2;
-
-            g.setColor(MAU_TIEU_DE, 0.45f);
-            g.fillRect(x0 + 1, y0 + CAO_TIEU_DE, rong - 2, cao - CAO_TIEU_DE - 1, 7);
-
-            int mau = thangVanRoi ? MAU_XANH_LA : (hoanVanRoi ? MAU_VIEN : MAU_XIU_SANG);
-            veKhungKep(g, x, y, w, h, MAU_THE, MAU_VIEN, 0.7f);
-            g.setClip(x + 1, y + 1, w - 2, 4);
-            g.setColor(mau, 1f);
-            g.fillRect(x + 1, y + 1, w - 2, 12, BO_GOC);
-            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-
-            mFont.tahoma_7_grey.drawString(g, "Phiên #" + phienVanRoi, x + w / 2, y + 12,
-                    mFont.CENTER);
-            string tieuDe = thangVanRoi ? "Bạn thắng" : (hoanVanRoi ? "Hoàn tiền" : "Bạn thua");
-            (thangVanRoi ? mFont.tahoma_7b_green : (hoanVanRoi ? mFont.tahoma_7b_dark
-                    : mFont.tahoma_7b_red)).drawString(g, tieuDe, x + w / 2, y + 26, mFont.CENTER);
-
-            string so = (thangVanRoi ? "+" : (hoanVanRoi ? "" : "-")) + dvSo(tienVanRoi);
-            int wSo = mFont.tahoma_7b_dark.getWidth(so);
-            int xCum = x + w / 2 - (wSo + 20) / 2;
-            SmallImage.drawSmallImage(g, ICON_THOI_VANG, xCum + 8, y + 49, 0,
-                    mGraphics.VCENTER | mGraphics.HCENTER);
-            mFont.tahoma_7b_dark.drawString(g, so, xCum + 20, y + 43, mFont.LEFT);
-            if (thangVanRoi)
-            {
-                veHatSang(g, x + w / 2, y + 30, 8, 46, MAU_VANG, 0.6f, 1300);
-            }
-            else if (hoanVanRoi)
-            {
-                mFont.tahoma_7_grey.drawString(g, "Cửa bên kia không có ai đặt", x + w / 2,
-                        y + 58, mFont.CENTER);
-            }
-
-            veNutPhu(g, oNutDongBao(), "Đóng", true);
-        }
-
         private int[] oNutDongBao()
         {
             int w = 220;
@@ -5674,6 +5158,12 @@ namespace Game5.God
                     if (choDatCuoc() && laCuaChon && tienCho > 0)
                     {
                         Service.gI().taiXiuDatCuoc(cua, tienCho);
+                    }
+                    else if (choDatCuoc() && !laCuaChon)
+                    {
+                        // Nut tat trai ca hang o cua chua chon: cham vao la chon cua.
+                        cuaChon = cua;
+                        tienCho = 0;
                     }
                     return true;
                 }
