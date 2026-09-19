@@ -635,14 +635,7 @@ namespace Game5.God
             g.setColor(MAU_VANG, 0.95f);
             g.fillRect(xDH + 6, y + 15, (int) ((rongDH - 12) * tiLe), 2, 1);
 
-            // Thoi vang, goc phai.
-            string so = dvSo(m.tongThoi);
-            int rongSo = mFont.tahoma_7b_dark.getWidth(so);
-            mFont.tahoma_7b_dark.drawString(g, so, x + w, y + 3, mFont.RIGHT);
-            // Tam icon cach mep chu nua be ngang icon (~22) cong mot khe: dat sat
-            // hon thi thoi vang de len chu so dau tien.
-            SmallImage.drawSmallImage(g, ICON_THOI_VANG, x + w - rongSo - 16, y + 8, 0,
-                    mGraphics.VCENTER | mGraphics.HCENTER);
+            // So thoi vang nay nam tren thanh tieu de, dung chung moi tro.
 
             // Lich su con thang, giua so phien va dong ho.
             int xLs = x + mFont.tahoma_7b_dark.getWidth(phienChu) + 8;
@@ -1462,9 +1455,9 @@ namespace Game5.God
         private void veHangNutVit(mGraphics g, int x, int y, int w, int h)
         {
             God.MiniGame m = God.MiniGame.gI();
-            const int khe = 4;
+            const int khe = 6;
             int soNho = DV_MUC.Length + 3;
-            // Nut dat rong gap ruoi mot nut nho.
+            // Nut dat rong gap ruoi mot chip.
             float donVi = (w - khe * soNho) / (soNho + 1.8f);
             int rNho = (int) donVi;
             int rDat = w - (rNho + khe) * soNho;
@@ -1480,24 +1473,17 @@ namespace Game5.God
                 }
                 else if (k == DV_MUC.Length)
                 {
-                    chu = "ALL";
+                    chu = "Tất tay";
                 }
                 else if (k == DV_MUC.Length + 1)
                 {
-                    chu = "Gõ số";
+                    chu = "Nhập số";
                 }
                 else
                 {
                     chu = "Huỷ";
                 }
-                veKhungBo(g, xn, y, rNho, h, MAU_THE, bam ? 0.95f : 0.4f,
-                        MAU_VIEN, bam ? 0.8f : 0.3f, 1);
-                if (bam)
-                {
-                    veChuyenSac(g, xn + 1, y + 1, rNho - 2, h - 2, 4);
-                }
-                (bam ? mFont.tahoma_7b_dark : mFont.tahoma_7_grey).drawString(g, chu,
-                        xn + rNho / 2, y + 5, mFont.CENTER);
+                veChip(g, dvONut[k], chu, bam);
                 xn += rNho + khe;
             }
             int kDat = soNho;
@@ -1520,19 +1506,7 @@ namespace Game5.God
             {
                 nhan = "ĐẶT " + dvSo(dvTienCho);
             }
-            if (datDuoc)
-            {
-                veQuang(g, xn, y, rDat, h, MAU_VUNG_SANG, 0.8f, 2);
-                veDaiMau(g, xn, y, rDat, h, MAU_VUNG_SANG, MAU_VUNG_TOT, 6);
-                veVetSang(g, xn, y, rDat, h, 1600);
-                veChuNoi(g, mFont.tahoma_7b_white, nhan, xn + rDat / 2, y + 5, mFont.CENTER);
-            }
-            else
-            {
-                veKhungBo(g, xn, y, rDat, h, rgb(0x88, 0x88, 0x88), 0.45f,
-                        MAU_VIEN, 0.35f, 1);
-                mFont.tahoma_7b_dark.drawString(g, nhan, xn + rDat / 2, y + 5, mFont.CENTER);
-            }
+            veNutChinh(g, dvONut[kDat], nhan, datDuoc, MAU_CHON);
         }
 
         // ==================================================================

@@ -14,6 +14,10 @@ namespace Game1.God
     ///
     /// <para>Saibaman và Bulma vẽ bằng <b>chính bộ phần hình trong game</b>
     /// (đầu/thân/chân của boss Saibamen và NPC Bulma), không cần ảnh riêng.</para>
+    ///
+    /// <para><b>Bố cục:</b> sân chơi bên trái là thứ duy nhất có màu mạnh; bảng
+    /// mốc quà bên phải là một thẻ giấy phẳng, đọc như một danh sách. Không lặp
+    /// tên trò trong sân (tab đã nói), không chữ trang trí.</para>
     /// </remarks>
     public partial class TroChoiUI
     {
@@ -52,16 +56,14 @@ namespace Game1.God
         private const int SB_LOAI_BULMA = 2;
 
         // ------------------------------------------------------------------
-        //  Màu
+        //  Màu của sân — chỉ dùng trong sân
         // ------------------------------------------------------------------
-        private static readonly int SB_CO_SANG = rgb(0x9C, 0xD9, 0x5E);
-        private static readonly int SB_CO_TOI = rgb(0x3F, 0x8C, 0x38);
-        private static readonly int SB_DAT = rgb(0x8A, 0x5A, 0x30);
-        private static readonly int SB_DAT_SANG = rgb(0xB9, 0x84, 0x4E);
-        private static readonly int SB_LO = rgb(0x21, 0x13, 0x0A);
-        private static readonly int SB_XANH_NUT = rgb(0x4F, 0xA8, 0x5C);
-        private static readonly int SB_XANH_NUT_SANG = rgb(0x8F, 0xE8, 0x6B);
-        private static readonly int SB_DO = rgb(0xD6, 0x45, 0x3A);
+        private static readonly int SB_CO = rgb(0x84, 0xC0, 0x5A);
+        private static readonly int SB_CO_SOC = rgb(0x7A, 0xB6, 0x51);
+        private static readonly int SB_DAT = rgb(0x8B, 0x5E, 0x36);
+        private static readonly int SB_DAT_SANG = rgb(0xA9, 0x7A, 0x4B);
+        private static readonly int SB_LO = rgb(0x26, 0x17, 0x0E);
+        private static readonly int SB_DO = rgb(0xD0, 0x43, 0x3A);
 
         // ------------------------------------------------------------------
         //  Trạng thái vẽ
@@ -88,7 +90,7 @@ namespace Game1.God
         /// <summary>Sân chơi: x, y, w, h.</summary>
         private int[] sbOSan = new int[0];
 
-        /// <summary>Từng hố: tâm x, tâm y, rộng miệng, cao miệng, x ô, đỉnh ô, rộng ô.</summary>
+        /// <summary>Từng hố: tâm x, tâm y, rộng miệng, cao miệng, x ô, đỉnh ô, rộng ô, cao ô.</summary>
         private readonly int[][] sbOHo = new int[9][];
 
         private int[] sbONutBatDau = new int[0];
@@ -140,6 +142,13 @@ namespace Game1.God
             return m.sbDangChoi || m.sbChoKetQua;
         }
 
+        /// <summary>Đang hiện bảng kết quả trên sân.</summary>
+        private bool sbHienKQ()
+        {
+            God.MiniGame m = God.MiniGame.gI();
+            return !m.sbDangChoi && !m.sbChoKetQua && m.sbCoKetQua && !sbDaDongKQ;
+        }
+
         // ==================================================================
         //  Vẽ — màn chơi
         // ==================================================================
@@ -147,39 +156,38 @@ namespace Game1.God
         private void veDapSaibaman(mGraphics g)
         {
             sbCapNhat();
-            God.MiniGame m = God.MiniGame.gI();
             int x = x0 + LE;
             int w = rong - LE * 2;
-            int yTren = yNoiDung() - 2;
+            int yTren = yNoiDung();
             int yDuoi = y0 + cao - LE;
-            int h = yDuoi - yTren;
 
-            const int CAO_DAU = 18;
-            veDauSb(g, x, yTren, w, CAO_DAU);
+            const int CAO_DAU = 20;
+            veDauSb(g, x, yTren, w);
 
             int yThan = yTren + CAO_DAU + 4;
             int hThan = yDuoi - yThan;
-            int rongBang = w * 34 / 100;
-            if (rongBang < 132)
+            int rongBang = w * 33 / 100;
+            if (rongBang < 136)
             {
-                rongBang = 132;
+                rongBang = 136;
             }
-            if (rongBang > 186)
+            if (rongBang > 184)
             {
-                rongBang = 186;
+                rongBang = 184;
             }
-            int rongSan = w - rongBang - 6;
+            int rongSan = w - rongBang - 8;
             veSanSb(g, x, yThan, rongSan, hThan);
-            veBangMocSb(g, x + rongSan + 6, yThan, rongBang, hThan);
+            veBangMocSb(g, x + rongSan + 8, yThan, rongBang, hThan);
         }
 
-        // ---- hàng đầu ----
+        // ---- hàng thông tin ----
 
-        private void veDauSb(mGraphics g, int x, int y, int w, int h)
+        private void veDauSb(mGraphics g, int x, int y, int w)
         {
             God.MiniGame m = God.MiniGame.gI();
-            string luot = "Hôm nay: " + m.sbDaChoi + "/" + m.sbLuotNgay + " ván";
-            mFont.tahoma_7b_dark.drawString(g, luot, x, y + 3, mFont.LEFT);
+            mFont.tahoma_7_grey.drawString(g, "Hôm nay", x, y + 2, mFont.LEFT);
+            mFont.tahoma_7b_dark.drawString(g, m.sbDaChoi + "/" + m.sbLuotNgay + " ván",
+                    x + mFont.tahoma_7_grey.getWidth("Hôm nay") + 4, y + 2, mFont.LEFT);
 
             string nhan;
             int mau;
@@ -190,40 +198,30 @@ namespace Game1.God
                 {
                     con = 0;
                 }
-                nhan = "CÒN  00:" + (con < 10 ? "0" : string.Empty) + con;
-                mau = con <= 5 ? MAU_XIU_SANG : MAU_TAI_SANG;
+                nhan = "Còn  00:" + (con < 10 ? "0" : string.Empty) + con;
+                mau = con <= 5 ? MAU_XIU_SANG : MAU_XANH_LA;
             }
             else if (m.sbChoKetQua)
             {
-                nhan = "ĐANG CHẤM ĐIỂM";
-                mau = rgb(0xD8, 0x9A, 0x1E);
+                nhan = "Đang chấm điểm";
+                mau = MAU_VANG;
             }
             else
             {
-                nhan = "VÉ " + m.sbVe + " THỎI · " + m.sbGiay + " GIÂY";
-                mau = SB_XANH_NUT;
+                nhan = "Vé " + m.sbVe + " thỏi  ·  " + m.sbGiay + " giây";
+                mau = MAU_VANG;
             }
-            int rongDH = 150;
-            int xDH = x + w / 2 - rongDH / 2;
-            veTheDem(g, xDH, y, rongDH, nhan, mau);
-            if (m.sbDangChoi)
-            {
-                float tiLe = 1f - (float) sbMsTrongVan() / m.sbDaiMs;
-                if (tiLe < 0f)
-                {
-                    tiLe = 0f;
-                }
-                g.setColor(0x000000, 0.25f);
-                g.fillRect(xDH + 6, y + 15, rongDH - 12, 2, 1);
-                g.setColor(MAU_VANG, 0.95f);
-                g.fillRect(xDH + 6, y + 15, (int) ((rongDH - 12) * tiLe), 2, 1);
-            }
+            int rongDH = 164;
+            veTheDem(g, x + w / 2 - rongDH / 2, y, rongDH, nhan, mau);
 
-            string so = dvSo(m.tongThoi);
-            int rongSo = mFont.tahoma_7b_dark.getWidth(so);
-            mFont.tahoma_7b_dark.drawString(g, so, x + w, y + 3, mFont.RIGHT);
-            SmallImage.drawSmallImage(g, ICON_THOI_VANG, x + w - rongSo - 16, y + 8, 0,
-                    mGraphics.VCENTER | mGraphics.HCENTER);
+            // Diem cao nhat trong bang xep hang hom nay, neu da tai.
+            if (m.sbTop.Count > 0)
+            {
+                string cao = m.sbTop[0].diem + string.Empty;
+                mFont.tahoma_7b_dark.drawString(g, cao, x + w, y + 2, mFont.RIGHT);
+                mFont.tahoma_7_grey.drawString(g, "Cao nhất hôm nay",
+                        x + w - mFont.tahoma_7b_dark.getWidth(cao) - 4, y + 2, mFont.RIGHT);
+            }
         }
 
         // ---- sân ----
@@ -243,43 +241,40 @@ namespace Game1.God
             int xs = x + rung;
             sbOSan = new int[] { x, y, w, h };
 
-            // Khung go + bai co.
-            veKhungKep(g, xs, y, w, h, SB_CO_TOI, MAU_VANG, 0.95f);
-            veDaiMau(g, xs + 3, y + 3, w - 6, h - 6, SB_CO_SANG, SB_CO_TOI, 10);
-            g.setClip(xs + 3, y + 3, w - 6, h - 6);
-            // Soc co cat xen ke.
-            int soc = 22;
-            for (int k = 0; k * soc < w; k += 2)
+            // Khung: vien muc mong, bai co mot mau voi soc cat xen ke — khong
+            // chuyen sac, khong hoa trang tri.
+            g.setColor(0x000000, 0.10f);
+            g.fillRect(xs, y + 2, w, h, BO_GOC + 1);
+            g.setColor(rgb(0x4E, 0x7A, 0x34), 1f);
+            g.fillRect(xs, y, w, h, BO_GOC + 1);
+            g.setColor(SB_CO, 1f);
+            g.fillRect(xs + 1, y + 1, w - 2, h - 2, BO_GOC);
+            g.setClip(xs + 1, y + 1, w - 2, h - 2);
+            const int SOC = 26;
+            g.setColor(SB_CO_SOC, 1f);
+            for (int k = 1; k * SOC < w; k += 2)
             {
-                g.setColor(0xFFFFFF, 0.06f);
-                g.fillRect(xs + 3 + k * soc, y + 3, soc, h - 6);
+                g.fillRect(xs + k * SOC, y + 1, SOC, h - 2);
             }
-            // Vai bong hoa nho, vi tri co dinh theo kich thuoc san.
-            for (int k = 0; k < 14; k++)
-            {
-                int hx = xs + 8 + (k * 53 + 17) % (w - 16);
-                int hy = y + 8 + (k * 37 + 11) % (h - 16);
-                g.setColor(k % 3 == 0 ? 0xFFF2A8 : (k % 3 == 1 ? 0xFFFFFF : 0xFFB0C8), 0.7f);
-                g.fillRect(hx, hy, 3, 3, 1);
-            }
+            // Bong mem o mep tren, cho san lom xuong duoi mat bang.
+            g.setColor(0x000000, 0.10f);
+            g.fillRect(xs + 1, y + 1, w - 2, 3);
             g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-            veGocKhung(g, xs, y, w, h, 0.9f);
 
-            // Luoi 3 x 3 hố.
-            int dinh = y + 24;
-            int caoLuoi = h - 30;
-            int rongO = (w - 12) / 3;
-            int caoO = caoLuoi / 3;
-            int rongMieng = Math.min(rongO * 72 / 100, 62);
-            int caoMieng = Math.max(10, rongMieng * 34 / 100);
+            // Luoi 3 x 3 ho — tinh vua het chieu cao, hang duoi khong bi cat.
+            const int DINH = 30;
+            int rongO = (w - 16) / 3;
+            int caoO = (h - DINH - 10) / 3;
+            int rongMieng = Math.min(rongO * 60 / 100, 56);
+            int caoMieng = Math.max(10, rongMieng * 32 / 100);
             for (int i = 0; i < 9; i++)
             {
                 int cot = i % 3;
                 int hang = i / 3;
-                int xo = xs + 6 + cot * rongO;
-                int yo = dinh + hang * caoO;
+                int xo = xs + 8 + cot * rongO;
+                int yo = y + DINH + hang * caoO;
                 int tamX = xo + rongO / 2;
-                int tamY = yo + caoO * 74 / 100;
+                int tamY = yo + caoO * 70 / 100;
                 sbOHo[i] = new int[] { tamX, tamY, rongMieng, caoMieng, xo, yo, rongO, caoO };
             }
 
@@ -289,25 +284,22 @@ namespace Game1.God
                 veHoSb(g, i, ms, bayGio);
             }
 
-            // Thanh thoi gian mong tren dinh san.
-            if (m.sbDangChoi)
+            // Thanh HUD tren dinh san: diem ben trai, thoi gian ben phai.
+            if (m.sbDangChoi || m.sbChoKetQua)
             {
-                float tiLe = 1f - (float) ms / m.sbDaiMs;
+                veHuyHieuDiemSb(g, xs + 8, y + 7, m.sbDiemTam());
+                float tiLe = m.sbDangChoi ? 1f - (float) ms / m.sbDaiMs : 0f;
                 if (tiLe < 0f)
                 {
                     tiLe = 0f;
                 }
-                int cuoi = m.sbDaiMs - ms;
-                g.setColor(0x000000, 0.3f);
-                g.fillRect(xs + 8, y + 6, w - 16, 5, 2);
-                g.setColor(cuoi <= 5000 && bayGio / 200 % 2 == 0 ? SB_DO : MAU_VANG, 1f);
-                g.fillRect(xs + 8, y + 6, (int) ((w - 16) * tiLe), 5, 2);
-            }
-
-            // Huy hieu diem goc trai.
-            if (m.sbDangChoi || m.sbChoKetQua)
-            {
-                veHuyHieuDiemSb(g, xs + 8, y + 13, m.sbDiemTam());
+                int wBar = w / 3;
+                int xBar = xs + w - 8 - wBar;
+                g.setColor(0x000000, 0.25f);
+                g.fillRect(xBar, y + 13, wBar, 5, 2);
+                bool gap = m.sbDangChoi && m.sbDaiMs - ms <= 5000;
+                g.setColor(gap ? SB_DO : 0xFFFFFF, 1f);
+                g.fillRect(xBar, y + 13, (int) (wBar * tiLe), 5, 2);
             }
 
             veHieuUngSb(g, bayGio);
@@ -315,19 +307,19 @@ namespace Game1.God
             // Loe do khi dap Bulma.
             if (tuPhat < 260L)
             {
-                g.setColor(SB_DO, 0.28f * (1f - tuPhat / 260f));
-                g.fillRect(xs + 3, y + 3, w - 6, h - 6, BO_GOC);
+                g.setColor(SB_DO, 0.22f * (1f - tuPhat / 260f));
+                g.fillRect(xs + 1, y + 1, w - 2, h - 2, BO_GOC);
             }
 
             if (m.sbDangChoi && ms < 900)
             {
-                veBangRonSb(g, xs, y, w, h, "BẮT ĐẦU!", SB_XANH_NUT, ms / 900f);
+                veThongDiepSb(g, xs, y, w, h, "Bắt đầu!", 1f - ms / 900f);
             }
             else if (m.sbChoKetQua)
             {
-                veBangRonSb(g, xs, y, w, h, "Đang chấm điểm...", rgb(0xD8, 0x9A, 0x1E), 0.3f);
+                veThongDiepSb(g, xs, y, w, h, "Đang chấm điểm...", 1f);
             }
-            else if (!m.sbDangChoi && m.sbCoKetQua && !sbDaDongKQ)
+            else if (sbHienKQ())
             {
                 veKetQuaSb(g, xs, y, w, h);
             }
@@ -337,18 +329,16 @@ namespace Game1.God
             }
         }
 
-        /// <summary>Huy hiệu điểm: nền tối trong, chữ ĐIỂM nhỏ, số to vàng.</summary>
+        /// <summary>Điểm đang có: nhãn nhỏ và con số to trên nền tối trong.</summary>
         private static void veHuyHieuDiemSb(mGraphics g, int x, int y, int diem)
         {
             string so = diem + string.Empty;
             int rongSo = mFont.bigNumber_yellow.getWidth(so);
-            int rong = rongSo + 44;
-            g.setColor(0x000000, 0.45f);
-            g.fillRect(x, y, rong, 20, 8);
-            g.setColor(MAU_VANG, 0.9f);
-            g.fillRect(x + 2, y + 2, 32, 16, 6);
-            mFont.tahoma_7b_dark.drawString(g, "ĐIỂM", x + 18, y + 4, mFont.CENTER);
-            mFont.bigNumber_yellow.drawString(g, so, x + 38, y + 3, mFont.LEFT);
+            int rong = rongSo + 42;
+            g.setColor(0x000000, 0.35f);
+            g.fillRect(x, y, rong, 18, 9);
+            mFont.tahoma_7_white.drawString(g, "Điểm", x + 8, y + 3, mFont.LEFT);
+            mFont.bigNumber_yellow.drawString(g, so, x + 36, y + 2, mFont.LEFT);
         }
 
         /// <summary>Một hố: ụ đất, miệng hố, con đang trồi, mép trước.</summary>
@@ -361,24 +351,24 @@ namespace Game1.God
             int rm = o[2];
             int cm = o[3];
 
-            // Bong + u dat.
-            g.setColor(0x000000, 0.18f);
-            g.fillRect(tamX - rm / 2 - 5, tamY - cm / 2 + 2, rm + 10, cm + 6, (cm + 6) / 2);
+            // U dat: bong nga xuong co, than dat, gờ sang mong o phia tren.
+            g.setColor(0x000000, 0.14f);
+            g.fillRect(tamX - rm / 2 - 6, tamY - cm / 2 + 2, rm + 12, cm + 6, (cm + 6) / 2);
             g.setColor(SB_DAT, 1f);
-            g.fillRect(tamX - rm / 2 - 5, tamY - cm / 2 - 2, rm + 10, cm + 6, (cm + 6) / 2);
+            g.fillRect(tamX - rm / 2 - 6, tamY - cm / 2 - 3, rm + 12, cm + 7, (cm + 7) / 2);
             g.setColor(SB_DAT_SANG, 1f);
-            g.fillRect(tamX - rm / 2 - 3, tamY - cm / 2 - 2, rm + 6, cm / 2, cm / 4);
-            // Mieng ho.
+            g.fillRect(tamX - rm / 2 - 3, tamY - cm / 2 - 3, rm + 6, 3, 2);
+            // Mieng ho, toi dan vao trong.
             g.setColor(SB_LO, 1f);
             g.fillRect(tamX - rm / 2, tamY - cm / 2, rm, cm, cm / 2);
             g.setColor(0x000000, 0.35f);
-            g.fillRect(tamX - rm / 2 + 3, tamY - cm / 2 + 1, rm - 6, cm / 2, cm / 4);
+            g.fillRect(tamX - rm / 2 + 3, tamY - cm / 2, rm - 6, cm / 2, cm / 4);
 
             // Con dang trong ho nay (neu co).
             int loai = -1;
             float troi = 0f;
             int lech = 0;
-            if (m.sbDangChoi || m.sbChoKetQua)
+            if (sbDangBan())
             {
                 for (int k = 0; k < m.sbT.Length; k++)
                 {
@@ -400,7 +390,7 @@ namespace Game1.God
                     }
                 }
             }
-            else if (!(m.sbCoKetQua && !sbDaDongKQ) && i >= 3 && i <= 5)
+            else if (!sbHienKQ() && i >= 3 && i <= 5)
             {
                 // Man cho: hang giua bay san ba loai de nguoi choi nhin mat.
                 loai = i - 3;
@@ -410,52 +400,51 @@ namespace Game1.God
             if (loai >= 0)
             {
                 const int CAO_NV = 54;
-                int yChan = tamY + 10 + (int) ((1f - troi) * CAO_NV);
+                int yChan = tamY + 8 + (int) ((1f - troi) * CAO_NV);
                 int dir = (i % 3 == 2) ? -1 : 1;
-                g.setClip(o[4], o[5] - 6, o[6], tamY - o[5] + 7);
+                g.setClip(o[4], o[5] - 8, o[6], tamY - o[5] + 9);
                 if (loai == SB_LOAI_VANG)
                 {
-                    float nhip = 0.55f + 0.35f * UnityEngine.Mathf.Sin(bayGio / 120f);
-                    g.setColor(MAU_VANG, 0.45f * nhip * troi);
-                    g.fillRect(tamX - 22, yChan - 50, 44, 44, 22);
-                    g.setColor(0xFFFFFF, 0.3f * nhip * troi);
-                    g.fillRect(tamX - 13, yChan - 42, 26, 26, 13);
+                    // Saibaman vang: mot vong sang am sau lung, dap theo nhip.
+                    float nhipV = 0.6f + 0.4f * UnityEngine.Mathf.Sin(bayGio / 140f);
+                    g.setColor(MAU_VANG, 0.55f * nhipV * troi);
+                    g.fillRect(tamX - 20, yChan - 48, 40, 40, 20);
                 }
                 int cf = (int) (bayGio / 320L % 2);
-                bool ve;
+                bool daVe;
                 if (loai == SB_LOAI_BULMA)
                 {
-                    ve = veBulmaSb(g, tamX + lech, yChan, dir, cf);
+                    daVe = veBulmaSb(g, tamX + lech, yChan, dir, cf);
                 }
                 else
                 {
-                    ve = veNhanVatPhan(g, SB_DAU, SB_THAN, SB_CHAN, tamX + lech, yChan, dir, cf);
+                    daVe = veNhanVatPhan(g, SB_DAU, SB_THAN, SB_CHAN, tamX + lech, yChan, dir, cf);
                 }
-                if (!ve)
+                if (!daVe)
                 {
                     veConThaySb(g, tamX + lech, yChan, loai);
                 }
                 g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-                if (loai == SB_LOAI_VANG && troi > 0.6f)
+                if (loai == SB_LOAI_VANG && troi > 0.6f && sbDangBan())
                 {
-                    veHatSang(g, tamX, yChan - 30, 6, 24, MAU_VANG, 0.9f, 1100);
+                    veHatSang(g, tamX, yChan - 30, 5, 22, MAU_VANG, 0.8f, 1100);
                 }
             }
 
             // Mep truoc cua ho, de len chan con vat.
             g.setColor(SB_DAT_SANG, 1f);
-            g.fillRect(tamX - rm / 2 + 1, tamY + cm / 2 - 3, rm - 2, 4, 2);
+            g.fillRect(tamX - rm / 2 + 2, tamY + cm / 2 - 2, rm - 4, 3, 1);
 
             // Nhan diem o man cho.
-            if (!sbDangBan() && !(m.sbCoKetQua && !sbDaDongKQ) && i >= 3 && i <= 5)
+            if (!sbDangBan() && !sbHienKQ() && i >= 3 && i <= 5)
             {
                 int d = m.sbDiemLoai(i - 3);
                 string chu = (d >= 0 ? "+" : string.Empty) + d;
                 int rc = mFont.tahoma_7b_white.getWidth(chu) + 12;
-                int yc = tamY + cm / 2 + 4;
-                g.setColor(i == 5 ? SB_DO : (i == 4 ? rgb(0xD8, 0x9A, 0x1E) : SB_XANH_NUT), 0.95f);
+                int yc = tamY + cm / 2 + 6;
+                g.setColor(i == 5 ? SB_DO : (i == 4 ? rgb(0xC8, 0x8A, 0x1E) : MAU_XANH_LA), 1f);
                 g.fillRect(tamX - rc / 2, yc, rc, 13, 6);
-                veChuNoi(g, mFont.tahoma_7b_white, chu, tamX, yc + 1, mFont.CENTER);
+                mFont.tahoma_7b_white.drawString(g, chu, tamX, yc + 1, mFont.CENTER);
             }
         }
 
@@ -562,78 +551,70 @@ namespace Game1.God
             g.fillRect(cx + 3, cy - 32, 4, 4, 2);
         }
 
-        /// <summary>Chữ nổi bay lên sau cú đập, vòng va chạm, hạt sáng.</summary>
+        /// <summary>Chữ điểm bay lên sau cú đập và vòng va chạm ngắn.</summary>
         private void veHieuUngSb(mGraphics g, long bayGio)
         {
             for (int i = sbHieuUng.Count - 1; i >= 0; i--)
             {
                 SbHieuUng h = sbHieuUng[i];
                 long d = bayGio - h.luc;
-                if (d > 750L)
+                if (d > 700L)
                 {
                     sbHieuUng.RemoveAt(i);
                     continue;
                 }
-                float t = d / 750f;
-                // Vong va cham ngan.
-                if (d < 220L && h.loai != 3)
+                float t = d / 700f;
+                if (d < 200L && h.loai != 3)
                 {
-                    float u = d / 220f;
-                    int co = 10 + (int) (34 * u);
-                    g.setColor(h.loai == 2 ? SB_DO : 0xFFFFFF, 0.55f * (1f - u));
+                    float u = d / 200f;
+                    int co = 12 + (int) (30 * u);
+                    g.setColor(h.loai == 2 ? SB_DO : 0xFFFFFF, 0.5f * (1f - u));
+                    g.fillRect(h.x - co / 2, h.y - co / 2, co, co, co / 2);
+                }
+                else if (h.loai == 3 && d < 180L)
+                {
+                    // Hut: mot cham bui nho.
+                    float u = d / 180f;
+                    g.setColor(SB_DAT, 0.5f * (1f - u));
+                    int co = 6 + (int) (8 * u);
                     g.fillRect(h.x - co / 2, h.y - co / 2, co, co, co / 2);
                 }
                 if (h.chu == null)
                 {
                     continue;
                 }
-                int yc = h.y - 12 - (int) (26 * t);
+                int yc = h.y - 12 - (int) (24 * t);
                 mFont f = h.loai == 2 ? mFont.tahoma_7b_red
                         : (h.loai == 1 ? mFont.tahoma_7b_yellow : mFont.tahoma_7b_white);
-                if (t < 0.8f || bayGio / 60 % 2 == 0)
-                {
-                    veChuNoi(g, f, h.chu, h.x, yc, mFont.CENTER);
-                }
+                veChuNoi(g, f, h.chu, h.x, yc, mFont.CENTER);
             }
         }
 
-        /// <summary>Băng rôn ngang giữa sân: "BẮT ĐẦU!", "Đang chấm điểm...".</summary>
-        private static void veBangRonSb(mGraphics g, int x, int y, int w, int h, string chu,
-                int mau, float t)
+        /// <summary>Một thông điệp ngắn giữa sân, trên viên mực.</summary>
+        private static void veThongDiepSb(mGraphics g, int x, int y, int w, int h, string chu,
+                float a)
         {
-            float a = t < 0.7f ? 1f : 1f - (t - 0.7f) / 0.3f;
-            int rb = mFont.tahoma_7b_white.getWidth(chu) + 40;
+            if (a <= 0f)
+            {
+                return;
+            }
+            int rb = mFont.tahoma_7b_white.getWidth(chu) + 28;
             int xb = x + (w - rb) / 2;
-            int yb = y + h / 2 - 12;
-            g.setColor(0x000000, 0.35f * a);
-            g.fillRect(xb + 2, yb + 3, rb, 24, 10);
-            g.setColor(mau, 0.95f * a);
-            g.fillRect(xb, yb, rb, 24, 10);
-            veChuyenSac(g, xb, yb, rb, 24, 4);
-            veChuNoi(g, mFont.tahoma_7b_white, chu, xb + rb / 2, yb + 6, mFont.CENTER);
+            int yb = y + h / 2 - 11;
+            g.setColor(MAU_TIEU_DE, 0.9f * a);
+            g.fillRect(xb, yb, rb, 22, 11);
+            mFont.tahoma_7b_white.drawString(g, chu, xb + rb / 2, yb + 5, mFont.CENTER);
         }
 
-        /// <summary>Màn chờ: tiêu đề và luật ngắn, ba con bày sẵn ở hàng giữa.</summary>
+        /// <summary>Màn chờ: ba con bày ở hàng giữa, một dòng hướng dẫn dưới đáy.</summary>
         private void veLoiMoiSb(mGraphics g, int x, int y, int w, int h)
         {
-            string tieuDe = "ĐẬP SAIBAMAN";
-            int rt = mFont.tahoma_7b_white.getWidth(tieuDe) + 36;
-            int xt = x + (w - rt) / 2;
-            int yt = y + 6;
-            veQuang(g, xt, yt, rt, 18, MAU_VANG, 0.7f, 3);
-            veDaiMau(g, xt, yt, rt, 18, rgb(0xF0, 0xA1, 0x64), rgb(0xB8, 0x5A, 0x22), 6);
-            veChuNoi(g, mFont.tahoma_7b_white, tieuDe, xt + rt / 2, yt + 3, mFont.CENTER);
-
-            string luat = "Đập Saibaman ăn điểm — đừng đập nhầm Bulma!";
-            if (mFont.tahoma_7b_white.getWidth(luat) + 20 > w)
-            {
-                luat = "Đập Saibaman, tránh Bulma!";
-            }
-            int rl = mFont.tahoma_7b_white.getWidth(luat) + 16;
-            int yl = y + h - 20;
-            g.setColor(rgb(0x0A, 0x3A, 0x1C), 0.75f);
-            g.fillRect(x + (w - rl) / 2, yl, rl, 15, 7);
-            mFont.tahoma_7b_white.drawString(g, luat, x + w / 2, yl + 1, mFont.CENTER);
+            string luat = "Chạm để đập  ·  tránh Bulma";
+            int rl = mFont.tahoma_7_white.getWidth(luat) + 20;
+            int yl = y + 8;
+            g.setColor(0x000000, 0.35f);
+            g.fillRect(x + (w - rl) / 2, yl, rl, 16, 8);
+            mFont.tahoma_7_white.drawString(g, luat, x + w / 2, yl + 2, mFont.CENTER);
         }
 
         /// <summary>Bảng kết quả giữa sân: điểm to, mốc đạt, quà nhận.</summary>
@@ -641,61 +622,56 @@ namespace Game1.God
         {
             God.MiniGame m = God.MiniGame.gI();
             long bayGio = mSystem.currentTimeMillis();
-            int rb = Math.min(250, w - 16);
-            int cb = Math.min(132, h - 12);
+            int rb = Math.min(236, w - 16);
+            int cb = Math.min(138, h - 12);
             int xb = x + (w - rb) / 2;
             int yb = y + (h - cb) / 2;
             bool dat = m.sbMocKQ >= 0;
 
-            g.setColor(0x000000, 0.35f);
-            g.fillRect(x + 3, y + 3, w - 6, h - 6, BO_GOC);
-            veQuang(g, xb, yb, rb, cb, dat ? MAU_VANG : rgb(0xAA, 0xAA, 0xAA), 0.9f, 4);
-            veKhungKep(g, xb, yb, rb, cb, rgb(0xFF, 0xF4, 0xDC), MAU_VANG, 1f);
-            veGocKhung(g, xb, yb, rb, cb, 0.9f);
-            veDaiMau(g, xb + 3, yb + 3, rb - 6, 16, dat ? rgb(0xF0, 0xA1, 0x64) : rgb(0x8A, 0x8A, 0x8A),
-                    dat ? rgb(0xB8, 0x5A, 0x22) : rgb(0x5A, 0x5A, 0x5A), 4);
-            veChuNoi(g, mFont.tahoma_7b_white, "KẾT THÚC", xb + rb / 2, yb + 5, mFont.CENTER);
+            g.setColor(0x000000, 0.30f);
+            g.fillRect(x + 1, y + 1, w - 2, h - 2, BO_GOC);
+            veKhungKep(g, xb, yb, rb, cb, MAU_THE, MAU_VIEN, 0.7f);
+            g.setClip(xb + 1, yb + 1, rb - 2, 4);
+            g.setColor(dat ? MAU_XANH_LA : MAU_VIEN, 1f);
+            g.fillRect(xb + 1, yb + 1, rb - 2, 12, BO_GOC);
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 
-            // Diem to, co vong no.
-            int yDiem = yb + 24;
-            if (dat)
-            {
-                veVongNo(g, xb + rb / 2, yDiem + 10, 16, 70, MAU_VANG, 1500);
-            }
+            mFont.tahoma_7_grey.drawString(g, "Kết thúc ván", xb + rb / 2, yb + 11, mFont.CENTER);
             string so = m.sbDiemKQ + string.Empty;
-            mFont.bigNumber_yellow.drawString(g, so, xb + rb / 2, yDiem, mFont.CENTER);
-            mFont.tahoma_7b_dark.drawString(g, "điểm", xb + rb / 2
-                    + mFont.bigNumber_yellow.getWidth(so) / 2 + 16, yDiem + 4, mFont.CENTER);
+            int wSo = mFont.bigNumber_yellow.getWidth(so);
+            int wCum = wSo + 4 + mFont.tahoma_7b_dark.getWidth("điểm");
+            int xCum = xb + rb / 2 - wCum / 2;
+            mFont.bigNumber_yellow.drawString(g, so, xCum, yb + 25, mFont.LEFT);
+            mFont.tahoma_7b_dark.drawString(g, "điểm", xCum + wSo + 4, yb + 28, mFont.LEFT);
 
-            int yMoc = yDiem + 22;
+            int yMoc = yb + 46;
             if (dat && m.sbMocKQ < m.sbMoc.Count)
             {
-                mFont.tahoma_7b_green2.drawString(g, "Đạt mốc " + m.sbMoc[m.sbMocKQ].diem
-                        + " — nhận quà:", xb + rb / 2, yMoc, mFont.CENTER);
-                veHangQuaSb(g, m.sbQuaKQ, xb + 10, yMoc + 14, rb - 20, 26, bayGio);
+                mFont.tahoma_7b_green.drawString(g, "Đạt mốc " + m.sbMoc[m.sbMocKQ].diem,
+                        xb + rb / 2, yMoc, mFont.CENTER);
+                veHangQuaSb(g, m.sbQuaKQ, xb + 10, yMoc + 15, rb - 20, 24);
+                if (bayGio - m.sbMocKetQua < 1500L)
+                {
+                    veHatSang(g, xb + rb / 2, yb + 34, 8, 44, MAU_VANG, 0.6f, 1300);
+                }
             }
             else
             {
-                string ke = sbMocKe(m.sbDiemKQ);
-                mFont.tahoma_7b_red.drawString(g, "Chưa tới mốc quà nào", xb + rb / 2, yMoc,
+                mFont.tahoma_7b_dark.drawString(g, "Chưa tới mốc quà", xb + rb / 2, yMoc,
                         mFont.CENTER);
+                string ke = sbMocKe(m.sbDiemKQ);
                 if (ke != null)
                 {
                     mFont.tahoma_7_grey.drawString(g, ke, xb + rb / 2, yMoc + 14, mFont.CENTER);
                 }
             }
 
-            // Hai nut: Choi lai / Dong.
-            int yn = yb + cb - 26;
-            int rn = (rb - 30) / 2;
-            bool choiDuoc = sbChoiDuoc() == null;
-            sbONutChoiLai = new int[] { xb + 10, yn, rn, 20 };
-            sbONutDongKQ = new int[] { xb + 20 + rn, yn, rn, 20 };
-            veNutXanhSb(g, sbONutChoiLai, "CHƠI LẠI", choiDuoc);
-            veKhungBo(g, sbONutDongKQ[0], yn, rn, 20, MAU_THE, 1f, MAU_VIEN, 0.8f, 1);
-            veChuyenSac(g, sbONutDongKQ[0] + 1, yn + 1, rn - 2, 18, 4);
-            mFont.tahoma_7b_dark.drawString(g, "Đóng", sbONutDongKQ[0] + rn / 2, yn + 4,
-                    mFont.CENTER);
+            int yn = yb + cb - 30;
+            int rn = (rb - 26) / 2;
+            sbONutChoiLai = new int[] { xb + 10, yn, rn, 22 };
+            sbONutDongKQ = new int[] { xb + 16 + rn, yn, rn, 22 };
+            veNutChinh(g, sbONutChoiLai, "Chơi lại", sbChoiDuoc() == null, MAU_CHON);
+            veNutPhu(g, sbONutDongKQ, "Đóng", true);
         }
 
         /// <summary>"Còn N điểm nữa tới mốc M" — hoặc null nếu đã quá mốc cao nhất.</summary>
@@ -706,16 +682,16 @@ namespace Game1.God
             {
                 if (diem < m.sbMoc[i].diem)
                 {
-                    return "Còn " + (m.sbMoc[i].diem - diem) + " điểm nữa tới mốc "
+                    return "Thiếu " + (m.sbMoc[i].diem - diem) + " điểm để tới mốc "
                             + m.sbMoc[i].diem;
                 }
             }
             return null;
         }
 
-        /// <summary>Một hàng icon vật phẩm kèm số lượng, căn giữa.</summary>
+        /// <summary>Một hàng ô quà, căn giữa.</summary>
         private static void veHangQuaSb(mGraphics g, List<God.MiniGame.SbQua> ds, int x, int y,
-                int w, int co, long bayGio)
+                int w, int co)
         {
             int n = ds.Count;
             if (n == 0)
@@ -727,19 +703,18 @@ namespace Game1.God
             int xd = x + (w - tong) / 2;
             for (int i = 0; i < n; i++)
             {
-                God.MiniGame.SbQua q = ds[i];
-                int xo = xd + i * buoc;
-                veOQuaSb(g, xo, y, co, q);
+                veOQuaSb(g, xd + i * buoc, y, co, ds[i]);
             }
         }
 
-        /// <summary>Một ô quà: nền kem, icon giữa, số lượng góc dưới.</summary>
+        /// <summary>Một ô quà: rãnh chìm, icon giữa, số lượng góc dưới phải.</summary>
         private static void veOQuaSb(mGraphics g, int x, int y, int co, God.MiniGame.SbQua q)
         {
-            veKhungBo(g, x, y, co, co, MAU_THE, 1f, MAU_VIEN, 0.7f, 1);
+            g.setColor(MAU_LOM, 1f);
+            g.fillRect(x, y, co, co, 4);
             if (q.icon >= 0)
             {
-                g.setClip(x + 1, y + 1, co - 2, co - 2);
+                g.setClip(x, y, co, co);
                 SmallImage.drawSmallImage(g, q.icon, x + co / 2, y + co / 2, 0,
                         mGraphics.VCENTER | mGraphics.HCENTER);
                 g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
@@ -747,27 +722,10 @@ namespace Game1.God
             if (q.soLuong > 1)
             {
                 string sl = "x" + q.soLuong;
-                mFont.tahoma_7b_dark.drawString(g, sl, x + co - 1, y + co - 11, mFont.RIGHT);
-            }
-        }
-
-        /// <summary>Nút xanh lá nổi — nút chính của trò.</summary>
-        private static void veNutXanhSb(mGraphics g, int[] o, string chu, bool bamDuoc)
-        {
-            if (bamDuoc)
-            {
-                veQuang(g, o[0], o[1], o[2], o[3], SB_XANH_NUT_SANG, 0.8f, 2);
-                veDaiMau(g, o[0], o[1], o[2], o[3], SB_XANH_NUT_SANG, SB_XANH_NUT, 6);
-                veVetSang(g, o[0], o[1], o[2], o[3], 1600);
-                veChuNoi(g, mFont.tahoma_7b_white, chu, o[0] + o[2] / 2, o[1] + o[3] / 2 - 6,
-                        mFont.CENTER);
-            }
-            else
-            {
-                veKhungBo(g, o[0], o[1], o[2], o[3], rgb(0x88, 0x88, 0x88), 0.45f,
-                        MAU_VIEN, 0.35f, 1);
-                mFont.tahoma_7b_dark.drawString(g, chu, o[0] + o[2] / 2, o[1] + o[3] / 2 - 6,
-                        mFont.CENTER);
+                int rs = mFont.tahoma_7_white.getWidth(sl) + 4;
+                g.setColor(MAU_TIEU_DE, 0.85f);
+                g.fillRect(x + co - rs, y + co - 10, rs, 10, 3);
+                mFont.tahoma_7_white.drawString(g, sl, x + co - 2, y + co - 11, mFont.RIGHT);
             }
         }
 
@@ -777,15 +735,15 @@ namespace Game1.God
             God.MiniGame m = God.MiniGame.gI();
             if (sbDangBan())
             {
-                return m.sbDangChoi ? "ĐANG CHƠI..." : "ĐANG CHẤM...";
+                return m.sbDangChoi ? "Đang chơi..." : "Đang chấm...";
             }
             if (m.sbDaChoi >= m.sbLuotNgay)
             {
-                return "HẾT LƯỢT HÔM NAY";
+                return "Hết lượt hôm nay";
             }
             if (m.tongThoi < m.sbVe)
             {
-                return "THIẾU THỎI VÀNG";
+                return "Thiếu thỏi vàng";
             }
             return null;
         }
@@ -795,19 +753,20 @@ namespace Game1.God
         private void veBangMocSb(mGraphics g, int x, int y, int w, int h)
         {
             God.MiniGame m = God.MiniGame.gI();
-            long bayGio = mSystem.currentTimeMillis();
-            veKhungBo(g, x, y, w, h, MAU_THE, 0.95f, MAU_VIEN, 0.7f, 1);
-            veDaiMau(g, x + 2, y + 2, w - 4, 16, rgb(0xF0, 0xA1, 0x64), rgb(0xC8, 0x6E, 0x30), 4);
-            veChuNoi(g, mFont.tahoma_7b_white, "MỐC QUÀ", x + w / 2, y + 4, mFont.CENTER);
+            veKhungKep(g, x, y, w, h, MAU_THE, MAU_VIEN, 0.55f);
+
+            mFont.tahoma_7b_dark.drawString(g, "Mốc quà", x + 10, y + 8, mFont.LEFT);
+            mFont.tahoma_7_grey.drawString(g, "theo điểm ván", x + w - 10, y + 8, mFont.RIGHT);
+            g.setColor(MAU_VIEN, 0.35f);
+            g.fillRect(x + 1, y + 24, w - 2, 1);
 
             const int CAO_NUT = 26;
-            int yNut = y + h - CAO_NUT - 4;
-            int yDs = y + 22;
-            int caoDs = yNut - 4 - yDs;
+            int yNut = y + h - CAO_NUT - 8;
+            int yDs = y + 25;
+            int caoDs = yNut - 6 - yDs;
             int n = m.sbMoc.Count;
             sbODongMoc.Clear();
-            int diemNay = m.sbDangChoi || m.sbChoKetQua ? m.sbDiemTam()
-                    : (m.sbCoKetQua ? m.sbDiemKQ : 0);
+            int diemNay = sbDangBan() ? m.sbDiemTam() : (m.sbCoKetQua ? m.sbDiemKQ : 0);
             if (n == 0)
             {
                 mFont.tahoma_7_grey.drawString(g, "Đang tải...", x + w / 2, yDs + caoDs / 2 - 6,
@@ -816,9 +775,9 @@ namespace Game1.God
             else
             {
                 int caoDong = caoDs / n;
-                if (caoDong > 34)
+                if (caoDong > 32)
                 {
-                    caoDong = 34;
+                    caoDong = 32;
                 }
                 int ke = -1;
                 for (int i = 0; i < n; i++)
@@ -833,83 +792,87 @@ namespace Game1.God
                 {
                     God.MiniGame.SbMoc mc = m.sbMoc[i];
                     int yd = yDs + i * caoDong;
-                    int hd = caoDong - 3;
-                    sbODongMoc.Add(new int[] { x + 3, yd, w - 6, hd, i });
-                    bool datRoi = diemNay >= mc.diem;
-                    bool laKe = i == ke;
-                    if (laKe && sbDangBan())
+                    int hd = caoDong;
+                    sbODongMoc.Add(new int[] { x + 1, yd, w - 2, hd, i });
+                    bool datRoi = diemNay >= mc.diem && (sbDangBan() || m.sbCoKetQua);
+                    bool laKe = i == ke && sbDangBan();
+
+                    if (datRoi)
                     {
-                        float nhip = 0.5f + 0.5f * UnityEngine.Mathf.Sin(bayGio / 180f);
-                        veQuang(g, x + 3, yd, w - 6, hd, MAU_VANG, nhip, 2);
+                        g.setColor(MAU_XANH_LA, 0.08f);
+                        g.fillRect(x + 1, yd, w - 2, hd);
                     }
-                    veKhungBo(g, x + 3, yd, w - 6, hd,
-                            datRoi ? rgb(0xD8, 0xF0, 0xC8) : rgb(0xFF, 0xFA, 0xEE), 1f,
-                            datRoi ? SB_XANH_NUT : (laKe ? MAU_VANG : MAU_VIEN),
-                            datRoi || laKe ? 0.95f : 0.4f, 1);
+                    if (laKe)
+                    {
+                        g.setColor(MAU_CHON, 1f);
+                        g.fillRect(x + 1, yd + 3, 3, hd - 6, 1);
+                    }
+                    if (i < n - 1)
+                    {
+                        g.setColor(MAU_VIEN, 0.22f);
+                        g.fillRect(x + 8, yd + hd - 1, w - 16, 1);
+                    }
 
-                    // Vien diem ben trai.
-                    int rp = 34;
-                    int cp = Math.min(hd - 4, 16);
-                    int yp = yd + (hd - cp) / 2;
-                    g.setColor(datRoi ? SB_XANH_NUT : rgb(0xB8, 0x5A, 0x22), 1f);
-                    g.fillRect(x + 6, yp, rp, cp, cp / 2);
-                    mFont.tahoma_7b_white.drawString(g, mc.diem + string.Empty, x + 6 + rp / 2,
-                            yp + cp / 2 - 6, mFont.CENTER);
+                    // Diem moc.
+                    (datRoi ? mFont.tahoma_7b_green : mFont.tahoma_7b_dark).drawString(g,
+                            mc.diem + string.Empty, x + 10, yd + hd / 2 - 6, mFont.LEFT);
 
-                    // Icon qua.
-                    int co = Math.min(hd - 4, 24);
-                    int xq = x + 6 + rp + 4;
-                    int hetCho = x + w - 6;
+                    // O qua.
+                    int co = Math.min(hd - 8, 20);
+                    int xq = x + 40;
+                    int hetCho = x + w - (datRoi ? 24 : 8);
                     for (int k = 0; k < mc.qua.Count; k++)
                     {
                         if (xq + co > hetCho)
                         {
-                            mFont.tahoma_7b_dark.drawString(g, "...", hetCho - 2, yd + hd / 2 - 6,
-                                    mFont.RIGHT);
+                            mFont.tahoma_7_grey.drawString(g, "+" + (mc.qua.Count - k),
+                                    hetCho, yd + hd / 2 - 6, mFont.RIGHT);
                             break;
                         }
                         veOQuaSb(g, xq, yd + (hd - co) / 2, co, mc.qua[k]);
-                        xq += co + 2;
+                        xq += co + 3;
                     }
 
                     if (datRoi)
                     {
-                        // Dau tich goc phai tren.
-                        // Ve bang hinh: font game khong co ky tu dau tich.
-                        int xt = x + w - 16;
-                        int yt = yd + 1;
-                        g.setColor(SB_XANH_NUT, 1f);
-                        g.fillRect(xt, yt, 11, 11, 5);
-                        g.setColor(0xFFFFFF, 1f);
-                        g.fillRect(xt + 2, yt + 5, 2, 2);
-                        g.fillRect(xt + 3, yt + 6, 2, 2);
-                        g.fillRect(xt + 4, yt + 7, 2, 2);
-                        g.fillRect(xt + 5, yt + 6, 2, 2);
-                        g.fillRect(xt + 6, yt + 5, 2, 2);
-                        g.fillRect(xt + 7, yt + 4, 2, 2);
-                        g.fillRect(xt + 8, yt + 3, 2, 2);
+                        veDauTichSb(g, x + w - 18, yd + hd / 2 - 6);
                     }
-                    else if (laKe && sbDangBan() && i > 0)
+                    else if (laKe)
                     {
                         // Thanh tien do tu moc truoc toi moc nay.
-                        int tu = m.sbMoc[i - 1].diem;
+                        int tu = i > 0 ? m.sbMoc[i - 1].diem : 0;
                         float tl = (float) (diemNay - tu) / (mc.diem - tu);
                         if (tl < 0f)
                         {
                             tl = 0f;
                         }
-                        g.setColor(0x000000, 0.2f);
-                        g.fillRect(x + 6, yd + hd - 3, w - 12, 2, 1);
-                        g.setColor(MAU_VANG, 1f);
-                        g.fillRect(x + 6, yd + hd - 3, (int) ((w - 12) * tl), 2, 1);
+                        g.setColor(MAU_LOM, 1f);
+                        g.fillRect(x + 40, yd + hd - 4, w - 50, 2, 1);
+                        g.setColor(MAU_CHON, 1f);
+                        g.fillRect(x + 40, yd + hd - 4, (int) ((w - 50) * tl), 2, 1);
                     }
                 }
             }
 
-            // Nut bat dau.
             string lyDo = sbChoiDuoc();
-            sbONutBatDau = new int[] { x + 4, yNut, w - 8, CAO_NUT };
-            veNutXanhSb(g, sbONutBatDau, lyDo ?? ("BẮT ĐẦU  (" + m.sbVe + " thỏi)"), lyDo == null);
+            sbONutBatDau = new int[] { x + 8, yNut, w - 16, CAO_NUT };
+            veNutChinh(g, sbONutBatDau, lyDo ?? ("Bắt đầu  ·  " + m.sbVe + " thỏi"), lyDo == null,
+                    MAU_CHON);
+        }
+
+        /// <summary>Dấu tích trong vòng tròn xanh — vẽ bằng hình, font không có ký tự này.</summary>
+        private static void veDauTichSb(mGraphics g, int x, int y)
+        {
+            g.setColor(MAU_XANH_LA, 1f);
+            g.fillRect(x, y, 12, 12, 6);
+            g.setColor(0xFFFFFF, 1f);
+            g.fillRect(x + 2, y + 6, 2, 2);
+            g.fillRect(x + 3, y + 7, 2, 2);
+            g.fillRect(x + 4, y + 8, 2, 2);
+            g.fillRect(x + 5, y + 7, 2, 2);
+            g.fillRect(x + 6, y + 6, 2, 2);
+            g.fillRect(x + 7, y + 5, 2, 2);
+            g.fillRect(x + 8, y + 4, 2, 2);
         }
 
         // ==================================================================
@@ -953,9 +916,12 @@ namespace Game1.God
                 God.MiniGame.SbDong d = m.sbLsToi[dau + i];
                 int[] o = oDongLs(i);
                 bool dat = d.moc >= 0;
-                g.setColor(dat ? 0xD8F0C8 : (i % 2 == 0 ? 0xFFFFFF : 0xE8D6B8), dat ? 0.6f : 0.35f);
-                g.fillRect(o[0], o[1], o[2], o[3], 3);
-                mFont.tahoma_7b_dark.drawString(g, "#" + d.van, o[0] + xCot[0] + 2, o[1] + 2,
+                if (i % 2 == 1)
+                {
+                    g.setColor(MAU_LOM, 0.6f);
+                    g.fillRect(o[0], o[1], o[2], o[3], 3);
+                }
+                mFont.tahoma_7_grey.drawString(g, "#" + d.van, o[0] + xCot[0] + 2, o[1] + 2,
                         mFont.LEFT);
                 mFont.tahoma_7b_dark.drawString(g, d.diem + string.Empty, o[0] + xCot[1], o[1] + 2,
                         mFont.LEFT);
@@ -984,7 +950,7 @@ namespace Game1.God
                 veNutTrang(g, 0);
                 return;
             }
-            int[] mauHuyChuong = { rgb(0xF2, 0xC2, 0x2E), rgb(0xB8, 0xC4, 0xD0), rgb(0xC8, 0x80, 0x48) };
+            int[] mauHuyChuong = { rgb(0xE0, 0xA8, 0x2A), rgb(0x9C, 0xA8, 0xB4), rgb(0xB8, 0x74, 0x40) };
             int moiTrang = soDongMotTrang();
             int dau = trang * moiTrang;
             for (int i = 0; i < moiTrang && dau + i < tong; i++)
@@ -992,23 +958,25 @@ namespace Game1.God
                 int hang = dau + i;
                 God.MiniGame.SbDong d = m.sbTop[hang];
                 int[] o = oDongLs(i);
-                g.setColor(hang < 3 ? 0xFFF1C8 : (i % 2 == 0 ? 0xFFFFFF : 0xE8D6B8),
-                        hang < 3 ? 0.75f : 0.35f);
-                g.fillRect(o[0], o[1], o[2], o[3], 3);
+                if (i % 2 == 1)
+                {
+                    g.setColor(MAU_LOM, 0.6f);
+                    g.fillRect(o[0], o[1], o[2], o[3], 3);
+                }
                 if (hang < 3)
                 {
                     g.setColor(mauHuyChuong[hang], 1f);
-                    g.fillRect(o[0] + xCot[0] + 2, o[1] + 1, 14, 12, 6);
+                    g.fillRect(o[0] + xCot[0] + 3, o[1] + 1, 12, 12, 6);
                     mFont.tahoma_7b_white.drawString(g, (hang + 1) + string.Empty,
                             o[0] + xCot[0] + 9, o[1] + 1, mFont.CENTER);
                 }
                 else
                 {
-                    mFont.tahoma_7b_dark.drawString(g, (hang + 1) + string.Empty,
+                    mFont.tahoma_7_grey.drawString(g, (hang + 1) + string.Empty,
                             o[0] + xCot[0] + 9, o[1] + 2, mFont.CENTER);
                 }
                 mFont.tahoma_7b_dark.drawString(g, d.ten, o[0] + xCot[1], o[1] + 2, mFont.LEFT);
-                mFont.tahoma_7b_red.drawString(g, d.diem + string.Empty, o[0] + xCot[2], o[1] + 2,
+                mFont.tahoma_7b_dark.drawString(g, d.diem + string.Empty, o[0] + xCot[2], o[1] + 2,
                         mFont.LEFT);
                 mFont.tahoma_7_grey.drawString(g, d.moc + string.Empty, o[0] + xCot[3], o[1] + 2,
                         mFont.LEFT);
@@ -1100,7 +1068,7 @@ namespace Game1.God
                 }
                 return true;
             }
-            // Hut: vong bui nho, khong tru diem.
+            // Hut: cham bui nho, khong tru diem.
             SbHieuUng hut = new SbHieuUng();
             hut.x = px;
             hut.y = py;
@@ -1114,7 +1082,7 @@ namespace Game1.God
         private void chamSb()
         {
             God.MiniGame m = God.MiniGame.gI();
-            if (!m.sbDangChoi && m.sbCoKetQua && !sbDaDongKQ)
+            if (sbHienKQ())
             {
                 if (sbONutDongKQ.Length == 4
                         && cham(sbONutDongKQ[0], sbONutDongKQ[1], sbONutDongKQ[2], sbONutDongKQ[3]))
@@ -1164,7 +1132,7 @@ namespace Game1.God
             {
                 if (!sbDangBan())
                 {
-                    GameScr.info1.addInfo(lyDo == "THIẾU THỎI VÀNG"
+                    GameScr.info1.addInfo(lyDo == "Thiếu thỏi vàng"
                             ? "Cần " + God.MiniGame.gI().sbVe + " thỏi vàng để mua vé!"
                             : "Hôm nay bạn đã chơi hết lượt, mai quay lại nhé!", 0);
                 }
