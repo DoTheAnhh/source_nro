@@ -415,38 +415,41 @@ namespace Game6
     			}
     			else
     			{
-    			boCucNut();
-    			if (veLogoDs && LoginScr.imgTitle != null)
-    			{
-    				g.drawImage(LoginScr.imgTitle, xLogoDs, yLogoDs, 3);
-    			}
-    			for (int i = 0; i < cmd.Length; i++)
-    			{
-    				cmd[i].paint(g);
-    			}
-    			g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-    			veChamMayChu(g);
+    				veManDs(g);
     			}
     		}
     		base.paint(g);
     	}
     
         // =====================================================================
-        //  BO CUC NUT MAN CHON TAI KHOAN / MAY CHU
+        //  MAN CHON TAI KHOAN / MAY CHU — cung kieu form dang nhap
         // =====================================================================
         //
-        // Ban cu dat nut MOT LAN trong initCommand theo GameCanvas.hh, con logo
-        // tinh rieng o paint: man thap (dien thoai nam ngang) thi logo de len nut,
-        // xoay / doi kich thuoc cua so thi nut nam lech cho ve. Nay tinh lai MOI
-        // KHUNG HINH: logo + cot nut canh giua trong phan man con trong; khong du
-        // cao thi chia hai cot, van khong du nua thi bo logo.
+        // Khung be (PopUp) co tieu de, cac nut nam TRONG khung: nut dau (Choi)
+        // mau cam, cac nut con lai mau kem — ve bang LoginScr.veNutForm de hai
+        // man giong het nhau.
+        //
+        // Bo cuc tinh lai MOI KHUNG HINH tu GameCanvas.w/h (ban cu dat nut mot
+        // lan luc mo man, xoay / doi cua so la lech; man thap thi logo de len
+        // nut). Thu lan luot: logo + nut mot cot → logo + hai cot → bo logo.
 
-        private int xLogoDs;
-        private int yLogoDs;
         private bool veLogoDs;
+        private int yLogoDs;
+        private int xKhungDs;
+        private int yKhungDs;
+        private int wKhungDs;
+        private int hKhungDs;
 
         private const int CAO_NUT_DS = 24;
-        private const int KHE_NUT_DS = 7;
+        private const int KHE_NUT_DS = 6;
+        private const int LE_DS = 12;
+        private const int CAO_TIEU_DE_DS = 20;
+
+        private static int caoKhungDs(int caoNut)
+        {
+            int h = 8 + CAO_TIEU_DE_DS + caoNut + 10;
+            return 20 + (h - 20 + 9) / 10 * 10;
+        }
 
         private void boCucNut()
         {
@@ -457,67 +460,77 @@ namespace Game6
             int n = cmd.Length;
             int caoLogo = (LoginScr.imgTitle != null) ? LoginScr.imgTitle.getHeight() : 0;
             // Chua cho dong link web / phien ban o goc tren, chu "xoa du lieu" o duoi.
-            int tren = 26;
+            int tren = 24;
             int duoi = (cmdDeleteRMS != null) ? 20 : 8;
             int con = GameCanvas.h - tren - duoi;
 
-            int bw1 = Math.max(160, Math.min(GameCanvas.w - 40, 240));
-            int cao1 = n * CAO_NUT_DS + (n - 1) * KHE_NUT_DS;
-            int hang2 = (n + 1) / 2;
-            int cao2 = hang2 * CAO_NUT_DS + (hang2 - 1) * KHE_NUT_DS;
-            int bw2 = Math.min((GameCanvas.w - 36) / 2, 200);
-            bool duHaiCot = bw2 >= 130;
-
-            int soCot;
-            bool coLogo;
-            if (caoLogo > 0 && caoLogo + 10 + cao1 <= con)
+            int w = Math.min(GameCanvas.w - 16, 264);
+            if (w < 170)
             {
-                soCot = 1;
-                coLogo = true;
+                w = GameCanvas.w - 4;
             }
-            else if (duHaiCot && caoLogo > 0 && caoLogo + 10 + cao2 <= con)
+            // Khung PopUp ghep bang o 10 diem: lam tron de o vien khong tran goc.
+            w = 20 + (w - 20) / 10 * 10;
+            int trong = w - LE_DS * 2;
+            int hang2 = (n + 1) / 2;
+            int h1 = caoKhungDs(n * CAO_NUT_DS + (n - 1) * KHE_NUT_DS);
+            int h2 = caoKhungDs(hang2 * CAO_NUT_DS + (hang2 - 1) * KHE_NUT_DS);
+            bool duHaiCot = (trong - KHE_NUT_DS) / 2 >= 100;
+
+            bool coLogo;
+            bool haiCot;
+            if (caoLogo > 0 && caoLogo + 8 + h1 <= con)
             {
-                soCot = 2;
                 coLogo = true;
+                haiCot = false;
+            }
+            else if (duHaiCot && caoLogo > 0 && caoLogo + 8 + h2 <= con)
+            {
+                coLogo = true;
+                haiCot = true;
             }
             else
             {
                 coLogo = false;
-                soCot = (cao1 <= con || !duHaiCot) ? 1 : 2;
+                haiCot = duHaiCot && h1 > con;
             }
-            int caoNut = soCot == 1 ? cao1 : cao2;
-            int khoi = (coLogo ? caoLogo + 10 : 0) + caoNut;
+            int h = haiCot ? h2 : h1;
+            int khoi = (coLogo ? caoLogo + 8 : 0) + h;
             int y = tren + Math.max(0, (con - khoi) / 2);
             veLogoDs = coLogo;
-            xLogoDs = GameCanvas.hw;
-            yLogoDs = y + caoLogo / 2;
             if (coLogo)
             {
-                y += caoLogo + 10;
+                yLogoDs = y + caoLogo / 2;
+                y += caoLogo + 8;
             }
-            int bw = soCot == 1 ? bw1 : bw2;
+            int x = (GameCanvas.w - w) / 2;
+            xKhungDs = x;
+            yKhungDs = y;
+            wKhungDs = w;
+            hKhungDs = h;
+
+            int yn = y + 8 + CAO_TIEU_DE_DS;
+            int bw2 = (trong - KHE_NUT_DS) / 2;
             for (int i = 0; i < n; i++)
             {
                 if (cmd[i] == null)
                 {
                     continue;
                 }
-                int hang = soCot == 1 ? i : i / 2;
-                int cot = soCot == 1 ? 0 : i % 2;
-                int xNut;
-                if (soCot == 1 || (i == n - 1 && n % 2 == 1))
+                if (!haiCot)
                 {
-                    // Nut le cuoi cua kieu hai cot thi dat giua.
-                    xNut = (GameCanvas.w - bw) / 2;
+                    cmd[i].x = x + LE_DS;
+                    cmd[i].y = yn + i * (CAO_NUT_DS + KHE_NUT_DS);
+                    cmd[i].w = trong;
                 }
                 else
                 {
-                    xNut = GameCanvas.hw + (cot == 0 ? -6 - bw : 6);
+                    bool leCuoi = i == n - 1 && n % 2 == 1;
+                    cmd[i].x = leCuoi ? x + LE_DS : x + LE_DS + (i % 2) * (bw2 + KHE_NUT_DS);
+                    cmd[i].y = yn + (i / 2) * (CAO_NUT_DS + KHE_NUT_DS);
+                    cmd[i].w = leCuoi ? trong : bw2;
                 }
-                cmd[i].x = xNut;
-                cmd[i].y = y + hang * (CAO_NUT_DS + KHE_NUT_DS);
-                cmd[i].w = bw;
-                cmd[i].hw = bw / 2;
+                cmd[i].hw = cmd[i].w / 2;
                 cmd[i].h = CAO_NUT_DS;
             }
             if (cmdDeleteRMS != null)
@@ -532,6 +545,48 @@ namespace Game6
             }
         }
 
+        /// <summary>Ve logo, khung, tieu de va cac nut — kieu form dang nhap.</summary>
+        private void veManDs(mGraphics g)
+        {
+            boCucNut();
+            if (veLogoDs && LoginScr.imgTitle != null)
+            {
+                g.drawImage(LoginScr.imgTitle, GameCanvas.hw, yLogoDs, 3);
+            }
+            PopUp.paintPopUp(g, xKhungDs, yKhungDs, wKhungDs, hKhungDs, -1, true);
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+            mFont.tahoma_7b_dark.drawString(g, "VÀO GAME", xKhungDs + wKhungDs / 2, yKhungDs + 9,
+                    mFont.CENTER);
+            g.setColor(0xB07A3E, 0.6f);
+            g.fillRect(xKhungDs + LE_DS, yKhungDs + 8 + CAO_TIEU_DE_DS - 3, wKhungDs - LE_DS * 2, 1);
+            for (int i = 0; i < cmd.Length; i++)
+            {
+                Command c = cmd[i];
+                if (c == null)
+                {
+                    continue;
+                }
+                // May tinh chon bang phim: vien vang quanh nut dang chon.
+                if (!GameCanvas.isTouch && c.isFocus)
+                {
+                    g.setColor(0xFFE066, 1f);
+                    g.fillRect(c.x - 2, c.y - 2, c.w + 4, c.h + 4, 8);
+                }
+                string chu = c.caption;
+                if (chu != null && mFont.tahoma_7b_dark.getWidth(chu) + 14 > c.w)
+                {
+                    // Hai cot hep: cat chu va them "..." cho vua nut.
+                    while (chu.Length > 1 && mFont.tahoma_7b_dark.getWidth(chu + "...") + 14 > c.w)
+                    {
+                        chu = chu.Substring(0, chu.Length - 1);
+                    }
+                    chu += "...";
+                }
+                LoginScr.veNutForm(g, c.x, c.y, c.w, c.h, chu ?? string.Empty, i == 0);
+            }
+            veChamMayChu(g);
+        }
+
         /// <summary>Cham trang thai ket noi, dat sat truoc chu cua nut "May chu".</summary>
         private void veChamMayChu(mGraphics g)
         {
@@ -542,16 +597,21 @@ namespace Game6
             }
             Command c = cmd[k];
             int xc = c.x + (c.w - mFont.tahoma_7b_dark.getWidth(c.caption)) / 2 - 10;
+            if (xc < c.x + 4)
+            {
+                xc = c.x + 4;
+            }
+            int yc = c.y + c.h / 2 - 4;
             if (testConnect == -1)
             {
                 if (GameCanvas.gameTick % 20 > 10)
                 {
-                    g.drawRegion(GameScr.imgRoomStat, 0, 14, 7, 7, 0, xc, c.y + 9, 0);
+                    g.drawRegion(GameScr.imgRoomStat, 0, 14, 7, 7, 0, xc, yc, 0);
                 }
             }
             else
             {
-                g.drawRegion(GameScr.imgRoomStat, 0, testConnect * 7, 7, 7, 0, xc, c.y + 9, 0);
+                g.drawRegion(GameScr.imgRoomStat, 0, testConnect * 7, 7, 7, 0, xc, yc, 0);
             }
         }
 

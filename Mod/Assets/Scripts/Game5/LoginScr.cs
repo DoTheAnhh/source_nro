@@ -997,13 +997,7 @@ namespace Game5
 
         private const int DE_TRONG = 12;
         private const int CAO_NUT = 24;
-        private const int KHE_NUT = 7;
         private const int CAO_TIEU_DE_FORM = 20;
-        private const int RONG_NUT_MAT = 40;
-
-        // Logo tinh cung luc voi bo cuc: chi ve khi con cho.
-        private bool veLogo;
-        private int yLogo;
 
         /// <summary>O mat khau duoc gan nut an / hien (o mat khau dau tien).</summary>
         private TField oCoNutMat()
@@ -1011,81 +1005,30 @@ namespace Game5
             return cheDo == CD_QUEN_MK ? null : tfPass;
         }
 
-        /// <summary>
-        /// Tinh vi tri logo, khung o nhap va nut — goi moi khung hinh.
-        /// </summary>
-        /// <remarks>
-        /// Cung kieu man chon may chu: logo tren cung, khung be chua cac o nhap,
-        /// duoi khung la cac nut cam dai. Thu lan luot tu rong rai toi gon: nut
-        /// mot cot co logo → nut hai cot co logo → bo logo → bo dong nhan tren o.
-        /// </remarks>
+        /// <summary>Tinh vi tri khung, o nhap va nut — goi moi khung hinh.</summary>
         private void tinhBoCuc()
         {
             TField[] os = oCuaCheDo();
             int fh = mScreen.ITEM_HEIGHT + 2;
+            bool coNhan = GameCanvas.h >= 280;
+            int caoO = (coNhan ? 12 : 0) + fh + 7;
             object[][][] nut = nutCuaCheDo();
-            int soNut = 0;
-            foreach (object[][] hang in nut)
-            {
-                soNut += hang.Length;
-            }
             int caoChu = cheDo == CD_QUEN_MK ? CHU_QUEN_MK.Length * 12 + 6 : 0;
-            int caoLogo = imgTitle != null ? imgTitle.getHeight() : 0;
 
             int w = Math.min(GameCanvas.w - 16, 264);
             if (w < 170)
             {
                 w = GameCanvas.w - 4;
             }
-            // Khung PopUp ghep bang o 10 diem: canh le khong chia het cho 10
-            // thi o cuoi ve lan ra ngoai goc khung (vet rang cua o mep).
-            w = 20 + (w - 20) / 10 * 10;
+            int h = 8 + CAO_TIEU_DE_FORM + os.Length * caoO + caoChu + 2
+                    + nut.Length * (CAO_NUT + 6) + 4;
             int x = (GameCanvas.w - w) / 2;
-
-            int caoMotCot = soNut * CAO_NUT + (soNut - 1) * KHE_NUT;
-            int caoHaiCot = nut.Length * CAO_NUT + (nut.Length - 1) * KHE_NUT;
-            int tren = 20;
-            int duoi = 30;
-            int con = GameCanvas.h - tren - duoi;
-            bool banPhim = !Main.isPC && TouchScreenKeyboard.visible;
-
-            // { co logo, co nhan, hai cot }
-            bool[][] cachXep = {
-                new bool[] { true, true, false },
-                new bool[] { true, true, true },
-                new bool[] { false, true, false },
-                new bool[] { false, true, true },
-                new bool[] { false, false, true }
-            };
-            bool coLogo = false;
-            bool coNhan = false;
-            bool haiCot = true;
-            int caoKhung = 0;
-            int tong = 0;
-            for (int c = 0; c < cachXep.Length; c++)
-            {
-                bool l = cachXep[c][0] && caoLogo > 0 && !banPhim;
-                bool nh = cachXep[c][1];
-                bool hc = cachXep[c][2] || banPhim;
-                int hk = khungCao(os.Length, fh, nh, caoChu);
-                int t = (l ? caoLogo + 8 : 0) + hk + 8 + (hc ? caoHaiCot : caoMotCot);
-                coLogo = l;
-                coNhan = nh;
-                haiCot = hc;
-                caoKhung = hk;
-                tong = t;
-                if (t <= con)
-                {
-                    break;
-                }
-            }
-            int caoO = (coNhan ? 12 : 0) + fh + 7;
-
             int y;
+            bool banPhim = !Main.isPC && TouchScreenKeyboard.visible;
             if (banPhim)
             {
-                // Ban phim chiem nua duoi man: day len sat tren, va neu o dang go
-                // van nam thap thi day them cho no hien tren ban phim.
+                // Ban phim chiem nua duoi man: day khung len sat tren, va neu o
+                // dang go van nam thap thi day them cho no hien tren ban phim.
                 y = 6;
                 // Chieu cao ban phim that (diem anh -> diem logic). Mot so may
                 // Android tra 0: khi do lay 60% man, ban phim ngang thuong co vay.
@@ -1116,19 +1059,23 @@ namespace Game5
             }
             else
             {
-                y = tren + Math.max(0, (con - tong) / 2);
+                int duoiLogo = (imgTitle != null && GameCanvas.h > 220)
+                        ? 60 + imgTitle.getHeight() / 2 + 8 : 8;
+                y = Math.max(duoiLogo, (GameCanvas.h - h) / 2 + 20);
+                if (y + h > GameCanvas.h - 30)
+                {
+                    y = Math.max(4, GameCanvas.h - 30 - h);
+                }
             }
-
-            veLogo = coLogo;
-            if (coLogo)
-            {
-                yLogo = y + caoLogo / 2;
-                y += caoLogo + 8;
-            }
+            // Khung PopUp ghep bang o 10 diem: canh le khong chia het cho 10
+            // thi o cuoi ve lan ra ngoai goc khung (vet rang cua o mep).
+            w = 20 + (w - 20) / 10 * 10;
+            h = 20 + (h - 20 + 9) / 10 * 10;
+            x = (GameCanvas.w - w) / 2;
             xForm = x;
             yForm = y;
             wForm = w;
-            hForm = caoKhung;
+            hForm = h;
 
             // O nhap.
             int yc = y + 8 + CAO_TIEU_DE_FORM;
@@ -1146,50 +1093,28 @@ namespace Game5
                     // Nut an / hien sat mep phai khung. Chua 22 diem giua o nhap va
                     // nut: vung 20 diem quanh mep phai o nhap la nut XOA chu cua
                     // TField, dat nut vao do thi bam an / hien lai xoa sach.
-                    wNutMat = RONG_NUT_MAT;
+                    wNutMat = fh;
                     xNutMat = x + w - DE_TRONG - wNutMat;
-                    // O nhap ve tu y-1, cao fh+5: canh giua nut theo do.
-                    yNutMat = t.y - 1 + (fh + 5) / 2 - CAO_NUT / 2;
+                    yNutMat = t.y;
                     t.width = xNutMat - 22 - t.x;
                 }
                 yc += caoO;
             }
 
-            // Nut, duoi khung.
+            // Nut.
             oNutForm.Clear();
-            int yn = y + caoKhung + 8;
-            int bw1 = w;
-            int bw2 = (w - 8) / 2;
+            int yn = yc + caoChu + 2;
             for (int hang = 0; hang < nut.Length; hang++)
             {
                 int k = nut[hang].Length;
+                int bw = (w - DE_TRONG * 2 - (k - 1) * 6) / k;
                 for (int i = 0; i < k; i++)
                 {
-                    int id = (int)nut[hang][i][2];
-                    if (haiCot)
-                    {
-                        int bw = k == 1 ? bw1 : bw2;
-                        oNutForm.Add(new int[] { x + i * (bw2 + 8), yn, bw, CAO_NUT, id, hang, i });
-                    }
-                    else
-                    {
-                        oNutForm.Add(new int[] { x, yn, bw1, CAO_NUT, id, hang, i });
-                        yn += CAO_NUT + KHE_NUT;
-                    }
+                    oNutForm.Add(new int[] { x + DE_TRONG + i * (bw + 6), yn, bw, CAO_NUT,
+                        (int)nut[hang][i][2], hang, i });
                 }
-                if (haiCot)
-                {
-                    yn += CAO_NUT + KHE_NUT;
-                }
+                yn += CAO_NUT + 6;
             }
-        }
-
-        /// <summary>Chieu cao khung o nhap (lam tron boi 10 cho PopUp).</summary>
-        private static int khungCao(int soO, int fh, bool coNhan, int caoChu)
-        {
-            int caoO = (coNhan ? 12 : 0) + fh + 7;
-            int h = 8 + CAO_TIEU_DE_FORM + soO * caoO + caoChu + 2;
-            return 20 + (h - 20 + 9) / 10 * 10;
         }
 
         private void veForm(mGraphics g)
@@ -1197,11 +1122,13 @@ namespace Game5
             tinhBoCuc();
             TField[] os = oCuaCheDo();
             string[] nhan = nhanCuaCheDo();
-            bool coNhan = os.Length > 0 && (os[0].y - (yForm + 8 + CAO_TIEU_DE_FORM)) >= 12;
+            bool coNhan = GameCanvas.h >= 280;
 
-            if (veLogo && imgTitle != null)
+            // Logo chi ve khi con cho phia tren khung, khong de len form.
+            if (imgTitle != null && GameCanvas.h > 220
+                    && yForm >= 60 + imgTitle.getHeight() / 2 + 4)
             {
-                g.drawImage(imgTitle, GameCanvas.hw, yLogo, 3);
+                g.drawImage(imgTitle, GameCanvas.hw, 60, 3);
             }
 
             PopUp.paintPopUp(g, xForm, yForm, wForm, hForm, -1, true);
@@ -1227,7 +1154,8 @@ namespace Game5
 
             if (wNutMat > 0)
             {
-                veNutForm(g, xNutMat, yNutMat, wNutMat, CAO_NUT, hienMatKhau ? "Ẩn" : "Hiện");
+                veNutForm(g, xNutMat, yNutMat, wNutMat, wNutMat,
+                        hienMatKhau ? "Ẩn" : "Hiện", false);
             }
 
             if (cheDo == CD_QUEN_MK)
@@ -1245,48 +1173,37 @@ namespace Game5
             {
                 object[] n = nut[o[5]][o[6]];
                 string chu = (string)n[0];
-                if (mFont.tahoma_7b_dark.getWidth(chu) + 14 > o[2])
+                if (mFont.tahoma_7b_white.getWidth(chu) + 10 > o[2])
                 {
                     chu = (string)n[1];
                 }
-                veNutForm(g, o[0], o[1], o[2], o[3], chu);
+                veNutForm(g, o[0], o[1], o[2], o[3], chu, (bool)n[3]);
             }
         }
 
-        /// <summary>
-        /// Mot nut cua form — dung chinh anh nut cam cua man chon may chu
-        /// (Command.btn0*/btn1*), dang bam thi doi sang anh nut sang.
-        /// </summary>
-        private static void veNutForm(mGraphics g, int x, int y, int w, int h, string chu)
+        /// <summary>Mot nut cua form: vien nau, than cam (nut chinh) hoac kem.</summary>
+        /// <remarks>Man chon may chu (ServerListScreen) dung chung de hai man giong nhau.</remarks>
+        public static void veNutForm(mGraphics g, int x, int y, int w, int h, string chu,
+                bool chinh)
         {
             bool dangNhan = GameCanvas.isPointerDown && GameCanvas.isPointerHoldIn(x, y, w, h);
-            if (Command.btn0left != null && Command.btn1left != null)
+            g.setColor(0x000000, 0.25f);
+            g.fillRect(x + 1, y + 2, w, h, 6);
+            g.setColor(0x7A3F12, 1f);
+            g.fillRect(x, y, w, h, 6);
+            int mau = chinh ? (dangNhan ? 0xC96A1C : 0xF08A2A) : (dangNhan ? 0xD9B27A : 0xF3D9A8);
+            g.setColor(mau, 1f);
+            g.fillRect(x + 1, y + 1, w - 2, h - 2, 5);
+            g.setColor(0xFFFFFF, dangNhan ? 0.08f : 0.22f);
+            g.fillRect(x + 3, y + 2, w - 6, h / 2 - 2, 4);
+            if (chinh)
             {
-                if (dangNhan)
-                {
-                    Command.paintOngMau(Command.btn1left, Command.btn1mid, Command.btn1right, x, y, w, g);
-                }
-                else
-                {
-                    Command.paintOngMau(Command.btn0left, Command.btn0mid, Command.btn0right, x, y, w, g);
-                }
+                mFont.tahoma_7b_dark.drawString(g, chu, x + w / 2 + 1, y + h / 2 - 5, mFont.CENTER);
+                mFont.tahoma_7b_white.drawString(g, chu, x + w / 2, y + h / 2 - 6, mFont.CENTER);
             }
             else
             {
-                // Anh nut chua nap (rat hiem): ve tam bang khoi mau cung tong.
-                g.setColor(0x6B2A12, 1f);
-                g.fillRect(x, y, w, h, 6);
-                g.setColor(dangNhan ? 0xF5A04A : 0xE8842E, 1f);
-                g.fillRect(x + 1, y + 1, w - 2, h - 2, 5);
-            }
-            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
-            if (dangNhan)
-            {
-                mFont.tahoma_7b_green2.drawString(g, chu, x + w / 2, y + 7, mFont.CENTER);
-            }
-            else
-            {
-                mFont.tahoma_7b_dark.drawString(g, chu, x + w / 2, y + 7, mFont.CENTER);
+                mFont.tahoma_7b_dark.drawString(g, chu, x + w / 2, y + h / 2 - 6, mFont.CENTER);
             }
         }
 
@@ -1420,7 +1337,7 @@ namespace Game5
             {
                 return false;
             }
-            if (wNutMat > 0 && GameCanvas.isPointerHoldIn(xNutMat, yNutMat, wNutMat, CAO_NUT))
+            if (wNutMat > 0 && GameCanvas.isPointerHoldIn(xNutMat, yNutMat, wNutMat, wNutMat))
             {
                 hienMatKhau = !hienMatKhau;
                 apDungHienMk();
