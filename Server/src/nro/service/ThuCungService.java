@@ -62,7 +62,8 @@ public class ThuCungService {
 
         public int loai;
         public int thamSo;
-        public int phanTram;
+        /** Mạnh bao nhiêu, tính bằng phần vạn (1.000 = 10%). */
+        public int phanVan;
         /** Mốc thời gian máy lúc hết hiệu lực. */
         public long het;
     }
@@ -336,9 +337,10 @@ public class ThuCungService {
 
     /** Một chiêu vừa nổ: loại nào ăn ngay thì làm ngay, loại nào kéo dài thì đặt lớp. */
     private void no(Player pl, ThuCungDAO.ThuSoHuu thu, ThuCungDAO.KyNang k, long bayGio) {
-        int phanTram = k.phanTramTheoCap(thu.cap);
+        // Theo CAP CHIEU cua con nay, khong theo cap thu.
+        int phanVan = k.phanVanTheoCapChieu(thu.capChieu(k.thuTu));
         if (k.loai == ThuCungDAO.LOAI_HOI_HP) {
-            long hoi = pl.nPoint.hpMax * phanTram / 100L;
+            long hoi = (long) (pl.nPoint.hpMax * (phanVan / 10000d));
             pl.nPoint.hp = Math.min(pl.nPoint.hpMax, pl.nPoint.hp + hoi);
             nro.service.PlayerService.gI().sendInfoHpMpMoney(pl);
         } else {
@@ -348,12 +350,12 @@ public class ThuCungService {
             Buff b = new Buff();
             b.loai = k.loai;
             b.thamSo = k.thamSo;
-            b.phanTram = phanTram;
+            b.phanVan = phanVan;
             b.het = bayGio + Math.max(1, k.giay) * 1000L;
             pl.tcBuff.add(b);
         }
         Service.gI().sendThongBao(pl, tenThu(thu) + " dùng " + k.ten
-                + ": " + ThuCungDAO.tenLoai(k.loai).replace("%", phanTram + "%")
+                + ": " + ThuCungDAO.tenLoai(k.loai).replace("%", inPhanVan(phanVan) + "%")
                 + (k.loai == ThuCungDAO.LOAI_HOI_HP ? "" : " trong " + k.giay + " giây"));
         baoNoChieu(pl, thu, k);
     }
@@ -406,9 +408,20 @@ public class ThuCungService {
             if (loai == ThuCungDAO.LOAI_CHIEU && b.thamSo != idChieu) {
                 continue;
             }
-            t += b.phanTram;
+            t += b.phanVan;
         }
         return t;
+    }
+
+    /** Phần vạn viết ra phần trăm: 1000 → "10", 1050 → "10,5", 1025 → "10,25". */
+    public static String inPhanVan(int phanVan) {
+        int nguyen = phanVan / 100;
+        int le = Math.abs(phanVan % 100);
+        if (le == 0) {
+            return String.valueOf(nguyen);
+        }
+        return nguyen + "," + (le % 10 == 0 ? String.valueOf(le / 10)
+                : (le < 10 ? "0" + le : String.valueOf(le)));
     }
 
     /**
@@ -425,28 +438,30 @@ public class ThuCungService {
                 && pl.playerSkill.skillSelect.template != null) {
             idChieu = pl.playerSkill.skillSelect.template.id;
         }
-        int phanTram = tong(pl, ThuCungDAO.LOAI_SUC_DANH, -1)
+        int phanVan = tong(pl, ThuCungDAO.LOAI_SUC_DANH, -1)
                 + tong(pl, ThuCungDAO.LOAI_CHIEU, idChieu);
-        if (phanTram <= 0) {
+        if (phanVan <= 0) {
             return dameGoc;
         }
-        return dameGoc + dameGoc * phanTram / 100L;
+        // Nhan kieu double: dameGoc * phanVan co the tran long voi dame cuc lon.
+        return dameGoc + (long) (dameGoc * (phanVan / 10000d));
     }
 
+    /** Phần trăm chí mạng cộng thêm; lẻ thì làm tròn xuống vì chí mạng tính nguyên. */
     public int themChiMang(Player pl) {
-        return tong(pl, ThuCungDAO.LOAI_CHI_MANG, -1);
+        return tong(pl, ThuCungDAO.LOAI_CHI_MANG, -1) / 100;
     }
 
     public double giamSatThuong(Player pl, double damage) {
-        int phanTram = tong(pl, ThuCungDAO.LOAI_GIAM_SAT_THUONG, -1);
-        if (phanTram <= 0) {
+        int phanVan = tong(pl, ThuCungDAO.LOAI_GIAM_SAT_THUONG, -1);
+        if (phanVan <= 0) {
             return damage;
         }
-        if (phanTram > 90) {
+        if (phanVan > 9000) {
             // Chan o 90%: de admin go nham 100 la nhan vat bat tu.
-            phanTram = 90;
+            phanVan = 9000;
         }
-        return damage - damage * phanTram / 100d;
+        return damage - damage * phanVan / 10000d;
     }
 
     // =====================================================================
@@ -673,6 +688,8 @@ public class ThuCungService {
                 msg.writer().writeShort(t.leg);
                 msg.writer().writeByte(ThuCungDAO.bac(t.id));
             }
+            // Ghi o CUOI goi: client cu doc het phan tren roi dung, khong lech.
+            msg.writer().writeShort(ThuCungDAO.chieuMoiCap());
             pl.sendMessage(msg);
         } catch (Exception ex) {
             Logger.logException(ThuCungService.class, ex, "Không gửi được bảng thú cưng");
@@ -706,6 +723,14 @@ public class ThuCungService {
                 msg.writer().writeInt(t.theoCap(t.giap));
                 msg.writer().writeShort(t.chiMang);
                 msg.writer().writeByte(t.raTran ? 1 : 0);
+            }
+            // Cap chieu cua tung con, gom thanh mot khoi o CUOI goi thay vi chen
+            // vao tung ban ghi: client cu doc het cac ban ghi roi dung, khoi
+            // nay nam thua o cuoi chu khong lam lech ban ghi nao.
+            for (ThuCungDAO.ThuSoHuu t : ds) {
+                for (int i = 1; i <= ThuCungDAO.SO_KY_NANG; i++) {
+                    msg.writer().writeShort(t.capChieu(i));
+                }
             }
             pl.sendMessage(msg);
         } catch (Exception ex) {

@@ -267,6 +267,25 @@ public class ThuCungTab extends JPanel {
      * <p>Chiêu chưa có thì các ô vẫn hiện với giá trị mặc định và nút ghi thành
      * "Thêm chiêu" — không phải bấm nút riêng để tạo dòng rồi mới sửa.</p>
      */
+    /** Một mục trong ô chọn chiêu: id kèm tên và hành tinh cho dễ nhận. */
+    private static final class MucChieu {
+
+        final int id;
+        final String ten;
+        final String hanhTinh;
+
+        MucChieu(int id, String ten, String hanhTinh) {
+            this.id = id;
+            this.ten = ten == null ? "" : ten;
+            this.hanhTinh = hanhTinh == null ? "" : hanhTinh;
+        }
+
+        @Override
+        public String toString() {
+            return id + " · " + ten + (hanhTinh.isEmpty() ? "" : " (" + hanhTinh + ")");
+        }
+    }
+
     private final class ODung extends JPanel {
 
         private final int thuTu;
@@ -287,6 +306,16 @@ public class ThuCungTab extends JPanel {
         private final JButton nutLuu = new JButton("Lưu");
         private final JButton nutXoa = new JButton("Xoá chiêu");
         private final JLabel lblThamSo = new JLabel(" ");
+
+        /**
+         * Ô chọn chiêu, thay cho ô gõ số khi hiệu ứng là "sát thương của một
+         * chiêu". Gõ id chiêu bằng tay thì phải thuộc lòng bảng kỹ năng, gõ
+         * nhầm một số là chiêu thú cưng cộng vào một chiêu không ai dùng.
+         */
+        private final JComboBox<MucChieu> fChieu = new JComboBox<>();
+
+        /** Giữ ô gõ số và ô chọn chiêu cùng một chỗ, hiện một trong hai. */
+        private final JPanel oThamSo = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
 
         ODung(int thuTu) {
             this.thuTu = thuTu;
@@ -316,9 +345,14 @@ public class ThuCungTab extends JPanel {
             c.gridwidth = 1;
 
             them(c, 0, y, new JLabel("Tham số:"));
-            them(c, 1, y, fThamSo);
-            c.gridwidth = 2;
-            them(c, 2, y++, lblThamSo);
+            oThamSo.setOpaque(false);
+            oThamSo.add(fThamSo);
+            oThamSo.add(fChieu);
+            fChieu.setVisible(false);
+            fChieu.setMaximumRowCount(16);
+            c.gridwidth = 3;
+            them(c, 1, y++, oThamSo);
+            them(c, 1, y++, lblThamSo);
             c.gridwidth = 1;
 
             them(c, 0, y, new JLabel("Mức (%):"));
@@ -365,9 +399,59 @@ public class ThuCungTab extends JPanel {
             String y = (loai >= 0 && loai < ThuCungDAO.Y_NGHIA_THAM_SO.length)
                     ? ThuCungDAO.Y_NGHIA_THAM_SO[loai] : "";
             boolean dung = y != null && !y.isEmpty();
-            fThamSo.setEnabled(dung);
-            lblThamSo.setText(dung ? y : "(loại này không dùng tham số)");
+            boolean chonChieu = loai == ThuCungDAO.LOAI_CHIEU;
+            if (chonChieu) {
+                napDsChieu();
+            }
+            fThamSo.setVisible(!chonChieu);
+            fChieu.setVisible(chonChieu);
+            fThamSo.setEnabled(dung && itemId > 0);
+            fChieu.setEnabled(itemId > 0);
+            lblThamSo.setText(chonChieu ? "Chiêu được cộng sát thương"
+                    : (dung ? y : "(loại này không dùng tham số)"));
             lblThamSo.setForeground(dung ? UiTheme.TEXT : UiTheme.TEXT_MUTED);
+            oThamSo.revalidate();
+        }
+
+        /**
+         * Nạp danh sách chiêu vào ô chọn, một lần.
+         *
+         * <p>Không nạp trong hàm dựng: panel dựng trước khi máy chủ đọc xong
+         * bảng kỹ năng, lúc ấy {@code Manager.NCLASS} còn rỗng — đúng cái bẫy
+         * từng làm sập máy chủ lúc khởi động với bảng vật phẩm.</p>
+         */
+        private void napDsChieu() {
+            if (fChieu.getItemCount() > 0) {
+                return;
+            }
+            java.util.Map<Integer, MucChieu> theoId = new java.util.TreeMap<>();
+            for (nro.entity.skill.NClass nc : nro.server.Manager.NCLASS) {
+                if (nc == null) {
+                    continue;
+                }
+                for (nro.entity.template.SkillTemplate st : nc.skillTemplatess) {
+                    if (st != null && !theoId.containsKey((int) st.id)) {
+                        theoId.put((int) st.id, new MucChieu(st.id, st.name, nc.name));
+                    }
+                }
+            }
+            for (MucChieu m : theoId.values()) {
+                fChieu.addItem(m);
+            }
+        }
+
+        /** Chọn mục có id {@code id}; chưa có thì thêm một mục tạm để không mất số cũ. */
+        private void chonChieu(int id) {
+            napDsChieu();
+            for (int i = 0; i < fChieu.getItemCount(); i++) {
+                if (fChieu.getItemAt(i).id == id) {
+                    fChieu.setSelectedIndex(i);
+                    return;
+                }
+            }
+            MucChieu tam = new MucChieu(id, "(không có trong bảng kỹ năng)", "");
+            fChieu.addItem(tam);
+            fChieu.setSelectedItem(tam);
         }
 
         void dat(int itemId, ThuCungDAO.KyNang k) {
@@ -379,6 +463,11 @@ public class ThuCungTab extends JPanel {
             fLoai.setSelectedIndex(k == null ? 0
                     : Math.max(0, Math.min(ThuCungDAO.TEN_LOAI.length - 1, k.loai)));
             fThamSo.setText(String.valueOf(k == null ? 0 : k.thamSo));
+            if (k != null && k.loai == ThuCungDAO.LOAI_CHIEU) {
+                chonChieu(k.thamSo);
+            } else if (fChieu.getItemCount() > 0) {
+                fChieu.setSelectedIndex(0);
+            }
             fPhanTram.setText(String.valueOf(k == null ? 10 : k.phanTram));
             fGiay.setText(String.valueOf(k == null ? 10 : k.giay));
             fTiLe.setText(String.valueOf(k == null ? 10 : k.tiLe));
@@ -407,7 +496,17 @@ public class ThuCungTab extends JPanel {
             k.ten = fTen.getText().trim();
             k.moTa = fMoTa.getText().trim();
             k.loai = Math.max(0, fLoai.getSelectedIndex());
-            k.thamSo = so(fThamSo, 0);
+            if (k.loai == ThuCungDAO.LOAI_CHIEU) {
+                MucChieu m = (MucChieu) fChieu.getSelectedItem();
+                if (m == null) {
+                    JOptionPane.showMessageDialog(ThuCungTab.this,
+                            "Chọn chiêu được cộng sát thương.");
+                    return;
+                }
+                k.thamSo = m.id;
+            } else {
+                k.thamSo = so(fThamSo, 0);
+            }
             k.phanTram = so(fPhanTram, 10);
             k.giay = so(fGiay, 10);
             k.tiLe = so(fTiLe, 10);

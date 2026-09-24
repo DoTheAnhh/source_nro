@@ -51,7 +51,24 @@ namespace Game2.God
             public int giap;
             public int chiMang;
             public bool raTran;
+            /// <summary>Cấp từng chiêu, theo thứ tự chiêu (ô 0 bỏ trống).</summary>
+            public int[] capChieu = { 1, 1, 1, 1 };
+
+            public int capCuaChieu(int thuTu)
+            {
+                if (thuTu < 1 || thuTu >= capChieu.Length)
+                {
+                    return 1;
+                }
+                return capChieu[thuTu] < 1 ? 1 : capChieu[thuTu];
+            }
         }
+
+        /// <summary>
+        /// Mỗi cấp chiêu mạnh thêm bao nhiêu % chỉ số gốc của chiêu. Máy chủ gửi
+        /// ở cuối gói bảng; 5 là số mặc định bên máy chủ.
+        /// </summary>
+        private static int tcChieuMoiCap = 5;
 
         /// <summary>Tên từng loại hiệu ứng — khớp <c>ThuCungDAO.TEN_LOAI</c>.</summary>
         private static readonly string[] TEN_LOAI_CHIEU = {
@@ -172,6 +189,11 @@ namespace Game2.God
                 hinhThuCung[id] = new short[] { dau, than, chan };
                 bacThuCung[id] = msg.reader().readByte();
             }
+            // May chu cu khong gui so nay: giu so mac dinh.
+            if (msg.reader().available() >= 2)
+            {
+                tcChieuMoiCap = msg.reader().readShort();
+            }
             tcDaCoBang = true;
         }
 
@@ -194,6 +216,18 @@ namespace Game2.God
                 t.chiMang = msg.reader().readShort();
                 t.raTran = msg.reader().readByte() == 1;
                 dsThuCung.Add(t);
+            }
+            // Cap chieu nam thanh mot khoi o CUOI goi (xem ThuCungService.guiDanhSach).
+            // Doc theo dung thu tu ban ghi, TRUOC khi sap xep lai danh sach.
+            if (msg.reader().available() >= dsThuCung.Count * 3 * 2)
+            {
+                for (int i = 0; i < dsThuCung.Count; i++)
+                {
+                    for (int k = 1; k <= 3; k++)
+                    {
+                        dsThuCung[i].capChieu[k] = msg.reader().readShort();
+                    }
+                }
             }
             // Con ra tran dung dau, con lai bac cao truoc.
             dsThuCung.Sort((a, b) =>
@@ -934,10 +968,25 @@ namespace Game2.God
                 mFont mfTen = mo ? mFont.tahoma_7b_dark : mFont.tahoma_7_grey;
                 mfTen.drawString(g, "Chiêu " + c.thuTu + ": " + c.ten, xc, yc,
                         mFont.LEFT);
+                int capC = thu.capCuaChieu(c.thuTu);
+                if (mo)
+                {
+                    // Nhan cap chieu goc tren phai o: cap nay len bang sach,
+                    // khong theo cap thu, nen phai de thay rieng.
+                    string nhanCap = "Cấp " + capC;
+                    int wN = mFont.tahoma_7b_white.getWidth(nhanCap) + 8;
+                    int xN = o[0] + o[2] - wN - 5;
+                    g.setColor(MAU_VIEN_O, 1f);
+                    g.fillRect(xN - 1, o[1] + 4, wN + 2, 13, 4);
+                    g.setColor(MAU_RA_TRAN, 1f);
+                    g.fillRect(xN, o[1] + 5, wN, 11, 3);
+                    mFont.tahoma_7b_white.drawString(g, nhanCap, xN + wN / 2,
+                            o[1] + 5, mFont.CENTER);
+                }
                 yc += 12;
                 if (mo)
                 {
-                    mFont.tahoma_7_blue.drawString(g, moTaChieu(c, thu.cap), xc, yc,
+                    mFont.tahoma_7_blue.drawString(g, moTaChieu(c, capC), xc, yc,
                             mFont.LEFT);
                     yc += 11;
                     mFont.tahoma_7_grey.drawString(g,
@@ -952,12 +1001,20 @@ namespace Game2.God
             }
         }
 
-        private static string moTaChieu(ChieuThuCung c, int cap)
+        /// <summary>Dòng hiệu ứng của chiêu ở cấp chiêu <paramref name="capChieu"/>.</summary>
+        /// <remarks>
+        /// Cùng công thức với <c>KyNang.phanVanTheoCapChieu</c> bên máy chủ: tính
+        /// bằng phần vạn, mỗi cấp cộng <see cref="tcChieuMoiCap"/>% của chỉ số
+        /// gốc. Cấp THÚ không đụng tới.
+        /// </remarks>
+        private static string moTaChieu(ChieuThuCung c, int capChieu)
         {
-            int pt = c.phanTram + (cap > c.capMo ? (cap - c.capMo) : 0);
+            long goc = c.phanTram * 100L;
+            long heSo = 100L + (long) tcChieuMoiCap * (capChieu > 1 ? capChieu - 1 : 0);
+            int phanVan = (int) (goc * heSo / 100L);
             string mau = (c.loai >= 0 && c.loai < TEN_LOAI_CHIEU.Length)
                     ? TEN_LOAI_CHIEU[c.loai] : "Hiệu ứng #%";
-            string s = mau.Replace("#", string.Empty + pt);
+            string s = mau.Replace("#", inPhanVan(phanVan));
             if (c.loai == 1)
             {
                 s += " (chiêu " + c.thamSo + ")";
@@ -967,6 +1024,26 @@ namespace Game2.God
                 s += " trong " + c.giay + "s";
             }
             return s;
+        }
+
+        /// <summary>Phần vạn thành phần trăm: 1000 → "10", 1050 → "10,5".</summary>
+        private static string inPhanVan(int phanVan)
+        {
+            int nguyen = phanVan / 100;
+            int le = phanVan % 100;
+            if (le < 0)
+            {
+                le = -le;
+            }
+            if (le == 0)
+            {
+                return string.Empty + nguyen;
+            }
+            if (le % 10 == 0)
+            {
+                return nguyen + "," + (le / 10);
+            }
+            return nguyen + "," + (le < 10 ? "0" + le : string.Empty + le);
         }
 
         private int[] oOChieu(int i)

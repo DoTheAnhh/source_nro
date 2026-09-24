@@ -131,14 +131,21 @@ public final class ThuCungDAO {
         public boolean bat = true;
 
         /**
-         * Phần trăm thật sự, đã cộng thêm phần của cấp.
+         * Sức mạnh thật của chiêu ở cấp chiêu {@code capChieu}, tính bằng
+         * <b>phần vạn</b> (1.000 = 10%).
          *
-         * <p>Đúng bằng số khai trên panel ở <b>cấp vừa mở chiêu</b>; mỗi cấp sau
-         * đó cộng thêm {@code themMoiCap()} phần trăm. Không nhân dồn: nhân dồn
-         * thì tới cấp trần con số vọt lên vô lý.</p>
+         * <p><b>Cấp của thú không đụng tới con số này.</b> Chiêu có cấp riêng,
+         * mở ra là cấp 1 và chỉ lên bằng sách. Mỗi cấp mạnh thêm
+         * {@code chieuMoiCap()} phần trăm <b>của chính chỉ số gốc</b>: chiêu 10%,
+         * mỗi cấp +5% thì cấp 2 là 10,5%, cấp 11 là 15%. Không nhân dồn.</p>
+         *
+         * <p>Phần vạn chứ không phần trăm nguyên: 10% × 1,05 = 10,5%, làm tròn về
+         * phần trăm nguyên là mất sạch phần cấp của mọi chiêu dưới 20%.</p>
          */
-        public int phanTramTheoCap(int cap) {
-            return phanTram + Math.max(0, cap - capMo) * themMoiCap();
+        public int phanVanTheoCapChieu(int capChieu) {
+            long goc = phanTram * 100L;
+            long heSo = 100L + (long) chieuMoiCap() * Math.max(0, capChieu - 1);
+            return (int) Math.min(Integer.MAX_VALUE, goc * heSo / 100L);
         }
 
         /** Dòng chữ mô tả hiệu ứng, dùng cho cả game lẫn panel. */
@@ -150,7 +157,7 @@ public final class ThuCungDAO {
             if (loai != LOAI_HOI_HP) {
                 s += " trong " + giay + "s";
             }
-            return s + ", tỉ lệ " + tiLe + "%";
+            return s + ", tỉ lệ " + tiLe + "% (ở cấp chiêu 1)";
         }
     }
 
@@ -253,13 +260,20 @@ public final class ThuCungDAO {
     // =====================================================================
     public static final String K_EXP_MOI_CAP = "exp_moi_cap";
     public static final String K_CAP_TOI_DA = "cap_toi_da";
-    public static final String K_THEM_MOI_CAP = "them_moi_cap";
+    public static final String K_CHIEU_MOI_CAP = "chieu_moi_cap";
     public static final String K_CHI_SO_MOI_CAP = "chi_so_moi_cap";
+
+    /**
+     * Khoá cũ, bỏ rồi: chiêu từng mạnh thêm theo CẤP THÚ. Nay chiêu có cấp
+     * riêng ({@link #K_CHIEU_MOI_CAP}), khoá này chỉ còn để xoá dòng cũ khỏi
+     * bảng — để nguyên thì panel hiện một ô chỉnh không còn tác dụng gì.
+     */
+    private static final String K_CU_THEM_MOI_CAP = "them_moi_cap";
 
     private static final String[][] CAU_HINH_GOC = {
         {K_EXP_MOI_CAP, "100", "Kinh nghiệm cần cho MỖI cấp — lên cấp c cần c × số này"},
         {K_CAP_TOI_DA, "50", "Cấp cao nhất của thú cưng"},
-        {K_THEM_MOI_CAP, "1", "Mỗi cấp sau khi mở chiêu thì chiêu mạnh thêm bao nhiêu %"},
+        {K_CHIEU_MOI_CAP, "5", "Mỗi CẤP CHIÊU (nâng bằng sách) mạnh thêm bao nhiêu % chỉ số gốc của chiêu. Cấp thú không ảnh hưởng chiêu"},
         {K_CHI_SO_MOI_CAP, "3", "Mỗi cấp thú cưng cộng thêm bao nhiêu % chỉ số"}
     };
 
@@ -278,7 +292,12 @@ public final class ThuCungDAO {
             "ki INT(11) NOT NULL DEFAULT 0",
             "suc_danh INT(11) NOT NULL DEFAULT 0",
             "giap INT(11) NOT NULL DEFAULT 0",
-            "chi_mang INT(11) NOT NULL DEFAULT 0"
+            "chi_mang INT(11) NOT NULL DEFAULT 0",
+            // Cap cua tung chieu, rieng tung con. Mo chieu ra la cap 1; sach
+            // nang cap se ghi vao day.
+            "cap_chieu_1 INT(11) NOT NULL DEFAULT 1",
+            "cap_chieu_2 INT(11) NOT NULL DEFAULT 1",
+            "cap_chieu_3 INT(11) NOT NULL DEFAULT 1"
         };
         java.util.Set<String> dangCo = new java.util.HashSet<>();
         CrisResultSet rs = null;
@@ -315,6 +334,8 @@ public final class ThuCungDAO {
             ConnectDB.executeUpdate("INSERT IGNORE INTO thu_cung_cau_hinh"
                     + " (khoa, gia_tri, mo_ta) VALUES (?, ?, ?)", d[0], d[1], d[2]);
         }
+        ConnectDB.executeUpdate("DELETE FROM thu_cung_cau_hinh WHERE khoa = ?",
+                K_CU_THEM_MOI_CAP);
     }
 
     private static final Map<String, String> CAU_HINH = new HashMap<>();
@@ -366,8 +387,9 @@ public final class ThuCungDAO {
         return Math.max(1, soCauHinh(K_CAP_TOI_DA, 50));
     }
 
-    public static int themMoiCap() {
-        return Math.max(0, soCauHinh(K_THEM_MOI_CAP, 1));
+    /** Mỗi cấp chiêu mạnh thêm bao nhiêu phần trăm chỉ số gốc của chiêu. */
+    public static int chieuMoiCap() {
+        return Math.max(0, soCauHinh(K_CHIEU_MOI_CAP, 5));
     }
 
     public static void datCauHinh(String khoa, String giaTri) {
@@ -932,6 +954,19 @@ public final class ThuCungDAO {
         public int giap;
         public int chiMang;
         public boolean raTran;
+        /**
+         * Cấp của từng chiêu, đánh số theo thứ tự chiêu (ô 0 bỏ trống).
+         * Mở chiêu ra là cấp 1.
+         */
+        public int[] capChieu = {1, 1, 1, 1};
+
+        /** Cấp của chiêu thứ {@code thuTu}, ít nhất là 1. */
+        public int capChieu(int thuTu) {
+            if (thuTu < 1 || thuTu >= capChieu.length) {
+                return 1;
+            }
+            return Math.max(1, capChieu[thuTu]);
+        }
 
         /** Chỉ số sau khi cộng phần của cấp. */
         public int theoCap(int goc) {
@@ -1002,10 +1037,38 @@ public final class ThuCungDAO {
         t.giap = rs.getInt("giap");
         t.chiMang = rs.getInt("chi_mang");
         t.raTran = rs.getInt("ra_tran") == 1;
+        for (int i = 1; i <= SO_KY_NANG; i++) {
+            try {
+                t.capChieu[i] = Math.max(1, rs.getInt("cap_chieu_" + i));
+            } catch (Exception chuaCoCot) {
+                // May chua kip them cot: moi chieu coi nhu cap 1.
+                t.capChieu[i] = 1;
+            }
+        }
         if (t.ten == null) {
             t.ten = "";
         }
         return t;
+    }
+
+    /**
+     * Đặt cấp cho một chiêu của một con thú — lối vào cho sách nâng chiêu.
+     *
+     * @param thuTu chiêu thứ mấy, 1..{@link #SO_KY_NANG}
+     */
+    public static void datCapChieu(int idThu, int thuTu, int cap) {
+        if (thuTu < 1 || thuTu > SO_KY_NANG) {
+            return;
+        }
+        try {
+            damBaoBang();
+            // Ten cot ghep tu thuTu da kiem tra o tren, khong phai chu nguoi
+            // choi go vao.
+            ConnectDB.executeUpdate("UPDATE thu_cung_so_huu SET cap_chieu_" + thuTu
+                    + " = ? WHERE id = ?", Math.max(1, cap), idThu);
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không lưu được cấp chiêu");
+        }
     }
 
     /**
