@@ -935,6 +935,12 @@ public class Controller implements IMessageHandler {
                 case -48:
                     nro.service.SuKienManHinhService.gI().guiDuLieu(player);
                     break;
+                // [115] Mo ruong (tab gacha trong man Su kien): xin bang, mo x1/x10.
+                // Da soat 115 o CA BA noi: bang lenh may chu, bang lenh client va
+                // moi loi goi new Message(...) hai ben — deu trong.
+                case 115:
+                    nro.service.MoRuongService.gI().nhanGoi(player, _msg);
+                    break;
                 // [-58] Goi phuc loi: xin du lieu hoac xin nhan qua.
                 case -58:
                     nro.service.PhucLoiService.gI().nhanGoi(player, _msg);

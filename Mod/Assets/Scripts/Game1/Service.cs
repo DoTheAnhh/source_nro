@@ -2037,6 +2037,46 @@ namespace Game1
     		}
     	}
 
+    	/// <summary>Xin bang mo ruong (tab gacha trong man Su kien).</summary>
+    	public void moRuongXin()
+    	{
+    		guiMoRuong(0, -1, 0);
+    	}
+
+    	/// <summary>Mo ruong <paramref name="id"/> <paramref name="n"/> lan (1 hoac 10).</summary>
+    	public void moRuongMo(int id, int n)
+    	{
+    		guiMoRuong(1, id, n);
+    	}
+
+    	/// <summary>Goi 115: byte viec, roi (neu mo) short id va byte so lan.</summary>
+    	private void guiMoRuong(int viec, int id, int n)
+    	{
+    		Message message = null;
+    		try
+    		{
+    			message = new Message((sbyte)115);
+    			message.writer().writeByte(viec);
+    			if (id >= 0)
+    			{
+    				message.writer().writeShort(id);
+    				message.writer().writeByte(n);
+    			}
+    			session.sendMessage(message);
+    		}
+    		catch (Exception)
+    		{
+    			// Mat ket noi -> bo qua, nguoi choi bam lai.
+    		}
+    		finally
+    		{
+    			if (message != null)
+    			{
+    				message.cleanup();
+    			}
+    		}
+    	}
+
     	/// <summary>Xin may chu gui du lieu phuc loi.</summary>
 
     	public void phucLoiXin()

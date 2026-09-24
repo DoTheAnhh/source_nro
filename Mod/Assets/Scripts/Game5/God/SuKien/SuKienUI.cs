@@ -99,6 +99,42 @@ namespace Game5.God
         }
 
         private readonly List<SuKien> ds = new List<SuKien>();
+
+        /// <summary>Tab đang xem: 0 sự kiện, 1 mở rương.</summary>
+        private int theChon;
+
+        private static readonly string[] TEN_TAB = { "Sự kiện", "Mở rương" };
+
+        /// <summary>Vùng tab thứ <paramref name="i"/> ở góc trái dải tiêu đề.</summary>
+        private int[] oTab(int i)
+        {
+            int x = x0 + 6;
+            for (int k = 0; k < i; k++)
+            {
+                x += mFont.tahoma_7b_dark.getWidth(TEN_TAB[k]) + 22;
+            }
+            return new int[] { x, y0 + 3, mFont.tahoma_7b_dark.getWidth(TEN_TAB[i]) + 18, 17 };
+        }
+
+        private void veTab(mGraphics g)
+        {
+            for (int i = 0; i < TEN_TAB.Length; i++)
+            {
+                int[] o = oTab(i);
+                bool c = i == theChon;
+                veKhungBo(g, o[0], o[1], o[2], o[3], c ? MAU_THE : MAU_VIEN, c ? 1f : 0.55f,
+                        c ? MAU_VIEN : MAU_THE, c ? 1f : 0.6f, 1);
+                if (c)
+                {
+                    mFont.tahoma_7b_dark.drawString(g, TEN_TAB[i], o[0] + o[2] / 2, o[1] + 3, mFont.CENTER);
+                }
+                else
+                {
+                    mFont.tahoma_7b_white.drawString(g, TEN_TAB[i], o[0] + o[2] / 2, o[1] + 3, mFont.CENTER,
+                            mFont.tahoma_7b_dark);
+                }
+            }
+        }
         private int chon;
         private int cuon;
 
@@ -328,7 +364,14 @@ namespace Game5.God
             mFont.tahoma_7b_white.drawString(g, "SỰ KIỆN",
                     x0 + rong / 2, y0 + 4, mFont.CENTER, mFont.tahoma_7b_dark);
             veNut(g, x0 + rong - 20, y0 + 4, 16, 14, "X", false);
+            veTab(g);
 
+            if (theChon == 1)
+            {
+                MoRuongUI.getInstance().xinNeuCan();
+                MoRuongUI.getInstance().ve(g, xTrai, yThan, x0 + rong - LE - xTrai, caoThan);
+                return;
+            }
             if (ds.Count == 0)
             {
                 mFont.tahoma_7b_dark.drawString(g,
@@ -726,6 +769,31 @@ namespace Game5.God
                 return true;
             }
 
+            if (GameCanvas.isPointerJustRelease)
+            {
+                for (int i = 0; i < TEN_TAB.Length; i++)
+                {
+                    int[] o = oTab(i);
+                    if (cham(o[0], o[1], o[2], o[3]))
+                    {
+                        theChon = i;
+                        if (i == 1)
+                        {
+                            MoRuongUI.getInstance().xinNeuCan();
+                        }
+                        return true;
+                    }
+                }
+                if (theChon == 1 && cham(x0 + rong - 20, y0 + 4, 16, 14))
+                {
+                    dong();
+                    return true;
+                }
+            }
+            if (theChon == 1)
+            {
+                return MoRuongUI.getInstance().capNhatCham();
+            }
             cuonDanhSach(soDongCuon());
             if (!GameCanvas.isPointerJustRelease)
             {
