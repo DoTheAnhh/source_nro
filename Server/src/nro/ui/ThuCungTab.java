@@ -56,7 +56,8 @@ public class ThuCungTab extends JPanel {
         JTabbedPane trong = new JTabbedPane();
         trong.addTab("1. Chiêu của thú", theChieu());
         trong.addTab("2. Đồ ăn", theDoAn());
-        trong.addTab("3. Cấu hình", theCauHinh());
+        trong.addTab("3. Rương", theRuong());
+        trong.addTab("4. Cấu hình", theCauHinh());
         add(trong, BorderLayout.CENTER);
         // KHONG nap bang ngay trong ham dung.
         //
@@ -83,6 +84,7 @@ public class ThuCungTab extends JPanel {
         daNap = true;
         napThu();
         napDoAn();
+        napRuong();
     }
 
     /**
@@ -103,14 +105,45 @@ public class ThuCungTab extends JPanel {
     // =====================================================================
     //  Thẻ 1: chiêu của từng con
     // =====================================================================
-    private static final String[] COT_THU = {"Id", "Tên thú", "Số chiêu"};
+    private static final String[] COT_THU = {"Id", "Tên thú", "Bậc", "Số chiêu"};
 
+    /**
+     * Cột Bậc sửa được ngay trong bảng; các cột khác chỉ để đọc.
+     *
+     * <p>Chọn bậc xong là lưu luôn (xem {@code napThu}), không có nút Lưu riêng:
+     * một ô chọn bảy giá trị thì thêm một bước bấm nữa chỉ tổ quên.</p>
+     */
     private final DefaultTableModel mThu = new DefaultTableModel(COT_THU, 0) {
         @Override
         public boolean isCellEditable(int r, int c) {
-            return false;
+            return c == 2;
+        }
+
+        @Override
+        public void setValueAt(Object v, int r, int c) {
+            super.setValueAt(v, r, c);
+            if (c != 2) {
+                return;
+            }
+            int id = ((Number) getValueAt(r, 0)).intValue();
+            for (int i = 0; i < ThuCungDAO.TEN_BAC.length; i++) {
+                if (ThuCungDAO.TEN_BAC[i].equals(String.valueOf(v))) {
+                    ThuCungDAO.datBac(id, i);
+                    return;
+                }
+            }
         }
     };
+
+    /** Lọc danh sách theo bậc; mục đầu là "tất cả". */
+    private final JComboBox<String> locBac = new JComboBox<>(tenBacVaTatCa());
+
+    private static String[] tenBacVaTatCa() {
+        String[] ra = new String[ThuCungDAO.TEN_BAC.length + 1];
+        ra[0] = "Tất cả bậc";
+        System.arraycopy(ThuCungDAO.TEN_BAC, 0, ra, 1, ThuCungDAO.TEN_BAC.length);
+        return ra;
+    }
 
     private final JTable bangThu = new JTable(mThu);
     private final JTextField oTim = new JTextField(14);
@@ -130,9 +163,15 @@ public class ThuCungTab extends JPanel {
         ServerGuiUtils.toNut(nutTim, UiTheme.ACCENT);
         nutTim.addActionListener(e -> napThu());
         hangTim.add(nutTim);
+        hangTim.add(new JLabel("Bậc:"));
+        locBac.addActionListener(e -> napThu());
+        hangTim.add(locBac);
         trai.add(hangTim, BorderLayout.NORTH);
 
         bangThu.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        // O chon bay bac ngay trong cot, khong phai mo hop thoai rieng.
+        bangThu.getColumnModel().getColumn(2).setCellEditor(
+                new javax.swing.DefaultCellEditor(new JComboBox<>(ThuCungDAO.TEN_BAC)));
         bangThu.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 napChieuCuaThuDangChon();
@@ -178,7 +217,13 @@ public class ThuCungTab extends JPanel {
                     && (t.name == null || !t.name.toLowerCase().contains(tim))) {
                 continue;
             }
-            mThu.addRow(new Object[]{(int) t.id, t.name, ThuCungDAO.kyNangCua(t.id).size()});
+            if (locBac.getSelectedIndex() > 0
+                    && ThuCungDAO.bac(t.id) != locBac.getSelectedIndex() - 1) {
+                continue;
+            }
+            mThu.addRow(new Object[]{(int) t.id, t.name,
+                ThuCungDAO.tenBac(ThuCungDAO.bac(t.id)),
+                ThuCungDAO.kyNangCua(t.id).size()});
         }
     }
 
@@ -506,7 +551,229 @@ public class ThuCungTab extends JPanel {
     }
 
     // =====================================================================
-    //  Thẻ 3: cấu hình
+    //  Thẻ 3: rương thú cưng
+    // =====================================================================
+    private static final String[] COT_RUONG = {"Id", "Tên rương", "Số bậc"};
+
+    private final DefaultTableModel mRuong = new DefaultTableModel(COT_RUONG, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return false;
+        }
+    };
+
+    private static final String[] COT_TI_LE = {"Bậc", "Tỉ lệ", "Ra khoảng", "Số thú bậc này"};
+
+    /**
+     * Bậc mà rương đang chọn có thể ra.
+     *
+     * <p>Cột <b>Tỉ lệ</b> là <i>phần</i>, không bắt buộc cộng tròn 100: máy chủ
+     * cộng tổng rồi bốc theo phần, nên 70/25/5 và 14/5/1 cho cùng kết quả. Cột
+     * "Ra khoảng" quy ra phần trăm thật để khỏi phải nhẩm.</p>
+     */
+    private final DefaultTableModel mTiLe = new DefaultTableModel(COT_TI_LE, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return c == 1;
+        }
+
+        @Override
+        public Class<?> getColumnClass(int c) {
+            return c == 1 ? Integer.class : Object.class;
+        }
+    };
+
+    private final JTable bangRuong = new JTable(mRuong);
+    private final JTable bangTiLe = new JTable(mTiLe);
+    private final JTextField fIdRuongMoi = new JTextField(6);
+    private final JComboBox<String> fBacThem = new JComboBox<>(ThuCungDAO.TEN_BAC);
+    private final JLabel lblRuong = new JLabel("Chưa chọn rương nào");
+
+    private JPanel theRuong() {
+        // ----- trai: danh sach ruong -----
+        JPanel trai = new JPanel(new BorderLayout(0, 6));
+        trai.setBackground(UiTheme.CARD);
+        JPanel hangTrai = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        hangTrai.setBackground(UiTheme.CARD);
+        hangTrai.add(new JLabel("Thêm rương, id:"));
+        hangTrai.add(fIdRuongMoi);
+        JButton themRuong = new JButton("Thêm rương");
+        ServerGuiUtils.toNut(themRuong, UiTheme.OK);
+        themRuong.addActionListener(e -> themRuongMoi());
+        hangTrai.add(themRuong);
+        trai.add(hangTrai, BorderLayout.NORTH);
+
+        bangRuong.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        bangRuong.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                napTiLeCuaRuongDangChon();
+            }
+        });
+        trai.add(ServerGuiUtils.cuon(bangRuong), BorderLayout.CENTER);
+
+        // ----- phai: cac bac cua ruong dang chon -----
+        JPanel phai = new JPanel(new BorderLayout(0, 6));
+        phai.setBackground(UiTheme.CARD);
+        lblRuong.setFont(UiTheme.ui(java.awt.Font.BOLD, 14));
+        lblRuong.setForeground(UiTheme.ACCENT_TEXT);
+        lblRuong.setBorder(BorderFactory.createEmptyBorder(6, 8, 2, 8));
+        phai.add(lblRuong, BorderLayout.NORTH);
+        phai.add(ServerGuiUtils.cuon(bangTiLe), BorderLayout.CENTER);
+
+        JPanel duoi = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        duoi.setBackground(UiTheme.CARD);
+        duoi.add(new JLabel("Bậc:"));
+        duoi.add(fBacThem);
+        JButton themBac = new JButton("Thêm bậc");
+        ServerGuiUtils.toNut(themBac, UiTheme.OK);
+        themBac.addActionListener(e -> themBacChoRuong());
+        duoi.add(themBac);
+        JButton xoaBac = new JButton("Xoá bậc đang chọn");
+        ServerGuiUtils.toNut(xoaBac, UiTheme.DANGER);
+        xoaBac.addActionListener(e -> xoaBacCuaRuong());
+        duoi.add(xoaBac);
+        JButton luu = new JButton("Lưu tỉ lệ");
+        ServerGuiUtils.toNut(luu, UiTheme.ACCENT);
+        luu.addActionListener(e -> luuTiLe());
+        duoi.add(luu);
+        phai.add(duoi, BorderLayout.SOUTH);
+
+        JSplitPane chia = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, trai, phai);
+        chia.setResizeWeight(0.42);
+        chia.setBorder(null);
+        JPanel bao = new JPanel(new BorderLayout());
+        bao.setBackground(UiTheme.CARD);
+        bao.add(chia, BorderLayout.CENTER);
+        return bao;
+    }
+
+    private void napRuong() {
+        int giu = idRuongDangChon();
+        mRuong.setRowCount(0);
+        for (int id : ThuCungDAO.dsRuong()) {
+            ItemTemplate t = nro.service.item.ItemService.gI().getTemplate((short) id);
+            mRuong.addRow(new Object[]{id, t == null ? "?" : t.name,
+                ThuCungDAO.tiLeRuong(id).size()});
+        }
+        // Giu nguyen dong dang chon sau khi nap lai, khong nhay ve dau bang.
+        for (int i = 0; i < mRuong.getRowCount(); i++) {
+            if (((Number) mRuong.getValueAt(i, 0)).intValue() == giu) {
+                bangRuong.setRowSelectionInterval(i, i);
+                return;
+            }
+        }
+        // Chua chon gi thi chon san ruong dau: mo the ra la thay ngay ti le,
+        // khong phai bam them mot cai vao danh sach ben trai.
+        if (mRuong.getRowCount() > 0) {
+            bangRuong.setRowSelectionInterval(0, 0);
+            return;
+        }
+        napTiLeCuaRuongDangChon();
+    }
+
+    private int idRuongDangChon() {
+        int r = bangRuong.getSelectedRow();
+        if (r < 0) {
+            return -1;
+        }
+        return ((Number) mRuong.getValueAt(bangRuong.convertRowIndexToModel(r), 0)).intValue();
+    }
+
+    private void napTiLeCuaRuongDangChon() {
+        mTiLe.setRowCount(0);
+        int id = idRuongDangChon();
+        if (id < 0) {
+            lblRuong.setText("Chưa chọn rương nào");
+            return;
+        }
+        ItemTemplate t = nro.service.item.ItemService.gI().getTemplate((short) id);
+        lblRuong.setText(id + " — " + (t == null ? "?" : t.name));
+        Map<Integer, Integer> tl = ThuCungDAO.tiLeRuong(id);
+        int tong = 0;
+        for (int v : tl.values()) {
+            tong += Math.max(0, v);
+        }
+        for (Map.Entry<Integer, Integer> e : tl.entrySet()) {
+            int phanTram = tong > 0 ? Math.round(e.getValue() * 1000f / tong) : 0;
+            mTiLe.addRow(new Object[]{ThuCungDAO.tenBac(e.getKey()), e.getValue(),
+                (phanTram / 10f) + "%", demThuBac(e.getKey())});
+        }
+    }
+
+    /** Có bao nhiêu loại thú đang đứng ở bậc này — bậc rỗng thì rương ra hụt. */
+    private int demThuBac(int bac) {
+        int n = 0;
+        for (ItemTemplate t : Manager.ITEM_TEMPLATES) {
+            if (t != null && t.type == ThuCungDAO.KIEU_THU_CUNG && ThuCungDAO.bac(t.id) == bac) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    private void themRuongMoi() {
+        int id = so(fIdRuongMoi, -1);
+        if (id < 0 || nro.service.item.ItemService.gI().getTemplate((short) id) == null) {
+            JOptionPane.showMessageDialog(this, "Không có vật phẩm id " + fIdRuongMoi.getText());
+            return;
+        }
+        // Them mot bac mac dinh de ruong hien ra trong danh sach; admin sua sau.
+        ThuCungDAO.luuTiLeRuong(id, 0, 100);
+        fIdRuongMoi.setText("");
+        napRuong();
+    }
+
+    private void themBacChoRuong() {
+        int id = idRuongDangChon();
+        if (id < 0) {
+            return;
+        }
+        ThuCungDAO.luuTiLeRuong(id, fBacThem.getSelectedIndex(), 10);
+        napRuong();
+        napTiLeCuaRuongDangChon();
+    }
+
+    private void xoaBacCuaRuong() {
+        int id = idRuongDangChon();
+        int r = bangTiLe.getSelectedRow();
+        if (id < 0 || r < 0) {
+            return;
+        }
+        String bac = String.valueOf(mTiLe.getValueAt(bangTiLe.convertRowIndexToModel(r), 0));
+        for (int i = 0; i < ThuCungDAO.TEN_BAC.length; i++) {
+            if (ThuCungDAO.TEN_BAC[i].equals(bac)) {
+                ThuCungDAO.xoaTiLeRuong(id, i);
+                break;
+            }
+        }
+        napRuong();
+        napTiLeCuaRuongDangChon();
+    }
+
+    private void luuTiLe() {
+        int id = idRuongDangChon();
+        if (id < 0) {
+            return;
+        }
+        if (bangTiLe.isEditing()) {
+            bangTiLe.getCellEditor().stopCellEditing();
+        }
+        for (int i = 0; i < mTiLe.getRowCount(); i++) {
+            String bac = String.valueOf(mTiLe.getValueAt(i, 0));
+            int tiLe = ((Number) mTiLe.getValueAt(i, 1)).intValue();
+            for (int b = 0; b < ThuCungDAO.TEN_BAC.length; b++) {
+                if (ThuCungDAO.TEN_BAC[b].equals(bac)) {
+                    ThuCungDAO.luuTiLeRuong(id, b, tiLe);
+                    break;
+                }
+            }
+        }
+        napTiLeCuaRuongDangChon();
+        JOptionPane.showMessageDialog(this, "Đã lưu tỉ lệ rương.");
+    }
+
+    // =====================================================================
+    //  Thẻ 4: cấu hình
     // =====================================================================
     private final List<String[]> khoaCauHinh = new ArrayList<>();
     private final List<JTextField> oCauHinh = new ArrayList<>();

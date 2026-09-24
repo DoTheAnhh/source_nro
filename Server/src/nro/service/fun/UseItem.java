@@ -387,6 +387,10 @@ public class UseItem {
             nro.service.badges.BadgesTaskService.tangTheoLoai(pl,
                     nro.entity.badges.BadgesTaskTemplate.DUNG_VAT_PHAM,
                     item.template.id, 1);
+            // Ruong thu cung: bam Su dung la mo ngay, khong qua menu nao.
+            if (nro.service.ThuCungService.gI().moRuong(pl, item)) {
+                return;
+            }
             if (item.template.id == 570) {
                 if (!Util.isAfterMidnight(pl.lastTimeRewardWoodChest)) {
                     Service.gI().sendThongBao(pl, "Hãy chờ đến ngày mai");

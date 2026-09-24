@@ -81,6 +81,21 @@ public final class ThuCungDAO {
         "Giảm % sát thương phải chịu"
     };
 
+    // =====================================================================
+    //  Bậc của loại thú
+    // =====================================================================
+    /**
+     * Bậc từ thấp tới cao. Chỉ số trong mảng chính là con số lưu xuống bảng.
+     *
+     * <p>Thêm bậc mới thì nối vào <b>cuối</b> mảng: chèn vào giữa là mọi con
+     * thú đang lưu số cũ nhảy sang bậc khác.</p>
+     */
+    public static final String[] TEN_BAC = {"D", "C", "B", "A", "S", "SS", "SSS"};
+
+    public static String tenBac(int bac) {
+        return (bac >= 0 && bac < TEN_BAC.length) ? TEN_BAC[bac] : TEN_BAC[0];
+    }
+
     /** Tham số phụ của loại này nghĩa là gì; rỗng là loại đó không dùng. */
     public static final String[] Y_NGHIA_THAM_SO = {
         "", "Id chiêu được cộng", "", "", ""
@@ -180,6 +195,17 @@ public final class ThuCungDAO {
                     + " exp INT(11) NOT NULL DEFAULT 10,"
                     + " bat TINYINT(1) NOT NULL DEFAULT 1,"
                     + " PRIMARY KEY (item_id)"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            ConnectDB.executeUpdate("CREATE TABLE IF NOT EXISTS thu_cung_bac ("
+                    + " item_id INT(11) NOT NULL,"
+                    + " bac INT(11) NOT NULL DEFAULT 0,"
+                    + " PRIMARY KEY (item_id)"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            ConnectDB.executeUpdate("CREATE TABLE IF NOT EXISTS thu_cung_ruong ("
+                    + " item_id INT(11) NOT NULL,"
+                    + " bac INT(11) NOT NULL,"
+                    + " ti_le INT(11) NOT NULL DEFAULT 0,"
+                    + " PRIMARY KEY (item_id, bac)"
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
             ConnectDB.executeUpdate("CREATE TABLE IF NOT EXISTS thu_cung_cau_hinh ("
                     + " khoa VARCHAR(40) NOT NULL,"
@@ -460,6 +486,63 @@ public final class ThuCungDAO {
     }
 
     // =====================================================================
+    //  Bậc: đọc và ghi
+    // =====================================================================
+    /**
+     * Bậc của từng loại thú. Con nào chưa khai thì coi là bậc thấp nhất (D),
+     * không phải bỏ công gieo sẵn cả bảng.
+     */
+    private static final Map<Integer, Integer> BAC = new HashMap<>();
+    private static long lucDocBac;
+
+    private static synchronized void docBac() {
+        long bayGio = System.currentTimeMillis();
+        if (bayGio - lucDocBac < HAN_BO_NHO_MS && lucDocBac > 0) {
+            return;
+        }
+        damBaoBang();
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT item_id, bac FROM thu_cung_bac");
+            Map<Integer, Integer> moi = new HashMap<>();
+            while (rs.next()) {
+                moi.put(rs.getInt("item_id"), rs.getInt("bac"));
+            }
+            BAC.clear();
+            BAC.putAll(moi);
+            lucDocBac = bayGio;
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không đọc được bậc thú cưng");
+        } finally {
+            dong(rs);
+        }
+    }
+
+    public static int bac(int itemId) {
+        docBac();
+        Integer b = BAC.get(itemId);
+        if (b == null || b < 0 || b >= TEN_BAC.length) {
+            return 0;
+        }
+        return b;
+    }
+
+    public static void datBac(int itemId, int bac) {
+        if (bac < 0 || bac >= TEN_BAC.length) {
+            return;
+        }
+        try {
+            damBaoBang();
+            ConnectDB.executeUpdate("INSERT INTO thu_cung_bac (item_id, bac)"
+                    + " VALUES (?, ?) ON DUPLICATE KEY UPDATE bac = VALUES(bac)",
+                    itemId, bac);
+            lucDocBac = 0;
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không lưu được bậc thú cưng");
+        }
+    }
+
+    // =====================================================================
     //  Đồ ăn
     // =====================================================================
     /** Đậu thần các cấp: cấp càng cao càng nhiều kinh nghiệm. */
@@ -549,6 +632,209 @@ public final class ThuCungDAO {
             lucDocDoAn = 0;
         } catch (Exception ex) {
             Logger.logException(ThuCungDAO.class, ex, "Không xoá được đồ ăn thú cưng");
+        }
+    }
+
+    // =====================================================================
+    //  Rương thú cưng
+    // =====================================================================
+    /** Khoá nhớ id vật phẩm của hai rương dựng sẵn. */
+    public static final String K_RUONG_CAO_CAP = "ruong_cao_cap";
+    public static final String K_RUONG_THUONG = "ruong_thuong";
+
+    /** Ảnh hai rương — tệp nằm sẵn trong {@code data/icon/x1..x4}. */
+    private static final int ICON_RUONG_CAO_CAP = 25250;
+    private static final int ICON_RUONG_THUONG = 25251;
+
+    /** Kiểu vật phẩm "mở ra được", giống mấy hộp quà có sẵn. */
+    private static final int KIEU_RUONG = 27;
+
+    /** Tỉ lệ từng bậc của từng rương: itemId -> (bậc -> tỉ lệ). */
+    private static final Map<Integer, Map<Integer, Integer>> RUONG = new HashMap<>();
+    private static long lucDocRuong;
+
+    private static synchronized void docRuong() {
+        long bayGio = System.currentTimeMillis();
+        if (bayGio - lucDocRuong < HAN_BO_NHO_MS && lucDocRuong > 0) {
+            return;
+        }
+        damBaoBang();
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT item_id, bac, ti_le FROM thu_cung_ruong"
+                    + " ORDER BY item_id, bac");
+            Map<Integer, Map<Integer, Integer>> moi = new LinkedHashMap<>();
+            while (rs.next()) {
+                moi.computeIfAbsent(rs.getInt("item_id"), x -> new LinkedHashMap<>())
+                        .put(rs.getInt("bac"), rs.getInt("ti_le"));
+            }
+            RUONG.clear();
+            RUONG.putAll(moi);
+            lucDocRuong = bayGio;
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không đọc được rương thú cưng");
+        } finally {
+            dong(rs);
+        }
+    }
+
+    /** Món này có phải rương thú cưng không. */
+    public static boolean laRuong(int itemId) {
+        docRuong();
+        Map<Integer, Integer> m = RUONG.get(itemId);
+        return m != null && !m.isEmpty();
+    }
+
+    /** Tỉ lệ từng bậc của một rương; bậc nào không có nghĩa là rương không ra. */
+    public static Map<Integer, Integer> tiLeRuong(int itemId) {
+        docRuong();
+        Map<Integer, Integer> m = RUONG.get(itemId);
+        return m == null ? new LinkedHashMap<>() : new LinkedHashMap<>(m);
+    }
+
+    /** Mọi rương đang khai, cho panel bày ra. */
+    public static List<Integer> dsRuong() {
+        docRuong();
+        return new ArrayList<>(RUONG.keySet());
+    }
+
+    public static void luuTiLeRuong(int itemId, int bac, int tiLe) {
+        if (bac < 0 || bac >= TEN_BAC.length) {
+            return;
+        }
+        try {
+            damBaoBang();
+            ConnectDB.executeUpdate("INSERT INTO thu_cung_ruong (item_id, bac, ti_le)"
+                    + " VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE ti_le = VALUES(ti_le)",
+                    itemId, bac, Math.max(0, tiLe));
+            lucDocRuong = 0;
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không lưu được tỉ lệ rương");
+        }
+    }
+
+    public static void xoaTiLeRuong(int itemId, int bac) {
+        try {
+            ConnectDB.executeUpdate("DELETE FROM thu_cung_ruong"
+                    + " WHERE item_id = ? AND bac = ?", itemId, bac);
+            lucDocRuong = 0;
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không xoá được tỉ lệ rương");
+        }
+    }
+
+    /**
+     * Dựng sẵn hai rương: cao cấp (S · SS · SSS) và thường (D · C · B · A).
+     *
+     * <p>Gọi <b>sau</b> {@code loadDatabase}: phải có danh sách vật phẩm trong bộ
+     * nhớ mới nối được dòng mới vào đúng vị trí.</p>
+     *
+     * <p>Id vật phẩm không ghi cứng — cấp bằng {@code MAX(id) + 1} rồi nhớ vào
+     * {@code thu_cung_cau_hinh}, giống cách {@code TrungDeTuDAO} làm với ba quả
+     * trứng. Ảnh thì ghi cứng vì tệp ảnh nằm trong mã nguồn.</p>
+     */
+    public static synchronized void damBaoVatPhamRuong() {
+        damBaoBang();
+        damBaoMotRuong(K_RUONG_CAO_CAP, "Rương Thú Cưng Cao Cấp", ICON_RUONG_CAO_CAP,
+                "Mở ra ngẫu nhiên một thú cưng bậc S, SS hoặc SSS",
+                new int[][]{{4, 70}, {5, 25}, {6, 5}});
+        damBaoMotRuong(K_RUONG_THUONG, "Rương Thú Cưng Thường", ICON_RUONG_THUONG,
+                "Mở ra ngẫu nhiên một thú cưng bậc D, C, B hoặc A",
+                new int[][]{{0, 40}, {1, 30}, {2, 20}, {3, 10}});
+    }
+
+    private static void damBaoMotRuong(String khoa, String ten, int icon,
+            String moTa, int[][] tiLeGoc) {
+        try {
+            int id = soCauHinh(khoa, -1);
+            if (id > 0 && coVatPham(id)) {
+                return;
+            }
+            id = themVatPhamRuong(ten, moTa, icon);
+            if (id < 0) {
+                return;
+            }
+            datCauHinh(khoa, String.valueOf(id));
+            for (int[] d : tiLeGoc) {
+                luuTiLeRuong(id, d[0], d[1]);
+            }
+            Logger.success("Thú cưng: thêm " + ten + " (id " + id + ")\n");
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không dựng được " + ten);
+        }
+    }
+
+    private static boolean coVatPham(int id) throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM item_template WHERE id = ?", id);
+            return rs.next();
+        } finally {
+            dong(rs);
+        }
+    }
+
+    /**
+     * Thêm một dòng {@code item_template} cho rương và nối vào bộ nhớ.
+     *
+     * <p>Nối vào <b>cuối</b> danh sách trong bộ nhớ: client tra bảng vật phẩm
+     * theo vị trí chứ không theo id, mà id mới luôn là {@code MAX(id) + 1} nên
+     * cuối danh sách đúng là vị trí của nó.</p>
+     */
+    private static int themVatPhamRuong(String ten, String moTa, int icon) throws Exception {
+        int id;
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT MAX(id) AS m FROM item_template");
+            if (!rs.next()) {
+                return -1;
+            }
+            id = rs.getInt("m") + 1;
+        } finally {
+            dong(rs);
+        }
+        if (id < 0 || id > 32766) {
+            return -1;
+        }
+        ConnectDB.executeUpdate("INSERT INTO item_template"
+                + " (id, TYPE, gender, NAME, description, level, icon_id, part,"
+                + " is_up_to_up, power_require, gold, gold_sell, gem, gem_sell,"
+                + " ruby, ruby_sell, head, body, leg, TypeEvent, isGender,"
+                + " dung_duoc, aura_id)"
+                + " VALUES (?, ?, 3, ?, ?, 1, ?, -1, 0, 0, 0, 0, 0, 0, 0, 0,"
+                + " -1, -1, -1, 0, -1, 1, -1)",
+                id, KIEU_RUONG, ten, moTa, icon);
+        noiVaoBoNho(id, ten, moTa, icon);
+        return id;
+    }
+
+    private static void noiVaoBoNho(int id, String ten, String moTa, int icon) {
+        try {
+            List<nro.entity.template.ItemTemplate> ds = nro.server.Manager.ITEM_TEMPLATES;
+            if (ds == null || ds.size() != id) {
+                return;
+            }
+            nro.entity.template.ItemTemplate t = new nro.entity.template.ItemTemplate();
+            t.id = (short) id;
+            t.type = (byte) KIEU_RUONG;
+            t.gender = 3;
+            t.name = ten;
+            t.description = moTa;
+            t.level = 1;
+            t.iconID = (short) icon;
+            t.part = -1;
+            t.isUpToUp = false;
+            t.strRequire = 0;
+            t.head = -1;
+            t.body = -1;
+            t.leg = -1;
+            t.isGender = -1;
+            t.dungDuoc = true;
+            ds.add(t);
+            nro.ui.LamMoi.bao(nro.ui.LamMoi.VAT_PHAM);
+        } catch (Exception boQua) {
+            // Khong noi duoc vao bo nho thi dong trong CSDL van con: lan khoi
+            // dong sau se nap.
         }
     }
 

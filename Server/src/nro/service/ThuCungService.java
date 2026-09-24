@@ -351,6 +351,71 @@ public class ThuCungService {
     }
 
     // =====================================================================
+    //  Rương thú cưng
+    // =====================================================================
+    /**
+     * Mở một rương: bốc <b>bậc</b> theo tỉ lệ khai trên panel, rồi bốc đều một
+     * con trong bậc ấy.
+     *
+     * <p>Bốc hai nấc chứ không gộp làm một: admin chỉnh tỉ lệ theo bậc, còn
+     * trong cùng một bậc thì con nào cũng như con nào — thêm một con mới vào
+     * bậc là nó tự có phần, không phải chia lại tỉ lệ.</p>
+     *
+     * @return {@code true} nếu món này đúng là rương (đã xử lý xong)
+     */
+    public boolean moRuong(Player pl, Item ruong) {
+        if (pl == null || ruong == null || ruong.template == null
+                || !ThuCungDAO.laRuong(ruong.template.id)) {
+            return false;
+        }
+        java.util.Map<Integer, Integer> tiLe = ThuCungDAO.tiLeRuong(ruong.template.id);
+        int tong = 0;
+        for (int v : tiLe.values()) {
+            tong += Math.max(0, v);
+        }
+        if (tong <= 0) {
+            Service.gI().sendThongBao(pl, "Rương này chưa khai tỉ lệ");
+            return true;
+        }
+        int boc = Util.nextInt(0, tong - 1);
+        int bacRa = -1;
+        for (java.util.Map.Entry<Integer, Integer> e : tiLe.entrySet()) {
+            boc -= Math.max(0, e.getValue());
+            if (boc < 0) {
+                bacRa = e.getKey();
+                break;
+            }
+        }
+        if (bacRa < 0) {
+            return true;
+        }
+        List<nro.entity.template.ItemTemplate> ung = new ArrayList<>();
+        for (nro.entity.template.ItemTemplate t : nro.server.Manager.ITEM_TEMPLATES) {
+            if (t != null && t.type == ThuCungDAO.KIEU_THU_CUNG
+                    && ThuCungDAO.bac(t.id) == bacRa) {
+                ung.add(t);
+            }
+        }
+        if (ung.isEmpty()) {
+            Service.gI().sendThongBao(pl, "Chưa có thú cưng nào bậc "
+                    + ThuCungDAO.tenBac(bacRa));
+            return true;
+        }
+        if (InventoryService.gI().getCountEmptyBag(pl) == 0) {
+            Service.gI().sendThongBao(pl, "Hành trang của bạn không đủ chỗ trống");
+            return true;
+        }
+        nro.entity.template.ItemTemplate chon = ung.get(Util.nextInt(0, ung.size() - 1));
+        Item thu = nro.service.item.ItemService.gI().createNewItem((short) chon.id);
+        InventoryService.gI().subQuantityItemsBag(pl, ruong, 1);
+        InventoryService.gI().addItemBag(pl, thu);
+        InventoryService.gI().sendItemBag(pl);
+        Service.gI().sendThongBao(pl, "Bạn nhận được " + chon.name
+                + " — bậc " + ThuCungDAO.tenBac(bacRa));
+        return true;
+    }
+
+    // =====================================================================
     //  Gói tin
     // =====================================================================
     public void nhanGoi(Player pl, Message msg) {
@@ -439,6 +504,7 @@ public class ThuCungService {
                 msg.writer().writeShort(t.head);
                 msg.writer().writeShort(t.body);
                 msg.writer().writeShort(t.leg);
+                msg.writer().writeByte(ThuCungDAO.bac(t.id));
             }
             pl.sendMessage(msg);
         } catch (Exception ex) {

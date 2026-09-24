@@ -57,6 +57,12 @@ namespace Game2.God
         private static readonly Dictionary<int, short[]> hinhThuCung
                 = new Dictionary<int, short[]>();
 
+        /// <summary>Bậc từng loại thú: 0 là D, cao nhất là SSS.</summary>
+        private static readonly Dictionary<int, int> bacThuCung = new Dictionary<int, int>();
+
+        /// <summary>Tên các bậc — khớp <c>ThuCungDAO.TEN_BAC</c>.</summary>
+        private static readonly string[] TEN_BAC_THU = { "D", "C", "B", "A", "S", "SS", "SSS" };
+
         private static int tcCapToiDa = 50;
         private static int tcExpCapMot = 100;
 
@@ -121,6 +127,7 @@ namespace Game2.God
                 doAnThuCung.Sort((a, b) => a[1].CompareTo(b[1]));
 
                 hinhThuCung.Clear();
+                bacThuCung.Clear();
                 int soThu = msg.reader().readShort();
                 for (int i = 0; i < soThu; i++)
                 {
@@ -129,6 +136,7 @@ namespace Game2.God
                     short than = msg.reader().readShort();
                     short chan = msg.reader().readShort();
                     hinhThuCung[id] = new short[] { dau, than, chan };
+                    bacThuCung[id] = msg.reader().readByte();
                 }
                 tcDaCoBang = true;
             }
@@ -276,6 +284,57 @@ namespace Game2.God
         }
 
         // ==================================================================
+        //  Huy hieu bac
+        // ==================================================================
+
+        /// <summary>Màu nền huy hiệu từng bậc, xếp từ D tới SSS.</summary>
+        private static readonly int[] MAU_BAC = {
+            rgb(0x8A, 0x8A, 0x8A), // D  xam
+            rgb(0x4C, 0xA0, 0x50), // C  xanh la
+            rgb(0x35, 0x82, 0xC4), // B  xanh duong
+            rgb(0x8B, 0x5C, 0xD6), // A  tim
+            rgb(0xE8, 0x8B, 0x1A), // S  cam
+            rgb(0xD6, 0x3A, 0x3A), // SS do
+            rgb(0xC9, 0xA2, 0x27)  // SSS vang kim
+        };
+
+        /// <summary>Bậc của một con thú; không biết thì coi là D.</summary>
+        private static int bacCua(Item thu)
+        {
+            int b;
+            if (thu == null || thu.template == null
+                    || !bacThuCung.TryGetValue(thu.template.id, out b))
+            {
+                return 0;
+            }
+            return (b < 0 || b >= TEN_BAC_THU.Length) ? 0 : b;
+        }
+
+        /// <summary>
+        /// Huy hiệu bậc: chữ trắng trên nền màu riêng của bậc.
+        /// </summary>
+        /// <remarks>
+        /// Vẽ bằng khung bo góc thay vì một tấm ảnh: bảy bậc là bảy tấm phải
+        /// thêm vào bộ ảnh và phải nhớ đồng bộ bốn mức phóng, trong khi thứ cần
+        /// nói chỉ là một chữ cái và một màu.
+        /// </remarks>
+        /// <returns>Bề rộng đã vẽ, để chỗ gọi biết chừa chỗ.</returns>
+        private int veHuyBac(mGraphics g, int x, int y, int bac, bool nho)
+        {
+            if (bac < 0 || bac >= TEN_BAC_THU.Length)
+            {
+                bac = 0;
+            }
+            string chu = TEN_BAC_THU[bac];
+            int cao = nho ? 9 : 12;
+            int rong = mFont.tahoma_7b_white.getWidth(chu) + (nho ? 5 : 8);
+            veKhungBo(g, x, y, rong, cao, MAU_BAC[bac], 1f, MAU_VIEN_O, 0.85f, 1);
+            mFont.tahoma_7b_white.drawString(g, chu, x + rong / 2, y + (nho ? -1 : 1),
+                    mFont.CENTER);
+            return rong;
+        }
+
+        // ==================================================================
         //  Cap va kinh nghiem doc tu chi so phu cua mon
         // ==================================================================
 
@@ -370,8 +429,14 @@ namespace Game2.God
             // Ten + trang thai ngay duoi con thu.
             if (thu != null && thu.template != null)
             {
+                // Huy hieu bac dat ngay truoc ten, ca cum can giua cot.
+                int bacXem = bacCua(thu);
+                int rongTen = mFont.tahoma_7b_dark.getWidth(thu.template.name);
+                int rongHuy = mFont.tahoma_7b_white.getWidth(TEN_BAC_THU[bacXem]) + 8;
+                int xCum = xTrai + rongTrai / 2 - (rongTen + rongHuy + 4) / 2;
+                veHuyBac(g, xCum, yChan + 3, bacXem, false);
                 mFont.tahoma_7b_dark.drawString(g, thu.template.name,
-                        xTrai + rongTrai / 2, yChan + 4, mFont.CENTER);
+                        xCum + rongHuy + 4, yChan + 4, mFont.LEFT);
                 bool raTran = thuXemDangRaTran();
                 mFont mf = raTran ? mFont.tahoma_7b_green : mFont.tahoma_7_grey;
                 mf.drawString(g, raTran ? "Đang ra trận" : "Đang nghỉ ngơi",
@@ -388,6 +453,7 @@ namespace Game2.God
                 }
                 Item it = thuTaiO(ds[i][0]);
                 veMotO(g, it, o[0], o[1], o[2], string.Empty);
+                veHuyBac(g, o[0] + 2, o[1] + o[2] - 11, bacCua(it), true);
                 if (ds[i][1] == 1)
                 {
                     // Cham xanh goc tren: con nay dang ra tran.
@@ -488,7 +554,10 @@ namespace Game2.God
             int w = rongPhai - 16;
             int y = yNoiDungPhu() + 6;
 
-            mFont.tahoma_7b_dark.drawString(g, thu.template.name, x, y, mFont.LEFT);
+            int bacCs = bacCua(thu);
+            int rongHuyCs = veHuyBac(g, x, y + 1, bacCs, false);
+            mFont.tahoma_7b_dark.drawString(g, thu.template.name,
+                    x + rongHuyCs + 5, y, mFont.LEFT);
             y += 13;
 
             int cap = capThu(thu);
