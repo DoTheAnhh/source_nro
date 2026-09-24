@@ -222,16 +222,37 @@ namespace Game4.God
                 ra.Add(new int[] { -1, 1 });
             }
             Item[] tui = Char.myCharz().arrItemBag;
+            List<int[]> nghi = new List<int[]>();
             if (tui != null)
             {
                 for (int i = 0; i < tui.Length; i++)
                 {
                     if (laThuCung(tui[i]))
                     {
-                        ra.Add(new int[] { i, 0 });
+                        nghi.Add(new int[] { i, 0 });
                     }
                 }
             }
+            // Con nghi ngoi: bac CAO dung truoc, cung bac thi theo ten.
+            //
+            // Con ra tran da duoc them trươc vong nay nen luon o ngoai cung ben
+            // trai, du no bac gi — dang dung thi phai de mat ngay, khong phai
+            // do trong day.
+            nghi.Sort((x, y) =>
+            {
+                Item a = thuTaiO(x[0]);
+                Item b = thuTaiO(y[0]);
+                int ba = bacCua(a);
+                int bb = bacCua(b);
+                if (ba != bb)
+                {
+                    return bb - ba;
+                }
+                string ta = (a == null || a.template == null) ? string.Empty : a.template.name;
+                string tb = (b == null || b.template == null) ? string.Empty : b.template.name;
+                return string.Compare(ta, tb, System.StringComparison.Ordinal);
+            });
+            ra.AddRange(nghi);
             return ra;
         }
 

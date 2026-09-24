@@ -216,6 +216,7 @@ public final class ThuCungDAO {
             gieoCauHinh();
             gieoKyNang();
             gieoDoAn();
+            gieoBac();
         } catch (Exception ex) {
             daTaoBang = false;
             Logger.logException(ThuCungDAO.class, ex, "Không tạo được bảng thú cưng");
@@ -488,6 +489,67 @@ public final class ThuCungDAO {
     // =====================================================================
     //  Bậc: đọc và ghi
     // =====================================================================
+    /**
+     * Chia sẵn bậc cho mọi loại thú — <b>chỉ khi bảng còn rỗng</b>.
+     *
+     * <p>Để trống hết thì con nào cũng là D, và rương cao cấp mở ra chẳng có
+     * con nào bậc S để trả — người chơi bấm mở thấy như hỏng. Chia sẵn theo
+     * hình tháp: càng lên cao càng ít con.</p>
+     *
+     * <p>Chia theo thứ tự id, không bốc ngẫu nhiên: máy chủ nào cũng ra cùng
+     * một bảng, và admin sửa lại trên panel là xong.</p>
+     */
+    private static void gieoBac() throws Exception {
+        if (demDong("thu_cung_bac") > 0) {
+            return;
+        }
+        CrisResultSet rs = null;
+        List<Integer> ids = new ArrayList<>();
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM item_template WHERE TYPE = ?"
+                    + " ORDER BY id", KIEU_THU_CUNG);
+            while (rs.next()) {
+                ids.add(rs.getInt("id"));
+            }
+        } finally {
+            dong(rs);
+        }
+        if (ids.isEmpty()) {
+            return;
+        }
+        // Phan tram so con cho tung bac, tu D toi SSS.
+        int[] phan = {30, 25, 20, 15, 7, 2, 1};
+        int tong = 0;
+        for (int p : phan) {
+            tong += p;
+        }
+        // Tinh so con cho tung bac TRUOC, phan du don vao bac thap nhat.
+        //
+        // Cho bac cuoi om phan du thi SSS lai dong hon SS — nguoc hinh thap.
+        int[] soCon = new int[phan.length];
+        int daChia = 0;
+        for (int b = phan.length - 1; b >= 1; b--) {
+            soCon[b] = Math.max(1, ids.size() * phan[b] / tong);
+            daChia += soCon[b];
+        }
+        soCon[0] = Math.max(0, ids.size() - daChia);
+
+        int i = 0;
+        int[] dem = new int[TEN_BAC.length];
+        for (int b = 0; b < phan.length && i < ids.size(); b++) {
+            for (int k = 0; k < soCon[b] && i < ids.size(); k++, i++) {
+                ConnectDB.executeUpdate("INSERT IGNORE INTO thu_cung_bac (item_id, bac)"
+                        + " VALUES (?, ?)", ids.get(i), b);
+                dem[b]++;
+            }
+        }
+        StringBuilder sb = new StringBuilder("Thú cưng: chia bậc cho " + ids.size() + " con —");
+        for (int b = 0; b < TEN_BAC.length; b++) {
+            sb.append(' ').append(TEN_BAC[b]).append('=').append(dem[b]);
+        }
+        Logger.success(sb.append('\n').toString());
+    }
+
     /**
      * Bậc của từng loại thú. Con nào chưa khai thì coi là bậc thấp nhất (D),
      * không phải bỏ công gieo sẵn cả bảng.

@@ -214,6 +214,18 @@ public class ThuCungService {
     // =====================================================================
     //  Chiêu
     // =====================================================================
+    /** Có bao nhiêu loại thú đang đứng ở bậc này. */
+    private int soThuTheoBac(int bac) {
+        int n = 0;
+        for (nro.entity.template.ItemTemplate t : nro.server.Manager.ITEM_TEMPLATES) {
+            if (t != null && t.type == ThuCungDAO.KIEU_THU_CUNG
+                    && ThuCungDAO.bac(t.id) == bac) {
+                n++;
+            }
+        }
+        return n;
+    }
+
     /** Con thú đang ra trận, hoặc {@code null}. */
     public Item thuRaTran(Player pl) {
         if (pl == null || pl.inventory == null) {
@@ -369,12 +381,25 @@ public class ThuCungService {
             return false;
         }
         java.util.Map<Integer, Integer> tiLe = ThuCungDAO.tiLeRuong(ruong.template.id);
+        // Bo nhung bac chua co con thu nao.
+        //
+        // Bac rong ma van boc thi co lan mo ra khong duoc gi — nguoi choi mat
+        // ruong ma tuong hong. Bo han bac ay ra khoi luot boc thi phan tram cua
+        // no chia deu cho may bac con lai.
+        java.util.Iterator<java.util.Map.Entry<Integer, Integer>> it = tiLe.entrySet().iterator();
+        while (it.hasNext()) {
+            java.util.Map.Entry<Integer, Integer> e = it.next();
+            if (soThuTheoBac(e.getKey()) == 0) {
+                it.remove();
+            }
+        }
         int tong = 0;
         for (int v : tiLe.values()) {
             tong += Math.max(0, v);
         }
         if (tong <= 0) {
-            Service.gI().sendThongBao(pl, "Rương này chưa khai tỉ lệ");
+            Service.gI().sendThongBao(pl, "Rương này chưa khai tỉ lệ, hoặc chưa có"
+                    + " thú cưng nào thuộc các bậc của nó");
             return true;
         }
         int boc = Util.nextInt(0, tong - 1);
@@ -401,6 +426,9 @@ public class ThuCungService {
                     + ThuCungDAO.tenBac(bacRa));
             return true;
         }
+        // Khong tru ruong truoc buoc nay: moi cho thoat o tren deu la "khong
+        // nhan duoc gi", va tru mat ruong trong nhung truong hop ay la an cua
+        // nguoi choi.
         if (InventoryService.gI().getCountEmptyBag(pl) == 0) {
             Service.gI().sendThongBao(pl, "Hành trang của bạn không đủ chỗ trống");
             return true;
