@@ -1082,6 +1082,12 @@ namespace Game5.God
             // Bo khung chi tiet bang: mo lai bang ma con dinh mot bang cu tu lan
             // truoc thi nguoi choi thay ngay mot khung khong ai goi.
             bangXem = null;
+            // Hoi SOM, ngay luc mo bang, chu khong doi bam vao the.
+            //
+            // Hai the De tu va Thu cung deu can du lieu may chu moi ve duoc. Hoi
+            // luc bam the thi mo ra la mot khung trong cho tron mot vong goi
+            // tin — nguoi choi thay bang chua co gi.
+            xinDuLieuDeTuVaThuCung();
             vaoThe(theChon);
         }
 
@@ -6379,9 +6385,7 @@ namespace Game5.God
                 // Noi "chua co de" ngay la noi sai voi nguoi dang co de.
                 veKhungLom(g, xTrai, yThan, rongTrai, caoThan);
                 veKhungLom(g, xPhai, yThan, rongPhai, caoThan);
-                veChuGiua(g, xTrai, rongTrai, daXinDe
-                        ? "Đang tải thông tin đệ tử…"
-                        : "Bạn chưa có đệ tử.");
+                veChuGiua(g, xTrai, rongTrai, "Chưa sở hữu đệ tử");
                 return;
             }
 

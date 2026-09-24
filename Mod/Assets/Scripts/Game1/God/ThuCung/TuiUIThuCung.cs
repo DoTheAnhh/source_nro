@@ -170,6 +170,29 @@ namespace Game1.God
         /// <summary>Cho ăn liên tiếp thì mỗi lần cách nhau bao lâu.</summary>
         private const long NHIP_AN_LAP = 140L;
 
+        /// <summary>
+        /// Hỏi máy chủ dữ liệu cho hai thẻ Đệ tử và Thú cưng.
+        /// </summary>
+        /// <remarks>
+        /// <para>Gọi lúc <b>mở bảng</b>, không đợi tới lúc bấm vào thẻ: hai thẻ
+        /// ấy sống nhờ dữ liệu máy chủ (gói -107 cho đệ, gói 111 cho bảng chiêu
+        /// và bảng đồ ăn), hỏi muộn thì thẻ mở ra trống trơn mất một vòng gói
+        /// tin.</para>
+        ///
+        /// <para>Bảng chiêu chỉ hỏi MỘT lần cả phiên — nó không đổi trong lúc
+        /// chơi. Thông tin đệ thì hỏi mỗi lần mở bảng vì chỉ số đệ đổi liên tục.</para>
+        /// </remarks>
+        private void xinDuLieuDeTuVaThuCung()
+        {
+            Service.gI().petInfo();
+            daXinDe = true;
+            if (!tcDaXinBang)
+            {
+                Service.gI().thuCungXinBang();
+                tcDaXinBang = true;
+            }
+        }
+
         // ==================================================================
         //  Danh sach thu dang so huu
         // ==================================================================
@@ -303,9 +326,7 @@ namespace Game1.God
             {
                 veKhungLom(g, xTrai, yThan, rongTrai, caoThan);
                 veKhungLom(g, xPhai, yThan, rongPhai, caoThan);
-                veChuGiua(g, xTrai, rongTrai, tcDaCoBang
-                        ? "Bạn chưa sở hữu thú cưng"
-                        : "Đang tải thông tin thú cưng…");
+                veChuGiua(g, xTrai, rongTrai, "Chưa sở hữu thú cưng");
                 return;
             }
             // Con dang xem bien mat (vua ban, vua mac vao) thi quay ve con dau.
