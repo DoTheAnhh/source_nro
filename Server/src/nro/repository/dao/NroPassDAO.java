@@ -338,6 +338,7 @@ public class NroPassDAO {
                 gieoQua();
             }
             suaRuongThuCung();
+            doiQuaV2();
         } catch (Exception ex) {
             daTaoBang = false;
             Logger.logException(NroPassDAO.class, ex, "Không tạo được bảng NRO Pass");
@@ -357,20 +358,20 @@ public class NroPassDAO {
             if (cap == 50) {
                 them(cap, HANG_MIEN_PHI, idHoacTam(ThuCungDAO.idRuongThuong(), ID_TAM_RT_THUONG), 1);
             } else if (cap % 10 == 0) {
-                them(cap, HANG_MIEN_PHI, 571, 1);           // Ruong bac
+                them(cap, HANG_MIEN_PHI, 17, 1);            // Ngoc Rong 4 sao
             } else if (cap % 5 == 0) {
                 them(cap, HANG_MIEN_PHI, 380, 2);           // Vien capsule ki bi
             } else if (cap % 2 == 1) {
                 them(cap, HANG_MIEN_PHI, 457, 1 + cap / 10); // Thoi vang
             } else {
-                them(cap, HANG_MIEN_PHI, 595, 5);           // Dau than cap 10
+                them(cap, HANG_MIEN_PHI, BUFF[(cap / 2) % BUFF.length], 2); // Cuong no / Bo huyet / Bo khi / Giap Xen
             }
             // Cao cap.
             if (cap == 50) {
                 them(cap, HANG_CAO_CAP, idHoacTam(ThuCungDAO.idRuongCaoCap(), ID_TAM_RT_CAO_CAP), 1);
                 them(cap, HANG_CAO_CAP, 1453, 1);           // Ruong sao pha le VIP
             } else if (cap % 10 == 0) {
-                them(cap, HANG_CAO_CAP, 572, 1);            // Ruong vang
+                them(cap, HANG_CAO_CAP, 16, 1);             // Ngoc Rong 3 sao
             } else if (cap % 5 == 0) {
                 them(cap, HANG_CAO_CAP, 1440, 1);           // Ruong sao pha le
             } else if (cap % 3 == 0) {
@@ -415,6 +416,28 @@ public class NroPassDAO {
                 caoCap, HANG_CAO_CAP, ID_TAM_RT_CAO_CAP);
         ConnectDB.executeUpdate("INSERT IGNORE INTO nro_pass_cau_hinh (khoa, gia_tri, mo_ta) VALUES (?, '1', ?)",
                 "qua_id_that_v1", "Đã đổi quà rương thú cưng sang id thật (chạy một lần)");
+        lucDocQua = 0;
+        lucDocCauHinh = 0;
+    }
+
+    /** Cuồng nộ, Bổ huyết, Bổ khí, Giáp Xên bọ hung — thay cho đậu thần. */
+    private static final int[] BUFF = {381, 382, 383, 384};
+
+    /**
+     * Đổi quà đời đầu — một lần: bỏ đậu thần, Rương Bạc, Rương Vàng, Rương
+     * ngọc rồng. Đậu thành bốn món buff luân phiên theo cấp (x2), Rương Bạc
+     * thành Ngọc Rồng 4 sao, Rương Vàng và Rương ngọc rồng thành Ngọc Rồng 3 sao.
+     */
+    private static void doiQuaV2() throws Exception {
+        if (!chu("doi_qua_v2").isEmpty()) {
+            return;
+        }
+        ConnectDB.executeUpdate("UPDATE nro_pass_qua SET item_id = 381 + ((cap DIV 2) MOD 4), so_luong = 2"
+                + " WHERE item_id = 595");
+        ConnectDB.executeUpdate("UPDATE nro_pass_qua SET item_id = 17 WHERE item_id = 571");
+        ConnectDB.executeUpdate("UPDATE nro_pass_qua SET item_id = 16 WHERE item_id IN (572, 1560)");
+        ConnectDB.executeUpdate("INSERT IGNORE INTO nro_pass_cau_hinh (khoa, gia_tri, mo_ta) VALUES (?, '1', ?)",
+                "doi_qua_v2", "Đã đổi đậu thần / rương bạc / rương vàng sang món mới (chạy một lần)");
         lucDocQua = 0;
         lucDocCauHinh = 0;
     }

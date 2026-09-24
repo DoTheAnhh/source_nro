@@ -595,7 +595,27 @@ namespace Game1.God
             }
         }
 
-        /// <summary>Một ô món: nền tối, dải màu độ hiếm dưới đáy, icon, số lượng.</summary>
+        /// <summary>Trộn hai màu RGB: <paramref name="t"/> = 0 là <paramref name="a"/>, 1 là <paramref name="b"/>.</summary>
+        private static int tron(int a, int b, float t)
+        {
+            int ra = (a >> 16) & 0xFF, ga = (a >> 8) & 0xFF, ba = a & 0xFF;
+            int rb = (b >> 16) & 0xFF, gb = (b >> 8) & 0xFF, bb = b & 0xFF;
+            return rgb((int) (ra + (rb - ra) * t), (int) (ga + (gb - ga) * t), (int) (ba + (bb - ba) * t));
+        }
+
+        /// <summary>Nền gốc của ô món: xanh than rất tối, để màu độ hiếm nổi lên.</summary>
+        private static readonly int MAU_O_GOC = rgb(0x1C, 0x21, 0x2E);
+
+        /// <summary>
+        /// Một ô món kiểu hòm CS:GO: viền màu độ hiếm, ruột chuyển dần từ tối
+        /// sang ánh màu độ hiếm ở đáy, quầng sáng sau icon, vệt kính mờ phía
+        /// trên, vạch màu dưới đáy.
+        /// </summary>
+        /// <remarks>
+        /// Bản trước là một mảng màu phẳng phủ nửa dưới ô — nhìn như bị che mất
+        /// một nửa. Chuyển màu dọc (<c>veDaiDoc</c>) cho ô có chiều sâu, và độ
+        /// hiếm đọc ra từ cả viền, ánh nền lẫn vạch đáy.
+        /// </remarks>
         private void veOMon(mGraphics g, Mon m, int x, int y, int o, bool sang)
         {
             if (m == null)
@@ -606,15 +626,26 @@ namespace Game1.God
             if (sang)
             {
                 float tho = 0.5f + 0.5f * (float) System.Math.Sin(mSystem.currentTimeMillis() / 180.0);
-                g.setColor(mau, 0.35f + 0.35f * tho);
-                g.fillRect(x - 3, y - 3, o + 6, o + 6, 8);
+                g.setColor(mau, 0.3f + 0.35f * tho);
+                g.fillRect(x - 3, y - 3, o + 6, o + 6, 9);
             }
-            veKhungBo(g, x, y, o, o, rgb(0x3A, 0x2E, 0x24), 1f, mau, 1f, sang ? 2 : 1);
-            // Anh sang mau do hiem tu duoi len.
-            g.setColor(mau, 0.28f);
-            g.fillRect(x + 2, y + o / 2, o - 4, o / 2 - 2, 4);
+            int day = sang ? 2 : 1;
+            // Vien.
             g.setColor(mau, 1f);
-            g.fillRect(x + 2, y + o - 5, o - 4, 3, 1);
+            g.fillRect(x, y, o, o, 7);
+            // Ruot: toi o tren, anh mau do hiem o duoi.
+            g.veDaiDoc(x + day, y + day, o - day * 2, o - day * 2, 6,
+                    tron(MAU_O_GOC, mau, 0.08f), tron(MAU_O_GOC, mau, 0.5f));
+            // Quang sang sau icon.
+            int r = o * 3 / 10;
+            g.setColor(mau, 0.25f);
+            g.fillRect(x + o / 2 - r, y + o / 2 - r - 2, r * 2, r * 2, r);
+            // Vet kinh mo nua tren.
+            g.setColor(0xFFFFFF, 0.08f);
+            g.fillRect(x + day + 1, y + day + 1, o - (day + 1) * 2, (o - day * 2) / 3, 5);
+            // Vach day.
+            g.setColor(tron(mau, 0xFFFFFF, 0.25f), 1f);
+            g.fillRect(x + day + 3, y + o - day - 4, o - (day + 3) * 2, 2, 1);
             if (m.icon >= 0)
             {
                 SmallImage.drawSmallImage(g, m.icon, x + o / 2, y + o / 2 - 2, 0,
@@ -622,8 +653,12 @@ namespace Game1.God
             }
             if (m.soLuong > 1 && o >= 30)
             {
-                mFont.tahoma_7b_white.drawString(g, "x" + m.soLuong, x + o - 3, y + o - 16, mFont.RIGHT,
-                        mFont.tahoma_7b_dark);
+                string sl = "x" + m.soLuong;
+                int wSl = mFont.tahoma_7b_white.getWidth(sl) + 6;
+                g.setColor(0x000000, 0.6f);
+                g.fillRect(x + o - wSl - day - 2, y + o - day - 17, wSl, 12, 4);
+                mFont.tahoma_7b_white.drawString(g, sl, x + o - day - 2 - wSl / 2, y + o - day - 17,
+                        mFont.CENTER, mFont.tahoma_7b_dark);
             }
         }
 
@@ -640,7 +675,9 @@ namespace Game1.God
             int h = 30 + hang * (o + 24) + 36;
             int x = bx + (bw - w) / 2;
             int y = by + (bh - h) / 2;
-            veKhungBo(g, x, y, w, h, rgb(0x2A, 0x20, 0x18), 0.98f, rgb(0xF5, 0xA6, 0x23), 1f, 2);
+            g.setColor(rgb(0xF5, 0xA6, 0x23), 1f);
+            g.fillRect(x, y, w, h, BO_GOC + 2);
+            g.veDaiDoc(x + 2, y + 2, w - 4, h - 4, BO_GOC, rgb(0x2C, 0x33, 0x45), rgb(0x16, 0x19, 0x24));
             mFont.tahoma_7b_yellow.drawString(g, mot ? "BẠN NHẬN ĐƯỢC" : "KẾT QUẢ MỞ x" + ketQua.Count,
                     x + w / 2, y + 8, mFont.CENTER, mFont.tahoma_7b_dark);
             int xDau = x + (w - (cot * (o + 10) - 10)) / 2;
@@ -650,12 +687,12 @@ namespace Game1.God
                 int cx = xDau + (i % cot) * (o + 10);
                 int cy = y + 28 + (i / cot) * (o + 24);
                 veOMon(g, m, cx, cy, o, m.hiem >= 2);
-                mFont.tahoma_7.drawString(g, catBot(m.ten, mot ? 26 : 9), cx + o / 2, cy + o + 3,
-                        mFont.CENTER);
+                mFont.tahoma_7b_white.drawString(g, catBot(m.ten, mot ? 26 : 9), cx + o / 2, cy + o + 3,
+                        mFont.CENTER, mFont.tahoma_7b_dark);
             }
             if (mot && ketQua.Count == 1)
             {
-                mFont.tahoma_7b_white.drawString(g, TEN_HIEM[ketQua[0].hiem < 0 ? 0 : (ketQua[0].hiem > 3 ? 3 : ketQua[0].hiem)],
+                mFont.tahoma_7b_yellow.drawString(g, TEN_HIEM[ketQua[0].hiem < 0 ? 0 : (ketQua[0].hiem > 3 ? 3 : ketQua[0].hiem)],
                         x + w / 2, y + 28 + o + 15, mFont.CENTER, mFont.tahoma_7b_dark);
             }
             veNut(g, x + w / 2 - 40, y + h - 28, 80, 20, "Nhận", MAU_XANH, true);

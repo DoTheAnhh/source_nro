@@ -134,6 +134,7 @@ public class MoRuongDAO {
             }
             suaQuaTheoIdThat();
             datTrungCellVang();
+            doiQuaV2();
         } catch (Exception ex) {
             daTaoBang = false;
             Logger.logException(MoRuongDAO.class, ex, "Không tạo được bảng mở rương");
@@ -296,6 +297,44 @@ public class MoRuongDAO {
         Logger.success("Mở rương: Trứng Cell (" + cell + ") trong Rương Sự Kiện → nền vàng 1,5%\n");
     }
 
+    /**
+     * Đổi quà đời đầu — một lần: đậu thần thành Cuồng nộ + Bổ huyết (x2, chia
+     * đôi trọng số), Rương Bạc thành Ngọc Rồng 4 sao, Rương Vàng thành Giáp Xên
+     * bọ hung 2, Rương ngọc rồng thành Ngọc Rồng 3 sao. Trọng số tổng không đổi
+     * nên tỉ lệ các món vàng giữ nguyên.
+     */
+    private static void doiQuaV2() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT gia_tri FROM mo_ruong_cau_hinh WHERE khoa = 'doi_qua_v2'");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            dong(rs);
+        }
+        lucDoc = 0;
+        for (Ruong r : dsRuong(false)) {
+            for (Qua q : dsQuaDayDu(r.id)) {
+                if (q.itemId != 595) {
+                    continue;
+                }
+                int nua = q.trongSo / 2;
+                ConnectDB.executeUpdate("UPDATE mo_ruong_qua SET item_id = 381, so_luong = 2, trong_so = ?"
+                        + " WHERE id = ?", q.trongSo - nua, q.id);
+                if (nua > 0) {
+                    themQua(r.id, 382, 2, nua, q.hiem, "");
+                }
+            }
+        }
+        ConnectDB.executeUpdate("UPDATE mo_ruong_qua SET item_id = 17, so_luong = 1 WHERE item_id = 571");
+        ConnectDB.executeUpdate("UPDATE mo_ruong_qua SET item_id = 1153, so_luong = 1 WHERE item_id = 572");
+        ConnectDB.executeUpdate("UPDATE mo_ruong_qua SET item_id = 16, so_luong = 1 WHERE item_id = 1560");
+        ConnectDB.executeUpdate("INSERT IGNORE INTO mo_ruong_cau_hinh (khoa, gia_tri) VALUES ('doi_qua_v2', '1')");
+        lucDoc = 0;
+        Logger.success("Mở rương: đổi đậu thần / rương bạc / rương vàng / rương ngọc rồng sang món mới\n");
+    }
+
     /** Thang trọng số khi đặt tỉ lệ cố định: 100.000 phần = 100%. */
     private static final int THANG_TI_LE = 100_000;
 
@@ -372,10 +411,11 @@ public class MoRuongDAO {
         int thuong = themRuong("Rương Thường", "Rương cơ bản — đồ dùng hằng ngày, có cửa ra thú cưng.",
                 571, 10, 90, 1);
         themQua(thuong, 457, 1, 4000, 0, "");      // Thoi vang
-        themQua(thuong, 595, 5, 3000, 0, "");      // Dau than cap 10
+        themQua(thuong, 381, 2, 1500, 0, "");      // Cuong no
+        themQua(thuong, 382, 2, 1500, 0, "");      // Bo huyet
         themQua(thuong, 380, 1, 1500, 1, "");      // Vien capsule ki bi
         themQua(thuong, 987, 1, 1000, 1, "");      // Da bao ve
-        themQua(thuong, 571, 1, 400, 2, "");       // Ruong bac
+        themQua(thuong, 17, 1, 400, 2, "");        // Ngoc Rong 4 sao
         // Trung Mabu va Ruong thu cung thuong: them trong suaQuaTheoIdThat (id
         // cua hai mon nay moi may mot khac).
 
@@ -383,8 +423,8 @@ public class MoRuongDAO {
                 1960, 30, 270, 2);
         themQua(suKien, 457, 3, 3500, 0, "");      // Thoi vang
         themQua(suKien, 1440, 1, 2500, 1, "");     // Ruong sao pha le
-        themQua(suKien, 572, 1, 2000, 1, "");      // Ruong vang
-        themQua(suKien, 1560, 1, 1200, 2, "");     // Ruong ngoc rong
+        themQua(suKien, 1153, 1, 2000, 1, "");     // Giap Xen bo hung 2
+        themQua(suKien, 16, 1, 1200, 2, "");       // Ngoc Rong 3 sao
         themQua(suKien, 1453, 1, 600, 2, "");      // Ruong sao pha le VIP
         // Ruong thu cung cao cap: them trong suaQuaTheoIdThat.
         ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET ten_diem = 'Điểm Rương Thường' WHERE id = ?", thuong);
