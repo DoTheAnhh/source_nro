@@ -60,62 +60,71 @@ namespace Game6.God
             public readonly List<Moc> moc = new List<Moc>();
         }
 
-        /// <summary>Một bậc thẻ tháng đang bán.</summary>
-        public class GoiThe
+        /// <summary>Một ô quà của NRO Pass (một cấp, một hàng).</summary>
+        public class OPass
         {
-            public int bac;
-            public string ten;
-            public string gia;
-            public string uuDai;
-            public int soNgay;
-            public readonly List<Qua> quaMua = new List<Qua>();
-            public readonly List<Qua> quaNgay = new List<Qua>();
+            /// <summary>0 chưa tới · 1 nhận được · 2 đã nhận · 3 đã tới nhưng khoá.</summary>
+            public int trangThai;
+            public readonly List<Qua> qua = new List<Qua>();
         }
 
-        /// <summary>Toàn bộ mục thẻ tháng, máy chủ gửi ở cuối gói phúc lợi.</summary>
-        public class TheThang
+        /// <summary>Toàn bộ NRO Pass, máy chủ gửi ở cuối gói phúc lợi.</summary>
+        public class NroPass
         {
-            public readonly List<GoiThe> goi = new List<GoiThe>();
-            /// <summary>Bậc đang dùng, 0 là chưa có hoặc đã hết hạn.</summary>
-            public int bacDangCo;
-            public int soNgayCon;
-            public string hetHan;
-            public bool daNhanHomNay;
-            public string soDu;
+            public string ten = "NRO Pass";
+            public string moTaMua = string.Empty;
+            public int soCap;
+            public int diemMoiCap = 1;
+            public long diem;
+            public bool caoCap;
+            public string giaCaoCap = string.Empty;
+            public string uuDaiCaoCap = string.Empty;
+            public string nguonDiem = string.Empty;
+            public string soDu = string.Empty;
+            /// <summary>Ô hàng Miễn phí, chỉ số 0 là cấp 1.</summary>
+            public OPass[] mienPhi = new OPass[0];
+            /// <summary>Ô hàng Cao cấp.</summary>
+            public OPass[] caoCapO = new OPass[0];
+
+            public int capDat()
+            {
+                int c = (int) (diem / (diemMoiCap < 1 ? 1 : diemMoiCap));
+                return c > soCap ? soCap : c;
+            }
         }
 
         private readonly List<Nhom> nhom = new List<Nhom>();
         private int nhomChon;
         private int cuon;
 
-        /// <summary>Mục thẻ tháng; <c>null</c> khi máy chủ cũ không gửi.</summary>
-        private TheThang theThang;
+        /// <summary>NRO Pass; <c>null</c> khi máy chủ cũ không gửi.</summary>
+        private NroPass pass;
 
         /// <summary>
-        /// Đang xem mục thẻ tháng thay cho một nhóm mốc. Mở bảng lần đầu là vào
-        /// thẳng mục này: nó đứng đầu cột và là thứ duy nhất bán bằng tiền.
+        /// Đang xem NRO Pass thay cho một nhóm mốc. Mở bảng lần đầu là vào
+        /// thẳng mục này: nó đứng đầu cột.
         /// </summary>
         private bool xemThe = true;
 
-        /// <summary>Bậc đang chờ bấm lần hai để xác nhận mua, 0 là không có.</summary>
-        private int bacChoXacNhan;
+        /// <summary>Đang chờ bấm lần hai để xác nhận mở khoá cao cấp.</summary>
+        private bool choXacNhan;
 
         /// <summary>Lúc bấm lần một; quá <see cref="HAN_XAC_NHAN"/> thì phải bấm lại từ đầu.</summary>
         private long lucChoXacNhan;
 
         /// <summary>
-        /// Bấm "Mua" lần một chỉ đổi nút thành "Bấm lần nữa để mua"; lần hai mới
-        /// gửi. Mua là trừ tiền thật, một cú chạm lỡ tay không được phép tốn tiền.
+        /// Bấm "Mở khoá" lần một chỉ đổi nút thành "Bấm lần nữa để mua"; lần hai
+        /// mới gửi. Mua là trừ tiền thật, một cú chạm lỡ tay không được tốn tiền.
         /// </summary>
         private const long HAN_XAC_NHAN = 4000L;
 
-        /// <summary>Có mục thẻ tháng trên cột trái hay không.</summary>
+        /// <summary>Có mục NRO Pass trên cột trái hay không.</summary>
         private bool coThe()
         {
-            return theThang != null && theThang.goi.Count > 0;
+            return pass != null && pass.soCap > 0;
         }
 
-        /// <summary>Số dòng trên cột trái: thẻ tháng (nếu có) rồi tới các nhóm.</summary>
+        /// <summary>Số dòng trên cột trái: NRO Pass (nếu có) rồi tới các nhóm.</summary>
         private int soMuc()
         {
             return nhom.Count + (coThe() ? 1 : 0);
@@ -304,10 +313,18 @@ namespace Game6.God
             veNut(g, x + w / 2 - 40, yy + 6, 80, 20, "Đóng", true);
         }
 
-        /// <summary>Nạp mục thẻ tháng — gọi TRƯỚC <see cref="nhanDuLieu"/>.</summary>
-        public void nhanTheThang(TheThang t)
+        /// <summary>Nạp NRO Pass — gọi TRƯỚC <see cref="nhanDuLieu"/>.</summary>
+        /// <remarks>
+        /// Lần đầu có dữ liệu thì cuộn tới cấp đang làm; các lần làm mới sau
+        /// (15 giây một lần, hay sau khi nhận) giữ nguyên chỗ đang xem.
+        /// </remarks>
+        public void nhanPass(NroPass p)
         {
-            theThang = t;
+            if (pass == null && p != null)
+            {
+                canCanPass = true;
+            }
+            pass = p;
         }
 
         /// <summary>Moc thoi gian lan cuoi xin du lieu.</summary>
@@ -326,6 +343,10 @@ namespace Game6.God
             if (!dangMo)
             {
                 return;
+            }
+            if (pass != null)
+            {
+                truotPass();
             }
             if (lucBamNhanNhanh > 0
                     && mSystem.currentTimeMillis() - lucBamNhanNhanh > HAN_CHO_NHAN_NHANH)
@@ -408,7 +429,7 @@ namespace Game6.God
             veCotTrai(g);
             if (dangXemThe())
             {
-                veTheThang(g);
+                vePass(g);
             }
             else
             {
@@ -442,7 +463,7 @@ namespace Game6.God
                             chon ? MAU_THE_CAO : MAU_THE_VANG, 1f, MAU_VIEN, 0.9f, 1);
                     mFont.tahoma_7b_white.drawString(g, "NRO PASS",
                             xTrai + RONG_TRAI / 2, yy + CAO_MUC / 2 - 5, mFont.CENTER);
-                    if (coTheNhanHomNay())
+                    if (soOPassNhanDuoc() > 0)
                     {
                         // Cham do: con qua hom nay chua nhan.
                         g.setColor(0xE53935, 1f);
@@ -469,7 +490,7 @@ namespace Game6.God
         /// </summary>
         private int soMucChoNhan()
         {
-            int n = coTheNhanHomNay() ? 1 : 0;
+            int n = soOPassNhanDuoc();
             foreach (Nhom nh in nhom)
             {
                 foreach (Moc m in nh.moc)
@@ -518,265 +539,521 @@ namespace Game6.God
                     mFont.CENTER, mFont.tahoma_7b_dark);
         }
 
-        /// <summary>Đang có thẻ mà hôm nay chưa nhận quà.</summary>
-        private bool coTheNhanHomNay()
+        /// <summary>Số ô NRO Pass đang nhận được.</summary>
+        private int soOPassNhanDuoc()
         {
-            return theThang != null && theThang.bacDangCo > 0 && !theThang.daNhanHomNay;
+            if (pass == null)
+            {
+                return 0;
+            }
+            int n = 0;
+            for (int i = 0; i < pass.soCap; i++)
+            {
+                if (pass.mienPhi[i].trangThai == 1)
+                {
+                    n++;
+                }
+                if (pass.caoCapO[i].trangThai == 1)
+                {
+                    n++;
+                }
+            }
+            return n;
         }
 
         // ------------------------------------------------------------------
-        //  Mục thẻ tháng
+        //  NRO Pass — dải cấp trải ngang kiểu Royale Pass
         // ------------------------------------------------------------------
-        /// <summary>Đầu thẻ bậc thường: vàng nhạt.</summary>
+        /// <summary>Vàng cát: nền hàng Cao cấp, nhãn Cao cấp.</summary>
         private static readonly int MAU_THE_VANG = rgb(0xE0, 0x9A, 0x3E);
 
-        /// <summary>Đầu thẻ cao cấp, và dòng thẻ tháng đang chọn: cam cháy.</summary>
+        /// <summary>Cam cháy: dòng NRO Pass đang chọn, thanh tiến độ, nút mở khoá.</summary>
         private static readonly int MAU_THE_CAO = rgb(0xD9, 0x6A, 0x12);
 
-        private const int CAO_DAI_NHAN = 40;
+        /// <summary>Nền ô hàng Cao cấp: kem ánh vàng, tách hẳn với hàng Miễn phí.</summary>
+        private static readonly int MAU_O_CAO_CAP = rgb(0xFF, 0xE6, 0xAE);
 
-        /// <summary>Vùng thẻ thứ <paramref name="i"/>: x, y, rộng, cao.</summary>
-        private int[] oThe(int i)
+        private const int CAO_DAU_PASS = 30;
+        private const int CAO_DAY_PASS = 46;
+        private const int RONG_NHAN_HANG = 60;
+        private const int RONG_NUT_LAT_P = 15;
+        private const int KHE_O_PASS = 6;
+
+        /// <summary>Quãng đã cuộn ngang và quãng đang nhắm tới (điểm ảnh).</summary>
+        private float cuonPass;
+        private float cuonPassDich;
+        private bool dangKeoPass;
+        private int xKeoTruocP;
+        private int tongKeoP;
+
+        /// <summary>Lần tới vẽ thì cuộn tới cấp đang làm — đặt khi vừa mở mục pass.</summary>
+        private bool canCanPass = true;
+
+        /// <summary>Vùng dải cấp: x, y, rộng, cao.</summary>
+        private int[] vungPass()
         {
-            int n = theThang.goi.Count;
-            int khe = 6;
-            int w = (rongPhai - khe * (n - 1)) / n;
-            int y = yThan + 22;
-            int h = caoThan - 22 - CAO_DAI_NHAN - 6;
-            return new int[] { xPhai + i * (w + khe), y, w, h };
+            int x = xPhai + RONG_NHAN_HANG + RONG_NUT_LAT_P + 6;
+            int w = rongPhai - RONG_NHAN_HANG - RONG_NUT_LAT_P * 2 - 10;
+            int y = yThan + CAO_DAU_PASS + 4;
+            int h = caoThan - CAO_DAU_PASS - CAO_DAY_PASS - 10;
+            return new int[] { x, y, w, h };
         }
 
-        /// <summary>Nút nhận quà hôm nay, ở dải dưới cùng.</summary>
-        private int[] oNutNhanNgay()
+        /// <summary>Cạnh một ô quà, co theo chiều cao có được.</summary>
+        private int coOPass()
         {
-            int y = yThan + caoThan - CAO_DAI_NHAN;
-            return new int[] { xPhai + rongPhai - 80, y + (CAO_DAI_NHAN - 20) / 2, 72, 20 };
-        }
-
-        private GoiThe goiDangDung()
-        {
-            if (theThang == null)
+            int[] v = vungPass();
+            int s = (v[3] - 20 - 8) / 2 - 2;
+            if (s > 54)
             {
-                return null;
+                s = 54;
             }
-            foreach (GoiThe gt in theThang.goi)
+            return s < 26 ? 26 : s;
+        }
+
+        private int buocPass()
+        {
+            return coOPass() + KHE_O_PASS;
+        }
+
+        private int yHangMienPhi()
+        {
+            return vungPass()[1] + 22;
+        }
+
+        private int yHangCaoCap()
+        {
+            return yHangMienPhi() + coOPass() + 6;
+        }
+
+        private float cuonPassToiDa()
+        {
+            if (pass == null)
             {
-                if (gt.bac == theThang.bacDangCo)
+                return 0f;
+            }
+            float du = pass.soCap * buocPass() - KHE_O_PASS - vungPass()[2];
+            return du > 0 ? du : 0f;
+        }
+
+        /// <summary>x của cột cấp thứ <paramref name="i"/> (0 là cấp 1), đã trừ quãng cuộn.</summary>
+        private int xCotPass(int i)
+        {
+            return vungPass()[0] + i * buocPass() - (int) cuonPass;
+        }
+
+        private int[] oNutLatPass(bool trai)
+        {
+            int[] v = vungPass();
+            int y = yHangMienPhi();
+            int h = coOPass() * 2 + 6;
+            int x = trai ? (v[0] - RONG_NUT_LAT_P - 3) : (v[0] + v[2] + 3);
+            return new int[] { x, y, RONG_NUT_LAT_P, h };
+        }
+
+        private int[] oNutMoKhoa()
+        {
+            int y = yThan + caoThan - CAO_DAY_PASS;
+            int w = 176;
+            return new int[] { xPhai + rongPhai - w - 6, y + 18, w, 22 };
+        }
+
+        /// <summary>Đưa cột cấp <paramref name="cap"/> (1..) vào giữa tầm nhìn.</summary>
+        private void canGiuaCap(int cap, bool ngay)
+        {
+            int[] v = vungPass();
+            float dich = (cap - 1) * buocPass() - (v[2] - coOPass()) / 2f;
+            float tran = cuonPassToiDa();
+            cuonPassDich = dich < 0 ? 0 : (dich > tran ? tran : dich);
+            if (ngay)
+            {
+                cuonPass = cuonPassDich;
+            }
+        }
+
+        /// <summary>Cấp nên nhìn thấy đầu tiên: ô nhận được sớm nhất, không thì cấp đang làm.</summary>
+        private int capNenXem()
+        {
+            for (int i = 0; i < pass.soCap; i++)
+            {
+                if (pass.mienPhi[i].trangThai == 1 || pass.caoCapO[i].trangThai == 1)
                 {
-                    return gt;
+                    return i + 1;
                 }
             }
-            return null;
+            int c = pass.capDat() + 1;
+            return c > pass.soCap ? pass.soCap : c;
         }
 
-        private void veTheThang(mGraphics g)
+        private void vePass(mGraphics g)
         {
-            TheThang t = theThang;
-
-            // Dai trang thai.
-            g.setColor(MAU_THE, 0.9f);
-            g.fillRect(xPhai, yThan, rongPhai, 18, 6);
-            GoiThe dung = goiDangDung();
-            string trangThai = dung == null ? "Chưa có NRO Pass"
-                    : (dung.ten + " · còn " + t.soNgayCon + " ngày");
-            mFont.tahoma_7b_red.drawString(g, trangThai, xPhai + 8, yThan + 4, mFont.LEFT);
-            if (!string.IsNullOrEmpty(t.soDu))
+            NroPass p = pass;
+            if (canCanPass)
             {
-                int rTT = mFont.tahoma_7b_red.getWidth(trangThai);
-                if (mFont.tahoma_7.getWidth(t.soDu) + rTT + 24 < rongPhai)
-                {
-                    mFont.tahoma_7.drawString(g, t.soDu, xPhai + rongPhai - 8, yThan + 4,
-                            mFont.RIGHT);
-                }
+                canCanPass = false;
+                canGiuaCap(capNenXem(), true);
             }
 
-            for (int i = 0; i < t.goi.Count; i++)
-            {
-                veMotTheThang(g, t.goi[i], oThe(i));
-            }
-            veDaiNhanNgay(g);
-        }
+            // ---- Dau: ten + mua, ben phai cap va thanh diem ----
+            veKhungBo(g, xPhai, yThan, rongPhai, CAO_DAU_PASS, MAU_THE, 0.95f, MAU_VIEN, 0.7f, 1);
+            mFont.tahoma_7b_red.drawString(g, p.ten, xPhai + 8, yThan + 3, mFont.LEFT);
+            mFont.tahoma_7.drawString(g, p.moTaMua, xPhai + 8, yThan + 15, mFont.LEFT);
 
-        private void veMotTheThang(mGraphics g, GoiThe gt, int[] o)
-        {
-            bool dangDung = theThang.bacDangCo == gt.bac;
-            bool caoCap = gt.bac >= 2;
-            veKhungBo(g, o[0], o[1], o[2], o[3], MAU_THE, 0.97f,
-                    dangDung ? MAU_THE_CAO : MAU_VIEN, dangDung ? 1f : 0.8f, dangDung ? 2 : 1);
+            int capDat = p.capDat();
+            bool kich = capDat >= p.soCap;
+            long trongCap = kich ? p.diemMoiCap : p.diem % p.diemMoiCap;
+            int rThanh = 120;
+            int xThanh = xPhai + rongPhai - rThanh - 8;
+            string nhanCap = "CẤP " + capDat + "/" + p.soCap;
+            int wCap = mFont.tahoma_7b_white.getWidth(nhanCap) + 12;
+            int xCap = xThanh - wCap - 6;
+            veKhungBo(g, xCap, yThan + 6, wCap, 18, MAU_THE_CAO, 1f, MAU_VIEN, 1f, 1);
+            mFont.tahoma_7b_white.drawString(g, nhanCap, xCap + wCap / 2, yThan + 9, mFont.CENTER,
+                    mFont.tahoma_7b_dark);
+            g.setColor(MAU_THE_MO, 1f);
+            g.fillRect(xThanh, yThan + 17, rThanh, 6, 3);
+            int day = (int) (rThanh * trongCap / (p.diemMoiCap < 1 ? 1 : p.diemMoiCap));
+            if (day > 0)
+            {
+                g.setColor(MAU_THE_CAO, 1f);
+                g.fillRect(xThanh, yThan + 17, day > rThanh ? rThanh : day, 6, 3);
+            }
+            mFont.tahoma_7.drawString(g, kich ? "Đã đạt cấp tối đa"
+                    : (trongCap + "/" + p.diemMoiCap + " điểm"),
+                    xThanh + rThanh, yThan + 4, mFont.RIGHT);
 
-            // Dau the: dai mau, ten the.
-            int mauDau = caoCap ? MAU_THE_CAO : MAU_THE_VANG;
-            g.setColor(mauDau, 1f);
-            g.fillRect(o[0] + 2, o[1] + 2, o[2] - 4, 17, BO_GOC - 1);
-            mFont.tahoma_7b_white.drawString(g, catBot(gt.ten, 24), o[0] + o[2] / 2,
-                    o[1] + 5, mFont.CENTER);
-            if (dangDung)
+            // ---- Nhan hai hang ----
+            int s = coOPass();
+            int yM = yHangMienPhi();
+            int yC = yHangCaoCap();
+            veKhungBo(g, xPhai, yM, RONG_NHAN_HANG, s, MAU_THE, 1f, MAU_VIEN, 0.8f, 1);
+            mFont.tahoma_7b_dark.drawString(g, "MIỄN PHÍ", xPhai + RONG_NHAN_HANG / 2,
+                    yM + s / 2 - 5, mFont.CENTER);
+            veKhungBo(g, xPhai, yC, RONG_NHAN_HANG, s, MAU_THE_VANG, 1f, MAU_THE_CAO, 1f, 1);
+            mFont.tahoma_7b_white.drawString(g, "CAO CẤP", xPhai + RONG_NHAN_HANG / 2,
+                    yC + s / 2 - (p.caoCap ? 5 : 10), mFont.CENTER, mFont.tahoma_7b_dark);
+            if (!p.caoCap)
             {
-                // Nhan "Dang dung" goc tren phai.
-                string nhanDD = "Đang dùng";
-                int wD = mFont.tahoma_7b_white.getWidth(nhanDD) + 8;
-                g.setColor(0x2E9E48, 1f);
-                g.fillRect(o[0] + o[2] - wD - 4, o[1] + 22, wD, 12, 4);
-                mFont.tahoma_7b_white.drawString(g, nhanDD, o[0] + o[2] - wD / 2 - 4,
-                        o[1] + 22, mFont.CENTER);
+                veKhoa(g, xPhai + RONG_NHAN_HANG / 2, yC + s / 2 + 7);
             }
 
-            int x = o[0] + 8;
-            int y = o[1] + 23;
-            mFont.tahoma_7b_red.drawString(g, gt.gia, x, y, mFont.LEFT);
-            y += 12;
-            mFont.tahoma_7_grey.drawString(g, gt.soNgay + " ngày", x, y, mFont.LEFT);
-            y += 12;
-
-            // Uu dai: toi da hai dong.
-            string[] dong = mFont.tahoma_7.splitFontArray(gt.uuDai ?? string.Empty, o[2] - 16);
-            for (int i = 0; i < dong.Length && i < 2; i++)
+            // ---- Dai cap: cat dung vung, ve cac cot ----
+            int[] v = vungPass();
+            g.setClip(v[0], v[1], v[2], v[3]);
+            int buoc = buocPass();
+            // Duong tien do noi cac so cap.
+            int yDuong = v[1] + 8;
+            int xDau = xCotPass(0) + s / 2;
+            int xCuoi = xCotPass(p.soCap - 1) + s / 2;
+            g.setColor(MAU_THE_MO, 1f);
+            g.fillRect(xDau, yDuong, xCuoi - xDau, 4, 2);
+            if (capDat > 0)
             {
-                mFont.tahoma_7_blue.drawString(g, dong[i], x, y, mFont.LEFT);
-                y += 11;
+                int xDat = xCotPass(capDat - 1) + s / 2;
+                g.setColor(MAU_THE_CAO, 1f);
+                g.fillRect(xDau, yDuong, xDat - xDau, 4, 2);
             }
-            y += 3;
-
-            int yNut = o[1] + o[3] - 24;
-            y = veHangQua(g, "Nhận ngay", gt.quaMua, x, y, o[2] - 16, yNut);
-            veHangQua(g, "Mỗi ngày", gt.quaNgay, x, y, o[2] - 16, yNut);
-
-            // Nut mua.
-            int[] n = oNutMuaTheoThe(o);
-            bool khacBac = theThang.bacDangCo > 0 && !dangDung;
-            bool choXN = bacChoXacNhan == gt.bac
-                    && mSystem.currentTimeMillis() - lucChoXacNhan < HAN_XAC_NHAN;
-            if (khacBac)
+            for (int i = 0; i < p.soCap; i++)
             {
-                veKhungBo(g, n[0], n[1], n[2], n[3], MAU_THE_MO, 0.8f, MAU_VIEN, 0.4f, 1);
-                mFont.tahoma_7_grey.drawString(g, "Đang dùng gói khác", n[0] + n[2] / 2,
-                        n[1] + n[3] / 2 - 5, mFont.CENTER);
-            }
-            else
-            {
-                string chu = choXN ? "Bấm lần nữa để mua"
-                        : (dangDung ? "Gia hạn " + gt.soNgay + " ngày" : "Mua ngay");
-                veKhungBo(g, n[0], n[1], n[2], n[3], choXN ? MAU_THE_CAO : MAU_CHON, 1f,
-                        MAU_VIEN, 0.9f, 1);
-                (choXN ? mFont.tahoma_7b_white : mFont.tahoma_7b_dark)
-                        .drawString(g, chu, n[0] + n[2] / 2, n[1] + n[3] / 2 - 5, mFont.CENTER);
-            }
-        }
-
-        private int[] oNutMuaTheoThe(int[] o)
-        {
-            return new int[] { o[0] + 8, o[1] + o[3] - 24, o[2] - 16, 18 };
-        }
-
-        /// <summary>
-        /// Một hàng quà có nhãn ở trên; trả về y cho hàng kế tiếp. Không vẽ
-        /// tràn xuống nút mua: hết chỗ thì bỏ hàng.
-        /// </summary>
-        private int veHangQua(mGraphics g, string nhan, List<Qua> ds, int x, int y,
-                int w, int yGioiHan)
-        {
-            if (ds.Count == 0 || y + 34 > yGioiHan)
-            {
-                return y;
-            }
-            mFont.tahoma_7b_dark.drawString(g, nhan + ":", x, y, mFont.LEFT);
-            int ix = x;
-            int yIcon = y + 11;
-            for (int i = 0; i < ds.Count; i++)
-            {
-                if (ix + 22 > x + w)
-                {
-                    mFont.tahoma_7.drawString(g, "…", ix + 2, yIcon + 6, mFont.LEFT);
-                    break;
-                }
-                veMotQua(g, ds[i], ix, yIcon);
-                ix += 25;
-            }
-            return yIcon + 25;
-        }
-
-        /// <summary>Ô quà 22×22: icon, số lượng trên dải tối dưới đáy.</summary>
-        private void veMotQua(mGraphics g, Qua q, int ix, int yIcon)
-        {
-            g.setColor(MAU_THE_MO, 0.85f);
-            g.fillRect(ix, yIcon, 22, 22, 4);
-            if (q.icon >= 0)
-            {
-                SmallImage.drawSmallImage(g, q.icon, ix + 11, yIcon + 10,
-                        0, mGraphics.VCENTER | mGraphics.HCENTER);
-            }
-            g.setColor(0, 0.55f);
-            g.fillRect(ix, yIcon + 15, 22, 7);
-            mFont.tahoma_7.drawString(g, "x" + q.soLuong, ix + 11, yIcon + 14, mFont.CENTER);
-        }
-
-        /// <summary>Dải dưới cùng: quà hôm nay của thẻ đang dùng và nút nhận.</summary>
-        private void veDaiNhanNgay(mGraphics g)
-        {
-            int y = yThan + caoThan - CAO_DAI_NHAN;
-            veKhungBo(g, xPhai, y, rongPhai, CAO_DAI_NHAN, MAU_THE, 0.95f, MAU_VIEN, 0.7f, 1);
-            GoiThe dung = goiDangDung();
-            if (dung == null)
-            {
-                mFont.tahoma_7b_dark.drawString(g,
-                        "Mua NRO Pass để nhận quà mỗi ngày và ưu đãi chỉ số suốt thời hạn",
-                        xPhai + rongPhai / 2, y + CAO_DAI_NHAN / 2 - 5, mFont.CENTER);
-                return;
-            }
-            mFont.tahoma_7b_dark.drawString(g, "Quà hôm nay:", xPhai + 8,
-                    y + CAO_DAI_NHAN / 2 - 5, mFont.LEFT);
-            int ix = xPhai + 12 + mFont.tahoma_7b_dark.getWidth("Quà hôm nay:");
-            int yIcon = y + (CAO_DAI_NHAN - 22) / 2;
-            int[] n = oNutNhanNgay();
-            for (int i = 0; i < dung.quaNgay.Count && ix + 22 < n[0] - 4; i++)
-            {
-                veMotQua(g, dung.quaNgay[i], ix, yIcon);
-                ix += 25;
-            }
-            if (theThang.daNhanHomNay)
-            {
-                mFont.tahoma_7.drawString(g, "ĐÃ NHẬN", n[0] + n[2] / 2, n[1] + n[3] / 2 - 5,
-                        mFont.CENTER);
-            }
-            else
-            {
-                veNut(g, n[0], n[1], n[2], n[3], "Nhận", true);
-            }
-        }
-
-        /// <summary>Chạm trong mục thẻ tháng.</summary>
-        private void chamTheThang()
-        {
-            for (int i = 0; i < theThang.goi.Count; i++)
-            {
-                GoiThe gt = theThang.goi[i];
-                int[] n = oNutMuaTheoThe(oThe(i));
-                if (!cham(n[0], n[1], n[2], n[3]))
+                int x = xCotPass(i);
+                if (x + s < v[0] || x > v[0] + v[2])
                 {
                     continue;
                 }
-                if (theThang.bacDangCo > 0 && theThang.bacDangCo != gt.bac)
+                bool dat = i < capDat;
+                string so = string.Empty + (i + 1);
+                int wS = mFont.tahoma_7b_white.getWidth(so) + 8;
+                if (wS < 18)
                 {
-                    return;
+                    wS = 18;
                 }
-                long bayGio = mSystem.currentTimeMillis();
-                if (bacChoXacNhan == gt.bac && bayGio - lucChoXacNhan < HAN_XAC_NHAN)
+                veKhungBo(g, x + s / 2 - wS / 2, v[1] + 2, wS, 16, dat ? MAU_THE_CAO : MAU_THE_MO, 1f,
+                        MAU_VIEN, dat ? 1f : 0.6f, 1);
+                (dat ? mFont.tahoma_7b_white : mFont.tahoma_7b_dark).drawString(g, so, x + s / 2,
+                        v[1] + 4, mFont.CENTER);
+                veOPass(g, p.mienPhi[i], x, yM, s, false);
+                veOPass(g, p.caoCapO[i], x, yC, s, true);
+            }
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+
+            // ---- Hai nut lat ----
+            veNutLatP(g, true, cuonPassDich > 0.5f);
+            veNutLatP(g, false, cuonPassDich < cuonPassToiDa() - 0.5f);
+
+            // ---- Day: nguon diem, so du, nut mo khoa ----
+            int yD = yThan + caoThan - CAO_DAY_PASS;
+            veKhungBo(g, xPhai, yD, rongPhai, CAO_DAY_PASS, MAU_THE, 0.95f, MAU_VIEN, 0.7f, 1);
+            int[] nut = oNutMoKhoa();
+            int rChu = nut[0] - xPhai - 14;
+            string[] dongNguon = mFont.tahoma_7.splitFontArray(p.nguonDiem ?? string.Empty, rChu);
+            for (int i = 0; i < dongNguon.Length && i < 2; i++)
+            {
+                mFont.tahoma_7.drawString(g, dongNguon[i], xPhai + 8, yD + 4 + i * 11, mFont.LEFT);
+            }
+            mFont.tahoma_7_grey.drawString(g, catBot(p.soDu, 60), xPhai + 8, yD + 30, mFont.LEFT);
+
+            if (p.caoCap)
+            {
+                veKhungBo(g, nut[0], nut[1], nut[2], nut[3], MAU_THE_VANG, 1f, MAU_THE_CAO, 1f, 1);
+                mFont.tahoma_7b_white.drawString(g, "ĐÃ MỞ CAO CẤP", nut[0] + nut[2] / 2, nut[1] + 5,
+                        mFont.CENTER, mFont.tahoma_7b_dark);
+            }
+            else
+            {
+                bool cho = choXacNhan && mSystem.currentTimeMillis() - lucChoXacNhan < HAN_XAC_NHAN;
+                float tho = 0.5f + 0.5f * (float) System.Math.Sin(mSystem.currentTimeMillis() / 320.0);
+                g.setColor(0xFFD27A, 0.2f + 0.25f * tho);
+                g.fillRect(nut[0] - 2, nut[1] - 2, nut[2] + 4, nut[3] + 4, 7);
+                veKhungBo(g, nut[0], nut[1], nut[2], nut[3], MAU_THE_CAO, 1f, rgb(0x7A, 0x33, 0x08), 1f, 2);
+                mFont.tahoma_7b_white.drawString(g, cho ? "Bấm lần nữa để mua" : ("Mở Cao cấp · " + p.giaCaoCap),
+                        nut[0] + nut[2] / 2, nut[1] + 5, mFont.CENTER, mFont.tahoma_7b_dark);
+            }
+            if (!string.IsNullOrEmpty(p.uuDaiCaoCap))
+            {
+                mFont.tahoma_7_blue.drawString(g, catBot("Cao cấp: " + p.uuDaiCaoCap, 60),
+                        nut[0] + nut[2], yD + 5, mFont.RIGHT);
+            }
+        }
+
+        /// <summary>Một ô quà: nền theo hàng, icon món đầu, số lượng, và dấu trạng thái.</summary>
+        private void veOPass(mGraphics g, OPass o, int x, int y, int s, bool caoCap)
+        {
+            bool nhanDuoc = o.trangThai == 1;
+            int vien = nhanDuoc ? rgb(0x2E, 0xA8, 0x4A) : (caoCap ? MAU_THE_CAO : MAU_VIEN);
+            if (nhanDuoc)
+            {
+                float tho = 0.5f + 0.5f * (float) System.Math.Sin(mSystem.currentTimeMillis() / 250.0);
+                g.setColor(0x9CFF8A, 0.25f + 0.3f * tho);
+                g.fillRect(x - 2, y - 2, s + 4, s + 4, 7);
+            }
+            veKhungBo(g, x, y, s, s, caoCap ? MAU_O_CAO_CAP : MAU_THE, 1f, vien,
+                    nhanDuoc ? 1f : 0.8f, nhanDuoc ? 2 : 1);
+            if (o.qua.Count > 0)
+            {
+                Qua q = o.qua[0];
+                if (q.icon >= 0)
                 {
-                    bacChoXacNhan = 0;
-                    Service.gI().phucLoiMuaThe(gt.bac);
+                    SmallImage.drawSmallImage(g, q.icon, x + s / 2, y + s / 2 - 2, 0,
+                            mGraphics.VCENTER | mGraphics.HCENTER);
+                }
+                string sl = "x" + q.soLuong;
+                int wSl = mFont.tahoma_7b_dark.getWidth(sl) + 6;
+                g.setColor(MAU_VIEN, 0.9f);
+                g.fillRect(x + s - wSl - 2, y + s - 13, wSl, 11, 3);
+                mFont.tahoma_7b_white.drawString(g, sl, x + s - 2 - wSl / 2, y + s - 13, mFont.CENTER);
+                if (o.qua.Count > 1)
+                {
+                    string them = "+" + (o.qua.Count - 1);
+                    int wT = mFont.tahoma_7b_white.getWidth(them) + 6;
+                    g.setColor(MAU_THE_CAO, 1f);
+                    g.fillRect(x + s - wT - 2, y + 2, wT, 11, 3);
+                    mFont.tahoma_7b_white.drawString(g, them, x + s - 2 - wT / 2, y + 2, mFont.CENTER);
+                }
+            }
+            if (o.trangThai == 0)
+            {
+                // Chua toi: phu mo, nhin la biet con xa.
+                g.setColor(MAU_THE, 0.45f);
+                g.fillRect(x + 1, y + 1, s - 2, s - 2, BO_GOC - 1);
+            }
+            else if (o.trangThai == 2)
+            {
+                g.setColor(0, 0.3f);
+                g.fillRect(x + 1, y + 1, s - 2, s - 2, BO_GOC - 1);
+                veDauTich(g, x + s / 2, y + s / 2);
+            }
+            else if (o.trangThai == 3)
+            {
+                g.setColor(0, 0.35f);
+                g.fillRect(x + 1, y + 1, s - 2, s - 2, BO_GOC - 1);
+                veKhoa(g, x + s / 2, y + s / 2);
+            }
+            else
+            {
+                // Nhan duoc: dai "NHAN" duoi day o.
+                g.setColor(rgb(0x2E, 0xA8, 0x4A), 1f);
+                g.fillRect(x + 3, y + s - 12, s - 6, 10, 3);
+                mFont.tahoma_7b_white.drawString(g, "NHẬN", x + s / 2, y + s - 13, mFont.CENTER);
+            }
+        }
+
+        /// <summary>Dấu tích xanh, vẽ bằng hai nét chéo.</summary>
+        private static void veDauTich(mGraphics g, int tamX, int tamY)
+        {
+            g.setColor(0xFFFFFF, 1f);
+            g.fillRect(tamX - 9, tamY - 9, 18, 18, 9);
+            g.setColor(0x2E9E48, 1f);
+            for (int i = 0; i < 4; i++)
+            {
+                g.fillRect(tamX - 5 + i, tamY - 1 + i, 2, 2);
+            }
+            for (int i = 0; i < 7; i++)
+            {
+                g.fillRect(tamX - 2 + i, tamY + 2 - i, 2, 2);
+            }
+        }
+
+        /// <summary>Ổ khoá nhỏ: thân chữ nhật, quai tròn.</summary>
+        private static void veKhoa(mGraphics g, int tamX, int tamY)
+        {
+            g.setColor(0x3A2712, 1f);
+            g.fillRect(tamX - 5, tamY - 7, 10, 7, 4);
+            g.setColor(0xFFE6AE, 1f);
+            g.fillRect(tamX - 3, tamY - 5, 6, 5, 3);
+            g.setColor(0x3A2712, 1f);
+            g.fillRect(tamX - 7, tamY - 2, 14, 10, 2);
+            g.setColor(0xFFC861, 1f);
+            g.fillRect(tamX - 1, tamY + 1, 2, 4);
+        }
+
+        private void veNutLatP(mGraphics g, bool trai, bool con)
+        {
+            int[] n = oNutLatPass(trai);
+            float mo = con ? 1f : 0.4f;
+            veKhungBo(g, n[0], n[1], n[2], n[3], MAU_THE, mo, con ? MAU_THE_CAO : MAU_VIEN, mo, 1);
+            int xT = n[0] + n[2] / 2;
+            int yT = n[1] + n[3] / 2;
+            g.setColor(con ? MAU_THE_CAO : MAU_VIEN, con ? 1f : 0.5f);
+            for (int i = 0; i < 4; i++)
+            {
+                int cao = (4 - i) * 2 - 1;
+                int xv = trai ? (xT - 2 + i) : (xT + 1 - i);
+                g.fillRect(xv, yT - cao / 2, 1, cao);
+            }
+        }
+
+        /// <summary>
+        /// Kéo ngang dải cấp, lăn chuột, và kẹp trong biên. Gọi ở đầu phần bắt
+        /// chạm, TRƯỚC chỗ thoát sớm khi chưa nhả ngón: kéo phải thấy trượt liền.
+        /// </summary>
+        private void cuonPassCham()
+        {
+            int[] v = vungPass();
+            int yTren = v[1];
+            int cao = v[3];
+            if (GameCanvas.pXYScrollMouse != 0
+                    && GameCanvas.pxMouse >= v[0] && GameCanvas.pxMouse <= v[0] + v[2]
+                    && GameCanvas.pyMouse >= yTren && GameCanvas.pyMouse <= yTren + cao)
+            {
+                cuonPassDich += (GameCanvas.pXYScrollMouse > 0 ? -1 : 1) * buocPass() * 2;
+            }
+            if (GameCanvas.isPointerDown)
+            {
+                if (!dangKeoPass)
+                {
+                    if (GameCanvas.pxFirst >= v[0] && GameCanvas.pxFirst <= v[0] + v[2]
+                            && GameCanvas.pyFirst >= yTren && GameCanvas.pyFirst <= yTren + cao)
+                    {
+                        dangKeoPass = true;
+                        xKeoTruocP = GameCanvas.px;
+                        tongKeoP = 0;
+                    }
                 }
                 else
                 {
-                    bacChoXacNhan = gt.bac;
+                    int dx = GameCanvas.px - xKeoTruocP;
+                    xKeoTruocP = GameCanvas.px;
+                    tongKeoP += dx < 0 ? -dx : dx;
+                    cuonPassDich -= dx;
+                    cuonPass = cuonPassDich;
+                }
+            }
+            else
+            {
+                dangKeoPass = false;
+            }
+            float tran = cuonPassToiDa();
+            if (cuonPassDich > tran)
+            {
+                cuonPassDich = tran;
+            }
+            if (cuonPassDich < 0)
+            {
+                cuonPassDich = 0;
+            }
+        }
+
+        /// <summary>Trượt dần tới chỗ nhắm — gọi mỗi khung hình.</summary>
+        private void truotPass()
+        {
+            float lech = cuonPassDich - cuonPass;
+            if (lech > 0.5f || lech < -0.5f)
+            {
+                cuonPass += lech * 0.3f;
+            }
+            else
+            {
+                cuonPass = cuonPassDich;
+            }
+        }
+
+        /// <summary>Chạm trong mục NRO Pass (đã nhả ngón, không phải kéo).</summary>
+        private void chamPass()
+        {
+            if (tongKeoP > 6)
+            {
+                tongKeoP = 0;
+                return;
+            }
+            tongKeoP = 0;
+            for (int b = 0; b < 2; b++)
+            {
+                int[] n = oNutLatPass(b == 0);
+                if (cham(n[0], n[1], n[2], n[3]))
+                {
+                    cuonPassDich += (b == 0 ? -1 : 1) * buocPass() * 3;
+                    float tran = cuonPassToiDa();
+                    cuonPassDich = cuonPassDich < 0 ? 0 : (cuonPassDich > tran ? tran : cuonPassDich);
+                    return;
+                }
+            }
+            int[] nut = oNutMoKhoa();
+            if (!pass.caoCap && cham(nut[0], nut[1], nut[2], nut[3]))
+            {
+                long bayGio = mSystem.currentTimeMillis();
+                if (choXacNhan && bayGio - lucChoXacNhan < HAN_XAC_NHAN)
+                {
+                    choXacNhan = false;
+                    Service.gI().phucLoiMoCaoCap();
+                }
+                else
+                {
+                    choXacNhan = true;
                     lucChoXacNhan = bayGio;
                 }
                 return;
             }
-            int[] nn = oNutNhanNgay();
-            if (goiDangDung() != null && !theThang.daNhanHomNay
-                    && cham(nn[0], nn[1], nn[2], nn[3]))
+            int[] v = vungPass();
+            int s = coOPass();
+            for (int i = 0; i < pass.soCap; i++)
             {
-                Service.gI().phucLoiNhanThe();
+                int x = xCotPass(i);
+                if (x + s < v[0] || x > v[0] + v[2])
+                {
+                    continue;
+                }
+                for (int hang = 0; hang < 2; hang++)
+                {
+                    int y = hang == 0 ? yHangMienPhi() : yHangCaoCap();
+                    if (!cham(x, y, s, s))
+                    {
+                        continue;
+                    }
+                    OPass o = hang == 0 ? pass.mienPhi[i] : pass.caoCapO[i];
+                    if (o.trangThai == 1)
+                    {
+                        Service.gI().phucLoiNhanO(i + 1, hang);
+                    }
+                    else if (o.trangThai == 3)
+                    {
+                        GameScr.info1.addInfo("Mở Cao cấp để nhận ô này.", 0);
+                    }
+                    else if (o.trangThai == 0)
+                    {
+                        GameScr.info1.addInfo("Cần đạt cấp " + (i + 1) + ".", 0);
+                    }
+                    return;
+                }
             }
         }
 
@@ -1063,6 +1340,10 @@ namespace Game6.God
                 return true;
             }
             cuonDanhSach(soDongCuon());
+            if (dangXemThe())
+            {
+                cuonPassCham();
+            }
             if (!GameCanvas.isPointerJustRelease)
             {
                 return true;
@@ -1071,6 +1352,12 @@ namespace Game6.God
             if (daKeoXa)
             {
                 daKeoXa = false;
+                return true;
+            }
+            // Nha ngon sau mot nhat keo ngang dai cap: khong tinh la bam.
+            if (dangXemThe() && tongKeoP > 6)
+            {
+                tongKeoP = 0;
                 return true;
             }
 
@@ -1106,13 +1393,14 @@ namespace Game6.God
                     if (coThe() && i == 0)
                     {
                         xemThe = true;
+                        canCanPass = true;
                     }
                     else
                     {
                         xemThe = false;
                         nhomChon = i - lech;
                     }
-                    bacChoXacNhan = 0;
+                    choXacNhan = false;
                     cuon = 0;
                     return true;
                 }
@@ -1120,7 +1408,7 @@ namespace Game6.God
 
             if (dangXemThe())
             {
-                chamTheThang();
+                chamPass();
                 return true;
             }
             if (nhom.Count == 0)

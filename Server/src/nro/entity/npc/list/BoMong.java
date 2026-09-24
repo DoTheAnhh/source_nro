@@ -52,7 +52,7 @@ public class BoMong extends Npc {
                             String npcSay = "Nhiệm vụ hiện tại: " + player.playerTask.sideTask.getName() + " (" + player.playerTask.sideTask.getLevel() + ")"
                                     + "\nHoàn thành: " + player.playerTask.sideTask.count + "/" + player.playerTask.sideTask.maxCount
                                     + " (" + player.playerTask.sideTask.getPercentProcess() + "%)"
-                                    + "\nSố nhiệm vụ còn lại trong ngày: " + player.playerTask.sideTask.leftTask + "/" + ConstTask.MAX_SIDE_TASK;
+                                    + "\nSố nhiệm vụ còn lại trong ngày: " + player.playerTask.sideTask.leftTask + "/" + nro.entity.task.SideTask.soMoiNgay();
 
                             this.createOtherMenu(player, ConstNpc.MENU_OPTION_PAY_SIDE_TASK,
                                     npcSay,

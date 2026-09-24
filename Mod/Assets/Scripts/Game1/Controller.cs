@@ -3916,40 +3916,48 @@ namespace Game1
                                 }
                                 dsNhomPL.Add(nPL);
                             }
-                            // The thang: may chu noi o CUOI goi. May chu cu khong
-                            // gui thi het byte o day, muc the thang khong hien.
-                            God.PhucLoiUI.TheThang theTL = null;
-                            if (msg.reader().available() > 0 && msg.reader().readByte() == 1)
+                            // NRO Pass: may chu noi o CUOI goi, mo dau bang byte 2. May chu
+                            // cu khong gui thi het byte o day, muc NRO Pass khong hien.
+                            God.PhucLoiUI.NroPass passPL = null;
+                            if (msg.reader().available() > 0 && msg.reader().readByte() == 2)
                             {
-                                theTL = new God.PhucLoiUI.TheThang();
-                                int soGoiTL = msg.reader().readUnsignedByte();
-                                for (int iG = 0; iG < soGoiTL; iG++)
+                                passPL = new God.PhucLoiUI.NroPass();
+                                passPL.ten = msg.reader().readUTF();
+                                passPL.moTaMua = msg.reader().readUTF();
+                                passPL.soCap = msg.reader().readShort();
+                                passPL.diemMoiCap = msg.reader().readInt();
+                                passPL.diem = msg.reader().readLong();
+                                passPL.caoCap = msg.reader().readByte() == 1;
+                                passPL.giaCaoCap = msg.reader().readUTF();
+                                passPL.uuDaiCaoCap = msg.reader().readUTF();
+                                passPL.mienPhi = new God.PhucLoiUI.OPass[passPL.soCap];
+                                passPL.caoCapO = new God.PhucLoiUI.OPass[passPL.soCap];
+                                for (int iC = 0; iC < passPL.soCap; iC++)
                                 {
-                                    var gTL = new God.PhucLoiUI.GoiThe();
-                                    gTL.bac = msg.reader().readByte();
-                                    gTL.ten = msg.reader().readUTF();
-                                    gTL.gia = msg.reader().readUTF();
-                                    gTL.uuDai = msg.reader().readUTF();
-                                    gTL.soNgay = msg.reader().readShort();
-                                    for (int kQ = 0; kQ < 2; kQ++)
+                                    for (int hC = 0; hC < 2; hC++)
                                     {
-                                        var dsQ = (kQ == 0) ? gTL.quaMua : gTL.quaNgay;
-                                        int soQ = msg.reader().readUnsignedByte();
-                                        for (int iQ = 0; iQ < soQ; iQ++)
+                                        var oP = new God.PhucLoiUI.OPass();
+                                        oP.trangThai = msg.reader().readByte();
+                                        int soMonP = msg.reader().readUnsignedByte();
+                                        for (int iQ = 0; iQ < soMonP; iQ++)
                                         {
-                                            var qTL = new God.PhucLoiUI.Qua();
-                                            qTL.icon = msg.reader().readShort();
-                                            qTL.soLuong = msg.reader().readInt();
-                                            dsQ.Add(qTL);
+                                            var qP = new God.PhucLoiUI.Qua();
+                                            qP.icon = msg.reader().readShort();
+                                            qP.soLuong = msg.reader().readInt();
+                                            oP.qua.Add(qP);
+                                        }
+                                        if (hC == 0)
+                                        {
+                                            passPL.mienPhi[iC] = oP;
+                                        }
+                                        else
+                                        {
+                                            passPL.caoCapO[iC] = oP;
                                         }
                                     }
-                                    theTL.goi.Add(gTL);
                                 }
-                                theTL.bacDangCo = msg.reader().readByte();
-                                theTL.soNgayCon = msg.reader().readShort();
-                                theTL.hetHan = msg.reader().readUTF();
-                                theTL.daNhanHomNay = msg.reader().readByte() == 1;
-                                theTL.soDu = msg.reader().readUTF();
+                                passPL.nguonDiem = msg.reader().readUTF();
+                                passPL.soDu = msg.reader().readUTF();
                                 // Tong qua vua nhan (sau Nhan nhanh): byte 1 roi danh sach.
                                 var tongTL = new System.Collections.Generic.List<God.PhucLoiUI.QuaDaNhan>();
                                 if (msg.reader().available() > 0 && msg.reader().readByte() == 1)
@@ -3966,7 +3974,7 @@ namespace Game1
                                 }
                                 God.PhucLoiUI.getInstance().nhanTongKet(tongTL);
                             }
-                            God.PhucLoiUI.getInstance().nhanTheThang(theTL);
+                            God.PhucLoiUI.getInstance().nhanPass(passPL);
                             God.PhucLoiUI.getInstance().nhanDuLieu(dsNhomPL);
                         }
                         break;

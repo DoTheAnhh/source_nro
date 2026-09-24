@@ -45,13 +45,27 @@ public class SideTask {
     }
 
     public SideTask() {
-        this.leftTask = ConstTask.MAX_SIDE_TASK;
+        this.leftTask = soMoiNgay();
+    }
+
+    /**
+     * Số nhiệm vụ nhận được mỗi ngày — đọc từ cấu hình NRO Pass
+     * ({@code so_nv_bo_mong_ngay}) chứ không còn viết cứng: nhiệm vụ Bò Mộng
+     * là nguồn điểm pass nên số lượt mỗi ngày quyết định nhịp lên cấp.
+     */
+    public static int soMoiNgay() {
+        return nro.repository.dao.NroPassDAO.soNhiemVuMoiNgay();
     }
 
     public void renew() {
         if (Util.isAfterMidnight(receivedTime)) {
-            this.leftTask = ConstTask.MAX_SIDE_TASK;
+            this.leftTask = soMoiNgay();
             this.receivedTime = System.currentTimeMillis();
+        }
+        // Ha tran giua ngay (vd 20 -> 10) thi nguoi dang con nhieu luot cung ve
+        // dung tran moi, khong doi toi nua dem.
+        if (this.leftTask > soMoiNgay()) {
+            this.leftTask = soMoiNgay();
         }
     }
 

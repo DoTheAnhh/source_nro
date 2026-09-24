@@ -2051,19 +2051,33 @@ namespace Game4
     		guiPhucLoi(1, mocId);
     	}
 
-    	/// <summary>Mua / gia han the thang bac <paramref name="bac"/>.</summary>
-    	/// <remarks>
-    	/// Goi rieng chu khong qua guiPhucLoi: may chu doc MOT byte bac sau byte
-    	/// viec, con guiPhucLoi ghi bon byte int — byte dau cua int bac 1 la 0.
-    	/// </remarks>
-    	public void phucLoiMuaThe(int bac)
+    	/// <summary>Mo khoa hang Cao cap NRO Pass mua nay.</summary>
+    	public void phucLoiMoCaoCap()
+    	{
+    		guiPhucLoiByte(2, -1, -1);
+    	}
+
+    	/// <summary>Nhan mot o NRO Pass: cap (tu 1), hang 0 mien phi / 1 cao cap.</summary>
+    	public void phucLoiNhanO(int cap, int hang)
+    	{
+    		guiPhucLoiByte(5, cap, hang);
+    	}
+
+    	/// <summary>
+    	/// Goi -58 cho NRO Pass: byte viec, roi (neu co) short cap va byte hang.
+    	/// </summary>
+    	private void guiPhucLoiByte(int viec, int cap, int hang)
     	{
     		Message message = null;
     		try
     		{
     			message = new Message((sbyte)(-58));
-    			message.writer().writeByte(2);
-    			message.writer().writeByte(bac);
+    			message.writer().writeByte(viec);
+    			if (cap >= 0)
+    			{
+    				message.writer().writeShort(cap);
+    				message.writer().writeByte(hang);
+    			}
     			session.sendMessage(message);
     		}
     		catch (Exception)
@@ -2087,29 +2101,6 @@ namespace Game4
     		{
     			message = new Message((sbyte)(-58));
     			message.writer().writeByte(4);
-    			session.sendMessage(message);
-    		}
-    		catch (Exception)
-    		{
-    			// Mat ket noi -> bo qua, nguoi choi bam lai.
-    		}
-    		finally
-    		{
-    			if (message != null)
-    			{
-    				message.cleanup();
-    			}
-    		}
-    	}
-
-    	/// <summary>Nhan qua the thang hom nay.</summary>
-    	public void phucLoiNhanThe()
-    	{
-    		Message message = null;
-    		try
-    		{
-    			message = new Message((sbyte)(-58));
-    			message.writer().writeByte(3);
     			session.sendMessage(message);
     		}
     		catch (Exception)

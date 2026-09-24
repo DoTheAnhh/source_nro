@@ -1654,12 +1654,12 @@ public class NPoint {
             hpMax += calPercent(hpMax, 5);
             ghiHp("Thẻ tuần cao cấp (+5%)", hpMax);
         }
-        // The thang: phan tram doc tu bang the_thang_goi (panel "The thang").
+        // The thang / NRO Pass cao cap: phan tram doc tu cau hinh NRO Pass.
         if (this.player.THE_THANG != 0 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
-            int pt = nro.repository.dao.TheThangDAO.ptHp(this.player.THE_THANG);
+            int pt = nro.repository.dao.NroPassDAO.ptHp(this.player.THE_THANG);
             if (pt != 0) {
                 hpMax += calPercent(hpMax, pt);
-                ghiHp(nro.repository.dao.TheThangDAO.tenBac(this.player.THE_THANG)
+                ghiHp(nro.repository.dao.NroPassDAO.tenBac(this.player.THE_THANG)
                         + " (+" + pt + "%)", hpMax);
             }
         }
@@ -2004,12 +2004,12 @@ if (hasFull5NhatAn()) {
                     "THE_TUAN = 2 và LASTTIME_THE_TUAN còn hạn.");
         }
         if (this.player.THE_THANG != 0 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
-            int pt = nro.repository.dao.TheThangDAO.ptKi(this.player.THE_THANG);
+            int pt = nro.repository.dao.NroPassDAO.ptKi(this.player.THE_THANG);
             if (pt != 0) {
                 mpMax += calPercent(mpMax, pt);
-                ghiMp(nro.repository.dao.TheThangDAO.tenBac(this.player.THE_THANG)
+                ghiMp(nro.repository.dao.NroPassDAO.tenBac(this.player.THE_THANG)
                         + " +" + pt + "% KI", mpMax,
-                        "THE_THANG còn hạn, % đọc từ bảng the_thang_goi.");
+                        "THE_THANG còn hạn, % đọc từ cấu hình NRO Pass.");
             }
         }
         if (this.player.THE_NAM == 1 && this.player.LASTTIME_THE_NAM > System.currentTimeMillis()) {
@@ -2354,12 +2354,12 @@ if (hasFull5NhatAn()) {
                     "THE_TUAN=2 và LASTTIME_THE_TUAN còn hạn.");
         }
         if (this.player.THE_THANG != 0 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
-            int pt = nro.repository.dao.TheThangDAO.ptSd(this.player.THE_THANG);
+            int pt = nro.repository.dao.NroPassDAO.ptSd(this.player.THE_THANG);
             if (pt != 0) {
                 dame += calPercent(dame, pt);
-                ghiSd(nro.repository.dao.TheThangDAO.tenBac(this.player.THE_THANG)
+                ghiSd(nro.repository.dao.NroPassDAO.tenBac(this.player.THE_THANG)
                         + " +" + pt + "% sức đánh", dame,
-                        "THE_THANG còn hạn, % đọc từ bảng the_thang_goi.");
+                        "THE_THANG còn hạn, % đọc từ cấu hình NRO Pass.");
             }
         }
         if (this.player.THE_NAM == 1 && this.player.LASTTIME_THE_NAM > System.currentTimeMillis()) {
@@ -3940,7 +3940,7 @@ if (hasFull5NhatAn()) {
             tiemNang += pt(tiemNang, dk.theTuan == 1 ? 20 : 50);
         }
         if (dk.theThang != 0) {
-            tiemNang += pt(tiemNang, nro.repository.dao.TheThangDAO.ptTiemNang(dk.theThang));
+            tiemNang += pt(tiemNang, nro.repository.dao.NroPassDAO.ptTiemNang(dk.theThang));
         }
         if (dk.theNam != 0) {
             tiemNang += pt(tiemNang, dk.theNam == 1 ? 200 : 300);
@@ -4047,7 +4047,7 @@ if (hasFull5NhatAn()) {
                 tiemNang += pt(tiemNang, dk.spTheTuan == 1 ? 20 : 50);
             }
             if (dk.spTheThang != 0) {
-                tiemNang += pt(tiemNang, dk.spTheThang == 1 ? 100 : 150);
+                tiemNang += pt(tiemNang, nro.repository.dao.NroPassDAO.ptTiemNang(dk.spTheThang));
             }
             if (dk.spTheNam != 0) {
                 tiemNang += pt(tiemNang, dk.spTheNam == 1 ? 200 : 300);

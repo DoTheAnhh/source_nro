@@ -143,7 +143,7 @@ public class PhucLoiService {
             }
             // The thang noi vao CUOI goi: client cu doc het phan phuc loi roi
             // dung, khong lech.
-            TheThangService.gI().ghiVaoGoi(pl, msg);
+            NroPassService.gI().ghiVaoGoi(pl, msg);
             // Tong qua vua nhan (nhan nhanh): byte 1 roi danh sach, hoac byte 0.
             if (tongKet != null && !tongKet.isEmpty()) {
                 msg.writer().writeByte(1);
@@ -201,12 +201,18 @@ public class PhucLoiService {
                 guiDuLieu(pl);
                 return;
             }
-            if (viec == TheThangService.VIEC_MUA) {
-                TheThangService.gI().mua(pl, msg.reader().readByte());
+            if (viec == NroPassService.VIEC_MUA_CAO_CAP) {
+                NroPassService.gI().muaCaoCap(pl);
                 return;
             }
-            if (viec == TheThangService.VIEC_NHAN_NGAY) {
-                TheThangService.gI().nhanNgay(pl);
+            if (viec == NroPassService.VIEC_NHAN_O) {
+                int cap = msg.reader().readShort();
+                int hang = msg.reader().readByte();
+                NroPassService.gI().nhanO(pl, cap, hang);
+                return;
+            }
+            if (viec == 3) {
+                // Viec cua the thang doi cu (nhan qua ngay), da bo.
                 return;
             }
             if (viec == VIEC_NHAN_NHANH) {
@@ -238,18 +244,9 @@ public class PhucLoiService {
         java.util.Map<Integer, Integer> tong = new java.util.LinkedHashMap<>();
         Service.gI().batGomGoi(pl);
         try {
-            if (TheThangService.gI().coTheNhanHomNay(pl)) {
-                int bacPass = pl.THE_THANG;
-                if (TheThangService.gI().nhanNgay(pl, false)) {
-                    duoc++;
-                    for (nro.repository.dao.TheThangDAO.Qua q : nro.repository.dao.TheThangDAO
-                            .dsQua(bacPass, nro.repository.dao.TheThangDAO.QUA_NGAY)) {
-                        tong.merge(q.itemId, q.soLuong, Integer::sum);
-                    }
-                } else {
-                    conLai++;
-                }
-            }
+            int[] kqPass = NroPassService.gI().nhanTatCa(pl, tong);
+            duoc += kqPass[0];
+            conLai += kqPass[1];
             for (PhucLoiDAO.Nhom n : PhucLoiDAO.dsNhom(true)) {
                 long cua = tienDo(pl, n.loai);
                 for (PhucLoiDAO.Moc m : PhucLoiDAO.dsMoc(n.id, true)) {

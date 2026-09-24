@@ -2128,6 +2128,9 @@ public class TaskService {
                         break;
                 }
                 InventoryService.gI().sendItemBag(player);
+                // NRO Pass: diem theo do kho, doc TRUOC reset vi reset xoa level.
+                nro.service.NroPassService.gI().congNhiemVuBoMong(player,
+                        player.playerTask.sideTask.level);
                 player.playerTask.sideTask.reset();
             } else {
                 Service.gI().sendThongBao(player, "Bạn chưa hoàn thành nhiệm vụ");
