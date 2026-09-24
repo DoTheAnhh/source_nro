@@ -55,6 +55,7 @@ public class ThuCungService {
     // Viec may chu gui xuong.
     private static final int GUI_BANG = 0;
     private static final int GUI_DANH_SACH = 1;
+    private static final int GUI_NO_CHIEU = 2;
 
     /** Một lớp tăng ích đang chạy trên người chơi. */
     public static final class Buff {
@@ -336,6 +337,33 @@ public class ThuCungService {
         Service.gI().sendThongBao(pl, tenThu(thu) + " dùng " + k.ten
                 + ": " + ThuCungDAO.tenLoai(k.loai).replace("%", phanTram + "%")
                 + (k.loai == ThuCungDAO.LOAI_HOI_HP ? "" : " trong " + k.giay + " giây"));
+        baoNoChieu(pl, thu, k);
+    }
+
+    /**
+     * Báo cho client biết chiêu vừa nổ, để nó hiện biểu tượng con thú kèm số
+     * chiêu ở dãy hiệu lực.
+     *
+     * <p>Loại ăn ngay (hồi HP) không có thời gian hiệu lực, nhưng vẫn cho hiện
+     * mấy giây — không thì chiêu nổ mà màn hình chẳng có dấu hiệu gì.</p>
+     */
+    private void baoNoChieu(Player pl, ThuCungDAO.ThuSoHuu thu, ThuCungDAO.KyNang k) {
+        Message msg = null;
+        try {
+            int giay = k.loai == ThuCungDAO.LOAI_HOI_HP ? 3 : Math.max(1, k.giay);
+            msg = new Message(GOI_THU_CUNG);
+            msg.writer().writeByte(GUI_NO_CHIEU);
+            msg.writer().writeShort(thu.itemId);
+            msg.writer().writeByte(k.thuTu);
+            msg.writer().writeShort(giay);
+            pl.sendMessage(msg);
+        } catch (Exception ex) {
+            Logger.logException(ThuCungService.class, ex, "Không báo được chiêu thú cưng");
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
     }
 
     private void donBuff(Player pl, long bayGio) {

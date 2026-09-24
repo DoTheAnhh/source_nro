@@ -133,6 +133,8 @@ namespace Game2
     		curr = (last = mSystem.currentTimeMillis());
     	}
     
+    	public string nhan;
+
     	public void paint(mGraphics g, int x, int y)
     	{
     		SmallImage.drawSmallImage(g, idIcon, x, y, 0, 3);
@@ -143,6 +145,12 @@ namespace Game2
     			empty = second + "s";
     		}
     		mFont.tahoma_7b_white.drawString(g, empty, x, y + 15, 2, mFont.tahoma_7b_dark);
+			if (nhan != null && nhan.Length > 0)
+			{
+				// Goc tren phai cua bieu tuong: khong de len so giay o duoi.
+				mFont.tahoma_7b_white.drawString(g, nhan, x + 10, y - 12, 2,
+						mFont.tahoma_7b_dark);
+			}
     	}
     
     	public void paintText(mGraphics g, int x, int y)

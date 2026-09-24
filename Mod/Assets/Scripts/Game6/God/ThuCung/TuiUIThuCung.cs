@@ -110,6 +110,10 @@ namespace Game6.God
                 {
                     docDanhSachThu(msg);
                 }
+                else if (viec == 2)
+                {
+                    docNoChieu(msg);
+                }
             }
             catch (System.Exception e)
             {
@@ -207,6 +211,40 @@ namespace Game6.God
                 return a.id - b.id;
             });
             tcDaCoBang = true;
+        }
+
+        /// <summary>
+        /// Chiêu thú cưng vừa nổ: hiện biểu tượng con thú kèm số chiêu ở dãy
+        /// hiệu lực, đếm ngược đúng số giây chiêu còn chạy.
+        /// </summary>
+        /// <remarks>
+        /// Dùng chung dãy <c>Char.vItemTime</c> với mấy hiệu ứng có sẵn (hợp thể,
+        /// đồ theo giờ) thay vì vẽ riêng một chỗ: người chơi vốn đã nhìn vào đó
+        /// để biết mình đang được cộng gì.
+        /// </remarks>
+        private static void docNoChieu(Message msg)
+        {
+            int itemId = msg.reader().readShort();
+            int thuTu = msg.reader().readByte();
+            int giay = msg.reader().readShort();
+            ItemTemplate m = ItemTemplates.get((short) itemId);
+            if (m == null || giay <= 0)
+            {
+                return;
+            }
+            // Chieu cu cua CHINH con nay con chay thi thay bang chieu moi, khong
+            // chong them mot bieu tuong nua.
+            for (int i = Char.vItemTime.size() - 1; i >= 0; i--)
+            {
+                ItemTime cu = (ItemTime) Char.vItemTime.elementAt(i);
+                if (cu != null && cu.idIcon == m.iconID)
+                {
+                    Char.vItemTime.removeElementAt(i);
+                }
+            }
+            ItemTime moi = new ItemTime(m.iconID, giay);
+            moi.nhan = "C" + thuTu;
+            Char.vItemTime.addElement(moi);
         }
 
         // ==================================================================
