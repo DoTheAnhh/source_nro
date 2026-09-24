@@ -759,6 +759,9 @@ public class GodGK {
             player.LASTTIME_THE_TUAN = Long.parseLong(String.valueOf(dataArray.get(1)));
             player.THE_THANG = Integer.parseInt(String.valueOf(dataArray.get(2)));
             player.LASTTIME_THE_THANG = Long.parseLong(String.valueOf(dataArray.get(3)));
+            // Bang the_thang_nguoi la nguon su that (xem TheThangDAO): du lieu nhan
+            // vat chi luu theo nhip nen co the cu hon sau mot lan sap may.
+            nro.service.TheThangService.gI().dongBoKhiNap(player);
             player.THE_NAM = Integer.parseInt(String.valueOf(dataArray.get(4)));
             player.LASTTIME_THE_NAM = Long.parseLong(String.valueOf(dataArray.get(5)));
             player.THE_CHI_TON = Integer.parseInt(String.valueOf(dataArray.get(6)));

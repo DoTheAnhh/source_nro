@@ -2051,6 +2051,57 @@ namespace Game6
     		guiPhucLoi(1, mocId);
     	}
 
+    	/// <summary>Mua / gia han the thang bac <paramref name="bac"/>.</summary>
+    	/// <remarks>
+    	/// Goi rieng chu khong qua guiPhucLoi: may chu doc MOT byte bac sau byte
+    	/// viec, con guiPhucLoi ghi bon byte int — byte dau cua int bac 1 la 0.
+    	/// </remarks>
+    	public void phucLoiMuaThe(int bac)
+    	{
+    		Message message = null;
+    		try
+    		{
+    			message = new Message((sbyte)(-58));
+    			message.writer().writeByte(2);
+    			message.writer().writeByte(bac);
+    			session.sendMessage(message);
+    		}
+    		catch (Exception)
+    		{
+    			// Mat ket noi -> bo qua, nguoi choi bam lai.
+    		}
+    		finally
+    		{
+    			if (message != null)
+    			{
+    				message.cleanup();
+    			}
+    		}
+    	}
+
+    	/// <summary>Nhan qua the thang hom nay.</summary>
+    	public void phucLoiNhanThe()
+    	{
+    		Message message = null;
+    		try
+    		{
+    			message = new Message((sbyte)(-58));
+    			message.writer().writeByte(3);
+    			session.sendMessage(message);
+    		}
+    		catch (Exception)
+    		{
+    			// Mat ket noi -> bo qua, nguoi choi bam lai.
+    		}
+    		finally
+    		{
+    			if (message != null)
+    			{
+    				message.cleanup();
+    			}
+    		}
+    	}
+
     	/// <summary>
     	/// Goi phuc loi: byte viec roi int id.
     	/// </summary>

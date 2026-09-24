@@ -1654,13 +1654,14 @@ public class NPoint {
             hpMax += calPercent(hpMax, 5);
             ghiHp("Thẻ tuần cao cấp (+5%)", hpMax);
         }
-        if (this.player.THE_THANG == 1 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
-            hpMax += calPercent(hpMax, 7);
-            ghiHp("Thẻ tháng (+7%)", hpMax);
-        }
-        if (this.player.THE_THANG == 2 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
-            hpMax += calPercent(hpMax, 10);
-            ghiHp("Thẻ tháng cao cấp (+10%)", hpMax);
+        // The thang: phan tram doc tu bang the_thang_goi (panel "The thang").
+        if (this.player.THE_THANG != 0 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
+            int pt = nro.repository.dao.TheThangDAO.ptHp(this.player.THE_THANG);
+            if (pt != 0) {
+                hpMax += calPercent(hpMax, pt);
+                ghiHp(nro.repository.dao.TheThangDAO.tenBac(this.player.THE_THANG)
+                        + " (+" + pt + "%)", hpMax);
+            }
         }
         if (this.player.THE_NAM == 1 && this.player.LASTTIME_THE_NAM > System.currentTimeMillis()) {
             hpMax += calPercent(hpMax, 15);
@@ -2002,15 +2003,14 @@ if (hasFull5NhatAn()) {
             ghiMp("Thẻ tuần cao cấp +5% KI", mpMax,
                     "THE_TUAN = 2 và LASTTIME_THE_TUAN còn hạn.");
         }
-        if (this.player.THE_THANG == 1 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
-            mpMax += calPercent(mpMax, 7);
-            ghiMp("Thẻ tháng +7% KI", mpMax,
-                    "THE_THANG = 1 và LASTTIME_THE_THANG còn hạn.");
-        }
-        if (this.player.THE_THANG == 2 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
-            mpMax += calPercent(mpMax, 10);
-            ghiMp("Thẻ tháng cao cấp +10% KI", mpMax,
-                    "THE_THANG = 2 và LASTTIME_THE_THANG còn hạn.");
+        if (this.player.THE_THANG != 0 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
+            int pt = nro.repository.dao.TheThangDAO.ptKi(this.player.THE_THANG);
+            if (pt != 0) {
+                mpMax += calPercent(mpMax, pt);
+                ghiMp(nro.repository.dao.TheThangDAO.tenBac(this.player.THE_THANG)
+                        + " +" + pt + "% KI", mpMax,
+                        "THE_THANG còn hạn, % đọc từ bảng the_thang_goi.");
+            }
         }
         if (this.player.THE_NAM == 1 && this.player.LASTTIME_THE_NAM > System.currentTimeMillis()) {
             mpMax += calPercent(mpMax, 15);
@@ -2353,15 +2353,14 @@ if (hasFull5NhatAn()) {
             ghiSd("Thẻ tuần cao cấp +5% sức đánh", dame,
                     "THE_TUAN=2 và LASTTIME_THE_TUAN còn hạn.");
         }
-        if (this.player.THE_THANG == 1 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
-            dame += calPercent(dame, 7);
-            ghiSd("Thẻ tháng +7% sức đánh", dame,
-                    "THE_THANG=1 và LASTTIME_THE_THANG còn hạn.");
-        }
-        if (this.player.THE_THANG == 2 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
-            dame += calPercent(dame, 10);
-            ghiSd("Thẻ tháng cao cấp +10% sức đánh", dame,
-                    "THE_THANG=2 và LASTTIME_THE_THANG còn hạn.");
+        if (this.player.THE_THANG != 0 && this.player.LASTTIME_THE_THANG > System.currentTimeMillis()) {
+            int pt = nro.repository.dao.TheThangDAO.ptSd(this.player.THE_THANG);
+            if (pt != 0) {
+                dame += calPercent(dame, pt);
+                ghiSd(nro.repository.dao.TheThangDAO.tenBac(this.player.THE_THANG)
+                        + " +" + pt + "% sức đánh", dame,
+                        "THE_THANG còn hạn, % đọc từ bảng the_thang_goi.");
+            }
         }
         if (this.player.THE_NAM == 1 && this.player.LASTTIME_THE_NAM > System.currentTimeMillis()) {
             dame += calPercent(dame, 15);
@@ -3941,7 +3940,7 @@ if (hasFull5NhatAn()) {
             tiemNang += pt(tiemNang, dk.theTuan == 1 ? 20 : 50);
         }
         if (dk.theThang != 0) {
-            tiemNang += pt(tiemNang, dk.theThang == 1 ? 100 : 150);
+            tiemNang += pt(tiemNang, nro.repository.dao.TheThangDAO.ptTiemNang(dk.theThang));
         }
         if (dk.theNam != 0) {
             tiemNang += pt(tiemNang, dk.theNam == 1 ? 200 : 300);

@@ -60,9 +60,71 @@ namespace Game1.God
             public readonly List<Moc> moc = new List<Moc>();
         }
 
+        /// <summary>Một bậc thẻ tháng đang bán.</summary>
+        public class GoiThe
+        {
+            public int bac;
+            public string ten;
+            public string gia;
+            public string uuDai;
+            public int soNgay;
+            public readonly List<Qua> quaMua = new List<Qua>();
+            public readonly List<Qua> quaNgay = new List<Qua>();
+        }
+
+        /// <summary>Toàn bộ mục thẻ tháng, máy chủ gửi ở cuối gói phúc lợi.</summary>
+        public class TheThang
+        {
+            public readonly List<GoiThe> goi = new List<GoiThe>();
+            /// <summary>Bậc đang dùng, 0 là chưa có hoặc đã hết hạn.</summary>
+            public int bacDangCo;
+            public int soNgayCon;
+            public string hetHan;
+            public bool daNhanHomNay;
+            public string soDu;
+        }
+
         private readonly List<Nhom> nhom = new List<Nhom>();
         private int nhomChon;
         private int cuon;
+
+        /// <summary>Mục thẻ tháng; <c>null</c> khi máy chủ cũ không gửi.</summary>
+        private TheThang theThang;
+
+        /// <summary>
+        /// Đang xem mục thẻ tháng thay cho một nhóm mốc. Mở bảng lần đầu là vào
+        /// thẳng mục này: nó đứng đầu cột và là thứ duy nhất bán bằng tiền.
+        /// </summary>
+        private bool xemThe = true;
+
+        /// <summary>Bậc đang chờ bấm lần hai để xác nhận mua, 0 là không có.</summary>
+        private int bacChoXacNhan;
+
+        /// <summary>Lúc bấm lần một; quá <see cref="HAN_XAC_NHAN"/> thì phải bấm lại từ đầu.</summary>
+        private long lucChoXacNhan;
+
+        /// <summary>
+        /// Bấm "Mua" lần một chỉ đổi nút thành "Bấm lần nữa để mua"; lần hai mới
+        /// gửi. Mua là trừ tiền thật, một cú chạm lỡ tay không được phép tốn tiền.
+        /// </summary>
+        private const long HAN_XAC_NHAN = 4000L;
+
+        /// <summary>Có mục thẻ tháng trên cột trái hay không.</summary>
+        private bool coThe()
+        {
+            return theThang != null && theThang.goi.Count > 0;
+        }
+
+        /// <summary>Số dòng trên cột trái: thẻ tháng (nếu có) rồi tới các nhóm.</summary>
+        private int soMuc()
+        {
+            return nhom.Count + (coThe() ? 1 : 0);
+        }
+
+        private bool dangXemThe()
+        {
+            return xemThe && coThe();
+        }
 
         // ------------------------------------------------------------------
         //  Màu và kích thước
@@ -159,6 +221,12 @@ namespace Game1.God
             dangMo = true;
         }
 
+        /// <summary>Nạp mục thẻ tháng — gọi TRƯỚC <see cref="nhanDuLieu"/>.</summary>
+        public void nhanTheThang(TheThang t)
+        {
+            theThang = t;
+        }
+
         /// <summary>Moc thoi gian lan cuoi xin du lieu.</summary>
         private long lucXinCuoi;
 
@@ -232,28 +300,58 @@ namespace Game1.God
                     x0 + rong / 2, y0 + 4, mFont.CENTER);
             veNut(g, x0 + rong - 20, y0 + 4, 16, 14, "X", false);
 
-            if (nhom.Count == 0)
+            if (soMuc() == 0)
             {
                 mFont.tahoma_7b_dark.drawString(g, "Chưa có mục phúc lợi nào",
                         x0 + rong / 2, y0 + cao / 2 - 5, mFont.CENTER);
                 return;
             }
+            if (!coThe() || nhom.Count == 0)
+            {
+                // Chi con mot loai muc thi xem dung loai do.
+                xemThe = coThe();
+            }
             veCotTrai(g);
-            veCotPhai(g);
+            if (dangXemThe())
+            {
+                veTheThang(g);
+            }
+            else
+            {
+                veCotPhai(g);
+            }
         }
 
         private void veCotTrai(mGraphics g)
         {
             g.setColor(MAU_THE_MO, 0.55f);
             g.fillRect(xTrai, yThan, RONG_TRAI, caoThan, 6);
-            for (int i = 0; i < nhom.Count; i++)
+            int lech = coThe() ? 1 : 0;
+            for (int i = 0; i < soMuc(); i++)
             {
                 int yy = yThan + 4 + i * (CAO_MUC + 3);
                 if (yy + CAO_MUC > yThan + caoThan - 2)
                 {
                     break;
                 }
-                bool chon = (i == nhomChon);
+                bool laThe = coThe() && i == 0;
+                bool chon = laThe ? dangXemThe() : (!dangXemThe() && i - lech == nhomChon);
+                if (laThe)
+                {
+                    // Dong the thang: nen vang dam, chu trang — la thu duy nhat
+                    // tren bang ban bang tien, phai nhin ra ngay.
+                    veKhungBo(g, xTrai + 3, yy, RONG_TRAI - 6, CAO_MUC,
+                            chon ? MAU_THE_CAO : MAU_THE_VANG, 1f, MAU_VIEN, 0.9f, 1);
+                    mFont.tahoma_7b_white.drawString(g, "THẺ THÁNG",
+                            xTrai + RONG_TRAI / 2, yy + CAO_MUC / 2 - 5, mFont.CENTER);
+                    if (coTheNhanHomNay())
+                    {
+                        // Cham do: con qua hom nay chua nhan.
+                        g.setColor(0xE53935, 1f);
+                        g.fillRect(xTrai + RONG_TRAI - 14, yy + 3, 7, 7, 4);
+                    }
+                    continue;
+                }
                 g.setColor(chon ? MAU_CHON : MAU_THE, chon ? 1f : 0.95f);
                 g.fillRect(xTrai + 3, yy, RONG_TRAI - 6, CAO_MUC, 6);
                 if (chon)
@@ -263,8 +361,270 @@ namespace Game1.God
                     g.setColor(16777215, 0.85f);
                     g.fillRect(xTrai + 3, yy, 3, CAO_MUC);
                 }
-                mFont.tahoma_7b_dark.drawString(g, catBot(nhom[i].ten, 20),
+                mFont.tahoma_7b_dark.drawString(g, catBot(nhom[i - lech].ten, 20),
                         xTrai + RONG_TRAI / 2, yy + CAO_MUC / 2 - 5, mFont.CENTER);
+            }
+        }
+
+        /// <summary>Đang có thẻ mà hôm nay chưa nhận quà.</summary>
+        private bool coTheNhanHomNay()
+        {
+            return theThang != null && theThang.bacDangCo > 0 && !theThang.daNhanHomNay;
+        }
+
+        // ------------------------------------------------------------------
+        //  Mục thẻ tháng
+        // ------------------------------------------------------------------
+        /// <summary>Đầu thẻ bậc thường: vàng nhạt.</summary>
+        private static readonly int MAU_THE_VANG = rgb(0xE0, 0x9A, 0x3E);
+
+        /// <summary>Đầu thẻ cao cấp, và dòng thẻ tháng đang chọn: cam cháy.</summary>
+        private static readonly int MAU_THE_CAO = rgb(0xD9, 0x6A, 0x12);
+
+        private const int CAO_DAI_NHAN = 40;
+
+        /// <summary>Vùng thẻ thứ <paramref name="i"/>: x, y, rộng, cao.</summary>
+        private int[] oThe(int i)
+        {
+            int n = theThang.goi.Count;
+            int khe = 6;
+            int w = (rongPhai - khe * (n - 1)) / n;
+            int y = yThan + 22;
+            int h = caoThan - 22 - CAO_DAI_NHAN - 6;
+            return new int[] { xPhai + i * (w + khe), y, w, h };
+        }
+
+        /// <summary>Nút nhận quà hôm nay, ở dải dưới cùng.</summary>
+        private int[] oNutNhanNgay()
+        {
+            int y = yThan + caoThan - CAO_DAI_NHAN;
+            return new int[] { xPhai + rongPhai - 80, y + (CAO_DAI_NHAN - 20) / 2, 72, 20 };
+        }
+
+        private GoiThe goiDangDung()
+        {
+            if (theThang == null)
+            {
+                return null;
+            }
+            foreach (GoiThe gt in theThang.goi)
+            {
+                if (gt.bac == theThang.bacDangCo)
+                {
+                    return gt;
+                }
+            }
+            return null;
+        }
+
+        private void veTheThang(mGraphics g)
+        {
+            TheThang t = theThang;
+
+            // Dai trang thai.
+            g.setColor(MAU_THE, 0.9f);
+            g.fillRect(xPhai, yThan, rongPhai, 18, 6);
+            GoiThe dung = goiDangDung();
+            string trangThai = dung == null ? "Chưa có thẻ tháng"
+                    : (dung.ten + " · còn " + t.soNgayCon + " ngày");
+            mFont.tahoma_7b_red.drawString(g, trangThai, xPhai + 8, yThan + 4, mFont.LEFT);
+            if (!string.IsNullOrEmpty(t.soDu))
+            {
+                int rTT = mFont.tahoma_7b_red.getWidth(trangThai);
+                if (mFont.tahoma_7.getWidth(t.soDu) + rTT + 24 < rongPhai)
+                {
+                    mFont.tahoma_7.drawString(g, t.soDu, xPhai + rongPhai - 8, yThan + 4,
+                            mFont.RIGHT);
+                }
+            }
+
+            for (int i = 0; i < t.goi.Count; i++)
+            {
+                veMotTheThang(g, t.goi[i], oThe(i));
+            }
+            veDaiNhanNgay(g);
+        }
+
+        private void veMotTheThang(mGraphics g, GoiThe gt, int[] o)
+        {
+            bool dangDung = theThang.bacDangCo == gt.bac;
+            bool caoCap = gt.bac >= 2;
+            veKhungBo(g, o[0], o[1], o[2], o[3], MAU_THE, 0.97f,
+                    dangDung ? MAU_THE_CAO : MAU_VIEN, dangDung ? 1f : 0.8f, dangDung ? 2 : 1);
+
+            // Dau the: dai mau, ten the.
+            int mauDau = caoCap ? MAU_THE_CAO : MAU_THE_VANG;
+            g.setColor(mauDau, 1f);
+            g.fillRect(o[0] + 2, o[1] + 2, o[2] - 4, 17, BO_GOC - 1);
+            mFont.tahoma_7b_white.drawString(g, catBot(gt.ten, 24), o[0] + o[2] / 2,
+                    o[1] + 5, mFont.CENTER);
+            if (dangDung)
+            {
+                // Nhan "Dang dung" goc tren phai.
+                string nhanDD = "Đang dùng";
+                int wD = mFont.tahoma_7b_white.getWidth(nhanDD) + 8;
+                g.setColor(0x2E9E48, 1f);
+                g.fillRect(o[0] + o[2] - wD - 4, o[1] + 22, wD, 12, 4);
+                mFont.tahoma_7b_white.drawString(g, nhanDD, o[0] + o[2] - wD / 2 - 4,
+                        o[1] + 22, mFont.CENTER);
+            }
+
+            int x = o[0] + 8;
+            int y = o[1] + 23;
+            mFont.tahoma_7b_red.drawString(g, gt.gia, x, y, mFont.LEFT);
+            y += 12;
+            mFont.tahoma_7_grey.drawString(g, gt.soNgay + " ngày", x, y, mFont.LEFT);
+            y += 12;
+
+            // Uu dai: toi da hai dong.
+            string[] dong = mFont.tahoma_7.splitFontArray(gt.uuDai ?? string.Empty, o[2] - 16);
+            for (int i = 0; i < dong.Length && i < 2; i++)
+            {
+                mFont.tahoma_7_blue.drawString(g, dong[i], x, y, mFont.LEFT);
+                y += 11;
+            }
+            y += 3;
+
+            int yNut = o[1] + o[3] - 24;
+            y = veHangQua(g, "Nhận ngay", gt.quaMua, x, y, o[2] - 16, yNut);
+            veHangQua(g, "Mỗi ngày", gt.quaNgay, x, y, o[2] - 16, yNut);
+
+            // Nut mua.
+            int[] n = oNutMuaTheoThe(o);
+            bool khacBac = theThang.bacDangCo > 0 && !dangDung;
+            bool choXN = bacChoXacNhan == gt.bac
+                    && mSystem.currentTimeMillis() - lucChoXacNhan < HAN_XAC_NHAN;
+            if (khacBac)
+            {
+                veKhungBo(g, n[0], n[1], n[2], n[3], MAU_THE_MO, 0.8f, MAU_VIEN, 0.4f, 1);
+                mFont.tahoma_7_grey.drawString(g, "Đang dùng thẻ khác", n[0] + n[2] / 2,
+                        n[1] + n[3] / 2 - 5, mFont.CENTER);
+            }
+            else
+            {
+                string chu = choXN ? "Bấm lần nữa để mua"
+                        : (dangDung ? "Gia hạn " + gt.soNgay + " ngày" : "Mua ngay");
+                veKhungBo(g, n[0], n[1], n[2], n[3], choXN ? MAU_THE_CAO : MAU_CHON, 1f,
+                        MAU_VIEN, 0.9f, 1);
+                (choXN ? mFont.tahoma_7b_white : mFont.tahoma_7b_dark)
+                        .drawString(g, chu, n[0] + n[2] / 2, n[1] + n[3] / 2 - 5, mFont.CENTER);
+            }
+        }
+
+        private int[] oNutMuaTheoThe(int[] o)
+        {
+            return new int[] { o[0] + 8, o[1] + o[3] - 24, o[2] - 16, 18 };
+        }
+
+        /// <summary>
+        /// Một hàng quà có nhãn ở trên; trả về y cho hàng kế tiếp. Không vẽ
+        /// tràn xuống nút mua: hết chỗ thì bỏ hàng.
+        /// </summary>
+        private int veHangQua(mGraphics g, string nhan, List<Qua> ds, int x, int y,
+                int w, int yGioiHan)
+        {
+            if (ds.Count == 0 || y + 34 > yGioiHan)
+            {
+                return y;
+            }
+            mFont.tahoma_7b_dark.drawString(g, nhan + ":", x, y, mFont.LEFT);
+            int ix = x;
+            int yIcon = y + 11;
+            for (int i = 0; i < ds.Count; i++)
+            {
+                if (ix + 22 > x + w)
+                {
+                    mFont.tahoma_7.drawString(g, "…", ix + 2, yIcon + 6, mFont.LEFT);
+                    break;
+                }
+                veMotQua(g, ds[i], ix, yIcon);
+                ix += 25;
+            }
+            return yIcon + 25;
+        }
+
+        /// <summary>Ô quà 22×22: icon, số lượng trên dải tối dưới đáy.</summary>
+        private void veMotQua(mGraphics g, Qua q, int ix, int yIcon)
+        {
+            g.setColor(MAU_THE_MO, 0.85f);
+            g.fillRect(ix, yIcon, 22, 22, 4);
+            if (q.icon >= 0)
+            {
+                SmallImage.drawSmallImage(g, q.icon, ix + 11, yIcon + 10,
+                        0, mGraphics.VCENTER | mGraphics.HCENTER);
+            }
+            g.setColor(0, 0.55f);
+            g.fillRect(ix, yIcon + 15, 22, 7);
+            mFont.tahoma_7.drawString(g, "x" + q.soLuong, ix + 11, yIcon + 14, mFont.CENTER);
+        }
+
+        /// <summary>Dải dưới cùng: quà hôm nay của thẻ đang dùng và nút nhận.</summary>
+        private void veDaiNhanNgay(mGraphics g)
+        {
+            int y = yThan + caoThan - CAO_DAI_NHAN;
+            veKhungBo(g, xPhai, y, rongPhai, CAO_DAI_NHAN, MAU_THE, 0.95f, MAU_VIEN, 0.7f, 1);
+            GoiThe dung = goiDangDung();
+            if (dung == null)
+            {
+                mFont.tahoma_7b_dark.drawString(g,
+                        "Mua thẻ để nhận quà mỗi ngày và ưu đãi chỉ số suốt thời hạn",
+                        xPhai + rongPhai / 2, y + CAO_DAI_NHAN / 2 - 5, mFont.CENTER);
+                return;
+            }
+            mFont.tahoma_7b_dark.drawString(g, "Quà hôm nay:", xPhai + 8,
+                    y + CAO_DAI_NHAN / 2 - 5, mFont.LEFT);
+            int ix = xPhai + 12 + mFont.tahoma_7b_dark.getWidth("Quà hôm nay:");
+            int yIcon = y + (CAO_DAI_NHAN - 22) / 2;
+            int[] n = oNutNhanNgay();
+            for (int i = 0; i < dung.quaNgay.Count && ix + 22 < n[0] - 4; i++)
+            {
+                veMotQua(g, dung.quaNgay[i], ix, yIcon);
+                ix += 25;
+            }
+            if (theThang.daNhanHomNay)
+            {
+                mFont.tahoma_7.drawString(g, "ĐÃ NHẬN", n[0] + n[2] / 2, n[1] + n[3] / 2 - 5,
+                        mFont.CENTER);
+            }
+            else
+            {
+                veNut(g, n[0], n[1], n[2], n[3], "Nhận", true);
+            }
+        }
+
+        /// <summary>Chạm trong mục thẻ tháng.</summary>
+        private void chamTheThang()
+        {
+            for (int i = 0; i < theThang.goi.Count; i++)
+            {
+                GoiThe gt = theThang.goi[i];
+                int[] n = oNutMuaTheoThe(oThe(i));
+                if (!cham(n[0], n[1], n[2], n[3]))
+                {
+                    continue;
+                }
+                if (theThang.bacDangCo > 0 && theThang.bacDangCo != gt.bac)
+                {
+                    return;
+                }
+                long bayGio = mSystem.currentTimeMillis();
+                if (bacChoXacNhan == gt.bac && bayGio - lucChoXacNhan < HAN_XAC_NHAN)
+                {
+                    bacChoXacNhan = 0;
+                    Service.gI().phucLoiMuaThe(gt.bac);
+                }
+                else
+                {
+                    bacChoXacNhan = gt.bac;
+                    lucChoXacNhan = bayGio;
+                }
+                return;
+            }
+            int[] nn = oNutNhanNgay();
+            if (goiDangDung() != null && !theThang.daNhanHomNay
+                    && cham(nn[0], nn[1], nn[2], nn[3]))
+            {
+                Service.gI().phucLoiNhanThe();
             }
         }
 
@@ -429,6 +789,10 @@ namespace Game1.God
         /// </remarks>
         private int soDongCuon()
         {
+            if (dangXemThe())
+            {
+                return 0;
+            }
             return (nhomChon >= 0 && nhomChon < nhom.Count)
                     ? nhom[nhomChon].moc.Count : 0;
         }
@@ -553,11 +917,12 @@ namespace Game1.God
                 dong();
                 return true;
             }
-            if (nhom.Count == 0)
+            if (soMuc() == 0)
             {
                 return true;
             }
-            for (int i = 0; i < nhom.Count; i++)
+            int lech = coThe() ? 1 : 0;
+            for (int i = 0; i < soMuc(); i++)
             {
                 int yy = yThan + 4 + i * (CAO_MUC + 3);
                 if (yy + CAO_MUC > yThan + caoThan - 2)
@@ -566,12 +931,30 @@ namespace Game1.God
                 }
                 if (cham(xTrai + 3, yy, RONG_TRAI - 6, CAO_MUC))
                 {
-                    nhomChon = i;
+                    if (coThe() && i == 0)
+                    {
+                        xemThe = true;
+                    }
+                    else
+                    {
+                        xemThe = false;
+                        nhomChon = i - lech;
+                    }
+                    bacChoXacNhan = 0;
                     cuon = 0;
                     return true;
                 }
             }
 
+            if (dangXemThe())
+            {
+                chamTheThang();
+                return true;
+            }
+            if (nhom.Count == 0)
+            {
+                return true;
+            }
             Nhom n = nhom[nhomChon];
             for (int i = cuon; i < n.moc.Count && i - cuon < soTheHien; i++)
             {

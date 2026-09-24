@@ -3917,6 +3917,42 @@ namespace Game2
                                 }
                                 dsNhomPL.Add(nPL);
                             }
+                            // The thang: may chu noi o CUOI goi. May chu cu khong
+                            // gui thi het byte o day, muc the thang khong hien.
+                            God.PhucLoiUI.TheThang theTL = null;
+                            if (msg.reader().available() > 0 && msg.reader().readByte() == 1)
+                            {
+                                theTL = new God.PhucLoiUI.TheThang();
+                                int soGoiTL = msg.reader().readUnsignedByte();
+                                for (int iG = 0; iG < soGoiTL; iG++)
+                                {
+                                    var gTL = new God.PhucLoiUI.GoiThe();
+                                    gTL.bac = msg.reader().readByte();
+                                    gTL.ten = msg.reader().readUTF();
+                                    gTL.gia = msg.reader().readUTF();
+                                    gTL.uuDai = msg.reader().readUTF();
+                                    gTL.soNgay = msg.reader().readShort();
+                                    for (int kQ = 0; kQ < 2; kQ++)
+                                    {
+                                        var dsQ = (kQ == 0) ? gTL.quaMua : gTL.quaNgay;
+                                        int soQ = msg.reader().readUnsignedByte();
+                                        for (int iQ = 0; iQ < soQ; iQ++)
+                                        {
+                                            var qTL = new God.PhucLoiUI.Qua();
+                                            qTL.icon = msg.reader().readShort();
+                                            qTL.soLuong = msg.reader().readInt();
+                                            dsQ.Add(qTL);
+                                        }
+                                    }
+                                    theTL.goi.Add(gTL);
+                                }
+                                theTL.bacDangCo = msg.reader().readByte();
+                                theTL.soNgayCon = msg.reader().readShort();
+                                theTL.hetHan = msg.reader().readUTF();
+                                theTL.daNhanHomNay = msg.reader().readByte() == 1;
+                                theTL.soDu = msg.reader().readUTF();
+                            }
+                            God.PhucLoiUI.getInstance().nhanTheThang(theTL);
                             God.PhucLoiUI.getInstance().nhanDuLieu(dsNhomPL);
                         }
                         break;

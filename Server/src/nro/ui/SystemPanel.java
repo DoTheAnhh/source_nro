@@ -114,6 +114,7 @@ public class SystemPanel extends JPanel {
                 the("Nhiệm vụ chính tuyến", buildNhiemVuChinhTab()),
                 the("Sự kiện", buildSuKienTab()),
                 the("Phúc lợi", buildPhucLoiTab()),
+                the("Thẻ tháng", new TheThangTab()),
                 the("Hộ tống Đường Tăng", buildHoTongTab())));
         tabs.addTab("Bản đồ", nhomThe(
                 the("Bản đồ nhanh", buildMapNhanhTab()),

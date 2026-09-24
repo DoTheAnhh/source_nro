@@ -132,6 +132,9 @@ public class PhucLoiService {
                     }
                 }
             }
+            // The thang noi vao CUOI goi: client cu doc het phan phuc loi roi
+            // dung, khong lech.
+            TheThangService.gI().ghiVaoGoi(pl, msg);
             msg.writer().flush();
             pl.sendMessage(msg);
         } catch (Exception ex) {
@@ -144,7 +147,7 @@ public class PhucLoiService {
     }
 
     /** Id icon của một vật phẩm, {@code -1} nếu không tra được. */
-    private short iconCua(int itemId) {
+    short iconCua(int itemId) {
         try {
             nro.entity.template.ItemTemplate t = ItemService.gI().getTemplate(itemId);
             if (t != null) {
@@ -170,6 +173,14 @@ public class PhucLoiService {
             byte viec = msg.reader().readByte();
             if (viec == 0) {
                 guiDuLieu(pl);
+                return;
+            }
+            if (viec == TheThangService.VIEC_MUA) {
+                TheThangService.gI().mua(pl, msg.reader().readByte());
+                return;
+            }
+            if (viec == TheThangService.VIEC_NHAN_NGAY) {
+                TheThangService.gI().nhanNgay(pl);
                 return;
             }
             int mocId = msg.reader().readInt();
