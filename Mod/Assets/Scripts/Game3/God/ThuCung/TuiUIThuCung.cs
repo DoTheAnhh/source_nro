@@ -417,7 +417,7 @@ namespace Game3.God
             int caoD = yThan + caoThan - y0d;
 
             ThuSoHuu thu = thuDangXem();
-            int caoDs = (oCoThuCung() + KHE_O_THU) * soHangThu() + 6;
+            int caoDs = oCoThuCung() + 10;
             int yChan = y0d + (caoD - caoDs) / 2 + CAO_NHAN_VAT / 2;
             veHinhThu(g, thu, xTrai + rongTrai / 2, yChan);
 
@@ -438,7 +438,9 @@ namespace Game3.God
                         xTrai + rongTrai / 2, yChan + 16, mFont.CENTER);
             }
 
-            // Hang o: tung con dang so huu.
+            // Hang o: mot dai ngang, cat dung be rong dai.
+            int[] vung = vungHangThu();
+            g.setClip(vung[0], vung[1] - 2, vung[2], vung[3] + 4);
             for (int i = 0; i < dsThuCung.Count; i++)
             {
                 int[] o = oOThuCung(i);
@@ -448,6 +450,11 @@ namespace Game3.God
                 }
                 veOThu(g, dsThuCung[i], o[0], o[1], o[2]);
             }
+            g.setClip(xTrai, yThan, rongTrai, caoThan);
+
+            // Hai nut lat hai dau dai.
+            veNutLatThu(g, true, cuonThuDich > 0.5f);
+            veNutLatThu(g, false, cuonThuDich < cuonThuToiDa() - 0.5f);
         }
 
         /// <summary>
@@ -503,9 +510,11 @@ namespace Game3.God
                 // Dai chu nam SAT mep trong cua vien: chua mot diem cho net
                 // vien, khong chua nhieu hon — chua nhieu thi dai bi thut vao
                 // trong, nhin nhu dan lech.
+                // Dai phai BO GOC: o bo goc ma dai vuong thi hai goc duoi
+                // cua dai tho han ra ngoai net vien.
                 int v = dangXem ? 2 : 1;
                 g.setColor(MAU_RA_TRAN);
-                g.fillRect(x + v, y + o - caoDai - v, o - v * 2, caoDai);
+                g.fillRect(x + v, y + o - caoDai - v, o - v * 2, caoDai, 4);
                 mFont.tahoma_7b_white.drawString(g, "Ra trận", x + o / 2,
                         y + o - caoDai - v, mFont.CENTER);
             }
@@ -514,6 +523,33 @@ namespace Game3.God
 
         /// <summary>Màu của con đang ra trận: viền ô và dải chữ dưới đáy ô.</summary>
         private static readonly int MAU_RA_TRAN = rgb(0x3F, 0xA9, 0x4F);
+
+        /// <summary>
+        /// Nút lật ở một đầu dải thú.
+        /// </summary>
+        /// <param name="con">Phía ấy còn thú chưa thấy hay không: hết rồi thì
+        /// nút mờ đi, để người chơi khỏi bấm mãi vào chỗ không nhúc nhích.</param>
+        private void veNutLatThu(mGraphics g, bool trai, bool con)
+        {
+            int[] n = oNutLatThu(trai);
+            if (n == null)
+            {
+                return;
+            }
+            float mo = con ? 1f : 0.4f;
+            veKhungBo(g, n[0], n[1], n[2], n[3], MAU_O_DO, mo,
+                    con ? MAU_VIEN_SANG : MAU_VIEN_O, mo, 1);
+
+            int xTam = n[0] + n[2] / 2;
+            int yTam = n[1] + n[3] / 2;
+            g.setColor(con ? MAU_VIEN_SANG : MAU_VIEN_O, con ? 1f : 0.6f);
+            for (int i = 0; i < 4; i++)
+            {
+                int cao = (4 - i) * 2 - 1;
+                int xv = trai ? (xTam - 2 + i) : (xTam + 1 - i);
+                g.fillRect(xv, yTam - cao / 2, 1, cao);
+            }
+        }
 
         /// <summary>Vẽ con thú bằng ba bộ phận máy chủ gửi kèm bảng.</summary>
         private void veHinhThu(mGraphics g, ThuSoHuu thu, int x, int yChan)
@@ -556,6 +592,7 @@ namespace Game3.God
         /// <summary>Khe hở giữa hai ô, để chúng không dính thành một dải.</summary>
         private const int KHE_O_THU = 4;
 
+        /// <summary>Cạnh một ô trong hàng thú.</summary>
         private int oCoThuCung()
         {
             int o = (rongTrai - 10) / 5 - KHE_O_THU;
@@ -570,43 +607,193 @@ namespace Game3.God
             return o;
         }
 
-        private int soCotThu()
-        {
-            int buoc = oCoThuCung() + KHE_O_THU;
-            int soCot = (rongTrai - 8) / buoc;
-            return soCot < 1 ? 1 : soCot;
-        }
-
-        private int soHangThu()
-        {
-            int n = (dsThuCung.Count + soCotThu() - 1) / soCotThu();
-            if (n < 1)
-            {
-                n = 1;
-            }
-            return n > 3 ? 3 : n;
-        }
-
-        /// <summary>Vùng ô thứ <paramref name="i"/> của hàng danh sách thú.</summary>
-        private int[] oOThuCung(int i)
+        /// <summary>
+        /// Vùng hàng thú: một dải ngang sát đáy cột trái.
+        /// </summary>
+        /// <remarks>
+        /// Xếp MỘT hàng rồi cuộn ngang, không trải thành lưới. Nuôi nhiều con thì
+        /// lưới ăn hết cột trái và đè lên chính con thú đang xem — thứ đáng nhìn
+        /// nhất ở thẻ này.
+        /// </remarks>
+        private int[] vungHangThu()
         {
             int o = oCoThuCung();
-            int soCot = soCotThu();
-            int cot = i % soCot;
-            int hang = i / soCot;
-            if (hang >= soHangThu())
+            int x = xTrai + 5;
+            int w = rongTrai - 10;
+            // Chua hai dau cho hai nut, chi khi hang dai qua kho nhin het.
+            if (canCuonThu())
+            {
+                x += RONG_NUT_THU;
+                w -= RONG_NUT_THU * 2;
+            }
+            int y = yThan + caoThan - 6 - o;
+            return new int[] { x, y, w, o };
+        }
+
+        /// <summary>Bề ngang một nút lật, tính cả khe hở với dải.</summary>
+        private const int RONG_NUT_THU = 14;
+
+        /// <summary>Hàng có dài quá chỗ trống không.</summary>
+        /// <remarks>
+        /// Đo theo bề ngang ĐẦY ĐỦ chứ không gọi <c>vungHangThu()</c>: bề ngang
+        /// của dải lại phụ thuộc vào chính câu trả lời này.
+        /// </remarks>
+        private bool canCuonThu()
+        {
+            int buoc = oCoThuCung() + KHE_O_THU;
+            return dsThuCung.Count * buoc - KHE_O_THU > rongTrai - 10;
+        }
+
+        /// <summary>Vùng nút lật trái hoặc phải, hoặc null khi không cần nút.</summary>
+        private int[] oNutLatThu(bool trai)
+        {
+            if (!canCuonThu())
             {
                 return null;
             }
+            int[] v = vungHangThu();
+            int w = RONG_NUT_THU - 3;
+            int h = v[3] - 6;
+            if (h < 14)
+            {
+                h = 14;
+            }
+            int x = trai ? (v[0] - RONG_NUT_THU + 1) : (v[0] + v[2] + 2);
+            return new int[] { x, v[1] + (v[3] - h) / 2, w, h };
+        }
+
+        /// <summary>Lật hàng đi một ô về phía đã bấm.</summary>
+        private void latHangThu(bool trai)
+        {
+            int buoc = oCoThuCung() + KHE_O_THU;
+            cuonThuDich += trai ? -buoc : buoc;
+            // Kep lai ngay de nut o cuoi duong biet minh da het viec va mo di.
+            int tran = cuonThuToiDa();
+            if (cuonThuDich > tran)
+            {
+                cuonThuDich = tran;
+            }
+            if (cuonThuDich < 0)
+            {
+                cuonThuDich = 0;
+            }
+        }
+
+        /// <summary>Quãng cuộn tối đa; 0 nghĩa là cả hàng vừa khít.</summary>
+        private int cuonThuToiDa()
+        {
+            int[] v = vungHangThu();
+            int buoc = oCoThuCung() + KHE_O_THU;
+            int tong = dsThuCung.Count * buoc - KHE_O_THU;
+            int du = tong - v[2];
+            return du > 0 ? du : 0;
+        }
+
+        /// <summary>Vùng ô thứ <paramref name="i"/>, đã trừ quãng đang cuộn.</summary>
+        private int[] oOThuCung(int i)
+        {
+            int[] v = vungHangThu();
+            int o = v[3];
             int buoc = o + KHE_O_THU;
-            int yDay = yThan + caoThan - 6 - o;
-            int y = yDay - (soHangThu() - 1 - hang) * buoc;
-            if (y < yThan + CAO_DAI_TD + KHE_KHUNG + 2)
+            int x = v[0] + i * buoc - (int) cuonThu;
+            // Ra ngoai han dai thi coi nhu khong co o nao o day: phan bat cham
+            // doc lai chinh ham nay nen no khong the bam nham o dang bi cat.
+            if (x + o <= v[0] || x >= v[0] + v[2])
             {
                 return null;
             }
-            int xDau = xTrai + (rongTrai - (soCot * buoc - KHE_O_THU)) / 2;
-            return new int[] { xDau + cot * buoc, y, o };
+            return new int[] { x, v[1], o };
+        }
+
+        // ------------------------------------------------------------------
+        //  Cuon hang thu
+        // ------------------------------------------------------------------
+
+        /// <summary>Quãng đã cuộn (điểm ảnh) và quãng đang nhắm tới.</summary>
+        private float cuonThu;
+        private float cuonThuDich;
+
+        /// <summary>Đang kéo hàng thú, và toạ độ ngón ở khung hình trước.</summary>
+        private bool dangKeoThu;
+        private int xKeoTruoc;
+
+        /// <summary>Đã kéo đi xa hơn ngưỡng này thì cú nhả ngón không tính là bấm.</summary>
+        private const int NGUONG_KEO_THU = 6;
+        private int tongKeoThu;
+
+        /// <summary>
+        /// Kéo hàng thú và đưa nó trượt dần tới chỗ nhắm.
+        /// </summary>
+        /// <remarks>
+        /// Chạy trong <c>capNhat()</c>: kéo là chuyện của từng khung hình, phần
+        /// bắt chạm chỉ nhận đúng lúc nhả ngón nên không làm được.
+        /// </remarks>
+        private void cuonHangThu()
+        {
+            if (theChon != THE_THU_CUNG || dsThuCung.Count == 0)
+            {
+                dangKeoThu = false;
+                return;
+            }
+            int[] v = vungHangThu();
+            if (GameCanvas.isPointerDown && !hienHopDoAn)
+            {
+                if (!dangKeoThu && GameCanvas.isPointerHoldIn(v[0], v[1], v[2], v[3]))
+                {
+                    dangKeoThu = true;
+                    xKeoTruoc = GameCanvas.px;
+                    tongKeoThu = 0;
+                }
+                else if (dangKeoThu)
+                {
+                    int dx = GameCanvas.px - xKeoTruoc;
+                    xKeoTruoc = GameCanvas.px;
+                    tongKeoThu += (dx < 0) ? -dx : dx;
+                    // Keo sang trai thi hang chay sang trai, tuc quang cuon tang.
+                    cuonThuDich -= dx;
+                    cuonThu = cuonThuDich;
+                }
+            }
+            else
+            {
+                dangKeoThu = false;
+            }
+
+            float tran = cuonThuToiDa();
+            if (cuonThuDich > tran)
+            {
+                cuonThuDich = tran;
+            }
+            if (cuonThuDich < 0)
+            {
+                cuonThuDich = 0;
+            }
+            // Truot dan toi cho nham: nhay thang toi noi thi hang giat cuc mot.
+            float lech = cuonThuDich - cuonThu;
+            if (lech > 0.5f || lech < -0.5f)
+            {
+                cuonThu += lech * 0.35f;
+            }
+            else
+            {
+                cuonThu = cuonThuDich;
+            }
+        }
+
+        /// <summary>Đưa con đang xem vào trong tầm nhìn của hàng.</summary>
+        private void keoThuVaoTam(int i)
+        {
+            int[] v = vungHangThu();
+            int buoc = v[3] + KHE_O_THU;
+            int x = v[0] + i * buoc - (int) cuonThuDich;
+            if (x < v[0])
+            {
+                cuonThuDich -= (v[0] - x);
+            }
+            else if (x + v[3] > v[0] + v[2])
+            {
+                cuonThuDich += (x + v[3]) - (v[0] + v[2]);
+            }
         }
 
         // ==================================================================
@@ -1098,12 +1285,30 @@ namespace Game3.God
                 return true;
             }
 
+            for (int b = 0; b < 2; b++)
+            {
+                int[] n = oNutLatThu(b == 0);
+                if (n != null && cham(n[0], n[1], n[2], n[3]))
+                {
+                    latHangThu(b == 0);
+                    tongKeoThu = 0;
+                    return true;
+                }
+            }
+
+            // Vua keo hang thi cu nha ngon nay khong tinh la chon con nao.
+            bool vuaKeo = tongKeoThu > NGUONG_KEO_THU;
+            tongKeoThu = 0;
             for (int i = 0; i < dsThuCung.Count; i++)
             {
                 int[] o = oOThuCung(i);
                 if (o != null && cham(o[0], o[1], o[2], o[2]))
                 {
-                    idThuXem = dsThuCung[i].id;
+                    if (!vuaKeo)
+                    {
+                        idThuXem = dsThuCung[i].id;
+                        keoThuVaoTam(i);
+                    }
                     return true;
                 }
             }

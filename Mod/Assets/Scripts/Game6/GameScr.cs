@@ -7583,7 +7583,9 @@ namespace Game6
     		int LE_DUOI = 9;
     		int hKhung = LE_TREN + soThay * CAO_DONG + LE_DUOI;
     		int x = LE_COT_TRAI;
-    		int y = xinChoCotTrai(hKhung + 10);
+    		// Chua 7 diem phia TREN: tab nhan gac len mep the, dan sat bang ten
+    		// ban do thi hai cai dinh vao nhau nhin nhu mot khoi.
+    		int y = xinChoCotTrai(hKhung + 18) + 7;
 
     		veTheNhiemVu(g, x, y, wKhung, hKhung);
     		oBangNhiemVu = new int[] { x, y, wKhung, hKhung };
@@ -7623,7 +7625,7 @@ namespace Game6
     				// nhin nhu mot cai nut bam nham cho.
     				for (int b = 0; b < 3; b++)
     				{
-    					g.setColor(MAU_NV_NHAN, 0.16f - b * 0.05f);
+    					g.setColor(MAU_NV_NHAN, 0.26f - b * 0.07f);
     					g.fillRect(x + 6 + b * ((wKhung - 12) / 3), yd - 1,
     							(wKhung - 12) / 3, CAO_DONG - 1, 3);
     				}
@@ -7695,18 +7697,22 @@ namespace Game6
     	{
     		g.setColor(MAU_NV_VIEN, 0.95f);
     		g.fillRect(x, y, w, h, 7);
-    		g.setColor(MAU_NV_NEN, 0.86f);
+    		g.setColor(MAU_NV_NEN, 0.92f);
     		g.fillRect(x + 1, y + 1, w - 2, h - 2, 6);
     	}
 
-    	/// <summary>Nền thẻ: nâu đen ấm.</summary>
-    	private const int MAU_NV_NEN = 0x241A12;
+    	/// <summary>Nền thẻ: nâu gỗ sáng, cùng họ với mấy bảng khác của game.</summary>
+    	/// <remarks>
+    	/// Bản trước gần như đen (0x241A12): nổi thì có nổi, nhưng nó là mảng tối
+    	/// duy nhất trên màn hình sáng màu, nhìn như dán từ game khác sang.
+    	/// </remarks>
+    	private const int MAU_NV_NEN = 0x6B4A2A;
 
     	/// <summary>Viền thẻ và viền tab.</summary>
-    	private const int MAU_NV_VIEN = 0x7A5524;
+    	private const int MAU_NV_VIEN = 0x3A2712;
 
     	/// <summary>Màu nhấn: hổ phách, dùng cho tab, vệt sáng và thanh tiến độ.</summary>
-    	private const int MAU_NV_NHAN = 0xE2A33C;
+    	private const int MAU_NV_NHAN = 0xFFC861;
 
 
     	/// <summary>Ô chân dung của người chơi ở góc trên bên trái.</summary>

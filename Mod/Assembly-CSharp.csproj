@@ -20,7 +20,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <NoWarn>0169;USG0001</NoWarn>
-    <DefineConstants>UNITY_2022_3_61;UNITY_2022_3;UNITY_2022;UNITY_5_3_OR_NEWER;UNITY_5_4_OR_NEWER;UNITY_5_5_OR_NEWER;UNITY_5_6_OR_NEWER;UNITY_2017_1_OR_NEWER;UNITY_2017_2_OR_NEWER;UNITY_2017_3_OR_NEWER;UNITY_2017_4_OR_NEWER;UNITY_2018_1_OR_NEWER;UNITY_2018_2_OR_NEWER;UNITY_2018_3_OR_NEWER;UNITY_2018_4_OR_NEWER;UNITY_2019_1_OR_NEWER;UNITY_2019_2_OR_NEWER;UNITY_2019_3_OR_NEWER;UNITY_2019_4_OR_NEWER;UNITY_2020_1_OR_NEWER;UNITY_2020_2_OR_NEWER;UNITY_2020_3_OR_NEWER;UNITY_2021_1_OR_NEWER;UNITY_2021_2_OR_NEWER;UNITY_2021_3_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_2022_2_OR_NEWER;UNITY_2022_3_OR_NEWER;PLATFORM_ARCH_64;UNITY_64;UNITY_INCLUDE_TESTS;ENABLE_AR;ENABLE_AUDIO;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_EVENT_QUEUE;ENABLE_MICROPHONE;ENABLE_MULTIPLE_DISPLAYS;ENABLE_PHYSICS;ENABLE_TEXTURE_STREAMING;ENABLE_VIRTUALTEXTURING;ENABLE_LZMA;ENABLE_UNITYEVENTS;ENABLE_VR;ENABLE_WEBCAM;ENABLE_UNITYWEBREQUEST;ENABLE_WWW;ENABLE_CLOUD_SERVICES;ENABLE_CLOUD_SERVICES_ADS;ENABLE_CLOUD_SERVICES_USE_WEBREQUEST;ENABLE_CLOUD_SERVICES_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_PURCHASING;ENABLE_CLOUD_SERVICES_ANALYTICS;ENABLE_CLOUD_SERVICES_BUILD;ENABLE_EDITOR_GAME_SERVICES;ENABLE_UNITY_GAME_SERVICES_ANALYTICS_SUPPORT;ENABLE_CLOUD_LICENSE;ENABLE_EDITOR_HUB_LICENSE;ENABLE_WEBSOCKET_CLIENT;ENABLE_GENERATE_NATIVE_PLUGINS_FOR_ASSEMBLIES_API;ENABLE_DIRECTOR_AUDIO;ENABLE_DIRECTOR_TEXTURE;ENABLE_MANAGED_JOBS;ENABLE_MANAGED_TRANSFORM_JOBS;ENABLE_MANAGED_ANIMATION_JOBS;ENABLE_MANAGED_AUDIO_JOBS;ENABLE_MANAGED_UNITYTLS;INCLUDE_DYNAMIC_GI;ENABLE_SCRIPTING_GC_WBARRIERS;PLATFORM_SUPPORTS_MONO;RENDER_SOFTWARE_CURSOR;ENABLE_VIDEO;ENABLE_ACCELERATOR_CLIENT_DEBUGGING;ENABLE_NAVIGATION_PACKAGE_DEBUG_VISUALIZATION;ENABLE_NAVIGATION_HEIGHTMESH_RUNTIME_SUPPORT;ENABLE_NAVIGATION_UI_REQUIRES_PACKAGE;PLATFORM_STANDALONE;TEXTCORE_1_0_OR_NEWER;PLATFORM_STANDALONE_WIN;UNITY_STANDALONE_WIN;UNITY_STANDALONE;ENABLE_RUNTIME_GI;ENABLE_MOVIES;ENABLE_NETWORK;ENABLE_NVIDIA;ENABLE_CRUNCH_TEXTURE_COMPRESSION;ENABLE_OUT_OF_PROCESS_CRASH_HANDLER;ENABLE_CLUSTER_SYNC;ENABLE_CLUSTERINPUT;PLATFORM_UPDATES_TIME_OUTSIDE_OF_PLAYER_LOOP;GFXDEVICE_WAITFOREVENT_MESSAGEPUMP;PLATFORM_INITIALIZES_MEMORY_MANAGER_EXPLICITLY;ENABLE_MONO;NET_4_6;NET_UNITY_4_8;ENABLE_PROFILER;DEBUG;TRACE;UNITY_ASSERTIONS;UNITY_EDITOR;UNITY_EDITOR_64;UNITY_EDITOR_WIN;ENABLE_UNITY_COLLECTIONS_CHECKS;ENABLE_BURST_AOT;UNITY_TEAM_LICENSE;ENABLE_CUSTOM_RENDER_TEXTURE;ENABLE_DIRECTOR;ENABLE_LOCALIZATION;ENABLE_SPRITES;ENABLE_TERRAIN;ENABLE_TILEMAP;ENABLE_TIMELINE;ENABLE_LEGACY_INPUT_MANAGER;TEXTCORE_FONT_ENGINE_1_5_OR_NEWER;CSHARP_7_OR_LATER;CSHARP_7_3_OR_NEWER</DefineConstants>
+    <DefineConstants>UNITY_2022_3_61;UNITY_2022_3;UNITY_2022;UNITY_5_3_OR_NEWER;UNITY_5_4_OR_NEWER;UNITY_5_5_OR_NEWER;UNITY_5_6_OR_NEWER;UNITY_2017_1_OR_NEWER;UNITY_2017_2_OR_NEWER;UNITY_2017_3_OR_NEWER;UNITY_2017_4_OR_NEWER;UNITY_2018_1_OR_NEWER;UNITY_2018_2_OR_NEWER;UNITY_2018_3_OR_NEWER;UNITY_2018_4_OR_NEWER;UNITY_2019_1_OR_NEWER;UNITY_2019_2_OR_NEWER;UNITY_2019_3_OR_NEWER;UNITY_2019_4_OR_NEWER;UNITY_2020_1_OR_NEWER;UNITY_2020_2_OR_NEWER;UNITY_2020_3_OR_NEWER;UNITY_2021_1_OR_NEWER;UNITY_2021_2_OR_NEWER;UNITY_2021_3_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_2022_2_OR_NEWER;UNITY_2022_3_OR_NEWER;UNITY_INCLUDE_TESTS;ENABLE_AR;ENABLE_AUDIO;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_EVENT_QUEUE;ENABLE_MICROPHONE;ENABLE_MULTIPLE_DISPLAYS;ENABLE_PHYSICS;ENABLE_TEXTURE_STREAMING;ENABLE_LZMA;ENABLE_UNITYEVENTS;ENABLE_VR;ENABLE_WEBCAM;ENABLE_UNITYWEBREQUEST;ENABLE_WWW;ENABLE_CLOUD_SERVICES;ENABLE_CLOUD_SERVICES_ADS;ENABLE_CLOUD_SERVICES_USE_WEBREQUEST;ENABLE_CLOUD_SERVICES_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_NATIVE_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_PURCHASING;ENABLE_CLOUD_SERVICES_ANALYTICS;ENABLE_CLOUD_SERVICES_BUILD;ENABLE_EDITOR_GAME_SERVICES;ENABLE_UNITY_GAME_SERVICES_ANALYTICS_SUPPORT;ENABLE_CLOUD_LICENSE;ENABLE_EDITOR_HUB_LICENSE;ENABLE_WEBSOCKET_CLIENT;ENABLE_GENERATE_NATIVE_PLUGINS_FOR_ASSEMBLIES_API;ENABLE_DIRECTOR_AUDIO;ENABLE_DIRECTOR_TEXTURE;ENABLE_MANAGED_JOBS;ENABLE_MANAGED_TRANSFORM_JOBS;ENABLE_MANAGED_ANIMATION_JOBS;ENABLE_MANAGED_AUDIO_JOBS;ENABLE_RUNTIME_PERMISSIONS;ENABLE_ENGINE_CODE_STRIPPING;ENABLE_ONSCREEN_KEYBOARD;ENABLE_MANAGED_UNITYTLS;INCLUDE_DYNAMIC_GI;ENABLE_SCRIPTING_GC_WBARRIERS;PLATFORM_SUPPORTS_MONO;ENABLE_VIDEO;ENABLE_ACCELERATOR_CLIENT_DEBUGGING;ENABLE_NAVIGATION_PACKAGE_DEBUG_VISUALIZATION;ENABLE_NAVIGATION_HEIGHTMESH_RUNTIME_SUPPORT;ENABLE_NAVIGATION_UI_REQUIRES_PACKAGE;PLATFORM_ANDROID;TEXTCORE_1_0_OR_NEWER;UNITY_ANDROID;UNITY_ANDROID_API;ENABLE_EGL;ENABLE_NETWORK;ENABLE_RUNTIME_GI;ENABLE_CRUNCH_TEXTURE_COMPRESSION;UNITY_CAN_SHOW_SPLASH_SCREEN;UNITY_HAS_GOOGLEVR;UNITY_HAS_TANGO;ENABLE_SPATIALTRACKING;ENABLE_ETC_COMPRESSION;PLATFORM_EXTENDS_VULKAN_DEVICE;PLATFORM_HAS_MULTIPLE_SWAPCHAINS;UNITY_ANDROID_SUPPORTS_SHADOWFILES;PLATFORM_UPDATES_TIME_OUTSIDE_OF_PLAYER_LOOP;ENABLE_UNITYADS_RUNTIME;UNITY_UNITYADS_API;ENABLE_MONO;NET_4_6;NET_UNITY_4_8;ENABLE_PROFILER;DEBUG;TRACE;UNITY_ASSERTIONS;UNITY_EDITOR;UNITY_EDITOR_64;UNITY_EDITOR_WIN;ENABLE_UNITY_COLLECTIONS_CHECKS;ENABLE_BURST_AOT;UNITY_TEAM_LICENSE;ENABLE_CUSTOM_RENDER_TEXTURE;ENABLE_DIRECTOR;ENABLE_LOCALIZATION;ENABLE_SPRITES;ENABLE_TERRAIN;ENABLE_TILEMAP;ENABLE_TIMELINE;ENABLE_LEGACY_INPUT_MANAGER;TEXTCORE_FONT_ENGINE_1_5_OR_NEWER;CSHARP_7_OR_LATER;CSHARP_7_3_OR_NEWER</DefineConstants>
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -51,7 +51,7 @@
     <UnityProjectGeneratorVersion>2.0.23</UnityProjectGeneratorVersion>
     <UnityProjectGeneratorStyle>Legacy</UnityProjectGeneratorStyle>
     <UnityProjectType>Game:1</UnityProjectType>
-    <UnityBuildTarget>StandaloneWindows64:19</UnityBuildTarget>
+    <UnityBuildTarget>Android:13</UnityBuildTarget>
     <UnityVersion>2022.3.61f1</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
@@ -61,11 +61,13 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\Game2\TileMap.cs" />
     <Compile Include="Assets\Scripts\Game3\God\Player\TypePoint.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\MucTieu\ChiSoMucTieuUI.cs" />
     <Compile Include="Assets\Scripts\Game3\God\Player\Revive.cs" />
     <Compile Include="Assets\Scripts\Game2\God\Client\ClientManager.cs" />
     <Compile Include="Assets\Scripts\Game4\IKbAction.cs" />
     <Compile Include="Assets\Scripts\Game4\TaskOrder.cs" />
     <Compile Include="Assets\Scripts\Game2\DartInfo.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\Client\HudCot.cs" />
     <Compile Include="Assets\Scripts\Game6\Cmd.cs" />
     <Compile Include="Assets\Scripts\Game5\MobTemplate.cs" />
     <Compile Include="Assets\Scripts\Game6\iPhoneGeneration.cs" />
@@ -121,6 +123,7 @@
     <Compile Include="Assets\Scripts\Game3\Menu.cs" />
     <Compile Include="Assets\Scripts\Game1\EffectCharPaint.cs" />
     <Compile Include="Assets\Scripts\Game3\Assets\src\g\RegisterScreen.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\TroChoi\DapSaibaman.cs" />
     <Compile Include="Assets\Scripts\Game2\NewPanel.cs" />
     <Compile Include="Assets\Scripts\Game6\Skills.cs" />
     <Compile Include="Assets\Scripts\Game2\ImgByName.cs" />
@@ -129,9 +132,10 @@
     <Compile Include="Assets\Scripts\Game5\ServerListScreen.cs" />
     <Compile Include="Assets\Scripts\Game2\TaskOrder.cs" />
     <Compile Include="Assets\Scripts\Game5\TaskTemplate.cs" />
-    <Compile Include="Assets\Scripts\Game1\IKbAction.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\TroChoi\DapSaibaman.cs" />
     <Compile Include="Assets\Scripts\Game2\Res.cs" />
     <Compile Include="Assets\Scripts\Game1\MobTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game1\IKbAction.cs" />
     <Compile Include="Assets\Scripts\Game1\Assets\src\e\SmallSave.cs" />
     <Compile Include="Assets\Scripts\Game4\Res.cs" />
     <Compile Include="Assets\Scripts\Game1\Archivement.cs" />
@@ -147,6 +151,7 @@
     <Compile Include="Assets\Scripts\Game3\BgItemMn.cs" />
     <Compile Include="Assets\Scripts\Game5\IPaint.cs" />
     <Compile Include="Assets\Scripts\Game2\IChatable.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\MucTieu\ChiSoMucTieuUI.cs" />
     <Compile Include="Assets\Scripts\Game5\ItemOptionTemplate.cs" />
     <Compile Include="Assets\Scripts\Game6\ChatTextField.cs" />
     <Compile Include="Assets\Scripts\Game3\EffectPaint.cs" />
@@ -165,6 +170,7 @@
     <Compile Include="Assets\Scripts\Game4\ItemTime.cs" />
     <Compile Include="Assets\Scripts\Game6\Math.cs" />
     <Compile Include="Assets\Scripts\Game5\Scroll.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\ThuCung\TuiUIThuCung.cs" />
     <Compile Include="Assets\Scripts\Game4\MagicTree.cs" />
     <Compile Include="Assets\Scripts\Game4\EffectInfoPaint.cs" />
     <Compile Include="Assets\Scripts\Game4\RadarScr.cs" />
@@ -204,16 +210,18 @@
     <Compile Include="Assets\Scripts\Game4\IMapObject.cs" />
     <Compile Include="Assets\Scripts\Game2\ImageInfo.cs" />
     <Compile Include="Assets\Scripts\Game5\EffectCharPaint.cs" />
-    <Compile Include="Assets\Scripts\Game5\Task.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\TroChoi\TaiXiuBan.cs" />
     <Compile Include="Assets\Scripts\Game1\Task.cs" />
     <Compile Include="Assets\Scripts\Game3\mFont.cs" />
     <Compile Include="Assets\Scripts\Game6\ClanManager.cs" />
+    <Compile Include="Assets\Scripts\Game5\Task.cs" />
     <Compile Include="Assets\Scripts\Game5\SmallImage.cs" />
     <Compile Include="Assets\Scripts\Game1\InfoPhuBan.cs" />
     <Compile Include="Assets\Scripts\Game5\InfoPhuBan.cs" />
     <Compile Include="Assets\Scripts\Game3\Sprite.cs" />
     <Compile Include="Assets\Scripts\Game4\Skills.cs" />
     <Compile Include="Assets\Scripts\Game1\EffectData.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\TroChoi\DuaVit.cs" />
     <Compile Include="Assets\Scripts\Game6\Assets\src\g\GameInfo.cs" />
     <Compile Include="Assets\Scripts\Game6\DartInfo.cs" />
     <Compile Include="Assets\Scripts\Game5\ImgByName.cs" />
@@ -234,10 +242,12 @@
     <Compile Include="Assets\Scripts\Game5\BallInfo.cs" />
     <Compile Include="Assets\Scripts\Game2\VoiceChat.cs" />
     <Compile Include="Assets\Scripts\Game5\Cmd.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\TroChoi\TaiXiuBan.cs" />
     <Compile Include="Assets\Scripts\Game5\PopUp.cs" />
     <Compile Include="Assets\Scripts\Game6\TileMap.cs" />
     <Compile Include="Assets\Scripts\Game2\Assets\src\e\Small.cs" />
     <Compile Include="Assets\Scripts\Game3\FireWorkMn.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\Client\HudCot.cs" />
     <Compile Include="Assets\Scripts\Game3\Arrow.cs" />
     <Compile Include="Assets\Scripts\Game6\God\Player\NPoint.cs" />
     <Compile Include="Assets\Scripts\Game1\ServerEffect.cs" />
@@ -353,7 +363,6 @@
     <Compile Include="Assets\Scripts\Game1\PKFlag.cs" />
     <Compile Include="Assets\Scripts\Game2\God\Chung\BanPhimSo.cs" />
     <Compile Include="Assets\Scripts\Game5\ScaleGUI.cs" />
-    <Compile Include="Assets\Scripts\Game3\God\MenuTong\MenuTongUI.cs" />
     <Compile Include="Assets\Scripts\Game6\iOSPlugins.cs" />
     <Compile Include="Assets\Scripts\Game3\PlayerInfo.cs" />
     <Compile Include="Assets\Scripts\Game2\ClanImage.cs" />
@@ -372,6 +381,7 @@
     <Compile Include="Assets\Scripts\Game5\FireWorkEff.cs" />
     <Compile Include="Assets\Scripts\Game2\TabClanIcon.cs" />
     <Compile Include="Assets\Scripts\Game1\MapTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\Client\HudCot.cs" />
     <Compile Include="Assets\Scripts\Game2\God\TanSat\TanSatUI.cs" />
     <Compile Include="Assets\Scripts\Game1\MagicTree.cs" />
     <Compile Include="Assets\Scripts\Game5\Hint.cs" />
@@ -412,8 +422,6 @@
     <Compile Include="Assets\Scripts\Game5\Arrow.cs" />
     <Compile Include="Assets\Scripts\Game1\ItemTemplate.cs" />
     <Compile Include="Assets\Scripts\Game4\TouchScreenKeyboard.cs" />
-    <Compile Include="Assets\Scripts\Game6\God\MenuTong\MenuTongUI.cs" />
-    <Compile Include="Assets\Scripts\Game5\God\MenuTong\MenuTongUI.cs" />
     <Compile Include="Assets\Scripts\Game6\StaticObj.cs" />
     <Compile Include="Assets\Scripts\Game3\CreateCharScr.cs" />
     <Compile Include="Assets\Scripts\Game6\SplashScr.cs" />
@@ -487,6 +495,7 @@
     <Compile Include="Assets\Scripts\Game5\FireWorkMn.cs" />
     <Compile Include="Assets\Scripts\Game5\Part.cs" />
     <Compile Include="Assets\Scripts\Game6\HTTPHandler.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\ThuCung\TuiUIThuCung.cs" />
     <Compile Include="Assets\Scripts\Game1\NewBoss.cs" />
     <Compile Include="Assets\Scripts\Game2\Assets\src\g\ImageSource.cs" />
     <Compile Include="Assets\Scripts\Game5\Skill.cs" />
@@ -519,6 +528,7 @@
     <Compile Include="Assets\Scripts\Game1\God\Player\ThongTinDeTu.cs" />
     <Compile Include="Assets\Scripts\Game1\TextInfo.cs" />
     <Compile Include="Assets\Scripts\Game6\MobCapcha.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\MucTieu\ChiSoMucTieuUI.cs" />
     <Compile Include="Assets\Scripts\Game6\Image.cs" />
     <Compile Include="Assets\Scripts\Game4\ActionUpdate.cs" />
     <Compile Include="Assets\Scripts\Game2\ClanObject.cs" />
@@ -540,6 +550,7 @@
     <Compile Include="Assets\Scripts\Game4\PlayerInfo.cs" />
     <Compile Include="Assets\Scripts\Game6\InfoItem.cs" />
     <Compile Include="Assets\Scripts\Game1\Skills.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\TroChoi\DuaVit.cs" />
     <Compile Include="Assets\Scripts\Game4\God\Mob\Mobs.cs" />
     <Compile Include="Assets\Scripts\Game5\God\Mob\MobController.cs" />
     <Compile Include="Assets\Scripts\Game5\PlayerData.cs" />
@@ -659,16 +670,18 @@
     <Compile Include="Assets\Scripts\Game2\PKFlag.cs" />
     <Compile Include="Assets\Scripts\Game5\SkillInfoPaint.cs" />
     <Compile Include="Assets\Scripts\Game3\NpcTemplate.cs" />
-    <Compile Include="Assets\Scripts\Game4\God\MenuTong\MenuTongUI.cs" />
     <Compile Include="Assets\Scripts\Game6\TaskTemplate.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\ThuCung\TuiUIThuCung.cs" />
     <Compile Include="Assets\Scripts\Game2\InfoMe.cs" />
     <Compile Include="Assets\Scripts\Game6\God\Chung\BanPhimSo.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\MucTieu\ChiSoMucTieuUI.cs" />
     <Compile Include="Assets\Scripts\Game1\T2.cs" />
     <Compile Include="Assets\Scripts\Game1\ActionChat.cs" />
     <Compile Include="Assets\Scripts\Game2\ServerListScreen.cs" />
     <Compile Include="Assets\Scripts\Game2\ClanMessage.cs" />
     <Compile Include="Assets\Scripts\Game3\KeyConstant.cs" />
     <Compile Include="Assets\Scripts\Game3\Assets\src\g\ImageSource.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\Client\HudCot.cs" />
     <Compile Include="Assets\Scripts\Game3\God\Voice\VoiceConfigUI.cs" />
     <Compile Include="Assets\Scripts\Game2\ItemObject.cs" />
     <Compile Include="Assets\Scripts\Game4\God\Co\CoUI.cs" />
@@ -751,8 +764,10 @@
     <Compile Include="Assets\Scripts\Game5\MonsterDart.cs" />
     <Compile Include="Assets\Scripts\Game2\MobCapcha.cs" />
     <Compile Include="Assets\Scripts\Game1\MyHashTable.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\TroChoi\DapSaibaman.cs" />
     <Compile Include="Assets\Scripts\Game5\Panel.cs" />
     <Compile Include="Assets\Scripts\Game3\Main.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\TroChoi\DuaVit.cs" />
     <Compile Include="Assets\Scripts\Game5\IMapObject.cs" />
     <Compile Include="Assets\Scripts\Game5\MainImage.cs" />
     <Compile Include="Assets\Scripts\Game6\Effect.cs" />
@@ -765,8 +780,10 @@
     <Compile Include="Assets\Scripts\Game6\InfoDlg.cs" />
     <Compile Include="Assets\Scripts\Game6\Paint.cs" />
     <Compile Include="Assets\Scripts\Game3\ItemMap.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\MucTieu\ChiSoMucTieuUI.cs" />
     <Compile Include="Assets\Scripts\Game5\Service.cs" />
     <Compile Include="Assets\Scripts\Game6\God\NoiTai\NoiTaiUI.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\TroChoi\TaiXiuBan.cs" />
     <Compile Include="Assets\Scripts\Game6\T2.cs" />
     <Compile Include="Assets\Scripts\Game4\ImageInfo.cs" />
     <Compile Include="Assets\Scripts\Game5\God\TuiMoi\TuiUI.cs" />
@@ -841,6 +858,7 @@
     <Compile Include="Assets\Scripts\Game3\ChatBox.cs" />
     <Compile Include="Assets\Scripts\Game1\SkillPaint.cs" />
     <Compile Include="Assets\Scripts\Game6\ChatBox.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\ThuCung\TuiUIThuCung.cs" />
     <Compile Include="Assets\Scripts\Game5\Assets\src\g\Mabu.cs" />
     <Compile Include="Assets\Scripts\Game4\TextInfo.cs" />
     <Compile Include="Assets\Scripts\Game6\InputDlg.cs" />
@@ -880,6 +898,7 @@
     <Compile Include="Assets\Scripts\Game2\God\Item\Items.cs" />
     <Compile Include="Assets\Scripts\Game1\SoundMn.cs" />
     <Compile Include="Assets\Scripts\Game2\Dialog.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\TroChoi\DuaVit.cs" />
     <Compile Include="Assets\Scripts\Game2\EffecMn.cs" />
     <Compile Include="Assets\Scripts\Game5\God\Player\ThongTinDeTu.cs" />
     <Compile Include="Assets\Scripts\Game5\TransportScr.cs" />
@@ -901,16 +920,15 @@
     <Compile Include="Assets\Scripts\Game5\VoiceChat.cs" />
     <Compile Include="Assets\Scripts\Game5\SkillOptionTemplate.cs" />
     <Compile Include="Assets\Scripts\Game6\Frame.cs" />
+    <Compile Include="Assets\Scripts\Game4\Message.cs" />
     <Compile Include="Assets\Scripts\Game6\MsgDlg.cs" />
     <Compile Include="Assets\Scripts\Game5\Assets\src\g\RegisterScreen.cs" />
     <Compile Include="Assets\Scripts\Game3\Message.cs" />
-    <Compile Include="Assets\Scripts\Game4\Message.cs" />
     <Compile Include="Assets\Scripts\Game3\BallInfo.cs" />
     <Compile Include="Assets\Scripts\Game3\God\Chung\HopNhapChu.cs" />
     <Compile Include="Assets\Scripts\Game5\ISession.cs" />
     <Compile Include="Assets\Scripts\Game4\Cout.cs" />
     <Compile Include="Assets\Scripts\Game5\SplashScr.cs" />
-    <Compile Include="Assets\Scripts\Game2\God\MenuTong\MenuTongUI.cs" />
     <Compile Include="Assets\Scripts\Game1\TabControl.cs" />
     <Compile Include="Assets\Scripts\Game3\Rms.cs" />
     <Compile Include="Assets\Scripts\Game5\TField.cs" />
@@ -992,6 +1010,7 @@
     <Compile Include="Assets\Scripts\Game1\God\PhucLoi\PhucLoiUI.cs" />
     <Compile Include="Assets\Scripts\Game6\LoginScr.cs" />
     <Compile Include="Assets\Scripts\Game1\ImgByName.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\TroChoi\DuaVit.cs" />
     <Compile Include="Assets\Scripts\Game1\Clan.cs" />
     <Compile Include="Assets\Scripts\Game2\EffectCharPaint.cs" />
     <Compile Include="Assets\Scripts\Game6\God\Boss\Boss.cs" />
@@ -1001,10 +1020,12 @@
     <Compile Include="Assets\Scripts\Game4\Frame.cs" />
     <Compile Include="Assets\Scripts\Game1\DartInfo.cs" />
     <Compile Include="Assets\Scripts\Game1\EffectInfoPaint.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\Client\HudCot.cs" />
     <Compile Include="Assets\Scripts\Game1\ItemTemplates.cs" />
     <Compile Include="Assets\Scripts\Game1\Rms.cs" />
     <Compile Include="Assets\Scripts\Game4\InfoPhuBan.cs" />
     <Compile Include="Assets\Scripts\Game4\God\Player\ListChars.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\TroChoi\TaiXiuBan.cs" />
     <Compile Include="Assets\Scripts\Game4\T3.cs" />
     <Compile Include="Assets\Scripts\Game4\mSystem.cs" />
     <Compile Include="Assets\Scripts\Game6\God\SoSuuTam\SoSuuTamUI.cs" />
@@ -1077,6 +1098,7 @@
     <Compile Include="Assets\Scripts\Game4\ChatPopup.cs" />
     <Compile Include="Assets\Scripts\Game2\Char.cs" />
     <Compile Include="Assets\Scripts\Game3\LoginScr.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\Client\HudCot.cs" />
     <Compile Include="Assets\Scripts\Game2\Key.cs" />
     <Compile Include="Assets\Scripts\Game1\ListNew.cs" />
     <Compile Include="Assets\Scripts\Game5\EffectData.cs" />
@@ -1093,6 +1115,7 @@
     <Compile Include="Assets\Scripts\Game5\MotherCanvas.cs" />
     <Compile Include="Assets\Scripts\Game6\ServerListScreen.cs" />
     <Compile Include="Assets\Scripts\Game4\FireWorkMn.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\TroChoi\TaiXiuBan.cs" />
     <Compile Include="Assets\Scripts\Game6\MobTemplate.cs" />
     <Compile Include="Assets\Scripts\Game3\God\Player\PetService.cs" />
     <Compile Include="Assets\Scripts\Game3\ItemTemplate.cs" />
@@ -1115,7 +1138,6 @@
     <Compile Include="Assets\Scripts\Game3\SkillOptionTemplate.cs" />
     <Compile Include="Assets\Scripts\Game5\TabCommand.cs" />
     <Compile Include="Assets\Scripts\Game6\God\Boss\BossData.cs" />
-    <Compile Include="Assets\Scripts\Game1\God\MenuTong\MenuTongUI.cs" />
     <Compile Include="Assets\Scripts\Game2\God\Boss\BossData.cs" />
     <Compile Include="Assets\Scripts\Game1\KeyConstant.cs" />
     <Compile Include="Assets\Scripts\Game2\mFont.cs" />
@@ -1167,6 +1189,7 @@
     <Compile Include="Assets\Scripts\Game2\BackgroudEffect.cs" />
     <Compile Include="Assets\Scripts\Game5\TouchScreenKeyboard.cs" />
     <Compile Include="Assets\Scripts\Game3\ISession.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\MucTieu\ChiSoMucTieuUI.cs" />
     <Compile Include="Assets\Scripts\Game5\Session_ME.cs" />
     <Compile Include="Assets\Scripts\Game3\ClanMessage.cs" />
     <Compile Include="Assets\Scripts\Game5\InfoMe.cs" />
@@ -1211,6 +1234,7 @@
     <Compile Include="Assets\Scripts\Game3\CharChild.cs" />
     <Compile Include="Assets\Scripts\Game5\ItemTime.cs" />
     <Compile Include="Assets\Scripts\Game3\Effect2.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\ThuCung\TuiUIThuCung.cs" />
     <Compile Include="Assets\Scripts\Game1\Sound.cs" />
     <Compile Include="Assets\Scripts\Game1\ClanObject.cs" />
     <Compile Include="Assets\Scripts\Game5\TabControl.cs" />
@@ -1221,6 +1245,7 @@
     <Compile Include="Assets\Scripts\Game6\God\Player\ThongTinDeTu.cs" />
     <Compile Include="Assets\Scripts\Game6\InfoMe.cs" />
     <Compile Include="Assets\Scripts\Game3\Sound.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\TroChoi\DapSaibaman.cs" />
     <Compile Include="Assets\Scripts\Game2\God\Player\ThongTinDeTu.cs" />
     <Compile Include="Assets\Scripts\Game4\Assets\src\g\PetFollow.cs" />
     <Compile Include="Assets\Scripts\Game1\Math.cs" />
@@ -1337,6 +1362,7 @@
     <Compile Include="Assets\Scripts\Game4\Effect2.cs" />
     <Compile Include="Assets\Scripts\Game3\MonsterDart.cs" />
     <Compile Include="Assets\Scripts\Game2\God\Player\Revive.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\TroChoi\DapSaibaman.cs" />
     <Compile Include="Assets\Scripts\Game1\Assets\src\g\Mabu.cs" />
     <Compile Include="Assets\Scripts\Game4\EffecMn.cs" />
     <Compile Include="Assets\Scripts\Game5\ServerEffect.cs" />
@@ -1401,6 +1427,7 @@
     <Compile Include="Assets\Scripts\Game5\God\TroChoi\MiniGame.cs" />
     <Compile Include="Assets\Scripts\Game6\IChatable.cs" />
     <Compile Include="Assets\Scripts\Game6\Assets\src\g\Mabu.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\TroChoi\DuaVit.cs" />
     <Compile Include="Assets\Scripts\Game1\T1.cs" />
     <Compile Include="Assets\Scripts\Game2\God\PhucLoi\PhucLoiUI.cs" />
     <Compile Include="Assets\Scripts\Game2\ISession.cs" />
@@ -1460,6 +1487,7 @@
     <Compile Include="Assets\Scripts\Game1\God\Player\ListChars.cs" />
     <Compile Include="Assets\Scripts\Game4\God\Chung\NhatKy.cs" />
     <Compile Include="Assets\Scripts\Game5\Member.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\TroChoi\DapSaibaman.cs" />
     <Compile Include="Assets\Scripts\Game4\God\SuKien\SuKienUI.cs" />
     <Compile Include="Assets\Scripts\Game4\StaticObj.cs" />
     <Compile Include="Assets\Scripts\Game2\SoundMn.cs" />
@@ -1473,8 +1501,10 @@
     <Compile Include="Assets\Scripts\Game6\Effect_End.cs" />
     <Compile Include="Assets\Scripts\Game2\Task.cs" />
     <Compile Include="Assets\Scripts\Game4\TileMap.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\ThuCung\TuiUIThuCung.cs" />
     <Compile Include="Assets\Scripts\Game4\HTTPHandler.cs" />
     <Compile Include="Assets\Scripts\Game4\EffectChar.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\TroChoi\TaiXiuBan.cs" />
     <Compile Include="Assets\Scripts\Game6\ItemMap.cs" />
     <Compile Include="Assets\Scripts\Game1\CreateCharScr.cs" />
     <Compile Include="Assets\Scripts\Game4\ItemObject.cs" />
@@ -1535,14 +1565,6 @@
     </Reference>
     <Reference Include="UnityEngine.ClothModule">
       <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.ClothModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.ClusterInputModule">
-      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.ClusterInputModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.ClusterRendererModule">
-      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.ClusterRendererModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.ContentLoadModule">
@@ -1755,10 +1777,6 @@
     </Reference>
     <Reference Include="UnityEngine.VideoModule">
       <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.VideoModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.VirtualTexturingModule">
-      <HintPath>F:\2022.3.61f1\Editor\Data\Managed\UnityEngine\UnityEngine.VirtualTexturingModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.WindModule">

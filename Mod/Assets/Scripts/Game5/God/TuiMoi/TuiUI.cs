@@ -1028,6 +1028,7 @@ namespace Game5.God
             }
             chayDungNhieu();
             giuChoAn();
+            cuonHangThu();
         }
 
         /// <summary>Chỉ số ô ĐANG MẶC của món đang xem, hoặc -1.</summary>

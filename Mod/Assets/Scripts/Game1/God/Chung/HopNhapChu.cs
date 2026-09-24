@@ -303,16 +303,46 @@ namespace Game1.God
             return w;
         }
 
+        /// <summary>Số dòng của tiêu đề; ít nhất một dòng.</summary>
+        /// <remarks>
+        /// Tiêu đề có thể dài mấy dòng (chỗ gọi nối bằng ký tự xuống dòng).
+        /// Trước đây hộp vẽ nguyên chuỗi ở MỘT chỗ nên mấy dòng chồng lên nhau,
+        /// và đè cả xuống ô nhập.
+        /// </remarks>
+        private int soDongTieuDe()
+        {
+            if (string.IsNullOrEmpty(tieuDe))
+            {
+                return 1;
+            }
+            int n = 1;
+            for (int i = 0; i < tieuDe.Length; i++)
+            {
+                if (tieuDe[i] == '\n')
+                {
+                    n++;
+                }
+            }
+            return n;
+        }
+
+        /// <summary>Cao thêm so với hộp một dòng.</summary>
+        private int caoThemTieuDe()
+        {
+            return (soDongTieuDe() - 1) * 12;
+        }
+
         private int[] oKhung()
         {
             int w = rong();
             // Ban phim mem chiem gan nua duoi man hinh. Hop dat giua man hinh
             // thi nam ngay duoi no: nguoi choi khong thay minh dang go gi, ma
             // hai nut OK / Dong cung bi che not.
+            int h = CAO + caoThemTieuDe();
             int y = UnityEngine.TouchScreenKeyboard.visible
                     ? 20
-                    : (GameCanvas.h - CAO) / 2;
-            return new int[] { (GameCanvas.w - w) / 2, y, w, CAO };
+                    : (GameCanvas.h - h) / 2;
+            return new int[] { (GameCanvas.w - w) / 2, y, w, h };
         }
 
         private int[] oNut(bool ok)
@@ -322,7 +352,7 @@ namespace Game1.God
             int khe = 10;
             int x = h[0] + h[2] / 2 - (w * 2 + khe) / 2;
             return new int[] {
-                ok ? x : x + w + khe, h[1] + CAO - 32, w, 22 };
+                ok ? x : x + w + khe, h[1] + h[3] - 32, w, 22 };
         }
 
         // ------------------------------------------------------------------
@@ -430,15 +460,23 @@ namespace Game1.God
             veQuang(g, h[0], h[1], h[2], h[3], MAU_VANG, 0.7f, 3);
             veKhungKep(g, h[0], h[1], h[2], h[3], MAU_NEN);
 
-            mFont.tahoma_7b_dark.drawString(g, tieuDe,
-                    h[0] + h[2] / 2, h[1] + 8, mFont.CENTER);
+            // Tieu de: dong DAU dam, may dong sau la chu giai thich nen nho va
+            // nhat hon — mot khoi bon dong cung dam doc rat met.
+            string[] dongTd = tieuDe.Split('\n');
+            for (int i = 0; i < dongTd.Length; i++)
+            {
+                mFont ftd = (i == 0) ? mFont.tahoma_7b_dark : mFont.tahoma_7_grey;
+                ftd.drawString(g, dongTd[i], h[0] + h[2] / 2, h[1] + 8 + i * 12,
+                        mFont.CENTER);
+            }
 
-            // O chu, kem con tro nhay.
-            veTamChim(g, h[0] + 10, h[1] + 24, h[2] - 20, 24);
+            // O chu, kem con tro nhay. Day xuong duoi dong tieu de cuoi cung.
+            int yO = h[1] + 24 + caoThemTieuDe();
+            veTamChim(g, h[0] + 10, yO, h[2] - 20, 24);
             string hien = catVua(noiDung, h[2] - 30);
             bool nhay = (mSystem.currentTimeMillis() / 500) % 2 == 0;
             mFont.tahoma_7b_yellow.drawString(g, hien + (nhay ? "|" : ""),
-                    h[0] + 16, h[1] + 30, mFont.LEFT);
+                    h[0] + 16, yO + 6, mFont.LEFT);
 
             int[] ok = oNut(true);
             int[] dongNut = oNut(false);
