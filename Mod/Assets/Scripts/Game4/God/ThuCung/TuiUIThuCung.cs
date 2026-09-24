@@ -450,7 +450,9 @@ namespace Game4.God
                 }
                 veOThu(g, dsThuCung[i], o[0], o[1], o[2]);
             }
-            g.setClip(xTrai, yThan, rongTrai, caoThan);
+            // Tra lai ca man hinh: dat clip ve dung cot trai thi cot phai bi cat
+            // sach, ca the chi mat nua ben phai.
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
 
             // Hai nut lat hai dau dai.
             veNutLatThu(g, true, cuonThuDich > 0.5f);

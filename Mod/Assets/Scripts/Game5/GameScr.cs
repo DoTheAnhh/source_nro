@@ -7353,7 +7353,7 @@ namespace Game5
     		if (vai == 0)
     		{
     			// Da xong: dau tich, ve bang hai net cheo.
-    			g.setColor(0x4CD964, 1f);
+    			g.setColor(0x2E9E48, 1f);
     			for (int i = 0; i < 3; i++)
     			{
     				g.fillRect(tamX - 4 + i, tamY + i - 1, 2, 2);
@@ -7382,10 +7382,11 @@ namespace Game5
     			}
     			return;
     		}
-    		// Chua toi: vong tron rong, khong to ruot.
-    		g.setColor(0xFFFFFF, 0.5f);
+    		// Chua toi: vong tron rong. Vien nau, ruot mau nen — nguoc voi ban cu
+    		// (vien trang) vi nen gio la kem chu khong con toi.
+    		g.setColor(0x7A5524, 0.8f);
     		g.fillRect(tamX - 3, tamY - 3, 6, 6, 3);
-    		g.setColor(0x7A5524, 1f);
+    		g.setColor(MAU_NV_NEN, 1f);
     		g.fillRect(tamX - 2, tamY - 2, 4, 4, 2);
     	}
 
@@ -7605,7 +7606,7 @@ namespace Game5
     		int oTG = 9;
     		int xTG = xTab + 5;
     		int yTG = yTab + (hTab - oTG) / 2;
-    		g.setColor(MAU_NV_NEN, 0.9f);
+    		g.setColor(MAU_NV_VIEN, 0.9f);
     		g.fillRect(xTG, yTG, oTG, oTG, 2);
     		g.setColor(MAU_NV_NHAN, 1f);
     		g.fillRect(xTG + 2, yTG + (oTG - 1) / 2, oTG - 4, 1);
@@ -7625,7 +7626,7 @@ namespace Game5
     				// nhin nhu mot cai nut bam nham cho.
     				for (int b = 0; b < 3; b++)
     				{
-    					g.setColor(MAU_NV_NHAN, 0.26f - b * 0.07f);
+    					g.setColor(MAU_NV_DAM, 0.30f - b * 0.09f);
     					g.fillRect(x + 6 + b * ((wKhung - 12) / 3), yd - 1,
     							(wKhung - 12) / 3, CAO_DONG - 1, 3);
     				}
@@ -7639,13 +7640,15 @@ namespace Game5
     			switch (vai[i])
     			{
     			case 3:
-    				f = mFont.tahoma_7b_yellow;
+    				f = mFont.tahoma_7b_dark;
     				break;
     			case 0:
-    				f = mFont.tahoma_7b_green2;
+    				f = mFont.tahoma_7b_green;
     				break;
     			case 1:
-    				f = mFont.tahoma_7b_white;
+    				// Buoc dang lam cung la chu sam nhu ten nhiem vu; cai tach no
+    				// ra la vet cam chay sau lung va hinh thoi o dau dong.
+    				f = mFont.tahoma_7b_dark;
     				break;
     			default:
     				f = mFont.tahoma_7_grey;
@@ -7660,12 +7663,12 @@ namespace Game5
     			int wTd = wKhung - 16;
     			int xTd = x + 8;
     			int yTd = y + hKhung - 6;
-    			g.setColor(0x000000, 0.28f);
+    			g.setColor(0x000000, 0.16f);
     			g.fillRect(xTd, yTd, wTd, 3, 2);
     			int wDay = wTd * soXong / soBuoc;
     			if (wDay > 0)
     			{
-    				g.setColor(MAU_NV_NHAN, 0.95f);
+    				g.setColor(MAU_NV_DAM, 0.95f);
     				g.fillRect(xTd, yTd, wDay, 3, 2);
     			}
     		}
@@ -7701,18 +7704,26 @@ namespace Game5
     		g.fillRect(x + 1, y + 1, w - 2, h - 2, 6);
     	}
 
-    	/// <summary>Nền thẻ: nâu gỗ sáng, cùng họ với mấy bảng khác của game.</summary>
+    	/// <summary>Nền thẻ: kem, đúng màu nền của mấy bảng lớn trong game.</summary>
     	/// <remarks>
-    	/// Bản trước gần như đen (0x241A12): nổi thì có nổi, nhưng nó là mảng tối
-    	/// duy nhất trên màn hình sáng màu, nhìn như dán từ game khác sang.
+    	/// Hai bản trước đều tối (đen rồi nâu gỗ): nổi thì nổi, nhưng nó là mảng
+    	/// tối duy nhất giữa một giao diện toàn nền kem. Lấy luôn màu ấy thì bảng
+    	/// nhiệm vụ thành một phần của bộ, và chữ phải là chữ SẪM chứ không trắng.
     	/// </remarks>
-    	private const int MAU_NV_NEN = 0x6B4A2A;
+    	private const int MAU_NV_NEN = 0xFBEEDE;
 
-    	/// <summary>Viền thẻ và viền tab.</summary>
-    	private const int MAU_NV_VIEN = 0x3A2712;
+    	/// <summary>Viền thẻ và viền tab: nâu, cùng tông với viền mấy bảng kia.</summary>
+    	private const int MAU_NV_VIEN = 0x7A4A28;
 
-    	/// <summary>Màu nhấn: hổ phách, dùng cho tab, vệt sáng và thanh tiến độ.</summary>
+    	/// <summary>Màu nhấn: hổ phách, dùng cho tab.</summary>
     	private const int MAU_NV_NHAN = 0xFFC861;
+
+    	/// <summary>Màu nhấn đậm: cam đất, cho vệt sáng và thanh tiến độ.</summary>
+    	/// <remarks>
+    	/// Hổ phách nhạt nằm trên nền kem thì gần như mất hút; hai chỗ ấy cần màu
+    	/// tối hơn nền mới thấy.
+    	/// </remarks>
+    	private const int MAU_NV_DAM = 0xE07B1E;
 
 
     	/// <summary>Ô chân dung của người chơi ở góc trên bên trái.</summary>
