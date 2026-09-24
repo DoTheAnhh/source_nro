@@ -84,7 +84,7 @@ public class TheThangTab extends JPanel {
         setBackground(UiTheme.CARD);
         setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 
-        JLabel dau = new JLabel("<html>Thẻ tháng — bán trong màn <b>Phúc lợi</b> của game. Người chơi mua"
+        JLabel dau = new JLabel("<html>NRO Pass (thẻ tháng) — bán trong màn <b>Phúc lợi</b> của game. Người chơi mua"
                 + " một lần, được ưu đãi chỉ số suốt thời hạn và mỗi ngày vào nhận quà."
                 + " Sửa xong có hiệu lực ngay, không cần khởi động lại.</html>");
         dau.setForeground(UiTheme.TEXT_MUTED);
@@ -138,7 +138,7 @@ public class TheThangTab extends JPanel {
         JPanel p = new JPanel(new BorderLayout(0, 4));
         p.setBackground(UiTheme.CARD);
         p.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(UiTheme.LINE, 1, true), "Gói thẻ"));
+                BorderFactory.createLineBorder(UiTheme.LINE, 1, true), "Gói NRO Pass"));
         bangGoi.setRowHeight(24);
         bangGoi.getColumnModel().getColumn(3).setCellEditor(
                 new javax.swing.DefaultCellEditor(new JComboBox<>(TheThangDAO.CAC_LOAI_TIEN)));
@@ -187,7 +187,7 @@ public class TheThangTab extends JPanel {
             TheThangDAO.luuGoi(g);
         }
         napGoi();
-        bao("Đã lưu gói thẻ.");
+        bao("Đã lưu gói NRO Pass.");
     }
 
     // =====================================================================
@@ -294,7 +294,7 @@ public class TheThangTab extends JPanel {
         JPanel p = new JPanel(new BorderLayout(0, 4));
         p.setBackground(UiTheme.CARD);
         p.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(UiTheme.LINE, 1, true), "Người đang có thẻ"));
+                BorderFactory.createLineBorder(UiTheme.LINE, 1, true), "Người đang có NRO Pass"));
         bangNguoi.setRowHeight(22);
         p.add(ServerGuiUtils.cuon(bangNguoi), BorderLayout.CENTER);
 
@@ -305,7 +305,7 @@ public class TheThangTab extends JPanel {
         nut.add(chonBacTang);
         nut.add(fNgayTang);
         nut.add(new JLabel("ngày"));
-        JButton tang = new JButton("Tặng thẻ");
+        JButton tang = new JButton("Tặng NRO Pass");
         ServerGuiUtils.toNut(tang, UiTheme.OK);
         tang.addActionListener(e -> tangThe());
         nut.add(tang);
@@ -341,7 +341,7 @@ public class TheThangTab extends JPanel {
         }
         int bac = chonBacTang.getSelectedIndex() + 1;
         int chac = JOptionPane.showConfirmDialog(this, "Tặng " + ngay + " ngày "
-                + TheThangDAO.tenBac(bac) + " cho " + ten + "?", "Tặng thẻ",
+                + TheThangDAO.tenBac(bac) + " cho " + ten + "?", "Tặng NRO Pass",
                 JOptionPane.OK_CANCEL_OPTION);
         if (chac != JOptionPane.OK_OPTION) {
             return;

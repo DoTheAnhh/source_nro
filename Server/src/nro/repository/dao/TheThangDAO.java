@@ -184,8 +184,14 @@ public class TheThangDAO {
     private static void gieoGoc() throws Exception {
         ConnectDB.executeUpdate("INSERT IGNORE INTO the_thang_goi"
                 + " (bac, ten, gia, loai_tien, so_ngay, pt_hp, pt_ki, pt_sd, pt_tiem_nang, bat)"
-                + " VALUES (1, 'Thẻ tháng', 50000, 'vnd', 30, 7, 7, 7, 100, 1),"
-                + " (2, 'Thẻ tháng cao cấp', 100000, 'vnd', 30, 10, 10, 10, 150, 1)");
+                + " VALUES (1, 'NRO Pass', 50000, 'vnd', 30, 7, 7, 7, 100, 1),"
+                + " (2, 'NRO Pass cao cấp', 100000, 'vnd', 30, 10, 10, 10, 150, 1)");
+        // Doi ten hien thi sang "NRO Pass" — chi dong nao con dung ten mac
+        // dinh cu, ten quan tri da tu dat thi de yen.
+        ConnectDB.executeUpdate("UPDATE the_thang_goi SET ten = 'NRO Pass'"
+                + " WHERE bac = 1 AND ten = 'Thẻ tháng'");
+        ConnectDB.executeUpdate("UPDATE the_thang_goi SET ten = 'NRO Pass cao cấp'"
+                + " WHERE bac = 2 AND ten = 'Thẻ tháng cao cấp'");
         if (demDong("the_thang_qua") == 0) {
             // 457 = thoi vang. Quan tri doi tren panel.
             ConnectDB.executeUpdate("INSERT INTO the_thang_qua (bac, loai, item_id, so_luong)"
@@ -297,7 +303,7 @@ public class TheThangDAO {
     /** Tên bậc để ghi vào dòng giải thích chỉ số. */
     public static String tenBac(int bac) {
         Goi g = goi(bac);
-        return (g == null || g.ten.isEmpty()) ? ("Thẻ tháng bậc " + bac) : g.ten;
+        return (g == null || g.ten.isEmpty()) ? ("NRO Pass bậc " + bac) : g.ten;
     }
 
     // =====================================================================

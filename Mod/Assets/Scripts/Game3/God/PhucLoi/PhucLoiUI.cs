@@ -299,6 +299,12 @@ namespace Game3.God
             mFont.tahoma_7b_red.drawString(g, "PHÚC LỢI",
                     x0 + rong / 2, y0 + 4, mFont.CENTER);
             veNut(g, x0 + rong - 20, y0 + 4, 16, 14, "X", false);
+            int soCho = soMucChoNhan();
+            if (soCho > 0)
+            {
+                int[] nn = oNutNhanNhanh();
+                veNut(g, nn[0], nn[1], nn[2], nn[3], "Nhận nhanh (" + soCho + ")", true);
+            }
 
             if (soMuc() == 0)
             {
@@ -342,7 +348,7 @@ namespace Game3.God
                     // tren bang ban bang tien, phai nhin ra ngay.
                     veKhungBo(g, xTrai + 3, yy, RONG_TRAI - 6, CAO_MUC,
                             chon ? MAU_THE_CAO : MAU_THE_VANG, 1f, MAU_VIEN, 0.9f, 1);
-                    mFont.tahoma_7b_white.drawString(g, "THẺ THÁNG",
+                    mFont.tahoma_7b_white.drawString(g, "NRO PASS",
                             xTrai + RONG_TRAI / 2, yy + CAO_MUC / 2 - 5, mFont.CENTER);
                     if (coTheNhanHomNay())
                     {
@@ -364,6 +370,37 @@ namespace Game3.God
                 mFont.tahoma_7b_dark.drawString(g, catBot(nhom[i - lech].ten, 20),
                         xTrai + RONG_TRAI / 2, yy + CAO_MUC / 2 - 5, mFont.CENTER);
             }
+        }
+
+        /// <summary>
+        /// Số mục đang chờ nhận: quà NRO Pass hôm nay cộng mọi mốc đã đủ.
+        /// </summary>
+        private int soMucChoNhan()
+        {
+            int n = coTheNhanHomNay() ? 1 : 0;
+            foreach (Nhom nh in nhom)
+            {
+                foreach (Moc m in nh.moc)
+                {
+                    if (m.trangThai == 1)
+                    {
+                        n++;
+                    }
+                }
+            }
+            return n;
+        }
+
+        /// <summary>Nút "Nhận nhanh" ở góc trái dải tiêu đề.</summary>
+        /// <remarks>
+        /// Chỉ hiện khi có gì để nhận: nút bấm vào mà không ra gì thì người chơi
+        /// thôi tin nó.
+        /// </remarks>
+        private int[] oNutNhanNhanh()
+        {
+            string chu = "Nhận nhanh (" + soMucChoNhan() + ")";
+            int w = mFont.tahoma_7b_dark.getWidth(chu) + 16;
+            return new int[] { x0 + 6, y0 + 3, w, 16 };
         }
 
         /// <summary>Đang có thẻ mà hôm nay chưa nhận quà.</summary>
@@ -425,7 +462,7 @@ namespace Game3.God
             g.setColor(MAU_THE, 0.9f);
             g.fillRect(xPhai, yThan, rongPhai, 18, 6);
             GoiThe dung = goiDangDung();
-            string trangThai = dung == null ? "Chưa có thẻ tháng"
+            string trangThai = dung == null ? "Chưa có NRO Pass"
                     : (dung.ten + " · còn " + t.soNgayCon + " ngày");
             mFont.tahoma_7b_red.drawString(g, trangThai, xPhai + 8, yThan + 4, mFont.LEFT);
             if (!string.IsNullOrEmpty(t.soDu))
@@ -497,7 +534,7 @@ namespace Game3.God
             if (khacBac)
             {
                 veKhungBo(g, n[0], n[1], n[2], n[3], MAU_THE_MO, 0.8f, MAU_VIEN, 0.4f, 1);
-                mFont.tahoma_7_grey.drawString(g, "Đang dùng thẻ khác", n[0] + n[2] / 2,
+                mFont.tahoma_7_grey.drawString(g, "Đang dùng gói khác", n[0] + n[2] / 2,
                         n[1] + n[3] / 2 - 5, mFont.CENTER);
             }
             else
@@ -567,7 +604,7 @@ namespace Game3.God
             if (dung == null)
             {
                 mFont.tahoma_7b_dark.drawString(g,
-                        "Mua thẻ để nhận quà mỗi ngày và ưu đãi chỉ số suốt thời hạn",
+                        "Mua NRO Pass để nhận quà mỗi ngày và ưu đãi chỉ số suốt thời hạn",
                         xPhai + rongPhai / 2, y + CAO_DAI_NHAN / 2 - 5, mFont.CENTER);
                 return;
             }
@@ -916,6 +953,15 @@ namespace Game3.God
             {
                 dong();
                 return true;
+            }
+            if (soMucChoNhan() > 0)
+            {
+                int[] nn = oNutNhanNhanh();
+                if (cham(nn[0], nn[1], nn[2], nn[3]))
+                {
+                    Service.gI().phucLoiNhanNhanh();
+                    return true;
+                }
             }
             if (soMuc() == 0)
             {

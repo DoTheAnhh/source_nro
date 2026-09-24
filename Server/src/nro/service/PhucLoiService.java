@@ -183,11 +183,68 @@ public class PhucLoiService {
                 TheThangService.gI().nhanNgay(pl);
                 return;
             }
+            if (viec == VIEC_NHAN_NHANH) {
+                nhanNhanh(pl);
+                return;
+            }
             int mocId = msg.reader().readInt();
             nhanTheoId(pl, mocId);
         } catch (Exception ex) {
             Logger.logException(PhucLoiService.class, ex, "Lỗi nhận gói phúc lợi");
         }
+    }
+
+    /** Việc 4: nhận nhanh mọi thứ đang nhận được. */
+    public static final byte VIEC_NHAN_NHANH = 4;
+
+    /**
+     * Nhận nhanh: quà NRO Pass hôm nay và mọi mốc đã đủ, trong một lần bấm.
+     *
+     * <p>Đi qua đúng các hàm nhận lẻ (cùng kiểm hành trang, cùng ghi cờ
+     * đã-nhận trước khi phát), chỉ khác là gộp gói: nhận hai chục mốc một lúc
+     * mà mỗi mốc bắn một gói hành trang thì client ngập. Hết chỗ giữa chừng
+     * thì dừng ở đó, nói rõ còn bao nhiêu mục chưa nhận.</p>
+     */
+    private void nhanNhanh(Player pl) {
+        int duoc = 0;
+        int conLai = 0;
+        Service.gI().batGomGoi(pl);
+        try {
+            if (TheThangService.gI().coTheNhanHomNay(pl)) {
+                if (TheThangService.gI().nhanNgay(pl, false)) {
+                    duoc++;
+                } else {
+                    conLai++;
+                }
+            }
+            for (PhucLoiDAO.Nhom n : PhucLoiDAO.dsNhom(true)) {
+                long cua = tienDo(pl, n.loai);
+                for (PhucLoiDAO.Moc m : PhucLoiDAO.dsMoc(n.id, true)) {
+                    if (cua < m.moc || PhucLoiDAO.daNhan(pl.id, m.id, n.loai)) {
+                        continue;
+                    }
+                    if (PhucLoiDAO.dsQua(m.id).isEmpty()) {
+                        continue;
+                    }
+                    if (nhanMoc(pl, m, n)) {
+                        duoc++;
+                    } else {
+                        conLai++;
+                    }
+                }
+            }
+        } finally {
+            Service.gI().xaGomGoi(pl);
+        }
+        if (duoc == 0 && conLai == 0) {
+            Service.gI().sendThongBao(pl, "Không có quà nào đang chờ nhận.");
+        } else if (conLai == 0) {
+            Service.gI().sendThongBao(pl, "Đã nhận nhanh " + duoc + " mục quà.");
+        } else {
+            Service.gI().sendThongBao(pl, "Đã nhận " + duoc + " mục, còn " + conLai
+                    + " mục chưa nhận được (hành trang đầy?).");
+        }
+        guiDuLieu(pl);
     }
 
     /** Nhận quà của một mốc theo id, rồi gửi lại dữ liệu để client vẽ lại. */
@@ -211,34 +268,34 @@ public class PhucLoiService {
      * chừng thì người chơi mất quà một lần, còn ghi sau mà lỗi thì họ nhận được
      * vô hạn.</p>
      */
-    private void nhanMoc(Player pl, PhucLoiDAO.Moc m, PhucLoiDAO.Nhom nhom) {
+    private boolean nhanMoc(Player pl, PhucLoiDAO.Moc m, PhucLoiDAO.Nhom nhom) {
         if (nhom == null) {
-            return;
+            return false;
         }
         long cua = tienDo(pl, nhom.loai);
         if (cua < m.moc) {
             Service.gI().sendThongBao(pl, "Chưa đủ mốc — còn thiếu "
                     + Util.format(m.moc - cua));
-            return;
+            return false;
         }
         if (PhucLoiDAO.daNhan(pl.id, m.id, nhom.loai)) {
             Service.gI().sendThongBao(pl, "Mốc này đã nhận rồi.");
-            return;
+            return false;
         }
         List<PhucLoiDAO.Qua> qua = PhucLoiDAO.dsQua(m.id);
         if (qua.isEmpty()) {
             Service.gI().sendThongBao(pl, "Mốc này chưa gắn quà nào.");
-            return;
+            return false;
         }
         if (soO(pl) < qua.size()) {
             Service.gI().sendThongBao(pl, "Hành trang cần trống "
                     + qua.size() + " ô.");
-            return;
+            return false;
         }
         if (!PhucLoiDAO.ghiDaNhan(pl.id, m.id, nhom.loai)) {
             // Khoa chinh chan trung -> co nguoi vua nhan xong trong tich tac.
             Service.gI().sendThongBao(pl, "Mốc này đã nhận rồi.");
-            return;
+            return false;
         }
         StringBuilder tom = new StringBuilder();
         for (PhucLoiDAO.Qua q : qua) {
@@ -260,6 +317,7 @@ public class PhucLoiService {
             }
         }
         InventoryService.gI().sendItemBag(pl);
+        return true;
     }
 
     /** Nhóm theo id, hoặc null. */

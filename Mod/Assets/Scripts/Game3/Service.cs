@@ -2079,6 +2079,29 @@ namespace Game3
     		}
     	}
 
+    	/// <summary>Nhan nhanh: qua NRO Pass hom nay va moi moc da du, mot lan bam.</summary>
+    	public void phucLoiNhanNhanh()
+    	{
+    		Message message = null;
+    		try
+    		{
+    			message = new Message((sbyte)(-58));
+    			message.writer().writeByte(4);
+    			session.sendMessage(message);
+    		}
+    		catch (Exception)
+    		{
+    			// Mat ket noi -> bo qua, nguoi choi bam lai.
+    		}
+    		finally
+    		{
+    			if (message != null)
+    			{
+    				message.cleanup();
+    			}
+    		}
+    	}
+
     	/// <summary>Nhan qua the thang hom nay.</summary>
     	public void phucLoiNhanThe()
     	{

@@ -75,7 +75,7 @@ public class TheThangService {
                 pl.LASTTIME_THE_THANG = t.hetHan;
             }
         } catch (Exception ex) {
-            Logger.logException(TheThangService.class, ex, "Không nạp được thẻ tháng");
+            Logger.logException(TheThangService.class, ex, "Không nạp được NRO Pass");
         }
     }
 
@@ -99,7 +99,7 @@ public class TheThangService {
         synchronized (pl) {
             TheThangDAO.Goi g = TheThangDAO.goi(bac);
             if (g == null || !g.bat) {
-                Service.gI().sendThongBao(pl, "Gói thẻ này hiện không bán.");
+                Service.gI().sendThongBao(pl, "Gói NRO Pass này hiện không bán.");
                 return;
             }
             boolean conHan = conHan(pl);
@@ -123,7 +123,7 @@ public class TheThangService {
             pl.THE_THANG = bac;
             pl.LASTTIME_THE_THANG = hetHan;
             if (!TheThangDAO.datThe(pl.id, bac, hetHan, true)) {
-                Logger.error("THẺ THÁNG: đã trừ tiền nhưng KHÔNG ghi được bảng cho "
+                Logger.error("NRO PASS: đã trừ tiền nhưng KHÔNG ghi được bảng cho "
                         + pl.name + " (id " + pl.id + "), bậc " + bac + ", hết hạn " + hetHan + "\n");
             }
             phatQua(pl, qua);
@@ -177,7 +177,7 @@ public class TheThangService {
             pl.nPoint.calPoint();
             Service.gI().point(pl);
         } catch (Exception ex) {
-            Logger.logException(TheThangService.class, ex, "Không tính lại được chỉ số sau thẻ tháng");
+            Logger.logException(TheThangService.class, ex, "Không tính lại được chỉ số sau NRO Pass");
         }
     }
 
@@ -193,36 +193,54 @@ public class TheThangService {
      * lượt.</p>
      */
     public void nhanNgay(Player pl) {
+        nhanNgay(pl, true);
+    }
+
+    /** Hôm nay còn quà NRO Pass chưa nhận không. */
+    public boolean coTheNhanHomNay(Player pl) {
+        return conHan(pl) && !TheThangDAO.dsQua(pl.THE_THANG, TheThangDAO.QUA_NGAY).isEmpty()
+                && !TheThangDAO.daNhan(pl.id, PhucLoiDAO.ngayHomNay());
+    }
+
+    /**
+     * @param guiLai gửi lại dữ liệu màn Phúc lợi sau khi nhận; nhận nhanh tự
+     *               gửi một lần ở cuối nên truyền {@code false}
+     * @return {@code true} nếu đã phát quà
+     */
+    public boolean nhanNgay(Player pl, boolean guiLai) {
         if (pl == null || !pl.isPl()) {
-            return;
+            return false;
         }
         synchronized (pl) {
             if (!conHan(pl)) {
-                Service.gI().sendThongBao(pl, "Bạn chưa có thẻ tháng, hoặc thẻ đã hết hạn.");
-                return;
+                Service.gI().sendThongBao(pl, "Bạn chưa có NRO Pass, hoặc NRO Pass đã hết hạn.");
+                return false;
             }
             List<TheThangDAO.Qua> qua = TheThangDAO.dsQua(pl.THE_THANG, TheThangDAO.QUA_NGAY);
             if (qua.isEmpty()) {
-                Service.gI().sendThongBao(pl, "Gói thẻ này chưa gắn quà mỗi ngày.");
-                return;
+                Service.gI().sendThongBao(pl, "Gói NRO Pass này chưa gắn quà mỗi ngày.");
+                return false;
             }
             if (InventoryService.gI().getCountEmptyBag(pl) < qua.size()) {
                 Service.gI().sendThongBao(pl, "Hành trang cần trống " + qua.size() + " ô.");
-                return;
+                return false;
             }
             int ngay = PhucLoiDAO.ngayHomNay();
             if (!TheThangDAO.ghiNhan(pl.id, ngay)) {
-                Service.gI().sendThongBao(pl, "Hôm nay bạn đã nhận quà thẻ tháng rồi.");
-                return;
+                Service.gI().sendThongBao(pl, "Hôm nay bạn đã nhận quà NRO Pass rồi.");
+                return false;
             }
             if (phatQua(pl, qua) == 0) {
                 TheThangDAO.boNhan(pl.id, ngay);
                 Service.gI().sendThongBao(pl, "Không phát được quà, thử lại sau.");
-                return;
+                return false;
             }
-            Service.gI().sendThongBao(pl, "Đã nhận quà thẻ tháng hôm nay. Còn "
+            Service.gI().sendThongBao(pl, "Đã nhận quà NRO Pass hôm nay. Còn "
                     + soNgayCon(pl) + " ngày.");
-            PhucLoiService.gI().guiDuLieu(pl);
+            if (guiLai) {
+                PhucLoiService.gI().guiDuLieu(pl);
+            }
+            return true;
         }
     }
 
@@ -240,7 +258,7 @@ public class TheThangService {
                 InventoryService.gI().addItemBag(pl, it);
                 duoc++;
             } catch (Exception ex) {
-                Logger.logException(TheThangService.class, ex, "Lỗi phát quà thẻ tháng item " + q.itemId);
+                Logger.logException(TheThangService.class, ex, "Lỗi phát quà NRO Pass item " + q.itemId);
             }
         }
         if (duoc > 0) {
