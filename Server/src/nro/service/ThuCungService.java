@@ -189,6 +189,24 @@ public class ThuCungService {
     // =====================================================================
     private static final int DAI_TEN_TOI_DA = 16;
 
+    /**
+     * Tên thú chỉ cấm ký tự đặc biệt: chữ hoa, chữ thường, chữ có dấu, chữ số
+     * và dấu cách đều cho qua.
+     *
+     * Không dùng Util.haveSpecialCharacter được: hàm ấy viết cho tên tài khoản
+     * nên nó chặn cả dấu tiếng Việt lẫn dấu cách. isLetterOrDigit đọc theo
+     * bảng Unicode nên "Sư Tử Lửa 2" qua được, còn "abc@#" thì không.
+     */
+    private boolean tenHopLe(String ten) {
+        for (int i = 0; i < ten.length(); i++) {
+            char c = ten.charAt(i);
+            if (c != ' ' && !Character.isLetterOrDigit(c)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public void doiTen(Player pl, int id, String ten) {
         if (pl == null || ten == null) {
             return;
@@ -202,7 +220,7 @@ public class ThuCungService {
         if (sach.length() > DAI_TEN_TOI_DA) {
             sach = sach.substring(0, DAI_TEN_TOI_DA);
         }
-        if (Util.haveSpecialCharacter(sach)) {
+        if (!tenHopLe(sach)) {
             Service.gI().sendThongBao(pl, "Tên không được chứa ký tự đặc biệt");
             return;
         }

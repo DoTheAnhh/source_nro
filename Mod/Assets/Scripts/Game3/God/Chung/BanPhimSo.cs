@@ -101,7 +101,9 @@ namespace Game3.God
         {
             g.setColor(MAU_VANG, 0.85f);
             g.fillRect(x, y, w, h, 5);
-            g.setColor(0x000000, 0.42f);
+            // Ruot toi han de chu trang noi bat: 0.42 con ra mau nau bun, chu
+            // dat tren do doc khong ro.
+            g.setColor(0x000000, 0.55f);
             g.fillRect(x + 1, y + 1, w - 2, h - 2, 4);
         }
 
@@ -227,7 +229,7 @@ namespace Game3.God
 
             // O hien so dang go.
             veTamChim(g, h[0] + 10, h[1] + 24, h[2] - 20, 22);
-            mFont.tahoma_7b_yellow.drawString(g,
+            mFont.tahoma_7b_white.drawString(g,
                     soDangGo.Length == 0 ? "0" : soDangGo,
                     h[0] + h[2] / 2, h[1] + 29, mFont.CENTER);
 

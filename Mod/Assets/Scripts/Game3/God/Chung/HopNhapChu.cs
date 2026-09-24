@@ -125,7 +125,9 @@ namespace Game3.God
         {
             g.setColor(MAU_VANG, 0.85f);
             g.fillRect(x, y, w, h, 5);
-            g.setColor(0x000000, 0.42f);
+            // Ruot toi han de chu trang noi bat: 0.42 con ra mau nau bun, chu
+            // dat tren do doc khong ro.
+            g.setColor(0x000000, 0.55f);
             g.fillRect(x + 1, y + 1, w - 2, h - 2, 4);
         }
 
@@ -475,7 +477,9 @@ namespace Game3.God
             veTamChim(g, h[0] + 10, yO, h[2] - 20, 24);
             string hien = catVua(noiDung, h[2] - 30);
             bool nhay = (mSystem.currentTimeMillis() / 500) % 2 == 0;
-            mFont.tahoma_7b_yellow.drawString(g, hien + (nhay ? "|" : ""),
+            // Chu go vao phai SANG han moi thu trong hop: o nhap la cho mat
+            // nhin vao nhieu nhat, chu vang nho tren nen nau chim lai qua.
+            mFont.tahoma_7b_white.drawString(g, hien + (nhay ? "|" : ""),
                     h[0] + 16, yO + 6, mFont.LEFT);
 
             int[] ok = oNut(true);
@@ -496,7 +500,7 @@ namespace Game3.God
                 return "";
             }
             while (s.Length > 0
-                    && mFont.tahoma_7b_yellow.getWidth(s + "|") > rongToiDa)
+                    && mFont.tahoma_7b_white.getWidth(s + "|") > rongToiDa)
             {
                 s = s.Substring(1);
             }
