@@ -58,8 +58,46 @@ public class ThuCungTab extends JPanel {
         trong.addTab("2. Đồ ăn", theDoAn());
         trong.addTab("3. Cấu hình", theCauHinh());
         add(trong, BorderLayout.CENTER);
+        // KHONG nap bang ngay trong ham dung.
+        //
+        // Cua so panel dung xong TRUOC khi may chu nap bang vat pham, nen tra
+        // ten mon o day la doc mot danh sach con rong — truoc day cho nay lam
+        // ca may chu chet ngay o main. Nap khi tab that su duoc mo ra.
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                napLai();
+            }
+        });
+    }
+
+    /** Đã nạp bảng lần nào chưa. */
+    private boolean daNap;
+
+    /** Đọc lại cả ba bảng; gọi khi mở tab và khi bấm nút Tải lại. */
+    private void napLai() {
+        if (Manager.ITEM_TEMPLATES.isEmpty()) {
+            // Chua nap xong bang vat pham: de nguyen, lan ve sau thu lai.
+            return;
+        }
+        daNap = true;
         napThu();
         napDoAn();
+    }
+
+    /**
+     * Nạp muộn ở lần vẽ đầu tiên.
+     *
+     * <p>Chỗ dựa chính là {@code componentShown}, nhưng tab lồng trong tab thì
+     * sự kiện ấy không phải lúc nào cũng tới. Vẽ thì chắc chắn có, nên kiểm
+     * thêm ở đây — một lần, không tốn gì.</p>
+     */
+    @Override
+    protected void paintComponent(java.awt.Graphics g) {
+        super.paintComponent(g);
+        if (!daNap) {
+            napLai();
+        }
     }
 
     // =====================================================================

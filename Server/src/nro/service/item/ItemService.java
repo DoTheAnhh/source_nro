@@ -418,7 +418,19 @@ public class ItemService {
         return Manager.ITEM_OPTION_TEMPLATES.get(id);
     }
 
+    /**
+     * Mẫu vật phẩm theo id, hoặc {@code null} nếu không có.
+     *
+     * <p>Kiểm biên thay vì để {@code List.get} ném: bảng vật phẩm nạp <b>sau</b>
+     * khi cửa sổ panel dựng xong, nên một tab lỡ tra id lúc khởi động là cả máy
+     * chủ chết ngay ở {@code main} — đúng lỗi đã gặp với tab Thú cưng. Trả
+     * {@code null} thì chỗ gọi tự xử, và những chỗ gọi sẵn có đều đã kiểm
+     * {@code null}.</p>
+     */
     public ItemTemplate getTemplate(int id) {
+        if (id < 0 || id >= Manager.ITEM_TEMPLATES.size()) {
+            return null;
+        }
         return Manager.ITEM_TEMPLATES.get(id);
     }
 
