@@ -7441,9 +7441,16 @@ namespace Game1
     	/// thì mỗi lần máy chủ đẩy tiến độ mới lại phải nhớ cập nhật cả hai chỗ,
     	/// và quên một chỗ thì hai bảng nói hai điều khác nhau.</para>
     	///
-    	/// <para>Bước <b>đang làm</b> tô vàng và có số đếm; bước đã qua tô xám;
-    	/// bước chưa tới để trắng mờ. Không tô gì thì cả danh sách trông như nhau
-    	/// và người chơi phải tự đoán mình đang ở đâu.</para>
+    	/// <para><b>Hình dáng</b>: một thẻ nền tối trong mờ để bản đồ phía sau còn
+    	/// thấy được, nhãn "Nhiệm vụ" là một tab nhỏ gác lên mép trên, và một
+    	/// thanh tiến độ mảnh chạy dọc đáy thẻ. Bỏ hẳn dải tiêu đề nâu chiếm nguyên
+    	/// một hàng của bản cũ: nó to bằng cả một bước nhiệm vụ mà chẳng nói thêm
+    	/// điều gì.</para>
+    	///
+    	/// <para>Bước đã xong mang <b>dấu tích xanh</b>; bước đang làm có chấm hổ
+    	/// phách và một vệt sáng chạy sau chữ; bước chưa tới chỉ còn một vòng mờ.
+    	/// Ba trạng thái khác nhau cả hình lẫn màu nên liếc qua là biết đang ở
+    	/// đâu.</para>
     	///
     	/// <para>Xin chỗ qua <see cref="xinChoCotTrai"/> nên nó tự nằm dưới bảng
     	/// tên bản đồ, và mọi thứ phía dưới tự tụt xuống theo chiều cao thật của
@@ -7459,20 +7466,15 @@ namespace Game1
     		}
     		Task t = c.taskMaint;
 
-    		// Thu gon = thu HAN ve mot o vuong nho, khong giu lai dai tieu de.
-    		//
-    		// Ban truoc van ve nguyen dai "Nhiem vu" rong 187 diem — thu gon ma
-    		// gan nhu khong doi lai duoc bao nhieu cho, dung y bam nut la de lay
-    		// lai cho.
     		if (thuGonNhiemVu)
     		{
-    			int oc = 20;
+    			// Thu gon = mot the vuong nho mang dau cong, dat dung cho tab
+    			// nhan cua the day du, nen bam mo lai khong phai dua mat di dau.
+    			int oc = 18;
     			int xc = LE_COT_TRAI;
     			int ycc = xinChoCotTrai(oc + 4);
-    			veNenBangHud(g, xc, ycc, oc, oc);
-    			// Net day 2 diem va lui nua do day, khong thi dau cong lech mot
-    			// diem ve mot ben tren o co canh chan.
-    			g.setColor(0xFFE9A3, 1f);
+    			veTheNhiemVu(g, xc, ycc, oc, oc);
+    			g.setColor(MAU_NV_NHAN, 1f);
     			g.fillRect(xc + 5, ycc + (oc - 2) / 2, oc - 10, 2);
     			g.fillRect(xc + (oc - 2) / 2, ycc + 5, 2, oc - 10);
     			oThuGonNhiemVu = new int[] { xc, ycc, oc, oc };
@@ -7505,13 +7507,11 @@ namespace Game1
     				{
     					continue;
     				}
-    				// Khong con "- " dat truoc: dau hieu tinh trang duoc VE
-    				// (xem veDauBuoc) nen mot gach ngang o day thanh thua.
     				string s = t.subNames[i];
     				if (i == t.index && t.counts != null && i < t.counts.Length
     						&& t.counts[i] > 1)
     				{
-    					s += " (" + t.count + "/" + t.counts[i] + ")";
+    					s += "  " + t.count + "/" + t.counts[i];
     				}
     				buoc.Add(s);
     				// 0 = da xong, 1 = dang lam, 2 = chua toi.
@@ -7520,8 +7520,7 @@ namespace Game1
     		}
 
     		int wKhung = RONG_BANG_NV;
-    		int wChu = wKhung - 14;
-    		// Ngat dong TRUOC khi do chieu cao, va ngat theo be rong that cua khung.
+    		int wChu = wKhung - 30;
     		System.Collections.Generic.List<string> dong =
     				new System.Collections.Generic.List<string>();
     		System.Collections.Generic.List<int> vai =
@@ -7532,7 +7531,7 @@ namespace Game1
     				new System.Collections.Generic.List<bool>();
     		for (int i = 0; i < ten.Count; i++)
     		{
-    			string[] a = mFont.tahoma_7b_yellow.splitFontArray(ten[i], wChu);
+    			string[] a = mFont.tahoma_7b_yellow.splitFontArray(ten[i], wKhung - 18);
     			for (int j = 0; j < a.Length; j++)
     			{
     				dong.Add(a[j]);
@@ -7540,11 +7539,9 @@ namespace Game1
     				dauDong.Add(false);
     			}
     		}
-    		// Buoc thut vao cho dau hieu, nen be rong chu con lai hep hon. Ngat
-    		// theo dung be rong that, khong thi dong cuoi tho ra ngoai vien.
     		for (int i = 0; i < buoc.Count; i++)
     		{
-    			string[] a = mFont.tahoma_7.splitFontArray(buoc[i], wChu - 10);
+    			string[] a = mFont.tahoma_7.splitFontArray(buoc[i], wChu);
     			for (int j = 0; j < a.Length; j++)
     			{
     				dong.Add(a[j]);
@@ -7557,27 +7554,17 @@ namespace Game1
     			return;
     		}
 
-    		// Dem buoc de de tieu de: tong so buoc va dang o buoc thu may.
+    		// Bao nhieu buoc da xong — de do thanh tien do duoi day the.
     		int soBuoc = vaiBuoc.Count;
-    		int buocDangLam = 0;
+    		int soXong = 0;
     		for (int i = 0; i < vaiBuoc.Count; i++)
     		{
-    			if (vaiBuoc[i] <= 1)
+    			if (vaiBuoc[i] == 0)
     			{
-    				buocDangLam = i + 1;
+    				soXong++;
     			}
     		}
-    		if (buocDangLam < 1 && soBuoc > 0)
-    		{
-    			buocDangLam = 1;
-    		}
 
-    		int CAO_TD = 15;
-    		// Chi hien toi da SO_DONG_NV dong, phan con lai cuon.
-    		//
-    		// Nhiem vu dai muoi may buoc thi bang cao gan het canh trai man hinh,
-    		// che mat ban do. Cat bot va cho cuon thi van doc duoc het ma khong
-    		// chiem cho.
     		int soThay = dong.Count;
     		if (soThay > SO_DONG_NV)
     		{
@@ -7591,110 +7578,106 @@ namespace Game1
     		{
     			cuonNhiemVu = 0;
     		}
-    		int hKhung = CAO_TD + 4 + soThay * 12 + 6;
-    		int x = LE_COT_TRAI;
-    		int y = xinChoCotTrai(hKhung + 4);
 
-    		veNenBangHud(g, x, y, wKhung, hKhung);
+    		int CAO_DONG = 13;
+    		int LE_TREN = 13;
+    		int LE_DUOI = 9;
+    		int hKhung = LE_TREN + soThay * CAO_DONG + LE_DUOI;
+    		int x = LE_COT_TRAI;
+    		int y = xinChoCotTrai(hKhung + 10);
+
+    		veTheNhiemVu(g, x, y, wKhung, hKhung);
     		oBangNhiemVu = new int[] { x, y, wKhung, hKhung };
 
-    		// Dai tieu de: mot vach vang nhat cho phan dau tach khoi noi dung.
-    		// Dai tieu de chuyen mau, ke tung dong nhu nen bang — mot mau phang o
-    		// day nhin tach han ra khoi phan than da co do chuyen.
-    		// Dai tieu de chi cao 13 diem ma ban kinh bo goc la 6 — KHONG con dai
-    		// giua nao de ke tung dong ma khong cham goc. Ke nhu nen bang thi
-    		// nhung dong o tren cung va duoi cung de VUONG len dung bon goc tron,
-    		// dung canh "bo vien mau dang sai".
-    		//
-    		// Voi dai thap the nay, hai hinh bo goc chong len nhau la du: sang o
-    		// tren, dam o duoi, goc van tron tuyet doi.
-    		int hTD = CAO_TD - 2;
-    		g.setColor(0xFFE3A6, 1f);
-    		g.fillRect(x + 3, y + 3, wKhung - 6, hTD, 6);
-    		g.setColor(0xE8B457, 1f);
-    		g.fillRect(x + 3, y + 3 + hTD / 2, wKhung - 6, hTD - hTD / 2, 6);
-    		// Tieu de CAN TRAI, ngay sau dau thu gon; mep phai de danh cho so
-    		// buoc. Can giua thi chu bi dau thu gon day lech, nhin nhu dat nham.
-    		mFont.tahoma_7b_dark.drawString(g, "Nhiệm vụ", x + 20, y + 3, mFont.LEFT);
-    		if (soBuoc > 0)
-    		{
-    			mFont.tahoma_7_grey.drawString(g, "Bước " + buocDangLam + "/" + soBuoc,
-    					x + wKhung - 7, y + 3, mFont.RIGHT);
-    		}
+    		// Tab nhan gac len mep tren the.
+    		string nhan = "Nhiệm vụ";
+    		int wTab = mFont.tahoma_7b_dark.getWidth(nhan) + 30;
+    		int hTab = 13;
+    		int xTab = x + 8;
+    		int yTab = y - hTab / 2;
+    		g.setColor(MAU_NV_VIEN, 1f);
+    		g.fillRect(xTab - 1, yTab - 1, wTab + 2, hTab + 2, 4);
+    		g.setColor(MAU_NV_NHAN, 1f);
+    		g.fillRect(xTab, yTab, wTab, hTab, 4);
 
-    		// Dau thu gon o goc phai dai tieu de.
-    		//
-    		// Ghi lai vung bam NGAY TAI CHO VE: phan bat cham doc lai o nay nen
-    		// hai ben khong the lech nhau. Dat so rieng o phan cham la doi mot
-    		// ben thi ben kia sai am tham.
-    		// Dau thu gon dat BEN TRAI dai tieu de.
-    		//
-    		// Ben phai la cho mat nhin luot qua cuoi cung; dat nut o do thi phai
-    		// ra tan mep bang moi bam duoc. Ben trai nam ngay tren duong doc voi
-    		// bang ten ban do va o chan dung phia tren, tay di thang mot mach.
-    		int oTG = CAO_TD - 6;
-    		int xTG = x + 6;
-    		int yTG = y + 5;
-    		g.setColor(0x3B2712, 0.85f);
-    		g.fillRect(xTG, yTG, oTG, oTG, 3);
-    		g.setColor(0xFFE9A3, 1f);
-    		g.fillRect(xTG + 2, yTG + (oTG - 2) / 2, oTG - 4, 2);
-    		oThuGonNhiemVu = new int[] { xTG, yTG, oTG, oTG };
+    		// Dau thu gon nam TRONG tab, ben trai chu.
+    		int oTG = 9;
+    		int xTG = xTab + 5;
+    		int yTG = yTab + (hTab - oTG) / 2;
+    		g.setColor(MAU_NV_NEN, 0.9f);
+    		g.fillRect(xTG, yTG, oTG, oTG, 2);
+    		g.setColor(MAU_NV_NHAN, 1f);
+    		g.fillRect(xTG + 2, yTG + (oTG - 1) / 2, oTG - 4, 1);
+    		oThuGonNhiemVu = new int[] { xTG - 2, yTG - 2, oTG + 4, oTG + 4 };
 
-    		int yc = y + CAO_TD + 4;
+    		mFont.tahoma_7b_dark.drawString(g, nhan, xTG + oTG + 4, yTab, mFont.LEFT);
+
+    		int yc = y + LE_TREN;
     		for (int k = 0; k < soThay; k++)
     		{
     			int i = k + cuonNhiemVu;
+    			int yd = yc + k * CAO_DONG;
+    			if (vai[i] == 1)
+    			{
+    				// Vet sang chay sau chu cua buoc dang lam: dam o dau, nhat
+    				// dan ve cuoi, khong co vien — mot dai vien ro net o day
+    				// nhin nhu mot cai nut bam nham cho.
+    				for (int b = 0; b < 3; b++)
+    				{
+    					g.setColor(MAU_NV_NHAN, 0.16f - b * 0.05f);
+    					g.fillRect(x + 6 + b * ((wKhung - 12) / 3), yd - 1,
+    							(wKhung - 12) / 3, CAO_DONG - 1, 3);
+    				}
+    			}
+    			int xChu = (vai[i] == 3) ? (x + 8) : (x + 22);
+    			if (vai[i] != 3 && i < dauDong.Count && dauDong[i])
+    			{
+    				veDauBuoc(g, x + 13, yd + 5, vai[i]);
+    			}
     			mFont f;
     			switch (vai[i])
     			{
     			case 3:
-    				// Ten nhiem vu.
     				f = mFont.tahoma_7b_yellow;
     				break;
     			case 0:
-    				// Da xong -> xanh la.
     				f = mFont.tahoma_7b_green2;
     				break;
     			case 1:
-    				// Dang lam -> vang dam. Do tuoi tren nen nau doc chi mat, ma
-    				// da co dai nen va vach nhan lam dau roi.
-    				f = mFont.tahoma_7b_yellow;
+    				f = mFont.tahoma_7b_white;
     				break;
     			default:
-    				// Chua toi -> trang.
-    				f = mFont.tahoma_7_white;
+    				f = mFont.tahoma_7_grey;
     				break;
     			}
-    			int xChu = (vai[i] == 3) ? (x + 7) : (x + 17);
-    			if (vai[i] == 1)
-    			{
-    				// Buoc dang lam: mot dai nen mo va vach vang sat mep trai.
-    				// Chi to chu thoi thi trong danh sach dai van phai do mat tim.
-    				g.setColor(0xFFD166, 0.16f);
-    				g.fillRect(x + 5, yc + k * 12 - 1, wKhung - 12, 12, 3);
-    				g.setColor(0xFFD166, 0.9f);
-    				g.fillRect(x + 5, yc + k * 12 - 1, 2, 12);
-    			}
-    			if (vai[i] != 3 && i < dauDong.Count && dauDong[i])
-    			{
-    				veDauBuoc(g, x + 10, yc + k * 12 + 4, vai[i]);
-    			}
-    			// Ve MOT lan, khong kem font bong.
-    			//
-    			// Doi so cuoi cua drawString la font ve chong phia sau lam bong.
-    			// Chu nho ma co bong xam thi hai lop net dinh vao nhau va doc ra
-    			// mo — nen mo la vi the, khong phai vi mau chu.
-    			f.drawString(g, dong[i], xChu, yc + k * 12, mFont.LEFT);
+    			f.drawString(g, dong[i], xChu, yd, mFont.LEFT);
     		}
+
+    		// Thanh tien do sat day the: het buoc thi day mau.
+    		if (soBuoc > 0)
+    		{
+    			int wTd = wKhung - 16;
+    			int xTd = x + 8;
+    			int yTd = y + hKhung - 6;
+    			g.setColor(0x000000, 0.28f);
+    			g.fillRect(xTd, yTd, wTd, 3, 2);
+    			int wDay = wTd * soXong / soBuoc;
+    			if (wDay > 0)
+    			{
+    				g.setColor(MAU_NV_NHAN, 0.95f);
+    				g.fillRect(xTd, yTd, wDay, 3, 2);
+    			}
+    		}
+
     		// Hai nut cuon, chi hien khi con dong bi cat.
     		if (dong.Count > soThay)
     		{
-    			int xN = x + wKhung - 13;
-    			veNutCuonNV(g, xN, yc - 1, true);
-    			veNutCuonNV(g, xN, yc + soThay * 12 - 11, false);
-    			oCuonNhiemVuLen = new int[] { xN, yc - 1, 11, 11 };
-    			oCuonNhiemVuXuong = new int[] { xN, yc + soThay * 12 - 11, 11, 11 };
+    			int xN = x + wKhung - 12;
+    			veNutCuonNV(g, xN, y + LE_TREN, true);
+    			veNutCuonNV(g, xN, y + LE_TREN + soThay * CAO_DONG - 10, false);
+    			oCuonNhiemVuLen = new int[] { xN, y + LE_TREN, 10, 10 };
+    			oCuonNhiemVuXuong = new int[] {
+    				xN, y + LE_TREN + soThay * CAO_DONG - 10, 10, 10 };
     		}
     		else
     		{
@@ -7702,6 +7685,30 @@ namespace Game1
     			oCuonNhiemVuXuong = new int[0];
     		}
     	}
+
+    	/// <summary>Nền thẻ nhiệm vụ: tối trong mờ, viền mảnh, góc bo.</summary>
+    	/// <remarks>
+    	/// Trong mờ chứ không đặc: bảng dán đè lên bản đồ suốt cả lúc chơi, nền
+    	/// đặc thì nó cắt hẳn một mảng khỏi cảnh. Viền chỉ một điểm và tối hơn
+    	/// nền, đủ để tách khỏi cảnh mà không thành cái khung tranh.
+    	/// </remarks>
+    	private static void veTheNhiemVu(mGraphics g, int x, int y, int w, int h)
+    	{
+    		g.setColor(MAU_NV_VIEN, 0.95f);
+    		g.fillRect(x, y, w, h, 7);
+    		g.setColor(MAU_NV_NEN, 0.86f);
+    		g.fillRect(x + 1, y + 1, w - 2, h - 2, 6);
+    	}
+
+    	/// <summary>Nền thẻ: nâu đen ấm.</summary>
+    	private const int MAU_NV_NEN = 0x241A12;
+
+    	/// <summary>Viền thẻ và viền tab.</summary>
+    	private const int MAU_NV_VIEN = 0x7A5524;
+
+    	/// <summary>Màu nhấn: hổ phách, dùng cho tab, vệt sáng và thanh tiến độ.</summary>
+    	private const int MAU_NV_NHAN = 0xE2A33C;
+
 
     	/// <summary>Ô chân dung của người chơi ở góc trên bên trái.</summary>
 
