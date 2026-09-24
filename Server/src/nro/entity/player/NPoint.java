@@ -481,13 +481,14 @@ public class NPoint {
                     }
                     if (item.itemOptions != null) {
                         for (ItemOption io : item.itemOptions) {
-                            addOption(i == nro.repository.dao.ThuCungDAO.O_THU_CUNG
-                                    ? nhanTheoBacThu(io, item) : io,
-                                    nguonTrangBi(i, item));
+                            addOption(io, nguonTrangBi(i, item));
                         }
                     }
                 }
             }
+            // Chi so cua con thu dang ra tran: cong o day, cung cho voi chi so cua
+            // trang bi, de no di qua du moi phep nhan ve sau (set kich hoat, hop the).
+            nro.service.ThuCungService.gI().congChiSo(this, this.player);
             setTinhNhatNguyetAn();
             setDameTrainArmor();
             setBasePoint();
@@ -1015,36 +1016,6 @@ public class NPoint {
 
     private void addOption(ItemOption io) {
         addOption(io, NGUON_KHONG_RO);
-    }
-
-    /**
-     * Chỉ số của thú cưng, đã nhân hệ số <b>bậc</b>.
-     *
-     * <p>Mỗi bậc mạnh hơn bậc ngay dưới 5% và nhân dồn: D là 1, C là 1,05, B là
-     * 1,05², … Nhân dồn chứ không cộng thẳng vì "hơn bậc dưới 5%" đúng nghĩa là
-     * so với bậc liền kề, không phải so với bậc D.</p>
-     *
-     * <p>Trả về một <b>bản sao</b>: sửa thẳng chỉ số trên món là mỗi lần tính
-     * lại chỉ số con thú lại mạnh thêm 5%, vài phút sau thành vô hạn.</p>
-     *
-     * <p>Bỏ qua hai dòng cấp và kinh nghiệm — chúng chỉ để hiện chữ.</p>
-     */
-    private ItemOption nhanTheoBacThu(ItemOption io, Item thu) {
-        if (io == null || io.optionTemplate == null || thu == null || thu.template == null) {
-            return io;
-        }
-        int idCap = nro.repository.dao.ThuCungDAO.idChiSoCap();
-        int idExp = nro.repository.dao.ThuCungDAO.idChiSoExp();
-        if (io.optionTemplate.id == idCap || io.optionTemplate.id == idExp) {
-            return io;
-        }
-        int bac = nro.repository.dao.ThuCungDAO.bac(thu.template.id);
-        if (bac <= 0) {
-            return io;
-        }
-        ItemOption ra = new ItemOption(io);
-        ra.param = (int) Math.round(io.param * Math.pow(1.05d, bac));
-        return ra;
     }
 
     private void addOption(ItemOption io, String nguon) {

@@ -3,18 +3,17 @@ using System.Collections.Generic;
 namespace Game5.God
 {
     /// <summary>
-    /// Thẻ <b>Thú cưng</b> của bảng nhân vật: xem trước con thú, nuôi cho lên
-    /// cấp, và xem ba chiêu của nó.
+    /// Thẻ <b>Thú cưng</b> của bảng nhân vật: xem con thú, nuôi cho lên cấp, cho
+    /// ra trận, và xem ba chiêu của nó.
     /// </summary>
     /// <remarks>
+    /// <para>Thú <b>không</b> nằm trong hành trang. Cả danh sách thú, cấp, chỉ số
+    /// đều do máy chủ gửi xuống qua gói 111 (xem <c>ThuCungService</c>), nên thẻ
+    /// này chỉ vẽ lại thứ máy chủ nói, không tự suy ra gì từ túi đồ.</para>
+    ///
     /// <para>Nằm riêng một tệp vì thẻ này dài gần bằng cả thẻ Đệ tử. Vẫn là
     /// <c>TuiUI</c> (lớp <c>partial</c>) nên dùng chung được mọi hàm vẽ khung,
     /// dải thẻ con, ô vật phẩm… của bảng.</para>
-    ///
-    /// <para><b>Cấp và kinh nghiệm không có gói tin riêng.</b> Máy chủ gắn hai
-    /// con số ấy làm chỉ số phụ của chính món thú cưng, nên chúng về client
-    /// theo gói hành trang như mọi chỉ số khác; ở đây chỉ việc đọc ra theo id
-    /// chỉ số mà máy chủ báo trong gói 111.</para>
     /// </remarks>
     public partial class TuiUI
     {
@@ -36,6 +35,22 @@ namespace Game5.God
             public int tiLe;
             public int hoiChieu;
             public int capMo;
+        }
+
+        /// <summary>Một con thú người chơi đang có.</summary>
+        public sealed class ThuSoHuu
+        {
+            public int id;
+            public int itemId;
+            public string ten = string.Empty;
+            public int cap;
+            public int exp;
+            public int hp;
+            public int ki;
+            public int sucDanh;
+            public int giap;
+            public int chiMang;
+            public bool raTran;
         }
 
         /// <summary>Tên từng loại hiệu ứng — khớp <c>ThuCungDAO.TEN_LOAI</c>.</summary>
@@ -63,87 +78,135 @@ namespace Game5.God
         /// <summary>Tên các bậc — khớp <c>ThuCungDAO.TEN_BAC</c>.</summary>
         private static readonly string[] TEN_BAC_THU = { "D", "C", "B", "A", "S", "SS", "SSS" };
 
+        /// <summary>Thú của chính người chơi, con ra trận đứng đầu.</summary>
+        private static readonly List<ThuSoHuu> dsThuCung = new List<ThuSoHuu>();
+
         private static int tcCapToiDa = 50;
         private static int tcExpCapMot = 100;
 
-        /// <summary>Id chỉ số phụ giữ cấp và kinh nghiệm, máy chủ báo xuống.</summary>
-        private static int tcIdChiSoCap = -1;
-        private static int tcIdChiSoExp = -1;
-
-        /// <summary>Đã nhận bảng chưa — chưa thì thẻ hiện "đang tải".</summary>
+        /// <summary>Đã nhận bảng chung chưa.</summary>
         private static bool tcDaCoBang;
 
-        /// <summary>Đã hỏi bảng rồi, khỏi hỏi lại mỗi lần mở thẻ.</summary>
+        /// <summary>Đã hỏi máy chủ lần nào chưa.</summary>
         private static bool tcDaXinBang;
 
         /// <summary>
-        /// Đọc gói 111 việc 0: cấu hình, bảng chiêu, bảng đồ ăn, bảng hình thú.
+        /// Đọc gói 111. Byte đầu cho biết là bảng chung hay danh sách thú.
         /// </summary>
         /// <remarks>
-        /// Thứ tự đọc là giao kèo với <c>ThuCungService.guiBang</c>. Lệch một
-        /// trường là lệch cả gói, nên hai bên phải sửa cùng lúc.
+        /// Thứ tự đọc là giao kèo với <c>ThuCungService</c>: lệch một trường là
+        /// lệch cả gói, nên hai bên phải sửa cùng lúc.
         /// </remarks>
-        public static void nhanBangThuCung(Message msg)
+        public static void nhanGoiThuCung(Message msg)
         {
             try
             {
-                tcCapToiDa = msg.reader().readShort();
-                tcExpCapMot = msg.reader().readInt();
-                tcIdChiSoCap = msg.reader().readShort();
-                tcIdChiSoExp = msg.reader().readShort();
-
-                chieuTheoThu.Clear();
-                int soChieu = msg.reader().readShort();
-                for (int i = 0; i < soChieu; i++)
+                int viec = msg.reader().readByte();
+                if (viec == 0)
                 {
-                    ChieuThuCung c = new ChieuThuCung();
-                    c.itemId = msg.reader().readShort();
-                    c.thuTu = msg.reader().readByte();
-                    c.ten = msg.reader().readUTF();
-                    c.moTa = msg.reader().readUTF();
-                    c.loai = msg.reader().readByte();
-                    c.thamSo = msg.reader().readShort();
-                    c.phanTram = msg.reader().readShort();
-                    c.giay = msg.reader().readShort();
-                    c.tiLe = msg.reader().readShort();
-                    c.hoiChieu = msg.reader().readShort();
-                    c.capMo = msg.reader().readShort();
-                    if (!chieuTheoThu.ContainsKey(c.itemId))
-                    {
-                        chieuTheoThu[c.itemId] = new List<ChieuThuCung>();
-                    }
-                    chieuTheoThu[c.itemId].Add(c);
+                    docBangThuCung(msg);
                 }
-
-                doAnThuCung.Clear();
-                int soAn = msg.reader().readShort();
-                for (int i = 0; i < soAn; i++)
+                else if (viec == 1)
                 {
-                    int id = msg.reader().readShort();
-                    int exp = msg.reader().readInt();
-                    doAnThuCung.Add(new int[] { id, exp });
+                    docDanhSachThu(msg);
                 }
-                // Trai sang phai: it exp truoc, nhieu exp sau.
-                doAnThuCung.Sort((a, b) => a[1].CompareTo(b[1]));
-
-                hinhThuCung.Clear();
-                bacThuCung.Clear();
-                int soThu = msg.reader().readShort();
-                for (int i = 0; i < soThu; i++)
-                {
-                    int id = msg.reader().readShort();
-                    short dau = msg.reader().readShort();
-                    short than = msg.reader().readShort();
-                    short chan = msg.reader().readShort();
-                    hinhThuCung[id] = new short[] { dau, than, chan };
-                    bacThuCung[id] = msg.reader().readByte();
-                }
-                tcDaCoBang = true;
             }
             catch (System.Exception e)
             {
-                Cout.println("Loi doc bang thu cung: " + e);
+                Cout.println("Loi doc goi thu cung: " + e);
             }
+        }
+
+        private static void docBangThuCung(Message msg)
+        {
+            tcCapToiDa = msg.reader().readShort();
+            tcExpCapMot = msg.reader().readInt();
+
+            chieuTheoThu.Clear();
+            int soChieu = msg.reader().readShort();
+            for (int i = 0; i < soChieu; i++)
+            {
+                ChieuThuCung c = new ChieuThuCung();
+                c.itemId = msg.reader().readShort();
+                c.thuTu = msg.reader().readByte();
+                c.ten = msg.reader().readUTF();
+                c.moTa = msg.reader().readUTF();
+                c.loai = msg.reader().readByte();
+                c.thamSo = msg.reader().readShort();
+                c.phanTram = msg.reader().readShort();
+                c.giay = msg.reader().readShort();
+                c.tiLe = msg.reader().readShort();
+                c.hoiChieu = msg.reader().readShort();
+                c.capMo = msg.reader().readShort();
+                if (!chieuTheoThu.ContainsKey(c.itemId))
+                {
+                    chieuTheoThu[c.itemId] = new List<ChieuThuCung>();
+                }
+                chieuTheoThu[c.itemId].Add(c);
+            }
+
+            doAnThuCung.Clear();
+            int soAn = msg.reader().readShort();
+            for (int i = 0; i < soAn; i++)
+            {
+                int id = msg.reader().readShort();
+                int exp = msg.reader().readInt();
+                doAnThuCung.Add(new int[] { id, exp });
+            }
+            // Trai sang phai: it exp truoc, nhieu exp sau.
+            doAnThuCung.Sort((a, b) => a[1].CompareTo(b[1]));
+
+            hinhThuCung.Clear();
+            bacThuCung.Clear();
+            int soThu = msg.reader().readShort();
+            for (int i = 0; i < soThu; i++)
+            {
+                int id = msg.reader().readShort();
+                short dau = msg.reader().readShort();
+                short than = msg.reader().readShort();
+                short chan = msg.reader().readShort();
+                hinhThuCung[id] = new short[] { dau, than, chan };
+                bacThuCung[id] = msg.reader().readByte();
+            }
+            tcDaCoBang = true;
+        }
+
+        private static void docDanhSachThu(Message msg)
+        {
+            dsThuCung.Clear();
+            int n = msg.reader().readShort();
+            for (int i = 0; i < n; i++)
+            {
+                ThuSoHuu t = new ThuSoHuu();
+                t.id = msg.reader().readInt();
+                t.itemId = msg.reader().readShort();
+                t.ten = msg.reader().readUTF();
+                t.cap = msg.reader().readShort();
+                t.exp = msg.reader().readInt();
+                t.hp = msg.reader().readInt();
+                t.ki = msg.reader().readInt();
+                t.sucDanh = msg.reader().readInt();
+                t.giap = msg.reader().readInt();
+                t.chiMang = msg.reader().readShort();
+                t.raTran = msg.reader().readByte() == 1;
+                dsThuCung.Add(t);
+            }
+            // Con ra tran dung dau, con lai bac cao truoc.
+            dsThuCung.Sort((a, b) =>
+            {
+                if (a.raTran != b.raTran)
+                {
+                    return a.raTran ? -1 : 1;
+                }
+                int ba = bacCuaLoai(a.itemId);
+                int bb = bacCuaLoai(b.itemId);
+                if (ba != bb)
+                {
+                    return bb - ba;
+                }
+                return a.id - b.id;
+            });
+            tcDaCoBang = true;
         }
 
         // ==================================================================
@@ -157,8 +220,8 @@ namespace Game5.God
 
         private int theThuChon = THU_CHI_SO;
 
-        /// <summary>Con đang xem: -1 là con đang ra trận, còn lại là ô hành trang.</summary>
-        private int oThuXem = -1;
+        /// <summary>Id con đang xem (id dòng của máy chủ), -1 là chưa chọn.</summary>
+        private int idThuXem = -1;
 
         /// <summary>Đang mở hộp chọn đồ ăn.</summary>
         private bool hienHopDoAn;
@@ -172,136 +235,61 @@ namespace Game5.God
         private Char thuVe;
         private int thuVeId = -1;
 
-        /// <summary>Giữ ngón bao lâu thì bắt đầu cho ăn liên tiếp.</summary>
         private const long CHO_TRUOC_KHI_LAP = 400L;
-
-        /// <summary>Cho ăn liên tiếp thì mỗi lần cách nhau bao lâu.</summary>
         private const long NHIP_AN_LAP = 140L;
 
-        /// <summary>
-        /// Hỏi máy chủ dữ liệu cho hai thẻ Đệ tử và Thú cưng.
-        /// </summary>
-        /// <remarks>
-        /// <para>Gọi lúc <b>mở bảng</b>, không đợi tới lúc bấm vào thẻ: hai thẻ
-        /// ấy sống nhờ dữ liệu máy chủ (gói -107 cho đệ, gói 111 cho bảng chiêu
-        /// và bảng đồ ăn), hỏi muộn thì thẻ mở ra trống trơn mất một vòng gói
-        /// tin.</para>
-        ///
-        /// <para>Bảng chiêu chỉ hỏi MỘT lần cả phiên — nó không đổi trong lúc
-        /// chơi. Thông tin đệ thì hỏi mỗi lần mở bảng vì chỉ số đệ đổi liên tục.</para>
-        /// </remarks>
-        private void xinDuLieuDeTuVaThuCung()
-        {
-            Service.gI().petInfo();
-            daXinDe = true;
-            if (!tcDaXinBang)
-            {
-                Service.gI().thuCungXinBang();
-                tcDaXinBang = true;
-            }
-        }
-
         // ==================================================================
-        //  Danh sach thu dang so huu
+        //  Tra cuu
         // ==================================================================
 
-        /// <summary>
-        /// Mọi con thú đang có: con ra trận trước, rồi tới các con trong hành
-        /// trang.
-        /// </summary>
-        /// <remarks>
-        /// Mỗi phần tử là {ô, có phải đang ra trận}: ô là chỉ số trong
-        /// <c>arrItemBag</c>, hoặc -1 khi con ấy đang mặc.
-        /// </remarks>
-        private List<int[]> dsThuCung()
+        private static int bacCuaLoai(int itemId)
         {
-            List<int[]> ra = new List<int[]>();
-            Item mac = thuDangRaTran();
-            if (mac != null)
+            int b;
+            if (!bacThuCung.TryGetValue(itemId, out b) || b < 0 || b >= TEN_BAC_THU.Length)
             {
-                ra.Add(new int[] { -1, 1 });
+                return 0;
             }
-            Item[] tui = Char.myCharz().arrItemBag;
-            List<int[]> nghi = new List<int[]>();
-            if (tui != null)
-            {
-                for (int i = 0; i < tui.Length; i++)
-                {
-                    if (laThuCung(tui[i]))
-                    {
-                        nghi.Add(new int[] { i, 0 });
-                    }
-                }
-            }
-            // Con nghi ngoi: bac CAO dung truoc, cung bac thi theo ten.
-            //
-            // Con ra tran da duoc them trươc vong nay nen luon o ngoai cung ben
-            // trai, du no bac gi — dang dung thi phai de mat ngay, khong phai
-            // do trong day.
-            nghi.Sort((x, y) =>
-            {
-                Item a = thuTaiO(x[0]);
-                Item b = thuTaiO(y[0]);
-                int ba = bacCua(a);
-                int bb = bacCua(b);
-                if (ba != bb)
-                {
-                    return bb - ba;
-                }
-                string ta = (a == null || a.template == null) ? string.Empty : a.template.name;
-                string tb = (b == null || b.template == null) ? string.Empty : b.template.name;
-                return string.Compare(ta, tb, System.StringComparison.Ordinal);
-            });
-            ra.AddRange(nghi);
-            return ra;
+            return b;
         }
 
-        private static bool laThuCung(Item it)
+        /// <summary>Tên hiện lên: tên tự đặt, không có thì tên loại thú.</summary>
+        private static string tenThu(ThuSoHuu t)
         {
-            return it != null && it.template != null && it.template.type == 21;
+            if (t == null)
+            {
+                return string.Empty;
+            }
+            if (t.ten != null && t.ten.Length > 0)
+            {
+                return t.ten;
+            }
+            ItemTemplate m = ItemTemplates.get((short) t.itemId);
+            return m == null ? ("Thú #" + t.itemId) : m.name;
         }
 
-        /// <summary>Con đang mặc ở ô Pet (ô 7), hoặc null.</summary>
-        private static Item thuDangRaTran()
+        private ThuSoHuu thuDangXem()
         {
-            Item[] mac = Char.myCharz().arrItemBody;
-            if (mac == null || mac.Length <= 7)
+            if (dsThuCung.Count == 0)
             {
                 return null;
             }
-            return laThuCung(mac[7]) ? mac[7] : null;
-        }
-
-        /// <summary>Con thú đang xem trong thẻ.</summary>
-        private Item thuDangXem()
-        {
-            if (oThuXem < 0)
+            for (int i = 0; i < dsThuCung.Count; i++)
             {
-                Item mac = thuDangRaTran();
-                if (mac != null)
+                if (dsThuCung[i].id == idThuXem)
                 {
-                    return mac;
+                    return dsThuCung[i];
                 }
-                List<int[]> ds = dsThuCung();
-                return ds.Count > 0 ? thuTaiO(ds[0][0]) : null;
             }
-            return thuTaiO(oThuXem);
+            // Chua chon gi (hoac con vua chon khong con nua): lay con dau —
+            // danh sach da xep con ra tran len truoc.
+            idThuXem = dsThuCung[0].id;
+            return dsThuCung[0];
         }
 
-        private static Item thuTaiO(int o)
+        private static int expCanChoCap(int cap)
         {
-            if (o < 0)
-            {
-                return thuDangRaTran();
-            }
-            Item[] tui = Char.myCharz().arrItemBag;
-            return (tui != null && o < tui.Length && laThuCung(tui[o])) ? tui[o] : null;
-        }
-
-        /// <summary>Con đang xem có đúng là con đang ra trận không.</summary>
-        private bool thuXemDangRaTran()
-        {
-            return oThuXem < 0 && thuDangRaTran() != null;
+            int m = tcExpCapMot < 1 ? 1 : tcExpCapMot;
+            return m * (cap < 1 ? 1 : cap);
         }
 
         // ==================================================================
@@ -319,26 +307,9 @@ namespace Game5.God
             rgb(0xC9, 0xA2, 0x27)  // SSS vang kim
         };
 
-        /// <summary>Bậc của một con thú; không biết thì coi là D.</summary>
-        private static int bacCua(Item thu)
-        {
-            int b;
-            if (thu == null || thu.template == null
-                    || !bacThuCung.TryGetValue(thu.template.id, out b))
-            {
-                return 0;
-            }
-            return (b < 0 || b >= TEN_BAC_THU.Length) ? 0 : b;
-        }
-
         /// <summary>
         /// Huy hiệu bậc: chữ trắng trên nền màu riêng của bậc.
         /// </summary>
-        /// <remarks>
-        /// Vẽ bằng khung bo góc thay vì một tấm ảnh: bảy bậc là bảy tấm phải
-        /// thêm vào bộ ảnh và phải nhớ đồng bộ bốn mức phóng, trong khi thứ cần
-        /// nói chỉ là một chữ cái và một màu.
-        /// </remarks>
         /// <returns>Bề rộng đã vẽ, để chỗ gọi biết chừa chỗ.</returns>
         private int veHuyBac(mGraphics g, int x, int y, int bac, bool nho)
         {
@@ -347,52 +318,23 @@ namespace Game5.God
                 bac = 0;
             }
             string chu = TEN_BAC_THU[bac];
-            int cao = nho ? 9 : 12;
-            int rong = mFont.tahoma_7b_white.getWidth(chu) + (nho ? 5 : 8);
+            int cao = nho ? 10 : 12;
+            int rong = mFont.tahoma_7b_white.getWidth(chu) + (nho ? 6 : 8);
             veKhungBo(g, x, y, rong, cao, MAU_BAC[bac], 1f, MAU_VIEN_O, 0.85f, 1);
-            mFont.tahoma_7b_white.drawString(g, chu, x + rong / 2, y + (nho ? -1 : 1),
+            mFont.tahoma_7b_white.drawString(g, chu, x + rong / 2, y + (nho ? 0 : 1),
                     mFont.CENTER);
             return rong;
         }
 
-        // ==================================================================
-        //  Cap va kinh nghiem doc tu chi so phu cua mon
-        // ==================================================================
-
-        private static int chiSoCua(Item it, int idChiSo)
+        /// <summary>Nhãn "Ra trận": chữ trắng trên nền xanh, có viền.</summary>
+        private int veNhanRaTran(mGraphics g, int x, int y)
         {
-            if (it == null || it.itemOption == null || idChiSo < 0)
-            {
-                return 0;
-            }
-            for (int i = 0; i < it.itemOption.Length; i++)
-            {
-                ItemOption io = it.itemOption[i];
-                if (io != null && io.optionTemplate != null
-                        && io.optionTemplate.id == idChiSo)
-                {
-                    return io.param;
-                }
-            }
-            return 0;
-        }
-
-        private static int capThu(Item it)
-        {
-            int c = chiSoCua(it, tcIdChiSoCap);
-            return c < 1 ? 1 : c;
-        }
-
-        private static int expThu(Item it)
-        {
-            return chiSoCua(it, tcIdChiSoExp);
-        }
-
-        /// <summary>Kinh nghiệm cần để lên cấp kế tiếp.</summary>
-        private static int expCanChoCap(int cap)
-        {
-            int m = tcExpCapMot < 1 ? 1 : tcExpCapMot;
-            return m * (cap < 1 ? 1 : cap);
+            string chu = "Ra trận";
+            int rong = mFont.tahoma_7b_white.getWidth(chu) + 8;
+            veKhungBo(g, x, y, rong, 12, rgb(0x3F, 0xA9, 0x4F), 1f,
+                    rgb(0x22, 0x6B, 0x2C), 1f, 1);
+            mFont.tahoma_7b_white.drawString(g, chu, x + rong / 2, y + 1, mFont.CENTER);
+            return rong;
         }
 
         // ==================================================================
@@ -401,21 +343,15 @@ namespace Game5.God
 
         private void veThuCung(mGraphics g)
         {
-            List<int[]> ds = dsThuCung();
-            if (ds.Count == 0)
+            if (dsThuCung.Count == 0)
             {
                 veKhungLom(g, xTrai, yThan, rongTrai, caoThan);
                 veKhungLom(g, xPhai, yThan, rongPhai, caoThan);
                 veChuGiua(g, xTrai, rongTrai, "Chưa sở hữu thú cưng");
                 return;
             }
-            // Con dang xem bien mat (vua ban, vua mac vao) thi quay ve con dau.
-            if (thuDangXem() == null)
-            {
-                oThuXem = ds[0][0];
-            }
 
-            veCotThu(g, ds);
+            veCotThu(g);
 
             veDaiTheNho(g, TEN_THE_THU, theThuChon, xPhai, rongPhai);
             veKhungLom(g, xPhai, yNoiDungPhu(), rongPhai, caoNoiDungPhu());
@@ -435,53 +371,59 @@ namespace Game5.God
         }
 
         /// <summary>Cột trái: con thú đứng giữa, danh sách thú xếp dưới.</summary>
-        private void veCotThu(mGraphics g, List<int[]> ds)
+        private void veCotThu(mGraphics g)
         {
             veKhungCoTieuDe(g, xTrai, yThan, rongTrai, caoThan, "Thú cưng", 0,
                     MAU_DAI_CAM);
-            int y0 = yThan + CAO_DAI_TD + KHE_KHUNG + 2;
-            int cao = yThan + caoThan - y0;
+            int y0d = yThan + CAO_DAI_TD + KHE_KHUNG + 2;
+            int caoD = yThan + caoThan - y0d;
 
-            Item thu = thuDangXem();
-            int caoDs = oCoThuCung() + 6;
-            int yChan = y0 + (cao - caoDs) / 2 + CAO_NHAN_VAT / 2;
+            ThuSoHuu thu = thuDangXem();
+            int caoDs = oCoThuCung() * soHangThu() + 6;
+            int yChan = y0d + (caoD - caoDs) / 2 + CAO_NHAN_VAT / 2;
             veHinhThu(g, thu, xTrai + rongTrai / 2, yChan);
 
-            // Ten + trang thai ngay duoi con thu.
-            if (thu != null && thu.template != null)
+            if (thu != null)
             {
                 // Huy hieu bac dat ngay truoc ten, ca cum can giua cot.
-                int bacXem = bacCua(thu);
-                int rongTen = mFont.tahoma_7b_dark.getWidth(thu.template.name);
-                int rongHuy = mFont.tahoma_7b_white.getWidth(TEN_BAC_THU[bacXem]) + 8;
+                string ten = tenThu(thu);
+                int bac = bacCuaLoai(thu.itemId);
+                int rongTen = mFont.tahoma_7b_dark.getWidth(ten);
+                int rongHuy = mFont.tahoma_7b_white.getWidth(TEN_BAC_THU[bac]) + 8;
                 int xCum = xTrai + rongTrai / 2 - (rongTen + rongHuy + 4) / 2;
-                veHuyBac(g, xCum, yChan + 3, bacXem, false);
-                mFont.tahoma_7b_dark.drawString(g, thu.template.name,
-                        xCum + rongHuy + 4, yChan + 4, mFont.LEFT);
-                bool raTran = thuXemDangRaTran();
-                mFont mf = raTran ? mFont.tahoma_7b_green : mFont.tahoma_7_grey;
-                mf.drawString(g, raTran ? "Đang ra trận" : "Đang nghỉ ngơi",
-                        xTrai + rongTrai / 2, yChan + 15, mFont.CENTER);
+                veHuyBac(g, xCum, yChan + 3, bac, false);
+                mFont.tahoma_7b_dark.drawString(g, ten, xCum + rongHuy + 4, yChan + 4,
+                        mFont.LEFT);
+
+                mFont mf = thu.raTran ? mFont.tahoma_7b_green : mFont.tahoma_7_grey;
+                mf.drawString(g, thu.raTran ? "Đang ra trận" : "Đang nghỉ ngơi",
+                        xTrai + rongTrai / 2, yChan + 16, mFont.CENTER);
             }
 
             // Hang o: tung con dang so huu.
-            for (int i = 0; i < ds.Count; i++)
+            for (int i = 0; i < dsThuCung.Count; i++)
             {
                 int[] o = oOThuCung(i);
                 if (o == null)
                 {
                     continue;
                 }
-                Item it = thuTaiO(ds[i][0]);
-                veMotO(g, it, o[0], o[1], o[2], string.Empty);
-                veHuyBac(g, o[0] + 2, o[1] + o[2] - 11, bacCua(it), true);
-                if (ds[i][1] == 1)
+                ThuSoHuu t = dsThuCung[i];
+                veKhungBo(g, o[0] + 1, o[1] + 1, o[2] - 2, o[2] - 2, MAU_O_DO, 1f,
+                        MAU_VIEN_O, t.id == idThuXem ? 1f : 0.8f, 1);
+                ItemTemplate m = ItemTemplates.get((short) t.itemId);
+                if (m != null)
                 {
-                    // Cham xanh goc tren: con nay dang ra tran.
-                    g.setColor(rgb(0x3F, 0xA9, 0x3F));
-                    g.fillRect(o[0] + o[2] - 8, o[1] + 3, 5, 5);
+                    SmallImage.drawSmallImage(g, m.iconID, o[0] + o[2] / 2,
+                            o[1] + o[2] / 2 - 2, 0,
+                            mGraphics.VCENTER | mGraphics.HCENTER);
                 }
-                if (thuTaiO(ds[i][0]) == thuDangXem())
+                veHuyBac(g, o[0] + 2, o[1] + o[2] - 12, bacCuaLoai(t.itemId), true);
+                if (t.raTran)
+                {
+                    veNhanRaTran(g, o[0] + 2, o[1] + 2);
+                }
+                if (t.id == idThuXem)
                 {
                     veKhungBo(g, o[0], o[1], o[2], o[2], MAU_O, 0f,
                             MAU_VIEN_SANG, 1f, 1);
@@ -490,21 +432,24 @@ namespace Game5.God
         }
 
         /// <summary>Vẽ con thú bằng ba bộ phận máy chủ gửi kèm bảng.</summary>
-        private void veHinhThu(mGraphics g, Item thu, int x, int yChan)
+        private void veHinhThu(mGraphics g, ThuSoHuu thu, int x, int yChan)
         {
-            if (thu == null || thu.template == null)
+            if (thu == null)
             {
                 return;
             }
             short[] hinh;
-            if (!hinhThuCung.TryGetValue(thu.template.id, out hinh))
+            if (!hinhThuCung.TryGetValue(thu.itemId, out hinh))
             {
-                // Chua co bang hinh: ve tam cai icon cua mon cho do trong.
-                SmallImage.drawSmallImage(g, thu.template.iconID, x, yChan - 20,
-                        0, mGraphics.VCENTER | mGraphics.HCENTER);
+                ItemTemplate m = ItemTemplates.get((short) thu.itemId);
+                if (m != null)
+                {
+                    SmallImage.drawSmallImage(g, m.iconID, x, yChan - 20, 0,
+                            mGraphics.VCENTER | mGraphics.HCENTER);
+                }
                 return;
             }
-            if (thuVe == null || thuVeId != thu.template.id)
+            if (thuVe == null || thuVeId != thu.itemId)
             {
                 thuVe = new Char();
                 thuVe.head = hinh[0];
@@ -512,7 +457,7 @@ namespace Game5.God
                 thuVe.leg = hinh[2];
                 thuVe.bag = -1;
                 thuVe.cName = string.Empty;
-                thuVeId = thu.template.id;
+                thuVeId = thu.itemId;
             }
             try
             {
@@ -524,13 +469,12 @@ namespace Game5.God
             }
         }
 
-        /// <summary>Cạnh một ô trong hàng danh sách thú.</summary>
         private int oCoThuCung()
         {
             int o = (rongTrai - 10) / 5;
-            if (o > O_TOI_DA)
+            if (o > 42)
             {
-                o = O_TOI_DA;
+                o = 42;
             }
             if (o < O_TOI_THIEU)
             {
@@ -539,19 +483,36 @@ namespace Game5.God
             return o;
         }
 
+        private int soCotThu()
+        {
+            int o = oCoThuCung();
+            int soCot = (rongTrai - 8) / o;
+            return soCot < 1 ? 1 : soCot;
+        }
+
+        private int soHangThu()
+        {
+            int n = (dsThuCung.Count + soCotThu() - 1) / soCotThu();
+            if (n < 1)
+            {
+                n = 1;
+            }
+            return n > 3 ? 3 : n;
+        }
+
         /// <summary>Vùng ô thứ <paramref name="i"/> của hàng danh sách thú.</summary>
         private int[] oOThuCung(int i)
         {
             int o = oCoThuCung();
-            int soCot = (rongTrai - 8) / o;
-            if (soCot < 1)
-            {
-                soCot = 1;
-            }
+            int soCot = soCotThu();
             int cot = i % soCot;
             int hang = i / soCot;
+            if (hang >= soHangThu())
+            {
+                return null;
+            }
             int yDay = yThan + caoThan - 4 - o;
-            int y = yDay - hang * o;
+            int y = yDay - (soHangThu() - 1 - hang) * o;
             if (y < yThan + CAO_DAI_TD + KHE_KHUNG + 2)
             {
                 return null;
@@ -566,8 +527,8 @@ namespace Game5.God
 
         private void veThuChiSo(mGraphics g)
         {
-            Item thu = thuDangXem();
-            if (thu == null || thu.template == null)
+            ThuSoHuu thu = thuDangXem();
+            if (thu == null)
             {
                 return;
             }
@@ -575,66 +536,51 @@ namespace Game5.God
             int w = rongPhai - 16;
             int y = yNoiDungPhu() + 6;
 
-            int bacCs = bacCua(thu);
-            int rongHuyCs = veHuyBac(g, x, y + 1, bacCs, false);
-            mFont.tahoma_7b_dark.drawString(g, thu.template.name,
-                    x + rongHuyCs + 5, y, mFont.LEFT);
-            y += 13;
+            // Hang ten: huy hieu bac, ten, nut doi ten.
+            int bac = bacCuaLoai(thu.itemId);
+            int rongHuy = veHuyBac(g, x, y + 1, bac, false);
+            mFont.tahoma_7b_dark.drawString(g, tenThu(thu), x + rongHuy + 5, y,
+                    mFont.LEFT);
+            int[] nutTen = oNutDoiTen();
+            veKhungBo(g, nutTen[0], nutTen[1], nutTen[2], nutTen[3], MAU_O, 0.95f,
+                    MAU_VIEN, 0.8f, 1);
+            mFont.tahoma_7b_dark.drawString(g, "Sửa", nutTen[0] + nutTen[2] / 2,
+                    nutTen[1] + 2, mFont.CENTER);
+            y += 14;
 
-            int cap = capThu(thu);
-            mFont.tahoma_7b_dark.drawString(g, "Cấp " + cap + " / " + tcCapToiDa,
+            mFont.tahoma_7b_dark.drawString(g, "Cấp " + thu.cap + " / " + tcCapToiDa,
                     x, y, mFont.LEFT);
             y += 12;
 
             // Thanh kinh nghiem.
-            int exp = expThu(thu);
-            int can = expCanChoCap(cap);
-            int rongThanh = w;
-            veKhungBo(g, x, y, rongThanh, 8, MAU_O_DO, 1f, MAU_VIEN_O, 0.8f, 1);
-            if (cap >= tcCapToiDa)
+            int can = expCanChoCap(thu.cap);
+            veKhungBo(g, x, y, w, 8, MAU_O_DO, 1f, MAU_VIEN_O, 0.8f, 1);
+            if (thu.cap >= tcCapToiDa)
             {
                 g.setColor(rgb(0xE0, 0xA8, 0x3A));
-                g.fillRect(x + 1, y + 1, rongThanh - 2, 6);
+                g.fillRect(x + 1, y + 1, w - 2, 6);
             }
-            else if (can > 0 && exp > 0)
+            else if (can > 0 && thu.exp > 0)
             {
-                int rongDay = (rongThanh - 2) * exp / can;
-                if (rongDay > rongThanh - 2)
+                int rongDay = (w - 2) * thu.exp / can;
+                if (rongDay > w - 2)
                 {
-                    rongDay = rongThanh - 2;
+                    rongDay = w - 2;
                 }
                 g.setColor(rgb(0x5A, 0xB8, 0x4A));
                 g.fillRect(x + 1, y + 1, rongDay, 6);
             }
             mFont.tahoma_7_grey.drawString(g,
-                    cap >= tcCapToiDa ? "Đã tối đa" : (exp + " / " + can),
-                    x + rongThanh / 2, y - 1, mFont.CENTER);
+                    thu.cap >= tcCapToiDa ? "Đã tối đa" : (thu.exp + " / " + can),
+                    x + w / 2, y - 1, mFont.CENTER);
             y += 14;
 
-            // Cac chi so cua mon, bo hai dong cap va kinh nghiem.
-            if (thu.itemOption != null)
-            {
-                for (int i = 0; i < thu.itemOption.Length; i++)
-                {
-                    ItemOption io = thu.itemOption[i];
-                    if (io == null || io.optionTemplate == null)
-                    {
-                        continue;
-                    }
-                    if (io.optionTemplate.id == tcIdChiSoCap
-                            || io.optionTemplate.id == tcIdChiSoExp)
-                    {
-                        continue;
-                    }
-                    if (y > yNoiDungPhu() + caoNoiDungPhu() - 40)
-                    {
-                        break;
-                    }
-                    mFont.tahoma_7_blue.drawString(g, io.getOptionString(), x, y,
-                            mFont.LEFT);
-                    y += 11;
-                }
-            }
+            // Nam chi so con thu cong cho chu.
+            y = veDongChiSoThu(g, x, w, y, "HP", thu.hp, string.Empty);
+            y = veDongChiSoThu(g, x, w, y, "KI", thu.ki, string.Empty);
+            y = veDongChiSoThu(g, x, w, y, "Sức đánh", thu.sucDanh, string.Empty);
+            y = veDongChiSoThu(g, x, w, y, "Giáp", thu.giap, string.Empty);
+            veDongChiSoThu(g, x, w, y, "Chí mạng", thu.chiMang, "%");
 
             // O "+" mo hop chon do an, va nut ra tran / nghi ngoi.
             int[] oAn = oNutChoAn();
@@ -647,17 +593,33 @@ namespace Game5.God
 
             int[] nut = oNutRaTran();
             veNut(g, nut[0], nut[1], nut[2], nut[3],
-                    thuXemDangRaTran() ? "Nghỉ ngơi" : "Ra trận", true);
+                    thu.raTran ? "Nghỉ ngơi" : "Ra trận", true);
         }
 
-        /// <summary>Ô "+" cho ăn: góc dưới trái cột phải.</summary>
+        /// <summary>Một dòng chỉ số: tên bên trái, số bên phải.</summary>
+        private int veDongChiSoThu(mGraphics g, int x, int w, int y, string ten,
+                int gt, string duoi)
+        {
+            mFont.tahoma_7_grey.drawString(g, ten, x, y, mFont.LEFT);
+            mFont.tahoma_7b_dark.drawString(g, "+" + NinjaUtil.getMoneys(gt) + duoi,
+                    x + w, y, mFont.RIGHT);
+            return y + 12;
+        }
+
+        /// <summary>Nút "Sửa" tên, nằm sát bên phải hàng tên.</summary>
+        private int[] oNutDoiTen()
+        {
+            int w = 30;
+            int h = 13;
+            return new int[] { xPhai + rongPhai - w - 8, yNoiDungPhu() + 5, w, h };
+        }
+
         private int[] oNutChoAn()
         {
             int o = 26;
             return new int[] { xPhai + 8, yThan + caoThan - o - 8, o, o };
         }
 
-        /// <summary>Nút ra trận / nghỉ ngơi: góc dưới phải cột phải.</summary>
         private int[] oNutRaTran()
         {
             int w = 74;
@@ -671,14 +633,13 @@ namespace Game5.God
 
         private void veThuKyNang(mGraphics g)
         {
-            Item thu = thuDangXem();
-            if (thu == null || thu.template == null)
+            ThuSoHuu thu = thuDangXem();
+            if (thu == null)
             {
                 return;
             }
-            int cap = capThu(thu);
             List<ChieuThuCung> ds;
-            if (!chieuTheoThu.TryGetValue(thu.template.id, out ds) || ds.Count == 0)
+            if (!chieuTheoThu.TryGetValue(thu.itemId, out ds) || ds.Count == 0)
             {
                 mFont.tahoma_7_grey.drawString(g, "Con này chưa có chiêu nào.",
                         xPhai + rongPhai / 2, yNoiDungPhu() + 20, mFont.CENTER);
@@ -688,7 +649,7 @@ namespace Game5.God
             {
                 ChieuThuCung c = ds[i];
                 int[] o = oOChieu(i);
-                bool mo = cap >= c.capMo;
+                bool mo = thu.cap >= c.capMo;
                 veKhungBo(g, o[0], o[1], o[2], o[3], MAU_O_DO, mo ? 1f : 0.55f,
                         MAU_VIEN_O, 0.85f, 1);
                 int xc = o[0] + 8;
@@ -699,7 +660,7 @@ namespace Game5.God
                 yc += 12;
                 if (mo)
                 {
-                    mFont.tahoma_7_blue.drawString(g, moTaChieu(c, cap), xc, yc,
+                    mFont.tahoma_7_blue.drawString(g, moTaChieu(c, thu.cap), xc, yc,
                             mFont.LEFT);
                     yc += 11;
                     mFont.tahoma_7_grey.drawString(g,
@@ -714,7 +675,6 @@ namespace Game5.God
             }
         }
 
-        /// <summary>Một dòng nói chiêu làm gì, đã tính phần mạnh thêm theo cấp.</summary>
         private static string moTaChieu(ChieuThuCung c, int cap)
         {
             int pt = c.phanTram + (cap > c.capMo ? (cap - c.capMo) : 0);
@@ -748,7 +708,6 @@ namespace Game5.God
         //  Hop chon do an
         // ==================================================================
 
-        /// <summary>Cạnh một ô đồ ăn trong hộp.</summary>
         private const int O_DO_AN = 32;
 
         private int[] khungHopDoAn()
@@ -812,7 +771,6 @@ namespace Game5.God
                     "Bấm để cho ăn · giữ để cho ăn liên tiếp",
                     k[0] + k[2] / 2, k[1] + k[3] - 13, mFont.CENTER);
 
-            // Chu goi y khi re chuot: ten mon + exp moi cai.
             if (chuot >= 0 && chuot < doAnThuCung.Count)
             {
                 int[] o = oODoAn(chuot);
@@ -885,7 +843,6 @@ namespace Game5.God
             return n;
         }
 
-        /// <summary>Ô hành trang đầu tiên chứa món này, hoặc -1.</summary>
         private static int oTuiCuaMon(int idMon)
         {
             Item[] tui = Char.myCharz().arrItemBag;
@@ -920,14 +877,13 @@ namespace Game5.God
         //  Cho an
         // ==================================================================
 
-        /// <summary>Gửi lệnh cho con đang xem ăn món ở ô <paramref name="iMon"/>.</summary>
         private void choThuAn(int iMon)
         {
             if (iMon < 0 || iMon >= doAnThuCung.Count)
             {
                 return;
             }
-            Item thu = thuDangXem();
+            ThuSoHuu thu = thuDangXem();
             if (thu == null)
             {
                 return;
@@ -938,8 +894,7 @@ namespace Game5.God
                 GameCanvas.startOKDlg("Bạn không có " + tenCuaMon(doAnThuCung[iMon][0]));
                 return;
             }
-            Service.gI().thuCungChoAn(thuXemDangRaTran(),
-                    oThuXem < 0 ? 0 : oThuXem, oTui);
+            Service.gI().thuCungChoAn(thu.id, oTui);
         }
 
         /// <summary>
@@ -951,12 +906,7 @@ namespace Game5.God
         /// </remarks>
         private void giuChoAn()
         {
-            if (!hienHopDoAn)
-            {
-                oDoAnDangGiu = -1;
-                return;
-            }
-            if (!GameCanvas.isPointerDown)
+            if (!hienHopDoAn || !GameCanvas.isPointerDown)
             {
                 oDoAnDangGiu = -1;
                 return;
@@ -993,6 +943,41 @@ namespace Game5.God
         }
 
         // ==================================================================
+        //  Xin du lieu
+        // ==================================================================
+
+        /// <summary>
+        /// Hỏi máy chủ dữ liệu cho hai thẻ Đệ tử và Thú cưng.
+        /// </summary>
+        /// <remarks>
+        /// <para>Gọi lúc <b>mở bảng</b>, không đợi tới lúc bấm vào thẻ: hai thẻ ấy
+        /// sống nhờ dữ liệu máy chủ, hỏi muộn thì thẻ mở ra trống mất một vòng gói
+        /// tin.</para>
+        ///
+        /// <para>Gói thú cưng trả về cả bảng chung lẫn danh sách thú, nên hỏi lại
+        /// mỗi lần mở bảng cũng đúng: cấp và chỉ số của thú đổi theo từng lần cho
+        /// ăn.</para>
+        /// </remarks>
+        private void xinDuLieuDeTuVaThuCung()
+        {
+            Service.gI().petInfo();
+            daXinDe = true;
+            Service.gI().thuCungXinBang();
+            tcDaXinBang = true;
+        }
+
+        /// <summary>Người chơi vừa gõ xong tên mới cho thú.</summary>
+        private void goXongTenThu(string chu)
+        {
+            ThuSoHuu thu = thuDangXem();
+            if (thu == null)
+            {
+                return;
+            }
+            Service.gI().thuCungDoiTen(thu.id, chu == null ? string.Empty : chu.Trim());
+        }
+
+        // ==================================================================
         //  Bat cham
         // ==================================================================
 
@@ -1017,7 +1002,6 @@ namespace Game5.God
                 int[] k = khungHopDoAn();
                 if (!cham(k[0], k[1], k[2], k[3]))
                 {
-                    // Bam ra ngoai hop thi dong hop.
                     hienHopDoAn = false;
                 }
                 return true;
@@ -1030,19 +1014,26 @@ namespace Game5.God
                 return true;
             }
 
-            List<int[]> ds = dsThuCung();
-            for (int i = 0; i < ds.Count; i++)
+            for (int i = 0; i < dsThuCung.Count; i++)
             {
                 int[] o = oOThuCung(i);
                 if (o != null && cham(o[0], o[1], o[2], o[2]))
                 {
-                    oThuXem = ds[i][0];
+                    idThuXem = dsThuCung[i].id;
                     return true;
                 }
             }
 
-            if (theThuChon == THU_CHI_SO && thuDangXem() != null)
+            ThuSoHuu thu = thuDangXem();
+            if (theThuChon == THU_CHI_SO && thu != null)
             {
+                int[] nutTen = oNutDoiTen();
+                if (cham(nutTen[0], nutTen[1], nutTen[2], nutTen[3]))
+                {
+                    viecGoChu = GO_TEN_THU;
+                    moHopGoChu("Tên thú cưng", tenThu(thu), 0);
+                    return true;
+                }
                 int[] oAn = oNutChoAn();
                 if (cham(oAn[0], oAn[1], oAn[2], oAn[3]))
                 {
@@ -1056,34 +1047,12 @@ namespace Game5.God
                 int[] nut = oNutRaTran();
                 if (cham(nut[0], nut[1], nut[2], nut[3]))
                 {
-                    doiRaTran();
+                    // Dang ra tran thi cho ve nghi (gui 0), khong thi cho ra tran.
+                    Service.gI().thuCungRaTran(thu.raTran ? 0 : thu.id);
                     return true;
                 }
             }
             return true;
-        }
-
-        /// <summary>
-        /// Cho con đang xem ra trận, hoặc cho con đang ra trận về nghỉ.
-        /// </summary>
-        /// <remarks>
-        /// Chỉ có <b>một</b> ô thú cưng nên không cần luật "chỉ một con ra
-        /// trận": mặc con mới là con cũ tự về hành trang. Dùng đúng hai lệnh
-        /// mặc/tháo sẵn có, không thêm gói tin mới.
-        /// </remarks>
-        private void doiRaTran()
-        {
-            if (thuXemDangRaTran())
-            {
-                Service.gI().getItem((sbyte) 5, (sbyte) 7);
-                return;
-            }
-            if (oThuXem >= 0)
-            {
-                Service.gI().getItem((sbyte) 4, (sbyte) oThuXem);
-                // Con vua mac se nam o o Pet; chuyen sang xem no.
-                oThuXem = -1;
-            }
         }
     }
 }

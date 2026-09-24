@@ -3272,27 +3272,43 @@ namespace Game4
     
     	public void thuCungXinBang()
     	{
-    		thuCungGoi(0, 0, 0, 0);
+    		thuCungGoi(0, 0, 0, null);
     	}
 
-    	public void thuCungChoAn(bool oTrangBi, int viTriThu, int viTriDoAn)
+    	public void thuCungChoAn(int idThu, int viTriDoAn)
     	{
-    		thuCungGoi(1, oTrangBi ? 1 : 0, viTriThu, viTriDoAn);
+    		thuCungGoi(1, idThu, viTriDoAn, null);
     	}
 
-    	/// <summary>Goi 111: viec 0 xin bang, viec 1 cho an.</summary>
-    	private void thuCungGoi(int viec, int a, int b, int c)
+    	public void thuCungRaTran(int idThu)
+    	{
+    		thuCungGoi(2, idThu, 0, null);
+    	}
+
+    	public void thuCungDoiTen(int idThu, string ten)
+    	{
+    		thuCungGoi(3, idThu, 0, ten);
+    	}
+
+    	/// <summary>Goi 111: 0 xin bang, 1 cho an, 2 ra tran, 3 doi ten.</summary>
+    	private void thuCungGoi(int viec, int idThu, int soPhu, string chu)
     	{
     		Message message = null;
     		try
     		{
     			message = new Message((sbyte)111);
     			message.writer().writeByte((sbyte)viec);
+    			if (viec != 0)
+    			{
+    				message.writer().writeInt(idThu);
+    			}
     			if (viec == 1)
     			{
-    				message.writer().writeByte((sbyte)a);
-    				message.writer().writeByte((sbyte)b);
-    				message.writer().writeByte((sbyte)c);
+    				message.writer().writeByte((sbyte)soPhu);
+    			}
+    			if (viec == 3)
+    			{
+    				message.writer().writeUTF(chu == null ? string.Empty : chu);
     			}
     			session.sendMessage(message);
     		}

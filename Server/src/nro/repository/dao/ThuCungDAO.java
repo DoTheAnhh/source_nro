@@ -29,9 +29,7 @@ import nro.repository.CrisResultSet;
  *
  * <p>Không có bảng "thú của người chơi". Cấp và kinh nghiệm là hai <b>chỉ số
  * phụ</b> gắn thẳng vào món thú cưng trong hành trang (xem
- * {@link #idChiSoCap()} và {@link #idChiSoExp()}), nên chúng đi theo con thú
- * khi trao đổi, hiện ngay trong bảng mô tả món, và client đọc được mà không
- * cần thêm gói tin nào.</p>
+ * bảng {@code thu_cung_so_huu}), không phải vật phẩm trong hành trang.</p>
  *
  * <p>Đọc lại mỗi {@link #HAN_BO_NHO_MS}: sửa trên panel thì chốc lát sau máy
  * chủ đã theo số mới, không phải khởi động lại.</p>
@@ -201,6 +199,31 @@ public final class ThuCungDAO {
                     + " bac INT(11) NOT NULL DEFAULT 0,"
                     + " PRIMARY KEY (item_id)"
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            ConnectDB.executeUpdate("CREATE TABLE IF NOT EXISTS thu_cung_so_huu ("
+                    + " id INT(11) NOT NULL AUTO_INCREMENT,"
+                    + " player_id INT(11) NOT NULL,"
+                    + " item_id INT(11) NOT NULL,"
+                    + " ten VARCHAR(40) NOT NULL DEFAULT '',"
+                    + " cap INT(11) NOT NULL DEFAULT 1,"
+                    + " exp INT(11) NOT NULL DEFAULT 0,"
+                    + " hp INT(11) NOT NULL DEFAULT 0,"
+                    + " ki INT(11) NOT NULL DEFAULT 0,"
+                    + " suc_danh INT(11) NOT NULL DEFAULT 0,"
+                    + " giap INT(11) NOT NULL DEFAULT 0,"
+                    + " chi_mang INT(11) NOT NULL DEFAULT 0,"
+                    + " ra_tran TINYINT(1) NOT NULL DEFAULT 0,"
+                    + " PRIMARY KEY (id),"
+                    + " KEY player_id (player_id)"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            ConnectDB.executeUpdate("CREATE TABLE IF NOT EXISTS thu_cung_chi_so_bac ("
+                    + " bac INT(11) NOT NULL,"
+                    + " hp_min INT(11) NOT NULL DEFAULT 0, hp_max INT(11) NOT NULL DEFAULT 0,"
+                    + " ki_min INT(11) NOT NULL DEFAULT 0, ki_max INT(11) NOT NULL DEFAULT 0,"
+                    + " sd_min INT(11) NOT NULL DEFAULT 0, sd_max INT(11) NOT NULL DEFAULT 0,"
+                    + " giap_min INT(11) NOT NULL DEFAULT 0, giap_max INT(11) NOT NULL DEFAULT 0,"
+                    + " cm_min INT(11) NOT NULL DEFAULT 0, cm_max INT(11) NOT NULL DEFAULT 0,"
+                    + " PRIMARY KEY (bac)"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
             ConnectDB.executeUpdate("CREATE TABLE IF NOT EXISTS thu_cung_ruong ("
                     + " item_id INT(11) NOT NULL,"
                     + " bac INT(11) NOT NULL,"
@@ -213,10 +236,12 @@ public final class ThuCungDAO {
                     + " mo_ta VARCHAR(255) DEFAULT NULL,"
                     + " PRIMARY KEY (khoa)"
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            themCotThieu();
             gieoCauHinh();
             gieoKyNang();
             gieoDoAn();
             gieoBac();
+            gieoChiSoBac();
         } catch (Exception ex) {
             daTaoBang = false;
             Logger.logException(ThuCungDAO.class, ex, "Không tạo được bảng thú cưng");
@@ -229,12 +254,61 @@ public final class ThuCungDAO {
     public static final String K_EXP_MOI_CAP = "exp_moi_cap";
     public static final String K_CAP_TOI_DA = "cap_toi_da";
     public static final String K_THEM_MOI_CAP = "them_moi_cap";
+    public static final String K_CHI_SO_MOI_CAP = "chi_so_moi_cap";
 
     private static final String[][] CAU_HINH_GOC = {
         {K_EXP_MOI_CAP, "100", "Kinh nghiệm cần cho MỖI cấp — lên cấp c cần c × số này"},
         {K_CAP_TOI_DA, "50", "Cấp cao nhất của thú cưng"},
-        {K_THEM_MOI_CAP, "1", "Mỗi cấp sau khi mở chiêu thì chiêu mạnh thêm bao nhiêu %"}
+        {K_THEM_MOI_CAP, "1", "Mỗi cấp sau khi mở chiêu thì chiêu mạnh thêm bao nhiêu %"},
+        {K_CHI_SO_MOI_CAP, "3", "Mỗi cấp thú cưng cộng thêm bao nhiêu % chỉ số"}
     };
+
+    /**
+     * Thêm cột cho bảng đã tạo từ bản trước.
+     *
+     * <p>{@code CREATE TABLE IF NOT EXISTS} không sửa bảng đã có, nên máy nào
+     * chạy bản thú cưng đời đầu (thú chưa có tên riêng, chưa có chỉ số bốc) sẽ
+     * thiếu cột và mọi câu đọc đều hỏng. Mỗi cột một lệnh riêng, lỗi "trùng
+     * tên cột" là chuyện bình thường nên nuốt.</p>
+     */
+    private static void themCotThieu() {
+        String[] cot = {
+            "ten VARCHAR(40) NOT NULL DEFAULT ''",
+            "hp INT(11) NOT NULL DEFAULT 0",
+            "ki INT(11) NOT NULL DEFAULT 0",
+            "suc_danh INT(11) NOT NULL DEFAULT 0",
+            "giap INT(11) NOT NULL DEFAULT 0",
+            "chi_mang INT(11) NOT NULL DEFAULT 0"
+        };
+        java.util.Set<String> dangCo = new java.util.HashSet<>();
+        CrisResultSet rs = null;
+        try {
+            // Doc theo TEN COT GOC, khong đặt bí danh: bộ đọc kết quả của máy
+            // chủ tra ô theo tên cột thật (viết thường), bí danh AS không có
+            // tác dụng — đặt bí danh thì mọi ô đọc ra null và lần nào cũng thử
+            // ALTER lại, in đầy log lúc khởi động.
+            rs = ConnectDB.executeQuery("SELECT COLUMN_NAME FROM information_schema.COLUMNS"
+                    + " WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'thu_cung_so_huu'");
+            while (rs.next()) {
+                dangCo.add(String.valueOf(rs.getString("column_name")).toLowerCase());
+            }
+        } catch (Exception ex) {
+            // Khong doc duoc danh sach cot thi thoi, de phan duoi thu them.
+        } finally {
+            dong(rs);
+        }
+        for (String c : cot) {
+            String ten = c.substring(0, c.indexOf(' ')).toLowerCase();
+            if (dangCo.contains(ten)) {
+                continue;
+            }
+            try {
+                ConnectDB.executeUpdate("ALTER TABLE thu_cung_so_huu ADD COLUMN " + c);
+            } catch (Exception daCo) {
+                // Cot da co: khong phai loi.
+            }
+        }
+    }
 
     private static void gieoCauHinh() throws Exception {
         for (String[] d : CAU_HINH_GOC) {
@@ -698,6 +772,326 @@ public final class ThuCungDAO {
     }
 
     // =====================================================================
+    //  Chỉ số theo bậc, và thú của người chơi
+    // =====================================================================
+    /**
+     * Khoảng chỉ số của một bậc.
+     *
+     * <p>Nhận một con thú thì mỗi chỉ số bốc ngẫu nhiên trong khoảng của bậc
+     * ấy, nên hai con cùng loại vẫn khác nhau — chỗ để người chơi săn con
+     * "ngon". Khoảng do admin khai trên panel.</p>
+     */
+    public static final class ChiSoBac {
+
+        public int bac;
+        public int hpMin;
+        public int hpMax;
+        public int kiMin;
+        public int kiMax;
+        public int sdMin;
+        public int sdMax;
+        public int giapMin;
+        public int giapMax;
+        /** Tỉ lệ chí mạng, phần trăm. */
+        public int cmMin;
+        public int cmMax;
+    }
+
+    private static final Map<Integer, ChiSoBac> CHI_SO_BAC = new HashMap<>();
+    private static long lucDocChiSoBac;
+
+    private static synchronized void docChiSoBac() {
+        long bayGio = System.currentTimeMillis();
+        if (bayGio - lucDocChiSoBac < HAN_BO_NHO_MS && lucDocChiSoBac > 0) {
+            return;
+        }
+        damBaoBang();
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT * FROM thu_cung_chi_so_bac ORDER BY bac");
+            Map<Integer, ChiSoBac> moi = new LinkedHashMap<>();
+            while (rs.next()) {
+                ChiSoBac c = new ChiSoBac();
+                c.bac = rs.getInt("bac");
+                c.hpMin = rs.getInt("hp_min");
+                c.hpMax = rs.getInt("hp_max");
+                c.kiMin = rs.getInt("ki_min");
+                c.kiMax = rs.getInt("ki_max");
+                c.sdMin = rs.getInt("sd_min");
+                c.sdMax = rs.getInt("sd_max");
+                c.giapMin = rs.getInt("giap_min");
+                c.giapMax = rs.getInt("giap_max");
+                c.cmMin = rs.getInt("cm_min");
+                c.cmMax = rs.getInt("cm_max");
+                moi.put(c.bac, c);
+            }
+            CHI_SO_BAC.clear();
+            CHI_SO_BAC.putAll(moi);
+            lucDocChiSoBac = bayGio;
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không đọc được chỉ số theo bậc");
+        } finally {
+            dong(rs);
+        }
+    }
+
+    public static ChiSoBac chiSoBac(int bac) {
+        docChiSoBac();
+        ChiSoBac c = CHI_SO_BAC.get(bac);
+        if (c != null) {
+            return c;
+        }
+        ChiSoBac rong = new ChiSoBac();
+        rong.bac = bac;
+        return rong;
+    }
+
+    public static List<ChiSoBac> tatCaChiSoBac() {
+        docChiSoBac();
+        List<ChiSoBac> ra = new ArrayList<>();
+        for (int b = 0; b < TEN_BAC.length; b++) {
+            ra.add(chiSoBac(b));
+        }
+        return ra;
+    }
+
+    public static void luuChiSoBac(ChiSoBac c) {
+        if (c == null || c.bac < 0 || c.bac >= TEN_BAC.length) {
+            return;
+        }
+        try {
+            damBaoBang();
+            ConnectDB.executeUpdate("INSERT INTO thu_cung_chi_so_bac"
+                    + " (bac, hp_min, hp_max, ki_min, ki_max, sd_min, sd_max,"
+                    + " giap_min, giap_max, cm_min, cm_max)"
+                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    + " ON DUPLICATE KEY UPDATE hp_min = VALUES(hp_min), hp_max = VALUES(hp_max),"
+                    + " ki_min = VALUES(ki_min), ki_max = VALUES(ki_max),"
+                    + " sd_min = VALUES(sd_min), sd_max = VALUES(sd_max),"
+                    + " giap_min = VALUES(giap_min), giap_max = VALUES(giap_max),"
+                    + " cm_min = VALUES(cm_min), cm_max = VALUES(cm_max)",
+                    c.bac, c.hpMin, c.hpMax, c.kiMin, c.kiMax, c.sdMin, c.sdMax,
+                    c.giapMin, c.giapMax, c.cmMin, c.cmMax);
+            lucDocChiSoBac = 0;
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không lưu được chỉ số theo bậc");
+        }
+    }
+
+    /**
+     * Gieo khoảng chỉ số cho bảy bậc — chỉ khi bảng còn rỗng.
+     *
+     * <p>Bậc trên hơn bậc ngay dưới <b>5%</b>, nhân dồn: đúng luật đã chốt, và
+     * vì con số nằm trong bảng nên admin muốn đổi thì sửa thẳng trên panel chứ
+     * không phải sửa mã.</p>
+     */
+    private static void gieoChiSoBac() throws Exception {
+        if (demDong("thu_cung_chi_so_bac") > 0) {
+            return;
+        }
+        // Bac D lam goc.
+        double[] goc = {2000, 2000, 50, 10, 1};
+        for (int b = 0; b < TEN_BAC.length; b++) {
+            double he = Math.pow(1.05d, b);
+            ChiSoBac c = new ChiSoBac();
+            c.bac = b;
+            c.hpMin = (int) Math.round(goc[0] * he * 0.8);
+            c.hpMax = (int) Math.round(goc[0] * he * 1.2);
+            c.kiMin = (int) Math.round(goc[1] * he * 0.8);
+            c.kiMax = (int) Math.round(goc[1] * he * 1.2);
+            c.sdMin = (int) Math.round(goc[2] * he * 0.8);
+            c.sdMax = (int) Math.round(goc[2] * he * 1.2);
+            c.giapMin = (int) Math.round(goc[3] * he * 0.8);
+            c.giapMax = (int) Math.round(goc[3] * he * 1.2);
+            c.cmMin = b == 0 ? 0 : (int) Math.round(goc[4] * he * 0.8);
+            c.cmMax = (int) Math.round(goc[4] * he * 1.2);
+            luuChiSoBac(c);
+        }
+        Logger.success("Thú cưng: gieo khoảng chỉ số cho " + TEN_BAC.length + " bậc\n");
+    }
+
+    public static int chiSoMoiCap() {
+        return Math.max(0, soCauHinh(K_CHI_SO_MOI_CAP, 3));
+    }
+
+    // ------------------------------------------------- thú của người chơi
+    /** Một con thú cụ thể của một người chơi. */
+    public static final class ThuSoHuu {
+
+        public int id;
+        public int playerId;
+        public int itemId;
+        /** Tên người chơi tự đặt; rỗng thì lấy tên loại thú. */
+        public String ten = "";
+        public int cap = 1;
+        public int exp;
+        /** Chỉ số bốc lúc nhận, ở cấp 1. */
+        public int hp;
+        public int ki;
+        public int sucDanh;
+        public int giap;
+        public int chiMang;
+        public boolean raTran;
+
+        /** Chỉ số sau khi cộng phần của cấp. */
+        public int theoCap(int goc) {
+            return (int) Math.round(goc * (1d + Math.max(0, cap - 1) * chiSoMoiCap() / 100d));
+        }
+    }
+
+    /** Mọi con thú của một người chơi, con ra trận đứng đầu. */
+    public static List<ThuSoHuu> thuCuaNguoi(int playerId) {
+        damBaoBang();
+        List<ThuSoHuu> ra = new ArrayList<>();
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT * FROM thu_cung_so_huu"
+                    + " WHERE player_id = ? ORDER BY ra_tran DESC, id", playerId);
+            while (rs.next()) {
+                ra.add(docThu(rs));
+            }
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không đọc được thú của người chơi");
+        } finally {
+            dong(rs);
+        }
+        return ra;
+    }
+
+    /** Con đang ra trận của một người chơi, hoặc {@code null}. */
+    public static ThuSoHuu thuRaTran(int playerId) {
+        damBaoBang();
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT * FROM thu_cung_so_huu"
+                    + " WHERE player_id = ? AND ra_tran = 1 LIMIT 1", playerId);
+            return rs.next() ? docThu(rs) : null;
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không đọc được thú ra trận");
+            return null;
+        } finally {
+            dong(rs);
+        }
+    }
+
+    public static ThuSoHuu thuTheoId(int id) {
+        damBaoBang();
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT * FROM thu_cung_so_huu WHERE id = ?", id);
+            return rs.next() ? docThu(rs) : null;
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không đọc được thú cưng");
+            return null;
+        } finally {
+            dong(rs);
+        }
+    }
+
+    private static ThuSoHuu docThu(CrisResultSet rs) throws Exception {
+        ThuSoHuu t = new ThuSoHuu();
+        t.id = rs.getInt("id");
+        t.playerId = rs.getInt("player_id");
+        t.itemId = rs.getInt("item_id");
+        t.ten = rs.getString("ten");
+        t.cap = rs.getInt("cap");
+        t.exp = rs.getInt("exp");
+        t.hp = rs.getInt("hp");
+        t.ki = rs.getInt("ki");
+        t.sucDanh = rs.getInt("suc_danh");
+        t.giap = rs.getInt("giap");
+        t.chiMang = rs.getInt("chi_mang");
+        t.raTran = rs.getInt("ra_tran") == 1;
+        if (t.ten == null) {
+            t.ten = "";
+        }
+        return t;
+    }
+
+    /**
+     * Thêm một con thú cho người chơi, chỉ số bốc theo khoảng của bậc.
+     *
+     * @return dòng vừa thêm, hoặc {@code null} nếu hỏng
+     */
+    public static ThuSoHuu themThu(int playerId, int itemId) {
+        ChiSoBac k = chiSoBac(bac(itemId));
+        int hp = boc(k.hpMin, k.hpMax);
+        int ki = boc(k.kiMin, k.kiMax);
+        int sd = boc(k.sdMin, k.sdMax);
+        int giap = boc(k.giapMin, k.giapMax);
+        int cm = boc(k.cmMin, k.cmMax);
+        try {
+            damBaoBang();
+            ConnectDB.executeUpdate("INSERT INTO thu_cung_so_huu"
+                    + " (player_id, item_id, ten, cap, exp, hp, ki, suc_danh, giap,"
+                    + " chi_mang, ra_tran) VALUES (?, ?, '', 1, 0, ?, ?, ?, ?, ?, 0)",
+                    playerId, itemId, hp, ki, sd, giap, cm);
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không thêm được thú cưng");
+            return null;
+        }
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT * FROM thu_cung_so_huu"
+                    + " WHERE player_id = ? ORDER BY id DESC LIMIT 1", playerId);
+            return rs.next() ? docThu(rs) : null;
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không đọc lại được thú vừa thêm");
+            return null;
+        } finally {
+            dong(rs);
+        }
+    }
+
+    private static int boc(int min, int max) {
+        if (max <= min) {
+            return Math.max(0, min);
+        }
+        return min + nro.core.util.Util.nextInt(0, max - min);
+    }
+
+    public static void luuCapExp(int id, int cap, int exp) {
+        try {
+            ConnectDB.executeUpdate("UPDATE thu_cung_so_huu SET cap = ?, exp = ?"
+                    + " WHERE id = ?", cap, exp, id);
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không lưu được cấp thú cưng");
+        }
+    }
+
+    public static void doiTen(int id, String ten) {
+        try {
+            ConnectDB.executeUpdate("UPDATE thu_cung_so_huu SET ten = ? WHERE id = ?",
+                    ten == null ? "" : ten, id);
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không đổi được tên thú cưng");
+        }
+    }
+
+    /**
+     * Cho một con ra trận; mọi con khác của người ấy về nghỉ.
+     *
+     * <p>Hai câu lệnh chứ không một: "tắt hết rồi bật một con" là cách duy nhất
+     * chắc chắn không bao giờ có hai con cùng ra trận, kể cả khi dữ liệu cũ đang
+     * lỗi sẵn.</p>
+     *
+     * @param id dòng cho ra trận, hoặc -1 để cho tất cả về nghỉ
+     */
+    public static void datRaTran(int playerId, int id) {
+        try {
+            damBaoBang();
+            ConnectDB.executeUpdate("UPDATE thu_cung_so_huu SET ra_tran = 0"
+                    + " WHERE player_id = ?", playerId);
+            if (id > 0) {
+                ConnectDB.executeUpdate("UPDATE thu_cung_so_huu SET ra_tran = 1"
+                        + " WHERE id = ? AND player_id = ?", id, playerId);
+            }
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không đổi được thú ra trận");
+        }
+    }
+
+    // =====================================================================
     //  Rương thú cưng
     // =====================================================================
     /** Khoá nhớ id vật phẩm của hai rương dựng sẵn. */
@@ -903,44 +1297,6 @@ public final class ThuCungDAO {
     // =====================================================================
     //  Hai chỉ số phụ giữ cấp và kinh nghiệm
     // =====================================================================
-    /**
-     * Id chỉ số "Cấp" của thú cưng, tự cấp một lần rồi nhớ trong
-     * {@code thu_cung_cau_hinh}.
-     *
-     * <p>Không ghi cứng con số: bảng {@code item_option_template} của mỗi máy
-     * chủ dài ngắn khác nhau, ghi cứng là đụng vào chỉ số người ta đang dùng.
-     * {@link ChiSoOptionDAO#them} cấp id kế tiếp rồi nối luôn vào bộ nhớ.</p>
-     *
-     * <p>Kiểu 9 là <b>dòng chỉ in chữ</b>: không cộng gì vào nhân vật, chỉ hiện
-     * trong bảng mô tả món.</p>
-     */
-    public static int idChiSoCap() {
-        return idChiSo("chi_so_cap", "Cấp #");
-    }
-
-    /** Id chỉ số "Kinh nghiệm" của thú cưng. */
-    public static int idChiSoExp() {
-        return idChiSo("chi_so_exp", "Kinh nghiệm #");
-    }
-
-    private static synchronized int idChiSo(String khoa, String ten) {
-        int id = soCauHinh(khoa, -1);
-        if (id > 0) {
-            return id;
-        }
-        int moi = ChiSoOptionDAO.them(ten, 9);
-        if (moi > 0) {
-            datCauHinh(khoa, String.valueOf(moi));
-            return moi;
-        }
-        // Khong cap duoc thi thu cung KHONG giu duoc cap va kinh nghiem. Im lang
-        // o day thi nguoi choi cho thu an ca buoi ma cap khong nhuc, chang ai
-        // biet vi sao — nen noi to mot dong.
-        Logger.warning("Thú cưng: chưa cấp được chỉ số \"" + ten + "\"."
-                + " Cấp và kinh nghiệm sẽ không lưu được cho tới khi cấp xong.\n");
-        return -1;
-    }
-
     // =====================================================================
     //  Vặt
     // =====================================================================

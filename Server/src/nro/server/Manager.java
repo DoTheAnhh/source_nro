@@ -327,8 +327,6 @@ public final class Manager {
     // nghiem. Phai SAU loadDatabase: cap id chi so moi can danh sach chi so da
     // nap xong, khong thi ChiSoOptionDAO thay bo nho lech va tu choi them.
     nro.repository.dao.ThuCungDAO.damBaoBang();
-    nro.repository.dao.ThuCungDAO.idChiSoCap();
-    nro.repository.dao.ThuCungDAO.idChiSoExp();
     // Hai ruong thu cung: them vao danh sach vat pham neu chua co.
     nro.repository.dao.ThuCungDAO.damBaoVatPhamRuong();
 

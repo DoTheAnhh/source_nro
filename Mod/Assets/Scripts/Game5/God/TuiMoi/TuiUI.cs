@@ -3830,6 +3830,7 @@ namespace Game5.God
         private const int GO_MUC_NANG = 2;
         private const int GO_CHAT_BANG = 3;
         private const int GO_KHAU_HIEU = 4;
+        private const int GO_TEN_THU = 5;
 
         /// <summary>Khung hình trước còn đang gõ chữ.</summary>
         private bool vuaGoChu;
@@ -3867,6 +3868,14 @@ namespace Game5.God
         public void onChatFromMe(string text, string to)
         {
             string chu = (text == null) ? "" : text.Trim();
+            if (viecGoChu == GO_TEN_THU)
+            {
+                // Tra lai viec mac dinh ngay: khong tra thi chuoi go o o LOC lan
+                // sau lai bi hieu la ten thu cung.
+                viecGoChu = GO_LOC_BANG;
+                goXongTenThu(chu);
+                return;
+            }
             if (viecGoChu == GO_CHAT_BANG)
             {
                 if (chu.Length > 0)

@@ -288,6 +288,15 @@ public class Player implements Runnable {
 
     /** Lần nổ gần nhất của từng chiêu (theo thứ tự chiêu), để đếm hồi chiêu. */
     public transient long[] tcLanNo;
+
+    /**
+     * Con thú đang ra trận, nhớ sẵn để khỏi hỏi cơ sở dữ liệu mỗi đòn đánh.
+     *
+     * <p>{@code tcDaNapThu} phân biệt "chưa đọc lần nào" với "đọc rồi, người này
+     * không có con nào" — thiếu nó thì người không nuôi thú bị hỏi lại liên tục.</p>
+     */
+    public transient nro.repository.dao.ThuCungDAO.ThuSoHuu tcThu;
+    public transient boolean tcDaNapThu;
     public transient List<HistoryTransactionDAO.TransactionLog> lichSuGiaoDichDangXem;
     public transient int trangThaiLichSuGd;
     /**

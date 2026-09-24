@@ -5,7 +5,6 @@ import java.util.List;
 import nro.core.log.Logger;
 import nro.core.util.Util;
 import nro.entity.item.Item;
-import nro.entity.item.ItemOption;
 import nro.entity.player.Player;
 import nro.net.io.Message;
 import nro.repository.dao.ThuCungDAO;
@@ -14,28 +13,24 @@ import nro.service.inventory.InventoryService;
 /**
  * Nuôi và dùng <b>thú cưng</b>.
  *
- * <h2>Con thú là một món đồ</h2>
+ * <h2>Thú không nằm trong hành trang</h2>
  *
- * <p>Thú cưng vốn đã là vật phẩm kiểu 21, mặc vào ô {@link ThuCungDAO#O_THU_CUNG}
- * là nó chạy theo sau lưng. Ở đây thêm ba thứ: <b>cấp</b>, <b>kinh nghiệm</b>
- * và <b>chiêu</b>.</p>
+ * <p>Mỗi con thú là một dòng trong {@code thu_cung_so_huu}: của ai, loại gì,
+ * cấp mấy, chỉ số bao nhiêu, có đang ra trận không. Mở rương là thêm một dòng
+ * chứ không rơi ra vật phẩm, nên thú không ăn ô hành trang nào và không bán
+ * hay trao đổi được.</p>
  *
- * <p>Cấp và kinh nghiệm là hai chỉ số phụ gắn thẳng vào món, nên chúng theo con
- * thú qua trao đổi, hiện sẵn trong bảng mô tả, và client đọc được ngay từ gói
- * hành trang cũ — không phải thêm gói tin nào cho việc hiển thị.</p>
+ * <h2>Chỉ số bốc theo bậc</h2>
+ *
+ * <p>Lúc nhận, mỗi chỉ số bốc trong khoảng của bậc ({@code thu_cung_chi_so_bac},
+ * khai trên panel) nên hai con cùng loại vẫn khác nhau. Cấp càng cao chỉ số
+ * càng lên theo {@code chi_so_moi_cap}. Con <b>đang ra trận</b> cộng thẳng chỉ
+ * số ấy cho chủ.</p>
  *
  * <h2>Một con ra trận</h2>
  *
- * <p>Ô thú cưng chỉ có một, nên "ra trận" chính là mặc vào ô ấy và mọi con còn
- * lại nằm trong hành trang là "nghỉ ngơi" — không cần thêm cột trạng thái nào,
- * cũng không có cách nào cho hai con cùng ra trận.</p>
- *
- * <h2>Chiêu nổ thế nào</h2>
- *
- * <p>Mỗi đòn đánh, từng chiêu <b>đã mở</b> của con đang ra trận tự bốc theo tỉ
- * lệ của nó, ai hồi chiêu xong thì bốc. Nổ trúng thì đặt một lớp tăng ích
- * ({@link Buff}) sống trong mấy giây; hết giờ thì lớp ấy tự rụng. Nhiều chiêu
- * nổ cùng lúc thì cộng dồn.</p>
+ * <p>Cho con này ra trận thì mọi con khác tự về nghỉ — chuyện ấy do một câu
+ * lệnh trong {@link ThuCungDAO#datRaTran} lo, không phải luật rải trong mã.</p>
  */
 public class ThuCungService {
 
@@ -51,8 +46,15 @@ public class ThuCungService {
     /** Mã gói tin thú cưng, khớp với client ({@code Controller}, case 111). */
     public static final int GOI_THU_CUNG = 111;
 
+    // Viec client gui len.
     private static final int VIEC_BANG = 0;
     private static final int VIEC_CHO_AN = 1;
+    private static final int VIEC_RA_TRAN = 2;
+    private static final int VIEC_DOI_TEN = 3;
+
+    // Viec may chu gui xuong.
+    private static final int GUI_BANG = 0;
+    private static final int GUI_DANH_SACH = 1;
 
     /** Một lớp tăng ích đang chạy trên người chơi. */
     public static final class Buff {
@@ -65,106 +67,161 @@ public class ThuCungService {
     }
 
     // =====================================================================
-    //  Cấp và kinh nghiệm của một con
+    //  Con đang ra trận
     // =====================================================================
-    public static boolean laThuCung(Item it) {
-        return it != null && it.isNotNullItem() && it.template != null
-                && it.template.type == ThuCungDAO.KIEU_THU_CUNG;
-    }
-
-    public int cap(Item it) {
-        int c = doChiSo(it, ThuCungDAO.idChiSoCap());
-        return c < 1 ? 1 : c;
-    }
-
-    public int exp(Item it) {
-        return Math.max(0, doChiSo(it, ThuCungDAO.idChiSoExp()));
-    }
-
-    private int doChiSo(Item it, int idChiSo) {
-        if (it == null || it.itemOptions == null || idChiSo <= 0) {
-            return 0;
-        }
-        for (ItemOption io : it.itemOptions) {
-            if (io != null && io.optionTemplate != null && io.optionTemplate.id == idChiSo) {
-                return io.param;
-            }
-        }
-        return 0;
-    }
-
     /**
-     * Ghi một chỉ số phụ, thêm dòng mới nếu món chưa có.
+     * Con đang ra trận, nhớ sẵn trên {@link Player}.
      *
-     * <p>Dòng cấp đặt lên <b>đầu</b> danh sách để bảng mô tả mở ra là thấy ngay,
-     * không phải dò giữa mấy dòng cộng máu cộng sức đánh.</p>
+     * <p>Không hỏi cơ sở dữ liệu ở đây: hàm này bị gọi trong lúc tính sát
+     * thương, tức mỗi đòn đánh của mọi người chơi. Chỉ đọc một lần mỗi phiên,
+     * và mỗi lần đổi thú thì {@link #quenThu} xoá cho đọc lại.</p>
      */
-    private void datChiSo(Item it, int idChiSo, int giaTri, boolean lenDau) {
-        if (it == null || it.itemOptions == null || idChiSo <= 0) {
+    public ThuCungDAO.ThuSoHuu thuRaTran(Player pl) {
+        if (pl == null || !pl.isPl()) {
+            return null;
+        }
+        if (!pl.tcDaNapThu) {
+            pl.tcDaNapThu = true;
+            pl.tcThu = ThuCungDAO.thuRaTran((int) pl.id);
+        }
+        return pl.tcThu;
+    }
+
+    /** Quên con đang nhớ, để lần sau đọc lại từ cơ sở dữ liệu. */
+    public void quenThu(Player pl) {
+        if (pl != null) {
+            pl.tcDaNapThu = false;
+            pl.tcThu = null;
+        }
+    }
+
+    // =====================================================================
+    //  Chỉ số cộng cho chủ
+    // =====================================================================
+    /**
+     * Cộng chỉ số của con đang ra trận vào người chơi.
+     *
+     * <p>Gọi từ {@code NPoint.calPoint}, cùng chỗ với chỉ số của trang bị, nên
+     * nó đi qua đủ mọi phép nhân về sau (set kích hoạt, hợp thể…) y như đồ.</p>
+     */
+    public void congChiSo(nro.entity.player.NPoint n, Player chu) {
+        if (n == null || chu == null) {
             return;
         }
-        for (ItemOption io : it.itemOptions) {
-            if (io != null && io.optionTemplate != null && io.optionTemplate.id == idChiSo) {
-                io.param = giaTri;
+        ThuCungDAO.ThuSoHuu t = thuRaTran(chu);
+        if (t == null) {
+            return;
+        }
+        n.hpAdd += t.theoCap(t.hp);
+        n.mpAdd += t.theoCap(t.ki);
+        n.dameAdd += t.theoCap(t.sucDanh);
+        n.defAdd += t.theoCap(t.giap);
+        n.critAdd += t.chiMang;
+    }
+
+    // =====================================================================
+    //  Ra trận / nghỉ ngơi
+    // =====================================================================
+    /**
+     * Cho một con ra trận, hoặc cho tất cả về nghỉ khi {@code id <= 0}.
+     *
+     * <p>Đổi xong thì dựng lại chỉ số và thả con thú chạy theo sau lưng — hai
+     * việc người chơi thấy ngay, nên làm luôn ở đây thay vì đợi lần tính sau.</p>
+     */
+    public void raTran(Player pl, int id) {
+        if (pl == null || !pl.isPl()) {
+            return;
+        }
+        if (id > 0) {
+            ThuCungDAO.ThuSoHuu t = ThuCungDAO.thuTheoId(id);
+            if (t == null || t.playerId != (int) pl.id) {
+                Service.gI().sendThongBao(pl, "Không thấy thú cưng này");
                 return;
             }
         }
-        ItemOption moi = new ItemOption(idChiSo, giaTri);
-        if (moi.optionTemplate == null) {
-            return;
-        }
-        if (lenDau) {
-            it.itemOptions.add(0, moi);
-        } else {
-            it.itemOptions.add(moi);
-        }
+        ThuCungDAO.datRaTran((int) pl.id, id);
+        quenThu(pl);
+        capNhatThuTheoSau(pl);
+        pl.nPoint.calPoint();
+        pl.nPoint.setFullHpMp();
+        Service.gI().point(pl);
+        guiDanhSach(pl);
+        ThuCungDAO.ThuSoHuu moi = thuRaTran(pl);
+        Service.gI().sendThongBao(pl, moi == null
+                ? "Thú cưng đã về nghỉ ngơi" : (tenThu(moi) + " đã ra trận"));
     }
 
-    /**
-     * Cộng kinh nghiệm cho một con thú, lên cấp bao nhiêu lần thì lên.
-     *
-     * @return số cấp vừa lên
-     */
-    public int themExp(Item thu, int them) {
-        if (!laThuCung(thu) || them <= 0) {
-            return 0;
+    /** Dựng lại con thú chạy theo sau lưng cho khớp con đang ra trận. */
+    public void capNhatThuTheoSau(Player pl) {
+        ThuCungDAO.ThuSoHuu t = thuRaTran(pl);
+        if (t == null) {
+            if (pl.PetFollow != null) {
+                nro.service.fun.ChangeMapService.gI().exitMap(pl.PetFollow);
+                pl.PetFollow.dispose();
+                pl.PetFollow = null;
+            }
+            return;
         }
-        int cap = cap(thu);
-        int exp = exp(thu) + them;
-        int tran = ThuCungDAO.capToiDa();
-        int lenCap = 0;
-        while (cap < tran && exp >= ThuCungDAO.expCanChoCap(cap)) {
-            exp -= ThuCungDAO.expCanChoCap(cap);
-            cap++;
-            lenCap++;
+        nro.entity.template.ItemTemplate m
+                = nro.service.item.ItemService.gI().getTemplate(t.itemId);
+        if (m == null) {
+            return;
         }
-        if (cap >= tran) {
-            // Toi tran thi khong giu phan thua: giu lai chi lam nguoi choi tuong
-            // con len duoc nua.
-            exp = 0;
+        DetuService.PetFollow(pl, m.head, m.body, m.leg);
+    }
+
+    /** Tên hiển thị: tên người chơi đặt, không có thì lấy tên loại. */
+    public String tenThu(ThuCungDAO.ThuSoHuu t) {
+        if (t == null) {
+            return "";
         }
-        datChiSo(thu, ThuCungDAO.idChiSoCap(), cap, true);
-        datChiSo(thu, ThuCungDAO.idChiSoExp(), exp, false);
-        return lenCap;
+        if (t.ten != null && !t.ten.trim().isEmpty()) {
+            return t.ten.trim();
+        }
+        nro.entity.template.ItemTemplate m
+                = nro.service.item.ItemService.gI().getTemplate(t.itemId);
+        return m == null ? ("Thú #" + t.itemId) : m.name;
+    }
+
+    // =====================================================================
+    //  Đổi tên
+    // =====================================================================
+    private static final int DAI_TEN_TOI_DA = 16;
+
+    public void doiTen(Player pl, int id, String ten) {
+        if (pl == null || ten == null) {
+            return;
+        }
+        ThuCungDAO.ThuSoHuu t = ThuCungDAO.thuTheoId(id);
+        if (t == null || t.playerId != (int) pl.id) {
+            Service.gI().sendThongBao(pl, "Không thấy thú cưng này");
+            return;
+        }
+        String sach = ten.trim();
+        if (sach.length() > DAI_TEN_TOI_DA) {
+            sach = sach.substring(0, DAI_TEN_TOI_DA);
+        }
+        if (Util.haveSpecialCharacter(sach)) {
+            Service.gI().sendThongBao(pl, "Tên không được chứa ký tự đặc biệt");
+            return;
+        }
+        ThuCungDAO.doiTen(id, sach);
+        quenThu(pl);
+        guiDanhSach(pl);
+        Service.gI().sendThongBao(pl, sach.isEmpty()
+                ? "Đã trả lại tên gốc" : ("Đã đổi tên thành " + sach));
     }
 
     // =====================================================================
     //  Cho ăn
     // =====================================================================
-    /**
-     * Cho con thú ở {@code viTriThu} ăn món ở ô {@code viTriDoAn} của hành trang.
-     *
-     * @param oTrangBi thú đang mặc (ô 7) hay đang nằm trong hành trang
-     */
-    public void choAn(Player pl, boolean oTrangBi, int viTriThu, int viTriDoAn) {
+    public void choAn(Player pl, int idThu, int viTriDoAn) {
         if (pl == null || pl.inventory == null) {
             return;
         }
-        Item thu = oTrangBi
-                ? layO(pl.inventory.itemsBody, ThuCungDAO.O_THU_CUNG)
-                : layO(pl.inventory.itemsBag, viTriThu);
-        if (!laThuCung(thu)) {
-            Service.gI().sendThongBao(pl, "Không thấy thú cưng");
+        ThuCungDAO.ThuSoHuu t = ThuCungDAO.thuTheoId(idThu);
+        if (t == null || t.playerId != (int) pl.id) {
+            Service.gI().sendThongBao(pl, "Không thấy thú cưng này");
             return;
         }
         Item mon = layO(pl.inventory.itemsBag, viTriDoAn);
@@ -177,30 +234,44 @@ public class ThuCungService {
             Service.gI().sendThongBao(pl, "Thú cưng không ăn được món này");
             return;
         }
-        if (cap(thu) >= ThuCungDAO.capToiDa()) {
+        if (t.cap >= ThuCungDAO.capToiDa()) {
             Service.gI().sendThongBao(pl, "Thú cưng đã đạt cấp cao nhất");
             return;
         }
         String tenMon = mon.template.name;
-        int capCu = cap(thu);
         InventoryService.gI().subQuantityItemsBag(pl, mon, 1);
-        themExp(thu, exp);
         InventoryService.gI().sendItemBag(pl);
-        if (oTrangBi) {
-            InventoryService.gI().sendItemBody(pl);
+
+        int capCu = t.cap;
+        int cap = t.cap;
+        int expMoi = t.exp + exp;
+        int tran = ThuCungDAO.capToiDa();
+        while (cap < tran && expMoi >= ThuCungDAO.expCanChoCap(cap)) {
+            expMoi -= ThuCungDAO.expCanChoCap(cap);
+            cap++;
         }
-        String bao = thu.template.name + " ăn " + tenMon + ", được " + exp + " kinh nghiệm";
-        int capMoi = cap(thu);
-        if (capMoi > capCu) {
-            bao += " — lên cấp " + capMoi + "!";
-            baoChieuVuaMo(pl, thu, capCu, capMoi);
+        if (cap >= tran) {
+            expMoi = 0;
+        }
+        ThuCungDAO.luuCapExp(t.id, cap, expMoi);
+        if (t.raTran) {
+            quenThu(pl);
+            pl.nPoint.calPoint();
+            Service.gI().point(pl);
+        }
+        guiDanhSach(pl);
+
+        String bao = tenThu(t) + " ăn " + tenMon + ", được " + exp + " kinh nghiệm";
+        if (cap > capCu) {
+            bao += " — lên cấp " + cap + "!";
+            baoChieuVuaMo(pl, t.itemId, capCu, cap);
         }
         Service.gI().sendThongBao(pl, bao);
     }
 
     /** Lên cấp mà vừa chạm cấp mở của chiêu nào thì nói cho người chơi biết. */
-    private void baoChieuVuaMo(Player pl, Item thu, int capCu, int capMoi) {
-        for (ThuCungDAO.KyNang k : ThuCungDAO.kyNangCua(thu.template.id)) {
+    private void baoChieuVuaMo(Player pl, int itemId, int capCu, int capMoi) {
+        for (ThuCungDAO.KyNang k : ThuCungDAO.kyNangCua(itemId)) {
             if (k.bat && k.capMo > capCu && k.capMo <= capMoi) {
                 Service.gI().sendThongBao(pl, "Mở chiêu " + k.thuTu + ": " + k.ten);
             }
@@ -214,41 +285,18 @@ public class ThuCungService {
     // =====================================================================
     //  Chiêu
     // =====================================================================
-    /** Có bao nhiêu loại thú đang đứng ở bậc này. */
-    private int soThuTheoBac(int bac) {
-        int n = 0;
-        for (nro.entity.template.ItemTemplate t : nro.server.Manager.ITEM_TEMPLATES) {
-            if (t != null && t.type == ThuCungDAO.KIEU_THU_CUNG
-                    && ThuCungDAO.bac(t.id) == bac) {
-                n++;
-            }
-        }
-        return n;
-    }
-
-    /** Con thú đang ra trận, hoặc {@code null}. */
-    public Item thuRaTran(Player pl) {
-        if (pl == null || pl.inventory == null) {
-            return null;
-        }
-        Item it = layO(pl.inventory.itemsBody, ThuCungDAO.O_THU_CUNG);
-        return laThuCung(it) ? it : null;
-    }
-
     /**
      * Bốc xem chiêu nào nổ — gọi mỗi đòn đánh, từ {@code NPoint.getDameAttack}.
      *
-     * <p>Từng chiêu đã mở bốc riêng, ai hồi chiêu xong thì bốc. Không giới hạn
-     * hai chiêu cùng chạy: cộng dồn cũng chỉ là mấy chục phần trăm.</p>
+     * <p>Từng chiêu đã mở bốc riêng, ai hồi chiêu xong thì bốc.</p>
      */
     private void bocChieu(Player pl) {
-        Item thu = thuRaTran(pl);
+        ThuCungDAO.ThuSoHuu thu = thuRaTran(pl);
         if (thu == null) {
             return;
         }
         long bayGio = System.currentTimeMillis();
-        int cap = cap(thu);
-        for (ThuCungDAO.KyNang k : ThuCungDAO.kyNangMo(thu.template.id, cap)) {
+        for (ThuCungDAO.KyNang k : ThuCungDAO.kyNangMo(thu.itemId, thu.cap)) {
             if (k.tiLe <= 0 || k.phanTram <= 0 || k.thuTu < 1
                     || k.thuTu > ThuCungDAO.SO_KY_NANG) {
                 continue;
@@ -263,13 +311,13 @@ public class ThuCungService {
                 continue;
             }
             pl.tcLanNo[k.thuTu] = bayGio;
-            no(pl, thu, k, cap, bayGio);
+            no(pl, thu, k, bayGio);
         }
     }
 
     /** Một chiêu vừa nổ: loại nào ăn ngay thì làm ngay, loại nào kéo dài thì đặt lớp. */
-    private void no(Player pl, Item thu, ThuCungDAO.KyNang k, int cap, long bayGio) {
-        int phanTram = k.phanTramTheoCap(cap);
+    private void no(Player pl, ThuCungDAO.ThuSoHuu thu, ThuCungDAO.KyNang k, long bayGio) {
+        int phanTram = k.phanTramTheoCap(thu.cap);
         if (k.loai == ThuCungDAO.LOAI_HOI_HP) {
             long hoi = pl.nPoint.hpMax * phanTram / 100L;
             pl.nPoint.hp = Math.min(pl.nPoint.hpMax, pl.nPoint.hp + hoi);
@@ -285,12 +333,11 @@ public class ThuCungService {
             b.het = bayGio + Math.max(1, k.giay) * 1000L;
             pl.tcBuff.add(b);
         }
-        Service.gI().sendThongBao(pl, thu.template.name + " dùng " + k.ten
+        Service.gI().sendThongBao(pl, tenThu(thu) + " dùng " + k.ten
                 + ": " + ThuCungDAO.tenLoai(k.loai).replace("%", phanTram + "%")
                 + (k.loai == ThuCungDAO.LOAI_HOI_HP ? "" : " trong " + k.giay + " giây"));
     }
 
-    /** Bỏ những lớp đã hết giờ. */
     private void donBuff(Player pl, long bayGio) {
         if (pl.tcBuff == null || pl.tcBuff.isEmpty()) {
             return;
@@ -321,10 +368,6 @@ public class ThuCungService {
     /**
      * Sức đánh sau khi tính thú cưng, và <b>nhân tiện bốc xem có chiêu nào nổ
      * không</b>.
-     *
-     * <p>Gọi ngay đầu {@code NPoint.getDameAttack} nên mỗi đòn bốc đúng một
-     * lần. Cộng cả loại "% sức đánh" lẫn loại "% sát thương của một chiêu" khi
-     * chiêu đang chọn đúng là chiêu ấy.</p>
      */
     public long dameSauThuCung(Player pl, long dameGoc) {
         if (pl == null || !pl.isPl()) {
@@ -344,12 +387,10 @@ public class ThuCungService {
         return dameGoc + dameGoc * phanTram / 100L;
     }
 
-    /** Cộng thêm bao nhiêu phần trăm tỉ lệ chí mạng. */
     public int themChiMang(Player pl) {
         return tong(pl, ThuCungDAO.LOAI_CHI_MANG, -1);
     }
 
-    /** Sát thương phải chịu sau khi trừ phần thú cưng đỡ giúp. */
     public double giamSatThuong(Player pl, double damage) {
         int phanTram = tong(pl, ThuCungDAO.LOAI_GIAM_SAT_THUONG, -1);
         if (phanTram <= 0) {
@@ -367,11 +408,7 @@ public class ThuCungService {
     // =====================================================================
     /**
      * Mở một rương: bốc <b>bậc</b> theo tỉ lệ khai trên panel, rồi bốc đều một
-     * con trong bậc ấy.
-     *
-     * <p>Bốc hai nấc chứ không gộp làm một: admin chỉnh tỉ lệ theo bậc, còn
-     * trong cùng một bậc thì con nào cũng như con nào — thêm một con mới vào
-     * bậc là nó tự có phần, không phải chia lại tỉ lệ.</p>
+     * con trong bậc ấy. Con thú vào thẳng bộ sưu tập, không rơi ra hành trang.
      *
      * @return {@code true} nếu món này đúng là rương (đã xử lý xong)
      */
@@ -381,15 +418,12 @@ public class ThuCungService {
             return false;
         }
         java.util.Map<Integer, Integer> tiLe = ThuCungDAO.tiLeRuong(ruong.template.id);
-        // Bo nhung bac chua co con thu nao.
-        //
-        // Bac rong ma van boc thi co lan mo ra khong duoc gi — nguoi choi mat
-        // ruong ma tuong hong. Bo han bac ay ra khoi luot boc thi phan tram cua
-        // no chia deu cho may bac con lai.
-        java.util.Iterator<java.util.Map.Entry<Integer, Integer>> it = tiLe.entrySet().iterator();
+        // Bo nhung bac chua co con thu nao: boc trung bac rong thi mo ra khong
+        // duoc gi, ma ruong thi da mat.
+        java.util.Iterator<java.util.Map.Entry<Integer, Integer>> it
+                = tiLe.entrySet().iterator();
         while (it.hasNext()) {
-            java.util.Map.Entry<Integer, Integer> e = it.next();
-            if (soThuTheoBac(e.getKey()) == 0) {
+            if (soThuTheoBac(it.next().getKey()) == 0) {
                 it.remove();
             }
         }
@@ -426,21 +460,81 @@ public class ThuCungService {
                     + ThuCungDAO.tenBac(bacRa));
             return true;
         }
-        // Khong tru ruong truoc buoc nay: moi cho thoat o tren deu la "khong
-        // nhan duoc gi", va tru mat ruong trong nhung truong hop ay la an cua
-        // nguoi choi.
-        if (InventoryService.gI().getCountEmptyBag(pl) == 0) {
-            Service.gI().sendThongBao(pl, "Hành trang của bạn không đủ chỗ trống");
+        nro.entity.template.ItemTemplate chon = ung.get(Util.nextInt(0, ung.size() - 1));
+        ThuCungDAO.ThuSoHuu moi = ThuCungDAO.themThu((int) pl.id, chon.id);
+        if (moi == null) {
+            Service.gI().sendThongBao(pl, "Không thêm được thú cưng, thử lại sau");
             return true;
         }
-        nro.entity.template.ItemTemplate chon = ung.get(Util.nextInt(0, ung.size() - 1));
-        Item thu = nro.service.item.ItemService.gI().createNewItem((short) chon.id);
         InventoryService.gI().subQuantityItemsBag(pl, ruong, 1);
-        InventoryService.gI().addItemBag(pl, thu);
         InventoryService.gI().sendItemBag(pl);
+        guiDanhSach(pl);
         Service.gI().sendThongBao(pl, "Bạn nhận được " + chon.name
-                + " — bậc " + ThuCungDAO.tenBac(bacRa));
+                + " — bậc " + ThuCungDAO.tenBac(bacRa) + ". Xem ở thẻ Thú cưng.");
         return true;
+    }
+
+    private int soThuTheoBac(int bac) {
+        int n = 0;
+        for (nro.entity.template.ItemTemplate t : nro.server.Manager.ITEM_TEMPLATES) {
+            if (t != null && t.type == ThuCungDAO.KIEU_THU_CUNG
+                    && ThuCungDAO.bac(t.id) == bac) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    // =====================================================================
+    //  Vật phẩm thú cưng cũ trong hành trang
+    // =====================================================================
+    /**
+     * Nuốt những con thú còn nằm dạng <b>vật phẩm</b> vào bộ sưu tập.
+     *
+     * <p>Trước khi có bộ sưu tập, thú cưng là vật phẩm kiểu 21 nằm trong hành
+     * trang hoặc ô Pet. Giữ cả hai đường thì người chơi có hai chỗ chứa thú mà
+     * chỉ một chỗ dùng được — nên chuyển hết sang bộ sưu tập rồi bỏ vật phẩm
+     * đi. Chạy một lần cho mỗi người, lúc họ mở thẻ Thú cưng.</p>
+     */
+    public void nuotThuCu(Player pl) {
+        if (pl == null || !pl.isPl() || pl.inventory == null) {
+            return;
+        }
+        int daNuot = 0;
+        List<Item> body = pl.inventory.itemsBody;
+        if (body != null && body.size() > ThuCungDAO.O_THU_CUNG) {
+            Item it = body.get(ThuCungDAO.O_THU_CUNG);
+            if (it != null && it.isNotNullItem() && it.template != null
+                    && it.template.type == ThuCungDAO.KIEU_THU_CUNG) {
+                if (ThuCungDAO.themThu((int) pl.id, it.template.id) != null) {
+                    body.set(ThuCungDAO.O_THU_CUNG,
+                            nro.service.item.ItemService.gI().createItemNull());
+                    daNuot++;
+                }
+            }
+        }
+        List<Item> bag = pl.inventory.itemsBag;
+        if (bag != null) {
+            for (int i = 0; i < bag.size(); i++) {
+                Item it = bag.get(i);
+                if (it != null && it.isNotNullItem() && it.template != null
+                        && it.template.type == ThuCungDAO.KIEU_THU_CUNG) {
+                    if (ThuCungDAO.themThu((int) pl.id, it.template.id) != null) {
+                        bag.set(i, nro.service.item.ItemService.gI().createItemNull());
+                        daNuot++;
+                    }
+                }
+            }
+        }
+        if (daNuot > 0) {
+            InventoryService.gI().sendItemBag(pl);
+            InventoryService.gI().sendItemBody(pl);
+            quenThu(pl);
+            pl.nPoint.calPoint();
+            Service.gI().point(pl);
+            Service.gI().sendThongBao(pl, "Đã chuyển " + daNuot
+                    + " thú cưng từ hành trang vào thẻ Thú cưng");
+        }
     }
 
     // =====================================================================
@@ -451,14 +545,27 @@ public class ThuCungService {
             int viec = msg.reader().readByte();
             switch (viec) {
                 case VIEC_BANG:
+                    nuotThuCu(pl);
                     guiBang(pl);
+                    guiDanhSach(pl);
                     break;
-                case VIEC_CHO_AN:
-                    boolean oTrangBi = msg.reader().readByte() == 1;
-                    int viTriThu = msg.reader().readByte();
+                case VIEC_CHO_AN: {
+                    int idThu = msg.reader().readInt();
                     int viTriDoAn = msg.reader().readByte();
-                    choAn(pl, oTrangBi, viTriThu, viTriDoAn);
+                    choAn(pl, idThu, viTriDoAn);
                     break;
+                }
+                case VIEC_RA_TRAN: {
+                    int idThu = msg.reader().readInt();
+                    raTran(pl, idThu);
+                    break;
+                }
+                case VIEC_DOI_TEN: {
+                    int idThu = msg.reader().readInt();
+                    String ten = msg.reader().readUTF();
+                    doiTen(pl, idThu, ten);
+                    break;
+                }
                 default:
                     break;
             }
@@ -467,13 +574,7 @@ public class ThuCungService {
         }
     }
 
-    /**
-     * Gửi bảng chiêu và bảng đồ ăn cho client.
-     *
-     * <p>Client cần hai bảng này để vẽ ô chiêu của từng con và để lọc ra những
-     * món cho ăn được. Chỉ gửi khi client hỏi (lúc mở thẻ Thú cưng), không nhồi
-     * vào lúc đăng nhập.</p>
-     */
+    /** Bảng chung: cấu hình, chiêu, đồ ăn, hình và bậc từng loại thú. */
     public void guiBang(Player pl) {
         Message msg = null;
         try {
@@ -490,11 +591,9 @@ public class ThuCungService {
                 }
             }
             msg = new Message(GOI_THU_CUNG);
-            msg.writer().writeByte(VIEC_BANG);
+            msg.writer().writeByte(GUI_BANG);
             msg.writer().writeShort(ThuCungDAO.capToiDa());
             msg.writer().writeInt(ThuCungDAO.expCanChoCap(1));
-            msg.writer().writeShort(ThuCungDAO.idChiSoCap());
-            msg.writer().writeShort(ThuCungDAO.idChiSoExp());
             msg.writer().writeShort(kn.size());
             for (ThuCungDAO.KyNang k : kn) {
                 msg.writer().writeShort(k.itemId);
@@ -514,12 +613,6 @@ public class ThuCungService {
                 msg.writer().writeShort(d.itemId);
                 msg.writer().writeInt(d.exp);
             }
-            // Hinh tung loai thu: mu, than, chan.
-            //
-            // Client khong co ba so nay — mau vat pham ben do chi co icon va
-            // `part`. Khong gui thi khung xem truoc dung duoc moi con dang deo
-            // (may chu co bao hinh qua goi 105), con nhung con nam trong hanh
-            // trang thi khong ve duoc.
             List<nro.entity.template.ItemTemplate> thu = new ArrayList<>();
             for (nro.entity.template.ItemTemplate t : nro.server.Manager.ITEM_TEMPLATES) {
                 if (t != null && t.type == ThuCungDAO.KIEU_THU_CUNG) {
@@ -537,6 +630,40 @@ public class ThuCungService {
             pl.sendMessage(msg);
         } catch (Exception ex) {
             Logger.logException(ThuCungService.class, ex, "Không gửi được bảng thú cưng");
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
+    }
+
+    /** Danh sách thú của chính người chơi này. */
+    public void guiDanhSach(Player pl) {
+        if (pl == null || !pl.isPl()) {
+            return;
+        }
+        Message msg = null;
+        try {
+            List<ThuCungDAO.ThuSoHuu> ds = ThuCungDAO.thuCuaNguoi((int) pl.id);
+            msg = new Message(GOI_THU_CUNG);
+            msg.writer().writeByte(GUI_DANH_SACH);
+            msg.writer().writeShort(ds.size());
+            for (ThuCungDAO.ThuSoHuu t : ds) {
+                msg.writer().writeInt(t.id);
+                msg.writer().writeShort(t.itemId);
+                msg.writer().writeUTF(t.ten == null ? "" : t.ten);
+                msg.writer().writeShort(t.cap);
+                msg.writer().writeInt(t.exp);
+                msg.writer().writeInt(t.theoCap(t.hp));
+                msg.writer().writeInt(t.theoCap(t.ki));
+                msg.writer().writeInt(t.theoCap(t.sucDanh));
+                msg.writer().writeInt(t.theoCap(t.giap));
+                msg.writer().writeShort(t.chiMang);
+                msg.writer().writeByte(t.raTran ? 1 : 0);
+            }
+            pl.sendMessage(msg);
+        } catch (Exception ex) {
+            Logger.logException(ThuCungService.class, ex, "Không gửi được danh sách thú cưng");
         } finally {
             if (msg != null) {
                 msg.cleanup();

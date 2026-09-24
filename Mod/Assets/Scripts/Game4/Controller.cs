@@ -3941,14 +3941,9 @@ namespace Game4
                         }
                         break;
                     case 111:
-                        {
-                            // Thu cung: viec 0 la bang chieu + bang do an + bang hinh thu.
-                            sbyte viecTC = msg.reader().readByte();
-                            if (viecTC == 0)
-                            {
-                                God.TuiUI.nhanBangThuCung(msg);
-                            }
-                        }
+                        // Thu cung: byte dau trong goi cho biet la bang chung hay
+                        // danh sach thu — de chinh ham do tu doc.
+                        God.TuiUI.nhanGoiThuCung(msg);
                         break;
 
                     case 110:

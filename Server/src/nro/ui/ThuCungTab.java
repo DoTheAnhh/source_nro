@@ -57,7 +57,8 @@ public class ThuCungTab extends JPanel {
         trong.addTab("1. Chiêu của thú", theChieu());
         trong.addTab("2. Đồ ăn", theDoAn());
         trong.addTab("3. Rương", theRuong());
-        trong.addTab("4. Cấu hình", theCauHinh());
+        trong.addTab("4. Chỉ số theo bậc", theChiSoBac());
+        trong.addTab("5. Cấu hình", theCauHinh());
         add(trong, BorderLayout.CENTER);
         // KHONG nap bang ngay trong ham dung.
         //
@@ -85,6 +86,7 @@ public class ThuCungTab extends JPanel {
         napThu();
         napDoAn();
         napRuong();
+        napChiSoBac();
     }
 
     /**
@@ -772,6 +774,97 @@ public class ThuCungTab extends JPanel {
         JOptionPane.showMessageDialog(this, "Đã lưu tỉ lệ rương.");
     }
 
+    //  Thẻ: khoảng chỉ số theo bậc
+    // =====================================================================
+    private static final String[] COT_CS = {"Bậc", "HP từ", "HP đến", "KI từ", "KI đến",
+        "SĐ từ", "SĐ đến", "Giáp từ", "Giáp đến", "Chí mạng từ", "Chí mạng đến"};
+
+    /**
+     * Khoảng chỉ số của từng bậc.
+     *
+     * <p>Nhận một con thú thì mỗi chỉ số bốc ngẫu nhiên trong khoảng của bậc
+     * ấy, nên hai con cùng loại vẫn khác nhau. Cột "Bậc" chỉ để đọc; mười cột
+     * còn lại sửa thẳng rồi bấm Lưu.</p>
+     */
+    private final DefaultTableModel mCs = new DefaultTableModel(COT_CS, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return c > 0;
+        }
+
+        @Override
+        public Class<?> getColumnClass(int c) {
+            return c == 0 ? Object.class : Integer.class;
+        }
+    };
+
+    private final JTable bangCs = new JTable(mCs);
+
+    private JPanel theChiSoBac() {
+        JPanel p = new JPanel(new BorderLayout(0, 6));
+        p.setBackground(UiTheme.CARD);
+
+        JPanel tren = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        tren.setBackground(UiTheme.CARD);
+        JButton luu = new JButton("Lưu bảng");
+        ServerGuiUtils.toNut(luu, UiTheme.ACCENT);
+        luu.addActionListener(e -> luuChiSoBac());
+        tren.add(luu);
+        JLabel ghi = new JLabel("Chỉ số cộng thẳng cho người chơi khi con thú ra trận."
+                + " Cấp càng cao càng tăng thêm theo 'chi_so_moi_cap' ở thẻ Cấu hình.");
+        ghi.setForeground(UiTheme.TEXT_MUTED);
+        tren.add(ghi);
+        p.add(tren, BorderLayout.NORTH);
+
+        bangCs.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        p.add(ServerGuiUtils.cuon(bangCs), BorderLayout.CENTER);
+        return p;
+    }
+
+    private void napChiSoBac() {
+        mCs.setRowCount(0);
+        for (ThuCungDAO.ChiSoBac c : ThuCungDAO.tatCaChiSoBac()) {
+            mCs.addRow(new Object[]{ThuCungDAO.tenBac(c.bac), c.hpMin, c.hpMax,
+                c.kiMin, c.kiMax, c.sdMin, c.sdMax, c.giapMin, c.giapMax,
+                c.cmMin, c.cmMax});
+        }
+    }
+
+    private void luuChiSoBac() {
+        if (bangCs.isEditing()) {
+            bangCs.getCellEditor().stopCellEditing();
+        }
+        for (int i = 0; i < mCs.getRowCount(); i++) {
+            ThuCungDAO.ChiSoBac c = new ThuCungDAO.ChiSoBac();
+            c.bac = i;
+            c.hpMin = so(mCs.getValueAt(i, 1));
+            c.hpMax = so(mCs.getValueAt(i, 2));
+            c.kiMin = so(mCs.getValueAt(i, 3));
+            c.kiMax = so(mCs.getValueAt(i, 4));
+            c.sdMin = so(mCs.getValueAt(i, 5));
+            c.sdMax = so(mCs.getValueAt(i, 6));
+            c.giapMin = so(mCs.getValueAt(i, 7));
+            c.giapMax = so(mCs.getValueAt(i, 8));
+            c.cmMin = so(mCs.getValueAt(i, 9));
+            c.cmMax = so(mCs.getValueAt(i, 10));
+            ThuCungDAO.luuChiSoBac(c);
+        }
+        napChiSoBac();
+        JOptionPane.showMessageDialog(this, "Đã lưu khoảng chỉ số theo bậc.");
+    }
+
+    private static int so(Object o) {
+        if (o instanceof Number) {
+            return ((Number) o).intValue();
+        }
+        try {
+            return Integer.parseInt(String.valueOf(o).trim());
+        } catch (NumberFormatException sai) {
+            return 0;
+        }
+    }
+
+    // =====================================================================
     // =====================================================================
     //  Thẻ 4: cấu hình
     // =====================================================================
