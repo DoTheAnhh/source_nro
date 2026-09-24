@@ -1039,9 +1039,8 @@ namespace Game1.God
                         o[0] + o[2] / 2, o[1] + o[3] / 2, 0,
                         mGraphics.VCENTER | mGraphics.HCENTER);
                 // So luong LUON hien, ke ca khi bang 0 — de biet ngay con hay het.
-                mFont mfSo = soCo > 0 ? mFont.tahoma_7b_dark : mFont.tahoma_7_grey;
-                mfSo.drawString(g, string.Empty + soCo,
-                        o[0] + o[2] / 2, o[1] + o[3] - 2, mFont.CENTER);
+                veChipSoGiua(g, string.Empty + soCo, o[0] + o[2] / 2,
+                        o[1] + o[3] + 3, soCo <= 0);
             }
 
             if (chuot >= 0 && chuot < doAnThuCung.Count)

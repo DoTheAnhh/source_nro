@@ -357,6 +357,13 @@ namespace Game6.God
         /// <summary>Viền ô — nâu đậm hơn nền ô.</summary>
         private static readonly int MAU_VIEN_O = rgb(0x8B, 0x62, 0x3A);
 
+        /// <summary>Nền miếng số lượng: vàng cát, đậm hơn mặt ô một bậc.</summary>
+        /// <remarks>
+        /// Cùng màu kem với mặt ô thì miếng nền chỉ còn cái viền, nhìn như một
+        /// cái khung rỗng chứ không ra một nhãn.
+        /// </remarks>
+        private static readonly int MAU_CHIP_SO = rgb(0xF2, 0xD3, 0x9B);
+
         /// <summary>
         /// Việc phải làm khi bước vào một thẻ.
         /// </summary>
@@ -7165,13 +7172,7 @@ namespace Game6.God
                     y + h / 2, 0, mGraphics.VCENTER | mGraphics.HCENTER);
             if (it.quantity > 1)
             {
-                // So luong: chu NAU DAM, khong miếng nen.
-                //
-                // Doi theo mau o: den khi o sang, trang tren chip nau khi o kem,
-                // vang khi o nau/cam, va gio nau dam vi o da thanh kem. Chu vang
-                // tren kem la mat han con so.
-                mFont.tahoma_7b_dark.drawString(g, "" + it.quantity,
-                        x + w - 3, y + h - 12, mFont.RIGHT);
+                veChipSo(g, "" + it.quantity, x + w - 2, y + h - 2);
             }
             int cap = capNang(it);
             if (cap > 0)
@@ -7179,6 +7180,46 @@ namespace Game6.God
                 mFont.tahoma_7b_red.drawString(g, "+" + cap, x + 4, y + 2,
                         mFont.LEFT);
             }
+        }
+
+        /// <summary>
+        /// Con số nhỏ đặt trên một miếng nền có viền, góc dưới bên phải ô.
+        /// </summary>
+        /// <param name="xPhai">Mép phải của miếng nền.</param>
+        /// <param name="yDay">Mép dưới của miếng nền.</param>
+        /// <remarks>
+        /// Chữ trần nằm thẳng trên ảnh vật phẩm thì đọc rất mệt: ảnh nào cũng
+        /// một màu khác, con số khi thì trùng màu ảnh, khi thì rơi vào chỗ rối
+        /// chi tiết. Một miếng nền đặc tách hẳn nó ra khỏi ảnh.
+        /// </remarks>
+        private static void veChipSo(mGraphics g, string so, int xPhai, int yDay)
+        {
+            int w = mFont.tahoma_7b_dark.getWidth(so) + 7;
+            int h = 11;
+            int x = xPhai - w;
+            int y = yDay - h;
+            g.setColor(MAU_VIEN_O, 1f);
+            g.fillRect(x - 1, y - 1, w + 2, h + 2, 4);
+            g.setColor(MAU_CHIP_SO, 1f);
+            g.fillRect(x, y, w, h, 3);
+            mFont.tahoma_7b_dark.drawString(g, so, x + w / 2, y + 1,
+                    mFont.CENTER);
+        }
+
+        /// <summary>Như <see cref="veChipSo"/> nhưng canh giữa theo trục dọc.</summary>
+        private static void veChipSoGiua(mGraphics g, string so, int xTam,
+                int yDay, bool mo)
+        {
+            int w = mFont.tahoma_7b_dark.getWidth(so) + 7;
+            int h = 11;
+            int x = xTam - w / 2;
+            int y = yDay - h;
+            g.setColor(MAU_VIEN_O, mo ? 0.5f : 1f);
+            g.fillRect(x - 1, y - 1, w + 2, h + 2, 4);
+            g.setColor(MAU_CHIP_SO, mo ? 0.5f : 1f);
+            g.fillRect(x, y, w, h, 3);
+            (mo ? mFont.tahoma_7_grey : mFont.tahoma_7b_dark)
+                    .drawString(g, so, x + w / 2, y + 1, mFont.CENTER);
         }
 
         /// <summary>
