@@ -65,10 +65,10 @@ namespace Game1.God
         }
 
         /// <summary>
-        /// Mỗi cấp chiêu mạnh thêm bao nhiêu % chỉ số gốc của chiêu. Máy chủ gửi
-        /// ở cuối gói bảng; 5 là số mặc định bên máy chủ.
+        /// Mỗi cấp chiêu cộng thẳng bao nhiêu điểm % vào chiêu (10% → 12% → 14%).
+        /// Máy chủ gửi ở cuối gói bảng; 2 là số mặc định bên máy chủ.
         /// </summary>
-        private static int tcChieuMoiCap = 5;
+        private static int tcChieuCongMoiCap = 2;
 
         /// <summary>Tên từng loại hiệu ứng — khớp <c>ThuCungDAO.TEN_LOAI</c>.</summary>
         private static readonly string[] TEN_LOAI_CHIEU = {
@@ -192,7 +192,7 @@ namespace Game1.God
             // May chu cu khong gui so nay: giu so mac dinh.
             if (msg.reader().available() >= 2)
             {
-                tcChieuMoiCap = msg.reader().readShort();
+                tcChieuCongMoiCap = msg.reader().readShort();
             }
             tcDaCoBang = true;
         }
@@ -1004,14 +1004,14 @@ namespace Game1.God
         /// <summary>Dòng hiệu ứng của chiêu ở cấp chiêu <paramref name="capChieu"/>.</summary>
         /// <remarks>
         /// Cùng công thức với <c>KyNang.phanVanTheoCapChieu</c> bên máy chủ: tính
-        /// bằng phần vạn, mỗi cấp cộng <see cref="tcChieuMoiCap"/>% của chỉ số
-        /// gốc. Cấp THÚ không đụng tới.
+        /// bằng phần vạn, mỗi cấp cộng thẳng <see cref="tcChieuCongMoiCap"/>
+        /// điểm phần trăm. Cấp THÚ không đụng tới.
         /// </remarks>
         private static string moTaChieu(ChieuThuCung c, int capChieu)
         {
             long goc = c.phanTram * 100L;
-            long heSo = 100L + (long) tcChieuMoiCap * (capChieu > 1 ? capChieu - 1 : 0);
-            int phanVan = (int) (goc * heSo / 100L);
+            long them = (long) tcChieuCongMoiCap * 100L * (capChieu > 1 ? capChieu - 1 : 0);
+            int phanVan = (int) (goc + them);
             string mau = (c.loai >= 0 && c.loai < TEN_LOAI_CHIEU.Length)
                     ? TEN_LOAI_CHIEU[c.loai] : "Hiệu ứng #%";
             string s = mau.Replace("#", inPhanVan(phanVan));

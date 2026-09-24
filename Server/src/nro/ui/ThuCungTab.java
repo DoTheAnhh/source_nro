@@ -470,7 +470,7 @@ public class ThuCungTab extends JPanel {
             }
             fPhanTram.setText(String.valueOf(k == null ? 10 : k.phanTram));
             fGiay.setText(String.valueOf(k == null ? 10 : k.giay));
-            fTiLe.setText(String.valueOf(k == null ? 10 : k.tiLe));
+            fTiLe.setText(String.valueOf(k == null ? 3 : k.tiLe));
             fHoiChieu.setText(String.valueOf(k == null ? 30 : k.hoiChieu));
             fCapMo.setText(String.valueOf(k == null ? (thuTu == 1 ? 1 : thuTu * 10) : k.capMo));
             fBat.setSelected(k == null || k.bat);
@@ -509,7 +509,7 @@ public class ThuCungTab extends JPanel {
             }
             k.phanTram = so(fPhanTram, 10);
             k.giay = so(fGiay, 10);
-            k.tiLe = so(fTiLe, 10);
+            k.tiLe = so(fTiLe, 3);
             k.hoiChieu = so(fHoiChieu, 30);
             k.capMo = Math.max(1, so(fCapMo, 1));
             k.bat = fBat.isSelected();
@@ -564,7 +564,6 @@ public class ThuCungTab extends JPanel {
     };
 
     private final JTable bangAn = new JTable(mAn);
-    private final JTextField fIdMoi = new JTextField(6);
     private final JTextField fExpMoi = new JTextField(6);
 
     private JPanel theDoAn() {
@@ -573,11 +572,12 @@ public class ThuCungTab extends JPanel {
 
         JPanel tren = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
         tren.setBackground(UiTheme.CARD);
-        tren.add(new JLabel("Thêm món: id"));
-        tren.add(fIdMoi);
-        tren.add(new JLabel("kinh nghiệm"));
+        tren.add(new JLabel("Kinh nghiệm mỗi món:"));
         tren.add(fExpMoi);
-        JButton nutThem = new JButton("Thêm");
+        // Chon mon trong hop tra cuu (anh + ten), khong go id: may chu co hon
+        // hai nghin mau vat pham, go id tran thi khong biet minh them dung mon
+        // khong. Giu Ctrl/Shift de them nhieu mon mot luot.
+        JButton nutThem = new JButton("Chọn vật phẩm & thêm…");
         ServerGuiUtils.toNut(nutThem, UiTheme.OK);
         nutThem.addActionListener(e -> themDoAn());
         tren.add(nutThem);
@@ -610,21 +610,49 @@ public class ThuCungTab extends JPanel {
         }
     }
 
+    /**
+     * Chọn một hay nhiều vật phẩm trong hộp tra cứu rồi thêm vào bảng đồ ăn,
+     * tất cả cùng số kinh nghiệm đang gõ.
+     *
+     * <p>Món đã có trong bảng thì bỏ qua chứ không ghi đè: bấm nhầm vào một
+     * món cũ không được làm mất con số kinh nghiệm đã chỉnh cho nó. Muốn đổi
+     * thì sửa thẳng trong cột.</p>
+     */
     private void themDoAn() {
-        int id = so(fIdMoi, -1);
         int exp = so(fExpMoi, 0);
-        if (id < 0 || exp <= 0) {
-            JOptionPane.showMessageDialog(this, "Cần id món và số kinh nghiệm lớn hơn 0.");
+        if (exp <= 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Gõ số kinh nghiệm (lớn hơn 0) trước, rồi mới chọn vật phẩm.");
+            fExpMoi.requestFocusInWindow();
             return;
         }
-        if (nro.service.item.ItemService.gI().getTemplate((short) id) == null) {
-            JOptionPane.showMessageDialog(this, "Không có vật phẩm id " + id);
+        java.util.List<Integer> chon = OptionPicker.chonNhieuVatPham(this, -1);
+        if (chon.isEmpty()) {
             return;
         }
-        ThuCungDAO.luuDoAn(id, exp, true);
-        fIdMoi.setText("");
-        fExpMoi.setText("");
+        java.util.Set<Integer> daCo = new java.util.HashSet<>();
+        for (ThuCungDAO.DoAn d : ThuCungDAO.tatCaDoAn()) {
+            daCo.add(d.itemId);
+        }
+        int them = 0;
+        java.util.List<String> boQua = new java.util.ArrayList<>();
+        for (int id : chon) {
+            ItemTemplate t = nro.service.item.ItemService.gI().getTemplate((short) id);
+            if (t == null) {
+                continue;
+            }
+            if (daCo.contains(id)) {
+                boQua.add(t.name);
+                continue;
+            }
+            ThuCungDAO.luuDoAn(id, exp, true);
+            them++;
+        }
         napDoAn();
+        if (!boQua.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Đã thêm " + them + " món. Bỏ qua "
+                    + boQua.size() + " món đã có sẵn trong bảng:\n" + String.join(", ", boQua));
+        }
     }
 
     private void xoaDoAn() {

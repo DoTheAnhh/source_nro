@@ -123,7 +123,7 @@ public final class ThuCungDAO {
         /** Nổ rồi thì kéo dài bao nhiêu giây. */
         public int giay = 10;
         /** Mỗi đòn đánh có bao nhiêu phần trăm cơ hội nổ. */
-        public int tiLe = 10;
+        public int tiLe = 3;
         /** Nổ xong bao lâu mới được nổ lại. */
         public int hoiChieu = 30;
         /** Thú phải đạt cấp này mới mở được chiêu. */
@@ -135,17 +135,17 @@ public final class ThuCungDAO {
          * <b>phần vạn</b> (1.000 = 10%).
          *
          * <p><b>Cấp của thú không đụng tới con số này.</b> Chiêu có cấp riêng,
-         * mở ra là cấp 1 và chỉ lên bằng sách. Mỗi cấp mạnh thêm
-         * {@code chieuMoiCap()} phần trăm <b>của chính chỉ số gốc</b>: chiêu 10%,
-         * mỗi cấp +5% thì cấp 2 là 10,5%, cấp 11 là 15%. Không nhân dồn.</p>
+         * mở ra là cấp 1 và chỉ lên bằng sách. Mỗi cấp <b>cộng thẳng</b>
+         * {@code chieuCongMoiCap()} điểm phần trăm vào chiêu: chiêu 10%, mỗi cấp
+         * +2 thì cấp 2 là 12%, cấp 3 là 14%, cấp 11 là 30%.</p>
          *
-         * <p>Phần vạn chứ không phần trăm nguyên: 10% × 1,05 = 10,5%, làm tròn về
-         * phần trăm nguyên là mất sạch phần cấp của mọi chiêu dưới 20%.</p>
+         * <p>Vẫn trả phần vạn để chỗ dùng không phải đổi, và để sau này đặt số
+         * lẻ (1,5 điểm mỗi cấp…) cũng không phải sửa công thức.</p>
          */
         public int phanVanTheoCapChieu(int capChieu) {
             long goc = phanTram * 100L;
-            long heSo = 100L + (long) chieuMoiCap() * Math.max(0, capChieu - 1);
-            return (int) Math.min(Integer.MAX_VALUE, goc * heSo / 100L);
+            long them = (long) chieuCongMoiCap() * 100L * Math.max(0, capChieu - 1);
+            return (int) Math.min(Integer.MAX_VALUE, goc + them);
         }
 
         /** Dòng chữ mô tả hiệu ứng, dùng cho cả game lẫn panel. */
@@ -189,7 +189,7 @@ public final class ThuCungDAO {
                     + " tham_so INT(11) NOT NULL DEFAULT 0,"
                     + " phan_tram INT(11) NOT NULL DEFAULT 10,"
                     + " giay INT(11) NOT NULL DEFAULT 10,"
-                    + " ti_le INT(11) NOT NULL DEFAULT 10,"
+                    + " ti_le INT(11) NOT NULL DEFAULT 3,"
                     + " hoi_chieu INT(11) NOT NULL DEFAULT 30,"
                     + " cap_mo INT(11) NOT NULL DEFAULT 1,"
                     + " bat TINYINT(1) NOT NULL DEFAULT 1,"
@@ -249,6 +249,7 @@ public final class ThuCungDAO {
             gieoDoAn();
             gieoBac();
             gieoChiSoBac();
+            datTiLeNoMotLan();
         } catch (Exception ex) {
             daTaoBang = false;
             Logger.logException(ThuCungDAO.class, ex, "Không tạo được bảng thú cưng");
@@ -260,12 +261,20 @@ public final class ThuCungDAO {
     // =====================================================================
     public static final String K_EXP_MOI_CAP = "exp_moi_cap";
     public static final String K_CAP_TOI_DA = "cap_toi_da";
-    public static final String K_CHIEU_MOI_CAP = "chieu_moi_cap";
+    public static final String K_CHIEU_CONG_MOI_CAP = "chieu_cong_moi_cap";
+
+    /**
+     * Khoá cũ, bỏ rồi: "mỗi cấp chiêu +x% CỦA GỐC". Nay là cộng thẳng điểm
+     * phần trăm ({@link #K_CHIEU_CONG_MOI_CAP}). Đổi TÊN khoá chứ không dùng
+     * lại: dòng cũ trong bảng đang ghi 5 theo nghĩa cũ, dùng lại tên ấy thì
+     * máy nào đã chạy bản trước sẽ thành +5 điểm mỗi cấp thay vì +2.
+     */
+    private static final String K_CU_CHIEU_MOI_CAP = "chieu_moi_cap";
     public static final String K_CHI_SO_MOI_CAP = "chi_so_moi_cap";
 
     /**
      * Khoá cũ, bỏ rồi: chiêu từng mạnh thêm theo CẤP THÚ. Nay chiêu có cấp
-     * riêng ({@link #K_CHIEU_MOI_CAP}), khoá này chỉ còn để xoá dòng cũ khỏi
+     * riêng ({@link #K_CHIEU_CONG_MOI_CAP}), khoá này chỉ còn để xoá dòng cũ khỏi
      * bảng — để nguyên thì panel hiện một ô chỉnh không còn tác dụng gì.
      */
     private static final String K_CU_THEM_MOI_CAP = "them_moi_cap";
@@ -273,7 +282,7 @@ public final class ThuCungDAO {
     private static final String[][] CAU_HINH_GOC = {
         {K_EXP_MOI_CAP, "100", "Kinh nghiệm cần cho MỖI cấp — lên cấp c cần c × số này"},
         {K_CAP_TOI_DA, "50", "Cấp cao nhất của thú cưng"},
-        {K_CHIEU_MOI_CAP, "5", "Mỗi CẤP CHIÊU (nâng bằng sách) mạnh thêm bao nhiêu % chỉ số gốc của chiêu. Cấp thú không ảnh hưởng chiêu"},
+        {K_CHIEU_CONG_MOI_CAP, "2", "Mỗi CẤP CHIÊU (nâng bằng sách) cộng thẳng bao nhiêu điểm % vào chiêu — chiêu 10%, số này 2 thì cấp 2 là 12%. Cấp thú không ảnh hưởng chiêu"},
         {K_CHI_SO_MOI_CAP, "3", "Mỗi cấp thú cưng cộng thêm bao nhiêu % chỉ số"}
     };
 
@@ -334,8 +343,8 @@ public final class ThuCungDAO {
             ConnectDB.executeUpdate("INSERT IGNORE INTO thu_cung_cau_hinh"
                     + " (khoa, gia_tri, mo_ta) VALUES (?, ?, ?)", d[0], d[1], d[2]);
         }
-        ConnectDB.executeUpdate("DELETE FROM thu_cung_cau_hinh WHERE khoa = ?",
-                K_CU_THEM_MOI_CAP);
+        ConnectDB.executeUpdate("DELETE FROM thu_cung_cau_hinh WHERE khoa IN (?, ?)",
+                K_CU_THEM_MOI_CAP, K_CU_CHIEU_MOI_CAP);
     }
 
     private static final Map<String, String> CAU_HINH = new HashMap<>();
@@ -387,9 +396,9 @@ public final class ThuCungDAO {
         return Math.max(1, soCauHinh(K_CAP_TOI_DA, 50));
     }
 
-    /** Mỗi cấp chiêu mạnh thêm bao nhiêu phần trăm chỉ số gốc của chiêu. */
-    public static int chieuMoiCap() {
-        return Math.max(0, soCauHinh(K_CHIEU_MOI_CAP, 5));
+    /** Mỗi cấp chiêu cộng thẳng bao nhiêu điểm phần trăm vào chiêu. */
+    public static int chieuCongMoiCap() {
+        return Math.max(0, soCauHinh(K_CHIEU_CONG_MOI_CAP, 2));
     }
 
     public static void datCauHinh(String khoa, String giaTri) {
@@ -432,6 +441,35 @@ public final class ThuCungDAO {
      * <p>Chiêu 1 mở ngay ở cấp 1 để con thú nào vừa nhận về cũng có cái để
      * dùng. Hai chiêu còn lại để trống: admin tự thêm và tự đặt cấp mở.</p>
      */
+    /** Cờ trong bảng cấu hình: đã hạ tỉ lệ nổ mọi chiêu về 3% hay chưa. */
+    private static final String K_DA_HA_TI_LE_NO = "da_ha_ti_le_no_3";
+
+    /**
+     * Hạ tỉ lệ nổ của MỌI chiêu về 3% — đúng một lần.
+     *
+     * <p>Máy chủ thật chỉ {@code git pull} rồi chạy, không ai chạy SQL tay, nên
+     * việc sửa dữ liệu phải tự làm lúc khởi động. Nhưng chỉ làm một lần: có cờ
+     * trong {@code thu_cung_cau_hinh}. Không có cờ thì lần khởi động nào cũng
+     * đè về 3%, và mọi con số admin chỉnh lại trên panel sau đó đều mất.</p>
+     */
+    private static void datTiLeNoMotLan() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT gia_tri FROM thu_cung_cau_hinh WHERE khoa = ?",
+                    K_DA_HA_TI_LE_NO);
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            dong(rs);
+        }
+        ConnectDB.executeUpdate("UPDATE thu_cung_ky_nang SET ti_le = 3");
+        ConnectDB.executeUpdate("INSERT IGNORE INTO thu_cung_cau_hinh (khoa, gia_tri, mo_ta)"
+                + " VALUES (?, '1', ?)", K_DA_HA_TI_LE_NO,
+                "Đã hạ tỉ lệ nổ mọi chiêu về 3% (chạy một lần). Xoá dòng này là lần khởi động sau hạ lại");
+        Logger.success("Thú cưng: đã đặt tỉ lệ nổ mọi chiêu về 3%\n");
+    }
+
     private static void gieoKyNang() throws Exception {
         if (demDong("thu_cung_ky_nang") > 0) {
             return;
@@ -450,7 +488,7 @@ public final class ThuCungDAO {
                 ConnectDB.executeUpdate("INSERT IGNORE INTO thu_cung_ky_nang"
                         + " (item_id, thu_tu, ten, mo_ta, loai, tham_so, phan_tram,"
                         + " giay, ti_le, hoi_chieu, cap_mo, bat)"
-                        + " VALUES (?, 1, ?, ?, 0, 0, 10, 10, 10, 30, 1, 1)",
+                        + " VALUES (?, 1, ?, ?, 0, 0, 10, 10, 3, 30, 1, 1)",
                         ids.get(i), "Đòn của " + ten.get(i),
                         "Mỗi đòn đánh có tỉ lệ nổ, cộng thêm sức đánh trong chốc lát");
             }

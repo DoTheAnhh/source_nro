@@ -689,7 +689,7 @@ public class ThuCungService {
                 msg.writer().writeByte(ThuCungDAO.bac(t.id));
             }
             // Ghi o CUOI goi: client cu doc het phan tren roi dung, khong lech.
-            msg.writer().writeShort(ThuCungDAO.chieuMoiCap());
+            msg.writer().writeShort(ThuCungDAO.chieuCongMoiCap());
             pl.sendMessage(msg);
         } catch (Exception ex) {
             Logger.logException(ThuCungService.class, ex, "Không gửi được bảng thú cưng");
