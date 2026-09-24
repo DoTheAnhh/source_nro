@@ -379,7 +379,7 @@ namespace Game6.God
             int caoD = yThan + caoThan - y0d;
 
             ThuSoHuu thu = thuDangXem();
-            int caoDs = oCoThuCung() * soHangThu() + 6;
+            int caoDs = (oCoThuCung() + KHE_O_THU) * soHangThu() + 6;
             int yChan = y0d + (caoD - caoDs) / 2 + CAO_NHAN_VAT / 2;
             veHinhThu(g, thu, xTrai + rongTrai / 2, yChan);
 
@@ -408,28 +408,70 @@ namespace Game6.God
                 {
                     continue;
                 }
-                ThuSoHuu t = dsThuCung[i];
-                veKhungBo(g, o[0] + 1, o[1] + 1, o[2] - 2, o[2] - 2, MAU_O_DO, 1f,
-                        MAU_VIEN_O, t.id == idThuXem ? 1f : 0.8f, 1);
-                ItemTemplate m = ItemTemplates.get((short) t.itemId);
-                if (m != null)
-                {
-                    SmallImage.drawSmallImage(g, m.iconID, o[0] + o[2] / 2,
-                            o[1] + o[2] / 2 - 2, 0,
-                            mGraphics.VCENTER | mGraphics.HCENTER);
-                }
-                veHuyBac(g, o[0] + 2, o[1] + o[2] - 12, bacCuaLoai(t.itemId), true);
-                if (t.raTran)
-                {
-                    veNhanRaTran(g, o[0] + 2, o[1] + 2);
-                }
-                if (t.id == idThuXem)
-                {
-                    veKhungBo(g, o[0], o[1], o[2], o[2], MAU_O, 0f,
-                            MAU_VIEN_SANG, 1f, 1);
-                }
+                veOThu(g, dsThuCung[i], o[0], o[1], o[2]);
             }
         }
+
+        /// <summary>
+        /// Một ô trong danh sách thú: ảnh con thú, huy hiệu bậc, dải "Ra trận".
+        /// </summary>
+        /// <remarks>
+        /// <para>Mọi thứ vẽ <b>bên trong</b> ô. Bản trước đặt huy hiệu ở mép dưới
+        /// nên nó thò hẳn ra ngoài khung, nhìn như dán nhầm.</para>
+        ///
+        /// <para>Ô của con đang ra trận mang viền xanh và một dải chữ "Ra trận"
+        /// chạy suốt đáy ô; ô đang xem thì viền cam dày. Hai dấu hiệu khác màu,
+        /// khác chỗ nên không lẫn nhau.</para>
+        ///
+        /// <para>Không có ảnh vật phẩm thì in mấy chữ đầu của tên, chứ không để
+        /// một ô nâu trơn chẳng nói lên gì.</para>
+        /// </remarks>
+        private void veOThu(mGraphics g, ThuSoHuu t, int x, int y, int o)
+        {
+            bool dangXem = t.id == idThuXem;
+            veKhungBo(g, x, y, o, o, MAU_O_DO, 1f,
+                    t.raTran ? MAU_RA_TRAN : MAU_VIEN_O, dangXem ? 1f : 0.85f, 1);
+
+            int caoDai = 11;
+            ItemTemplate m = ItemTemplates.get((short) t.itemId);
+            if (m != null && m.iconID >= 0)
+            {
+                SmallImage.drawSmallImage(g, m.iconID, x + o / 2,
+                        y + (o - caoDai) / 2, 0,
+                        mGraphics.VCENTER | mGraphics.HCENTER);
+            }
+            else
+            {
+                string ten = tenThu(t);
+                if (ten.Length > 6)
+                {
+                    ten = ten.Substring(0, 6);
+                }
+                mFont.tahoma_7_grey.drawString(g, ten, x + o / 2,
+                        y + (o - caoDai) / 2 - 5, mFont.CENTER);
+            }
+
+            // Huy hieu bac: goc tren trai, nam gon trong o.
+            veHuyBac(g, x + 3, y + 3, bacCuaLoai(t.itemId), true);
+
+            if (t.raTran)
+            {
+                g.setColor(MAU_RA_TRAN);
+                g.fillRect(x + 2, y + o - caoDai - 1, o - 4, caoDai - 1);
+                mFont.tahoma_7b_white.drawString(g, "Ra trận", x + o / 2,
+                        y + o - caoDai - 1, mFont.CENTER);
+            }
+
+            if (dangXem)
+            {
+                // Vien cam day: ve them mot khung thut vao trong mot diem.
+                veKhungBo(g, x + 1, y + 1, o - 2, o - 2, MAU_O, 0f,
+                        MAU_VIEN_SANG, 1f, 1);
+            }
+        }
+
+        /// <summary>Màu của con đang ra trận: viền ô và dải chữ dưới đáy ô.</summary>
+        private static readonly int MAU_RA_TRAN = rgb(0x3F, 0xA9, 0x4F);
 
         /// <summary>Vẽ con thú bằng ba bộ phận máy chủ gửi kèm bảng.</summary>
         private void veHinhThu(mGraphics g, ThuSoHuu thu, int x, int yChan)
@@ -469,12 +511,15 @@ namespace Game6.God
             }
         }
 
+        /// <summary>Khe hở giữa hai ô, để chúng không dính thành một dải.</summary>
+        private const int KHE_O_THU = 4;
+
         private int oCoThuCung()
         {
-            int o = (rongTrai - 10) / 5;
-            if (o > 42)
+            int o = (rongTrai - 10) / 5 - KHE_O_THU;
+            if (o > 46)
             {
-                o = 42;
+                o = 46;
             }
             if (o < O_TOI_THIEU)
             {
@@ -485,8 +530,8 @@ namespace Game6.God
 
         private int soCotThu()
         {
-            int o = oCoThuCung();
-            int soCot = (rongTrai - 8) / o;
+            int buoc = oCoThuCung() + KHE_O_THU;
+            int soCot = (rongTrai - 8) / buoc;
             return soCot < 1 ? 1 : soCot;
         }
 
@@ -511,14 +556,15 @@ namespace Game6.God
             {
                 return null;
             }
-            int yDay = yThan + caoThan - 4 - o;
-            int y = yDay - (soHangThu() - 1 - hang) * o;
+            int buoc = o + KHE_O_THU;
+            int yDay = yThan + caoThan - 6 - o;
+            int y = yDay - (soHangThu() - 1 - hang) * buoc;
             if (y < yThan + CAO_DAI_TD + KHE_KHUNG + 2)
             {
                 return null;
             }
-            int xDau = xTrai + (rongTrai - soCot * o) / 2;
-            return new int[] { xDau + cot * o, y, o };
+            int xDau = xTrai + (rongTrai - (soCot * buoc - KHE_O_THU)) / 2;
+            return new int[] { xDau + cot * buoc, y, o };
         }
 
         // ==================================================================
