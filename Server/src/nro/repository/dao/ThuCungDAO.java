@@ -1435,6 +1435,22 @@ public final class ThuCungDAO {
      * {@code thu_cung_cau_hinh}, giống cách {@code TrungDeTuDAO} làm với ba quả
      * trứng. Ảnh thì ghi cứng vì tệp ảnh nằm trong mã nguồn.</p>
      */
+    /**
+     * Id vật phẩm thật của Rương Thú Cưng Thường trên máy này, hoặc -1.
+     *
+     * <p>Id do máy chủ tự cấp lúc dựng rương nên <b>mỗi máy một khác</b> — chỗ
+     * nào cần rương này (quà NRO Pass, quà mở rương…) phải hỏi ở đây, không
+     * được viết cứng con số của một máy.</p>
+     */
+    public static int idRuongThuong() {
+        return soCauHinh(K_RUONG_THUONG, -1);
+    }
+
+    /** Id vật phẩm thật của Rương Thú Cưng Cao Cấp trên máy này, hoặc -1. */
+    public static int idRuongCaoCap() {
+        return soCauHinh(K_RUONG_CAO_CAP, -1);
+    }
+
     public static synchronized void damBaoVatPhamRuong() {
         damBaoBang();
         damBaoMotRuong(K_RUONG_CAO_CAP, "Rương Thú Cưng Cao Cấp", ICON_RUONG_CAO_CAP,

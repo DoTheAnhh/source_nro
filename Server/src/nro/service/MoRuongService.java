@@ -14,7 +14,8 @@ import nro.service.item.ItemService;
 /**
  * <b>Mở rương</b> — tab gacha trong màn Sự kiện.
  *
- * <p>Người chơi chọn loại rương, mở x1 hoặc x10 bằng <b>điểm rương</b>. Máy
+ * <p>Người chơi chọn loại rương, mở x1 hoặc x10 bằng <b>điểm của chính loại
+ * rương ấy</b> — mỗi rương một loại điểm, không dùng chung. Máy
  * chủ bốc quà theo trọng số, phát vào hành trang, rồi gửi kết quả; hiệu ứng
  * dải quà trượt kiểu CS:GO là việc của client, máy chủ không dính vào.</p>
  *
@@ -22,9 +23,9 @@ import nro.service.item.ItemService;
  * <pre>
  * Lên:  byte 0                      xin bảng
  *       byte 1, short id, byte n    mở rương id, n lần (1 hoặc 10)
- * Xuống: byte 0 BẢNG   long diem, UTF tenDiem, byte soRuong
+ * Xuống: byte 0 BẢNG   byte soRuong
  *                        { short id, UTF ten, UTF moTa, short icon, int giaX1,
- *                          int giaX10, byte soQua
+ *                          int giaX10, long diem, UTF tenDiem, byte soQua
  *                          { short icon, int soLuong, UTF ten, byte hiem, UTF tiLe } }
  *        byte 1 KẾT QUẢ short id, long diemConLai, byte n
  *                        { short icon, int soLuong, UTF ten, byte hiem }
@@ -46,8 +47,6 @@ public class MoRuongService {
     private static final int MO = 1;
     private static final int GUI_BANG = 0;
     private static final int GUI_KET_QUA = 1;
-
-    public static final String TEN_DIEM = "Điểm rương";
 
     public void nhanGoi(Player pl, Message msg) {
         if (pl == null || msg == null || !pl.isPl()) {
@@ -98,9 +97,9 @@ public class MoRuongService {
                 return;
             }
             int gia = soLan == 10 ? r.giaX10 : r.giaX1;
-            if (gia > 0 && !MoRuongDAO.truDiem(pl.id, gia)) {
-                Service.gI().sendThongBao(pl, "Không đủ " + TEN_DIEM.toLowerCase() + " — cần "
-                        + gia + ", đang có " + MoRuongDAO.diem(pl.id) + ".");
+            if (gia > 0 && !MoRuongDAO.truDiem(pl.id, id, gia)) {
+                Service.gI().sendThongBao(pl, "Không đủ " + r.tenDiemDeDoc() + " — cần "
+                        + gia + ", đang có " + MoRuongDAO.diem(pl.id, id) + ".");
                 return;
             }
             List<MoRuongDAO.Qua> trung = new ArrayList<>();
@@ -183,13 +182,17 @@ public class MoRuongService {
     // =====================================================================
     //  Quản trị
     // =====================================================================
-    public String congDiem(long playerId, long diem) {
-        MoRuongDAO.congDiem(playerId, diem);
+    /** Đặt điểm một loại rương của một người (panel), báo cho người ấy nếu đang chơi. */
+    public String datDiem(long playerId, int ruongId, long diem) {
+        MoRuongDAO.Ruong r = MoRuongDAO.ruong(ruongId);
+        long cu = MoRuongDAO.diem(playerId, ruongId);
+        MoRuongDAO.datDiem(playerId, ruongId, diem);
         Player p = nro.server.Client.gI().getPlayerByID(playerId);
-        if (p != null) {
-            Service.gI().sendThongBao(p, "Bạn được cộng " + diem + " " + TEN_DIEM.toLowerCase() + ".");
+        if (p != null && diem != cu) {
+            Service.gI().sendThongBao(p, (r == null ? "Điểm rương" : r.tenDiemDeDoc()) + ": " + cu + " → " + diem + ".");
+            guiBang(p);
         }
-        return "Đã cộng " + diem + " điểm, giờ có " + MoRuongDAO.diem(playerId) + ".";
+        return (r == null ? "Rương #" + ruongId : r.ten) + ": " + cu + " → " + diem;
     }
 
     // =====================================================================
@@ -201,16 +204,17 @@ public class MoRuongService {
             List<MoRuongDAO.Ruong> ds = MoRuongDAO.dsRuong(true);
             msg = new Message(GOI);
             msg.writer().writeByte(GUI_BANG);
-            msg.writer().writeLong(MoRuongDAO.diem(pl.id));
-            msg.writer().writeUTF(TEN_DIEM);
+            java.util.Map<Integer, Long> diem = MoRuongDAO.diemCuaNguoi(pl.id);
             msg.writer().writeByte(ds.size());
             for (MoRuongDAO.Ruong r : ds) {
                 msg.writer().writeShort(r.id);
                 msg.writer().writeUTF(r.ten);
                 msg.writer().writeUTF(r.moTa);
-                msg.writer().writeShort(PhucLoiService.gI().iconCua(r.itemHinh));
+                msg.writer().writeShort(r.iconHinh > 0 ? r.iconHinh : PhucLoiService.gI().iconCua(r.itemHinh));
                 msg.writer().writeInt(r.giaX1);
                 msg.writer().writeInt(r.giaX10);
+                msg.writer().writeLong(diem.getOrDefault(r.id, 0L));
+                msg.writer().writeUTF(r.tenDiemDeDoc());
                 List<MoRuongDAO.Qua> qua = MoRuongDAO.dsQua(r.id);
                 long tong = 0;
                 for (MoRuongDAO.Qua q : qua) {
@@ -243,7 +247,7 @@ public class MoRuongService {
             msg = new Message(GOI);
             msg.writer().writeByte(GUI_KET_QUA);
             msg.writer().writeShort(id);
-            msg.writer().writeLong(MoRuongDAO.diem(pl.id));
+            msg.writer().writeLong(MoRuongDAO.diem(pl.id, id));
             msg.writer().writeByte(trung.size());
             for (MoRuongDAO.Qua q : trung) {
                 msg.writer().writeShort(PhucLoiService.gI().iconCua(q.itemId));

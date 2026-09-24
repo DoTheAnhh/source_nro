@@ -50,12 +50,13 @@ namespace Game4.God
             public int icon;
             public int giaX1;
             public int giaX10;
+            /// <summary>Điểm của CHÍNH loại rương này — mỗi rương một loại điểm, không chung.</summary>
+            public long diem;
+            public string tenDiem;
             public readonly List<Mon> qua = new List<Mon>();
         }
 
         private readonly List<Ruong> ds = new List<Ruong>();
-        private long diem;
-        private string tenDiem = "Điểm rương";
         private int chon;
         private bool coDuLieu;
 
@@ -199,8 +200,6 @@ namespace Game4.God
 
         private void docBang(Message msg)
         {
-            diem = msg.reader().readLong();
-            tenDiem = msg.reader().readUTF();
             int n = msg.reader().readUnsignedByte();
             ds.Clear();
             for (int i = 0; i < n; i++)
@@ -212,6 +211,8 @@ namespace Game4.God
                 r.icon = msg.reader().readShort();
                 r.giaX1 = msg.reader().readInt();
                 r.giaX10 = msg.reader().readInt();
+                r.diem = msg.reader().readLong();
+                r.tenDiem = msg.reader().readUTF();
                 int soQua = msg.reader().readUnsignedByte();
                 for (int k = 0; k < soQua; k++)
                 {
@@ -235,7 +236,14 @@ namespace Game4.God
         private void docKetQua(Message msg)
         {
             int id = msg.reader().readShort();
-            diem = msg.reader().readLong();
+            long diemMoi = msg.reader().readLong();
+            foreach (Ruong rr in ds)
+            {
+                if (rr.id == id)
+                {
+                    rr.diem = diemMoi;
+                }
+            }
             int n = msg.reader().readUnsignedByte();
             ketQua.Clear();
             for (int i = 0; i < n; i++)
@@ -453,13 +461,14 @@ namespace Game4.God
                     SmallImage.drawSmallImage(g, ds[i].icon, bx + 20, yy + CAO_MUC / 2, 0,
                             mGraphics.VCENTER | mGraphics.HCENTER);
                 }
-                mFont.tahoma_7b_dark.drawString(g, catBot(ds[i].ten, 14), bx + 36, yy + CAO_MUC / 2 - 5,
-                        mFont.LEFT);
+                mFont.tahoma_7b_dark.drawString(g, catBot(ds[i].ten, 14), bx + 36, yy + 5, mFont.LEFT);
+                mFont.tahoma_7.drawString(g, ds[i].diem + " điểm", bx + 36, yy + 18, mFont.LEFT);
             }
             // Diem rieng, day cot.
             int yD = by + bh - 26;
             veKhungBo(g, bx + 3, yD, RONG_DS - 6, 22, MAU_CAM, 1f, MAU_VIEN, 1f, 1);
-            mFont.tahoma_7b_white.drawString(g, catBot(tenDiem + ": " + diem, 22), bx + RONG_DS / 2, yD + 6,
+            Ruong dc = ds[chon];
+            mFont.tahoma_7b_white.drawString(g, catBot(dc.tenDiem + ": " + dc.diem, 22), bx + RONG_DS / 2, yD + 6,
                     mFont.CENTER, mFont.tahoma_7b_dark);
         }
 
@@ -481,8 +490,8 @@ namespace Game4.God
             int[] n1 = oNutMo(0);
             int[] n10 = oNutMo(1);
             int[] nx = oNutMo(2);
-            veNutMo(g, n1, "Mở x1 · " + r.giaX1, diem >= r.giaX1 && !ban);
-            veNutMo(g, n10, "Mở x10 · " + r.giaX10, diem >= r.giaX10 && !ban);
+            veNutMo(g, n1, "Mở x1 · " + r.giaX1, r.diem >= r.giaX1 && !ban);
+            veNutMo(g, n10, "Mở x10 · " + r.giaX10, r.diem >= r.giaX10 && !ban);
             veNut(g, nx[0], nx[1], nx[2], nx[3], "Xem quà", MAU_THE, false);
 
             // Hang "quy hiem nhat" duoi nut: nhin la biet rương nay dang gia gi.
@@ -816,9 +825,9 @@ namespace Game4.God
 
         private void gui(Ruong r, int n, int gia)
         {
-            if (diem < gia)
+            if (r.diem < gia)
             {
-                GameScr.info1.addInfo("Không đủ " + tenDiem.ToLower() + " — cần " + gia + ".", 0);
+                GameScr.info1.addInfo("Không đủ " + r.tenDiem + " — cần " + gia + ".", 0);
                 return;
             }
             dangCho = true;

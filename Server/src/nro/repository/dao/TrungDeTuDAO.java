@@ -263,6 +263,19 @@ public final class TrungDeTuDAO {
     /** Bao lâu thì đọc lại bảng, tính bằng mili giây. */
     private static final long HAN_DEM = 15_000L;
 
+    /**
+     * Id vật phẩm thật của quả trứng nở ra loại đệ {@code loai}, hoặc -1.
+     * Id do máy chủ tự cấp nên mỗi máy một khác — đừng viết cứng.
+     */
+    public static int itemCuaLoai(byte loai) {
+        for (Trung t : dsTrung()) {
+            if (t.loai == loai) {
+                return t.itemId;
+            }
+        }
+        return -1;
+    }
+
     /** Ba quả trứng đang khai. <b>Không bao giờ trả {@code null}.</b> */
     public static synchronized List<Trung> dsTrung() {
         long gio = System.currentTimeMillis();

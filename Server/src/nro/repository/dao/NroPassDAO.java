@@ -337,6 +337,7 @@ public class NroPassDAO {
             if (demDong("nro_pass_qua") == 0) {
                 gieoQua();
             }
+            suaRuongThuCung();
         } catch (Exception ex) {
             daTaoBang = false;
             Logger.logException(NroPassDAO.class, ex, "Không tạo được bảng NRO Pass");
@@ -354,7 +355,7 @@ public class NroPassDAO {
         for (int cap = 1; cap <= 50; cap++) {
             // Mien phi.
             if (cap == 50) {
-                them(cap, HANG_MIEN_PHI, 2454, 1);          // Ruong thu cung thuong
+                them(cap, HANG_MIEN_PHI, idHoacTam(ThuCungDAO.idRuongThuong(), ID_TAM_RT_THUONG), 1);
             } else if (cap % 10 == 0) {
                 them(cap, HANG_MIEN_PHI, 571, 1);           // Ruong bac
             } else if (cap % 5 == 0) {
@@ -366,7 +367,7 @@ public class NroPassDAO {
             }
             // Cao cap.
             if (cap == 50) {
-                them(cap, HANG_CAO_CAP, 2453, 1);           // Ruong thu cung cao cap
+                them(cap, HANG_CAO_CAP, idHoacTam(ThuCungDAO.idRuongCaoCap(), ID_TAM_RT_CAO_CAP), 1);
                 them(cap, HANG_CAO_CAP, 1453, 1);           // Ruong sao pha le VIP
             } else if (cap % 10 == 0) {
                 them(cap, HANG_CAO_CAP, 572, 1);            // Ruong vang
@@ -379,6 +380,43 @@ public class NroPassDAO {
             }
         }
         Logger.success("NRO Pass: gieo quà mặc định 50 cấp\n");
+    }
+
+    /**
+     * Id tạm cho hai rương thú cưng khi chưa tra được id thật lúc gieo. Đây là
+     * id của một máy cụ thể; {@link #suaRuongThuCung} đổi sang id thật.
+     */
+    private static final int ID_TAM_RT_THUONG = 2454;
+    private static final int ID_TAM_RT_CAO_CAP = 2453;
+
+    private static int idHoacTam(int that, int tam) {
+        return that > 0 ? that : tam;
+    }
+
+    /**
+     * Đổi quà rương thú cưng ở cấp 50 sang <b>id thật của máy này</b> — một lần.
+     *
+     * <p>Rương thú cưng là vật phẩm tự tạo, id mỗi máy một khác. Bản đầu viết
+     * cứng 2453/2454 theo một máy; trên máy khác hai số ấy là quả trứng đệ tử.
+     * Chưa tra được id thì không ghi cờ, lần khởi động sau làm lại.</p>
+     */
+    private static void suaRuongThuCung() throws Exception {
+        if (!chu("qua_id_that_v1").isEmpty()) {
+            return;
+        }
+        int thuong = ThuCungDAO.idRuongThuong();
+        int caoCap = ThuCungDAO.idRuongCaoCap();
+        if (thuong <= 0 || caoCap <= 0) {
+            return;
+        }
+        ConnectDB.executeUpdate("UPDATE nro_pass_qua SET item_id = ? WHERE cap = 50 AND hang = ? AND item_id = ?",
+                thuong, HANG_MIEN_PHI, ID_TAM_RT_THUONG);
+        ConnectDB.executeUpdate("UPDATE nro_pass_qua SET item_id = ? WHERE cap = 50 AND hang = ? AND item_id = ?",
+                caoCap, HANG_CAO_CAP, ID_TAM_RT_CAO_CAP);
+        ConnectDB.executeUpdate("INSERT IGNORE INTO nro_pass_cau_hinh (khoa, gia_tri, mo_ta) VALUES (?, '1', ?)",
+                "qua_id_that_v1", "Đã đổi quà rương thú cưng sang id thật (chạy một lần)");
+        lucDocQua = 0;
+        lucDocCauHinh = 0;
     }
 
     private static void them(int cap, int hang, int itemId, int soLuong) throws Exception {

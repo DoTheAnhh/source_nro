@@ -342,6 +342,7 @@
     <Compile Include="Assets\Scripts\Game6\Sprite.cs" />
     <Compile Include="Assets\Scripts\Game2\Part.cs" />
     <Compile Include="Assets\Scripts\Game4\Info.cs" />
+    <Compile Include="Assets\Scripts\Game6\God\SuKien\MoRuongUI.cs" />
     <Compile Include="Assets\Scripts\Game2\God\Player\NPoint.cs" />
     <Compile Include="Assets\Scripts\Game1\DataInputStream.cs" />
     <Compile Include="Assets\Scripts\Game6\SoundMn.cs" />
@@ -566,6 +567,7 @@
     <Compile Include="Assets\Scripts\Game1\SMS.cs" />
     <Compile Include="Assets\Scripts\Game3\TopInfo.cs" />
     <Compile Include="Assets\Scripts\Game2\God\Boss\Boss.cs" />
+    <Compile Include="Assets\Scripts\Game1\God\SuKien\MoRuongUI.cs" />
     <Compile Include="Assets\Scripts\Game6\Net.cs" />
     <Compile Include="Assets\Scripts\Game5\Assets\src\g\ClientInput.cs" />
     <Compile Include="Assets\Scripts\Game1\Assets\src\g\ClientInput.cs" />
@@ -712,6 +714,7 @@
     <Compile Include="Assets\Scripts\Game3\Npc.cs" />
     <Compile Include="Assets\Scripts\Game2\BallInfo.cs" />
     <Compile Include="Assets\Scripts\Game6\GamePad.cs" />
+    <Compile Include="Assets\Scripts\Game2\God\SuKien\MoRuongUI.cs" />
     <Compile Include="Assets\Scripts\Game1\SkillOptionTemplate.cs" />
     <Compile Include="Assets\Scripts\Game6\GameMidlet.cs" />
     <Compile Include="Assets\Scripts\Game6\Friend.cs" />
@@ -1116,6 +1119,7 @@
     <Compile Include="Assets\Scripts\Game6\ServerListScreen.cs" />
     <Compile Include="Assets\Scripts\Game4\FireWorkMn.cs" />
     <Compile Include="Assets\Scripts\Game5\God\TroChoi\TaiXiuBan.cs" />
+    <Compile Include="Assets\Scripts\Game4\God\SuKien\MoRuongUI.cs" />
     <Compile Include="Assets\Scripts\Game6\MobTemplate.cs" />
     <Compile Include="Assets\Scripts\Game3\God\Player\PetService.cs" />
     <Compile Include="Assets\Scripts\Game3\ItemTemplate.cs" />
@@ -1184,6 +1188,7 @@
     <Compile Include="Assets\Scripts\Game1\TabCommand.cs" />
     <Compile Include="Assets\Scripts\Game1\InfoItem.cs" />
     <Compile Include="Assets\Scripts\Game5\God\Chung\HopNhapChu.cs" />
+    <Compile Include="Assets\Scripts\Game5\God\SuKien\MoRuongUI.cs" />
     <Compile Include="Assets\Scripts\Game2\Position.cs" />
     <Compile Include="Assets\Scripts\Game2\Message.cs" />
     <Compile Include="Assets\Scripts\Game2\BackgroudEffect.cs" />
@@ -1248,6 +1253,7 @@
     <Compile Include="Assets\Scripts\Game2\God\TroChoi\DapSaibaman.cs" />
     <Compile Include="Assets\Scripts\Game2\God\Player\ThongTinDeTu.cs" />
     <Compile Include="Assets\Scripts\Game4\Assets\src\g\PetFollow.cs" />
+    <Compile Include="Assets\Scripts\Game3\God\SuKien\MoRuongUI.cs" />
     <Compile Include="Assets\Scripts\Game1\Math.cs" />
     <Compile Include="Assets\Scripts\Game6\ServerScr.cs" />
     <Compile Include="Assets\Scripts\Game3\GameCanvas.cs" />

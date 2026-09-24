@@ -28,14 +28,16 @@ import nro.server.Manager;
  *   <li><b>Rương & quà</b> — trái là các loại rương (tên, hình, giá x1/x10,
  *       thứ tự, bật), phải là quà của rương đang chọn với trọng số và độ hiếm;
  *       cột "Tỉ lệ" tự tính từ trọng số để khỏi phải cộng nhẩm.</li>
- *   <li><b>Điểm & lịch sử</b> — cộng điểm rương cho một nhân vật, xem 300 lượt
- *       mở gần nhất.</li>
+ *   <li><b>Điểm người chơi</b> — mỗi loại rương một loại điểm riêng; gõ tên
+ *       nhân vật để xem và sửa điểm của từng loại.</li>
+ *   <li><b>Lịch sử</b> — 300 lượt mở gần nhất.</li>
  * </ul>
  */
 public class MoRuongTab extends JPanel {
 
     private final DefaultTableModel mRuong = new DefaultTableModel(
-            new String[]{"Id", "Tên", "Mô tả", "Vật phẩm hình", "Giá x1", "Giá x10", "Thứ tự", "Bật"}, 0) {
+            new String[]{"Id", "Tên", "Mô tả", "Tên điểm", "Icon hình", "Vật phẩm hình", "Giá x1",
+                "Giá x10", "Thứ tự", "Bật"}, 0) {
         @Override
         public boolean isCellEditable(int r, int c) {
             return c != 0;
@@ -43,7 +45,7 @@ public class MoRuongTab extends JPanel {
 
         @Override
         public Class<?> getColumnClass(int c) {
-            return c == 7 ? Boolean.class : Object.class;
+            return c == 9 ? Boolean.class : Object.class;
         }
     };
     private final JTable bangRuong = new JTable(mRuong);
@@ -70,6 +72,16 @@ public class MoRuongTab extends JPanel {
     private final JTable bangLichSu = new JTable(mLichSu);
     private final JTextField fTen = new JTextField(14);
     private final JTextField fDiem = new JTextField("100", 6);
+    private long idNguoiDangXem = -1;
+    private final DefaultTableModel mDiem = new DefaultTableModel(
+            new String[]{"Id rương", "Rương", "Tên điểm", "Điểm"}, 0) {
+        @Override
+        public boolean isCellEditable(int r, int c) {
+            return c == 3;
+        }
+    };
+    private final JTable bangDiem = new JTable(mDiem);
+    private final JLabel nhanNguoi = new JLabel("Chưa chọn nhân vật");
 
     private final JLabel nhanTrangThai = new JLabel(" ");
 
@@ -78,14 +90,15 @@ public class MoRuongTab extends JPanel {
         setBackground(UiTheme.CARD);
         setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         JLabel dau = new JLabel("<html><b>Mở rương</b> — tab gacha trong màn Sự kiện của game. Mở x1/x10 bằng"
-                + " <b>điểm rương</b>. Tỉ lệ = trọng số / tổng trọng số của rương. Độ hiếm chỉ để tô màu;"
+                + " <b>điểm riêng của từng loại rương</b>. Tỉ lệ = trọng số / tổng trọng số của rương. Độ hiếm chỉ để tô màu;"
                 + " trúng Huyền thoại thì báo cả máy chủ.</html>");
         dau.setForeground(UiTheme.TEXT_MUTED);
         add(dau, BorderLayout.NORTH);
 
         JTabbedPane trong = new JTabbedPane();
         trong.addTab("1. Rương & quà", theRuong());
-        trong.addTab("2. Điểm & lịch sử", theLichSu());
+        trong.addTab("2. Điểm người chơi", theDiem());
+        trong.addTab("3. Lịch sử", theLichSu());
         add(trong, BorderLayout.CENTER);
         nhanTrangThai.setForeground(UiTheme.ACCENT_TEXT);
         add(nhanTrangThai, BorderLayout.SOUTH);
@@ -201,7 +214,7 @@ public class MoRuongTab extends JPanel {
         int chonLai = -1;
         for (MoRuongDAO.Ruong r : MoRuongDAO.dsRuong(false)) {
             ItemTemplate t = nro.service.item.ItemService.gI().getTemplate(r.itemHinh);
-            mRuong.addRow(new Object[]{r.id, r.ten, r.moTa,
+            mRuong.addRow(new Object[]{r.id, r.ten, r.moTa, r.tenDiem, r.iconHinh,
                 r.itemHinh + (t == null ? "" : " · " + t.name), r.giaX1, r.giaX10, r.thuTu, r.bat});
             if (r.id == giu) {
                 chonLai = mRuong.getRowCount() - 1;
@@ -237,12 +250,14 @@ public class MoRuongTab extends JPanel {
             x.id = soNguyen(mRuong.getValueAt(r, 0), -1);
             x.ten = String.valueOf(mRuong.getValueAt(r, 1)).trim();
             x.moTa = String.valueOf(mRuong.getValueAt(r, 2)).trim();
-            String hinh = String.valueOf(mRuong.getValueAt(r, 3));
+            x.tenDiem = String.valueOf(mRuong.getValueAt(r, 3)).trim();
+            x.iconHinh = Math.max(0, soNguyen(mRuong.getValueAt(r, 4), 0));
+            String hinh = String.valueOf(mRuong.getValueAt(r, 5));
             x.itemHinh = soNguyen(hinh.contains("·") ? hinh.substring(0, hinh.indexOf('·')).trim() : hinh, 0);
-            x.giaX1 = Math.max(0, soNguyen(mRuong.getValueAt(r, 4), 10));
-            x.giaX10 = Math.max(0, soNguyen(mRuong.getValueAt(r, 5), 90));
-            x.thuTu = soNguyen(mRuong.getValueAt(r, 6), 0);
-            x.bat = Boolean.TRUE.equals(mRuong.getValueAt(r, 7));
+            x.giaX1 = Math.max(0, soNguyen(mRuong.getValueAt(r, 6), 10));
+            x.giaX10 = Math.max(0, soNguyen(mRuong.getValueAt(r, 7), 90));
+            x.thuTu = soNguyen(mRuong.getValueAt(r, 8), 0);
+            x.bat = Boolean.TRUE.equals(mRuong.getValueAt(r, 9));
             MoRuongDAO.luuRuong(x);
         }
         napRuong();
@@ -259,8 +274,11 @@ public class MoRuongTab extends JPanel {
             return;
         }
         ItemTemplate t = nro.service.item.ItemService.gI().getTemplate(id);
-        mRuong.setValueAt(id + (t == null ? "" : " · " + t.name), bangRuong.convertRowIndexToModel(r), 3);
-        bao("Đã đổi hình — bấm Lưu rương để ghi.");
+        int dong = bangRuong.convertRowIndexToModel(r);
+        mRuong.setValueAt(id + (t == null ? "" : " · " + t.name), dong, 5);
+        // Chon hinh theo vat pham thi bo icon go tay, khong thi icon go tay van de len.
+        mRuong.setValueAt(0, dong, 4);
+        bao("Đã đổi hình theo vật phẩm — bấm Lưu rương để ghi. Muốn dùng hình riêng thì gõ id icon vào cột Icon hình.");
     }
 
     private void xoaRuong() {
@@ -352,32 +370,48 @@ public class MoRuongTab extends JPanel {
     // =====================================================================
     //  Điểm & lịch sử
     // =====================================================================
-    private JPanel theLichSu() {
+    private JPanel theDiem() {
         JPanel p = new JPanel(new BorderLayout(0, 4));
         p.setBackground(UiTheme.CARD);
         JPanel tren = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 2));
         tren.setBackground(UiTheme.CARD);
-        tren.add(new JLabel("Cộng điểm rương cho:"));
+        tren.add(new JLabel("Nhân vật:"));
         tren.add(fTen);
-        tren.add(fDiem);
-        JButton cong = new JButton("Cộng điểm");
-        ServerGuiUtils.toNut(cong, UiTheme.OK);
-        cong.addActionListener(e -> congDiem());
-        tren.add(cong);
-        JButton tai = new JButton("Tải lại lịch sử");
-        tai.addActionListener(e -> napLichSu());
-        tren.add(tai);
+        JButton tim = new JButton("Xem điểm");
+        ServerGuiUtils.toNut(tim, UiTheme.ACCENT);
+        tim.addActionListener(e -> xemDiem());
+        fTen.addActionListener(e -> xemDiem());
+        tren.add(tim);
+        nhanNguoi.setForeground(UiTheme.TEXT_MUTED);
+        tren.add(nhanNguoi);
         p.add(tren, BorderLayout.NORTH);
-        bangLichSu.setRowHeight(22);
-        p.add(ServerGuiUtils.cuon(bangLichSu), BorderLayout.CENTER);
+
+        bangDiem.setRowHeight(24);
+        bangDiem.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        p.add(ServerGuiUtils.cuon(bangDiem), BorderLayout.CENTER);
+
+        JPanel duoi = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 2));
+        duoi.setBackground(UiTheme.CARD);
+        JButton luu = new JButton("Lưu điểm");
+        ServerGuiUtils.toNut(luu, UiTheme.OK);
+        luu.addActionListener(e -> luuDiem());
+        duoi.add(luu);
+        duoi.add(new JLabel("   Cộng nhanh vào dòng đang chọn:"));
+        duoi.add(fDiem);
+        JButton cong = new JButton("Cộng (âm là trừ)");
+        cong.addActionListener(e -> congNhanh());
+        duoi.add(cong);
+        JLabel ghi = new JLabel("  Sửa thẳng cột Điểm rồi bấm Lưu. Người đang online thấy ngay.");
+        ghi.setForeground(UiTheme.TEXT_MUTED);
+        duoi.add(ghi);
+        p.add(duoi, BorderLayout.SOUTH);
         return p;
     }
 
-    private void congDiem() {
+    private void xemDiem() {
         String ten = fTen.getText().trim();
-        int diem = soNguyen(fDiem.getText(), 0);
-        if (ten.isEmpty() || diem == 0) {
-            JOptionPane.showMessageDialog(this, "Cần tên nhân vật và số điểm (âm là trừ).");
+        if (ten.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Gõ tên nhân vật.");
             return;
         }
         long id = MoRuongDAO.idTheoTen(ten);
@@ -385,7 +419,79 @@ public class MoRuongTab extends JPanel {
             JOptionPane.showMessageDialog(this, "Không có nhân vật tên \"" + ten + "\".");
             return;
         }
-        bao(nro.service.MoRuongService.gI().congDiem(id, diem));
+        idNguoiDangXem = id;
+        nhanNguoi.setText(ten + " (id " + id + ")");
+        napDiem();
+    }
+
+    private void napDiem() {
+        if (bangDiem.isEditing()) {
+            bangDiem.getCellEditor().stopCellEditing();
+        }
+        mDiem.setRowCount(0);
+        if (idNguoiDangXem < 0) {
+            return;
+        }
+        java.util.Map<Integer, Long> diem = MoRuongDAO.diemCuaNguoi(idNguoiDangXem);
+        for (MoRuongDAO.Ruong r : MoRuongDAO.dsRuong(false)) {
+            mDiem.addRow(new Object[]{r.id, r.ten, r.tenDiemDeDoc(), diem.getOrDefault(r.id, 0L)});
+        }
+    }
+
+    private void luuDiem() {
+        if (idNguoiDangXem < 0) {
+            return;
+        }
+        if (bangDiem.isEditing()) {
+            bangDiem.getCellEditor().stopCellEditing();
+        }
+        java.util.Map<Integer, Long> cu = MoRuongDAO.diemCuaNguoi(idNguoiDangXem);
+        StringBuilder kq = new StringBuilder();
+        for (int r = 0; r < mDiem.getRowCount(); r++) {
+            int ruongId = soNguyen(mDiem.getValueAt(r, 0), -1);
+            long moi;
+            try {
+                moi = Math.max(0, Long.parseLong(String.valueOf(mDiem.getValueAt(r, 3)).trim()));
+            } catch (NumberFormatException sai) {
+                continue;
+            }
+            if (moi != cu.getOrDefault(ruongId, 0L)) {
+                if (kq.length() > 0) {
+                    kq.append(" · ");
+                }
+                kq.append(nro.service.MoRuongService.gI().datDiem(idNguoiDangXem, ruongId, moi));
+            }
+        }
+        napDiem();
+        bao(kq.length() == 0 ? "Không có điểm nào đổi." : kq.toString());
+    }
+
+    private void congNhanh() {
+        int r = bangDiem.getSelectedRow();
+        int them = soNguyen(fDiem.getText(), 0);
+        if (idNguoiDangXem < 0 || r < 0 || them == 0) {
+            JOptionPane.showMessageDialog(this, "Chọn một dòng rương và gõ số điểm (âm là trừ).");
+            return;
+        }
+        int dong = bangDiem.convertRowIndexToModel(r);
+        int ruongId = soNguyen(mDiem.getValueAt(dong, 0), -1);
+        long moi = Math.max(0, MoRuongDAO.diem(idNguoiDangXem, ruongId) + them);
+        bao(nro.service.MoRuongService.gI().datDiem(idNguoiDangXem, ruongId, moi));
+        napDiem();
+    }
+
+    private JPanel theLichSu() {
+        JPanel p = new JPanel(new BorderLayout(0, 4));
+        p.setBackground(UiTheme.CARD);
+        JPanel tren = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 2));
+        tren.setBackground(UiTheme.CARD);
+        JButton tai = new JButton("Tải lại lịch sử");
+        tai.addActionListener(e -> napLichSu());
+        tren.add(tai);
+        p.add(tren, BorderLayout.NORTH);
+        bangLichSu.setRowHeight(22);
+        p.add(ServerGuiUtils.cuon(bangLichSu), BorderLayout.CENTER);
+        return p;
     }
 
     private void napLichSu() {
