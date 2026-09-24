@@ -3270,6 +3270,44 @@ namespace Game3
     		}
     	}
     
+    	public void thuCungXinBang()
+    	{
+    		thuCungGoi(0, 0, 0, 0);
+    	}
+
+    	public void thuCungChoAn(bool oTrangBi, int viTriThu, int viTriDoAn)
+    	{
+    		thuCungGoi(1, oTrangBi ? 1 : 0, viTriThu, viTriDoAn);
+    	}
+
+    	/// <summary>Goi 111: viec 0 xin bang, viec 1 cho an.</summary>
+    	private void thuCungGoi(int viec, int a, int b, int c)
+    	{
+    		Message message = null;
+    		try
+    		{
+    			message = new Message((sbyte)111);
+    			message.writer().writeByte((sbyte)viec);
+    			if (viec == 1)
+    			{
+    				message.writer().writeByte((sbyte)a);
+    				message.writer().writeByte((sbyte)b);
+    				message.writer().writeByte((sbyte)c);
+    			}
+    			session.sendMessage(message);
+    		}
+    		catch (Exception)
+    		{
+    		}
+    		finally
+    		{
+    			if (message != null)
+    			{
+    				message.cleanup();
+    			}
+    		}
+    	}
+
     	public void petInfo()
     	{
     		Message message = null;

@@ -854,6 +854,12 @@ public class Controller implements IMessageHandler {
                         ClanService.gI().clanInvite(player, _msg);
                     }
                     break;
+                // [111] Thú cưng: xin bảng chiêu / cho ăn
+                case 111:
+                    if (player != null) {
+                        nro.service.ThuCungService.gI().nhanGoi(player, _msg);
+                    }
+                    break;
                 // [-40] Chặn thao tác khi đang giao dịch
                 case -40:
                     if (player != null) {

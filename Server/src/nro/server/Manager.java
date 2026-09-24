@@ -323,6 +323,13 @@ public final class Manager {
     // được nạp, để option mới được nối đúng id vào bộ nhớ và gửi cho client.
     nro.repository.dao.TrangBiBonusDAO.damBaoVaGieo();
 
+    // Thu cung: bang chieu, bang do an, va hai chi so phu giu cap + kinh
+    // nghiem. Phai SAU loadDatabase: cap id chi so moi can danh sach chi so da
+    // nap xong, khong thi ChiSoOptionDAO thay bo nho lech va tu choi them.
+    nro.repository.dao.ThuCungDAO.damBaoBang();
+    nro.repository.dao.ThuCungDAO.idChiSoCap();
+    nro.repository.dao.ThuCungDAO.idChiSoExp();
+
     // Bo khoa hanh tinh cho sau cuon Sach Tuyet Ky neu tab panel dang bat.
     // Phai goi SAU loadDatabase chu khong phai trong: ho ket noi cau hinh
     // database.max=1, ma loadDatabase giu ket noi duy nhat do suot luc chay —

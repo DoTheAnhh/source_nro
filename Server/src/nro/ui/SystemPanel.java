@@ -108,7 +108,8 @@ public class SystemPanel extends JPanel {
         tabs.addTab("Trang sức & thú", nhomThe(
                 the("Bông tai", buildBongTaiTab()),
                 the("Chân mệnh", buildChanMenhTab()),
-                the("Rồng nhí", buildRongNhiTab())));
+                the("Rồng nhí", buildRongNhiTab()),
+                the("Thú cưng", new ThuCungTab())));
         tabs.addTab("Nhiệm vụ & sự kiện", nhomThe(
                 the("Nhiệm vụ chính tuyến", buildNhiemVuChinhTab()),
                 the("Sự kiện", buildSuKienTab()),

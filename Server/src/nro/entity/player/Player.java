@@ -276,6 +276,18 @@ public class Player implements Runnable {
     public int tempItemIndex = -1;
     public Item itemThrow_Drop = null;
     public Item Item_ChangePet = null;
+
+    // ------------------------------------------------------------ thú cưng
+    /**
+     * Các lớp tăng ích chiêu thú cưng đang đặt lên người chơi.
+     *
+     * <p>{@code transient}: hết phiên là mất, đúng ý — chiêu chỉ sống mấy giây,
+     * không có gì để lưu xuống cơ sở dữ liệu.</p>
+     */
+    public transient java.util.List<nro.service.ThuCungService.Buff> tcBuff;
+
+    /** Lần nổ gần nhất của từng chiêu (theo thứ tự chiêu), để đếm hồi chiêu. */
+    public transient long[] tcLanNo;
     public transient List<HistoryTransactionDAO.TransactionLog> lichSuGiaoDichDangXem;
     public transient int trangThaiLichSuGd;
     /**
@@ -2746,6 +2758,9 @@ public byte getAura() {
 
     public synchronized double injured(Player plAtt, double damage, boolean piercing, boolean isMobAttack) {
         if (!this.isDie()) {
+            // Chieu thu cung loai "giam % sat thuong" tru ngay tu dau, truoc moi
+            // phep cong sat thuong khac — de no khong bi nhan len theo.
+            damage = nro.service.ThuCungService.gI().giamSatThuong(this, damage);
             if (plAtt != null && !plAtt.equals(this)) {
                 setTemporaryEnemies(plAtt);
             }

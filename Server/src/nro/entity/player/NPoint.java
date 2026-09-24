@@ -3119,6 +3119,7 @@ if (hasFull5NhatAn()) {
             int themChiMang = idSkill < 0 ? 0
                     : nro.repository.dao.SetBonusDAO.phanTramChiMangSkill(
                             this.player, idSkill);
+            themChiMang += nro.service.ThuCungService.gI().themChiMang(this.player);
             int tiLeChiMang = Math.max(0, Math.min(100, this.crit + themChiMang));
             isCrit = Util.isTrue(tiLeChiMang, ConstRatio.PER100);
         }
@@ -3137,7 +3138,10 @@ if (hasFull5NhatAn()) {
     public double getDameAttack(boolean isAttackMob) {
         intrinsic = this.player.playerIntrinsic == null ? null : this.player.playerIntrinsic.intrinsic;
         setIsCrit();
-        long dameAttack = this.dame;
+        // Thu cung: boc xem chieu nao no, roi cong phan tram vao dame goc.
+        // Dat o day vi moi duong tinh sat thuong ben duoi deu di tu dameAttack,
+        // ke ca may nhanh return som.
+        long dameAttack = nro.service.ThuCungService.gI().dameSauThuCung(this.player, this.dame);
         percentDameIntrinsic = 0;
         int percentDameSkill = 0;
         // int chu khong phai byte: set viet cung cho 100 roi cong them

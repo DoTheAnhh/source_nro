@@ -21,7 +21,7 @@ namespace Game1.God
     /// <para>Bố cục tính một lần trong <see cref="tinhBoCuc"/> rồi cả phần vẽ lẫn
     /// phần bắt chạm cùng đọc, tránh hai bên tính lệch nhau.</para>
     /// </remarks>
-    public class TuiUI : IChatable
+    public partial class TuiUI : IChatable
     {
         private static TuiUI instance;
 
@@ -102,15 +102,17 @@ namespace Game1.God
         /// là bấm thẻ này ra nội dung thẻ khác.
         /// </remarks>
         private static readonly string[] TEN_THE = {
-            "Nhiệm vụ", "Nhân vật", "Kỹ năng", "Đệ tử", "Bang hội", "Chức năng"
+            "Nhiệm vụ", "Nhân vật", "Kỹ năng", "Đệ tử", "Thú cưng", "Bang hội",
+            "Chức năng"
         };
 
         private const int THE_NHIEM_VU = 0;
         private const int THE_BAN_THAN = 1;
         private const int THE_KY_NANG = 2;
         private const int THE_DE_TU = 3;
-        private const int THE_BANG_HOI = 4;
-        private const int THE_CHUC_NANG = 5;
+        private const int THE_THU_CUNG = 4;
+        private const int THE_BANG_HOI = 5;
+        private const int THE_CHUC_NANG = 6;
 
         private int theChon = THE_BAN_THAN;
 
@@ -370,6 +372,12 @@ namespace Game1.God
             {
                 Service.gI().petInfo();
                 daXinDe = true;
+            }
+            if (the == THE_THU_CUNG && !tcDaXinBang)
+            {
+                // Bang chieu va bang do an khong tu ve: hoi mot lan roi nho.
+                Service.gI().thuCungXinBang();
+                tcDaXinBang = true;
             }
             if (the == THE_NHIEM_VU && dsNhomMap.Count == 0)
             {
@@ -1019,6 +1027,7 @@ namespace Game1.God
                 return;
             }
             chayDungNhieu();
+            giuChoAn();
         }
 
         /// <summary>Chỉ số ô ĐANG MẶC của món đang xem, hoặc -1.</summary>
@@ -1393,6 +1402,9 @@ namespace Game1.God
                         break;
                     case THE_DE_TU:
                         veDeTu(g);
+                        break;
+                    case THE_THU_CUNG:
+                        veThuCung(g);
                         break;
                     default:
                         veChucNang(g);
@@ -8678,6 +8690,10 @@ namespace Game1.God
             if (theChon == THE_DE_TU)
             {
                 return chamDeTu();
+            }
+            if (theChon == THE_THU_CUNG)
+            {
+                return chamThuCung();
             }
             if (theChon == THE_KY_NANG)
             {

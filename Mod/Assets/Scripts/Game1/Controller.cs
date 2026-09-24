@@ -3939,6 +3939,17 @@ namespace Game1
                             God.TuiUI.datHinhPet(dauPet, thanPet, chanPet);
                         }
                         break;
+                    case 111:
+                        {
+                            // Thu cung: viec 0 la bang chieu + bang do an + bang hinh thu.
+                            sbyte viecTC = msg.reader().readByte();
+                            if (viecTC == 0)
+                            {
+                                God.TuiUI.nhanBangThuCung(msg);
+                            }
+                        }
+                        break;
+
                     case 110:
                         {
                             // Chi so de tu, may chu day moi giay khi co doi

@@ -889,6 +889,16 @@ public class InventoryService {
             Service.gI().point(player);
             Service.gI().Send_Caitrang(player);
             Service.getInstance().sendFlagBag(player);
+            // Thu cung mac vao thi phai co con thu chay theo NGAY.
+            //
+            // Truoc day chi duong "Su dung" (UseItem kieu 21) goi PetFollow, nen
+            // mac thang tu o hanh trang — nhu nut "Ra tran" cua the Thu cung —
+            // la o co do ma sau lung trong khong, phai thoat game vao lai.
+            if (item.template.type == nro.repository.dao.ThuCungDAO.KIEU_THU_CUNG
+                    && !player.isDeTu) {
+                nro.service.DetuService.PetFollow(player, player.getHeadThuCung(),
+                        player.getBodyThuCung(), player.getLegThuCung());
+            }
         }
     }
 
