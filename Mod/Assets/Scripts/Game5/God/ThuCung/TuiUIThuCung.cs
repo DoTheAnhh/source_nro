@@ -467,8 +467,14 @@ namespace Game5.God
         private void veOThu(mGraphics g, ThuSoHuu t, int x, int y, int o)
         {
             bool dangXem = t.id == idThuXem;
+            // MOT lượt vẽ cho cả nền lẫn viền.
+            //
+            // veKhungBo tô màu viền phủ kín ô rồi mới tô nền đè lên, nên vẽ
+            // thêm một lượt "viền" với nền trong suốt là nguyên ô thành một
+            // khối nâu, che mất con thú. Viền dày 2 điểm cho ô đang xem.
             veKhungBo(g, x, y, o, o, MAU_O_DO, 1f,
-                    t.raTran ? MAU_RA_TRAN : MAU_VIEN_O, dangXem ? 1f : 0.85f, 1);
+                    dangXem ? MAU_VIEN_SANG : (t.raTran ? MAU_RA_TRAN : MAU_VIEN_O),
+                    1f, dangXem ? 2 : 1);
 
             int caoDai = 11;
             ItemTemplate m = ItemTemplates.get((short) t.itemId);
@@ -494,18 +500,16 @@ namespace Game5.God
 
             if (t.raTran)
             {
+                // Dai chu nam SAT mep trong cua vien: chua mot diem cho net
+                // vien, khong chua nhieu hon — chua nhieu thi dai bi thut vao
+                // trong, nhin nhu dan lech.
+                int v = dangXem ? 2 : 1;
                 g.setColor(MAU_RA_TRAN);
-                g.fillRect(x + 2, y + o - caoDai - 1, o - 4, caoDai - 1);
+                g.fillRect(x + v, y + o - caoDai - v, o - v * 2, caoDai);
                 mFont.tahoma_7b_white.drawString(g, "Ra trận", x + o / 2,
-                        y + o - caoDai - 1, mFont.CENTER);
+                        y + o - caoDai - v, mFont.CENTER);
             }
 
-            if (dangXem)
-            {
-                // Vien cam day: ve them mot khung thut vao trong mot diem.
-                veKhungBo(g, x + 1, y + 1, o - 2, o - 2, MAU_O, 0f,
-                        MAU_VIEN_SANG, 1f, 1);
-            }
         }
 
         /// <summary>Màu của con đang ra trận: viền ô và dải chữ dưới đáy ô.</summary>
@@ -850,10 +854,6 @@ namespace Game5.God
                 mfSo.drawString(g, string.Empty + soCo,
                         o[0] + o[2] / 2, o[1] + o[3] - 2, mFont.CENTER);
             }
-
-            mFont.tahoma_7_grey.drawString(g,
-                    "Bấm để cho ăn · giữ để cho ăn liên tiếp",
-                    k[0] + k[2] / 2, k[1] + k[3] - 13, mFont.CENTER);
 
             if (chuot >= 0 && chuot < doAnThuCung.Count)
             {

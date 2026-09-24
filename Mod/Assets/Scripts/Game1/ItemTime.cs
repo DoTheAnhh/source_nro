@@ -146,9 +146,21 @@ namespace Game1
     		mFont.tahoma_7b_white.drawString(g, empty, x, y + 15, 2, mFont.tahoma_7b_dark);
 			if (nhan != null && nhan.Length > 0)
 			{
-				// Goc tren phai cua bieu tuong: khong de len so giay o duoi.
-				mFont.tahoma_7b_white.drawString(g, nhan, x + 10, y - 12, 2,
-						mFont.tahoma_7b_dark);
+				// Huy hieu goc tren phai: nen cam, vien nau, chu trang.
+				//
+				// Chu tran khong nen thi no nam de len anh con thu — hai thu
+				// cung sang nen nhin thanh mot dam. Mot mieng nen dac va vien
+				// dam tach han chu ra.
+				int wN = mFont.tahoma_7b_white.getWidth(nhan) + 7;
+				int hN = 11;
+				int xN = x + 14 - wN;
+				int yN = y - 15;
+				g.setColor(0x3B2712, 1f);
+				g.fillRect(xN - 1, yN - 1, wN + 2, hN + 2, 4);
+				g.setColor(0xE8801A, 1f);
+				g.fillRect(xN, yN, wN, hN, 3);
+				mFont.tahoma_7b_white.drawString(g, nhan, xN + wN / 2, yN + 1,
+						mFont.CENTER);
 			}
     	}
     
