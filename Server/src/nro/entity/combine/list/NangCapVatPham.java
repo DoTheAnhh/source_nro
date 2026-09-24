@@ -151,25 +151,62 @@ public class NangCapVatPham {
         nangCapVatPham(player, useDBV, 1);
     }
 
+    /** Không làm được nữa (thiếu đá, thiếu vàng, đã kịch cấp…) — dừng hẳn. */
+    private static final int KHONG_LAM_DUOC = 0;
+
+    /** Đã thử và trượt — còn nguyên liệu thì chạy tiếp. */
+    private static final int TRUOT = 1;
+
+    /** Đã lên cấp — dừng, xem {@link #nangCapVatPham(Player, boolean, int)}. */
+    private static final int LEN_CAP = 2;
+
+    /**
+     * Chạy nâng cấp tối đa {@code soLan} lượt, <b>dừng ngay khi lên được</b>.
+     *
+     * <p>Bấm x100 là "thử tới khi lên", không phải "đốt đúng một trăm viên đá".
+     * Bản trước lên cấp ở lượt 60 rồi vẫn chạy nốt 40 lượt nữa: bốn mươi lượt ấy
+     * đánh vào món <b>vừa lên</b>, mà trượt ở cấp cao là tụt cấp — người chơi
+     * bấm một cái rồi nhìn món đồ đi lùi.</p>
+     */
     public static void nangCapVatPham(Player player, boolean useDBV, int soLan) {
         int daLam = 0;
-        for (int i = 0; i < soLan; i++) {
-            if (!nangCapVatPhamMotLan(player, useDBV)) {
-                break;
+        boolean lenCap = false;
+        // Gop goi trong suot vong lap: moi luot cu goi sendItemBag mot lan, chay
+        // mot tram luot la mot tram goi hanh trang ban lien tiep.
+        Service.gI().batGomGoi(player);
+        try {
+            for (int i = 0; i < soLan; i++) {
+                int kq = nangCapVatPhamMotLan(player, useDBV);
+                if (kq == KHONG_LAM_DUOC) {
+                    break;
+                }
+                daLam++;
+                if (kq == LEN_CAP) {
+                    lenCap = true;
+                    break;
+                }
             }
-            daLam++;
+        } finally {
+            Service.gI().xaGomGoi(player);
         }
-        if (soLan > 1) {
-            Service.gI().sendThongBao(player, "Da chay nang cap " + daLam + "/" + soLan + " lan.");
+        if (soLan > 1 && daLam > 0) {
+            Service.gI().sendThongBao(player, lenCap
+                    ? ("Lên cấp ở lượt thứ " + daLam + ", dừng lại (đặt " + soLan + ").")
+                    : ("Đã chạy " + daLam + "/" + soLan + " lượt, chưa lên."));
         }
         CombineService.gI().reOpenItemCombine(player);
     }
 
-    private static boolean nangCapVatPhamMotLan(Player player, boolean useDBV) {
+    /**
+     * Một lượt nâng cấp.
+     *
+     * @return {@link #KHONG_LAM_DUOC}, {@link #TRUOT} hoặc {@link #LEN_CAP}
+     */
+    private static int nangCapVatPhamMotLan(Player player, boolean useDBV) {
         if (player.combine.itemsCombine.size() != 2) {
             Service.gI().sendThongBao(player,
                     "Cần đúng 1 trang bị và 1 loại đá nâng cấp trong ô.");
-            return false;
+            return KHONG_LAM_DUOC;
         }
 
         Item trangBi = null;
@@ -184,7 +221,7 @@ public class NangCapVatPham {
         if (trangBi == null || daNangCap == null || !trangBi.canNangCapWithNDC(daNangCap)) {
             Service.gI().sendThongBao(player,
                     "Trang bị và đá nâng cấp không khớp nhau.");
-            return false;
+            return KHONG_LAM_DUOC;
         }
         Item daBaoVe = InventoryService.gI().findItemBag(player, 987);
         Item daBaoVeKhoa = InventoryService.gI().findItemBag(player, 1143);
@@ -196,24 +233,25 @@ public class NangCapVatPham {
         if (level >= CombineService.MAX_LEVEL_ITEM) {
             Service.gI().sendThongBao(player, "Món này đã đạt cấp tối đa (+"
                     + CombineService.MAX_LEVEL_ITEM + ").");
-            return false;
+            return KHONG_LAM_DUOC;
         }
         if (daNangCap.quantity < da) {
             Service.gI().sendThongBao(player, "Không đủ " + daNangCap.template.name
                     + " — cần " + da + ", đang có " + daNangCap.quantity + ".");
-            return false;
+            return KHONG_LAM_DUOC;
         }
         if (player.inventory.gold < gold) {
             Service.gI().sendThongBao(player, "Không đủ vàng, còn thiếu "
                     + Util.soCham(gold - player.inventory.gold) + " vàng.");
-            return false;
+            return KHONG_LAM_DUOC;
         }
         if (canUseDBV && useDBV && daBaoVe == null && daBaoVeKhoa == null) {
             Service.gI().sendThongBao(player,
                     "Không có Đá Bảo Vệ trong hành trang.");
-            return false;
+            return KHONG_LAM_DUOC;
         }
-        if (Util.isTrueMayMan(player, getRatio(level), 100)) {
+        boolean lenCap = Util.isTrueMayMan(player, getRatio(level), 100);
+        if (lenCap) {
             for (ItemOption io : trangBi.itemOptions) {
                 if (io.isOptionCanUpgrade()) {
                     io.param += (io.param * 10 / 100);
@@ -257,7 +295,7 @@ public class NangCapVatPham {
         InventoryService.gI().subQuantityItemsBag(player, daNangCap, da);
         InventoryService.gI().sendItemBag(player);
         Service.gI().sendMoney(player);
-        return true;
+        return lenCap ? LEN_CAP : TRUOT;
     }
 
 }

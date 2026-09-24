@@ -669,17 +669,141 @@ namespace Game5.God
             }
         }
 
+        /// <summary>
+        /// Tiềm năng phải trả để nâng <paramref name="soLan"/> lần chỉ số
+        /// <paramref name="chiSo"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>Chép đúng <c>NPoint.giaNangTiemNang</c> bên máy chủ. Máy chủ
+        /// mới là nơi trừ tiềm năng, nên con số bảng này hiện phải ra <b>từ
+        /// cùng một công thức</b>; đoán gần đúng thì người chơi bấm xong mới
+        /// biết mình tính sai.</para>
+        ///
+        /// <para>HP và KI: mỗi lần cộng 20, giá là cấp số cộng bắt đầu từ
+        /// <c>gốc + 1000</c>. Sức đánh và giáp: cấp số cộng nhân thêm hệ số.
+        /// Chí mạng: mỗi điểm đắt gấp năm điểm trước, nên cộng dồn từng bước và
+        /// chặn tràn.</para>
+        /// </remarks>
+        private static long giaNangTiemNang(int chiSo, long soLan)
+        {
+            if (soLan <= 0)
+            {
+                return 0;
+            }
+            var c = Char.myCharz();
+            if (chiSo == 0 || chiSo == 1)
+            {
+                long goc = (chiSo == 0) ? (long) c.cHPGoc : (long) c.cMPGoc;
+                long them = soLan * 20L;
+                return soLan * (2L * (goc + 1000L) + them - 20L) / 2L;
+            }
+            if (chiSo == 2)
+            {
+                return soLan * (2L * (long) c.cDamGoc + soLan - 1L) / 2L * 100L;
+            }
+            if (chiSo == 3)
+            {
+                return soLan * (2L * ((long) c.cDefGoc + 5L) + soLan - 1L)
+                        / 2L * 100000L;
+            }
+            long giaMot = 50000000L;
+            for (int i = 0; i < c.cCriticalGoc; i++)
+            {
+                if (giaMot > long.MaxValue / 5L)
+                {
+                    return long.MaxValue;
+                }
+                giaMot *= 5L;
+            }
+            long tong = 0;
+            for (long i = 0; i < soLan; i++)
+            {
+                if (giaMot >= long.MaxValue - tong)
+                {
+                    return long.MaxValue;
+                }
+                tong += giaMot;
+                if (giaMot > long.MaxValue / 5L)
+                {
+                    return long.MaxValue;
+                }
+                giaMot *= 5L;
+            }
+            return tong;
+        }
+
+        /// <summary>Giá của một nút mức, tức của <c>mức / bước</c> lần nâng.</summary>
+        private static long giaNangCuaMuc(int chiSo, long luong)
+        {
+            return giaNangTiemNang(chiSo, luong / buocMotLan(chiSo));
+        }
+
+        /// <summary>
+        /// Số tiềm năng viết gọn cho vừa bề ngang một nút.
+        /// </summary>
+        /// <remarks>
+        /// Giá chí mạng nhân năm mỗi điểm nên nó vượt mọi bề ngang rất nhanh;
+        /// viết đủ chữ số thì tràn sang nút bên cạnh.
+        /// </remarks>
+        private static string gonTiemNang(long v)
+        {
+            if (v >= 1000000000000000L)
+            {
+                return "quá lớn";
+            }
+            if (v < 1000000L)
+            {
+                return NinjaUtil.getMoneys(v);
+            }
+            if (v < 1000000000L)
+            {
+                return v / 1000000L + "," + (v / 100000L) % 10L + "Tr";
+            }
+            if (v < 1000000000000L)
+            {
+                return v / 1000000000L + "," + (v / 100000000L) % 10L + "Tỷ";
+            }
+            return v / 1000000000000L + "," + (v / 100000000000L) % 10L + "NgTỷ";
+        }
+
         private void moHopNang(int chiSo)
         {
             chiSoDangNang = chiSo;
             GameCanvas.clearAllPointerEvent();
         }
 
+        /// <summary>
+        /// Dòng chữ dưới ô số của bàn phím: gõ tới đâu, đếm tiềm năng tới đó.
+        /// </summary>
+        private static string ghiChuToiMuc(int chiSo, long muc)
+        {
+            long dangCo = soGocThuong(chiSo);
+            if (muc <= dangCo)
+            {
+                return "Đang có " + NinjaUtil.getMoneys(dangCo);
+            }
+            int buoc = buocMotLan(chiSo);
+            long soLan = (muc - dangCo) / buoc;
+            if (soLan <= 0)
+            {
+                return "Chưa đủ một bước (" + buoc + ")";
+            }
+            long gia = giaNangTiemNang(chiSo, soLan);
+            string s = "Cần " + gonTiemNang(gia) + " tiềm năng";
+            if (gia > Char.myCharz().cTiemNang)
+            {
+                s += " — thiếu";
+            }
+            return s;
+        }
+
         /// <summary>Vùng hộp nâng: x, y, rộng, cao.</summary>
         private int[] oHopNang()
         {
             int w = Math.min(rong - 60, 230);
-            int h = 84;
+            // Cao hon ban truoc 16 diem: duoi moi nut muc gio co mot dong ghi
+            // gia tiem nang, khong con bat nguoi choi tu nham.
+            int h = 100;
             return new int[] { x0 + (rong - w) / 2, y0 + (cao - h) / 2, w, h };
         }
 
@@ -700,9 +824,9 @@ namespace Game5.God
             int wn2 = (w - 22) / 2;
             if (i == 3)
             {
-                return new int[] { hop[0] + 8, hop[1] + 62, wn2, 18 };
+                return new int[] { hop[0] + 8, hop[1] + 76, wn2, 18 };
             }
-            return new int[] { hop[0] + w - 8 - wn2, hop[1] + 62, wn2, 18 };
+            return new int[] { hop[0] + w - 8 - wn2, hop[1] + 76, wn2, 18 };
         }
 
         /// <summary>Hộp nâng chỉ số, tự vẽ trong bảng.</summary>
@@ -726,10 +850,17 @@ namespace Game5.God
                     hop[0] + hop[2] / 2, hop[1] + 21, mFont.CENTER);
 
             int[] muc = mucNangCua(chiSoDangNang);
+            long dangCo = Char.myCharz().cTiemNang;
             for (int i = 0; i < muc.Length; i++)
             {
                 int[] o = oNutHopNang(i);
                 veNut(g, o[0], o[1], o[2], o[3], "+" + muc[i], false);
+                // Gia ngay duoi nut: khong co no thi phai bam thu moi biet mat
+                // bao nhieu, ma bam roi la tru that.
+                long gia = giaNangCuaMuc(chiSoDangNang, muc[i]);
+                mFont f = (gia > dangCo) ? mFont.tahoma_7_red : mFont.tahoma_7;
+                f.drawString(g, gonTiemNang(gia), o[0] + o[2] / 2,
+                        o[1] + o[3] + 2, mFont.CENTER);
             }
             int[] toiMuc = oNutHopNang(3);
             veNut(g, toiMuc[0], toiMuc[1], toiMuc[2], toiMuc[3],
@@ -769,7 +900,8 @@ namespace Game5.God
                             {
                                 nangChiSoGoc(chiSo, (int) (muc - dangCo));
                             }
-                        });
+                        },
+                        muc => ghiChuToiMuc(chiSo, muc));
                 return true;
             }
             if (cham2(oNutHopNang(4)))
@@ -2591,38 +2723,41 @@ namespace Game5.God
         }
 
         /// <summary>Dòng "giá tiềm năng: tăng N" của chỉ số thứ <paramref name="i"/>.</summary>
+        /// <summary>Dòng giá của MỘT lần nâng, ngay dưới tên chỉ số.</summary>
+        /// <remarks>
+        /// Giá lấy từ <see cref="giaNangTiemNang"/> — công thức thật của máy chủ.
+        /// Bản trước viết đại là "gốc + 1000" cho cả năm chỉ số: đúng với HP và
+        /// KI, còn sức đánh thật ra tốn <c>gốc × 100</c> và giáp tốn
+        /// <c>(gốc + 5) × 100.000</c>, tức bảng báo ít hơn hàng trăm lần.
+        /// </remarks>
         private static string dongGiaNang(int i)
         {
             var c = Char.myCharz();
-            long gia;
-            int tang = -1;
+            string gia = gonTiemNang(giaNangTiemNang(i, 1));
+            int tang;
             if (i == 0)
             {
-                gia = (long)c.cHPGoc + 1000;
                 tang = c.hpFrom1000TiemNang;
             }
             else if (i == 1)
             {
-                gia = c.cMPGoc + 1000;
                 tang = c.mpFrom1000TiemNang;
             }
             else if (i == 2)
             {
-                gia = c.cDamGoc + 1000;
                 tang = c.damFrom1000TiemNang;
             }
             else if (i == 3)
             {
-                gia = c.cDefGoc + 1000;
                 tang = c.defFrom1000TiemNang;
             }
             else
             {
-                // Crit khong co truong "from1000TiemNang" nao ve client.
-                return NinjaUtil.getMoneys(c.cCriticalGoc + 1000)
-                        + " tiềm năng";
+                // Chi mang khong co truong "from1000TiemNang" nao ve client, va
+                // may chu cong dung mot diem moi lan.
+                tang = 1;
             }
-            return NinjaUtil.getMoneys(gia) + " tiềm năng: tăng " + tang;
+            return gia + " tiềm năng: tăng " + tang;
         }
 
         /// <summary>

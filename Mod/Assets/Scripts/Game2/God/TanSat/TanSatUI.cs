@@ -36,11 +36,33 @@ namespace Game2.God
         private const int RONG = 258;
         private const int CAO = 246;
 
-        private const int MAU_NEN = 0x332B22;
-        private const int MAU_VIEN = 0xC8933C;
-        private const int MAU_O = 0x4A4034;
-        private const int MAU_O_BAT = 0x2E7D32;
-        private const int MAU_O_TAT = 0x5A5A5A;
+        /// <summary>Nền bảng: kem, đúng màu nền của mấy bảng lớn trong game.</summary>
+        /// <remarks>
+        /// Bản trước nâu đen trên nền trời sáng: nổi thì nổi, nhưng nhìn như dán
+        /// từ game khác sang. Nền sáng kéo theo chữ phải là chữ sẫm.
+        /// </remarks>
+        private const int MAU_NEN = 0xFBEEDE;
+
+        /// <summary>Viền bảng và viền nút.</summary>
+        private const int MAU_VIEN = 0x7A4A28;
+
+        /// <summary>Viền nhạt, cho mấy khung phụ bên trong.</summary>
+        private const int MAU_VIEN_NHAT = 0xB08A5A;
+
+        /// <summary>Mặt nút thường.</summary>
+        private const int MAU_O = 0xF4DEBE;
+
+        /// <summary>Mặt nút đang bật: xanh lá tươi.</summary>
+        private const int MAU_O_BAT = 0x3FA94F;
+
+        /// <summary>Ô tích chưa chọn.</summary>
+        private const int MAU_O_TAT = 0xD8C4A6;
+
+        /// <summary>Nền chìm của danh sách loài.</summary>
+        private const int MAU_LOM = 0xF1DFC0;
+
+        /// <summary>Nền dòng đang chọn trong danh sách.</summary>
+        private const int MAU_DONG_CHON = 0xE7CFA6;
 
         /// <summary>Cao mỗi dòng trong danh sách loài.</summary>
         private const int CAO_DONG = 16;
@@ -140,12 +162,12 @@ namespace Game2.God
 
             g.setColor(0, 0.55f);
             g.fillRect(0, 0, GameCanvas.w, GameCanvas.h);
-            g.setColor(MAU_NEN, 0.97f);
-            g.fillRect(x0, y0, RONG, CAO, 8);
-            g.setColor(MAU_VIEN);
-            g.drawRect(x0, y0, RONG, CAO);
+            // Vien ve bang MOT hinh bo goc to hon roi dat ruot len tren, chu
+            // khong phai drawRect: drawRect ve hinh chu nhat VUONG, nen bon goc
+            // cua no thua ra ngoai ruot da bo goc.
+            veKhungBo(g, x0, y0, RONG, CAO, MAU_NEN, 0.97f, MAU_VIEN, 1f, 1, 8);
 
-            mFont.tahoma_7b_yellow.drawString(g, "Tàn sát",
+            mFont.tahoma_7b_red.drawString(g, "Tàn sát",
                     x0 + RONG / 2, y0 + 4, mFont.CENTER);
             veNut(g, x0 + RONG - 18, y0 + 3, 15, 12, "X", false);
 
@@ -170,14 +192,14 @@ namespace Game2.God
             string nhan = (Mobs.TypeMobsTanSat.Count == 0)
                     ? "Loài đánh: TẤT CẢ quái trong bản đồ"
                     : ("Loài đánh: đã chọn " + Mobs.TypeMobsTanSat.Count);
-            mFont.tahoma_7_white.drawString(g, nhan, x0 + 6, y, mFont.LEFT);
+            mFont.tahoma_7b_dark.drawString(g, nhan, x0 + 6, y, mFont.LEFT);
             y += 12;
 
             // ---- danh sách loài ----
             int yDs = y;
             int caoDs = SO_DONG_THAY * CAO_DONG;
-            g.setColor(MAU_O, 0.9f);
-            g.fillRect(x0 + 6, yDs, RONG - 12, caoDs, 4);
+            veKhungBo(g, x0 + 6, yDs, RONG - 12, caoDs, MAU_LOM, 1f,
+                    MAU_VIEN_NHAT, 0.9f, 1, 5);
 
             if (loai.Count == 0)
             {
@@ -193,9 +215,18 @@ namespace Game2.God
                     int yd = yDs + (i - cuon) * CAO_DONG;
                     bool chon = Mobs.TypeMobsTanSat.Contains(l.templateId);
 
+                    // Dong da chon co nen rieng: chi moi dau tich thi phai soi
+                    // vao o vuong 10 diem mo i thay minh dang chon nhung gi.
+                    if (chon)
+                    {
+                        g.setColor(MAU_DONG_CHON, 1f);
+                        g.fillRect(x0 + 8, yd + 1, RONG - 16, CAO_DONG - 2, 3);
+                    }
+
                     // O tich
-                    g.setColor(chon ? MAU_O_BAT : MAU_O_TAT, 1f);
-                    g.fillRect(x0 + 10, yd + 3, 10, 10, 2);
+                    veKhungBo(g, x0 + 10, yd + 3, 10, 10,
+                            chon ? MAU_O_BAT : MAU_O_TAT, 1f,
+                            MAU_VIEN_NHAT, 0.9f, 1, 3);
                     if (chon)
                     {
                         mFont.tahoma_7b_white.drawString(g, "v",
@@ -204,7 +235,7 @@ namespace Game2.God
 
                     string chu = l.ten + " (" + l.soCon + ")"
                             + (l.sieuQuai ? " [siêu]" : "");
-                    (chon ? mFont.tahoma_7b_white : mFont.tahoma_7_white)
+                    (chon ? mFont.tahoma_7b_dark : mFont.tahoma_7)
                             .drawString(g, catBot(chu, 30), x0 + 26, yd + 2, mFont.LEFT);
                 }
             }
@@ -215,7 +246,7 @@ namespace Game2.God
             {
                 veNut(g, x0 + 6, y, 40, 14, "Lên", false);
                 veNut(g, x0 + 50, y, 40, 14, "Xuống", false);
-                mFont.tahoma_7_grey.drawString(g,
+                mFont.tahoma_7.drawString(g,
                         (cuon + 1) + "-" + Math.min(loai.Count, cuon + SO_DONG_THAY)
                         + "/" + loai.Count, x0 + 96, y + 2, mFont.LEFT);
             }
@@ -238,11 +269,30 @@ namespace Game2.God
         private static void veNut(mGraphics g, int x, int y, int w, int h,
                 string chu, bool bat)
         {
-            g.setColor(bat ? MAU_O_BAT : MAU_O, 1f);
-            g.fillRect(x, y, w, h, 3);
-            g.setColor(MAU_VIEN, 0.7f);
-            g.drawRect(x, y, w, h);
-            mFont.tahoma_7_white.drawString(g, chu, x + w / 2, y + 2, mFont.CENTER);
+            veKhungBo(g, x, y, w, h, bat ? MAU_O_BAT : MAU_O, 1f,
+                    MAU_VIEN, bat ? 1f : 0.75f, 1, 4);
+            // Nut bat la mang xanh dam nen chu trang; nut thuong mat kem nen chu
+            // phai sam, chu trang dat tren do la mat hut.
+            (bat ? mFont.tahoma_7b_white : mFont.tahoma_7b_dark)
+                    .drawString(g, chu, x + w / 2, y + 2, mFont.CENTER);
+        }
+
+        /// <summary>
+        /// Khung bo góc: một hình viền to hơn, rồi đặt ruột lên trên.
+        /// </summary>
+        /// <remarks>
+        /// Cách duy nhất có viền bo đúng theo góc — <c>drawRect</c> chỉ vẽ được
+        /// hình chữ nhật vuông góc.
+        /// </remarks>
+        private static void veKhungBo(mGraphics g, int x, int y, int w, int h,
+                int mauNen, float moNen, int mauVien, float moVien, int day,
+                int boGoc)
+        {
+            g.setColor(mauVien, moVien);
+            g.fillRect(x, y, w, h, boGoc);
+            g.setColor(mauNen, moNen);
+            g.fillRect(x + day, y + day, w - day * 2, h - day * 2,
+                    boGoc > day ? boGoc - day : 1);
         }
 
         // ==================================================================

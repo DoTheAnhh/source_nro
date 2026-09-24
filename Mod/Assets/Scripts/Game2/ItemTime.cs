@@ -154,8 +154,10 @@ namespace Game2
 				// dam tach han chu ra.
 				int wN = mFont.tahoma_7b_white.getWidth(nhan) + 7;
 				int hN = 11;
-				int xN = x + 14 - wN;
-				int yN = y - 15;
+				// Nam sat goc tren phai cua anh chu khong nho ra ngoai: anh cao
+				// 24 nen mep tren la y - 12, mep phai la x + 12.
+				int xN = x + 11 - wN;
+				int yN = y - 12;
 				g.setColor(0x3B2712, 1f);
 				g.fillRect(xN - 1, yN - 1, wN + 2, hN + 2, 4);
 				g.setColor(0xE8801A, 1f);

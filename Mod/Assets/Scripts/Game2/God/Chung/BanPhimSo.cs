@@ -69,6 +69,16 @@ namespace Game2.God
         private long toiDa;
         private System.Action<long> khiXong;
 
+        /// <summary>
+        /// Hàm sinh dòng chữ dưới ô số, tính theo số đang gõ; <c>null</c> là
+        /// không có dòng nào.
+        /// </summary>
+        /// <remarks>
+        /// Gọi lại mỗi khung hình chứ không tính một lần lúc mở: cả ý nghĩa của
+        /// dòng này là nó đổi theo từng chữ số vừa bấm.
+        /// </remarks>
+        private System.Func<long, string> ghiChu;
+
         // ------------------------------------------------------------------
         //  Màu — giống bộ màn phụ còn lại
         // ------------------------------------------------------------------
@@ -141,9 +151,18 @@ namespace Game2.God
 
         public void moRa(string tieuDe, long toiDa, System.Action<long> khiXong)
         {
+            moRa(tieuDe, toiDa, khiXong, null);
+        }
+
+        /// <param name="ghiChu">Sinh dòng chữ dưới ô số theo số đang gõ, ví dụ
+        /// "Cần 1,2Tỷ tiềm năng"; <c>null</c> là không hiện dòng nào.</param>
+        public void moRa(string tieuDe, long toiDa, System.Action<long> khiXong,
+                System.Func<long, string> ghiChu)
+        {
             this.tieuDe = string.IsNullOrEmpty(tieuDe) ? TIEU_DE_MAC_DINH : tieuDe;
             this.toiDa = toiDa;
             this.khiXong = khiXong;
+            this.ghiChu = ghiChu;
             soDangGo = "";
             chu = null;
             dangMo = true;
@@ -157,6 +176,7 @@ namespace Game2.God
             // Bo ham goi lai: giu lai thi lan mo sau ma cho goi quen truyen ham
             // moi se chay nham ham cua lan truoc.
             khiXong = null;
+            ghiChu = null;
         }
 
         // ------------------------------------------------------------------
@@ -165,12 +185,19 @@ namespace Game2.God
         private const int RONG = 172;
         private const int CAO = 196;
 
+        /// <summary>Cao thêm khi có dòng ghi chú.</summary>
+        private int caoThem()
+        {
+            return (ghiChu == null) ? 0 : 12;
+        }
+
         private int[] oKhung()
         {
+            int h = CAO + caoThem();
             return new int[] {
                 (GameCanvas.w - RONG) / 2,
-                (GameCanvas.h - CAO) / 2,
-                RONG, CAO };
+                (GameCanvas.h - h) / 2,
+                RONG, h };
         }
 
         /// <summary>
@@ -190,7 +217,7 @@ namespace Game2.God
             int w = (h[2] - le * 2 - khe * (cot - 1)) / cot;
             return new int[] {
                 h[0] + le + (i % cot) * (w + khe),
-                h[1] + 62 + (i / cot) * (cao + khe),
+                h[1] + 62 + caoThem() + (i / cot) * (cao + khe),
                 w, cao };
         }
 
@@ -237,6 +264,24 @@ namespace Game2.God
             {
                 mFont.tahoma_7_grey.drawString(g, "Tối đa " + toiDa,
                         h[0] + h[2] / 2, h[1] + 48, mFont.CENTER);
+            }
+            if (ghiChu != null)
+            {
+                string gc = null;
+                try
+                {
+                    gc = ghiChu(docSoDangGo());
+                }
+                catch (System.Exception)
+                {
+                    // Ham cua cho goi hong thi bo dong nay, dung keo ca ban phim
+                    // chet theo.
+                }
+                if (!string.IsNullOrEmpty(gc))
+                {
+                    mFont.tahoma_7b_dark.drawString(g, gc,
+                            h[0] + h[2] / 2, h[1] + 58, mFont.CENTER);
+                }
             }
 
             for (int i = 0; i < 12; i++)
@@ -323,6 +368,26 @@ namespace Game2.God
         /// Chặn ở 12 chữ số: dài hơn là tràn kiểu <c>long</c> lúc đọc ra. Bỏ số 0
         /// đứng đầu cho khỏi thành "007".
         /// </remarks>
+        /// <summary>Số đang gõ, 0 khi ô còn trống.</summary>
+        private long docSoDangGo()
+        {
+            long v = 0;
+            for (int i = 0; i < soDangGo.Length; i++)
+            {
+                char c = soDangGo[i];
+                if (c < '0' || c > '9')
+                {
+                    continue;
+                }
+                if (v > (long.MaxValue - 9L) / 10L)
+                {
+                    return long.MaxValue;
+                }
+                v = v * 10L + (c - '0');
+            }
+            return v;
+        }
+
         private void themChuSo(char c)
         {
             if (soDangGo.Length >= 12)
