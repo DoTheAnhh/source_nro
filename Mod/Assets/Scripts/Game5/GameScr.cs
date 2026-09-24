@@ -7352,21 +7352,40 @@ namespace Game5
     	{
     		if (vai == 0)
     		{
+    			// Da xong: dau tich, ve bang hai net cheo.
     			g.setColor(0x4CD964, 1f);
-    			g.fillRect(tamX - 3, tamY - 3, 6, 6, 3);
+    			for (int i = 0; i < 3; i++)
+    			{
+    				g.fillRect(tamX - 4 + i, tamY + i - 1, 2, 2);
+    			}
+    			for (int i = 0; i < 5; i++)
+    			{
+    				g.fillRect(tamX - 1 + i, tamY + 2 - i, 2, 2);
+    			}
     			return;
     		}
     		if (vai == 1)
     		{
-    			g.setColor(0xFFE9A3, 1f);
-    			g.fillRect(tamX - 4, tamY - 4, 8, 8, 4);
-    			g.setColor(0xE03A3A, 1f);
-    			g.fillRect(tamX - 3, tamY - 3, 6, 6, 3);
+    			// Dang lam: hinh thoi vang, vien nau — khac han hai dau kia ca ve
+    			// hinh lan mau nen liec mot cai la thay minh dang o buoc nao.
+    			g.setColor(0x6B4718, 1f);
+    			for (int i = -4; i <= 4; i++)
+    			{
+    				int rong = 4 - (i < 0 ? -i : i);
+    				g.fillRect(tamX - rong, tamY + i, rong * 2 + 1, 1);
+    			}
+    			g.setColor(0xFFD166, 1f);
+    			for (int i = -3; i <= 3; i++)
+    			{
+    				int rong = 3 - (i < 0 ? -i : i);
+    				g.fillRect(tamX - rong, tamY + i, rong * 2 + 1, 1);
+    			}
     			return;
     		}
-    		g.setColor(0xFFFFFF, 0.55f);
+    		// Chua toi: vong tron rong, khong to ruot.
+    		g.setColor(0xFFFFFF, 0.5f);
     		g.fillRect(tamX - 3, tamY - 3, 6, 6, 3);
-    		g.setColor(0x6B4718, 1f);
+    		g.setColor(0x7A5524, 1f);
     		g.fillRect(tamX - 2, tamY - 2, 4, 4, 2);
     	}
 
@@ -7537,6 +7556,21 @@ namespace Game5
     			return;
     		}
 
+    		// Dem buoc de de tieu de: tong so buoc va dang o buoc thu may.
+    		int soBuoc = vaiBuoc.Count;
+    		int buocDangLam = 0;
+    		for (int i = 0; i < vaiBuoc.Count; i++)
+    		{
+    			if (vaiBuoc[i] <= 1)
+    			{
+    				buocDangLam = i + 1;
+    			}
+    		}
+    		if (buocDangLam < 1 && soBuoc > 0)
+    		{
+    			buocDangLam = 1;
+    		}
+
     		int CAO_TD = 15;
     		// Chi hien toi da SO_DONG_NV dong, phan con lai cuon.
     		//
@@ -7578,8 +7612,14 @@ namespace Game5
     		g.fillRect(x + 3, y + 3, wKhung - 6, hTD, 6);
     		g.setColor(0xE8B457, 1f);
     		g.fillRect(x + 3, y + 3 + hTD / 2, wKhung - 6, hTD - hTD / 2, 6);
-    		mFont.tahoma_7b_dark.drawString(g, "Nhiệm vụ", x + wKhung / 2, y + 3,
-    				mFont.CENTER);
+    		// Tieu de CAN TRAI, ngay sau dau thu gon; mep phai de danh cho so
+    		// buoc. Can giua thi chu bi dau thu gon day lech, nhin nhu dat nham.
+    		mFont.tahoma_7b_dark.drawString(g, "Nhiệm vụ", x + 20, y + 3, mFont.LEFT);
+    		if (soBuoc > 0)
+    		{
+    			mFont.tahoma_7_grey.drawString(g, "Bước " + buocDangLam + "/" + soBuoc,
+    					x + wKhung - 7, y + 3, mFont.RIGHT);
+    		}
 
     		// Dau thu gon o goc phai dai tieu de.
     		//
@@ -7616,8 +7656,9 @@ namespace Game5
     				f = mFont.tahoma_7b_green2;
     				break;
     			case 1:
-    				// Dang lam -> do, cho no bat han ra khoi danh sach.
-    				f = mFont.tahoma_7b_red;
+    				// Dang lam -> vang dam. Do tuoi tren nen nau doc chi mat, ma
+    				// da co dai nen va vach nhan lam dau roi.
+    				f = mFont.tahoma_7b_yellow;
     				break;
     			default:
     				// Chua toi -> trang.
@@ -7625,9 +7666,18 @@ namespace Game5
     				break;
     			}
     			int xChu = (vai[i] == 3) ? (x + 7) : (x + 17);
+    			if (vai[i] == 1)
+    			{
+    				// Buoc dang lam: mot dai nen mo va vach vang sat mep trai.
+    				// Chi to chu thoi thi trong danh sach dai van phai do mat tim.
+    				g.setColor(0xFFD166, 0.16f);
+    				g.fillRect(x + 5, yc + k * 12 - 1, wKhung - 12, 12, 3);
+    				g.setColor(0xFFD166, 0.9f);
+    				g.fillRect(x + 5, yc + k * 12 - 1, 2, 12);
+    			}
     			if (vai[i] != 3 && i < dauDong.Count && dauDong[i])
     			{
-    				veDauBuoc(g, x + 9, yc + k * 12 + 4, vai[i]);
+    				veDauBuoc(g, x + 10, yc + k * 12 + 4, vai[i]);
     			}
     			// Ve MOT lan, khong kem font bong.
     			//
