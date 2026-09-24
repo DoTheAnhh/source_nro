@@ -133,6 +133,7 @@ public class MoRuongDAO {
                 gieoMacDinh();
             }
             suaQuaTheoIdThat();
+            datTrungCellVang();
         } catch (Exception ex) {
             daTaoBang = false;
             Logger.logException(MoRuongDAO.class, ex, "Không tạo được bảng mở rương");
@@ -242,6 +243,114 @@ public class MoRuongDAO {
         for (int itemId : them) {
             themQua(ruongId, itemId, 1, (int) Math.min(Integer.MAX_VALUE, conLai), 3, "");
         }
+    }
+
+    /** Cờ: đã đặt Trứng Cell trong Rương Sự Kiện thành nền vàng 1,5% chưa. */
+    private static final String CO_TRUNG_CELL = "trung_cell_1_5_v1";
+
+    /**
+     * Trứng Cell trong Rương Sự Kiện: nền vàng (Huyền thoại), đúng 1,5% — một lần.
+     *
+     * <p>Rương Thú Cưng Cao Cấp giữ đúng 2%; mọi món khác chia phần còn lại,
+     * giữ nguyên tỉ lệ giữa chúng. Chưa có dòng Trứng Cell thì thêm. Chưa tra
+     * được id trứng thì không ghi cờ, lần khởi động sau làm lại.</p>
+     */
+    private static void datTrungCellVang() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT gia_tri FROM mo_ruong_cau_hinh WHERE khoa = ?", CO_TRUNG_CELL);
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            dong(rs);
+        }
+        int cell = TrungDeTuDAO.itemCuaLoai(nro.core.consts.ConstDetu.CELL);
+        int rtCaoCap = ThuCungDAO.idRuongCaoCap();
+        if (cell <= 0) {
+            return;
+        }
+        int suKien = idTheoTenRuong("Rương Sự Kiện");
+        if (suKien > 0) {
+            boolean coCell = false;
+            lucDoc = 0;
+            for (Qua q : dsQuaDayDu(suKien)) {
+                if (q.itemId == cell) {
+                    coCell = true;
+                }
+            }
+            if (!coCell) {
+                themQua(suKien, cell, 1, 1, 3, "");
+            }
+            ConnectDB.executeUpdate("UPDATE mo_ruong_qua SET hiem = 3 WHERE ruong_id = ? AND item_id = ?",
+                    suKien, cell);
+            java.util.Map<Integer, Integer> coDinh = new java.util.LinkedHashMap<>();
+            coDinh.put(cell, 1500);          // 1,5%
+            if (rtCaoCap > 0) {
+                coDinh.put(rtCaoCap, 2000);  // 2%
+            }
+            datTiLeCoDinh(suKien, coDinh);
+        }
+        ConnectDB.executeUpdate("INSERT IGNORE INTO mo_ruong_cau_hinh (khoa, gia_tri) VALUES (?, '1')", CO_TRUNG_CELL);
+        lucDoc = 0;
+        Logger.success("Mở rương: Trứng Cell (" + cell + ") trong Rương Sự Kiện → nền vàng 1,5%\n");
+    }
+
+    /** Thang trọng số khi đặt tỉ lệ cố định: 100.000 phần = 100%. */
+    private static final int THANG_TI_LE = 100_000;
+
+    /**
+     * Đặt một số món của rương về <b>đúng</b> tỉ lệ cho trước; các món còn lại
+     * chia phần dư, giữ nguyên tỉ lệ giữa chúng.
+     *
+     * <p>Mọi trọng số quy về thang {@link #THANG_TI_LE}: món cố định nhận đúng
+     * số phần của nó, món còn lại nhận phần tương ứng rồi phần lẻ do làm tròn
+     * dồn vào món lớn nhất — tổng luôn tròn 100.000, nên món cố định hiện đúng
+     * con số đặt, không lệch 0,01%.</p>
+     *
+     * @param coDinh id vật phẩm → số phần trên 100.000 (1.500 = 1,5%)
+     */
+    public static void datTiLeCoDinh(int ruongId, java.util.Map<Integer, Integer> coDinh) throws Exception {
+        lucDoc = 0;
+        List<Qua> ds = dsQuaDayDu(ruongId);
+        long tongKhac = 0;
+        int phanCoDinh = 0;
+        java.util.Set<Integer> daDat = new java.util.HashSet<>();
+        for (Qua q : ds) {
+            if (coDinh.containsKey(q.itemId)) {
+                if (daDat.add(q.itemId)) {
+                    phanCoDinh += coDinh.get(q.itemId);
+                }
+            } else {
+                tongKhac += Math.max(0, q.trongSo);
+            }
+        }
+        int conLai = Math.max(0, THANG_TI_LE - phanCoDinh);
+        daDat.clear();
+        int daChia = 0;
+        Qua lonNhat = null;
+        java.util.Map<Integer, Integer> moi = new java.util.HashMap<>();
+        for (Qua q : ds) {
+            int w;
+            if (coDinh.containsKey(q.itemId)) {
+                // Trung mon (hai dong cung mot vat pham) thi dong sau ve 0.
+                w = daDat.add(q.itemId) ? coDinh.get(q.itemId) : 0;
+            } else {
+                w = tongKhac <= 0 ? 0 : (int) Math.round((double) Math.max(0, q.trongSo) * conLai / tongKhac);
+                daChia += w;
+                if (lonNhat == null || w > moi.getOrDefault(lonNhat.id, 0)) {
+                    lonNhat = q;
+                }
+            }
+            moi.put(q.id, w);
+        }
+        if (lonNhat != null) {
+            moi.put(lonNhat.id, moi.get(lonNhat.id) + (conLai - daChia));
+        }
+        for (java.util.Map.Entry<Integer, Integer> e : moi.entrySet()) {
+            ConnectDB.executeUpdate("UPDATE mo_ruong_qua SET trong_so = ? WHERE id = ?", e.getValue(), e.getKey());
+        }
+        lucDoc = 0;
     }
 
     private static int idTheoTenRuong(String ten) throws Exception {
