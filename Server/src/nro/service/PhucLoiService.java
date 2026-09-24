@@ -85,6 +85,15 @@ public class PhucLoiService {
      * </pre>
      */
     public void guiDuLieu(Player pl) {
+        guiDuLieu(pl, null);
+    }
+
+    /**
+     * Như trên, kèm <b>tổng quà vừa nhận</b> ở cuối gói để client hiện popup.
+     *
+     * @param tongKet id vật phẩm → tổng số lượng; {@code null} là không có
+     */
+    public void guiDuLieu(Player pl, java.util.Map<Integer, Integer> tongKet) {
         if (pl == null) {
             return;
         }
@@ -135,6 +144,23 @@ public class PhucLoiService {
             // The thang noi vao CUOI goi: client cu doc het phan phuc loi roi
             // dung, khong lech.
             TheThangService.gI().ghiVaoGoi(pl, msg);
+            // Tong qua vua nhan (nhan nhanh): byte 1 roi danh sach, hoac byte 0.
+            if (tongKet != null && !tongKet.isEmpty()) {
+                msg.writer().writeByte(1);
+                msg.writer().writeByte(Math.min(120, tongKet.size()));
+                int dem = 0;
+                for (java.util.Map.Entry<Integer, Integer> e : tongKet.entrySet()) {
+                    if (dem++ >= 120) {
+                        break;
+                    }
+                    nro.entity.template.ItemTemplate t = ItemService.gI().getTemplate(e.getKey());
+                    msg.writer().writeShort(iconCua(e.getKey()));
+                    msg.writer().writeInt(e.getValue());
+                    msg.writer().writeUTF(t == null ? ("Vật phẩm " + e.getKey()) : t.name);
+                }
+            } else {
+                msg.writer().writeByte(0);
+            }
             msg.writer().flush();
             pl.sendMessage(msg);
         } catch (Exception ex) {
@@ -208,11 +234,18 @@ public class PhucLoiService {
     private void nhanNhanh(Player pl) {
         int duoc = 0;
         int conLai = 0;
+        // Giu thu tu nhan de popup liet ke dung thu tu.
+        java.util.Map<Integer, Integer> tong = new java.util.LinkedHashMap<>();
         Service.gI().batGomGoi(pl);
         try {
             if (TheThangService.gI().coTheNhanHomNay(pl)) {
+                int bacPass = pl.THE_THANG;
                 if (TheThangService.gI().nhanNgay(pl, false)) {
                     duoc++;
+                    for (nro.repository.dao.TheThangDAO.Qua q : nro.repository.dao.TheThangDAO
+                            .dsQua(bacPass, nro.repository.dao.TheThangDAO.QUA_NGAY)) {
+                        tong.merge(q.itemId, q.soLuong, Integer::sum);
+                    }
                 } else {
                     conLai++;
                 }
@@ -228,6 +261,9 @@ public class PhucLoiService {
                     }
                     if (nhanMoc(pl, m, n)) {
                         duoc++;
+                        for (PhucLoiDAO.Qua q : PhucLoiDAO.dsQua(m.id)) {
+                            tong.merge(q.itemId, q.soLuong, Integer::sum);
+                        }
                     } else {
                         conLai++;
                     }
@@ -244,7 +280,7 @@ public class PhucLoiService {
             Service.gI().sendThongBao(pl, "Đã nhận " + duoc + " mục, còn " + conLai
                     + " mục chưa nhận được (hành trang đầy?).");
         }
-        guiDuLieu(pl);
+        guiDuLieu(pl, tong);
     }
 
     /** Nhận quà của một mốc theo id, rồi gửi lại dữ liệu để client vẽ lại. */

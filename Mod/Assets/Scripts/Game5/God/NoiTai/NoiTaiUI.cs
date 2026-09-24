@@ -292,7 +292,7 @@ namespace Game5.God
             g.setColor(MAU_NHAN, 0.75f);
             g.fillRect(k[0] + 10, k[1] + CAO_TIEU_DE - 2, k[2] - 20, 1);
             mFont.tahoma_7b_yellow.drawString(g, "NỘI TẠI",
-                    k[0] + k[2] / 2, k[1] + 4, mFont.CENTER);
+                    k[0] + k[2] / 2, k[1] + 4, mFont.CENTER, mFont.tahoma_7b_dark);
             veNut(g, nutX, "X", MAU_NUT_DONG, true);
         }
 

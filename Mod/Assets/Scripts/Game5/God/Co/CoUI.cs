@@ -205,7 +205,7 @@ namespace Game5.God
             g.setColor(MAU_TIEU_DE, 1f);
             g.fillRect(x0 + 1, y0 + 1, rong - 2, CAO_TIEU_DE, BO_GOC);
             mFont.tahoma_7b_white.drawString(g, "ĐỔI CỜ", x0 + rong / 2,
-                    y0 + 6, mFont.CENTER);
+                    y0 + 6, mFont.CENTER, mFont.tahoma_7b_dark);
 
             veNutDong(g, x0 + rong - 20, y0 + 4);
 

@@ -43,6 +43,9 @@ namespace Game5.God
         /// </remarks>
         private const int MAU_NEN = 0xFBEEDE;
 
+        /// <summary>Dải tiêu đề: cam, cùng màu dải tiêu đề của mấy bảng khác.</summary>
+        private const int MAU_TIEU_DE = 0xF0A164;
+
         /// <summary>Viền bảng và viền nút.</summary>
         private const int MAU_VIEN = 0x7A4A28;
 
@@ -167,8 +170,12 @@ namespace Game5.God
             // cua no thua ra ngoai ruot da bo goc.
             veKhungBo(g, x0, y0, RONG, CAO, MAU_NEN, 0.97f, MAU_VIEN, 1f, 1, 8);
 
-            mFont.tahoma_7b_red.drawString(g, "Tàn sát",
-                    x0 + RONG / 2, y0 + 4, mFont.CENTER);
+            // Dai tieu de mau, chu trang bong nau: tieu de do tran tren nen kem
+            // chim vao than bang.
+            g.setColor(MAU_TIEU_DE, 1f);
+            g.fillRect(x0 + 1, y0 + 1, RONG - 2, 17, 7);
+            mFont.tahoma_7b_white.drawString(g, "TÀN SÁT",
+                    x0 + RONG / 2, y0 + 4, mFont.CENTER, mFont.tahoma_7b_dark);
             veNut(g, x0 + RONG - 18, y0 + 3, 15, 12, "X", false);
 
             int y = y0 + 20;

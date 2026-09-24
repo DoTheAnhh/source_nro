@@ -3951,6 +3951,21 @@ namespace Game4
                                 theTL.hetHan = msg.reader().readUTF();
                                 theTL.daNhanHomNay = msg.reader().readByte() == 1;
                                 theTL.soDu = msg.reader().readUTF();
+                                // Tong qua vua nhan (sau Nhan nhanh): byte 1 roi danh sach.
+                                var tongTL = new System.Collections.Generic.List<God.PhucLoiUI.QuaDaNhan>();
+                                if (msg.reader().available() > 0 && msg.reader().readByte() == 1)
+                                {
+                                    int soTK = msg.reader().readUnsignedByte();
+                                    for (int iT = 0; iT < soTK; iT++)
+                                    {
+                                        var qTK = new God.PhucLoiUI.QuaDaNhan();
+                                        qTK.icon = msg.reader().readShort();
+                                        qTK.soLuong = msg.reader().readInt();
+                                        qTK.ten = msg.reader().readUTF();
+                                        tongTL.Add(qTK);
+                                    }
+                                }
+                                God.PhucLoiUI.getInstance().nhanTongKet(tongTL);
                             }
                             God.PhucLoiUI.getInstance().nhanTheThang(theTL);
                             God.PhucLoiUI.getInstance().nhanDuLieu(dsNhomPL);

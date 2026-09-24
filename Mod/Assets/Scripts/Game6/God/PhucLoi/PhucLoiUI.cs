@@ -221,6 +221,89 @@ namespace Game6.God
             dangMo = true;
         }
 
+        /// <summary>Một dòng trong popup tổng quà.</summary>
+        public class QuaDaNhan
+        {
+            public int icon;
+            public int soLuong;
+            public string ten;
+        }
+
+        private readonly List<QuaDaNhan> tongKet = new List<QuaDaNhan>();
+        private bool hienTongKet;
+
+        /// <summary>Lúc bấm Nhận nhanh; 0 là không chờ gì.</summary>
+        private long lucBamNhanNhanh;
+
+        /// <summary>
+        /// Bấm Nhận nhanh mà quá chừng này không có trả lời thì báo máy chủ cũ.
+        /// </summary>
+        /// <remarks>
+        /// Máy chủ chưa cập nhật hiểu gói nhận nhanh thành gói nhận mốc, đọc
+        /// thiếu byte rồi im lặng bỏ qua — người chơi bấm mãi không thấy gì.
+        /// </remarks>
+        private const long HAN_CHO_NHAN_NHANH = 5000L;
+
+        /// <summary>
+        /// Máy chủ mới đã trả dữ liệu (có mục NRO Pass): thôi chờ. Có quà thì
+        /// mở popup.
+        /// </summary>
+        public void nhanTongKet(List<QuaDaNhan> ds)
+        {
+            lucBamNhanNhanh = 0;
+            if (ds == null || ds.Count == 0)
+            {
+                return;
+            }
+            tongKet.Clear();
+            tongKet.AddRange(ds);
+            hienTongKet = true;
+        }
+
+        private void veTongKet(mGraphics g)
+        {
+            g.setColor(0, 0.5f);
+            g.fillRect(x0, y0, rong, cao, BO_GOC);
+
+            const int caoDong = 26;
+            int w = Math.min(rong - 40, 280);
+            int soDongToiDa = Math.max(1, (cao - 90) / caoDong);
+            int soDong = Math.min(tongKet.Count, soDongToiDa);
+            bool thua = tongKet.Count > soDong;
+            int h = 26 + soDong * caoDong + (thua ? 14 : 0) + 34;
+            int x = x0 + (rong - w) / 2;
+            int y = y0 + (cao - h) / 2;
+
+            veKhungBo(g, x, y, w, h, MAU_NEN, 1f, MAU_VIEN, 1f, 2);
+            g.setColor(MAU_NHAN_NHANH, 1f);
+            g.fillRect(x + 2, y + 2, w - 4, 20, BO_GOC - 1);
+            mFont.tahoma_7b_white.drawString(g, "ĐÃ NHẬN", x + w / 2, y + 6, mFont.CENTER,
+                    mFont.tahoma_7b_dark);
+
+            int yy = y + 26;
+            for (int i = 0; i < soDong; i++)
+            {
+                QuaDaNhan q = tongKet[i];
+                g.setColor(i % 2 == 0 ? MAU_THE : MAU_THE_MO, 0.95f);
+                g.fillRect(x + 6, yy, w - 12, caoDong - 2, 4);
+                if (q.icon >= 0)
+                {
+                    SmallImage.drawSmallImage(g, q.icon, x + 20, yy + caoDong / 2 - 1, 0,
+                            mGraphics.VCENTER | mGraphics.HCENTER);
+                }
+                mFont.tahoma_7b_dark.drawString(g, catBot(q.ten, 26), x + 36, yy + 7, mFont.LEFT);
+                mFont.tahoma_7b_red.drawString(g, "x" + q.soLuong, x + w - 14, yy + 7, mFont.RIGHT);
+                yy += caoDong;
+            }
+            if (thua)
+            {
+                mFont.tahoma_7.drawString(g, "… và " + (tongKet.Count - soDong) + " món khác",
+                        x + w / 2, yy, mFont.CENTER);
+                yy += 14;
+            }
+            veNut(g, x + w / 2 - 40, yy + 6, 80, 20, "Đóng", true);
+        }
+
         /// <summary>Nạp mục thẻ tháng — gọi TRƯỚC <see cref="nhanDuLieu"/>.</summary>
         public void nhanTheThang(TheThang t)
         {
@@ -243,6 +326,12 @@ namespace Game6.God
             if (!dangMo)
             {
                 return;
+            }
+            if (lucBamNhanNhanh > 0
+                    && mSystem.currentTimeMillis() - lucBamNhanNhanh > HAN_CHO_NHAN_NHANH)
+            {
+                lucBamNhanNhanh = 0;
+                GameScr.info1.addInfo("Máy chủ chưa hỗ trợ Nhận nhanh — cần cập nhật máy chủ.", 0);
             }
             if (mSystem.currentTimeMillis() - lucXinCuoi >= NHIP_LAM_MOI)
             {
@@ -296,14 +385,13 @@ namespace Game6.God
             g.setColor(MAU_TIEU_DE, 1f);
             g.fillRect(x0 + 1, y0 + 1, rong - 2, CAO_TIEU_DE, BO_GOC);
 
-            mFont.tahoma_7b_red.drawString(g, "PHÚC LỢI",
-                    x0 + rong / 2, y0 + 4, mFont.CENTER);
+            // Chu trang, bong nau dam: chu do tren dai cam chim han vao nen.
+            mFont.tahoma_7b_white.drawString(g, "PHÚC LỢI",
+                    x0 + rong / 2, y0 + 4, mFont.CENTER, mFont.tahoma_7b_dark);
             veNut(g, x0 + rong - 20, y0 + 4, 16, 14, "X", false);
-            int soCho = soMucChoNhan();
-            if (soCho > 0)
+            if (soMucChoNhan() > 0)
             {
-                int[] nn = oNutNhanNhanh();
-                veNut(g, nn[0], nn[1], nn[2], nn[3], "Nhận nhanh (" + soCho + ")", true);
+                veNutNhanNhanh(g);
             }
 
             if (soMuc() == 0)
@@ -325,6 +413,10 @@ namespace Game6.God
             else
             {
                 veCotPhai(g);
+            }
+            if (hienTongKet)
+            {
+                veTongKet(g);
             }
         }
 
@@ -398,9 +490,32 @@ namespace Game6.God
         /// </remarks>
         private int[] oNutNhanNhanh()
         {
-            string chu = "Nhận nhanh (" + soMucChoNhan() + ")";
-            int w = mFont.tahoma_7b_dark.getWidth(chu) + 16;
-            return new int[] { x0 + 6, y0 + 3, w, 16 };
+            int w = mFont.tahoma_7b_white.getWidth("Nhận nhanh") + 20;
+            return new int[] { x0 + 6, y0 + 3, w, 17 };
+        }
+
+        /// <summary>Xanh lá tươi của nút Nhận nhanh, và viền đậm của nó.</summary>
+        private static readonly int MAU_NHAN_NHANH = rgb(0x2E, 0xA8, 0x4A);
+        private static readonly int MAU_NHAN_NHANH_VIEN = rgb(0x17, 0x62, 0x2A);
+
+        /// <summary>
+        /// Nút Nhận nhanh: xanh lá giữa dải cam, chữ trắng viền đậm, quầng sáng
+        /// thở nhẹ quanh nút.
+        /// </summary>
+        /// <remarks>
+        /// Màu khác hẳn mọi thứ trên bảng (toàn cam, kem, nâu) — liếc là thấy.
+        /// Quầng thở chứ không nhấp nháy: nhấp nháy trên một bảng người ta ngồi
+        /// đọc lâu thì chỉ làm mỏi mắt.
+        /// </remarks>
+        private void veNutNhanNhanh(mGraphics g)
+        {
+            int[] n = oNutNhanNhanh();
+            float tho = 0.5f + 0.5f * (float) System.Math.Sin(mSystem.currentTimeMillis() / 300.0);
+            g.setColor(0xB8FFB0, 0.18f + 0.22f * tho);
+            g.fillRect(n[0] - 2, n[1] - 2, n[2] + 4, n[3] + 4, 7);
+            veKhungBo(g, n[0], n[1], n[2], n[3], MAU_NHAN_NHANH, 1f, MAU_NHAN_NHANH_VIEN, 1f, 2);
+            mFont.tahoma_7b_white.drawString(g, "Nhận nhanh", n[0] + n[2] / 2, n[1] + 3,
+                    mFont.CENTER, mFont.tahoma_7b_dark);
         }
 
         /// <summary>Đang có thẻ mà hôm nay chưa nhận quà.</summary>
@@ -937,6 +1052,16 @@ namespace Game6.God
             }
             // Nuot MOI cham khi dang mo, ke ca cham ra ngoai khung.
             tinhBoCuc();
+            if (hienTongKet)
+            {
+                if (GameCanvas.isPointerJustRelease)
+                {
+                    // Bam dau cung dong: popup chi de xem, khong co gi khac de bam.
+                    GameCanvas.clearAllPointerEvent();
+                    hienTongKet = false;
+                }
+                return true;
+            }
             cuonDanhSach(soDongCuon());
             if (!GameCanvas.isPointerJustRelease)
             {
@@ -960,6 +1085,7 @@ namespace Game6.God
                 if (cham(nn[0], nn[1], nn[2], nn[3]))
                 {
                     Service.gI().phucLoiNhanNhanh();
+                    lucBamNhanNhanh = mSystem.currentTimeMillis();
                     return true;
                 }
             }

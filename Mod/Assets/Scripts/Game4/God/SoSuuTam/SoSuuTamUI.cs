@@ -684,7 +684,8 @@ namespace Game4.God
             g.setColor(TRANG, 0.10f);
             g.fillRect(x0 + 6, y0 + 4, rong - 12, CAO_DAU / 2 - 2, 8);
 
-            mFont.tahoma_7b_yellow.drawString(g, "SỔ SƯU TẦM", x0 + rong / 2, y0 + 5, mFont.CENTER);
+            mFont.tahoma_7b_yellow.drawString(g, "SỔ SƯU TẦM", x0 + rong / 2, y0 + 5, mFont.CENTER,
+                    mFont.tahoma_7b_dark);
 
             int tong = ds.Count;
             int daCo = demDaCo();

@@ -325,8 +325,8 @@ namespace Game2.God
             g.setColor(MAU_TIEU_DE, 1f);
             g.fillRect(x0 + 1, y0 + 1, rong - 2, CAO_TIEU_DE, BO_GOC);
 
-            mFont.tahoma_7b_red.drawString(g, "SỰ KIỆN",
-                    x0 + rong / 2, y0 + 4, mFont.CENTER);
+            mFont.tahoma_7b_white.drawString(g, "SỰ KIỆN",
+                    x0 + rong / 2, y0 + 4, mFont.CENTER, mFont.tahoma_7b_dark);
             veNut(g, x0 + rong - 20, y0 + 4, 16, 14, "X", false);
 
             if (ds.Count == 0)
