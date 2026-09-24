@@ -1422,7 +1422,8 @@ public class SkillService {
 
     private void PhanSatThuong(Player plAtt, Player plTarget, double dame) {
         if (plAtt != null) {
-            int percentPST = plTarget.nPoint.tlPST;
+            int percentPST = plTarget.nPoint.tlPST
+                    + nro.service.ThuCungService.gI().themPhanDon(plTarget);
             if (percentPST != 0) {
                 double damePST = Util.CrisGH(dame * percentPST / 100L);
                 Message msg = null;

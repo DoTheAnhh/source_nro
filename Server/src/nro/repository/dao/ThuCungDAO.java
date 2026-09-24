@@ -65,6 +65,31 @@ public final class ThuCungDAO {
     public static final int LOAI_CHI_MANG = 2;
     public static final int LOAI_HOI_HP = 3;
     public static final int LOAI_GIAM_SAT_THUONG = 4;
+    /** Hút một phần sát thương gây ra thành HP, trong một lúc. */
+    public static final int LOAI_HUT_MAU = 5;
+    /** Phản một phần sát thương phải chịu về kẻ đánh, trong một lúc. */
+    public static final int LOAI_PHAN_DON = 6;
+    /** Cộng tỉ lệ né đòn, trong một lúc. */
+    public static final int LOAI_NE_DON = 7;
+    /** Khiên chặn sát thương, lớn bằng % HP tối đa, vỡ khi hết hoặc hết giờ. */
+    public static final int LOAI_KHIEN = 8;
+    /** Vùng hồi máu: mỗi giây hồi % HP tối đa cho mình và đồng đội đứng gần. */
+    public static final int LOAI_VUNG_HOI_MAU = 9;
+    /** Nộ kích: chính đòn vừa nổ gây thêm %. */
+    public static final int LOAI_NO_KICH = 10;
+    /** Hồi % KI tối đa ngay. */
+    public static final int LOAI_HOI_KI = 11;
+    /** Sét lan: đánh % sức đánh vào mọi quái quanh mình. */
+    public static final int LOAI_SET_LAN = 12;
+
+    /**
+     * Loại ăn ngay lúc nổ, không kéo dài: không có "trong N giây", và ô HUD
+     * chỉ hiện chốc lát cho người chơi biết là vừa nổ.
+     */
+    public static boolean laTucThi(int loai) {
+        return loai == LOAI_HOI_HP || loai == LOAI_NO_KICH
+                || loai == LOAI_HOI_KI || loai == LOAI_SET_LAN;
+    }
 
     /**
      * Tên từng loại, dùng cho panel và cho dòng chữ hiện trong game.
@@ -76,7 +101,15 @@ public final class ThuCungDAO {
         "Cộng % sát thương của một chiêu",
         "Cộng % tỉ lệ chí mạng",
         "Hồi % HP tối đa ngay khi nổ",
-        "Giảm % sát thương phải chịu"
+        "Giảm % sát thương phải chịu",
+        "Hút % sát thương gây ra thành HP",
+        "Phản % sát thương phải chịu về kẻ đánh",
+        "Cộng % né đòn",
+        "Khiên chặn sát thương bằng % HP tối đa",
+        "Vùng hồi máu: mỗi giây hồi % HP cho mình và đồng đội quanh đó",
+        "Nộ kích: đòn này gây thêm % sát thương",
+        "Hồi % KI tối đa ngay khi nổ",
+        "Sét lan: đánh % sức đánh vào mọi quái quanh mình"
     };
 
     // =====================================================================
@@ -96,8 +129,15 @@ public final class ThuCungDAO {
 
     /** Tham số phụ của loại này nghĩa là gì; rỗng là loại đó không dùng. */
     public static final String[] Y_NGHIA_THAM_SO = {
-        "", "Id chiêu được cộng", "", "", ""
+        "", "Id chiêu được cộng", "", "", "",
+        "", "", "", "",
+        "Bán kính (điểm ảnh, 0 = 250)",
+        "", "",
+        "Bán kính (điểm ảnh, 0 = 250)"
     };
+
+    /** Bán kính mặc định của vùng hồi máu và sét lan. */
+    public static final int BAN_KINH_MAC_DINH = 250;
 
     public static String tenLoai(int loai) {
         return (loai >= 0 && loai < TEN_LOAI.length) ? TEN_LOAI[loai] : ("Loại " + loai);
@@ -129,6 +169,11 @@ public final class ThuCungDAO {
         /** Thú phải đạt cấp này mới mở được chiêu. */
         public int capMo = 1;
         public boolean bat = true;
+        /**
+         * Id hiệu ứng hình hiện trên người chơi khi chiêu nổ; 0 là không có.
+         * Thử id bằng lệnh admin {@code ep <id>} trong khung chat.
+         */
+        public int hieuUng;
 
         /**
          * Sức mạnh thật của chiêu ở cấp chiêu {@code capChieu}, tính bằng
@@ -154,7 +199,7 @@ public final class ThuCungDAO {
             if (loai == LOAI_CHIEU) {
                 s += " (chiêu " + thamSo + ")";
             }
-            if (loai != LOAI_HOI_HP) {
+            if (!laTucThi(loai)) {
                 s += " trong " + giay + "s";
             }
             return s + ", tỉ lệ " + tiLe + "% (ở cấp chiêu 1)";
@@ -249,7 +294,15 @@ public final class ThuCungDAO {
             gieoDoAn();
             gieoBac();
             gieoChiSoBac();
+            try {
+                // Bang ky nang tao tu ban truoc chua co cot hinh hieu ung.
+                ConnectDB.executeUpdate("ALTER TABLE thu_cung_ky_nang"
+                        + " ADD COLUMN hieu_ung INT(11) NOT NULL DEFAULT 0");
+            } catch (Exception daCo) {
+                // Cot da co: khong phai loi.
+            }
             datTiLeNoMotLan();
+            gieoChieuLaMotLan();
         } catch (Exception ex) {
             daTaoBang = false;
             Logger.logException(ThuCungDAO.class, ex, "Không tạo được bảng thú cưng");
@@ -470,6 +523,92 @@ public final class ThuCungDAO {
         Logger.success("Thú cưng: đã đặt tỉ lệ nổ mọi chiêu về 3%\n");
     }
 
+    /** Cờ: đã gieo chiêu 2 và 3 kiểu mới cho mọi loại thú hay chưa. */
+    private static final String K_DA_GIEO_CHIEU_LA = "da_gieo_chieu_la";
+
+    /**
+     * Mẫu chiêu kiểu mới để gieo: loại, mức %, giây, hồi chiêu, tham số, rồi
+     * ba cái tên — thú nào lấy tên nào tuỳ id, cho hai con cùng loại chiêu
+     * vẫn gọi khác nhau.
+     */
+    private static final Object[][] MAU_CHIEU_LA = {
+        {LOAI_HUT_MAU, 10, 8, 30, 0, "Nanh Huyết Ảnh", "Huyết Phệ", "Cắn Hút Sinh Lực",
+            "Mỗi đòn trúng hút lại một phần sát thương thành máu"},
+        {LOAI_PHAN_DON, 15, 8, 35, 0, "Giáp Gai Phản Chấn", "Gương Phản Hồn", "Vảy Ngược",
+            "Kẻ nào đánh vào sẽ tự lãnh lại một phần sát thương"},
+        {LOAI_NE_DON, 15, 6, 35, 0, "Bước Ảnh Mờ", "Thân Pháp Như Gió", "Ảo Ảnh Phân Thân",
+            "Thân hình mờ đi, dễ né đòn hơn trong chốc lát"},
+        {LOAI_KHIEN, 20, 10, 45, 0, "Khiên Kim Cang", "Lá Chắn Tinh Linh", "Vòng Bảo Hộ",
+            "Dựng một tấm khiên hứng sát thương thay cho chủ"},
+        {LOAI_VUNG_HOI_MAU, 3, 8, 45, 0, "Suối Nguồn Sinh Mệnh", "Vòng Tròn Chữa Lành", "Mưa Hồi Xuân",
+            "Tạo vùng hồi máu quanh chủ, đồng đội đứng gần cũng được hồi"},
+        {LOAI_NO_KICH, 80, 0, 20, 0, "Nộ Kích Chí Mạng", "Cú Vồ Hung Tợn", "Đòn Sấm Sét",
+            "Dồn lực vào một đòn, sát thương tăng vọt"},
+        {LOAI_HOI_KI, 20, 0, 30, 0, "Hấp Thụ Linh Khí", "Tụ Khí Đan Điền", "Nguồn Ki Vô Tận",
+            "Hút linh khí trời đất, hồi lại KI cho chủ"},
+        {LOAI_SET_LAN, 50, 0, 25, 0, "Sét Lan Liên Hoàn", "Cuồng Lôi Trận", "Bão Tinh Tú",
+            "Sét nổ lan ra, đánh mọi con quái quanh chủ"},
+    };
+
+    /**
+     * Gieo chiêu 2 và 3 kiểu mới cho mọi loại thú — một lần, chỉ vào ô trống.
+     *
+     * <p>Ô đã có chiêu (admin đặt tay) thì để yên. Có cờ trong bảng cấu hình
+     * nên xoá chiêu trên panel rồi khởi động lại cũng không bị gieo lại.</p>
+     *
+     * <p>Chọn loại theo id thú chứ không bốc ngẫu nhiên: khởi động lại hay
+     * chạy trên máy khác vẫn ra đúng bộ chiêu ấy, và hai ô của cùng một con
+     * không bao giờ trùng loại.</p>
+     */
+    private static void gieoChieuLaMotLan() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT gia_tri FROM thu_cung_cau_hinh WHERE khoa = ?",
+                    K_DA_GIEO_CHIEU_LA);
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            dong(rs);
+        }
+        List<Integer> ids = new ArrayList<>();
+        rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM item_template WHERE TYPE = ?",
+                    KIEU_THU_CUNG);
+            while (rs.next()) {
+                ids.add(rs.getInt("id"));
+            }
+        } finally {
+            dong(rs);
+        }
+        int n = MAU_CHIEU_LA.length;
+        int gieo = 0;
+        for (int id : ids) {
+            int a = Math.floorMod(id * 7, n);
+            int b = (a + 3) % n;
+            gieo += gieoMotChieu(id, 2, MAU_CHIEU_LA[a], id);
+            gieo += gieoMotChieu(id, 3, MAU_CHIEU_LA[b], id + 1);
+        }
+        ConnectDB.executeUpdate("INSERT IGNORE INTO thu_cung_cau_hinh (khoa, gia_tri, mo_ta)"
+                + " VALUES (?, '1', ?)", K_DA_GIEO_CHIEU_LA,
+                "Đã gieo chiêu 2 và 3 kiểu mới cho mọi thú (chạy một lần)");
+        lucDocKyNang = 0;
+        Logger.success("Thú cưng: gieo " + gieo + " chiêu kiểu mới vào ô trống\n");
+    }
+
+    /** Ghi một chiêu mẫu vào ô {@code thuTu} nếu ô ấy còn trống; trả 1 nếu có ghi. */
+    private static int gieoMotChieu(int itemId, int thuTu, Object[] mau, int chonTen)
+            throws Exception {
+        String ten = (String) mau[5 + Math.floorMod(chonTen, 3)];
+        return ConnectDB.executeUpdate("INSERT IGNORE INTO thu_cung_ky_nang"
+                + " (item_id, thu_tu, ten, mo_ta, loai, tham_so, phan_tram,"
+                + " giay, ti_le, hoi_chieu, cap_mo, bat, hieu_ung)"
+                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, 3, ?, ?, 1, 0)",
+                itemId, thuTu, ten, mau[8], mau[0], mau[4], mau[1],
+                mau[2], mau[3], thuTu * 10) > 0 ? 1 : 0;
+    }
+
     private static void gieoKyNang() throws Exception {
         if (demDong("thu_cung_ky_nang") > 0) {
             return;
@@ -527,6 +666,11 @@ public final class ThuCungDAO {
                 k.hoiChieu = rs.getInt("hoi_chieu");
                 k.capMo = rs.getInt("cap_mo");
                 k.bat = rs.getInt("bat") == 1;
+                try {
+                    k.hieuUng = rs.getInt("hieu_ung");
+                } catch (Exception chuaCoCot) {
+                    k.hieuUng = 0;
+                }
                 moi.computeIfAbsent(k.itemId, x -> new ArrayList<>()).add(k);
             }
             KY_NANG.clear();
@@ -595,15 +739,16 @@ public final class ThuCungDAO {
             damBaoBang();
             ConnectDB.executeUpdate("INSERT INTO thu_cung_ky_nang"
                     + " (item_id, thu_tu, ten, mo_ta, loai, tham_so, phan_tram, giay,"
-                    + " ti_le, hoi_chieu, cap_mo, bat)"
-                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    + " ti_le, hoi_chieu, cap_mo, bat, hieu_ung)"
+                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                     + " ON DUPLICATE KEY UPDATE ten = VALUES(ten), mo_ta = VALUES(mo_ta),"
                     + " loai = VALUES(loai), tham_so = VALUES(tham_so),"
                     + " phan_tram = VALUES(phan_tram), giay = VALUES(giay),"
                     + " ti_le = VALUES(ti_le), hoi_chieu = VALUES(hoi_chieu),"
-                    + " cap_mo = VALUES(cap_mo), bat = VALUES(bat)",
+                    + " cap_mo = VALUES(cap_mo), bat = VALUES(bat),"
+                    + " hieu_ung = VALUES(hieu_ung)",
                     k.itemId, k.thuTu, k.ten, k.moTa, k.loai, k.thamSo, k.phanTram,
-                    k.giay, k.tiLe, k.hoiChieu, k.capMo, k.bat ? 1 : 0);
+                    k.giay, k.tiLe, k.hoiChieu, k.capMo, k.bat ? 1 : 0, k.hieuUng);
             lucDocKyNang = 0;
         } catch (Exception ex) {
             Logger.logException(ThuCungDAO.class, ex, "Không lưu được kỹ năng thú cưng");

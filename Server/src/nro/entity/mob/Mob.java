@@ -209,7 +209,8 @@ public class Mob {
             if (plAtt == null || plAtt.nPoint == null || damage <= 0 || plAtt.isDie()) {
                 return;
             }
-            int phanTram = plAtt.nPoint.tlHutHp;
+            int phanTram = plAtt.nPoint.tlHutHp
+                    + nro.service.ThuCungService.gI().themHutMau(plAtt);
             if (phanTram <= 0) {
                 return;
             }
@@ -1938,7 +1939,8 @@ public class Mob {
         if (plTarget.nPoint == null) {
             return;
         }
-        int percentPST = plTarget.nPoint.tlPST;
+        int percentPST = plTarget.nPoint.tlPST
+                + nro.service.ThuCungService.gI().themPhanDon(plTarget);
         if (percentPST != 0) {
             double damePST = Util.CrisGH(dame * percentPST / 100L);
             Message msg;

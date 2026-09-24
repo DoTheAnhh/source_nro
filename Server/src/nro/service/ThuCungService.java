@@ -66,6 +66,12 @@ public class ThuCungService {
         public int phanVan;
         /** Mốc thời gian máy lúc hết hiệu lực. */
         public long het;
+        /** Khiên: lượng sát thương còn chặn được. */
+        public long khien;
+        /** Vùng hồi máu: mốc lần hồi tiếp theo. */
+        public long lanHoiToi;
+        /** Id hình hiệu ứng đang hiện trên người chơi, để gỡ khi hết; 0 là không. */
+        public int hieuUng;
     }
 
     // =====================================================================
@@ -339,25 +345,126 @@ public class ThuCungService {
     private void no(Player pl, ThuCungDAO.ThuSoHuu thu, ThuCungDAO.KyNang k, long bayGio) {
         // Theo CAP CHIEU cua con nay, khong theo cap thu.
         int phanVan = k.phanVanTheoCapChieu(thu.capChieu(k.thuTu));
-        if (k.loai == ThuCungDAO.LOAI_HOI_HP) {
-            long hoi = (long) (pl.nPoint.hpMax * (phanVan / 10000d));
-            pl.nPoint.hp = Math.min(pl.nPoint.hpMax, pl.nPoint.hp + hoi);
-            nro.service.PlayerService.gI().sendInfoHpMpMoney(pl);
-        } else {
-            if (pl.tcBuff == null) {
-                pl.tcBuff = new ArrayList<>();
+        String them = "";
+        switch (k.loai) {
+            case ThuCungDAO.LOAI_HOI_HP: {
+                long hoi = phanCua(pl.nPoint.hpMax, phanVan);
+                pl.nPoint.hp = Math.min(pl.nPoint.hpMax, pl.nPoint.hp + hoi);
+                nro.service.PlayerService.gI().sendInfoHpMpMoney(pl);
+                break;
             }
-            Buff b = new Buff();
-            b.loai = k.loai;
-            b.thamSo = k.thamSo;
-            b.phanVan = phanVan;
-            b.het = bayGio + Math.max(1, k.giay) * 1000L;
-            pl.tcBuff.add(b);
+            case ThuCungDAO.LOAI_HOI_KI: {
+                long hoi = phanCua(pl.nPoint.mpMax, phanVan);
+                pl.nPoint.mp = Math.min(pl.nPoint.mpMax, pl.nPoint.mp + hoi);
+                nro.service.PlayerService.gI().sendInfoHpMpMoney(pl);
+                break;
+            }
+            case ThuCungDAO.LOAI_NO_KICH:
+                // An vao CHINH don dang tinh: dameSauThuCung doc va xoa ngay sau
+                // khi bocChieu tra ve.
+                pl.tcNoKich += phanVan;
+                break;
+            case ThuCungDAO.LOAI_SET_LAN:
+                them = " — trúng " + setLan(pl, k, phanVan) + " quái";
+                break;
+            default: {
+                Buff b = new Buff();
+                b.loai = k.loai;
+                b.thamSo = k.thamSo;
+                b.phanVan = phanVan;
+                b.het = bayGio + Math.max(1, k.giay) * 1000L;
+                if (k.loai == ThuCungDAO.LOAI_KHIEN) {
+                    b.khien = phanCua(pl.nPoint.hpMax, phanVan);
+                    them = " (chặn " + nro.core.util.Util.soCham(b.khien) + " sát thương)";
+                }
+                if (k.loai == ThuCungDAO.LOAI_VUNG_HOI_MAU) {
+                    // Hoi lan dau ngay, khong bat doi mot giay moi thay gi.
+                    b.lanHoiToi = bayGio;
+                }
+                b.hieuUng = k.hieuUng;
+                danhSachBuff(pl).add(b);
+                break;
+            }
         }
+        hienHinh(pl, k);
         Service.gI().sendThongBao(pl, tenThu(thu) + " dùng " + k.ten
                 + ": " + ThuCungDAO.tenLoai(k.loai).replace("%", inPhanVan(phanVan) + "%")
-                + (k.loai == ThuCungDAO.LOAI_HOI_HP ? "" : " trong " + k.giay + " giây"));
+                + (ThuCungDAO.laTucThi(k.loai) ? "" : " trong " + k.giay + " giây") + them);
         baoNoChieu(pl, thu, k);
+    }
+
+    /** {@code phanVan} phần vạn của {@code goc}, không tràn với số rất lớn. */
+    private static long phanCua(long goc, int phanVan) {
+        return (long) (goc * (phanVan / 10000d));
+    }
+
+    /**
+     * Danh sách lớp tăng ích của người chơi, tạo nếu chưa có.
+     *
+     * <p>CopyOnWrite: danh sách bị đọc từ luồng đánh, từ lúc bị đánh và từ vòng
+     * {@code update} cùng lúc. ArrayList thường sẽ ném lỗi sửa-khi-đang-duyệt
+     * ngay giữa trận. Danh sách chỉ vài phần tử nên chép khi ghi là rẻ.</p>
+     */
+    private static java.util.List<Buff> danhSachBuff(Player pl) {
+        if (pl.tcBuff == null) {
+            pl.tcBuff = new java.util.concurrent.CopyOnWriteArrayList<>();
+        }
+        return pl.tcBuff;
+    }
+
+    /** Hiện hình hiệu ứng của chiêu cho cả khu thấy; loại tức thì thì tự gỡ sau 2 giây. */
+    private void hienHinh(Player pl, ThuCungDAO.KyNang k) {
+        if (k.hieuUng <= 0 || pl.zone == null) {
+            return;
+        }
+        try {
+            Service.gI().sendEffAllPlayer(pl, k.hieuUng, 1, -1, -1);
+            if (ThuCungDAO.laTucThi(k.loai)) {
+                final int id = k.hieuUng;
+                Util.setTimeout(() -> Service.gI().removeEffPlayer(pl, id), 2000);
+            }
+        } catch (Exception ex) {
+            Logger.logException(ThuCungService.class, ex, "Không hiện được hình chiêu thú cưng");
+        }
+    }
+
+    /**
+     * Sét lan: đánh {@code phanVan} phần vạn sức đánh vào mọi quái còn sống
+     * trong bán kính quanh chủ.
+     *
+     * <p>Đi qua đúng {@code Mob.injured} như chiêu thường, nên quái chết thì
+     * rơi đồ, cộng tiềm năng, tính nhiệm vụ y như bị đánh bằng tay. Duyệt trên
+     * bản chép của danh sách quái: đánh chết một con có thể khiến khu sửa danh
+     * sách ngay giữa vòng lặp.</p>
+     *
+     * @return số quái trúng
+     */
+    private int setLan(Player pl, ThuCungDAO.KyNang k, int phanVan) {
+        if (pl.zone == null || pl.zone.mobs == null || pl.location == null) {
+            return 0;
+        }
+        int banKinh = k.thamSo > 0 ? k.thamSo : ThuCungDAO.BAN_KINH_MAC_DINH;
+        long dame = phanCua(pl.nPoint.dame, phanVan);
+        if (dame <= 0) {
+            return 0;
+        }
+        int trung = 0;
+        for (nro.entity.mob.Mob m : new ArrayList<>(pl.zone.mobs)) {
+            try {
+                if (m == null || m.isDie() || m.location == null) {
+                    continue;
+                }
+                if (Util.getDistance(pl.location.x, pl.location.y,
+                        m.location.x, m.location.y) > banKinh) {
+                    continue;
+                }
+                m.injured(pl, dame, true);
+                trung++;
+            } catch (Exception ex) {
+                Logger.logException(ThuCungService.class, ex, "Sét lan lỗi trên một con quái");
+            }
+        }
+        return trung;
     }
 
     /**
@@ -370,7 +477,7 @@ public class ThuCungService {
     private void baoNoChieu(Player pl, ThuCungDAO.ThuSoHuu thu, ThuCungDAO.KyNang k) {
         Message msg = null;
         try {
-            int giay = k.loai == ThuCungDAO.LOAI_HOI_HP ? 3 : Math.max(1, k.giay);
+            int giay = ThuCungDAO.laTucThi(k.loai) ? 3 : Math.max(1, k.giay);
             msg = new Message(GOI_THU_CUNG);
             msg.writer().writeByte(GUI_NO_CHIEU);
             msg.writer().writeShort(thu.itemId);
@@ -390,7 +497,118 @@ public class ThuCungService {
         if (pl.tcBuff == null || pl.tcBuff.isEmpty()) {
             return;
         }
+        for (Buff b : pl.tcBuff) {
+            if (b != null && b.het <= bayGio && b.hieuUng > 0) {
+                Service.gI().removeEffPlayer(pl, b.hieuUng);
+            }
+        }
         pl.tcBuff.removeIf(b -> b == null || b.het <= bayGio);
+    }
+
+    /**
+     * Việc theo thời gian của chiêu thú cưng — gọi mỗi vòng {@code Player.update}.
+     *
+     * <p>Vùng hồi máu cần nhịp một giây; lớp hết hạn cần gỡ hình ngay cả khi
+     * người chơi đứng yên không đánh ai (lúc đó không có đòn nào gọi
+     * {@link #tong} để dọn hộ). Không có lớp nào thì trả về ngay: hàm này chạy
+     * cho mọi người chơi mọi vòng.</p>
+     */
+    public void capNhat(Player pl) {
+        if (pl == null || pl.tcBuff == null || pl.tcBuff.isEmpty()) {
+            return;
+        }
+        long bayGio = System.currentTimeMillis();
+        try {
+            for (Buff b : pl.tcBuff) {
+                if (b.loai != ThuCungDAO.LOAI_VUNG_HOI_MAU || b.het <= bayGio
+                        || bayGio < b.lanHoiToi) {
+                    continue;
+                }
+                b.lanHoiToi = bayGio + 1000L;
+                hoiVung(pl, b);
+            }
+            donBuff(pl, bayGio);
+        } catch (Exception ex) {
+            Logger.logException(ThuCungService.class, ex, "Lỗi nhịp chiêu thú cưng");
+        }
+    }
+
+    /**
+     * Một nhịp vùng hồi máu: hồi cho chủ, đệ tử của chủ, và người cùng bang
+     * đứng trong bán kính.
+     *
+     * <p>Chỉ người cùng bang chứ không phải ai đứng gần: hồi cho cả người lạ
+     * thì đứng cạnh kẻ đang đánh mình cũng hồi máu cho nó.</p>
+     */
+    private void hoiVung(Player chu, Buff b) {
+        if (chu.zone == null) {
+            return;
+        }
+        int banKinh = b.thamSo > 0 ? b.thamSo : ThuCungDAO.BAN_KINH_MAC_DINH;
+        for (Player p : new ArrayList<>(chu.zone.getPlayers())) {
+            if (p == null || p.isDie() || p.nPoint == null || p.location == null) {
+                continue;
+            }
+            boolean laMinh = p == chu || p == chu.Detu;
+            boolean cungBang = chu.clan != null && p.clan != null
+                    && chu.clan.id == p.clan.id;
+            if (!laMinh && !cungBang) {
+                continue;
+            }
+            if (p != chu && Util.getDistance(chu, p) > banKinh) {
+                continue;
+            }
+            if (p.nPoint.hp >= p.nPoint.hpMax) {
+                continue;
+            }
+            long hoi = phanCua(p.nPoint.hpMax, b.phanVan);
+            if (hoi <= 0) {
+                continue;
+            }
+            p.nPoint.hp = Math.min(p.nPoint.hpMax, p.nPoint.hp + hoi);
+            nro.service.PlayerService.gI().sendInfoHpMpMoney(p);
+        }
+    }
+
+    /**
+     * Cho khiên hứng sát thương trước. Khiên cạn thì vỡ (gỡ hình luôn), phần
+     * sát thương còn thừa mới tới người.
+     */
+    private double anKhien(Player pl, double damage) {
+        if (pl == null || pl.tcBuff == null || pl.tcBuff.isEmpty() || damage <= 0) {
+            return damage;
+        }
+        long bayGio = System.currentTimeMillis();
+        for (Buff b : pl.tcBuff) {
+            if (b.loai != ThuCungDAO.LOAI_KHIEN || b.het <= bayGio || b.khien <= 0) {
+                continue;
+            }
+            double chan = Math.min(damage, b.khien);
+            b.khien -= (long) chan;
+            damage -= chan;
+            if (b.khien <= 0) {
+                b.het = bayGio;
+            }
+            if (damage <= 0) {
+                return 0;
+            }
+        }
+        return damage;
+    }
+
+    /** Phần trăm hút máu cộng thêm (nguyên), đọc ở chỗ game tính hút máu. */
+    public int themHutMau(Player pl) {
+        return tong(pl, ThuCungDAO.LOAI_HUT_MAU, -1) / 100;
+    }
+
+    /** Phần trăm phản sát thương cộng thêm, đọc ở chỗ game tính phản sát thương. */
+    public int themPhanDon(Player pl) {
+        return tong(pl, ThuCungDAO.LOAI_PHAN_DON, -1) / 100;
+    }
+
+    /** Phần trăm né đòn cộng thêm, đọc ở chỗ game tính né. */
+    public int themNeDon(Player pl) {
+        return tong(pl, ThuCungDAO.LOAI_NE_DON, -1) / 100;
     }
 
     /** Tổng phần trăm của một loại đang chạy; {@code idChieu} chỉ dùng cho loại chiêu. */
@@ -439,7 +657,10 @@ public class ThuCungService {
             idChieu = pl.playerSkill.skillSelect.template.id;
         }
         int phanVan = tong(pl, ThuCungDAO.LOAI_SUC_DANH, -1)
-                + tong(pl, ThuCungDAO.LOAI_CHIEU, idChieu);
+                + tong(pl, ThuCungDAO.LOAI_CHIEU, idChieu)
+                + pl.tcNoKich;
+        // No kich chi an dung mot don.
+        pl.tcNoKich = 0;
         if (phanVan <= 0) {
             return dameGoc;
         }
@@ -453,6 +674,7 @@ public class ThuCungService {
     }
 
     public double giamSatThuong(Player pl, double damage) {
+        damage = anKhien(pl, damage);
         int phanVan = tong(pl, ThuCungDAO.LOAI_GIAM_SAT_THUONG, -1);
         if (phanVan <= 0) {
             return damage;

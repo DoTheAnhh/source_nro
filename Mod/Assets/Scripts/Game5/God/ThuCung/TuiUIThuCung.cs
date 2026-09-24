@@ -76,8 +76,22 @@ namespace Game5.God
             "Cộng #% sát thương chiêu",
             "Cộng #% tỉ lệ chí mạng",
             "Hồi #% HP tối đa",
-            "Giảm #% sát thương phải chịu"
+            "Giảm #% sát thương phải chịu",
+            "Hút #% sát thương thành HP",
+            "Phản #% sát thương về kẻ đánh",
+            "Cộng #% né đòn",
+            "Khiên chặn #% HP tối đa",
+            "Vùng hồi #% HP mỗi giây",
+            "Nộ kích: đòn này thêm #%",
+            "Hồi #% KI tối đa",
+            "Sét lan: #% sức đánh lên quái quanh mình"
         };
+
+        /// <summary>Loại ăn ngay lúc nổ — khớp <c>ThuCungDAO.laTucThi</c>.</summary>
+        private static bool laChieuTucThi(int loai)
+        {
+            return loai == 3 || loai == 10 || loai == 11 || loai == 12;
+        }
 
         private static readonly Dictionary<int, List<ChieuThuCung>> chieuTheoThu
                 = new Dictionary<int, List<ChieuThuCung>>();
@@ -1019,7 +1033,7 @@ namespace Game5.God
             {
                 s += " (chiêu " + c.thamSo + ")";
             }
-            if (c.loai != 3)
+            if (!laChieuTucThi(c.loai))
             {
                 s += " trong " + c.giay + "s";
             }

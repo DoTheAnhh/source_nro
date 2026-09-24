@@ -302,6 +302,8 @@ public class ThuCungTab extends JPanel {
         private final JTextField fTiLe = new JTextField(5);
         private final JTextField fHoiChieu = new JTextField(5);
         private final JTextField fCapMo = new JTextField(5);
+        /** Id hình hiệu ứng hiện khi chiêu nổ; thử bằng lệnh chat admin "ep <id>". */
+        private final JTextField fHinh = new JTextField(5);
         private final JCheckBox fBat = new JCheckBox("Bật", true);
         private final JButton nutLuu = new JButton("Lưu");
         private final JButton nutXoa = new JButton("Xoá chiêu");
@@ -370,6 +372,14 @@ public class ThuCungTab extends JPanel {
             fBat.setBackground(UiTheme.CARD);
             fBat.setForeground(UiTheme.TEXT);
             them(c, 2, y++, fBat);
+
+            them(c, 0, y, new JLabel("Hình (id eff):"));
+            them(c, 1, y, fHinh);
+            JLabel goiYHinh = new JLabel("0 = không hiện. Thử id: chat \"ep <id>\" bằng acc admin");
+            goiYHinh.setForeground(UiTheme.TEXT_MUTED);
+            c.gridwidth = 2;
+            them(c, 2, y++, goiYHinh);
+            c.gridwidth = 1;
 
             JPanel nut = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
             nut.setBackground(UiTheme.CARD);
@@ -474,6 +484,7 @@ public class ThuCungTab extends JPanel {
             fHoiChieu.setText(String.valueOf(k == null ? 30 : k.hoiChieu));
             fCapMo.setText(String.valueOf(k == null ? (thuTu == 1 ? 1 : thuTu * 10) : k.capMo));
             fBat.setSelected(k == null || k.bat);
+            fHinh.setText(String.valueOf(k == null ? 0 : k.hieuUng));
             nutLuu.setText(daCo ? "Lưu" : "Thêm chiêu");
             nutXoa.setEnabled(daCo && coThu);
             for (java.awt.Component o : getComponents()) {
@@ -513,6 +524,7 @@ public class ThuCungTab extends JPanel {
             k.hoiChieu = so(fHoiChieu, 30);
             k.capMo = Math.max(1, so(fCapMo, 1));
             k.bat = fBat.isSelected();
+            k.hieuUng = Math.max(0, so(fHinh, 0));
             if (k.ten.isEmpty()) {
                 JOptionPane.showMessageDialog(ThuCungTab.this, "Chiêu phải có tên.");
                 return;

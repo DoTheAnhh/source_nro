@@ -288,6 +288,8 @@ public class Player implements Runnable {
 
     /** Lần nổ gần nhất của từng chiêu (theo thứ tự chiêu), để đếm hồi chiêu. */
     public transient long[] tcLanNo;
+    /** Chiêu "nộ kích" vừa nổ: phần vạn cộng vào ĐÚNG đòn đang tính, xong về 0. */
+    public transient int tcNoKich;
 
     /**
      * Con thú đang ra trận, nhớ sẵn để khỏi hỏi cơ sở dữ liệu mỗi đòn đánh.
@@ -1317,6 +1319,8 @@ public class Player implements Runnable {
         if (!this.beforeDispose) {
             try {
                 capNhatHaoQuangNeuDoi();
+                // Chieu thu cung: nhip vung hoi mau, go lop het han.
+                nro.service.ThuCungService.gI().capNhat(this);
                 // Tu phat no: gong du gio thi no, khong cho cu bam thu hai.
                 nro.service.skill.SkillService.gI().kiemTraGongTuSat(this);
                 // Dung nhieu: luot dang xep hang cho het hieu luc.
@@ -2743,7 +2747,8 @@ public byte getAura() {
                     || mauDaTru <= 0 || plAtt.isDie()) {
                 return;
             }
-            int phanTram = plAtt.nPoint.tlHutHp;
+            int phanTram = plAtt.nPoint.tlHutHp
+                    + nro.service.ThuCungService.gI().themHutMau(plAtt);
             if (phanTram <= 0) {
                 return;
             }
@@ -2822,7 +2827,9 @@ public byte getAura() {
                 }
             }
             int tlGiap = this.nPoint.tlGiap;
-            int tlNeDon = this.nPoint.tlNeDon;
+            // Chieu thu cung loai "ne don" cong tam vao dung cho game doc ti le ne.
+            int tlNeDon = this.nPoint.tlNeDon
+                    + nro.service.ThuCungService.gI().themNeDon(this);
             if (plAtt != null && this.effectSkill != null
                     && this.effectSkill.anTroi && this.effectSkill.plTroi == plAtt) {
                 int giamGiap = nro.repository.dao.SetBonusDAO.tongTheoLoai(
