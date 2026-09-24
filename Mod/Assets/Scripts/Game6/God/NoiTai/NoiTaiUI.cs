@@ -36,16 +36,30 @@ namespace Game6.God
         //  Màu
         // ==================================================================
 
-        private const int MAU_NEN = 0x241D33;
-        private const int MAU_NEN_2 = 0x2E2642;
-        private const int MAU_VIEN = 0xC8933C;
+        // Tim than, mot bac mot: nen bang, dai tieu de, the noi len, o chon.
+        private const int MAU_NEN = 0x201A2E;
+        private const int MAU_NEN_2 = 0x2B2340;
+        private const int MAU_THE = 0x322A49;
         private const int MAU_O = 0x3A3154;
-        private const int MAU_O_CHON = 0x6B4FA8;
-        private const int MAU_O_MO = 0x322B49;
+        private const int MAU_O_CHON = 0x4A3C72;
+        private const int MAU_O_MO = 0x2A2340;
+
+        /// <summary>Viền chung: tím nhạt, KHÔNG phải vàng.</summary>
+        /// <remarks>
+        /// Viền vàng quanh mọi khung làm cả bảng thành một mớ khung tranh, và
+        /// vàng mất hết tác dụng "chỗ này đáng chú ý". Vàng để dành cho nút mở
+        /// bằng vàng, cho vạch dưới tiêu đề và cho dòng đang chọn.
+        /// </remarks>
+        private const int MAU_VIEN = 0x4A3F6B;
+
+        /// <summary>Màu nhấn: hổ phách.</summary>
+        private const int MAU_NHAN = 0xD8A23C;
+
         private const int MAU_NUT_VANG = 0xB8862B;
-        private const int MAU_NUT_NGOC = 0x2E8B8B;
-        private const int MAU_NUT_TAT = 0x4A4458;
-        private const int MAU_NHANH = 0x8A5BD0;
+        private const int MAU_NUT_NGOC = 0x2E8B74;
+        private const int MAU_NUT_TAT = 0x393150;
+        private const int MAU_NHANH = 0x7B52C4;
+        private const int MAU_NUT_DONG = 0x8E3B46;
 
         // ==================================================================
         //  Kích thước
@@ -233,30 +247,53 @@ namespace Game6.God
             veHangTien(g, o[3]);
             veHaiNutMo(g, o[4], o[5]);
 
+            // Cham ho phach dan dau cho cai nhan khoi troi lo lung giua hai khung.
+            g.setColor(MAU_NHAN, 0.9f);
+            g.fillRect(o[6][0] + 1, o[6][1] + 4, 3, 3, 1);
             mFont.tahoma_7_grey.drawString(g, "Nội tại của hành tinh bạn",
-                    o[6][0], o[6][1], mFont.LEFT);
+                    o[6][0] + 8, o[6][1], mFont.LEFT);
 
             veDanhSach(g, o[7]);
             veNutCuon(g, o[8], o[9], o[7]);
             veNutMoNhanh(g, o[10]);
         }
 
+        /// <summary>
+        /// Một khung bo góc: viền là hình bo lớn, nền là hình bo nhỏ hơn.
+        /// </summary>
+        /// <remarks>
+        /// Cả bảng dùng mỗi hàm này. Bản trước tô nền bo góc rồi viền bằng
+        /// <c>drawRect</c> — mà <c>drawRect</c> vẽ góc VUÔNG, nên khung nào cũng
+        /// có bốn cái tai nhọn thò ra ngoài mép bo.
+        /// </remarks>
+        private static void veKhungBo(mGraphics g, int x, int y, int w, int h,
+                int mauNen, float moNen, int mauVien, float moVien, int bo)
+        {
+            g.setColor(mauVien, moVien);
+            g.fillRect(x, y, w, h, bo);
+            g.setColor(mauNen, moNen);
+            g.fillRect(x + 1, y + 1, w - 2, h - 2, bo - 1);
+        }
+
         private static void veKhung(mGraphics g, int[] k)
         {
-            g.setColor(MAU_VIEN, 0.95f);
-            g.fillRect(k[0] - 2, k[1] - 2, k[2] + 4, k[3] + 4, 10);
-            g.setColor(MAU_NEN, 0.98f);
-            g.fillRect(k[0], k[1], k[2], k[3], 9);
+            // Mot quang toi om ngoai cho bang noi han khoi canh phia sau.
+            g.setColor(0x14101E, 0.9f);
+            g.fillRect(k[0] - 3, k[1] - 3, k[2] + 6, k[3] + 6, 12);
+            veKhungBo(g, k[0], k[1], k[2], k[3], MAU_NEN, 0.99f, MAU_VIEN, 1f, 10);
         }
 
         private static void veTieuDe(mGraphics g, int[] k, int[] nutX)
         {
-            // Dai tieu de rieng mot mau, de phan biet voi than bang.
+            // Dai tieu de sang hon than bang mot bac, kem mot vach ho phach
+            // mong chay suot ben duoi — dai va than dinh nhau nhung van tach.
             g.setColor(MAU_NEN_2, 1f);
-            g.fillRect(k[0] + 2, k[1] + 2, k[2] - 4, CAO_TIEU_DE - 4, 7);
+            g.fillRect(k[0] + 2, k[1] + 2, k[2] - 4, CAO_TIEU_DE - 3, 8);
+            g.setColor(MAU_NHAN, 0.75f);
+            g.fillRect(k[0] + 10, k[1] + CAO_TIEU_DE - 2, k[2] - 20, 1);
             mFont.tahoma_7b_yellow.drawString(g, "NỘI TẠI",
                     k[0] + k[2] / 2, k[1] + 4, mFont.CENTER);
-            veNut(g, nutX, "X", MAU_O, true);
+            veNut(g, nutX, "X", MAU_NUT_DONG, true);
         }
 
         /// <summary>Thẻ "đang mang": icon, tên, và dòng mô tả tác dụng.</summary>
@@ -267,14 +304,11 @@ namespace Game6.God
         /// </remarks>
         private void veTheDangMang(mGraphics g, int[] k)
         {
-            g.setColor(MAU_O, 1f);
-            g.fillRect(k[0], k[1], k[2], k[3], 5);
-            g.setColor(MAU_VIEN, 0.5f);
-            g.drawRect(k[0], k[1], k[2], k[3]);
+            veKhungBo(g, k[0], k[1], k[2], k[3], MAU_THE, 1f, MAU_VIEN, 1f, 6);
 
             int oAnh = k[3] - 10;
-            g.setColor(MAU_NEN, 1f);
-            g.fillRect(k[0] + 5, k[1] + 5, oAnh, oAnh, 4);
+            veKhungBo(g, k[0] + 5, k[1] + 5, oAnh, oAnh, MAU_NEN, 1f,
+                    MAU_NHAN, 0.55f, 5);
             if (iconDangCo >= 0)
             {
                 SmallImage.drawSmallImage(g, iconDangCo,
@@ -314,8 +348,7 @@ namespace Game6.God
         /// <summary>Hàng tiền: vàng bên trái, ngọc bên phải, không chồng nhau.</summary>
         private void veHangTien(mGraphics g, int[] k)
         {
-            g.setColor(MAU_O_MO, 1f);
-            g.fillRect(k[0], k[1], k[2], k[3], 4);
+            veKhungBo(g, k[0], k[1], k[2], k[3], MAU_O_MO, 1f, MAU_VIEN, 0.8f, 5);
             mFont.tahoma_7b_yellow.drawString(g, "Vàng " + soCham(vangDangCo),
                     k[0] + 6, k[1] + 2, mFont.LEFT);
             mFont.tahoma_7b_green.drawString(g, "Ngọc " + soCham(ngocDangCo),
@@ -343,10 +376,7 @@ namespace Game6.God
 
         private void veDanhSach(mGraphics g, int[] k)
         {
-            g.setColor(MAU_O_MO, 1f);
-            g.fillRect(k[0], k[1], k[2], k[3], 5);
-            g.setColor(MAU_VIEN, 0.35f);
-            g.drawRect(k[0], k[1], k[2], k[3]);
+            veKhungBo(g, k[0], k[1], k[2], k[3], MAU_O_MO, 1f, MAU_VIEN, 0.9f, 6);
 
             if (!coDuLieu)
             {
@@ -368,12 +398,18 @@ namespace Game6.God
                 int yd = k[1] + 2 + (i - cuon) * CAO_DONG;
                 bool chon = (i == dongChon);
 
-                g.setColor(chon ? MAU_O_CHON : MAU_O, chon ? 1f : 0.65f);
-                g.fillRect(k[0] + 3, yd, k[2] - 6, CAO_DONG - 2, 4);
+                // Dong chon: nen sang hon va mot vach ho phach sat mep trai.
+                g.setColor(chon ? MAU_O_CHON : MAU_O, chon ? 1f : 0.55f);
+                g.fillRect(k[0] + 3, yd, k[2] - 6, CAO_DONG - 2, 5);
+                if (chon)
+                {
+                    g.setColor(MAU_NHAN, 1f);
+                    g.fillRect(k[0] + 3, yd + 2, 2, CAO_DONG - 6);
+                }
 
                 int oAnh = CAO_DONG - 8;
-                g.setColor(MAU_NEN, 1f);
-                g.fillRect(k[0] + 6, yd + 3, oAnh, oAnh, 3);
+                veKhungBo(g, k[0] + 6, yd + 3, oAnh, oAnh, MAU_NEN, 1f,
+                        MAU_VIEN, chon ? 1f : 0.7f, 4);
                 if (m.icon >= 0)
                 {
                     SmallImage.drawSmallImage(g, m.icon,
@@ -412,8 +448,8 @@ namespace Game6.God
             bool coChon = (dongChon >= 0 && dongChon < danhSach.Count);
             if (!coChon)
             {
-                g.setColor(MAU_O_MO, 1f);
-                g.fillRect(k[0], k[1], k[2], k[3], 5);
+                veKhungBo(g, k[0], k[1], k[2], k[3], MAU_O_MO, 0.85f,
+                        MAU_VIEN, 0.7f, 6);
                 mFont.tahoma_7_grey.drawString(g,
                         "Chạm một dòng ở trên để dùng \"Mở nhanh\"",
                         k[0] + k[2] / 2, k[1] + (k[3] - 11) / 2, mFont.CENTER);
@@ -432,10 +468,8 @@ namespace Game6.God
         private static void veNut(mGraphics g, int[] k, string chu, int mau,
                 bool sang)
         {
-            g.setColor(sang ? mau : MAU_NUT_TAT, 1f);
-            g.fillRect(k[0], k[1], k[2], k[3], 4);
-            g.setColor(MAU_VIEN, sang ? 0.8f : 0.35f);
-            g.drawRect(k[0], k[1], k[2], k[3]);
+            veKhungBo(g, k[0], k[1], k[2], k[3], sang ? mau : MAU_NUT_TAT, 1f,
+                    sang ? MAU_NHAN : MAU_VIEN, sang ? 0.85f : 0.6f, 5);
             mFont f = sang ? mFont.tahoma_7b_white : mFont.tahoma_7_grey;
             f.drawString(g, catTheoBeRong(f, chu, k[2] - 8),
                     k[0] + k[2] / 2, k[1] + (k[3] - 11) / 2, mFont.CENTER);
@@ -444,10 +478,9 @@ namespace Game6.God
         private static void veNutHaiDong(mGraphics g, int[] k, string tren,
                 string duoi, int mau)
         {
-            g.setColor(mau, 1f);
-            g.fillRect(k[0], k[1], k[2], k[3], 4);
-            g.setColor(MAU_VIEN, 0.8f);
-            g.drawRect(k[0], k[1], k[2], k[3]);
+            veKhungBo(g, k[0], k[1], k[2], k[3], mau, 1f,
+                    mau == MAU_NUT_TAT ? MAU_VIEN : MAU_NHAN,
+                    mau == MAU_NUT_TAT ? 0.6f : 0.9f, 5);
             mFont.tahoma_7b_white.drawString(g,
                     catTheoBeRong(mFont.tahoma_7b_white, tren, k[2] - 6),
                     k[0] + k[2] / 2, k[1] + 3, mFont.CENTER);
