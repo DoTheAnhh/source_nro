@@ -2839,6 +2839,13 @@ namespace Game3.God
             {
                 s = "Chạm để mở";
             }
+            // Chi lay dong DAU: may chu gui kem dong "Bam..." o duoi, o nay chi
+            // cao mot dong nen no bi cat cut thanh "Ba...".
+            int xd = s.IndexOf('\n');
+            if (xd > 0)
+            {
+                s = s.Substring(0, xd).Trim();
+            }
             int k = s.IndexOf('[');
             if (k > 0)
             {
