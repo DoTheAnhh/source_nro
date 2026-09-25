@@ -1220,6 +1220,8 @@ namespace Game6.God
             bangNguoi = 0;
             dangMo = true;
             hienHop = false;
+            // Xin truoc danh sach trang phuc: bam muc Trang phuc la co ngay.
+            TrangPhucUI.getInstance().xinTruoc();
             hienHopDoAn = false;
             cuon = 0;
             // Bo khung chi tiet bang: mo lai bang ma con dinh mot bang cu tu lan

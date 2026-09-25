@@ -72,10 +72,34 @@ namespace Game6.God
         // ------------------------------------------------------------------
         //  Mở / đóng / gói
         // ------------------------------------------------------------------
+        /// <summary>Lúc xin gần nhất; 0 = chưa xin.</summary>
+        private long lucXin;
+
+        /// <summary>Xin quá chừng này không có trả lời thì báo máy chủ chưa hỗ trợ.</summary>
+        private const long HAN_CHO = 5000L;
+
         public void mo()
         {
             dangMo = true;
             lucMo = mSystem.currentTimeMillis();
+            xin();
+        }
+
+        /// <summary>
+        /// Xin trước lúc mở túi, để bấm "Trang phục" là có ngay, không phải chờ.
+        /// Đã có dữ liệu thì xin lại nhiều nhất mỗi 30 giây.
+        /// </summary>
+        public void xinTruoc()
+        {
+            if (!coDuLieu || mSystem.currentTimeMillis() - lucXin > 30000L)
+            {
+                xin();
+            }
+        }
+
+        private void xin()
+        {
+            lucXin = mSystem.currentTimeMillis();
             Service.gI().trangPhucXin();
         }
 
@@ -272,7 +296,9 @@ namespace Game6.God
 
             if (!coDuLieu)
             {
-                mFont.tahoma_7b_dark.drawString(g, "Đang tải…", x0 + rong / 2, y0 + cao / 2, mFont.CENTER);
+                bool quaHan = lucXin > 0 && mSystem.currentTimeMillis() - lucXin > HAN_CHO;
+                mFont.tahoma_7b_dark.drawString(g, quaHan ? "Máy chủ chưa hỗ trợ Trang phục — cần cập nhật máy chủ."
+                        : "Đang tải…", x0 + rong / 2, y0 + cao / 2, mFont.CENTER);
                 return;
             }
             if (dsChieu.Count == 0)
