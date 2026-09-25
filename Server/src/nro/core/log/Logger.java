@@ -52,7 +52,33 @@ public class Logger {
         return String.format("%-14s", "[" + tag + "]");
     }
 
+    /**
+     * Chỉ log cái quan trọng: các tag in liên tục lúc chạy (gói lớn, chat, kết
+     * nối, đăng nhập, lưu, bot…) bị ẩn. Lỗi và cảnh báo (vàng / đỏ) LUÔN hiện.
+     * Chạy với {@code -Dnro.logdaydu=true} để xem lại tất cả khi cần dò lỗi.
+     */
+    private static final boolean DAY_DU = Boolean.getBoolean("nro.logdaydu");
+
+    private static final java.util.Set<String> TAG_AN = new java.util.HashSet<>(java.util.Arrays.asList(
+            "LOG", "GOI_LON", "CHAT_MAP", "CHAT_KHU", "CHAT_TG", "TU_SAT", "GHEP", "PANEL",
+            "CONNECT", "LOGIN", "SAVE", "AUTO_SAVE", "BOT", "THREAD", "SCHEDULE", "BXH",
+            "SERVER_INFO", "IP", "CHONG_DDOS", "DUP_LOGIN", "CLIENT"));
+
+    private static boolean an(String color, String tag) {
+        if (DAY_DU || tag == null) {
+            return false;
+        }
+        // Loi / canh bao khong bao gio an.
+        if (color != null && (color.contains(YELLOW) || color.contains(RED))) {
+            return false;
+        }
+        return TAG_AN.contains(tag);
+    }
+
     private static void print(String color, String tag, String text, boolean newLine) {
+        if (an(color, tag)) {
+            return;
+        }
         synchronized (LOCK) {
             String msg = color + "[" + now() + "] " + tag(tag) + " " + text + RESET;
             if (newLine) {

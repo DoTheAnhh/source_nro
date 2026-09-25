@@ -954,6 +954,9 @@ namespace Game2
     	/// <summary>Gồng Makankosappo xong lúc này, đang chờ game tạo quả cầu bay (0 = không chờ).</summary>
     	public long tpChoDart;
 
+    	/// <summary>Chiêu nào đang dùng skin (bit 1 &lt;&lt; mã chiêu) — nhớ lâu, không theo từng lần ném.</summary>
+    	public int tpCoSkin;
+
     	/// <summary>Lúc thấy isCreateDark kẹt (không gồng, không quả cầu, không tư thế) — chốt an toàn mở khoá đổi chiêu.</summary>
     	public long tpLucKet;
 
@@ -2199,7 +2202,7 @@ namespace Game2
     					if (GameCanvas.gameTick % 4 == 0)
     					{
     					}
-    					if (GameCanvas.gameTick % 2 == 0 && !God.TrangPhucUI.conHieuLuc(this))
+    					if (GameCanvas.gameTick % 2 == 0 && !God.TrangPhucUI.chanGoc(this))
     					{
     						if (cdir == 1)
     						{

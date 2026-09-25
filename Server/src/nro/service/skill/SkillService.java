@@ -818,6 +818,14 @@ public class SkillService {
                     player.playerSkill.prepareLaze = false;
                     player.playerSkill.lazeChoLuc = 0;
                 }
+                // Goi danh co muc tieu toi TRE sau khi may chu da tu ban (duoi) thi bo
+                // qua: da tru mau roi, xu ly nua la tinh trung hoac bat dau nap lai.
+                if (!player.playerSkill.prepareLaze && player.playerSkill.lazeDaBanLuc > 0
+                        && startMakenko - player.playerSkill.lazeDaBanLuc < 2_500L
+                        && (plTarget != null || mobTarget != null)) {
+                    player.playerSkill.lazeDaBanLuc = 0;
+                    break;
+                }
                 if (!player.playerSkill.prepareLaze) {
                     //bắt đầu nạp laze
                     player.playerSkill.prepareLaze = true;
@@ -838,10 +846,20 @@ public class SkillService {
                     // NAP LAN MOI (nguoi khac thay gong lai) thay vi gay sat thuong.
                     // Nay: chua co muc tieu thi GIU co nap, cho goi danh co muc tieu.
                     if (plTarget == null && mobTarget == null) {
+                        // Cho goi danh co muc tieu cua client 0,8 giay (voi nguoi choi no
+                        // toi luc qua cau cham dich). Khong toi — mat muc tieu dung luc nem,
+                        // client khong tao qua cau — thi tuBanLaze tu chon muc tieu gan
+                        // nhat va ban. Truoc day lan do mat trang sat thuong.
                         if (player.playerSkill.lazeChoLuc == 0) {
                             player.playerSkill.lazeChoLuc = startMakenko;
+                            final Player nguoiBan = player;
+                            final long moc = startMakenko;
+                            HEN_NO.schedule(() -> tuBanLaze(nguoiBan, moc), 800,
+                                    java.util.concurrent.TimeUnit.MILLISECONDS);
                         }
                         break;
+                    } else {
+                        player.playerSkill.lazeDaBanLuc = 0;
                     }
                     player.playerSkill.prepareLaze = false;
                     player.playerSkill.lazeChoLuc = 0;
@@ -2401,6 +2419,93 @@ public class SkillService {
             return plTarget.cFlag == 0;
         }
         return true;
+    }
+
+    /**
+     * Makankosappo đã "bắn" mà 0,8 giây không có gói đánh nào mang mục tiêu:
+     * tự chọn mục tiêu gần nhất trong tầm và gây sát thương. Có gói đánh tới
+     * trước thì lượt này đã xong (cờ nạp hạ) — không làm gì.
+     */
+    private void tuBanLaze(Player pl, long moc) {
+        try {
+            if (pl == null || pl.playerSkill == null || pl.zone == null || pl.isDie()) {
+                return;
+            }
+            synchronized (pl.playerSkill) {
+                if (!pl.playerSkill.prepareLaze || pl.playerSkill.lazeChoLuc != moc
+                        || pl.playerSkill.skillSelect == null
+                        || pl.playerSkill.skillSelect.template.id != Skill.MAKANKOSAPPO) {
+                    return;
+                }
+                pl.playerSkill.prepareLaze = false;
+                pl.playerSkill.lazeChoLuc = 0;
+                pl.playerSkill.lazeDaBanLuc = System.currentTimeMillis();
+            }
+            Mob mob = mucTieuLazeQuai(pl);
+            Player nguoi = mob == null ? mucTieuLazeNguoi(pl) : null;
+            if (nguoi != null) {
+                playerAttackPlayer(pl, nguoi, false);
+            }
+            if (mob != null) {
+                playerAttackMob(pl, mob, false, true);
+            }
+            if (nguoi != null || mob != null) {
+                tanCongMucTieuThem(pl, nguoi, mob, false, true);
+            }
+            affterUseSkill(pl, Skill.MAKANKOSAPPO);
+            PlayerService.gI().sendInfoHpMpMoney(pl);
+        } catch (Exception ex) {
+            Logger.logException(SkillService.class, ex, "Lỗi tự bắn Makankosappo");
+        }
+    }
+
+    /** Tầm tự chọn mục tiêu của Makankosappo khi client không gửi mục tiêu. */
+    private static final int TAM_LAZE = 300;
+
+    /** Tầm của chính chiêu (dữ liệu để 20000 = gần như cả bản đồ), chặn ở 800 cho khỏi bắn ra ngoài màn hình. */
+    private static int tamLaze(Player pl) {
+        int dx = pl.playerSkill != null && pl.playerSkill.skillSelect != null ? pl.playerSkill.skillSelect.dx : 0;
+        return dx > 0 ? Math.min(dx, 800) : TAM_LAZE;
+    }
+
+    /** Quái còn sống gần nhất trong tầm, hoặc null. */
+    private Mob mucTieuLazeQuai(Player pl) {
+        if (pl.zone == null || pl.isBoss) {
+            return null;
+        }
+        Mob gan = null;
+        int kc = tamLaze(pl) + 1;
+        for (Mob mob : pl.zone.mobs) {
+            if (mob == null || mob.isDie()) {
+                continue;
+            }
+            int d = Util.getDistance(pl, mob);
+            if (d < kc) {
+                kc = d;
+                gan = mob;
+            }
+        }
+        return gan;
+    }
+
+    /** Người chơi đánh được gần nhất trong tầm (không tính boss), hoặc null. */
+    private Player mucTieuLazeNguoi(Player pl) {
+        if (pl.zone == null) {
+            return null;
+        }
+        Player gan = null;
+        int kc = tamLaze(pl) + 1;
+        for (Player p : pl.zone.getHumanoids()) {
+            if (p == null || p.equals(pl) || p.isDie() || p.isBoss || !canAttackPlayer(pl, p)) {
+                continue;
+            }
+            int d = Util.getDistance(pl, p);
+            if (d < kc) {
+                kc = d;
+                gan = p;
+            }
+        }
+        return gan;
     }
 
     public boolean canAttackPlayer(Player p1, Player p2) {

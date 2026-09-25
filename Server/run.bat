@@ -20,6 +20,20 @@ echo ===============================
 echo     Starting Anwin Version 3 Server
 echo ===============================
 
+REM --- Dau van tay cua src/: so tep + tong dung luong + gio sua moi nhat ---
+REM Giong het lan build truoc (luu o out\.dau_van_tay) thi BO QUA bien dich,
+REM chay luon. Khac (git pull co thay doi, sua tay, XOA tep) thi don sach out/
+REM va bien dich lai tu dau nhu cu. Chay lai server khi khong doi gi: vai giay
+REM thay vi mot phut.
+set "DAU_MOI="
+for /f "delims=" %%H in ('powershell -NoProfile -Command "$f = Get-ChildItem -Path src -Recurse -File; $m = ($f | Measure-Object -Property Length -Sum); $t = ($f | Measure-Object -Property LastWriteTimeUtc -Maximum).Maximum.Ticks; '' + $m.Count + '-' + $m.Sum + '-' + $t"') do set "DAU_MOI=%%H"
+set "DAU_CU="
+if exist "out\.dau_van_tay" set /p DAU_CU=<"out\.dau_van_tay"
+if defined DAU_MOI if "%DAU_MOI%"=="%DAU_CU%" if exist "out\nro\server\ServerManager.class" (
+    echo [NHANH] src/ khong doi tu lan build truoc - bo qua bien dich.
+    goto chay
+)
+
 REM --- Xoa ket qua bien dich cu ---
 REM QUAN TRONG: out/ tung chua .class cua nhung tinh nang da go khoi src/
 REM (MaiTienDungManager, NangCapDeTu...). Khong xoa thi cac class rac do van
@@ -34,10 +48,14 @@ echo [BUILD] Compiling source... ^(javac = %JAVAC_EXE%^)
 if exist sources.txt del sources.txt
 dir /s /b src\*.java > sources.txt
 
-REM -J-Xmx512m: gioi han heap cho chinh tien trinh javac. Mac dinh javac xin
-REM mot phan tu bo nho vat ly; khi Unity dang mo thi khong con du va build
-REM chet voi "paging file is too small" du ma nguon khong he co loi.
-"%JAVAC_EXE%" -J-Xmx512m -J-Xms64m -encoding UTF-8 ^
+REM Thong so javac (do tren 763 tep: 69 giay -> 36 giay):
+REM   -J-Xmx1536m  : 512m cu qua chat, javac mat phan lon thoi gian don rac.
+REM                  Server chua chay luc nay nen bo nho du.
+REM   ParallelGC   : don rac nhieu luong, nhanh hon cho mot lan chay ngan.
+REM   TieredStopAtLevel=1 : JIT khoi dong nhanh — javac chay mot lan roi thoi.
+REM   -g:source,lines : giu so dong trong log loi (bo -g:vars cho gon).
+"%JAVAC_EXE%" -J-Xmx1536m -J-Xms256m -J-XX:+UseParallelGC -J-XX:TieredStopAtLevel=1 ^
+ -encoding UTF-8 -nowarn -Xlint:none -g:source,lines ^
  -cp "lib\*" ^
  -d out ^
  @sources.txt
@@ -57,6 +75,11 @@ REM buoc nay thi sau khi clean out/ toan bo icon cua giao dien se bi null.
 echo [RES] Copy icons/images...
 xcopy /s /y /i /q "src\icons"  "out\icons"  >nul
 xcopy /s /y /i /q "src\images" "out\images" >nul
+
+REM Ghi dau van tay SAU CUNG — build hong giua chung thi lan sau van build lai.
+if defined DAU_MOI >"out\.dau_van_tay" echo %DAU_MOI%
+
+:chay
 
 REM --- Run server ---
 REM -Duser.dir tro ve chinh thu muc nay, vi mo hinh doc du lieu cua server

@@ -134,6 +134,14 @@ namespace Game6.God
                         c.tpXong = false;
                         c.tpSkill = skillTpl;
                         c.tpHetLuc = 0;
+                        if (bay.Length > 0)
+                        {
+                            c.tpCoSkin |= 1 << skillTpl;
+                        }
+                        else
+                        {
+                            c.tpCoSkin &= ~(1 << skillTpl);
+                        }
                     }
                 }
             }
@@ -195,6 +203,23 @@ namespace Game6.God
                 lucChonO = mSystem.currentTimeMillis();
             }
             coDuLieu = true;
+            // Nho skin dang bat cua chinh minh ngay khi co danh sach.
+            Char toi = Char.myCharz();
+            if (toi != null)
+            {
+                foreach (Chieu ch in dsChieu)
+                {
+                    Mau m = timMau(ch, ch.dangDung);
+                    if (m != null && m.daCo)
+                    {
+                        toi.tpCoSkin |= 1 << ch.tpl;
+                    }
+                    else
+                    {
+                        toi.tpCoSkin &= ~(1 << ch.tpl);
+                    }
+                }
+            }
         }
 
         private static Mau timMau(Chieu c, int id)
@@ -912,7 +937,38 @@ namespace Game6.God
         /// <summary>Còn phải chặn hình gốc: đang có trang phục, hoặc vừa nổ xong chưa quá 2,5 giây.</summary>
         public static bool chanGoc(Char c)
         {
-            return conHieuLuc(c) || (c != null && mSystem.currentTimeMillis() < c.tpChanDen);
+            return conHieuLuc(c) || (c != null && mSystem.currentTimeMillis() < c.tpChanDen) || dangVeChieuCoSkin(c);
+        }
+
+        /// <summary>
+        /// Game đang vẽ một chiêu mà nhân vật này có skin — theo mã hoạt ảnh của chiêu,
+        /// không theo lần ném: Makankosappo 77–83 (cả gồng tay Namếc), Quả cầu kênh
+        /// khi 70–76. Chặn cả khi gói trang phục tới trễ hay đã hết hạn.
+        /// </summary>
+        private static bool dangVeChieuCoSkin(Char c)
+        {
+            if (c == null || c.tpCoSkin == 0)
+            {
+                return false;
+            }
+            int id = c.skillPaint != null ? c.skillPaint.id
+                    : (c.dart != null && c.dart.skillPaint != null ? c.dart.skillPaint.id : -1);
+            if ((c.tpCoSkin & (1 << 11)) != 0)
+            {
+                if (id >= 77 && id <= 83)
+                {
+                    return true;
+                }
+                if (c.isStandAndCharge && c.cgender == 1)
+                {
+                    return true;
+                }
+            }
+            if ((c.tpCoSkin & (1 << 10)) != 0 && id >= 70 && id <= 76)
+            {
+                return true;
+            }
+            return false;
         }
 
         /// <summary>Đánh dấu lần tụ đã nổ, vẫn chặn hình gốc thêm một lát.</summary>

@@ -381,9 +381,14 @@ public final class TrangPhucDAO {
         for (Mau m : tatCa()) {
             try {
                 if (m.itemId > 0 && coVatPham(m.itemId)) {
+                    String tenMoi = tenVatPham(m);
+                    if (tenMoi != null) {
+                        doiTenVatPham(m.itemId, tenMoi);
+                    }
                     continue;
                 }
-                int id = themVatPham("Trang phục: " + m.ten,
+                String tenVp = tenVatPham(m);
+                int id = themVatPham(tenVp != null ? tenVp : "Skin: " + m.ten,
                         "Dùng để mở khoá trang phục " + m.ten + " (Túi → Chức năng → Hệ thống → Trang phục)."
                         + " Chỉ đổi hình chiêu, không đổi sức mạnh.",
                         m.iconVp > 0 ? m.iconVp : m.icon);
@@ -396,6 +401,56 @@ public final class TrangPhucDAO {
             }
         }
         lucDoc = 0;
+    }
+
+    /** Tên vật phẩm mở khoá: "Skin Tự Phát Nổ: Thần La Thiên Chinh". */
+    private static String tenVatPham(Mau m) {
+        String kn = tenKyNang(m.skillTpl);
+        return kn != null ? "Skin " + kn + ": " + m.ten : null;
+    }
+
+    /** Tên kỹ năng viết hoa chữ đầu mỗi từ ("Tự phát nổ" → "Tự Phát Nổ"). */
+    private static String tenKyNang(int tpl) {
+        String ten = null;
+        try {
+            for (nro.entity.skill.NClass nc : nro.server.Manager.NCLASS) {
+                nro.entity.template.SkillTemplate t = nc.getSkillTemplate(tpl);
+                if (t != null) {
+                    ten = t.name;
+                    break;
+                }
+            }
+        } catch (Exception boQua) {
+            // Chua nap ky nang: dung ten du phong ben duoi.
+        }
+        if (ten == null || ten.trim().isEmpty()) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String tu : ten.trim().split("\s+")) {
+            if (sb.length() > 0) {
+                sb.append(' ');
+            }
+            sb.append(Character.toUpperCase(tu.charAt(0))).append(tu.substring(1));
+        }
+        return sb.toString();
+    }
+
+    /** Đổi tên vật phẩm đã có (CSDL + bộ nhớ) nếu còn tên cũ. */
+    private static void doiTenVatPham(int id, String ten) throws Exception {
+        int doi = ConnectDB.executeUpdate("UPDATE item_template SET NAME = ? WHERE id = ? AND NAME <> ?", ten, id, ten);
+        try {
+            nro.entity.template.ItemTemplate t = nro.service.item.ItemService.gI().getTemplate(id);
+            if (t != null && !ten.equals(t.name)) {
+                t.name = ten;
+                nro.ui.LamMoi.bao(nro.ui.LamMoi.VAT_PHAM);
+            }
+        } catch (Exception boQua) {
+            // Lan khoi dong sau nap lai tu CSDL.
+        }
+        if (doi > 0) {
+            Logger.success("Trang phục: đổi tên vật phẩm " + id + " → " + ten + "\n");
+        }
     }
 
     private static boolean coVatPham(int id) throws Exception {

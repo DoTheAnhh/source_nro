@@ -70,6 +70,9 @@ public class PlayerSkill {
     /** Luc nhan lenh "ban" Makankosappo chua co muc tieu (0 = chua); cho goi danh co muc tieu toi. */
     public long lazeChoLuc;
 
+    /** Lúc máy chủ đã tự bắn Makankosappo vào mục tiêu gần nhất (0 = chưa); gói đánh tới trễ sau đó bỏ qua. */
+    public long lazeDaBanLuc;
+
     public byte getIndexSkillSelect() {
         switch (skillSelect.template.id) {
             case Skill.DRAGON:
