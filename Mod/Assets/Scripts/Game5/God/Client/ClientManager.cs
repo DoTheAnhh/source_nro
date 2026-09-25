@@ -655,7 +655,6 @@ namespace Game5.God
             new object[] { HudCot.BOSS, 27016, "Boss" },
             new object[] { HudCot.SU_KIEN, 12769, "Sự kiện" },
             new object[] { HudCot.PHUC_LOI, 27135, "Phúc lợi" },
-            new object[] { HudCot.NHAN_VAT, 27017, "Nhân vật" },
             new object[] { HudCot.TRO_CHOI, 4028, "Trò chơi" }
         };
 

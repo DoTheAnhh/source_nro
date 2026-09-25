@@ -1,7 +1,7 @@
 namespace Game2.God
 {
     /// <summary>
-    /// Hàng nút HUD ở góc trên phải: Boss, Trò chơi, Nhân vật, Phúc lợi, Sự
+    /// Hàng nút HUD ở góc trên phải: Boss, Trò chơi, Phúc lợi, Sự
     /// kiện, Tab, Khu, Cờ, Chat — xếp thành <b>hai hàng</b>, cộng nút ba gạch
     /// đứng riêng một cột ngoài cùng.
     /// </summary>
@@ -30,17 +30,19 @@ namespace Game2.God
         // Hang tren, trai sang phai.
         public const int BOSS = 0;
         public const int TRO_CHOI = 1;
-        public const int NHAN_VAT = 2;
-        public const int PHUC_LOI = 3;
-        public const int SU_KIEN = 4;
+        public const int PHUC_LOI = 2;
+        public const int SU_KIEN = 3;
+
+        /// <summary>Nút Nhân vật đã bỏ khỏi HUD; -1 để không ô nào trùng.</summary>
+        public const int NHAN_VAT = -1;
 
         // Hang duoi, trai sang phai.
-        public const int TAB = 5;
-        public const int KHU = 6;
-        public const int CO = 7;
-        public const int CHAT = 8;
+        public const int TAB = 4;
+        public const int KHU = 5;
+        public const int CO = 6;
+        public const int CHAT = 7;
 
-        public const int SO_NUT = 9;
+        public const int SO_NUT = 8;
 
         /// <summary>Bề rộng một nút.</summary>
         public const int RONG = 38;
@@ -48,8 +50,8 @@ namespace Game2.God
         /// <summary>Bề cao một nút: icon 20 điểm cộng hàng chữ.</summary>
         public const int CAO = 32;
 
-        /// <summary>Số nút mỗi hàng. Chín nút chia hai hàng: 5 trên, 4 dưới.</summary>
-        private const int SO_MOI_HANG = 5;
+        /// <summary>Số nút mỗi hàng. Tám nút chia hai hàng: 4 trên, 4 dưới.</summary>
+        private const int SO_MOI_HANG = 4;
 
         /// <summary>Khe giữa hai nút, cả ngang lẫn dọc.</summary>
         private const int KHE = 3;

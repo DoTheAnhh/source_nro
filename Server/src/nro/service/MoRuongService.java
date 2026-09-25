@@ -280,6 +280,11 @@ public class MoRuongService {
                     msg.writer().writeUTF(tiLe(q.trongSo, tong));
                 }
             }
+            // Duoi goi: icon phieu cua tung ruong (-1 = mo bang diem). Client cu
+            // doc het phan tren roi bo qua duoi nay.
+            for (MoRuongDAO.Ruong r : ds) {
+                msg.writer().writeShort(r.itemPhieu > 0 ? PhucLoiService.gI().iconCua(r.itemPhieu) : -1);
+            }
             pl.sendMessage(msg);
         } catch (Exception ex) {
             Logger.logException(MoRuongService.class, ex, "Không gửi được bảng mở rương");

@@ -1078,9 +1078,16 @@ namespace Game5.God
 
         private const int O_DO_AN = 32;
 
+        /// <summary>Số cột hộp đồ ăn: vừa đủ số món (tối đa 6) — không thừa khúc trống.</summary>
+        private int soCotDoAn()
+        {
+            int n = doAnThuCung.Count;
+            return n < 1 ? 1 : (n > 6 ? 6 : n);
+        }
+
         private int[] khungHopDoAn()
         {
-            int soCot = 6;
+            int soCot = soCotDoAn();
             int w = soCot * O_DO_AN + 20;
             int soHang = (doAnThuCung.Count + soCot - 1) / soCot;
             if (soHang < 1)
@@ -1100,7 +1107,7 @@ namespace Game5.God
         private int[] oODoAn(int i)
         {
             int[] k = khungHopDoAn();
-            int soCot = 6;
+            int soCot = soCotDoAn();
             int cot = i % soCot;
             int hang = i / soCot;
             return new int[] { k[0] + 10 + cot * O_DO_AN,

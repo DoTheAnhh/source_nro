@@ -375,6 +375,7 @@ namespace Game5.God
         /// </remarks>
         private void vaoThe(int the)
         {
+            hienHopDoAn = false;
             if (the == THE_DE_TU)
             {
                 Service.gI().petInfo();
@@ -401,6 +402,7 @@ namespace Game5.God
         public void dong()
         {
             dangMo = false;
+            hienHopDoAn = false;
             // Lan sau mo lai the Bang hoi thi lai xuong tin moi nhat.
             soTinChatDaThay = -1;
             dongBangNguoi();
@@ -1218,6 +1220,7 @@ namespace Game5.God
             bangNguoi = 0;
             dangMo = true;
             hienHop = false;
+            hienHopDoAn = false;
             cuon = 0;
             // Bo khung chi tiet bang: mo lai bang ma con dinh mot bang cu tu lan
             // truoc thi nguoi choi thay ngay mot khung khong ai goi.

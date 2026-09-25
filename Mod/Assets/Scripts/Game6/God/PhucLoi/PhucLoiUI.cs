@@ -755,12 +755,15 @@ namespace Game6.God
 
             mFont.tahoma_7b_white.drawString(g, "NRO PASS", xPhai + 10, y + 7, mFont.LEFT, mFont.tahoma_7b_dark);
             mFont.tahoma_7b_white.drawString(g, p.moTaMua, xPhai + 10, y + 22, mFont.LEFT, mFont.tahoma_7b_dark);
-            if (soOPassNhanDuoc() > 0)
             {
+                // Nut luon hien; co o cho nhan thi tho sang.
                 int[] nn = oNutNhanNhanhPass();
-                float thoN = 0.5f + 0.5f * (float) System.Math.Sin(mSystem.currentTimeMillis() / 300.0);
-                g.setColor(0xB8FFB0, 0.3f + 0.3f * thoN);
-                g.fillRect(nn[0] - 2, nn[1] - 2, nn[2] + 4, nn[3] + 4, 10);
+                if (soOPassNhanDuoc() > 0)
+                {
+                    float thoN = 0.5f + 0.5f * (float) System.Math.Sin(mSystem.currentTimeMillis() / 300.0);
+                    g.setColor(0xB8FFB0, 0.3f + 0.3f * thoN);
+                    g.fillRect(nn[0] - 2, nn[1] - 2, nn[2] + 4, nn[3] + 4, 10);
+                }
                 veKhungDoc(g, nn[0], nn[1], nn[2], nn[3], 8, rgb(0x17, 0x62, 0x2A),
                         rgb(0x6C, 0xDC, 0x7C), rgb(0x2E, 0x9A, 0x44), 1);
                 mFont.tahoma_7b_white.drawString(g, "NHẬN NHANH", nn[0] + nn[2] / 2, nn[1] + 5, mFont.CENTER,
@@ -1089,7 +1092,7 @@ namespace Game6.God
             for (int i = 0; i < 5; i++)
             {
                 int cao = (5 - i) * 2 - 1;
-                int xv = trai ? (xT - 3 + i) : (xT + 2 - i);
+                int xv = trai ? (xT + 2 - i) : (xT - 3 + i);
                 g.fillRect(xv, yT - cao / 2, 2, cao);
             }
         }
@@ -1168,7 +1171,6 @@ namespace Game6.God
                 return;
             }
             tongKeoP = 0;
-            if (soOPassNhanDuoc() > 0)
             {
                 int[] nn = oNutNhanNhanhPass();
                 if (cham(nn[0], nn[1], nn[2], nn[3]))

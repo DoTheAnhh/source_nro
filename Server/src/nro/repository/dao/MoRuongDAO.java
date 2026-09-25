@@ -377,13 +377,56 @@ public class MoRuongDAO {
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
             damBaoMotPhieu(K_PHIEU_THUONG, "Phiếu quay rương thường", ICON_PHIEU_THUONG,
                     "Dùng để mở Rương Thường ở tab Mở rương (màn Sự kiện)");
-            damBaoMotPhieu(K_PHIEU_SU_KIEN, "Phiếu quay rương sự kiện", ICON_PHIEU_SU_KIEN,
-                    "Dùng để mở Rương Sự Kiện ở tab Mở rương (màn Sự kiện)");
+            damBaoMotPhieu(K_PHIEU_SU_KIEN, "Phiếu quay rương trung cấp", ICON_PHIEU_SU_KIEN,
+                    "Dùng để mở Rương Trung Cấp ở tab Mở rương (màn Sự kiện)");
             damBaoBang();
             datPhieuV1();
+            doiTenTrungCapV1();
         } catch (Exception ex) {
             Logger.logException(MoRuongDAO.class, ex, "Không dựng được phiếu quay rương");
         }
+    }
+
+    /** Tên mới của rương thứ hai (trước là "Rương Sự Kiện"). */
+    public static final String TEN_TRUNG_CAP = "Rương Trung Cấp";
+
+    /**
+     * Đổi "Rương Sự Kiện" thành "Rương Trung Cấp" — một lần: tên rương, mô tả,
+     * tên điểm, và tên/mô tả vật phẩm phiếu (cả trong bộ nhớ lẫn CSDL).
+     */
+    private static void doiTenTrungCapV1() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT gia_tri FROM mo_ruong_cau_hinh WHERE khoa = 'ten_trung_cap_v1'");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            dong(rs);
+        }
+        ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET ten = ? WHERE ten = 'Rương Sự Kiện'", TEN_TRUNG_CAP);
+        ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET mo_ta = REPLACE(mo_ta, 'Rương cao cấp', 'Rương trung cấp'),"
+                + " ten_diem = REPLACE(REPLACE(ten_diem, 'sự kiện', 'trung cấp'), 'Sự Kiện', 'Trung Cấp')"
+                + " WHERE ten = ?", TEN_TRUNG_CAP);
+        int phieu = idPhieuSuKien();
+        if (phieu > 0) {
+            String ten = "Phiếu quay rương trung cấp";
+            String moTa = "Dùng để mở Rương Trung Cấp ở tab Mở rương (màn Sự kiện)";
+            ConnectDB.executeUpdate("UPDATE item_template SET NAME = ?, description = ? WHERE id = ?", ten, moTa, phieu);
+            try {
+                nro.entity.template.ItemTemplate t = nro.service.item.ItemService.gI().getTemplate(phieu);
+                if (t != null) {
+                    t.name = ten;
+                    t.description = moTa;
+                    nro.ui.LamMoi.bao(nro.ui.LamMoi.VAT_PHAM);
+                }
+            } catch (Exception boQua) {
+                // Lan khoi dong sau nap lai tu CSDL.
+            }
+        }
+        ConnectDB.executeUpdate("INSERT IGNORE INTO mo_ruong_cau_hinh (khoa, gia_tri) VALUES ('ten_trung_cap_v1', '1')");
+        lucDoc = 0;
+        Logger.success("Mở rương: đổi Rương Sự Kiện → Rương Trung Cấp\n");
     }
 
     /** Id vật phẩm phiếu quay rương thường trên máy này, hoặc -1. */
@@ -499,7 +542,7 @@ public class MoRuongDAO {
         ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET item_phieu = ?, gia_x1 = 1, gia_x10 = 10,"
                 + " ten_diem = 'Phiếu quay rương thường' WHERE ten = 'Rương Thường'", thuong);
         ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET item_phieu = ?, gia_x1 = 1, gia_x10 = 10,"
-                + " ten_diem = 'Phiếu quay rương sự kiện' WHERE ten = 'Rương Sự Kiện'", suKien);
+                + " ten_diem = 'Phiếu quay rương trung cấp' WHERE ten IN ('Rương Sự Kiện', 'Rương Trung Cấp')", suKien);
         ConnectDB.executeUpdate("INSERT IGNORE INTO mo_ruong_cau_hinh (khoa, gia_tri) VALUES ('phieu_v1', '1')");
         lucDoc = 0;
         Logger.success("Mở rương: hai rương giờ mở bằng phiếu (x1 = 1 phiếu, x10 = 10 phiếu)\n");
@@ -565,7 +608,8 @@ public class MoRuongDAO {
     private static int idTheoTenRuong(String ten) throws Exception {
         CrisResultSet rs = null;
         try {
-            rs = ConnectDB.executeQuery("SELECT id FROM mo_ruong_loai WHERE ten = ? ORDER BY id LIMIT 1", ten);
+            rs = ConnectDB.executeQuery("SELECT id FROM mo_ruong_loai WHERE ten = ? OR (? = 'Rương Sự Kiện'"
+                    + " AND ten = ?) ORDER BY id LIMIT 1", ten, ten, TEN_TRUNG_CAP);
             return rs.next() ? rs.getInt("id") : -1;
         } finally {
             dong(rs);
@@ -589,7 +633,7 @@ public class MoRuongDAO {
         // Trung Mabu va Ruong thu cung thuong: them trong suaQuaTheoIdThat (id
         // cua hai mon nay moi may mot khac).
 
-        int suKien = themRuong("Rương Sự Kiện", "Rương cao cấp — toàn rương con, cửa ra thú cưng cao cấp.",
+        int suKien = themRuong(TEN_TRUNG_CAP, "Rương trung cấp — toàn rương con, cửa ra thú cưng cao cấp.",
                 1960, 30, 270, 2);
         themQua(suKien, 457, 3, 3500, 0, "");      // Thoi vang
         themQua(suKien, 1440, 1, 2500, 1, "");     // Ruong sao pha le
@@ -598,7 +642,7 @@ public class MoRuongDAO {
         themQua(suKien, 1453, 1, 600, 2, "");      // Ruong sao pha le VIP
         // Ruong thu cung cao cap: them trong suaQuaTheoIdThat.
         ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET ten_diem = 'Điểm Rương Thường' WHERE id = ?", thuong);
-        ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET ten_diem = 'Điểm Rương Sự Kiện' WHERE id = ?", suKien);
+        ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET ten_diem = 'Điểm Rương Trung Cấp' WHERE id = ?", suKien);
         Logger.success("Mở rương: gieo 2 rương mặc định\n");
     }
 
