@@ -1314,6 +1314,50 @@ namespace Game6
     	/// mà <c>fillRect</c> bo góc đang dùng — nên nó tôn trọng cả
     	/// <c>translate</c> lẫn vùng <c>clip</c> hiện hành.</para>
     	/// </remarks>
+    	/// <summary>
+    	/// Vẽ ảnh xoay một góc bất kỳ quanh tâm (<paramref name="xGiua"/>,
+    	/// <paramref name="yGiua"/>), cỡ <paramref name="w"/> × <paramref name="h"/>
+    	/// (toạ độ logic, chưa nhân zoom). Góc tính bằng độ, chiều kim đồng hồ.
+    	/// </summary>
+    	public void veAnhXoay(Image image, float xGiua, float yGiua, float w, float h, float gocDo)
+    	{
+    		if (image == null || image.texture == null || w <= 0f || h <= 0f)
+    		{
+    			return;
+    		}
+    		float px = xGiua * zoomLevel;
+    		float py = yGiua * zoomLevel;
+    		if (isTranslate)
+    		{
+    			px += translateX;
+    			py += translateY;
+    		}
+    		int cx = 0;
+    		int cy = 0;
+    		if (isClip)
+    		{
+    			cx = clipX;
+    			cy = clipY;
+    			if (isTranslate)
+    			{
+    				cx += clipTX;
+    				cy += clipTY;
+    			}
+    			GUI.BeginGroup(new Rect(cx, cy, clipW, clipH));
+    		}
+    		float pw = w * zoomLevel;
+    		float ph = h * zoomLevel;
+    		Vector2 tam = new Vector2(px - cx, py - cy);
+    		Matrix4x4 maTranCu = GUI.matrix;
+    		GUIUtility.RotateAroundPivot(gocDo, tam);
+    		GUI.DrawTexture(new Rect(tam.x - pw / 2f, tam.y - ph / 2f, pw, ph), image.texture, ScaleMode.StretchToFill, true);
+    		GUI.matrix = maTranCu;
+    		if (isClip)
+    		{
+    			GUI.EndGroup();
+    		}
+    	}
+
     	public void veAnhVuaO(Image image, int x, int y, int w, int h)
     	{
     		if (image == null || image.texture == null || w <= 0 || h <= 0)

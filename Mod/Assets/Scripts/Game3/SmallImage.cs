@@ -163,6 +163,27 @@ namespace Game3
     	/// <para>Ảnh của icon chỉ có sau khi tải xong. Chưa có thì xin tải rồi vẽ
     	/// tạm bằng đường cũ (đúng cỡ gốc) — khung hình sau là vừa ô.</para>
     	/// </remarks>
+    	/// <summary>
+    	/// Vẽ icon xoay <paramref name="gocDo"/> độ quanh tâm, phóng
+    	/// <paramref name="tiLe"/> lần so với cỡ gốc. Ảnh chưa tải xong thì xin tải
+    	/// rồi vẽ tạm không xoay.
+    	/// </summary>
+    	public static void veIconXoay(mGraphics g, int id, int xGiua, int yGiua, float tiLe, float gocDo)
+    	{
+    		Small s = (imgNew != null && id >= 0 && id < imgNew.Length) ? imgNew[id] : null;
+    		if (s == null || s.img == null || mGraphics.getImageWidth(s.img) <= 1)
+    		{
+    			if (s == null)
+    			{
+    				createImage(id);
+    			}
+    			drawSmallImage(g, id, xGiua, yGiua, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+    			return;
+    		}
+    		g.veAnhXoay(s.img, xGiua, yGiua, mGraphics.getImageWidth(s.img) * tiLe,
+    				mGraphics.getImageHeight(s.img) * tiLe, gocDo);
+    	}
+
     	public static void veIconVuaO(mGraphics g, int id, int xGiua, int yGiua,
     			int canh)
     	{

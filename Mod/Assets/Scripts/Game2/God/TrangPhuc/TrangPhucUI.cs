@@ -720,7 +720,19 @@ namespace Game2.God
         // ------------------------------------------------------------------
         /// <summary>Mười hai cục đá cắt từ frame 1 và 2 của Địa Bộc Thiên Tinh.</summary>
         private static readonly short[] ICON_DA = {
-            25301, 25302, 25303, 25304, 25305, 25306, 25307, 25308, 25309, 25310, 25311, 25312
+            25289, 25290, 25291, 25292, 25293, 25294, 25295, 25296, 25297, 25298, 25299, 25300
+        };
+
+        /// <summary>Vẽ đá ở 0,75 cỡ bộ gốc (= 1,5 lần bộ nửa cỡ trước).</summary>
+        private const float TI_LE_DA = 0.75f;
+
+        /// <summary>
+        /// Hướng mũi nhọn của từng cục đá trong ảnh (độ, chiều kim đồng hồ, 0 = sang
+        /// phải) — dò bằng điểm xa tâm nhất. Hai cục có vệt sáng (thứ 10, 12) lật
+        /// 180° để mũi đi trước, vệt đi sau.
+        /// </summary>
+        private static readonly float[] MUI_DA = {
+            -82f, 112f, 110f, 126f, -133f, 155f, -141f, -32f, -45f, -23f, 163f, -27f
         };
 
         /// <summary>Cứ chừng này ms sinh một cục đá.</summary>
@@ -731,6 +743,7 @@ namespace Game2.God
         public class Da
         {
             public short icon;
+            public int loai;
             /// <summary>Bán kính, góc xuất phát quanh tâm quả cầu.</summary>
             public float r0;
             public float a0;
@@ -763,7 +776,8 @@ namespace Game2.God
                     continue;
                 }
                 Da d = new Da();
-                d.icon = ICON_DA[ngauNhien.Next(ICON_DA.Length)];
+                d.loai = ngauNhien.Next(ICON_DA.Length);
+                d.icon = ICON_DA[d.loai];
                 d.r0 = 160f + (float) ngauNhien.NextDouble() * 100f;
                 d.a0 = (float) (ngauNhien.NextDouble() * System.Math.PI * 2);
                 d.chieu = ngauNhien.Next(2) == 0 ? 1f : -1f;
@@ -790,7 +804,9 @@ namespace Game2.God
                 float a = d.a0;
                 int x = tamX + (int) (r * System.Math.Cos(a));
                 int y = tamY + (int) (r * System.Math.Sin(a) * 0.8f);
-                SmallImage.drawSmallImage(g, d.icon, x, y, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+                // Huong bay = tu cho da ve tam (nguoc goc xuat phat): xoay de mui nhon chi vao tam.
+                float huongBay = (float) (System.Math.Atan2(-System.Math.Sin(a) * 0.8, -System.Math.Cos(a)) * 57.29578);
+                SmallImage.veIconXoay(g, d.icon, x, y, TI_LE_DA, huongBay - MUI_DA[d.loai]);
             }
         }
 
