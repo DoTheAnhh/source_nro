@@ -1207,6 +1207,46 @@ namespace Game5.God
         private const long MS_XOAY_RO = 1500L;
         private const long MS_XOAY = 3000L;
 
+        /// <summary>Tốc độ tối đa quả cầu bay (đơn vị PlayerDart.va): Rasenshuriken chậm để thấy rõ.</summary>
+        public static int tocDoToiDa(Char c)
+        {
+            return laRasen(c) ? 2600 : 8192;
+        }
+
+        /// <summary>
+        /// Nhân vật của mình vừa bấm chiêu tụ: gắn trang phục đang chọn NGAY từ danh
+        /// sách đã tải — gói máy chủ tới trễ vài khung, trong lúc đó hình gốc lọt ra.
+        /// Gói máy chủ tới sau chỉ ghi đè cho khớp.
+        /// </summary>
+        public static void ganTruoc(Char c, int skillTpl)
+        {
+            TrangPhucUI ui = getInstance();
+            if (!ui.coDuLieu)
+            {
+                ui.xinTruoc();
+                return;
+            }
+            foreach (Chieu ch in ui.dsChieu)
+            {
+                if (ch.tpl != skillTpl)
+                {
+                    continue;
+                }
+                Mau m = timMau(ch, ch.dangDung);
+                if (m == null || !m.daCo)
+                {
+                    return;
+                }
+                c.tpNap = m.nap != null && m.nap.Length > 0 ? m.nap : null;
+                c.tpBay = m.bay != null && m.bay.Length > 0 ? m.bay : null;
+                c.tpLuc = mSystem.currentTimeMillis();
+                c.tpXong = false;
+                c.tpSkill = skillTpl;
+                c.tpHetLuc = 0;
+                return;
+            }
+        }
+
         public static bool laRasen(Char c)
         {
             return conHieuLuc(c) && c.tpSkill == 11;
@@ -1344,7 +1384,7 @@ namespace Game5.God
                 for (int i = dsRasenBu.Count - 1; i >= 0; i--)
                 {
                     RasenBu b = dsRasenBu[i];
-                    float p = (float) (ms - b.batDau) / 360f;
+                    float p = (float) (ms - b.batDau) / 900f;
                     if (p >= 1f)
                     {
                         dsRasenBu.RemoveAt(i);
@@ -1444,13 +1484,16 @@ namespace Game5.God
 
         /// <summary>Khung Tự phát nổ căn đáy: tâm ảnh cao hơn chân chừng này điểm.</summary>
         /// <remarks>Khung căn theo ĐÁY KHỐI KHÓI CHÍNH (không theo mảnh vụn thấp nhất) nên mọi khung chạm đất như nhau.</remarks>
-        private const int TU_NO_TAM = 43;
+        private const int TU_NO_TAM = 35;
 
         /// <summary>Phóng mọi khung Tự phát nổ (người dùng muốn to hơn 50%).</summary>
         private const float TU_NO_TO = 1.5f;
 
         /// <summary>Tâm lớp mặt đất sau khi phóng: căn đáy nên tâm nâng theo cỡ, đáy vẫn ở mặt đất.</summary>
-        private static readonly int TAM_TO = (int) (TU_NO_TAM * TU_NO_TO);
+        /// <summary>Cỡ riêng lớp khói mặt đất: to hơn lớp giữa thân 30%.</summary>
+        private const float DAT_TO = TU_NO_TO * 1.3f;
+
+        private static readonly int TAM_TO = (int) (TU_NO_TAM * DAT_TO);
 
         /// <summary>Lớp giữa thân thấp hơn giữa người chừng này điểm.</summary>
         private const int GIUA_THAP = 8;
@@ -1513,7 +1556,7 @@ namespace Game5.God
                 float f = p * (dat.Length - 1);
                 int a = System.Math.Min(dat.Length - 1, (int) f);
                 int b = System.Math.Min(dat.Length - 1, a + 1);
-                veHoa(g, dat[a], dat[b], f - a, c.cx, c.cy - TAM_TO, TU_NO_TO);
+                veHoa(g, dat[a], dat[b], f - a, c.cx, c.cy - TAM_TO, DAT_TO);
             }
             short[] giua = tach(c.tpNap, 1);
             if (giua.Length > 0)
@@ -1561,7 +1604,7 @@ namespace Game5.God
             }
             if (day.Count > 0)
             {
-                themNo(day.ToArray(), c.cx, c.cy - TAM_TO, MS_NO, bayGio);
+                themNo(day.ToArray(), c.cx, c.cy - TAM_TO, MS_NO, bayGio, DAT_TO);
             }
             short[] bung = tach(c.tpBay, 1);
             if (bung.Length > 0)
@@ -1575,7 +1618,7 @@ namespace Game5.God
                 d.x = c.cx;
                 d.dat = c.cy;
                 d.dy = -TAM_TO;
-                d.tiLe = TU_NO_TO;
+                d.tiLe = DAT_TO;
                 d.batDau = bayGio + day.Count * MS_NO;
                 lock (dsDuAm)
                 {

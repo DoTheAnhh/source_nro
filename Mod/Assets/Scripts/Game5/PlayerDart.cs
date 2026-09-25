@@ -125,9 +125,15 @@ namespace Game5
     					angle = Res.fixangle(angle - 15);
     				}
     			}
-    			if (!isSpeedUp && va < 8192)
+    			// Trang phuc (Rasenshuriken) bay cham hon de nhin ro hieu ung tren duong bay.
+    			int vaMax = God.TrangPhucUI.tocDoToiDa(charBelong);
+    			if (!isSpeedUp && va < vaMax)
     			{
-    				va += 1024;
+    				va += vaMax < 8192 ? 256 : 1024;
+    			}
+    			if (va > vaMax)
+    			{
+    				va = vaMax;
     			}
     			vx = va * Res.cos(angle) >> 10;
     			vy = va * Res.sin(angle) >> 10;

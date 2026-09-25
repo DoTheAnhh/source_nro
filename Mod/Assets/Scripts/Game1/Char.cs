@@ -5402,6 +5402,11 @@ namespace Game1
     		{
     			return;
     		}
+    		// Trang phuc cua chinh minh: gan ngay tu danh sach da tai, khong cho goi may chu.
+    		if (me && myskill != null)
+    		{
+    			God.TrangPhucUI.ganTruoc(this, myskill.template.id);
+    		}
     		GameScr.gI().auto = 0;
     		if (isGround)
     		{
@@ -5909,6 +5914,10 @@ namespace Game1
 
     	private void paintEffect(mGraphics g)
     	{
+    		if (effPaints != null && God.TrangPhucUI.chanGoc(this))
+    		{
+    			effPaints = null;
+    		}
     		if (effPaints != null)
     		{
     			for (int i = 0; i < effPaints.Length; i++)
@@ -6516,6 +6525,12 @@ namespace Game1
     		SkillInfoPaint[] array = skillInfoPaint();
     		cf = array[indexSkill].status;
     		paintCharWithoutSkill(g);
+    		// Trang phuc ky nang: chan hieu ung goc o CHO VE — hieu ung gan truoc khi
+    		// goi trang phuc toi (tre vai khung) van khong lot ra.
+    		if (God.TrangPhucUI.chanGoc(this))
+    		{
+    			eff0 = (eff1 = (eff2 = null));
+    		}
     		if (cdir == 1)
     		{
     			if (eff0 != null)
