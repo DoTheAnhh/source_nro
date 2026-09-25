@@ -954,6 +954,9 @@ namespace Game3
     	/// <summary>Gồng Makankosappo xong lúc này, đang chờ game tạo quả cầu bay (0 = không chờ).</summary>
     	public long tpChoDart;
 
+    	/// <summary>Lúc thấy isCreateDark kẹt (không gồng, không quả cầu, không tư thế) — chốt an toàn mở khoá đổi chiêu.</summary>
+    	public long tpLucKet;
+
     	/// <summary>Khung chạm địch đang hiện (-1 = không) và chỗ, lúc bắt đầu.</summary>
     	public int tpTrung = -1;
 

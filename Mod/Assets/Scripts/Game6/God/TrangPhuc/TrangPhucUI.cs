@@ -1091,12 +1091,43 @@ namespace Game6.God
             }
         }
 
+        /// <summary>
+        /// Chốt an toàn: <c>isCreateDark</c> (game dùng để chặn đổi chiêu) bật mà không
+        /// còn gồng, không quả cầu, không tư thế ra chiêu quá 1,5 giây — tức kẹt (quả
+        /// cầu không được tạo nên không ai tắt) — thì dừng tụ để mở khoá đổi chiêu.
+        /// </summary>
+        private static void chotMoKhoa(Char c)
+        {
+            if (!c.me)
+            {
+                return;
+            }
+            bool ket = c.isCreateDark && !c.isFlyAndCharge && !c.isStandAndCharge
+                    && c.dart == null && c.skillPaint == null;
+            if (!ket)
+            {
+                c.tpLucKet = 0;
+                return;
+            }
+            long bayGio = mSystem.currentTimeMillis();
+            if (c.tpLucKet == 0)
+            {
+                c.tpLucKet = bayGio;
+            }
+            else if (bayGio - c.tpLucKet > 1500L)
+            {
+                c.tpLucKet = 0;
+                c.stopUseChargeSkill();
+            }
+        }
+
         private static void veMotNguoi(mGraphics g, Char c)
         {
             if (c == null)
             {
                 return;
             }
+            chotMoKhoa(c);
             long bayGio = mSystem.currentTimeMillis();
             // Qua cau dang bay: lap khung nem / cham (9 <-> 10).
             veGongTuNo(g, c);
@@ -1210,7 +1241,7 @@ namespace Game6.God
         /// <summary>Tốc độ tối đa quả cầu bay (đơn vị PlayerDart.va): Rasenshuriken chậm để thấy rõ.</summary>
         public static int tocDoToiDa(Char c)
         {
-            return laRasen(c) ? 2600 : 8192;
+            return 8192;
         }
 
         /// <summary>
@@ -1273,6 +1304,8 @@ namespace Game6.God
             long ms = mSystem.currentTimeMillis();
             short[] nap = c.tpNap;
             int n = nap == null ? 0 : nap.Length;
+            // Ve thang len qua cau THAT (bay dung toc do goc, khop luc gay sat thuong).
+            // Game khong tao qua cau (mat muc tieu) thi nem bu.
             if (c.tpChoDart > 0)
             {
                 if (c.dart != null)
@@ -1340,6 +1373,8 @@ namespace Game6.God
             public short cau;
             public int x0, y0, x1, y1;
             public long batDau;
+            /// <summary>Mục tiêu để đuổi theo nếu nó di chuyển (null = điểm cố định).</summary>
+            public IMapObject mt;
         }
 
         private static readonly List<RasenBu> dsRasenBu = new List<RasenBu>();
@@ -1353,6 +1388,7 @@ namespace Game6.God
             b.cau = c.tpNap[c.tpNap.Length - 1];
             b.x0 = c.cx - (c.cdir >= 0 ? 1 : -1) * 18;
             b.y0 = c.cy - c.ch / 2 - 2;
+            b.mt = mt;
             if (mt != null)
             {
                 b.x1 = mt.getX();
@@ -1365,7 +1401,14 @@ namespace Game6.God
             }
             b.batDau = mSystem.currentTimeMillis();
             ketThuc(c);
-            c.tpChanDen = b.batDau + 3000L;
+            // Chan hinh goc (qua cau that dang bay, don danh phat lai) suot luc bay + no.
+            c.tpChanDen = b.batDau + 3500L;
+            // Game khong tao qua cau thi cung khong ai tat isCreateDark (co khoa doi
+            // chieu) — dung tu o day cho no mo khoa.
+            if (c.dart == null)
+            {
+                c.stopUseChargeSkill();
+            }
             lock (dsRasenBu)
             {
                 dsRasenBu.Add(b);
@@ -1384,7 +1427,13 @@ namespace Game6.God
                 for (int i = dsRasenBu.Count - 1; i >= 0; i--)
                 {
                     RasenBu b = dsRasenBu[i];
-                    float p = (float) (ms - b.batDau) / 900f;
+                    if (b.mt != null)
+                    {
+                        // Duoi theo muc tieu dang chay.
+                        b.x1 = b.mt.getX();
+                        b.y1 = b.mt.getY() - b.mt.getH() / 2;
+                    }
+                    float p = (float) (ms - b.batDau) / 300f;
                     if (p >= 1f)
                     {
                         dsRasenBu.RemoveAt(i);
