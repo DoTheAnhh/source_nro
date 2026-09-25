@@ -665,16 +665,7 @@ namespace Game5.God
             {
                 return false;
             }
-            // Khung cham dich: hien mot lat tai cho qua cau trung.
-            long daQua = mSystem.currentTimeMillis() - c.tpTrungLuc;
-            if (c.tpTrung >= 0 && daQua < MS_TRUNG)
-            {
-                // Du chan: rung trai phai vai diem, nho dan ve 0 het 0,3 giay.
-                int bien = (int) (4 * (MS_TRUNG - daQua) / MS_TRUNG);
-                int lech = (GameCanvas.gameTick % 2 == 0) ? bien : -bien;
-                SmallImage.drawSmallImage(g, c.tpTrung, c.tpTrungX + lech, c.tpTrungY + lech / 2, 0,
-                        mGraphics.VCENTER | mGraphics.HCENTER);
-            }
+            // Khung cham dich ve o lop chung (veToanCuc).
             if (!conHieuLuc(c))
             {
                 return false;
@@ -712,9 +703,7 @@ namespace Game5.God
             {
                 return false;
             }
-            // Tu luc nem toi luc cham: lap cac khung bay (9 <-> 10).
-            int k = chu.tpBay[(int) ((mSystem.currentTimeMillis() / MS_BAY) % System.Math.Min(2, chu.tpBay.Length))];
-            SmallImage.drawSmallImage(g, k, x, y, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+            // Qua cau bay ve o lop chung (veToanCuc) — o day chi chan hinh goc.
             return true;
         }
 
@@ -883,11 +872,57 @@ namespace Game5.God
         private static readonly List<DuAm> dsDuAm = new List<DuAm>();
 
         /// <summary>Dư âm tồn tại bao lâu sau khi vụ nổ kết thúc (ms), và mờ dần trong bao lâu cuối.</summary>
-        private const long MS_DU_AM = 500L;
-        private const long MS_DU_AM_MO = 200L;
+        private const long MS_DU_AM = 1000L;
+        private const long MS_DU_AM_MO = 300L;
 
-        /// <summary>Tâm hố nứt nằm ở chừng 65% chiều cao ảnh: đẩy ảnh lên để hố nằm đúng mặt đất.</summary>
-        private const int LECH_DAT = 18;
+        /// <summary>Tâm ảnh đặt dưới mặt đất chừng này điểm (âm = thấp xuống) để hố nứt nằm sát đất.</summary>
+        private const int LECH_DAT = -12;
+
+        /// <summary>
+        /// Quả cầu đang bay và khung chạm địch của MỌI nhân vật — gọi trong
+        /// GameScr.paint sau khi vẽ nhân vật.
+        /// </summary>
+        /// <remarks>
+        /// Trước vẽ bên trong hàm vẽ của người ném. Game bỏ qua hàm đó khi người
+        /// ném ra ngoài màn hình hay đang ở trạng thái đặc biệt, nên lúc có lúc
+        /// không thấy quả cầu bay đi và vụ nổ. Vẽ ở đây thì luôn hiện.
+        /// </remarks>
+        public static void veToanCuc(mGraphics g)
+        {
+            veMotNguoi(g, Char.myCharz());
+            for (int i = 0; i < GameScr.vCharInMap.size(); i++)
+            {
+                Char c = GameScr.vCharInMap.elementAt(i) as Char;
+                if (c != null && c != Char.myCharz())
+                {
+                    veMotNguoi(g, c);
+                }
+            }
+        }
+
+        private static void veMotNguoi(mGraphics g, Char c)
+        {
+            if (c == null)
+            {
+                return;
+            }
+            long bayGio = mSystem.currentTimeMillis();
+            // Qua cau dang bay: lap khung nem / cham (9 <-> 10).
+            if (conHieuLuc(c) && c.dart != null && c.dart.isActive)
+            {
+                int k = c.tpBay[(int) ((bayGio / MS_BAY) % System.Math.Min(2, c.tpBay.Length))];
+                SmallImage.drawSmallImage(g, k, c.dart.x, c.dart.y, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+            }
+            // Khung cham dich: giu mot lat tai cho qua cau trung, rung du chan.
+            long daQua = bayGio - c.tpTrungLuc;
+            if (c.tpTrung >= 0 && daQua < MS_TRUNG)
+            {
+                int bien = (int) (4 * (MS_TRUNG - daQua) / MS_TRUNG);
+                int lech = (GameCanvas.gameTick % 2 == 0) ? bien : -bien;
+                SmallImage.drawSmallImage(g, c.tpTrung, c.tpTrungX + lech, c.tpTrungY + lech / 2, 0,
+                        mGraphics.VCENTER | mGraphics.HCENTER);
+            }
+        }
 
         /// <summary>Gọi trong GameScr.paint ngay sau lớp bản đồ, trước nhân vật / quái.</summary>
         public static void veDuAm(mGraphics g)

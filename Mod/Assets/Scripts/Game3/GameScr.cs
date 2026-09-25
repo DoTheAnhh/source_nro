@@ -5498,6 +5498,8 @@ namespace Game3
     				char4.paintMount2(g);
     			}
     		}
+    		// Trang phuc ky nang: qua cau bay + vu no cua moi nguoi, ve o lop chung.
+    		God.TrangPhucUI.veToanCuc(g);
     		for (int i = 0; i < vItemMap.size(); i++)
     		{
     			((ItemMap)vItemMap.elementAt(i)).paint(g);
