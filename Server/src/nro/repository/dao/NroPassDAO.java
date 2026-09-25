@@ -342,6 +342,7 @@ public class NroPassDAO {
             datPhieuV1();
             datThucAnV1();
             haTiemNangV1();
+            datPhieuCaoCapV1();
         } catch (Exception ex) {
             daTaoBang = false;
             Logger.logException(NroPassDAO.class, ex, "Không tạo được bảng NRO Pass");
@@ -459,6 +460,31 @@ public class NroPassDAO {
      * Hạ tiềm năng cộng thêm của hàng Cao cấp 150% → 50% — một lần. Chỉ sửa
      * khi còn đúng số cũ 150: quản trị đã tự đổi trên panel thì để nguyên.
      */
+    /**
+     * Phiếu quay rương cao cấp vào pass — một lần, ít và ở cấp cao: hàng Cao cấp
+     * cấp 44 và 49, hàng Miễn phí cấp 49, mỗi ô 1 phiếu (thay ô thỏi vàng). Chỉ
+     * sửa ô còn đúng là thỏi vàng — quản trị đã đổi trên panel thì để nguyên.
+     * Chưa có phiếu (máy chưa dựng) thì không ghi cờ, lần sau làm lại.
+     */
+    private static void datPhieuCaoCapV1() throws Exception {
+        if (!chu("phieu_cao_cap_v1").isEmpty()) {
+            return;
+        }
+        int phieu = MoRuongDAO.idPhieuCaoCap();
+        if (phieu <= 0) {
+            return;
+        }
+        int[][] o = {{44, HANG_CAO_CAP}, {49, HANG_CAO_CAP}, {49, HANG_MIEN_PHI}};
+        for (int[] c : o) {
+            ConnectDB.executeUpdate("UPDATE nro_pass_qua SET item_id = ?, so_luong = 1"
+                    + " WHERE cap = ? AND hang = ? AND item_id = 457", phieu, c[0], c[1]);
+        }
+        ConnectDB.executeUpdate("INSERT IGNORE INTO nro_pass_cau_hinh (khoa, gia_tri, mo_ta) VALUES (?, '1', ?)",
+                "phieu_cao_cap_v1", "Đã đưa phiếu quay rương cao cấp vào pass (chạy một lần)");
+        lucDocQua = 0;
+        lucDocCauHinh = 0;
+    }
+
     private static void haTiemNangV1() throws Exception {
         if (!chu("tiem_nang_50_v1").isEmpty()) {
             return;
