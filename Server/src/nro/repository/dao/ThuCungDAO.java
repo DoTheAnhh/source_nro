@@ -1455,16 +1455,18 @@ public final class ThuCungDAO {
     //  Thức ăn thú cưng (năm bậc)
     // =====================================================================
     /**
-     * Năm món thức ăn: tên, icon, kinh nghiệm cho thú, mô tả. Bậc càng cao ăn
-     * một lần được càng nhiều — món cuối xấp xỉ một cấp ở gần trần (cấp 49→50
-     * cần 4.900).
+     * Năm món thức ăn: tên, icon, kinh nghiệm cho thú, mô tả.
+     *
+     * <p>Mức vừa, cùng thang với đậu thần cũ (10–120): món cuối 600 là chừng
+     * một cấp ở cấp 6, còn ở gần trần (cấp 49→50 cần 4.900) phải ăn cả chục —
+     * lên cấp thú là chuyện cả mùa chứ không phải vài bữa.</p>
      */
     private static final Object[][] THUC_AN = {
-        {"Pate thú cưng", 25254, 200, "Thức ăn thú cưng — +200 kinh nghiệm"},
-        {"Túi bánh thưởng", 25255, 500, "Thức ăn thú cưng — +500 kinh nghiệm"},
-        {"Giỏ cá và bánh", 25256, 1200, "Thức ăn thú cưng — +1.200 kinh nghiệm"},
-        {"Bát hạt gà hầm", 25257, 2500, "Thức ăn thú cưng — +2.500 kinh nghiệm"},
-        {"Đĩa tiệc dinh dưỡng", 25258, 5000, "Thức ăn thú cưng — +5.000 kinh nghiệm"},
+        {"Pate thú cưng", 25254, 30, "Thức ăn thú cưng — +30 kinh nghiệm"},
+        {"Túi bánh thưởng", 25255, 80, "Thức ăn thú cưng — +80 kinh nghiệm"},
+        {"Giỏ cá và bánh", 25256, 150, "Thức ăn thú cưng — +150 kinh nghiệm"},
+        {"Bát hạt gà hầm", 25257, 300, "Thức ăn thú cưng — +300 kinh nghiệm"},
+        {"Đĩa tiệc dinh dưỡng", 25258, 600, "Thức ăn thú cưng — +600 kinh nghiệm"},
     };
 
     /** Id vật phẩm thức ăn bậc {@code bac} (1..5) trên máy này, hoặc -1. */
@@ -1497,9 +1499,21 @@ public final class ThuCungDAO {
                 }
                 ConnectDB.executeUpdate("INSERT IGNORE INTO thu_cung_do_an (item_id, exp, bat) VALUES (?, ?, 1)",
                         id, THUC_AN[i][2]);
+                // Ha exp ve muc vua cho may da tao voi so cu (200..5000) — mot lan.
+                if (soCauHinh("thuc_an_exp_v2", 0) == 0) {
+                    ConnectDB.executeUpdate("UPDATE thu_cung_do_an SET exp = ? WHERE item_id = ?", THUC_AN[i][2], id);
+                    ConnectDB.executeUpdate("UPDATE item_template SET description = ? WHERE id = ?", THUC_AN[i][3], id);
+                    nro.entity.template.ItemTemplate t = nro.service.item.ItemService.gI().getTemplate(id);
+                    if (t != null) {
+                        t.description = (String) THUC_AN[i][3];
+                    }
+                }
             } catch (Exception ex) {
                 Logger.logException(ThuCungDAO.class, ex, "Không dựng được thức ăn " + THUC_AN[i][0]);
             }
+        }
+        if (soCauHinh("thuc_an_exp_v2", 0) == 0 && idThucAn(5) > 0) {
+            datCauHinh("thuc_an_exp_v2", "1");
         }
         try {
             if (soCauHinh("tat_dau_than_v1", 0) == 0 && idThucAn(1) > 0) {
