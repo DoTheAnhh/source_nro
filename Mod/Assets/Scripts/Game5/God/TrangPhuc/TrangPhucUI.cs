@@ -130,6 +130,8 @@ namespace Game5.God
                     {
                         c.tpNap = nap.Length > 0 ? nap : null;
                         c.tpBay = bay.Length > 0 ? bay : null;
+                        taiTruoc(nap);
+                        taiTruoc(bay);
                         c.tpLuc = mSystem.currentTimeMillis();
                         c.tpXong = false;
                         c.tpSkill = skillTpl;
@@ -203,6 +205,17 @@ namespace Game5.God
                 lucChonO = mSystem.currentTimeMillis();
             }
             coDuLieu = true;
+            // Tai truoc moi khung cua moi skin (anh chi tai khi lan dau can ve; hieu
+            // ung ngan nhu kunai 0,23 giay la het truoc khi anh kip tai — khong thay gi).
+            foreach (Chieu ch in dsChieu)
+            {
+                foreach (Mau mm in ch.ds)
+                {
+                    taiTruoc(mm.nap);
+                    taiTruoc(mm.bay);
+                }
+            }
+            taiTruoc(ICON_DA);
             // Nho skin dang bat cua chinh minh ngay khi co danh sach.
             Char toi = Char.myCharz();
             if (toi != null)
@@ -218,6 +231,22 @@ namespace Game5.God
                     {
                         toi.tpCoSkin &= ~(1 << ch.tpl);
                     }
+                }
+            }
+        }
+
+        /// <summary>Xin tải trước các ảnh chưa có (bỏ qua -1 và ảnh đã tải).</summary>
+        public static void taiTruoc(short[] ids)
+        {
+            if (ids == null || SmallImage.imgNew == null)
+            {
+                return;
+            }
+            foreach (short id in ids)
+            {
+                if (id >= 0 && id < SmallImage.imgNew.Length && SmallImage.imgNew[id] == null)
+                {
+                    SmallImage.createImage(id);
                 }
             }
         }
@@ -1527,7 +1556,7 @@ namespace Game5.God
         private static readonly List<KunaiBay> dsKunai = new List<KunaiBay>();
 
         /// <summary>Kunai bay từ chỗ đi tới chỗ đến bao lâu (ms) — nhanh như dịch chuyển.</summary>
-        private const long MS_KUNAI = 160L;
+        private const long MS_KUNAI = 230L;
 
         /// <summary>Mỗi khung sét của kunai / mỗi khung chớp (ms).</summary>
         private const long MS_SET_KUNAI = 70L;
