@@ -421,7 +421,7 @@ public class UseItem {
                         UseCard(pl, item);
                         break;
                     case 6:
-                        this.eatPea(pl);
+                        this.eatPea(pl, item);
                         break;
 
                     case 77:
@@ -2010,52 +2010,105 @@ public class UseItem {
     }
 
     public void eatPea(Player player) {
+        eatPea(player, null);
+    }
+
+    /** Id đậu thần cấp 1..11 theo thứ tự cấp. */
+    private static final int[] ID_DAU = {13, 60, 61, 62, 63, 64, 65, 352, 523, 595, 1796};
+
+    /** Đậu Zeno: hồi đầy. */
+    private static final int ID_DAU_ZENO = 1746;
+
+    private static int capDau(int templateId) {
+        for (int i = 0; i < ID_DAU.length; i++) {
+            if (ID_DAU[i] == templateId) {
+                return i + 1;
+            }
+        }
+        return templateId == ID_DAU_ZENO ? ID_DAU.length : 1;
+    }
+
+    /**
+     * Lượng HP / KI một hạt hồi: đọc dòng hồi phục trên hạt (2 = nghìn, 48 =
+     * số thẳng) như cây thần đậu gắn. Hạt không mang dòng ấy — quà tặng,
+     * giftcode, rương… tạo bằng {@code createNewItem} trơn — thì tính theo cấp
+     * đúng bảng của cây đậu. Bản cũ trả 0 cho những hạt này: ăn mà không hồi gì.
+     */
+    private static long luongHoiDau(Item pea, int cap) {
+        for (ItemOption io : pea.itemOptions) {
+            if (io.optionTemplate.id == 2) {
+                return io.param * 1000L;
+            }
+            if (io.optionTemplate.id == 48) {
+                return io.param;
+            }
+        }
+        int[] bang = nro.entity.npc.special.MagicTree.PEA_PARAM;
+        if (cap > bang.length) {
+            return bang[bang.length - 1] * 2000L;
+        }
+        int i = Math.max(1, cap) - 1;
+        return i <= 1 ? bang[i] : bang[i] * 1000L;
+    }
+
+    /**
+     * Ăn đậu: đúng hạt vừa bấm; gọi từ chỗ khác (đệ tử xin, nút tự ăn) thì lấy
+     * hạt đầu tiên trong túi. Hồi HP, KI, thể lực cho người chơi, và cho đệ tử
+     * đứng cùng khu.
+     *
+     * <p>Bản cũ lấy cấp đậu bằng cách cắt tên từ ký tự thứ 13 — gặp "Đậu Zeno"
+     * là văng lỗi, cả lần ăn mất trắng; và không hồi thể lực người chơi.</p>
+     */
+    public void eatPea(Player player, Item chon) {
         if (!Util.canDoWithTime(player.lastTimeEatPea, 10_000)) {
             Service.getInstance().sendThongBao(player, "Vui lòng đợi " + TimeUtil.getTimeLeft(player.lastTimeEatPea, 10) + " nữa!");
             return;
         }
-        player.lastTimeEatPea = System.currentTimeMillis();
         Item pea = null;
-        for (Item item : player.inventory.itemsBag) {
-            if (item.isNotNullItem() && item.template.type == 6) {
-                pea = item;
-                break;
+        if (chon != null && chon.isNotNullItem() && chon.template.type == 6) {
+            pea = chon;
+        } else {
+            for (Item item : player.inventory.itemsBag) {
+                if (item.isNotNullItem() && item.template.type == 6) {
+                    pea = item;
+                    break;
+                }
             }
         }
-        if (pea != null) {
-            long hpKiHoiPhuc = 0;
-            int lvPea = Integer.parseInt(pea.template.name.substring(13));
-            for (ItemOption io : pea.itemOptions) {
-                if (io.optionTemplate.id == 2) {
-                    hpKiHoiPhuc = io.param * 1000;
-                    break;
-                }
-                if (io.optionTemplate.id == 48) {
-                    hpKiHoiPhuc = io.param;
-                    break;
-                }
-            }
-            player.nPoint.setHp(Util.CrisGH(player.nPoint.hp + hpKiHoiPhuc));
-            player.nPoint.setMp(Util.CrisGH(player.nPoint.mp + hpKiHoiPhuc));
-            PlayerService.gI().sendInfoHpMp(player);
-            Service.gI().sendInfoPlayerEatPea(player);
-            if (player.Detu != null && player.zone.equals(player.Detu.zone) && !player.Detu.isDie()) {
-                int statima = 100 * lvPea;
-                player.Detu.nPoint.stamina += statima;
-                if (player.Detu.nPoint.stamina > player.Detu.nPoint.maxStamina) {
-                    player.Detu.nPoint.stamina = player.Detu.nPoint.maxStamina;
-                }
-                player.Detu.nPoint.setHp(Util.CrisGH(player.Detu.nPoint.hp + hpKiHoiPhuc));
-                player.Detu.nPoint.setMp(Util.CrisGH(player.Detu.nPoint.mp + hpKiHoiPhuc));
-                Service.gI().sendInfoPlayerEatPea(player.Detu);
-                Service.gI().chatJustForMe(player, player.Detu, "Cám ơn sư phụ");
-            }
+        if (pea == null) {
+            return;
+        }
+        player.lastTimeEatPea = System.currentTimeMillis();
+        int lvPea = capDau(pea.template.id);
+        boolean zeno = pea.template.id == ID_DAU_ZENO;
+        long hoi = luongHoiDau(pea, lvPea);
 
-            InventoryService.gI().subQuantityItemsBag(player, pea, 1);
-            InventoryService.gI().sendItemBag(player);
-            nro.service.badges.BadgesTaskService.tangTheoLoai(player,
-                    nro.entity.badges.BadgesTaskTemplate.AN_DAU, -1, 1);
+        long hoiNguoi = zeno ? Math.max(player.nPoint.hpMax, player.nPoint.mpMax) : hoi;
+        player.nPoint.setHp(Util.CrisGH(Math.min(player.nPoint.hpMax, player.nPoint.hp + hoiNguoi)));
+        player.nPoint.setMp(Util.CrisGH(Math.min(player.nPoint.mpMax, player.nPoint.mp + hoiNguoi)));
+        int theLuc = zeno ? player.nPoint.maxStamina : 100 * lvPea;
+        player.nPoint.stamina = Math.min(player.nPoint.maxStamina, player.nPoint.stamina + theLuc);
+        PlayerService.gI().sendInfoHpMp(player);
+        PlayerService.gI().sendCurrentStamina(player);
+        Service.gI().sendInfoPlayerEatPea(player);
+        if (player.Detu != null && player.zone != null && player.zone.equals(player.Detu.zone)
+                && !player.Detu.isDie()) {
+            int statima = zeno ? player.Detu.nPoint.maxStamina : 100 * lvPea;
+            player.Detu.nPoint.stamina += statima;
+            if (player.Detu.nPoint.stamina > player.Detu.nPoint.maxStamina) {
+                player.Detu.nPoint.stamina = player.Detu.nPoint.maxStamina;
+            }
+            long hoiDe = zeno ? Math.max(player.Detu.nPoint.hpMax, player.Detu.nPoint.mpMax) : hoi;
+            player.Detu.nPoint.setHp(Util.CrisGH(Math.min(player.Detu.nPoint.hpMax, player.Detu.nPoint.hp + hoiDe)));
+            player.Detu.nPoint.setMp(Util.CrisGH(Math.min(player.Detu.nPoint.mpMax, player.Detu.nPoint.mp + hoiDe)));
+            Service.gI().sendInfoPlayerEatPea(player.Detu);
+            Service.gI().chatJustForMe(player, player.Detu, "Cám ơn sư phụ");
         }
+
+        InventoryService.gI().subQuantityItemsBag(player, pea, 1);
+        InventoryService.gI().sendItemBag(player);
+        nro.service.badges.BadgesTaskService.tangTheoLoai(player,
+                nro.entity.badges.BadgesTaskTemplate.AN_DAU, -1, 1);
     }
 
     public void eatPeaBot(Player player, int HpMp) {

@@ -384,6 +384,7 @@ public class MoRuongDAO {
             doiTenTrungCapV1();
             batGopChong();
             doiQuaV3();
+            giamGiaX10V1();
         } catch (Exception ex) {
             Logger.logException(MoRuongDAO.class, ex, "Không dựng được phiếu quay rương");
         }
@@ -434,6 +435,26 @@ public class MoRuongDAO {
             nro.ui.LamMoi.bao(nro.ui.LamMoi.VAT_PHAM);
             Logger.success("Rương / hộp / phiếu: bật xếp chồng (" + ids.size() + " món)\n");
         }
+    }
+
+    /**
+     * Mở x10 bằng phiếu chỉ tốn 9 phiếu (giảm 10%) — một lần. Chỉ sửa rương
+     * còn đúng giá cũ 10: quản trị đã tự đặt giá khác trên panel thì để nguyên.
+     */
+    private static void giamGiaX10V1() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT gia_tri FROM mo_ruong_cau_hinh WHERE khoa = 'gia_x10_9_v1'");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            dong(rs);
+        }
+        ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET gia_x10 = 9 WHERE item_phieu > 0 AND gia_x10 = 10");
+        ConnectDB.executeUpdate("INSERT IGNORE INTO mo_ruong_cau_hinh (khoa, gia_tri) VALUES ('gia_x10_9_v1', '1')");
+        lucDoc = 0;
+        Logger.success("Mở rương: x10 giờ tốn 9 phiếu\n");
     }
 
     /** Độ hiếm Thần thoại (đỏ) — trên Huyền thoại. */
@@ -667,9 +688,9 @@ public class MoRuongDAO {
         if (thuong <= 0 || suKien <= 0) {
             return;
         }
-        ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET item_phieu = ?, gia_x1 = 1, gia_x10 = 10,"
+        ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET item_phieu = ?, gia_x1 = 1, gia_x10 = 9,"
                 + " ten_diem = 'Phiếu quay rương thường' WHERE ten = 'Rương Thường'", thuong);
-        ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET item_phieu = ?, gia_x1 = 1, gia_x10 = 10,"
+        ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET item_phieu = ?, gia_x1 = 1, gia_x10 = 9,"
                 + " ten_diem = 'Phiếu quay rương trung cấp' WHERE ten IN ('Rương Sự Kiện', 'Rương Trung Cấp')", suKien);
         ConnectDB.executeUpdate("INSERT IGNORE INTO mo_ruong_cau_hinh (khoa, gia_tri) VALUES ('phieu_v1', '1')");
         lucDoc = 0;
