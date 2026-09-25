@@ -939,6 +939,9 @@ namespace Game2
 
     	public long tpLuc;
 
+    	/// <summary>Lần tụ hiện tại đã nổ xong (quả cầu đã chạm / đã ném bù) — hết hiệu lực.</summary>
+    	public bool tpXong;
+
     	/// <summary>Khung chạm địch đang hiện (-1 = không) và chỗ, lúc bắt đầu.</summary>
     	public int tpTrung = -1;
 
@@ -5368,6 +5371,9 @@ namespace Game2
     
     	public void stopUseChargeSkill()
     	{
+    		// Trang phuc: tu xong ma game khong tao qua cau bay (mat muc tieu dung
+    		// luc nem) thi nem bu mot qua cau cua trang phuc — luon co vu no, du am.
+    		God.TrangPhucUI.nemNeuChuaNem(this);
     		isFlyAndCharge = false;
     		isStandAndCharge = false;
     		isUseSkillAfterCharge = false;

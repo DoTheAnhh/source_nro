@@ -34,9 +34,13 @@ namespace Game1
     
     	public SkillPaint skillPaint;
     
+    	/// <summary>Lần tụ trang phục mà quả cầu này thuộc về (Char.tpLuc lúc tạo).</summary>
+    	public long tpLucGan;
+
     	public PlayerDart(Char charBelong, int dartType, SkillPaint sp, int x, int y)
     	{
     		skillPaint = sp;
+    		tpLucGan = charBelong.tpLuc;
     		this.charBelong = charBelong;
     		info = GameScr.darts[dartType];
     		va = info.va;
@@ -148,8 +152,10 @@ namespace Game1
     
     	private void endMe()
     	{
-    		// Trang phuc ky nang: ghi khung cham dich truoc khi stopUseChargeSkill xoa khung.
-    		God.TrangPhucUI.ghiChamDich(charBelong, x, y);
+    		// Trang phuc ky nang: chup trang thai TRUOC (ghiChamDich danh dau lan tu xong),
+    		// roi ghi khung cham dich.
+    		bool coTrangPhuc = God.TrangPhucUI.conHieuLuc(charBelong);
+    		God.TrangPhucUI.ghiChamDich(charBelong, x, y, tpLucGan);
     		if (!charBelong.isUseSkillAfterCharge && x >= GameScr.cmx && x <= GameScr.cmx + GameCanvas.w)
     		{
     			SoundMn.gI().explode_1();
@@ -172,7 +178,7 @@ namespace Game1
     				num = ((!charBelong.me) ? charBelong.skillTemplateId : Char.myCharz().myskill.skillId);
     				if (num < 77 || num > 83)
     				{
-    					if (!God.TrangPhucUI.conHieuLuc(charBelong))
+    					if (!coTrangPhuc)
     					{
     					    GameScr.gI().activeSuperPower(x, y);
     					}
@@ -180,7 +186,7 @@ namespace Game1
     			}
     			else
     			{
-    				if (!God.TrangPhucUI.conHieuLuc(charBelong))
+    				if (!coTrangPhuc)
     				{
     				    GameScr.gI().activeSuperPower(x, y);
     				}
@@ -191,11 +197,9 @@ namespace Game1
     		charBelong.skillPaint = null;
     		charBelong.skillPaintRandomPaint = null;
     		charBelong.stopUseChargeSkill();
-    		// Trang phuc: cau da cham dich, bo khung. Lan tu sau may chu gui lai.
-    		// (Khong bo trong stopUseChargeSkill: setSkillPaint co luc goi ham do
-    		// ngay luc nem, bo som la hinh goc hien lai.)
-    		charBelong.tpNap = null;
-    		charBelong.tpBay = null;
+    		// Khung trang phuc KHONG xoa o day: ghiChamDich da danh dau lan tu nay
+    		// xong (tpXong), chi dung cho dung lan tu cua qua cau nay — qua cau cu
+    		// cham dich luc dang tu lan moi khong xoa nham khung lan moi.
     	}
     
     	public void paint(mGraphics g)

@@ -131,6 +131,7 @@ namespace Game1.God
                         c.tpNap = nap.Length > 0 ? nap : null;
                         c.tpBay = bay.Length > 0 ? bay : null;
                         c.tpLuc = mSystem.currentTimeMillis();
+                        c.tpXong = false;
                     }
                 }
             }
@@ -859,7 +860,7 @@ namespace Game1.God
         /// <summary>Nhân vật đang mang khung trang phục chiêu còn hạn.</summary>
         public static bool conHieuLuc(Char c)
         {
-            return c != null && c.tpBay != null && c.tpBay.Length > 0
+            return c != null && c.tpBay != null && c.tpBay.Length > 0 && !c.tpXong
                     && mSystem.currentTimeMillis() - c.tpLuc < HAN_HIEU_LUC;
         }
 
@@ -882,7 +883,7 @@ namespace Game1.God
         private const long MS_DU_AM_MO = 2500L;
 
         /// <summary>Tâm ảnh đặt dưới mặt đất chừng này điểm (âm = thấp xuống) để hố nứt nằm sát đất.</summary>
-        private const int LECH_DAT = -17;
+        private const int LECH_DAT = -14;
 
         /// <summary>
         /// Quả cầu đang bay và khung chạm địch của MỌI nhân vật — gọi trong
@@ -895,6 +896,7 @@ namespace Game1.God
         /// </remarks>
         public static void veToanCuc(mGraphics g)
         {
+            veCauBu(g);
             veMotNguoi(g, Char.myCharz());
             for (int i = 0; i < GameScr.vCharInMap.size(); i++)
             {
@@ -902,6 +904,99 @@ namespace Game1.God
                 if (c != null && c != Char.myCharz())
                 {
                     veMotNguoi(g, c);
+                }
+            }
+        }
+
+        // ------------------------------------------------------------------
+        //  Ném bù: tụ xong mà game không tạo quả cầu bay
+        // ------------------------------------------------------------------
+        public class CauBu
+        {
+            public Char chu;
+            public short[] bay;
+            public int x0, y0, x1, y1, dat;
+            public long batDau;
+        }
+
+        private static readonly List<CauBu> dsCauBu = new List<CauBu>();
+
+        /// <summary>Quả cầu ném bù bay bao lâu (ms).</summary>
+        private const long MS_CAU_BU = 380L;
+
+        /// <summary>
+        /// Gọi đầu <c>Char.stopUseChargeSkill</c>. Game chỉ tạo quả cầu bay khi
+        /// đúng lúc ném còn mục tiêu; mất mục tiêu (vừa chết, đổi, auto chưa kịp
+        /// chọn) là không có quả cầu, không vụ nổ, không dư âm — dù máy chủ vẫn
+        /// tính sát thương. Khi đó ném bù quả cầu của trang phục tới mục tiêu cuối
+        /// (hay trước mặt), để lần nào cũng có đủ.
+        /// </summary>
+        public static void nemNeuChuaNem(Char c)
+        {
+            if (!conHieuLuc(c) || c.dart != null || c.tpBay.Length < 2)
+            {
+                return;
+            }
+            if (!c.isUseSkillAfterCharge && !c.isFlyAndCharge)
+            {
+                return;
+            }
+            // Bi ngat ngay dau luc tu (chua kip thanh qua cau) thi thoi.
+            if (mSystem.currentTimeMillis() - c.tpLuc < 1200L)
+            {
+                return;
+            }
+            IMapObject mt = c.mobFocus != null ? (IMapObject) c.mobFocus : c.charFocus;
+            CauBu b = new CauBu();
+            b.chu = c;
+            b.bay = c.tpBay;
+            b.x0 = c.cx;
+            b.y0 = c.cy - c.ch - CAO_TAM;
+            if (mt != null)
+            {
+                b.x1 = mt.getX();
+                b.dat = mt.getY();
+                b.y1 = mt.getY() - mt.getH() / 2;
+            }
+            else
+            {
+                b.x1 = c.cx + (c.cdir >= 0 ? 1 : -1) * 120;
+                b.dat = c.cy;
+                b.y1 = c.cy - 15;
+            }
+            b.batDau = mSystem.currentTimeMillis();
+            c.tpXong = true;
+            lock (dsCauBu)
+            {
+                dsCauBu.Add(b);
+            }
+        }
+
+        /// <summary>Vẽ các quả cầu ném bù; tới nơi thì nổ + dư âm.</summary>
+        private static void veCauBu(mGraphics g)
+        {
+            if (dsCauBu.Count == 0)
+            {
+                return;
+            }
+            long bayGio = mSystem.currentTimeMillis();
+            lock (dsCauBu)
+            {
+                for (int i = dsCauBu.Count - 1; i >= 0; i--)
+                {
+                    CauBu b = dsCauBu[i];
+                    float p = (float) (bayGio - b.batDau) / MS_CAU_BU;
+                    if (p >= 1f)
+                    {
+                        dsCauBu.RemoveAt(i);
+                        ghiNo(b.chu, b.bay, b.x1, b.y1, b.dat);
+                        continue;
+                    }
+                    float e = p * p;
+                    int x = b.x0 + (int) ((b.x1 - b.x0) * e);
+                    int y = b.y0 + (int) ((b.y1 - b.y0) * e);
+                    int k = b.bay[(int) ((bayGio / MS_BAY) % System.Math.Min(2, b.bay.Length))];
+                    SmallImage.veIconXoay(g, k, x, y, TO_CAU, 0f);
                 }
             }
         }
@@ -959,24 +1054,35 @@ namespace Game1.God
         }
 
         /// <summary>Quả cầu vừa trúng: ghi khung chạm (khung thứ hai của dãy bay) để vẽ một lát.</summary>
-        public static void ghiChamDich(Char chu, int x, int y)
+        public static void ghiChamDich(Char chu, int x, int y, long lucGan)
         {
-            if (!conHieuLuc(chu) || chu.tpBay.Length < 2)
+            if (!conHieuLuc(chu) || chu.tpBay.Length < 2 || lucGan != chu.tpLuc)
             {
                 return;
             }
-            chu.tpTrung = chu.tpBay[1];
+            IMapObject mt = chu.mobFocus != null ? (IMapObject) chu.mobFocus : chu.charFocus;
+            ghiNo(chu, chu.tpBay, x, y, mt != null ? mt.getY() : y + 25);
+        }
+
+        /// <summary>Ghi vụ nổ (khung chạm) và dư âm tại (x, y), mặt đất ở <paramref name="dat"/>; kết thúc lần tụ.</summary>
+        private static void ghiNo(Char chu, short[] bay, int x, int y, int dat)
+        {
+            chu.tpXong = true;
+            if (bay.Length < 2)
+            {
+                return;
+            }
+            chu.tpTrung = bay[1];
             chu.tpTrungX = x;
             chu.tpTrungY = y;
             chu.tpTrungLuc = mSystem.currentTimeMillis();
-            if (chu.tpBay.Length >= 3)
+            if (bay.Length >= 3)
             {
                 // Du am: dat o CHAN muc tieu (mat dat), hien sau khi vu no ket thuc.
-                IMapObject mt = chu.mobFocus != null ? (IMapObject) chu.mobFocus : chu.charFocus;
                 DuAm d = new DuAm();
-                d.icon = chu.tpBay[2];
+                d.icon = bay[2];
                 d.x = x;
-                d.dat = mt != null ? mt.getY() : y + 25;
+                d.dat = dat;
                 d.batDau = chu.tpTrungLuc + MS_TRUNG;
                 lock (dsDuAm)
                 {
