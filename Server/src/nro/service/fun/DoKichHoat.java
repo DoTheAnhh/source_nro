@@ -36,6 +36,13 @@ public final class DoKichHoat {
     /** Số ô: áo, quần, găng, giày, rađa. */
     public static final int SO_O = 5;
 
+    /** Bộ vải thô theo hệ: áo, quần, găng, giày, rađa. */
+    private static final short[][] VAI_THO = {
+        {0, 6, 21, 27, 12},
+        {1, 7, 22, 28, 12},
+        {2, 8, 23, 29, 12}
+    };
+
     /**
      * Mẫu đồ ô {@code o} (0 áo … 3 giày, 4 rađa), bậc {@code bac} của hệ
      * {@code gender}; -1 nếu không có.
@@ -43,6 +50,9 @@ public final class DoKichHoat {
     public static short mauDo(int gender, int o, int bac) {
         if (gender < 0 || gender >= Manager.doSKHVip.length) {
             gender = 0;
+        }
+        if (bac == TiLeKichHoatDAO.BAC_VAI_THO) {
+            return o >= 0 && o < SO_O ? VAI_THO[gender][o] : -1;
         }
         short[][] cuaHe = Manager.doSKHVip[gender];
         short[] day = o < cuaHe.length ? cuaHe[o] : Manager.radaSKHVip;
@@ -87,8 +97,8 @@ public final class DoKichHoat {
                 + " — báo quản trị.");
     }
 
-    /** Bậc đồ theo panel. */
+    /** Bậc đồ theo panel — bảy bậc cộng vải thô. */
     public static int bocBac() {
-        return TiLeKichHoatDAO.bocBac();
+        return TiLeKichHoatDAO.bocBacHop();
     }
 }

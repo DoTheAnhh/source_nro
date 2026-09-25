@@ -91,7 +91,7 @@ public class NroPassDAO {
         {K_PT_HP, "10", "Cao cấp: % HP cộng thêm suốt mùa"},
         {K_PT_KI, "10", "Cao cấp: % KI cộng thêm suốt mùa"},
         {K_PT_SD, "10", "Cao cấp: % sức đánh cộng thêm suốt mùa"},
-        {K_PT_TIEM_NANG, "150", "Cao cấp: % tiềm năng cộng thêm suốt mùa"},
+        {K_PT_TIEM_NANG, "50", "Cao cấp: % tiềm năng cộng thêm suốt mùa"},
     };
 
     private static final Map<String, String> CAU_HINH = new HashMap<>();
@@ -341,6 +341,7 @@ public class NroPassDAO {
             doiQuaV2();
             datPhieuV1();
             datThucAnV1();
+            haTiemNangV1();
         } catch (Exception ex) {
             daTaoBang = false;
             Logger.logException(NroPassDAO.class, ex, "Không tạo được bảng NRO Pass");
@@ -454,6 +455,21 @@ public class NroPassDAO {
      * cấp một bậc), hàng Cao cấp cao hơn hàng Miễn phí một bậc. Id thức ăn tra
      * theo máy; chưa có thì không ghi cờ, lần sau làm lại.
      */
+    /**
+     * Hạ tiềm năng cộng thêm của hàng Cao cấp 150% → 50% — một lần. Chỉ sửa
+     * khi còn đúng số cũ 150: quản trị đã tự đổi trên panel thì để nguyên.
+     */
+    private static void haTiemNangV1() throws Exception {
+        if (!chu("tiem_nang_50_v1").isEmpty()) {
+            return;
+        }
+        ConnectDB.executeUpdate("UPDATE nro_pass_cau_hinh SET gia_tri = '50' WHERE khoa = ? AND gia_tri = '150'",
+                K_PT_TIEM_NANG);
+        ConnectDB.executeUpdate("INSERT IGNORE INTO nro_pass_cau_hinh (khoa, gia_tri, mo_ta) VALUES (?, '1', ?)",
+                "tiem_nang_50_v1", "Đã hạ tiềm năng Cao cấp 150% → 50% (chạy một lần)");
+        lucDocCauHinh = 0;
+    }
+
     private static void datThucAnV1() throws Exception {
         if (!chu("thuc_an_v1").isEmpty()) {
             return;

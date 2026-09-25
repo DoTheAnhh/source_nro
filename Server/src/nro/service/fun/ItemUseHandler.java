@@ -478,7 +478,7 @@ public class ItemUseHandler {
         CombineService.gI().sendEffectOpenItem(pl, item.template.iconID, nhan.get(0).template.iconID);
         InventoryService.gI().subQuantityItemsBag(pl, item, 1);
         InventoryService.gI().sendItemBag(pl);
-        String ten = "Bạn nhận được Set Kích Hoạt" + (sao > 0 ? " " + sao + " Sao" : "") + " (bậc " + (bac + 1) + ")!";
+        String ten = "Bạn nhận được Set Kích Hoạt" + (sao > 0 ? " " + sao + " Sao" : "") + " (" + (bac == nro.repository.dao.TiLeKichHoatDAO.BAC_VAI_THO ? "vải thô" : "bậc " + (bac + 1)) + ")!";
         new Thread(() -> {
             Functions.sleep(2000);
             Service.gI().sendThongBao(pl, ten);

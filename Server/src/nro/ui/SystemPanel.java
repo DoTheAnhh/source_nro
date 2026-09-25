@@ -8736,7 +8736,7 @@ public class SystemPanel extends JPanel {
 
         khTable.setRowHeight(26);
         khTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        int[] w = {80, 120, 90, 60, 480};
+        int[] w = {80, 120, 150, 60, 420};
         for (int i = 0; i < khTable.getColumnCount() && i < w.length; i++) {
             khTable.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
         }
@@ -8766,7 +8766,12 @@ public class SystemPanel extends JPanel {
                 + "hành tinh của người chơi (set để trống hành tinh thì hành tinh nào "
                 + "cũng ra được). Thêm một set ở tab đó là nó vào ngay vòng bốc — "
                 + "trước bản này thì không, vì đường nâng cấp giữ một bản danh sách "
-                + "riêng gõ cứng trong mã."), BorderLayout.NORTH);
+                + "riêng gõ cứng trong mã."
+                + "<br><br>"
+                + "<b>Hộp quà set kích hoạt, Capsule 1 món kích hoạt, Capsule tự chọn</b> "
+                + "cũng bốc bậc theo bảng này, <b>cộng thêm dòng Vải thô</b> (nâng Huỷ Diệt "
+                + "không bao giờ ra vải thô). Cột \"Cơ hội\" ghi cả hai: phần trăm khi "
+                + "nâng Huỷ Diệt · phần trăm khi mở hộp / capsule."), BorderLayout.NORTH);
         root.add(ServerGuiUtils.cuon(khTable), BorderLayout.CENTER);
         root.add(nut, BorderLayout.SOUTH);
         napBangKichHoat();
@@ -8780,10 +8785,14 @@ public class SystemPanel extends JPanel {
         khModel.setRowCount(0);
         for (nro.repository.dao.TiLeKichHoatDAO.Bac b
                 : nro.repository.dao.TiLeKichHoatDAO.napLai()) {
-            khModel.addRow(new Object[]{"Bậc " + (b.bac + 1),
+            boolean vaiTho = b.bac == nro.repository.dao.TiLeKichHoatDAO.BAC_VAI_THO;
+            String hop = String.format("%.2f", nro.repository.dao.TiLeKichHoatDAO
+                    .phanTramHop(b.bac)).replace('.', ',') + "%";
+            String huyDiet = String.format("%.2f", nro.repository.dao.TiLeKichHoatDAO
+                    .phanTram(b.bac)).replace('.', ',') + "%";
+            khModel.addRow(new Object[]{vaiTho ? "Vải thô" : "Bậc " + (b.bac + 1),
                 String.valueOf(b.trongSo),
-                String.format("%.2f", nro.repository.dao.TiLeKichHoatDAO
-                        .phanTram(b.bac)).replace('.', ',') + "%",
+                vaiTho ? "hộp " + hop : huyDiet + " · hộp " + hop,
                 b.bat, b.ghiChu});
         }
     }

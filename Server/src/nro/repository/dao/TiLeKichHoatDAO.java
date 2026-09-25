@@ -34,6 +34,18 @@ public final class TiLeKichHoatDAO {
     /** Số bậc, khớp độ dài các dãy trong {@code Manager.doSKHVip}. */
     public static final int SO_BAC = 7;
 
+    /**
+     * Bậc <b>vải thô</b> — chỉ hộp / capsule set kích hoạt bốc tới (nâng Huỷ
+     * Diệt thì không). Nằm cùng bảng, dòng thứ tám.
+     */
+    public static final int BAC_VAI_THO = 7;
+
+    /** Số bậc hộp / capsule bốc: bảy bậc trên cộng vải thô. */
+    public static final int SO_BAC_HOP = 8;
+
+    /** Trọng số dựng sẵn của vải thô. */
+    private static final long MAC_DINH_VAI_THO = 5000;
+
     public static final class Bac {
 
         public int bac;
@@ -74,6 +86,10 @@ public final class TiLeKichHoatDAO {
                 ConnectDB.executeUpdate(LUOC_DO);
                 daTao = true;
                 gieoNeuTrong();
+                // Dong vai tho them sau: may da co bang van thieu dong nay.
+                ConnectDB.executeUpdate("INSERT IGNORE INTO ti_le_kich_hoat (bac, trong_so, bat, ghi_chu)"
+                        + " VALUES (?,?,1,?)", BAC_VAI_THO, MAC_DINH_VAI_THO,
+                        "Vải thô — chỉ hộp / capsule set kích hoạt");
             } catch (Exception ex) {
                 Logger.logException(TiLeKichHoatDAO.class, ex,
                         "Không tạo được bảng ti_le_kich_hoat");
@@ -165,12 +181,49 @@ public final class TiLeKichHoatDAO {
         return 0;
     }
 
-    /** Phần trăm thật của một bậc, để hiện trên panel. */
+    /**
+     * Bốc bậc cho hộp / capsule set kích hoạt: bảy bậc cộng vải thô
+     * ({ #BAC_VAI_THO}). Mọi bậc đều tắt thì trả vải thô.
+     */
+    public static int bocBacHop() {
+        List<Bac> ds = danhSach();
+        long tong = 0;
+        for (Bac b : ds) {
+            if (b.bat && b.trongSo > 0 && b.bac >= 0 && b.bac < SO_BAC_HOP) {
+                tong += b.trongSo;
+            }
+        }
+        if (tong <= 0) {
+            return BAC_VAI_THO;
+        }
+        long diem = (long) (Util.nextDouble(tong));
+        for (Bac b : ds) {
+            if (!b.bat || b.trongSo <= 0 || b.bac < 0 || b.bac >= SO_BAC_HOP) {
+                continue;
+            }
+            diem -= b.trongSo;
+            if (diem < 0) {
+                return b.bac;
+            }
+        }
+        return BAC_VAI_THO;
+    }
+
+    /** Phần trăm một bậc khi mở hộp / capsule (tính cả vải thô). */
+    public static double phanTramHop(int bac) {
+        return phanTramTrong(bac, SO_BAC_HOP);
+    }
+
+    /** Phần trăm thật của một bậc khi nâng Huỷ Diệt (không tính vải thô). */
     public static double phanTram(int bac) {
+        return phanTramTrong(bac, SO_BAC);
+    }
+
+    private static double phanTramTrong(int bac, int soBac) {
         long tong = 0;
         long cua = 0;
         for (Bac b : danhSach()) {
-            if (b.bat && b.trongSo > 0) {
+            if (b.bat && b.trongSo > 0 && b.bac >= 0 && b.bac < soBac) {
                 tong += b.trongSo;
                 if (b.bac == bac) {
                     cua = b.trongSo;
@@ -185,8 +238,8 @@ public final class TiLeKichHoatDAO {
         if (b == null) {
             return "Không có dữ liệu.";
         }
-        if (b.bac < 0 || b.bac >= SO_BAC) {
-            return "Bậc phải trong khoảng 0 tới " + (SO_BAC - 1) + ".";
+        if (b.bac < 0 || b.bac >= SO_BAC_HOP) {
+            return "Bậc phải trong khoảng 0 tới " + (SO_BAC_HOP - 1) + ".";
         }
         if (b.trongSo < 0) {
             return "Trọng số không được âm.";
