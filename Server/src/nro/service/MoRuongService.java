@@ -97,9 +97,9 @@ public class MoRuongService {
                 return;
             }
             int gia = soLan == 10 ? r.giaX10 : r.giaX1;
-            if (gia > 0 && !MoRuongDAO.truDiem(pl.id, id, gia)) {
+            if (gia > 0 && !tra(pl, r, gia)) {
                 Service.gI().sendThongBao(pl, "Không đủ " + r.tenDiemDeDoc() + " — cần "
-                        + gia + ", đang có " + MoRuongDAO.diem(pl.id, id) + ".");
+                        + gia + ", đang có " + conLai(pl, r) + ".");
                 return;
             }
             List<MoRuongDAO.Qua> trung = new ArrayList<>();
@@ -118,6 +118,55 @@ public class MoRuongService {
             guiKetQua(pl, id, trung);
             thongBaoHiem(pl, r, trung);
         }
+    }
+
+    /**
+     * Trả giá mở rương: rương có phiếu thì trừ phiếu trong hành trang, không
+     * thì trừ điểm (cách cũ).
+     *
+     * @return {@code true} nếu đã trả đủ
+     */
+    private boolean tra(Player pl, MoRuongDAO.Ruong r, int gia) {
+        if (r.itemPhieu <= 0) {
+            return MoRuongDAO.truDiem(pl.id, r.id, gia);
+        }
+        if (demPhieu(pl, r.itemPhieu) < gia) {
+            return false;
+        }
+        // Phieu co the nam o nhieu o (moi o toi da mot chong): tru lan luot.
+        int con = gia;
+        for (Item it : new ArrayList<>(pl.inventory.itemsBag)) {
+            if (con <= 0) {
+                break;
+            }
+            if (it != null && it.isNotNullItem() && it.template.id == r.itemPhieu) {
+                int lay = Math.min(con, it.quantity);
+                InventoryService.gI().subQuantityItemsBag(pl, it, lay);
+                con -= lay;
+            }
+        }
+        InventoryService.gI().sendItemBag(pl);
+        return con <= 0;
+    }
+
+    /** Số phiếu {@code itemId} đang có trong hành trang (cộng mọi ô). */
+    public static long demPhieu(Player pl, int itemId) {
+        long n = 0;
+        try {
+            for (Item it : pl.inventory.itemsBag) {
+                if (it != null && it.isNotNullItem() && it.template.id == itemId) {
+                    n += it.quantity;
+                }
+            }
+        } catch (Exception ex) {
+            // Hanh trang chua nap xong: coi nhu khong co.
+        }
+        return n;
+    }
+
+    /** Số phiếu (hoặc điểm, với rương cũ) còn lại để mở rương này. */
+    private long conLai(Player pl, MoRuongDAO.Ruong r) {
+        return r.itemPhieu > 0 ? demPhieu(pl, r.itemPhieu) : MoRuongDAO.diem(pl.id, r.id);
     }
 
     /** Bốc một món theo trọng số. */
@@ -213,7 +262,7 @@ public class MoRuongService {
                 msg.writer().writeShort(r.iconHinh > 0 ? r.iconHinh : PhucLoiService.gI().iconCua(r.itemHinh));
                 msg.writer().writeInt(r.giaX1);
                 msg.writer().writeInt(r.giaX10);
-                msg.writer().writeLong(diem.getOrDefault(r.id, 0L));
+                msg.writer().writeLong(r.itemPhieu > 0 ? demPhieu(pl, r.itemPhieu) : diem.getOrDefault(r.id, 0L));
                 msg.writer().writeUTF(r.tenDiemDeDoc());
                 List<MoRuongDAO.Qua> qua = MoRuongDAO.dsQua(r.id);
                 long tong = 0;
@@ -247,7 +296,8 @@ public class MoRuongService {
             msg = new Message(GOI);
             msg.writer().writeByte(GUI_KET_QUA);
             msg.writer().writeShort(id);
-            msg.writer().writeLong(MoRuongDAO.diem(pl.id, id));
+            MoRuongDAO.Ruong rKq = MoRuongDAO.ruong(id);
+            msg.writer().writeLong(rKq == null ? 0 : conLai(pl, rKq));
             msg.writer().writeByte(trung.size());
             for (MoRuongDAO.Qua q : trung) {
                 msg.writer().writeShort(PhucLoiService.gI().iconCua(q.itemId));

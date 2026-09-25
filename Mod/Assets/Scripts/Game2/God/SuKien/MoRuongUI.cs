@@ -462,7 +462,7 @@ namespace Game2.God
                             mGraphics.VCENTER | mGraphics.HCENTER);
                 }
                 mFont.tahoma_7b_dark.drawString(g, catBot(ds[i].ten, 14), bx + 36, yy + 5, mFont.LEFT);
-                mFont.tahoma_7.drawString(g, ds[i].diem + " điểm", bx + 36, yy + 18, mFont.LEFT);
+                mFont.tahoma_7.drawString(g, "Có: " + ds[i].diem, bx + 36, yy + 18, mFont.LEFT);
             }
             // Diem rieng, day cot.
             int yD = by + bh - 26;

@@ -2090,6 +2090,12 @@ namespace Game1
     		guiPhucLoi(1, mocId);
     	}
 
+    	/// <summary>Nhan nhanh rieng cac o NRO Pass (nut trong man pass).</summary>
+    	public void phucLoiNhanNhanhPass()
+    	{
+    		guiPhucLoiByte(6, -1, -1);
+    	}
+
     	/// <summary>Mo khoa hang Cao cap NRO Pass mua nay.</summary>
     	public void phucLoiMoCaoCap()
     	{

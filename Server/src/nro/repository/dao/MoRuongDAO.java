@@ -50,6 +50,11 @@ public class MoRuongDAO {
         public int iconHinh;
         /** Tên loại điểm của rương này; rỗng thì "Điểm " + tên rương. */
         public String tenDiem = "";
+        /**
+         * Vật phẩm phiếu dùng để mở rương này; giá x1/x10 tính bằng số phiếu.
+         * 0 là rương còn mở bằng điểm (cách cũ).
+         */
+        public int itemPhieu;
 
         public String tenDiemDeDoc() {
             return (tenDiem == null || tenDiem.trim().isEmpty()) ? ("Điểm " + ten) : tenDiem.trim();
@@ -135,6 +140,7 @@ public class MoRuongDAO {
             suaQuaTheoIdThat();
             datTrungCellVang();
             doiQuaV2();
+            datPhieuV1();
         } catch (Exception ex) {
             daTaoBang = false;
             Logger.logException(MoRuongDAO.class, ex, "Không tạo được bảng mở rương");
@@ -152,6 +158,11 @@ public class MoRuongDAO {
         }
         try {
             ConnectDB.executeUpdate("ALTER TABLE mo_ruong_loai ADD COLUMN ten_diem VARCHAR(60) NOT NULL DEFAULT ''");
+        } catch (Exception daCo) {
+            // Cot da co: khong phai loi.
+        }
+        try {
+            ConnectDB.executeUpdate("ALTER TABLE mo_ruong_loai ADD COLUMN item_phieu INT(11) NOT NULL DEFAULT 0");
         } catch (Exception daCo) {
             // Cot da co: khong phai loi.
         }
@@ -335,6 +346,165 @@ public class MoRuongDAO {
         Logger.success("Mở rương: đổi đậu thần / rương bạc / rương vàng / rương ngọc rồng sang món mới\n");
     }
 
+    // =====================================================================
+    //  Phiếu quay rương
+    // =====================================================================
+    /** Khoá cấu hình giữ id vật phẩm của hai phiếu (id mỗi máy một khác). */
+    public static final String K_PHIEU_THUONG = "phieu_thuong";
+    public static final String K_PHIEU_SU_KIEN = "phieu_su_kien";
+
+    /** Ảnh hai phiếu — tệp nằm sẵn trong data/icon. */
+    private static final int ICON_PHIEU_THUONG = 25252;
+    private static final int ICON_PHIEU_SU_KIEN = 25253;
+
+    /** Kiểu vật phẩm linh tinh, cùng kiểu với rương thú cưng. */
+    private static final int KIEU_PHIEU = 27;
+
+    /**
+     * Dựng hai vật phẩm phiếu nếu chưa có, rồi gắn chúng vào hai rương.
+     *
+     * <p>Gọi <b>sau</b> {@code loadDatabase} (trong {@code Manager}): phải có
+     * danh sách vật phẩm trong bộ nhớ mới nối dòng mới vào đúng chỗ. Id cấp
+     * bằng {@code MAX(id) + 1} rồi nhớ vào {@code mo_ruong_cau_hinh} — giống rương
+     * thú cưng và trứng đệ tử.</p>
+     */
+    public static synchronized void damBaoVatPhamPhieu() {
+        try {
+            ConnectDB.executeUpdate("CREATE TABLE IF NOT EXISTS mo_ruong_cau_hinh ("
+                    + " khoa VARCHAR(40) NOT NULL,"
+                    + " gia_tri VARCHAR(80) NOT NULL DEFAULT '',"
+                    + " PRIMARY KEY (khoa)"
+                    + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            damBaoMotPhieu(K_PHIEU_THUONG, "Phiếu quay rương thường", ICON_PHIEU_THUONG,
+                    "Dùng để mở Rương Thường ở tab Mở rương (màn Sự kiện)");
+            damBaoMotPhieu(K_PHIEU_SU_KIEN, "Phiếu quay rương sự kiện", ICON_PHIEU_SU_KIEN,
+                    "Dùng để mở Rương Sự Kiện ở tab Mở rương (màn Sự kiện)");
+            damBaoBang();
+            datPhieuV1();
+        } catch (Exception ex) {
+            Logger.logException(MoRuongDAO.class, ex, "Không dựng được phiếu quay rương");
+        }
+    }
+
+    /** Id vật phẩm phiếu quay rương thường trên máy này, hoặc -1. */
+    public static int idPhieuThuong() {
+        return soCauHinhRuong(K_PHIEU_THUONG);
+    }
+
+    /** Id vật phẩm phiếu quay rương sự kiện trên máy này, hoặc -1. */
+    public static int idPhieuSuKien() {
+        return soCauHinhRuong(K_PHIEU_SU_KIEN);
+    }
+
+    private static int soCauHinhRuong(String khoa) {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT gia_tri FROM mo_ruong_cau_hinh WHERE khoa = ?", khoa);
+            return rs.next() ? Integer.parseInt(rs.getString("gia_tri").trim()) : -1;
+        } catch (Exception ex) {
+            return -1;
+        } finally {
+            dong(rs);
+        }
+    }
+
+    private static void damBaoMotPhieu(String khoa, String ten, int icon, String moTa) throws Exception {
+        int id = soCauHinhRuong(khoa);
+        if (id > 0 && coVatPham(id)) {
+            return;
+        }
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT MAX(id) AS m FROM item_template");
+            if (!rs.next()) {
+                return;
+            }
+            id = rs.getInt("m") + 1;
+        } finally {
+            dong(rs);
+        }
+        if (id <= 0 || id > 32766) {
+            return;
+        }
+        // is_up_to_up = 1: phieu xep chong trong mot o, dung_duoc = 0: khong bam
+        // "dung" duoc, chi dung khi mo ruong.
+        ConnectDB.executeUpdate("INSERT INTO item_template"
+                + " (id, TYPE, gender, NAME, description, level, icon_id, part,"
+                + " is_up_to_up, power_require, gold, gold_sell, gem, gem_sell,"
+                + " ruby, ruby_sell, head, body, leg, TypeEvent, isGender,"
+                + " dung_duoc, aura_id)"
+                + " VALUES (?, ?, 3, ?, ?, 1, ?, -1, 1, 0, 0, 0, 0, 0, 0, 0,"
+                + " -1, -1, -1, 0, -1, 0, -1)",
+                id, KIEU_PHIEU, ten, moTa, icon);
+        ConnectDB.executeUpdate("INSERT INTO mo_ruong_cau_hinh (khoa, gia_tri) VALUES (?, ?)"
+                + " ON DUPLICATE KEY UPDATE gia_tri = VALUES(gia_tri)", khoa, String.valueOf(id));
+        try {
+            List<nro.entity.template.ItemTemplate> ds = nro.server.Manager.ITEM_TEMPLATES;
+            if (ds != null && ds.size() == id) {
+                nro.entity.template.ItemTemplate t = new nro.entity.template.ItemTemplate();
+                t.id = (short) id;
+                t.type = (byte) KIEU_PHIEU;
+                t.gender = 3;
+                t.name = ten;
+                t.description = moTa;
+                t.level = 1;
+                t.iconID = (short) icon;
+                t.part = -1;
+                t.isUpToUp = true;
+                t.strRequire = 0;
+                t.head = -1;
+                t.body = -1;
+                t.leg = -1;
+                t.isGender = -1;
+                t.dungDuoc = false;
+                ds.add(t);
+                nro.ui.LamMoi.bao(nro.ui.LamMoi.VAT_PHAM);
+            }
+        } catch (Exception boQua) {
+            // Khong noi duoc vao bo nho thi dong trong CSDL van con: lan khoi dong sau se nap.
+        }
+        Logger.success("Mở rương: thêm " + ten + " (id " + id + ", icon " + icon + ")\n");
+    }
+
+    private static boolean coVatPham(int id) throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM item_template WHERE id = ?", id);
+            return rs.next();
+        } finally {
+            dong(rs);
+        }
+    }
+
+    /**
+     * Gắn phiếu vào hai rương — một lần: Rương Thường mở bằng phiếu thường,
+     * Rương Sự Kiện bằng phiếu sự kiện; giá x1 = 1 phiếu, x10 = 10 phiếu.
+     * Chưa có phiếu (chưa dựng xong) thì không ghi cờ, lần sau làm lại.
+     */
+    private static void datPhieuV1() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT gia_tri FROM mo_ruong_cau_hinh WHERE khoa = 'phieu_v1'");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            dong(rs);
+        }
+        int thuong = idPhieuThuong();
+        int suKien = idPhieuSuKien();
+        if (thuong <= 0 || suKien <= 0) {
+            return;
+        }
+        ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET item_phieu = ?, gia_x1 = 1, gia_x10 = 10,"
+                + " ten_diem = 'Phiếu quay rương thường' WHERE ten = 'Rương Thường'", thuong);
+        ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET item_phieu = ?, gia_x1 = 1, gia_x10 = 10,"
+                + " ten_diem = 'Phiếu quay rương sự kiện' WHERE ten = 'Rương Sự Kiện'", suKien);
+        ConnectDB.executeUpdate("INSERT IGNORE INTO mo_ruong_cau_hinh (khoa, gia_tri) VALUES ('phieu_v1', '1')");
+        lucDoc = 0;
+        Logger.success("Mở rương: hai rương giờ mở bằng phiếu (x1 = 1 phiếu, x10 = 10 phiếu)\n");
+    }
+
     /** Thang trọng số khi đặt tỉ lệ cố định: 100.000 phần = 100%. */
     private static final int THANG_TI_LE = 100_000;
 
@@ -458,9 +628,11 @@ public class MoRuongDAO {
                 try {
                     x.iconHinh = rs.getInt("icon_hinh");
                     x.tenDiem = khongNull(rs.getString("ten_diem"));
+                    x.itemPhieu = rs.getInt("item_phieu");
                 } catch (Exception chuaCoCot) {
                     x.iconHinh = 0;
                     x.tenDiem = "";
+                    x.itemPhieu = 0;
                 }
                 x.giaX1 = rs.getInt("gia_x1");
                 x.giaX10 = rs.getInt("gia_x10");
@@ -555,9 +727,9 @@ public class MoRuongDAO {
     public static void luuRuong(Ruong r) {
         try {
             ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET ten = ?, mo_ta = ?, item_hinh = ?, icon_hinh = ?,"
-                    + " ten_diem = ?, gia_x1 = ?, gia_x10 = ?, thu_tu = ?, bat = ? WHERE id = ?", r.ten, r.moTa,
-                    r.itemHinh, r.iconHinh, r.tenDiem == null ? "" : r.tenDiem.trim(), r.giaX1, r.giaX10,
-                    r.thuTu, r.bat ? 1 : 0, r.id);
+                    + " ten_diem = ?, gia_x1 = ?, gia_x10 = ?, thu_tu = ?, bat = ?, item_phieu = ? WHERE id = ?", r.ten,
+                    r.moTa, r.itemHinh, r.iconHinh, r.tenDiem == null ? "" : r.tenDiem.trim(), r.giaX1, r.giaX10,
+                    r.thuTu, r.bat ? 1 : 0, r.itemPhieu, r.id);
             lucDoc = 0;
         } catch (Exception ex) {
             Logger.logException(MoRuongDAO.class, ex, "Không lưu được rương");

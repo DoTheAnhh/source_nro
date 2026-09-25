@@ -616,13 +616,13 @@ namespace Game2.God
             return caoThan - CAO_DAU_PASS - CAO_DAY_PASS - 12;
         }
 
-        /// <summary>Cạnh một ô quà: lấp đầy chiều cao có được, không quá 62.</summary>
+        /// <summary>Cạnh một ô quà: lấp đầy chiều cao có được, không quá 80.</summary>
         private int coOPass()
         {
-            int s = (caoVungPass() - CAO_DAI_CAP - 8) / 2;
-            if (s > 62)
+            int s = (caoVungPass() - CAO_DAI_CAP - 16) / 2;
+            if (s > 80)
             {
-                s = 62;
+                s = 80;
             }
             return s < 30 ? 30 : s;
         }
@@ -668,15 +668,23 @@ namespace Game2.God
             return vungPass()[0] + 4 + i * buocPass() - (int) cuonPass;
         }
 
-        /// <summary>Nút lật tròn, nổi trên mép dải, ngang dải tiến độ.</summary>
+        /// <summary>Nút lật tròn, nằm trong mép dải, ngang dải tiến độ.</summary>
         private int[] oNutLatPass(bool trai)
         {
             int[] v = vungPass();
-            int h = 36;
-            int w = 20;
-            int y = yHangMienPhi() + coOPass() + CAO_DAI_CAP / 2 - h / 2;
-            int x = trai ? (v[0] - 2) : (v[0] + v[2] - w + 2);
-            return new int[] { x, y, w, h };
+            int o = 26;
+            int y = yHangMienPhi() + coOPass() + CAO_DAI_CAP / 2 - o / 2;
+            int x = trai ? (v[0] + 4) : (v[0] + v[2] - o - 4);
+            return new int[] { x, y, o, o };
+        }
+
+        /// <summary>Nút "Nhận nhanh" trong dải đầu màn pass.</summary>
+        private int[] oNutNhanNhanhPass()
+        {
+            int w = mFont.tahoma_7b_white.getWidth("NHẬN NHANH") + 22;
+            int xTen = xPhai + 10 + Math.max(mFont.tahoma_7b_white.getWidth("NRO PASS"),
+                    mFont.tahoma_7b_white.getWidth(pass == null ? string.Empty : pass.moTaMua)) + 14;
+            return new int[] { xTen, yThan + (CAO_DAU_PASS - 22) / 2, w, 22 };
         }
 
         private int rongTheCaoCap()
@@ -747,6 +755,17 @@ namespace Game2.God
 
             mFont.tahoma_7b_white.drawString(g, "NRO PASS", xPhai + 10, y + 7, mFont.LEFT, mFont.tahoma_7b_dark);
             mFont.tahoma_7b_white.drawString(g, p.moTaMua, xPhai + 10, y + 22, mFont.LEFT, mFont.tahoma_7b_dark);
+            if (soOPassNhanDuoc() > 0)
+            {
+                int[] nn = oNutNhanNhanhPass();
+                float thoN = 0.5f + 0.5f * (float) System.Math.Sin(mSystem.currentTimeMillis() / 300.0);
+                g.setColor(0xB8FFB0, 0.3f + 0.3f * thoN);
+                g.fillRect(nn[0] - 2, nn[1] - 2, nn[2] + 4, nn[3] + 4, 10);
+                veKhungDoc(g, nn[0], nn[1], nn[2], nn[3], 8, rgb(0x17, 0x62, 0x2A),
+                        rgb(0x6C, 0xDC, 0x7C), rgb(0x2E, 0x9A, 0x44), 1);
+                mFont.tahoma_7b_white.drawString(g, "NHẬN NHANH", nn[0] + nn[2] / 2, nn[1] + 5, mFont.CENTER,
+                        mFont.tahoma_7b_dark);
+            }
 
             // Huy hieu cap: vang, so cap o giua.
             int capDat = p.capDat();
@@ -813,6 +832,10 @@ namespace Game2.God
             int yC = yHangCaoCap();
             int yDai = yM + s + CAO_DAI_CAP / 2;
             int capDat = p.capDat();
+            // Nen dai: mot the kem gom hai hang, hang Cao cap co anh vang rieng.
+            veKhungDoc(g, v[0], v[1], v[2], v[3], 10, rgb(0xD8, 0xB8, 0x8C),
+                    rgb(0xFB, 0xF1, 0xE0), rgb(0xF4, 0xE2, 0xC4), 1);
+            g.veDaiDoc(v[0] + 2, yC - 4, v[2] - 4, s + 8, 8, rgb(0xFF, 0xEB, 0xB8), rgb(0xF6, 0xCE, 0x78));
             g.setClip(v[0], v[1], v[2], v[3]);
 
             // Duong tien do: nen kem, phan da di to cam — ke ca phan le dang di do
@@ -851,9 +874,9 @@ namespace Game2.God
             // Mep mo dan: dai nhu chay vao trong nen, khong bi cat ngang.
             for (int k = 0; k < 6; k++)
             {
-                g.setColor(MAU_NEN, 0.55f - k * 0.09f);
-                g.fillRect(v[0] + k * 3, v[1], 3, v[3]);
-                g.fillRect(v[0] + v[2] - 3 - k * 3, v[1], 3, v[3]);
+                g.setColor(rgb(0xF8, 0xEA, 0xD2), 0.6f - k * 0.1f);
+                g.fillRect(v[0] + 1 + k * 3, v[1] + 1, 3, v[3] - 2);
+                g.fillRect(v[0] + v[2] - 4 - k * 3, v[1] + 1, 3, v[3] - 2);
             }
             g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
         }
@@ -1047,7 +1070,7 @@ namespace Game2.God
             g.fillRect(tamX - 1, tamY + 1, 2, 4);
         }
 
-        /// <summary>Nút lật tròn nổi trên mép dải: nền nâu mờ, mũi tên trắng.</summary>
+        /// <summary>Nút lật tròn: nền trắng có bóng, viền cam, mũi tên cam.</summary>
         private void veNutLatP(mGraphics g, bool trai, bool con)
         {
             if (!con)
@@ -1055,18 +1078,19 @@ namespace Game2.God
                 return;
             }
             int[] n = oNutLatPass(trai);
-            g.setColor(rgb(0x5A, 0x2A, 0x08), 0.72f);
-            g.fillRect(n[0], n[1], n[2], n[3], 10);
-            g.setColor(0xFFFFFF, 0.35f);
-            g.fillRect(n[0] + 2, n[1] + 2, n[2] - 4, n[3] / 3, 8);
-            int xT = n[0] + n[2] / 2;
-            int yT = n[1] + n[3] / 2;
-            g.setColor(0xFFFFFF, 1f);
+            int o = n[2];
+            g.setColor(0x000000, 0.22f);
+            g.fillRect(n[0] + 1, n[1] + 2, o, o, o / 2);
+            veKhungDoc(g, n[0], n[1], o, o, o / 2, rgb(0xD9, 0x6A, 0x12),
+                    rgb(0xFF, 0xFF, 0xFF), rgb(0xF4, 0xE8, 0xD6), 2);
+            int xT = n[0] + o / 2;
+            int yT = n[1] + o / 2;
+            g.setColor(rgb(0xD9, 0x5A, 0x12), 1f);
             for (int i = 0; i < 5; i++)
             {
                 int cao = (5 - i) * 2 - 1;
                 int xv = trai ? (xT - 3 + i) : (xT + 2 - i);
-                g.fillRect(xv, yT - cao / 2, 1, cao);
+                g.fillRect(xv, yT - cao / 2, 2, cao);
             }
         }
 
@@ -1144,6 +1168,16 @@ namespace Game2.God
                 return;
             }
             tongKeoP = 0;
+            if (soOPassNhanDuoc() > 0)
+            {
+                int[] nn = oNutNhanNhanhPass();
+                if (cham(nn[0], nn[1], nn[2], nn[3]))
+                {
+                    Service.gI().phucLoiNhanNhanhPass();
+                    lucBamNhanNhanh = mSystem.currentTimeMillis();
+                    return;
+                }
+            }
             for (int b = 0; b < 2; b++)
             {
                 int[] n = oNutLatPass(b == 0);

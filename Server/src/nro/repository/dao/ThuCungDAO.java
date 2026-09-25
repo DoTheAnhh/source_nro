@@ -1451,6 +1451,119 @@ public final class ThuCungDAO {
         return soCauHinh(K_RUONG_CAO_CAP, -1);
     }
 
+    // =====================================================================
+    //  Thức ăn thú cưng (năm bậc)
+    // =====================================================================
+    /**
+     * Năm món thức ăn: tên, icon, kinh nghiệm cho thú, mô tả. Bậc càng cao ăn
+     * một lần được càng nhiều — món cuối xấp xỉ một cấp ở gần trần (cấp 49→50
+     * cần 4.900).
+     */
+    private static final Object[][] THUC_AN = {
+        {"Pate thú cưng", 25254, 200, "Thức ăn thú cưng — +200 kinh nghiệm"},
+        {"Túi bánh thưởng", 25255, 500, "Thức ăn thú cưng — +500 kinh nghiệm"},
+        {"Giỏ cá và bánh", 25256, 1200, "Thức ăn thú cưng — +1.200 kinh nghiệm"},
+        {"Bát hạt gà hầm", 25257, 2500, "Thức ăn thú cưng — +2.500 kinh nghiệm"},
+        {"Đĩa tiệc dinh dưỡng", 25258, 5000, "Thức ăn thú cưng — +5.000 kinh nghiệm"},
+    };
+
+    /** Id vật phẩm thức ăn bậc {@code bac} (1..5) trên máy này, hoặc -1. */
+    public static int idThucAn(int bac) {
+        return soCauHinh("thuc_an_" + bac, -1);
+    }
+
+    /**
+     * Dựng năm vật phẩm thức ăn (xếp chồng được) nếu chưa có, ghi vào bảng đồ
+     * ăn, và tắt đậu thần khỏi bảng đồ ăn — một lần (đậu không còn là thức ăn
+     * thú cưng; dòng vẫn giữ, bật lại trên panel được).
+     *
+     * <p>Gọi <b>sau</b> {@code loadDatabase}. Id cấp bằng {@code MAX(id) + 1}
+     * rồi nhớ vào {@code thu_cung_cau_hinh}: mỗi máy một khác.</p>
+     */
+    public static synchronized void damBaoThucAn() {
+        damBaoBang();
+        for (int i = 0; i < THUC_AN.length; i++) {
+            try {
+                String khoa = "thuc_an_" + (i + 1);
+                int id = soCauHinh(khoa, -1);
+                if (id <= 0 || !coVatPham(id)) {
+                    id = themVatPhamXepChong((String) THUC_AN[i][0], (String) THUC_AN[i][3],
+                            (Integer) THUC_AN[i][1]);
+                    if (id < 0) {
+                        continue;
+                    }
+                    datCauHinh(khoa, String.valueOf(id));
+                    Logger.success("Thú cưng: thêm " + THUC_AN[i][0] + " (id " + id + ")\n");
+                }
+                ConnectDB.executeUpdate("INSERT IGNORE INTO thu_cung_do_an (item_id, exp, bat) VALUES (?, ?, 1)",
+                        id, THUC_AN[i][2]);
+            } catch (Exception ex) {
+                Logger.logException(ThuCungDAO.class, ex, "Không dựng được thức ăn " + THUC_AN[i][0]);
+            }
+        }
+        try {
+            if (soCauHinh("tat_dau_than_v1", 0) == 0 && idThucAn(1) > 0) {
+                ConnectDB.executeUpdate("UPDATE thu_cung_do_an SET bat = 0 WHERE item_id IN"
+                        + " (13, 60, 61, 62, 63, 64, 65, 352, 523, 595, 1746, 1796)");
+                datCauHinh("tat_dau_than_v1", "1");
+            }
+        } catch (Exception ex) {
+            Logger.logException(ThuCungDAO.class, ex, "Không tắt được đậu thần trong bảng đồ ăn");
+        }
+    }
+
+    /** Thêm một vật phẩm linh tinh xếp chồng được (không bấm dùng); trả id mới hoặc -1. */
+    private static int themVatPhamXepChong(String ten, String moTa, int icon) throws Exception {
+        int id;
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT MAX(id) AS m FROM item_template");
+            if (!rs.next()) {
+                return -1;
+            }
+            id = rs.getInt("m") + 1;
+        } finally {
+            dong(rs);
+        }
+        if (id < 0 || id > 32766) {
+            return -1;
+        }
+        ConnectDB.executeUpdate("INSERT INTO item_template"
+                + " (id, TYPE, gender, NAME, description, level, icon_id, part,"
+                + " is_up_to_up, power_require, gold, gold_sell, gem, gem_sell,"
+                + " ruby, ruby_sell, head, body, leg, TypeEvent, isGender,"
+                + " dung_duoc, aura_id)"
+                + " VALUES (?, ?, 3, ?, ?, 1, ?, -1, 1, 0, 0, 0, 0, 0, 0, 0,"
+                + " -1, -1, -1, 0, -1, 0, -1)",
+                id, KIEU_RUONG, ten, moTa, icon);
+        try {
+            List<nro.entity.template.ItemTemplate> ds = nro.server.Manager.ITEM_TEMPLATES;
+            if (ds != null && ds.size() == id) {
+                nro.entity.template.ItemTemplate t = new nro.entity.template.ItemTemplate();
+                t.id = (short) id;
+                t.type = (byte) KIEU_RUONG;
+                t.gender = 3;
+                t.name = ten;
+                t.description = moTa;
+                t.level = 1;
+                t.iconID = (short) icon;
+                t.part = -1;
+                t.isUpToUp = true;
+                t.strRequire = 0;
+                t.head = -1;
+                t.body = -1;
+                t.leg = -1;
+                t.isGender = -1;
+                t.dungDuoc = false;
+                ds.add(t);
+                nro.ui.LamMoi.bao(nro.ui.LamMoi.VAT_PHAM);
+            }
+        } catch (Exception boQua) {
+            // Khong noi duoc vao bo nho thi dong trong CSDL van con: lan khoi dong sau se nap.
+        }
+        return id;
+    }
+
     public static synchronized void damBaoVatPhamRuong() {
         damBaoBang();
         damBaoMotRuong(K_RUONG_CAO_CAP, "Rương Thú Cưng Cao Cấp", ICON_RUONG_CAO_CAP,

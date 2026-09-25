@@ -339,6 +339,8 @@ public class NroPassDAO {
             }
             suaRuongThuCung();
             doiQuaV2();
+            datPhieuV1();
+            datThucAnV1();
         } catch (Exception ex) {
             daTaoBang = false;
             Logger.logException(NroPassDAO.class, ex, "Không tạo được bảng NRO Pass");
@@ -416,6 +418,66 @@ public class NroPassDAO {
                 caoCap, HANG_CAO_CAP, ID_TAM_RT_CAO_CAP);
         ConnectDB.executeUpdate("INSERT IGNORE INTO nro_pass_cau_hinh (khoa, gia_tri, mo_ta) VALUES (?, '1', ?)",
                 "qua_id_that_v1", "Đã đổi quà rương thú cưng sang id thật (chạy một lần)");
+        lucDocQua = 0;
+        lucDocCauHinh = 0;
+    }
+
+    /**
+     * Đưa phiếu quay rương vào pass — một lần: ở các mốc 5, 15, 25, 35, 45,
+     * hàng Miễn phí đổi Viên Capsule kì bí thành 3 Phiếu quay rương thường,
+     * hàng Cao cấp đổi Rương sao pha lê thành 2 Phiếu quay rương sự kiện.
+     * Id phiếu tra theo máy; chưa có phiếu thì không ghi cờ, lần sau làm lại.
+     */
+    private static void datPhieuV1() throws Exception {
+        if (!chu("phieu_v1").isEmpty()) {
+            return;
+        }
+        int thuong = MoRuongDAO.idPhieuThuong();
+        int suKien = MoRuongDAO.idPhieuSuKien();
+        if (thuong <= 0 || suKien <= 0) {
+            return;
+        }
+        ConnectDB.executeUpdate("UPDATE nro_pass_qua SET item_id = ?, so_luong = 3 WHERE hang = ? AND item_id = 380",
+                thuong, HANG_MIEN_PHI);
+        ConnectDB.executeUpdate("UPDATE nro_pass_qua SET item_id = ?, so_luong = 2 WHERE hang = ? AND item_id = 1440",
+                suKien, HANG_CAO_CAP);
+        ConnectDB.executeUpdate("INSERT IGNORE INTO nro_pass_cau_hinh (khoa, gia_tri, mo_ta) VALUES (?, '1', ?)",
+                "phieu_v1", "Đã đưa phiếu quay rương vào quà pass (chạy một lần)");
+        lucDocQua = 0;
+        lucDocCauHinh = 0;
+    }
+
+    /**
+     * Đưa thức ăn thú cưng vào pass — một lần. Thay một phần thỏi vàng:
+     * hàng Miễn phí ở cấp chia 4 dư 3 (3, 7, 11…), hàng Cao cấp ở cấp chia 4 dư
+     * 2 (2, 14, 22…) thành 2 phần thức ăn. Bậc thức ăn lên dần theo cấp (mỗi 12
+     * cấp một bậc), hàng Cao cấp cao hơn hàng Miễn phí một bậc. Id thức ăn tra
+     * theo máy; chưa có thì không ghi cờ, lần sau làm lại.
+     */
+    private static void datThucAnV1() throws Exception {
+        if (!chu("thuc_an_v1").isEmpty()) {
+            return;
+        }
+        int[] an = new int[6];
+        for (int b = 1; b <= 5; b++) {
+            an[b] = ThuCungDAO.idThucAn(b);
+            if (an[b] <= 0) {
+                return;
+            }
+        }
+        for (int cap = 1; cap <= 200; cap++) {
+            if (cap % 4 == 3) {
+                int bac = Math.min(5, 1 + cap / 12);
+                ConnectDB.executeUpdate("UPDATE nro_pass_qua SET item_id = ?, so_luong = 2"
+                        + " WHERE cap = ? AND hang = ? AND item_id = 457", an[bac], cap, HANG_MIEN_PHI);
+            } else if (cap % 4 == 2) {
+                int bac = Math.min(5, 2 + cap / 12);
+                ConnectDB.executeUpdate("UPDATE nro_pass_qua SET item_id = ?, so_luong = 2"
+                        + " WHERE cap = ? AND hang = ? AND item_id = 457", an[bac], cap, HANG_CAO_CAP);
+            }
+        }
+        ConnectDB.executeUpdate("INSERT IGNORE INTO nro_pass_cau_hinh (khoa, gia_tri, mo_ta) VALUES (?, '1', ?)",
+                "thuc_an_v1", "Đã đưa thức ăn thú cưng vào quà pass (chạy một lần)");
         lucDocQua = 0;
         lucDocCauHinh = 0;
     }

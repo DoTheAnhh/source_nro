@@ -219,6 +219,10 @@ public class PhucLoiService {
                 nhanNhanh(pl);
                 return;
             }
+            if (viec == VIEC_NHAN_NHANH_PASS) {
+                nhanNhanhPass(pl);
+                return;
+            }
             int mocId = msg.reader().readInt();
             nhanTheoId(pl, mocId);
         } catch (Exception ex) {
@@ -228,6 +232,30 @@ public class PhucLoiService {
 
     /** Việc 4: nhận nhanh mọi thứ đang nhận được. */
     public static final byte VIEC_NHAN_NHANH = 4;
+
+    /** Việc 6: nhận nhanh riêng các ô NRO Pass (nút trong màn pass). */
+    public static final byte VIEC_NHAN_NHANH_PASS = 6;
+
+    /** Nhận mọi ô NRO Pass đang nhận được, rồi hiện popup tổng quà. */
+    private void nhanNhanhPass(Player pl) {
+        java.util.Map<Integer, Integer> tong = new java.util.LinkedHashMap<>();
+        int[] kq;
+        Service.gI().batGomGoi(pl);
+        try {
+            kq = NroPassService.gI().nhanTatCa(pl, tong);
+        } finally {
+            Service.gI().xaGomGoi(pl);
+        }
+        if (kq[0] == 0 && kq[1] == 0) {
+            Service.gI().sendThongBao(pl, "Không có ô NRO Pass nào đang chờ nhận.");
+        } else if (kq[1] == 0) {
+            Service.gI().sendThongBao(pl, "Đã nhận " + kq[0] + " ô NRO Pass.");
+        } else {
+            Service.gI().sendThongBao(pl, "Đã nhận " + kq[0] + " ô, còn " + kq[1]
+                    + " ô chưa nhận được (hành trang đầy?).");
+        }
+        guiDuLieu(pl, tong);
+    }
 
     /**
      * Nhận nhanh: quà NRO Pass hôm nay và mọi mốc đã đủ, trong một lần bấm.
