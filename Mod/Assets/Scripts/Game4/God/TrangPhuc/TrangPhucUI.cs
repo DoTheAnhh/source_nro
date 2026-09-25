@@ -691,10 +691,12 @@ namespace Game4.God
                 return false;
             }
             int k = khungTheoGio(c.tpNap, c.tpBay, c.tpLuc);
-            veDaBayVao(g, c, c.cx, c.cy - c.ch - 50);
+            float to = coLucTu(c);
+            int tamY = c.cy - c.ch - (int) (12 + 38 * to);
+            veDaBayVao(g, c, c.cx, tamY);
             if (k >= 0)
             {
-                SmallImage.drawSmallImage(g, k, c.cx, c.cy - c.ch - 50, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+                SmallImage.veIconXoay(g, k, c.cx, tamY, to, 0f);
             }
             return true;
         }
@@ -808,6 +810,46 @@ namespace Game4.God
                 float huongBay = (float) (System.Math.Atan2(-System.Math.Sin(a) * 0.8, -System.Math.Cos(a)) * 57.29578);
                 SmallImage.veIconXoay(g, d.icon, x, y, TI_LE_DA, huongBay - MUI_DA[d.loai]);
             }
+        }
+
+        /// <summary>Cỡ nhỏ nhất lúc mới bắt đầu tụ (phần của cỡ đầy đủ).</summary>
+        private const float CO_NHO_NHAT = 0.25f;
+
+        /// <summary>Đạt cỡ đầy đủ trước lúc ném chừng này (ms) rồi giữ nguyên.</summary>
+        private const long GIU_TO_NHAT = 200L;
+
+        /// <summary>
+        /// Cỡ quả cầu lúc đang tụ: lớn dần từ <see cref="CO_NHO_NHAT"/> tới 1, đạt
+        /// cỡ đầy đủ đúng <see cref="GIU_TO_NHAT"/> ms trước lúc ném.
+        /// </summary>
+        /// <remarks>
+        /// Game ném khi: bay lên đủ 20 nhịp (lúc đó đặt <c>last</c>), rồi thêm
+        /// <c>seconds</c> ms. Của mình thì <c>seconds</c> do máy chủ gửi; người khác
+        /// client không biết (để 50000) nên lấy 3 giây.
+        /// </remarks>
+        private static float coLucTu(Char c)
+        {
+            long bayGio = mSystem.currentTimeMillis();
+            long van = (c.seconds > 0 && c.seconds < 50000) ? c.seconds : 3000L;
+            long nem = c.posDisY >= 20 ? c.last + van : bayGio + (20 - c.posDisY) * 33L + van;
+            long toNhat = nem - GIU_TO_NHAT;
+            long tong = toNhat - c.tpLuc;
+            if (tong <= 0)
+            {
+                return 1f;
+            }
+            float p = (float) (bayGio - c.tpLuc) / tong;
+            if (p >= 1f)
+            {
+                return 1f;
+            }
+            if (p < 0f)
+            {
+                p = 0f;
+            }
+            // Nhanh luc dau, cham dan khi gan to nhat.
+            float e = 1f - (1f - p) * (1f - p);
+            return CO_NHO_NHAT + (1f - CO_NHO_NHAT) * e;
         }
 
         /// <summary>Trang phục chiêu còn hiệu lực bao lâu kể từ lúc tụ (ms).</summary>
