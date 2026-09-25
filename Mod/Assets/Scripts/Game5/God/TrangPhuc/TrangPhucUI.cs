@@ -471,7 +471,7 @@ namespace Game5.God
             g.fillRect(k[0] + 8, k[1] + 8, oXem, k[3] - 16, 8);
             if (m != null)
             {
-                int khung = khungXemTruoc(m.nap, m.bay, lucChonO);
+                int khung = khungXemTruoc(tach(m.nap, 0), tach(m.bay, 0), lucChonO);
                 if (khung >= 0)
                 {
                     SmallImage.veIconVuaO(g, khung, tamX, tamY, oXem);
@@ -1092,16 +1092,41 @@ namespace Game5.God
         // ------------------------------------------------------------------
         //  Tự phát nổ (skill 14): gồng quanh thân, nổ, dư âm hố nứt
         // ------------------------------------------------------------------
-        /// <summary>Khung Tự phát nổ căn đáy: tâm ảnh cao hơn chân chừng này điểm.</summary>
-        private const int TU_NO_TAM = 58;
+        /// <summary>
+        /// Tách dãy khung theo dấu -1: <paramref name="phan"/> 0 là phần trước (lớp
+        /// mặt đất), 1 là phần sau (lớp giữa thân). Không có -1 thì phần 1 rỗng.
+        /// </summary>
+        public static short[] tach(short[] a, int phan)
+        {
+            if (a == null)
+            {
+                return new short[0];
+            }
+            int cat = System.Array.IndexOf(a, (short) -1);
+            if (cat < 0)
+            {
+                return phan == 0 ? a : new short[0];
+            }
+            int tu = phan == 0 ? 0 : cat + 1;
+            int den = phan == 0 ? cat : a.Length;
+            short[] ra = new short[den - tu];
+            System.Array.Copy(a, tu, ra, 0, ra.Length);
+            return ra;
+        }
 
-        /// <summary>Mỗi khung nổ (khung bay trừ khung cuối) giữ bao lâu (ms).</summary>
-        private const long MS_NO = 120L;
+        /// <summary>Khung Tự phát nổ căn đáy: tâm ảnh cao hơn chân chừng này điểm.</summary>
+        private const int TU_NO_TAM = 44;
+
+        /// <summary>Nhịp khung: gồng đảo qua lại, nổ mặt đất, đá bung giữa thân (ms).</summary>
+        private const long MS_GONG = 110L;
+        private const long MS_NO = 90L;
+        private const long MS_BUNG = 65L;
 
         public class NoLon
         {
             public short[] khung;
-            public int x, dat;
+            public int x, tamY;
+            public long ms;
             public long batDau;
         }
 
@@ -1113,27 +1138,44 @@ namespace Game5.God
             return (c.seconds > 0 && c.seconds < 50000) ? c.seconds : 3000L;
         }
 
-        /// <summary>Đang gồng: khung gồng rải đều theo thời gian gồng, căn đáy ở chân.</summary>
+        /// <summary>
+        /// Đang gồng. Lớp mặt đất: khói theo tiến độ gồng, đảo qua lại giữa khung
+        /// hiện tại và khung liền trước để lúc nào cũng có chuyển động (hết cảnh
+        /// đứng hình rồi nhảy). Lớp giữa thân: đá dồn về (10–11–12–11 lặp), lớn dần.
+        /// </summary>
         private static void veGongTuNo(mGraphics g, Char c)
         {
-            if (!laTuNo(c) || !c.isStandAndCharge || c.tpNap == null || c.tpNap.Length == 0)
+            if (!laTuNo(c) || !c.isStandAndCharge)
             {
                 return;
             }
             long troi = mSystem.currentTimeMillis() - c.tpLuc;
-            int n = c.tpNap.Length;
-            int i = (int) (troi * n / System.Math.Max(1L, thoiGianGong(c)));
-            if (i >= n)
+            float p = System.Math.Min(1f, (float) troi / System.Math.Max(1L, thoiGianGong(c)));
+            short[] dat = tach(c.tpNap, 0);
+            if (dat.Length > 0)
             {
-                // Qua gio ma chua no (goi cham): giu hai khung cuoi nhap nhay.
-                i = n >= 2 ? n - 2 + (int) ((troi / 110L) % 2) : n - 1;
+                int s = System.Math.Min(dat.Length - 1, (int) (p * dat.Length));
+                int k = ((troi / MS_GONG) % 2 == 0 || s == 0) ? s : s - 1;
+                SmallImage.veIconXoay(g, dat[k], c.cx, c.cy - TU_NO_TAM, 1f, 0f);
             }
-            SmallImage.veIconXoay(g, c.tpNap[i], c.cx, c.cy - TU_NO_TAM, 1f, 0f);
+            short[] giua = tach(c.tpNap, 1);
+            if (giua.Length > 0)
+            {
+                // Vong qua lai 0-1-2-1-0...
+                int chu = System.Math.Max(1, giua.Length * 2 - 2);
+                int j = (int) ((troi / MS_GONG) % chu);
+                if (j >= giua.Length)
+                {
+                    j = chu - j;
+                }
+                SmallImage.veIconXoay(g, giua[j], c.cx, c.cy - c.ch / 2, 0.55f + 0.45f * p, 0f);
+            }
         }
 
         /// <summary>
-        /// Gồng xong (gọi đầu stopUseChargeSkill): phát vụ nổ của trang phục tại
-        /// chỗ đứng, khung cuối thành dư âm dưới đất. Bị ngắt sớm thì thôi.
+        /// Gồng xong (gọi đầu stopUseChargeSkill): nổ tại chỗ đứng. Mặt đất: các
+        /// khung nổ mỗi khung lặp hai lần theo cặp (6,7,6,7,8,9,8,9) cho dày, khung
+        /// cuối thành hố nứt dư âm. Giữa thân: đá bung 1→9 nhanh. Bị ngắt sớm thì thôi.
         /// </summary>
         private static void noTuSat(Char c)
         {
@@ -1146,25 +1188,37 @@ namespace Game5.God
             {
                 return;
             }
-            NoLon no = new NoLon();
-            int soNo = c.tpBay.Length >= 2 ? c.tpBay.Length - 1 : c.tpBay.Length;
-            no.khung = new short[soNo];
-            System.Array.Copy(c.tpBay, no.khung, soNo);
-            no.x = c.cx;
-            no.dat = c.cy;
-            no.batDau = bayGio;
-            lock (dsNo)
+            short[] dat = tach(c.tpBay, 0);
+            int soNo = dat.Length >= 2 ? dat.Length - 1 : dat.Length;
+            List<short> day = new List<short>();
+            for (int i = 0; i < soNo; i += 2)
             {
-                dsNo.Add(no);
+                for (int lap = 0; lap < 2; lap++)
+                {
+                    day.Add(dat[i]);
+                    if (i + 1 < soNo)
+                    {
+                        day.Add(dat[i + 1]);
+                    }
+                }
             }
-            if (c.tpBay.Length >= 2)
+            if (day.Count > 0)
+            {
+                themNo(day.ToArray(), c.cx, c.cy - TU_NO_TAM, MS_NO, bayGio);
+            }
+            short[] bung = tach(c.tpBay, 1);
+            if (bung.Length > 0)
+            {
+                themNo(bung, c.cx, c.cy - c.ch / 2, MS_BUNG, bayGio);
+            }
+            if (dat.Length >= 2)
             {
                 DuAm d = new DuAm();
-                d.icon = c.tpBay[c.tpBay.Length - 1];
+                d.icon = dat[dat.Length - 1];
                 d.x = c.cx;
                 d.dat = c.cy;
                 d.dy = -TU_NO_TAM;
-                d.batDau = bayGio + soNo * MS_NO;
+                d.batDau = bayGio + day.Count * MS_NO;
                 lock (dsDuAm)
                 {
                     dsDuAm.Add(d);
@@ -1172,6 +1226,20 @@ namespace Game5.God
             }
             // Giu tat hieu ung no goc them 1,5 giay (tu the no ve ngay sau day).
             c.tpHetLuc = bayGio + 1500L;
+        }
+
+        private static void themNo(short[] khung, int x, int tamY, long ms, long batDau)
+        {
+            NoLon no = new NoLon();
+            no.khung = khung;
+            no.x = x;
+            no.tamY = tamY;
+            no.ms = ms;
+            no.batDau = batDau;
+            lock (dsNo)
+            {
+                dsNo.Add(no);
+            }
         }
 
         /// <summary>Vẽ các vụ nổ Tự phát nổ đang chạy (lớp trên nhân vật).</summary>
@@ -1187,13 +1255,13 @@ namespace Game5.God
                 for (int i = dsNo.Count - 1; i >= 0; i--)
                 {
                     NoLon no = dsNo[i];
-                    int k = (int) ((bayGio - no.batDau) / MS_NO);
+                    int k = (int) ((bayGio - no.batDau) / no.ms);
                     if (k >= no.khung.Length)
                     {
                         dsNo.RemoveAt(i);
                         continue;
                     }
-                    SmallImage.veIconXoay(g, no.khung[k], no.x, no.dat - TU_NO_TAM, 1f, 0f);
+                    SmallImage.veIconXoay(g, no.khung[k], no.x, no.tamY, 1f, 0f);
                 }
             }
         }

@@ -123,7 +123,18 @@ public final class TrangPhucDAO {
      * 5 khung gồng, rồi [nổ, nổ, khói tan, xoáy khói, hố nứt dư âm]. Client hiểu
      * khung cuối của dãy bay là dư âm trên mặt đất.
      */
+    /**
+     * Khung Thần La Thiên Chinh: phần trước -1 là lớp mặt đất (ảnh 1, căn đáy),
+     * phần sau -1 là lớp giữa thân (ảnh 2, căn theo lõi sáng).
+     * Gồng: khói 1–5 | đá dồn 10–12. Nổ: nổ/khói tan 6–9 + hố nứt 10 | đá bung 1–9.
+     */
+    private static final String NAP_TLTC = "25314,25315,25316,25317,25318,-1,25334,25335,25336";
+    private static final String BAY_TLTC = "25319,25320,25321,25322,25323,-1,25325,25326,25327,25328,25329,25330,25331,25332,25333";
+
     private static void gieoThanLaThienChinh() throws Exception {
+        // Them lop giua than (anh 2) cho dong da gieo truoc — mot lan.
+        ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_nap = ?, khung_bay = ? WHERE skill_tpl = 14"
+                + " AND khung_nap = '25314,25315,25316,25317,25318'", NAP_TLTC, BAY_TLTC);
         CrisResultSet rs = null;
         try {
             rs = ConnectDB.executeQuery("SELECT id FROM trang_phuc_mau WHERE skill_tpl = 14 AND ten = ?",
@@ -139,7 +150,7 @@ public final class TrangPhucDAO {
         ConnectDB.executeUpdate("INSERT INTO trang_phuc_mau (skill_tpl, ten, mo_ta, icon, khung_nap, khung_bay, thu_tu, icon_vp)"
                 + " VALUES (?,?,?,?,?,?,1,?)", 14, "Thần La Thiên Chinh",
                 "Dồn lực đẩy vạn vật ra xa — một vòng chấn động quét sạch mặt đất quanh mình.",
-                25320, "25314,25315,25316,25317,25318", "25319,25320,25321,25322,25323", 25324);
+                25320, NAP_TLTC, BAY_TLTC, 25324);
         lucDoc = 0;
         Logger.success("Trang phục: gieo Thần La Thiên Chinh cho Tự phát nổ\n");
     }
