@@ -313,7 +313,7 @@ public class MoRuongTab extends JPanel {
             ItemTemplate t = nro.service.item.ItemService.gI().getTemplate(q.itemId);
             mQua.addRow(new Object[]{q.id, q.itemId, t == null ? "?" : t.name, q.soLuong, q.trongSo,
                 nro.service.MoRuongService.tiLe(Math.max(0, q.trongSo), tong),
-                MoRuongDAO.TEN_HIEM[Math.max(0, Math.min(3, q.hiem))], q.chiSo});
+                MoRuongDAO.TEN_HIEM[Math.max(0, Math.min(4, q.hiem))], q.chiSo});
         }
     }
 
@@ -505,7 +505,7 @@ public class MoRuongTab extends JPanel {
             ItemTemplate t = nro.service.item.ItemService.gI().getTemplate(d.itemId);
             mLichSu.addRow(new Object[]{f.format(new Date(d.luc)), d.nguoi,
                 tenRuong.getOrDefault(d.ruongId, "#" + d.ruongId), t == null ? ("#" + d.itemId) : t.name,
-                d.soLuong, MoRuongDAO.TEN_HIEM[Math.max(0, Math.min(3, d.hiem))]});
+                d.soLuong, MoRuongDAO.TEN_HIEM[Math.max(0, Math.min(4, d.hiem))]});
         }
     }
 

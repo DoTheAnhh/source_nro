@@ -121,14 +121,15 @@ namespace Game3.God
             rgb(0xB0, 0xB7, 0xC3),   // thuong: xam
             rgb(0x3B, 0x82, 0xF6),   // hiem: xanh duong
             rgb(0x9B, 0x4D, 0xDB),   // su thi: tim
-            rgb(0xF5, 0xA6, 0x23)    // huyen thoai: vang cam
+            rgb(0xF5, 0xA6, 0x23),   // huyen thoai: vang cam
+            rgb(0xE5, 0x2B, 0x2B)    // than thoai: do
         };
 
-        private static readonly string[] TEN_HIEM = { "Thường", "Hiếm", "Sử thi", "Huyền thoại" };
+        private static readonly string[] TEN_HIEM = { "Thường", "Hiếm", "Sử thi", "Huyền thoại", "Thần thoại" };
 
         private static int mauHiem(int h)
         {
-            return MAU_HIEM[h < 0 ? 0 : (h > 3 ? 3 : h)];
+            return MAU_HIEM[h < 0 ? 0 : (h > 4 ? 4 : h)];
         }
 
         private const int BO_GOC = 6;
@@ -291,17 +292,17 @@ namespace Game3.God
             {
                 return null;
             }
-            // Trong so hien thi: thuong 60, hiem 25, su thi 11, huyen thoai 4.
-            int[] ts = { 60, 25, 11, 4 };
+            // Trong so hien thi: thuong 60, hiem 25, su thi 11, huyen thoai 4, than thoai 2.
+            int[] ts = { 60, 25, 11, 4, 2 };
             int tong = 0;
             foreach (Mon m in r.qua)
             {
-                tong += ts[m.hiem < 0 ? 0 : (m.hiem > 3 ? 3 : m.hiem)];
+                tong += ts[m.hiem < 0 ? 0 : (m.hiem > 4 ? 4 : m.hiem)];
             }
             int x = rd.Next(tong);
             foreach (Mon m in r.qua)
             {
-                x -= ts[m.hiem < 0 ? 0 : (m.hiem > 3 ? 3 : m.hiem)];
+                x -= ts[m.hiem < 0 ? 0 : (m.hiem > 4 ? 4 : m.hiem)];
                 if (x < 0)
                 {
                     return m;
@@ -559,7 +560,7 @@ namespace Game3.God
 
         private static int hiemGon(int h)
         {
-            return h < 0 ? 0 : (h > 3 ? 3 : h);
+            return h < 0 ? 0 : (h > 4 ? 4 : h);
         }
 
         /// <summary>
@@ -581,7 +582,7 @@ namespace Game3.God
                     mFont.tahoma_7b_dark);
 
             quaXep.Clear();
-            for (int hi = 3; hi >= 0; hi--)
+            for (int hi = 4; hi >= 0; hi--)
             {
                 foreach (Mon m in r.qua)
                 {
@@ -846,7 +847,7 @@ namespace Game3.God
             }
             if (mot && ketQua.Count == 1)
             {
-                mFont.tahoma_7b_yellow.drawString(g, TEN_HIEM[ketQua[0].hiem < 0 ? 0 : (ketQua[0].hiem > 3 ? 3 : ketQua[0].hiem)],
+                mFont.tahoma_7b_yellow.drawString(g, TEN_HIEM[ketQua[0].hiem < 0 ? 0 : (ketQua[0].hiem > 4 ? 4 : ketQua[0].hiem)],
                         x + w / 2, y + 28 + o + 15, mFont.CENTER, mFont.tahoma_7b_dark);
             }
             veNut(g, x + w / 2 - 40, y + h - 28, 80, 20, "Nhận", MAU_XANH, true);
@@ -886,7 +887,7 @@ namespace Game3.God
                 veOMon(g, m, x + 14, yy + 1, 24, false);
                 mFont.tahoma_7b_dark.drawString(g, catBot(m.ten, 22) + " x" + m.soLuong, x + 44, yy + 3,
                         mFont.LEFT);
-                mFont.tahoma_7.drawString(g, TEN_HIEM[m.hiem < 0 ? 0 : (m.hiem > 3 ? 3 : m.hiem)], x + 44,
+                mFont.tahoma_7.drawString(g, TEN_HIEM[m.hiem < 0 ? 0 : (m.hiem > 4 ? 4 : m.hiem)], x + 44,
                         yy + 14, mFont.LEFT);
                 mFont.tahoma_7b_red.drawString(g, m.tiLe, x + w - 12, yy + 8, mFont.RIGHT);
                 yy += caoDong;

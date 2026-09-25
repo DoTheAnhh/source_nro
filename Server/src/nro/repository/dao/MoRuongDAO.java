@@ -29,7 +29,7 @@ import nro.repository.CrisResultSet;
 public class MoRuongDAO {
 
     /** Tên các độ hiếm, đúng thứ tự con số lưu trong bảng. */
-    public static final String[] TEN_HIEM = {"Thường", "Hiếm", "Sử thi", "Huyền thoại"};
+    public static final String[] TEN_HIEM = {"Thường", "Hiếm", "Sử thi", "Huyền thoại", "Thần thoại"};
 
     private static final long HAN_BO_NHO_MS = 30_000L;
 
@@ -383,6 +383,7 @@ public class MoRuongDAO {
             datPhieuV1();
             doiTenTrungCapV1();
             batGopChong();
+            doiQuaV3();
         } catch (Exception ex) {
             Logger.logException(MoRuongDAO.class, ex, "Không dựng được phiếu quay rương");
         }
@@ -433,6 +434,85 @@ public class MoRuongDAO {
             nro.ui.LamMoi.bao(nro.ui.LamMoi.VAT_PHAM);
             Logger.success("Rương / hộp / phiếu: bật xếp chồng (" + ids.size() + " món)\n");
         }
+    }
+
+    /** Độ hiếm Thần thoại (đỏ) — trên Huyền thoại. */
+    public static final int HIEM_DO = 4;
+
+    /**
+     * Đổi quà đợt ba — một lần:
+     * <ul>
+     * <li>Rương sao pha lê (1440) → Hộp sao pha lê (1964), giữ trọng số và độ
+     * hiếm; bỏ Rương sao pha lê VIP (1453).</li>
+     * <li>Rương Thường thêm Capsule 1 món kích hoạt (1559), Rương Trung Cấp thêm
+     * Capsule kích hoạt 1 món tự chọn (1655) — đỏ, đúng 0,5%.</li>
+     * </ul>
+     * Các món cố định cũ (trứng, rương thú cưng) giữ đúng tỉ lệ; phần còn lại
+     * chia lại theo tỉ lệ cũ giữa chúng. Chưa tra được id trứng / rương thú
+     * cưng thì không ghi cờ, lần sau làm lại.
+     */
+    private static void doiQuaV3() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT gia_tri FROM mo_ruong_cau_hinh WHERE khoa = 'qua_v3'");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            dong(rs);
+        }
+        int mabu = TrungDeTuDAO.itemCuaLoai(nro.core.consts.ConstDetu.MABU);
+        int cell = TrungDeTuDAO.itemCuaLoai(nro.core.consts.ConstDetu.CELL);
+        int rtThuong = ThuCungDAO.idRuongThuong();
+        int rtCaoCap = ThuCungDAO.idRuongCaoCap();
+        if (mabu <= 0 || cell <= 0 || rtThuong <= 0 || rtCaoCap <= 0) {
+            return;
+        }
+        int thuong = idTheoTenRuong("Rương Thường");
+        int trung = idTheoTenRuong(TEN_TRUNG_CAP);
+        for (int r : new int[]{thuong, trung}) {
+            if (r > 0) {
+                ConnectDB.executeUpdate("UPDATE mo_ruong_qua SET item_id = 1964, so_luong = 1"
+                        + " WHERE ruong_id = ? AND item_id = 1440", r);
+                ConnectDB.executeUpdate("DELETE FROM mo_ruong_qua WHERE ruong_id = ? AND item_id = 1453", r);
+            }
+        }
+        if (thuong > 0) {
+            themMonDo(thuong, 1559);
+            java.util.Map<Integer, Integer> coDinh = new java.util.LinkedHashMap<>();
+            coDinh.put(mabu, 2000);
+            coDinh.put(rtThuong, 2000);
+            coDinh.put(1559, 500);
+            datTiLeCoDinh(thuong, coDinh);
+        }
+        if (trung > 0) {
+            themMonDo(trung, 1655);
+            java.util.Map<Integer, Integer> coDinh = new java.util.LinkedHashMap<>();
+            coDinh.put(rtCaoCap, 2000);
+            coDinh.put(cell, 1500);
+            coDinh.put(1655, 500);
+            datTiLeCoDinh(trung, coDinh);
+        }
+        ConnectDB.executeUpdate("INSERT IGNORE INTO mo_ruong_cau_hinh (khoa, gia_tri) VALUES ('qua_v3', '1')");
+        lucDoc = 0;
+        Logger.success("Mở rương: Hộp sao pha lê thay Rương sao pha lê; thêm capsule kích hoạt đỏ 0,5%\n");
+    }
+
+    /** Thêm món đỏ vào rương nếu chưa có, rồi đặt độ hiếm đỏ. */
+    private static void themMonDo(int ruongId, int itemId) throws Exception {
+        boolean co = false;
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM mo_ruong_qua WHERE ruong_id = ? AND item_id = ?", ruongId, itemId);
+            co = rs.next();
+        } finally {
+            dong(rs);
+        }
+        if (!co) {
+            themQua(ruongId, itemId, 1, 1, HIEM_DO, "");
+        }
+        ConnectDB.executeUpdate("UPDATE mo_ruong_qua SET hiem = ? WHERE ruong_id = ? AND item_id = ?",
+                HIEM_DO, ruongId, itemId);
     }
 
     /** Tên mới của rương thứ hai (trước là "Rương Sự Kiện"). */
