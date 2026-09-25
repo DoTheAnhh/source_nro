@@ -678,8 +678,7 @@ namespace Game5.God
             {
                 if (c.isUseSkillAfterCharge && c.dart == null)
                 {
-                    int kn = c.tpBay[(int) ((mSystem.currentTimeMillis() / MS_BAY) % System.Math.Min(2, c.tpBay.Length))];
-                    SmallImage.veIconXoay(g, kn, c.cx, c.cy - c.ch - CAO_TAM, TO_CAU, 0f);
+                    veVongBay(g, c.tpBay, c.cx, c.cy - c.ch - CAO_TAM, TO_CAU);
                     return true;
                 }
                 return false;
@@ -691,7 +690,7 @@ namespace Game5.God
             veDaBayVao(g, c, c.cx, tamY);
             if (k >= 0)
             {
-                SmallImage.veIconXoay(g, k, c.cx, tamY, to * TO_CAU, 0f);
+                veTuQCKK(g, c, c.cx, tamY, to * TO_CAU);
             }
             return true;
         }
@@ -810,6 +809,49 @@ namespace Game5.God
 
         /// <summary>Tâm quả cầu cao hơn đỉnh đầu nhân vật chừng này điểm.</summary>
         private const int CAO_TAM = 60;
+
+        /// <summary>Quả cầu lúc tụ, hoà dần khung này sang khung kế (tụ một lượt rồi lặp hai khung cuối).</summary>
+        private static void veTuQCKK(mGraphics g, Char c, int x, int y, float tiLe)
+        {
+            short[] nap = c.tpNap;
+            if (nap == null || nap.Length == 0)
+            {
+                veVongBay(g, c.tpBay, x, y, tiLe);
+                return;
+            }
+            long troi = mSystem.currentTimeMillis() - c.tpLuc;
+            int n = nap.Length;
+            if (troi < n * MS_NAP || n < 2)
+            {
+                float f = System.Math.Min(n - 1, (float) troi / MS_NAP);
+                int a = (int) f;
+                int b = System.Math.Min(n - 1, a + 1);
+                veHoa(g, nap[a], nap[b], f - a, x, y, tiLe);
+                return;
+            }
+            float f2 = (float) (troi - n * MS_NAP) / MS_BAY;
+            int buoc = (int) f2;
+            int ka = n - 2 + buoc % 2;
+            int kb = n - 2 + (buoc + 1) % 2;
+            veHoa(g, nap[ka], nap[kb], f2 - buoc, x, y, tiLe);
+        }
+
+        /// <summary>Lặp hai khung đầu của dãy bay (ném ↔ chạm), hoà dần qua lại.</summary>
+        private static void veVongBay(mGraphics g, short[] bay, int x, int y, float tiLe)
+        {
+            if (bay == null || bay.Length == 0)
+            {
+                return;
+            }
+            int n = System.Math.Min(2, bay.Length);
+            // Tinh bang long: gio he thong ~1e12 ms dua vao float la mat phan le.
+            long ms = mSystem.currentTimeMillis();
+            long buoc = ms / MS_BAY;
+            float t = (float) (ms % MS_BAY) / MS_BAY;
+            int a = (int) (buoc % n);
+            int b = (int) ((buoc + 1) % n);
+            veHoa(g, bay[a], bay[b], t, x, y, tiLe);
+        }
 
         /// <summary>Cỡ nhỏ nhất lúc mới bắt đầu tụ (phần của cỡ đầy đủ).</summary>
         private const float CO_NHO_NHAT = 0.25f;
@@ -1018,8 +1060,7 @@ namespace Game5.God
                     float e = p * p;
                     int x = b.x0 + (int) ((b.x1 - b.x0) * e);
                     int y = b.y0 + (int) ((b.y1 - b.y0) * e);
-                    int k = b.bay[(int) ((bayGio / MS_BAY) % System.Math.Min(2, b.bay.Length))];
-                    SmallImage.veIconXoay(g, k, x, y, TO_CAU, 0f);
+                    veVongBay(g, b.bay, x, y, TO_CAU);
                 }
             }
         }
@@ -1035,8 +1076,7 @@ namespace Game5.God
             veGongTuNo(g, c);
             if (laQCKK(c) && c.dart != null && c.dart.isActive)
             {
-                int k = c.tpBay[(int) ((bayGio / MS_BAY) % System.Math.Min(2, c.tpBay.Length))];
-                SmallImage.veIconXoay(g, k, c.dart.x, c.dart.y, TO_CAU, 0f);
+                veVongBay(g, c.tpBay, c.dart.x, c.dart.y, TO_CAU);
             }
             // Khung cham dich: giu mot lat tai cho qua cau trung, rung du chan.
             long daQua = bayGio - c.tpTrungLuc;
@@ -1115,7 +1155,24 @@ namespace Game5.God
         }
 
         /// <summary>Khung Tự phát nổ căn đáy: tâm ảnh cao hơn chân chừng này điểm.</summary>
-        private const int TU_NO_TAM = 44;
+        private const int TU_NO_TAM = 36;
+
+        /// <summary>Lớp giữa thân thấp hơn giữa người chừng này điểm.</summary>
+        private const int GIUA_THAP = 8;
+
+        /// <summary>
+        /// Vẽ khung <paramref name="a"/> đục hoàn toàn rồi phủ <paramref name="b"/> lên với
+        /// độ đục <paramref name="t"/> — chuyển khung liên tục, không nhảy cóc, mà cũng
+        /// không nhạt đi giữa chừng như khi mờ cả hai.
+        /// </summary>
+        private static void veHoa(mGraphics g, short a, short b, float t, int x, int y, float tiLe)
+        {
+            SmallImage.veIconXoay(g, a, x, y, tiLe, 0f);
+            if (b != a && t > 0.02f)
+            {
+                SmallImage.veIconXoay(g, b, x, y, tiLe, 0f, t);
+            }
+        }
 
         /// <summary>Nhịp khung: gồng đảo qua lại, nổ mặt đất, đá bung giữa thân (ms).</summary>
         private const long MS_GONG = 110L;
@@ -1154,21 +1211,23 @@ namespace Game5.God
             short[] dat = tach(c.tpNap, 0);
             if (dat.Length > 0)
             {
-                int s = System.Math.Min(dat.Length - 1, (int) (p * dat.Length));
-                int k = ((troi / MS_GONG) % 2 == 0 || s == 0) ? s : s - 1;
-                SmallImage.veIconXoay(g, dat[k], c.cx, c.cy - TU_NO_TAM, 1f, 0f);
+                // Tien do lien tuc 0..n-1: hoa dan tu khung nay sang khung ke.
+                float f = p * (dat.Length - 1);
+                int a = System.Math.Min(dat.Length - 1, (int) f);
+                int b = System.Math.Min(dat.Length - 1, a + 1);
+                veHoa(g, dat[a], dat[b], f - a, c.cx, c.cy - TU_NO_TAM, 1f);
             }
             short[] giua = tach(c.tpNap, 1);
             if (giua.Length > 0)
             {
                 // Vong qua lai 0-1-2-1-0...
                 int chu = System.Math.Max(1, giua.Length * 2 - 2);
-                int j = (int) ((troi / MS_GONG) % chu);
-                if (j >= giua.Length)
-                {
-                    j = chu - j;
-                }
-                SmallImage.veIconXoay(g, giua[j], c.cx, c.cy - c.ch / 2, 0.55f + 0.45f * p, 0f);
+                float pha = (float) (troi % (chu * MS_GONG * 2)) / (MS_GONG * 2);
+                int ja = (int) pha % chu;
+                int jb = (ja + 1) % chu;
+                int a = ja >= giua.Length ? chu - ja : ja;
+                int b = jb >= giua.Length ? chu - jb : jb;
+                veHoa(g, giua[a], giua[b], pha - (int) pha, c.cx, c.cy - c.ch / 2 + GIUA_THAP, 0.55f + 0.45f * p);
             }
         }
 
@@ -1209,7 +1268,7 @@ namespace Game5.God
             short[] bung = tach(c.tpBay, 1);
             if (bung.Length > 0)
             {
-                themNo(bung, c.cx, c.cy - c.ch / 2, MS_BUNG, bayGio);
+                themNo(bung, c.cx, c.cy - c.ch / 2 + GIUA_THAP, MS_BUNG, bayGio);
             }
             if (dat.Length >= 2)
             {
@@ -1255,13 +1314,15 @@ namespace Game5.God
                 for (int i = dsNo.Count - 1; i >= 0; i--)
                 {
                     NoLon no = dsNo[i];
-                    int k = (int) ((bayGio - no.batDau) / no.ms);
+                    float f = (float) (bayGio - no.batDau) / no.ms;
+                    int k = (int) f;
                     if (k >= no.khung.Length)
                     {
                         dsNo.RemoveAt(i);
                         continue;
                     }
-                    SmallImage.veIconXoay(g, no.khung[k], no.x, no.tamY, 1f, 0f);
+                    int k2 = System.Math.Min(no.khung.Length - 1, k + 1);
+                    veHoa(g, no.khung[k], no.khung[k2], f - k, no.x, no.tamY, 1f);
                 }
             }
         }
