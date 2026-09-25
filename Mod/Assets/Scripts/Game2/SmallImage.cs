@@ -170,6 +170,12 @@ namespace Game2
     	/// </summary>
     	public static void veIconXoay(mGraphics g, int id, int xGiua, int yGiua, float tiLe, float gocDo)
     	{
+    		veIconXoay(g, id, xGiua, yGiua, tiLe, gocDo, 1f);
+    	}
+
+    	/// <summary>Như trên, kèm độ đục <paramref name="mo"/>.</summary>
+    	public static void veIconXoay(mGraphics g, int id, int xGiua, int yGiua, float tiLe, float gocDo, float mo)
+    	{
     		Small s = (imgNew != null && id >= 0 && id < imgNew.Length) ? imgNew[id] : null;
     		if (s == null || s.img == null || mGraphics.getImageWidth(s.img) <= 1)
     		{
@@ -181,7 +187,7 @@ namespace Game2
     			return;
     		}
     		g.veAnhXoay(s.img, xGiua, yGiua, mGraphics.getImageWidth(s.img) * tiLe,
-    				mGraphics.getImageHeight(s.img) * tiLe, gocDo);
+    				mGraphics.getImageHeight(s.img) * tiLe, gocDo, mo);
     	}
 
     	public static void veIconVuaO(mGraphics g, int id, int xGiua, int yGiua,

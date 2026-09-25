@@ -5408,6 +5408,8 @@ namespace Game5
     		GameCanvas.debug("PA5", 1);
     		BackgroudEffect.paintBackAll(g);
     		EffectManager.lowEffects.paintAll(g);
+    		// Du am vu no trang phuc ky nang: tren ban do, duoi moi nhan vat / quai.
+    		God.TrangPhucUI.veDuAm(g);
     		for (int i = 0; i < Effect2.vEffectFeet.size(); i++)
     		{
     			Effect2 effect = (Effect2)Effect2.vEffectFeet.elementAt(i);

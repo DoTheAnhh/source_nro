@@ -1320,6 +1320,12 @@ namespace Game1
     	/// </summary>
     	public void veAnhXoay(Image image, float xGiua, float yGiua, float w, float h, float gocDo)
     	{
+    		veAnhXoay(image, xGiua, yGiua, w, h, gocDo, 1f);
+    	}
+
+    	/// <summary>Như trên, kèm độ đục <paramref name="mo"/> (0 trong suốt – 1 đục).</summary>
+    	public void veAnhXoay(Image image, float xGiua, float yGiua, float w, float h, float gocDo, float mo)
+    	{
     		if (image == null || image.texture == null || w <= 0f || h <= 0f)
     		{
     			return;
@@ -1349,7 +1355,13 @@ namespace Game1
     		Vector2 tam = new Vector2(px - cx, py - cy);
     		Matrix4x4 maTranCu = GUI.matrix;
     		GUIUtility.RotateAroundPivot(gocDo, tam);
+    		Color mauCu = GUI.color;
+    		if (mo < 1f)
+    		{
+    			GUI.color = new Color(mauCu.r, mauCu.g, mauCu.b, mauCu.a * Mathf.Clamp01(mo));
+    		}
     		GUI.DrawTexture(new Rect(tam.x - pw / 2f, tam.y - ph / 2f, pw, ph), image.texture, ScaleMode.StretchToFill, true);
+    		GUI.color = mauCu;
     		GUI.matrix = maTranCu;
     		if (isClip)
     		{

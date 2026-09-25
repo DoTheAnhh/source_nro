@@ -90,6 +90,9 @@ public final class TrangPhucDAO {
             ConnectDB.executeUpdate("ALTER TABLE trang_phuc_mau ADD COLUMN IF NOT EXISTS icon_vp INT(11) NOT NULL DEFAULT -1");
             daTao = true;
             gieoNeuTrong();
+            // Them du am vu no (khung thu ba cua day bay).
+            ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_bay = ? WHERE skill_tpl = 10"
+                    + " AND khung_bay = '25285,25286'", KHUNG_BAY_DBTT);
             ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET icon_vp = ? WHERE skill_tpl = 10 AND icon_vp = -1"
                     + " AND ten = 'Địa Bộc Thiên Tinh'", ICON_VP_DBTT);
             // Bo khung moi (10 khung, nguoi dung gui lai): doi dong Dia Boc Thien Tinh
@@ -109,7 +112,8 @@ public final class TrangPhucDAO {
      */
     private static final int ICON_DBTT = 25284;
     private static final String KHUNG_NAP_DBTT = "25277,25278,25279,25280,25281,25282,25283,25284";
-    private static final String KHUNG_BAY_DBTT = "25285,25286";
+    /** Khung bay: [ném, chạm địch, dư âm vụ nổ]. */
+    private static final String KHUNG_BAY_DBTT = "25285,25286,25313";
     /** Icon cỡ vật phẩm (khung 8 thu nhỏ) cho "Trang phục: Địa Bộc Thiên Tinh". */
     private static final int ICON_VP_DBTT = 25288;
 

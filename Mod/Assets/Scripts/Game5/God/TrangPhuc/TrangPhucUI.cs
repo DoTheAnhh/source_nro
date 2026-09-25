@@ -684,7 +684,7 @@ namespace Game5.God
             {
                 if (c.isUseSkillAfterCharge && c.dart == null)
                 {
-                    int kn = c.tpBay[(int) ((mSystem.currentTimeMillis() / MS_BAY) % c.tpBay.Length)];
+                    int kn = c.tpBay[(int) ((mSystem.currentTimeMillis() / MS_BAY) % System.Math.Min(2, c.tpBay.Length))];
                     SmallImage.drawSmallImage(g, kn, c.cx, c.cy - c.ch - 50, 0, mGraphics.VCENTER | mGraphics.HCENTER);
                     return true;
                 }
@@ -713,7 +713,7 @@ namespace Game5.God
                 return false;
             }
             // Tu luc nem toi luc cham: lap cac khung bay (9 <-> 10).
-            int k = chu.tpBay[(int) ((mSystem.currentTimeMillis() / MS_BAY) % chu.tpBay.Length)];
+            int k = chu.tpBay[(int) ((mSystem.currentTimeMillis() / MS_BAY) % System.Math.Min(2, chu.tpBay.Length))];
             SmallImage.drawSmallImage(g, k, x, y, 0, mGraphics.VCENTER | mGraphics.HCENTER);
             return true;
         }
@@ -868,6 +868,56 @@ namespace Game5.God
                     && mSystem.currentTimeMillis() - c.tpLuc < HAN_HIEU_LUC;
         }
 
+        // ------------------------------------------------------------------
+        //  Dư âm vụ nổ (vẽ trên bản đồ, dưới nhân vật / quái — xem GameScr.paint)
+        // ------------------------------------------------------------------
+        public class DuAm
+        {
+            public int icon;
+            public int x;
+            /// <summary>Mặt đất (chân mục tiêu) tại chỗ nổ.</summary>
+            public int dat;
+            public long batDau;
+        }
+
+        private static readonly List<DuAm> dsDuAm = new List<DuAm>();
+
+        /// <summary>Dư âm tồn tại bao lâu sau khi vụ nổ kết thúc (ms), và mờ dần trong bao lâu cuối.</summary>
+        private const long MS_DU_AM = 500L;
+        private const long MS_DU_AM_MO = 200L;
+
+        /// <summary>Tâm hố nứt nằm ở chừng 65% chiều cao ảnh: đẩy ảnh lên để hố nằm đúng mặt đất.</summary>
+        private const int LECH_DAT = 18;
+
+        /// <summary>Gọi trong GameScr.paint ngay sau lớp bản đồ, trước nhân vật / quái.</summary>
+        public static void veDuAm(mGraphics g)
+        {
+            if (dsDuAm.Count == 0)
+            {
+                return;
+            }
+            long bayGio = mSystem.currentTimeMillis();
+            lock (dsDuAm)
+            {
+                for (int i = dsDuAm.Count - 1; i >= 0; i--)
+                {
+                    DuAm d = dsDuAm[i];
+                    long t = bayGio - d.batDau;
+                    if (t >= MS_DU_AM)
+                    {
+                        dsDuAm.RemoveAt(i);
+                        continue;
+                    }
+                    if (t < 0)
+                    {
+                        continue;
+                    }
+                    float mo = t < MS_DU_AM - MS_DU_AM_MO ? 1f : (float) (MS_DU_AM - t) / MS_DU_AM_MO;
+                    SmallImage.veIconXoay(g, d.icon, d.x, d.dat - LECH_DAT, 1f, 0f, mo);
+                }
+            }
+        }
+
         /// <summary>Quả cầu vừa trúng: ghi khung chạm (khung thứ hai của dãy bay) để vẽ một lát.</summary>
         public static void ghiChamDich(Char chu, int x, int y)
         {
@@ -879,6 +929,20 @@ namespace Game5.God
             chu.tpTrungX = x;
             chu.tpTrungY = y;
             chu.tpTrungLuc = mSystem.currentTimeMillis();
+            if (chu.tpBay.Length >= 3)
+            {
+                // Du am: dat o CHAN muc tieu (mat dat), hien sau khi vu no ket thuc.
+                IMapObject mt = chu.mobFocus != null ? (IMapObject) chu.mobFocus : chu.charFocus;
+                DuAm d = new DuAm();
+                d.icon = chu.tpBay[2];
+                d.x = x;
+                d.dat = mt != null ? mt.getY() : y + 25;
+                d.batDau = chu.tpTrungLuc + MS_TRUNG;
+                lock (dsDuAm)
+                {
+                    dsDuAm.Add(d);
+                }
+            }
         }
     }
 }
