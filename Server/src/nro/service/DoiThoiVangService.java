@@ -71,13 +71,6 @@ public class DoiThoiVangService {
         return vnd % 1000 == 0 ? (Util.soCham(vnd / 1000) + "K") : (Util.soCham(vnd) + "đ");
     }
 
-    /** Phần trăm thưởng so với mốc đầu (mốc rẻ nhất tính là gốc). */
-    private static long thuong(long[] moc, long[] goc) {
-        double rGoc = (double) goc[1] / goc[0];
-        double r = (double) moc[1] / moc[0];
-        return Math.round((r / rGoc - 1) * 100);
-    }
-
     /** Mở menu chọn mốc. */
     public void moMenu(Npc npc, Player pl, int maMenu) {
         if (!ConfigDAO.on(ConfigDAO.DOI_TV_BAT)) {
@@ -90,12 +83,11 @@ public class DoiThoiVangService {
             return;
         }
         long soDu = pl.getSession() == null ? 0 : pl.getSession().vnd;
-        StringBuilder sb = new StringBuilder("|7|ĐỔI VNĐ LẤY THỎI VÀNG\n|2|Đổi mốc càng cao càng được thêm\n\n");
+        StringBuilder sb = new StringBuilder("|7|ĐỔI VNĐ LẤY THỎI VÀNG\n\n");
         List<String> nut = new ArrayList<>();
         for (long[] m : ds) {
-            long t = thuong(m, ds.get(0));
             sb.append("|6|").append(gonTien(m[0])).append(" → ").append(Util.soCham(m[1])).append(" Thỏi Vàng")
-                    .append(t > 0 ? " (+" + t + "%)" : "").append("\n");
+                    .append("\n");
             nut.add(gonTien(m[0]) + "\n" + Util.soCham(m[1]) + " TV");
         }
         sb.append("\n|0|Số dư: ").append(Util.soCham(soDu)).append(" VNĐ");
