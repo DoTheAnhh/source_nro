@@ -173,12 +173,18 @@ namespace Game2
     				num = ((!charBelong.me) ? charBelong.skillTemplateId : Char.myCharz().myskill.skillId);
     				if (num < 77 || num > 83)
     				{
-    					GameScr.gI().activeSuperPower(x, y);
+    					if (charBelong.tpBay == null)
+    					{
+    					    GameScr.gI().activeSuperPower(x, y);
+    					}
     				}
     			}
     			else
     			{
-    				GameScr.gI().activeSuperPower(x, y);
+    				if (charBelong.tpBay == null)
+    				{
+    				    GameScr.gI().activeSuperPower(x, y);
+    				}
     			}
     		}
     		charBelong.dart = null;

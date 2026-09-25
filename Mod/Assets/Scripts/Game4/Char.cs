@@ -3280,6 +3280,12 @@ namespace Game4
     			eff2 = GameScr.efs[array[indexSkill].effS2Id - 1];
     			i2 = (dx2 = (dy2 = 0));
     		}
+    		// Trang phuc ky nang dang bat: bo hieu ung goc cua tu the ra chieu (qua cau
+    		// xanh...), chi con khung cua trang phuc.
+    		if (tpBay != null && (isUseSkillAfterCharge || isFlyAndCharge))
+    		{
+    			eff0 = (eff1 = (eff2 = null));
+    		}
     		SkillInfoPaint[] array2 = array;
     		int num = indexSkill;
     		if (array2 != null && array2[num] != null && num >= 0 && num <= array2.Length - 1 && array2[num].arrowId != 0)
