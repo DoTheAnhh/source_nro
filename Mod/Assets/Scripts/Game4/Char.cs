@@ -942,6 +942,12 @@ namespace Game4
     	/// <summary>Lần tụ hiện tại đã nổ xong (quả cầu đã chạm / đã ném bù) — hết hiệu lực.</summary>
     	public bool tpXong;
 
+    	/// <summary>Chiêu của trang phục đang gắn (10 Quả cầu kênh khi, 14 Tự phát nổ).</summary>
+    	public int tpSkill;
+
+    	/// <summary>Hết hiệu lực lúc này (0 = theo hạn thường) — Tự phát nổ giữ thêm một lát sau khi nổ.</summary>
+    	public long tpHetLuc;
+
     	/// <summary>Khung chạm địch đang hiện (-1 = không) và chỗ, lúc bắt đầu.</summary>
     	public int tpTrung = -1;
 
@@ -2169,11 +2175,11 @@ namespace Game4
     					}
     					else
     					{
-    						if (GameCanvas.gameTick % 3 == 0)
+    						if (GameCanvas.gameTick % 3 == 0 && !God.TrangPhucUI.conHieuLuc(this))
     						{
     							ServerEffect.addServerEffect(154, cx, cy - ch / 2 + 10, 1);
     						}
-    						if (GameCanvas.gameTick % 5 == 0)
+    						if (GameCanvas.gameTick % 5 == 0 && !God.TrangPhucUI.conHieuLuc(this))
     						{
     							ServerEffect.addServerEffect(114, cx + Res.random(-20, 20), cy + Res.random(-20, 20), 1);
     						}

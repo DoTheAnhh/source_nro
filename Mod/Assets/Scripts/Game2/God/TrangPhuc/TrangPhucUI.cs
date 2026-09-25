@@ -122,7 +122,7 @@ namespace Game2.God
                 else if (loai == 2)
                 {
                     int charId = msg.reader().readInt();
-                    msg.reader().readShort();
+                    int skillTpl = msg.reader().readShort();
                     short[] nap = docKhung(msg);
                     short[] bay = docKhung(msg);
                     Char c = Char.myCharz().charID == charId ? Char.myCharz() : GameScr.findCharInMap(charId);
@@ -132,6 +132,8 @@ namespace Game2.God
                         c.tpBay = bay.Length > 0 ? bay : null;
                         c.tpLuc = mSystem.currentTimeMillis();
                         c.tpXong = false;
+                        c.tpSkill = skillTpl;
+                        c.tpHetLuc = 0;
                     }
                 }
             }
@@ -667,7 +669,7 @@ namespace Game2.God
                 return false;
             }
             // Khung cham dich ve o lop chung (veToanCuc).
-            if (!conHieuLuc(c))
+            if (!laQCKK(c))
             {
                 return false;
             }
@@ -860,8 +862,21 @@ namespace Game2.God
         /// <summary>Nhân vật đang mang khung trang phục chiêu còn hạn.</summary>
         public static bool conHieuLuc(Char c)
         {
+            long bayGio = mSystem.currentTimeMillis();
             return c != null && c.tpBay != null && c.tpBay.Length > 0 && !c.tpXong
-                    && mSystem.currentTimeMillis() - c.tpLuc < HAN_HIEU_LUC;
+                    && bayGio - c.tpLuc < HAN_HIEU_LUC && (c.tpHetLuc == 0 || bayGio < c.tpHetLuc);
+        }
+
+        /// <summary>Đang mang trang phục Quả cầu kênh khi.</summary>
+        public static bool laQCKK(Char c)
+        {
+            return conHieuLuc(c) && c.tpSkill == 10;
+        }
+
+        /// <summary>Đang mang trang phục Tự phát nổ.</summary>
+        public static bool laTuNo(Char c)
+        {
+            return conHieuLuc(c) && c.tpSkill == 14;
         }
 
         // ------------------------------------------------------------------
@@ -873,6 +888,8 @@ namespace Game2.God
             public int x;
             /// <summary>Mặt đất (chân mục tiêu) tại chỗ nổ.</summary>
             public int dat;
+            /// <summary>Tâm ảnh lệch so với mặt đất (dương = thấp xuống).</summary>
+            public int dy = -LECH_DAT;
             public long batDau;
         }
 
@@ -897,6 +914,7 @@ namespace Game2.God
         public static void veToanCuc(mGraphics g)
         {
             veCauBu(g);
+            veNoTuNo(g);
             veMotNguoi(g, Char.myCharz());
             for (int i = 0; i < GameScr.vCharInMap.size(); i++)
             {
@@ -933,7 +951,12 @@ namespace Game2.God
         /// </summary>
         public static void nemNeuChuaNem(Char c)
         {
-            if (!conHieuLuc(c) || c.dart != null || c.tpBay.Length < 2)
+            if (laTuNo(c))
+            {
+                noTuSat(c);
+                return;
+            }
+            if (!laQCKK(c) || c.dart != null || c.tpBay.Length < 2)
             {
                 return;
             }
@@ -1009,7 +1032,8 @@ namespace Game2.God
             }
             long bayGio = mSystem.currentTimeMillis();
             // Qua cau dang bay: lap khung nem / cham (9 <-> 10).
-            if (conHieuLuc(c) && c.dart != null && c.dart.isActive)
+            veGongTuNo(g, c);
+            if (laQCKK(c) && c.dart != null && c.dart.isActive)
             {
                 int k = c.tpBay[(int) ((bayGio / MS_BAY) % System.Math.Min(2, c.tpBay.Length))];
                 SmallImage.veIconXoay(g, k, c.dart.x, c.dart.y, TO_CAU, 0f);
@@ -1048,7 +1072,7 @@ namespace Game2.God
                         continue;
                     }
                     float mo = t < MS_DU_AM - MS_DU_AM_MO ? 1f : (float) (MS_DU_AM - t) / MS_DU_AM_MO;
-                    SmallImage.veIconXoay(g, d.icon, d.x, d.dat - LECH_DAT, 1f, 0f, mo);
+                    SmallImage.veIconXoay(g, d.icon, d.x, d.dat + d.dy, 1f, 0f, mo);
                 }
             }
         }
@@ -1065,6 +1089,115 @@ namespace Game2.God
         }
 
         /// <summary>Ghi vụ nổ (khung chạm) và dư âm tại (x, y), mặt đất ở <paramref name="dat"/>; kết thúc lần tụ.</summary>
+        // ------------------------------------------------------------------
+        //  Tự phát nổ (skill 14): gồng quanh thân, nổ, dư âm hố nứt
+        // ------------------------------------------------------------------
+        /// <summary>Khung Tự phát nổ căn đáy: tâm ảnh cao hơn chân chừng này điểm.</summary>
+        private const int TU_NO_TAM = 58;
+
+        /// <summary>Mỗi khung nổ (khung bay trừ khung cuối) giữ bao lâu (ms).</summary>
+        private const long MS_NO = 120L;
+
+        public class NoLon
+        {
+            public short[] khung;
+            public int x, dat;
+            public long batDau;
+        }
+
+        private static readonly List<NoLon> dsNo = new List<NoLon>();
+
+        /// <summary>Thời gian gồng (ms): của mình / người khác đều do gói gồng gửi về.</summary>
+        private static long thoiGianGong(Char c)
+        {
+            return (c.seconds > 0 && c.seconds < 50000) ? c.seconds : 3000L;
+        }
+
+        /// <summary>Đang gồng: khung gồng rải đều theo thời gian gồng, căn đáy ở chân.</summary>
+        private static void veGongTuNo(mGraphics g, Char c)
+        {
+            if (!laTuNo(c) || !c.isStandAndCharge || c.tpNap == null || c.tpNap.Length == 0)
+            {
+                return;
+            }
+            long troi = mSystem.currentTimeMillis() - c.tpLuc;
+            int n = c.tpNap.Length;
+            int i = (int) (troi * n / System.Math.Max(1L, thoiGianGong(c)));
+            if (i >= n)
+            {
+                // Qua gio ma chua no (goi cham): giu hai khung cuoi nhap nhay.
+                i = n >= 2 ? n - 2 + (int) ((troi / 110L) % 2) : n - 1;
+            }
+            SmallImage.veIconXoay(g, c.tpNap[i], c.cx, c.cy - TU_NO_TAM, 1f, 0f);
+        }
+
+        /// <summary>
+        /// Gồng xong (gọi đầu stopUseChargeSkill): phát vụ nổ của trang phục tại
+        /// chỗ đứng, khung cuối thành dư âm dưới đất. Bị ngắt sớm thì thôi.
+        /// </summary>
+        private static void noTuSat(Char c)
+        {
+            if (!c.isStandAndCharge || c.tpBay == null || c.tpBay.Length == 0)
+            {
+                return;
+            }
+            long bayGio = mSystem.currentTimeMillis();
+            if (bayGio - c.tpLuc < thoiGianGong(c) - 400L)
+            {
+                return;
+            }
+            NoLon no = new NoLon();
+            int soNo = c.tpBay.Length >= 2 ? c.tpBay.Length - 1 : c.tpBay.Length;
+            no.khung = new short[soNo];
+            System.Array.Copy(c.tpBay, no.khung, soNo);
+            no.x = c.cx;
+            no.dat = c.cy;
+            no.batDau = bayGio;
+            lock (dsNo)
+            {
+                dsNo.Add(no);
+            }
+            if (c.tpBay.Length >= 2)
+            {
+                DuAm d = new DuAm();
+                d.icon = c.tpBay[c.tpBay.Length - 1];
+                d.x = c.cx;
+                d.dat = c.cy;
+                d.dy = -TU_NO_TAM;
+                d.batDau = bayGio + soNo * MS_NO;
+                lock (dsDuAm)
+                {
+                    dsDuAm.Add(d);
+                }
+            }
+            // Giu tat hieu ung no goc them 1,5 giay (tu the no ve ngay sau day).
+            c.tpHetLuc = bayGio + 1500L;
+        }
+
+        /// <summary>Vẽ các vụ nổ Tự phát nổ đang chạy (lớp trên nhân vật).</summary>
+        private static void veNoTuNo(mGraphics g)
+        {
+            if (dsNo.Count == 0)
+            {
+                return;
+            }
+            long bayGio = mSystem.currentTimeMillis();
+            lock (dsNo)
+            {
+                for (int i = dsNo.Count - 1; i >= 0; i--)
+                {
+                    NoLon no = dsNo[i];
+                    int k = (int) ((bayGio - no.batDau) / MS_NO);
+                    if (k >= no.khung.Length)
+                    {
+                        dsNo.RemoveAt(i);
+                        continue;
+                    }
+                    SmallImage.veIconXoay(g, no.khung[k], no.x, no.dat - TU_NO_TAM, 1f, 0f);
+                }
+            }
+        }
+
         private static void ghiNo(Char chu, short[] bay, int x, int y, int dat)
         {
             chu.tpXong = true;

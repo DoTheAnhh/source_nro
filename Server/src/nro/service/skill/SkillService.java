@@ -1216,6 +1216,8 @@ public class SkillService {
                                     player, Skill.TU_SAT, GIAY_GONG_TU_SAT);
                     // Báo cho client ĐÚNG con số mà cổng chặn dùng. Lệch nhau
                     // thì hoạt ảnh gồng và lúc được nổ không khớp.
+                    // Trang phuc ky nang: bao ca khu hinh Tu phat no TRUOC goi gong.
+                    nro.service.TrangPhucService.gI().baoTruocKhiTu(player, Skill.TU_SAT);
                     sendPlayerPrepareBom(player, player.playerSkill.timePrepareTuSat);
                     final Player nguoiNo = player;
                     HEN_NO.schedule(() -> kiemTraGongTuSat(nguoiNo),

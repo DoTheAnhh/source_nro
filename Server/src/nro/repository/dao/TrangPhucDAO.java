@@ -90,6 +90,7 @@ public final class TrangPhucDAO {
             ConnectDB.executeUpdate("ALTER TABLE trang_phuc_mau ADD COLUMN IF NOT EXISTS icon_vp INT(11) NOT NULL DEFAULT -1");
             daTao = true;
             gieoNeuTrong();
+            gieoThanLaThienChinh();
             // Them du am vu no (khung thu ba cua day bay).
             ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_bay = ? WHERE skill_tpl = 10"
                     + " AND khung_bay = '25285,25286'", KHUNG_BAY_DBTT);
@@ -116,6 +117,32 @@ public final class TrangPhucDAO {
     private static final String KHUNG_BAY_DBTT = "25285,25286,25313";
     /** Icon cỡ vật phẩm (khung 8 thu nhỏ) cho "Trang phục: Địa Bộc Thiên Tinh". */
     private static final int ICON_VP_DBTT = 25288;
+
+    /**
+     * Thần La Thiên Chinh cho Tự phát nổ (skill 14), icon 25314–25323, căn đáy:
+     * 5 khung gồng, rồi [nổ, nổ, khói tan, xoáy khói, hố nứt dư âm]. Client hiểu
+     * khung cuối của dãy bay là dư âm trên mặt đất.
+     */
+    private static void gieoThanLaThienChinh() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM trang_phuc_mau WHERE skill_tpl = 14 AND ten = ?",
+                    "Thần La Thiên Chinh");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            if (rs != null) {
+                rs.dispose();
+            }
+        }
+        ConnectDB.executeUpdate("INSERT INTO trang_phuc_mau (skill_tpl, ten, mo_ta, icon, khung_nap, khung_bay, thu_tu, icon_vp)"
+                + " VALUES (?,?,?,?,?,?,1,?)", 14, "Thần La Thiên Chinh",
+                "Dồn lực đẩy vạn vật ra xa — một vòng chấn động quét sạch mặt đất quanh mình.",
+                25320, "25314,25315,25316,25317,25318", "25319,25320,25321,25322,25323", 25324);
+        lucDoc = 0;
+        Logger.success("Trang phục: gieo Thần La Thiên Chinh cho Tự phát nổ\n");
+    }
 
     /** Trang phục đầu tiên: Địa Bộc Thiên Tinh cho Quả cầu kênh khi. */
     private static void gieoNeuTrong() throws Exception {
