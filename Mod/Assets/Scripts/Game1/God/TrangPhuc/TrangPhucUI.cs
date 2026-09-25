@@ -872,11 +872,11 @@ namespace Game1.God
         private static readonly List<DuAm> dsDuAm = new List<DuAm>();
 
         /// <summary>Dư âm tồn tại bao lâu sau khi vụ nổ kết thúc (ms), và mờ dần trong bao lâu cuối.</summary>
-        private const long MS_DU_AM = 1000L;
-        private const long MS_DU_AM_MO = 300L;
+        private const long MS_DU_AM = 3000L;
+        private const long MS_DU_AM_MO = 2500L;
 
         /// <summary>Tâm ảnh đặt dưới mặt đất chừng này điểm (âm = thấp xuống) để hố nứt nằm sát đất.</summary>
-        private const int LECH_DAT = -12;
+        private const int LECH_DAT = -17;
 
         /// <summary>
         /// Quả cầu đang bay và khung chạm địch của MỌI nhân vật — gọi trong
