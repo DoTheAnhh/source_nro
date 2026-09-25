@@ -3576,6 +3576,7 @@ public byte getAura() {
      * ghi chú trong {@code Client.disposePlayerData}.</p>
      */
     public void dispose() {
+        nro.repository.dao.TrangPhucDAO.quen(this.id);
         if (itemsTradeWVP != null) {
             if (!itemsTradeWVP.isEmpty()) {
                 for (Item item : itemsTradeWVP) {

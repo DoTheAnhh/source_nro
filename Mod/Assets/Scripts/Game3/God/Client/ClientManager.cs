@@ -272,7 +272,8 @@ namespace Game3.God
                     || VoiceConfigUI.getInstance().dangMo
                     || TanSatUI.getInstance().dangMo
                     || NoiTaiUI.getInstance().dangMo
-                    || SoSuuTamUI.getInstance().dangMo;
+                    || SoSuuTamUI.getInstance().dangMo
+                    || TrangPhucUI.getInstance().dangMo;
         }
 
         public void UpdateTouch()
@@ -290,6 +291,10 @@ namespace Game3.God
             }
             // So suu tam nam tren moi man khac (mo tu the He thong cua TuiUI).
             if (SoSuuTamUI.getInstance().capNhatCham())
+            {
+                return;
+            }
+            if (TrangPhucUI.getInstance().capNhatCham())
             {
                 return;
             }
@@ -953,6 +958,7 @@ namespace Game3.God
             NoiTaiUI.getInstance().ve(g);
             // So suu tam ve sau cung: no nam tren moi thu.
             SoSuuTamUI.getInstance().ve(g);
+            TrangPhucUI.getInstance().ve(g);
             // Khung chat va hai hop nhap KHONG ve o day nua.
             //
             // Chuoi nay chay ben trong GameScr.paint, tuc TRUOC khi GameCanvas

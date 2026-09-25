@@ -930,6 +930,13 @@ namespace Game1
     	public PlayerDart dart;
     
     	public bool isCreateDark;
+
+    	/// <summary>Trang phục Quả cầu kênh khi: khung tụ / khung lặp (null = hình gốc). Xem TrangPhucUI.</summary>
+    	public short[] tpNap;
+
+    	public short[] tpBay;
+
+    	public long tpLuc;
     
     	public SkillPaint skillPaint;
     
@@ -2291,11 +2298,11 @@ namespace Game1
     					else
     					{
     						cf = 32;
-    						if (cgender == 0 && GameCanvas.gameTick % 3 == 0)
+    						if (cgender == 0 && GameCanvas.gameTick % 3 == 0 && tpBay == null)
     						{
     							ServerEffect.addServerEffect(153, cx, cy - ch, 2);
     						}
-    						if (TileMap.mapID == 170 && (cgender == 2 || cgender == 1) && GameCanvas.gameTick % 3 == 0)
+    						if (TileMap.mapID == 170 && (cgender == 2 || cgender == 1) && GameCanvas.gameTick % 3 == 0 && tpBay == null)
     						{
     							ServerEffect.addServerEffect(153, cx, cy - ch, 2);
     						}
@@ -5340,6 +5347,9 @@ namespace Game1
     
     	public void stopUseChargeSkill()
     	{
+    		// Het chieu: bo hinh trang phuc, lan tu sau may chu gui lai.
+    		tpNap = null;
+    		tpBay = null;
     		isFlyAndCharge = false;
     		isStandAndCharge = false;
     		isUseSkillAfterCharge = false;
@@ -5751,6 +5761,7 @@ namespace Game1
     					dart.paint(g);
     				}
     				paintEffect(g);
+    				God.TrangPhucUI.veKhiTu(g, this);
     				if (mobMe != null)
     				{
     				}

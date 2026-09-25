@@ -2050,6 +2050,45 @@ namespace Game3
     		guiMoRuong(1, id, n);
     	}
 
+    	/// <summary>Goi 113: xin danh sach trang phuc ky nang.</summary>
+    	public void trangPhucXin()
+    	{
+    		guiTrangPhuc(0, 0, 0);
+    	}
+
+    	/// <summary>Goi 113: bat trang phuc <paramref name="mauId"/> cho chieu (0 = hinh goc).</summary>
+    	public void trangPhucChon(int skillTpl, int mauId)
+    	{
+    		guiTrangPhuc(1, skillTpl, mauId);
+    	}
+
+    	private void guiTrangPhuc(int viec, int skillTpl, int mauId)
+    	{
+    		Message message = null;
+    		try
+    		{
+    			message = new Message((sbyte)113);
+    			message.writer().writeByte(viec);
+    			if (viec == 1)
+    			{
+    				message.writer().writeShort(skillTpl);
+    				message.writer().writeShort(mauId);
+    			}
+    			session.sendMessage(message);
+    		}
+    		catch (Exception)
+    		{
+    			// Mat ket noi -> bo qua, nguoi choi bam lai.
+    		}
+    		finally
+    		{
+    			if (message != null)
+    			{
+    				message.cleanup();
+    			}
+    		}
+    	}
+
     	/// <summary>Goi 115: byte viec, roi (neu mo) short id va byte so lan.</summary>
     	private void guiMoRuong(int viec, int id, int n)
     	{

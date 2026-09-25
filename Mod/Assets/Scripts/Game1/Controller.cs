@@ -3881,6 +3881,10 @@ namespace Game1
                             God.SuKienUI.getInstance().nhanDuLieu(dsSK);
                         }
                         break;
+                    case 113:
+                        // Trang phuc ky nang (mo tu the He thong cua tui).
+                        God.TrangPhucUI.getInstance().nhanGoi(msg);
+                        break;
                     case 115:
                         // Mo ruong (tab gacha trong man Su kien).
                         God.MoRuongUI.getInstance().nhanGoi(msg);

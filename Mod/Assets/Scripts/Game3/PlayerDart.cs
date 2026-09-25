@@ -192,6 +192,11 @@ namespace Game3
     		{
     			return;
     		}
+    		// Trang phuc ky nang: qua cau doi hinh thi ve thay, khong ve hinh goc.
+    		if (God.TrangPhucUI.veKhiBay(g, charBelong, x, y))
+    		{
+    			return;
+    		}
     		int num = MonsterDart.findDirIndexFromAngle(360 - angle);
     		int num2 = MonsterDart.FRAME[num];
     		int transform = MonsterDart.TRANSFORM[num];

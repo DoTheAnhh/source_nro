@@ -6884,7 +6884,7 @@ namespace Game3.God
             new int[] { 2, 3, 12 },
             new int[] { 1, 7, 4, 9 },
             new int[] { 19, 6, 8 },
-            new int[] { 100003, 200001, 200002, 100001, 16, 17, 100002 }
+            new int[] { 200003, 100003, 200001, 200002, 100001, 16, 17, 100002 }
         };
 
         /// <summary>Mã riêng của bảng này, không phải mã mod hay mã game.</summary>
@@ -6903,7 +6903,7 @@ namespace Game3.God
             // "Dang xuat" xep CUOI CUNG: no la muc duy nhat ket thuc phien
             // choi, de lan giua may muc cai dat thi som muon co nguoi bam
             // nham.
-            new string[] { "Sổ sưu tầm", "Bạn bè", "Kẻ thù", "Đổi cờ",
+            new string[] { "Trang phục", "Sổ sưu tầm", "Bạn bè", "Kẻ thù", "Đổi cờ",
                 "Cấu hình Voice", "Âm thanh", "Đăng xuất" }
         };
 
@@ -6993,6 +6993,13 @@ namespace Game3.God
                 // Hai muc rieng mo bang NGAY TRONG man nay, dong man di thi
                 // khong con gi de mo bang len.
                 dong();
+            }
+            if (ma[i] == MA_RIENG + 3)
+            {
+                // Trang phuc ky nang: man rieng nam tren moi thu, dong tui truoc.
+                dong();
+                TrangPhucUI.getInstance().mo();
+                return;
             }
             if (ma[i] == MA_RIENG + 1)
             {

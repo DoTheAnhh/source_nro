@@ -736,6 +736,8 @@ public class SkillService {
                     //bắt đầu tụ quả cầu
                     player.playerSkill.prepareQCKK = true;
                     player.playerSkill.lastTimePrepareQCKK = System.currentTimeMillis();
+                    // Trang phuc ky nang: bao ca khu hinh qua cau TRUOC goi tu chieu.
+                    nro.service.TrangPhucService.gI().baoTruocKhiTu(player, Skill.QUA_CAU_KENH_KHI);
                     sendPlayerPrepareSkill(player,
                             nro.repository.dao.SetBonusDAO.thoiGianVanChieu(
                                     player, Skill.QUA_CAU_KENH_KHI, 4000));
