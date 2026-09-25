@@ -938,7 +938,7 @@ public class Controller implements IMessageHandler {
                 // [115] Mo ruong (tab gacha trong man Su kien): xin bang, mo x1/x10.
                 // Da soat 115 o CA BA noi: bang lenh may chu, bang lenh client va
                 // moi loi goi new Message(...) hai ben — deu trong.
-                case 113:
+                case 106:
                     nro.service.TrangPhucService.gI().nhanGoi(player, _msg);
                     break;
                 case 115:

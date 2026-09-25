@@ -12,7 +12,7 @@ namespace Game2.God
     /// <para>Chỉ đổi hình, không đổi sức mạnh. Mới có Quả cầu kênh khi.</para>
     ///
     /// <para><b>Người khác cũng thấy.</b> Ngay trước lúc ai đó tụ chiêu, máy chủ
-    /// gửi cả khu gói 113 loại 2 kèm các khung hình (rỗng = hình gốc). Client
+    /// gửi cả khu gói 106 loại 2 kèm các khung hình (rỗng = hình gốc). Client
     /// gắn vào <c>Char.tpNap</c> / <c>Char.tpBay</c>; hai hàm vẽ tĩnh ở cuối
     /// lớp này dùng chúng lúc tụ và lúc quả cầu bay.</para>
     /// </remarks>

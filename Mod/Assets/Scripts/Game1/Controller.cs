@@ -3881,8 +3881,8 @@ namespace Game1
                             God.SuKienUI.getInstance().nhanDuLieu(dsSK);
                         }
                         break;
-                    case 113:
-                        // Trang phuc ky nang (mo tu the He thong cua tui).
+                    case 106:
+                        // Trang phuc ky nang (goi 106; 113 la hieu ung ban do cua game goc) (mo tu the He thong cua tui).
                         God.TrangPhucUI.getInstance().nhanGoi(msg);
                         break;
                     case 115:

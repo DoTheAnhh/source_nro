@@ -13,7 +13,7 @@ import nro.repository.dao.TrangPhucDAO;
 import nro.server.Manager;
 
 /**
- * Gói <b>113</b> — Trang phục kỹ năng. Xem {@link TrangPhucDAO}.
+ * Gói <b>106</b> — Trang phục kỹ năng (113 là hiệu ứng bản đồ của game gốc, không dùng được). Xem {@link TrangPhucDAO}.
  *
  * <pre>
  * client → máy chủ
@@ -31,7 +31,7 @@ import nro.server.Manager;
  */
 public final class TrangPhucService {
 
-    public static final int GOI = 113;
+    public static final int GOI = 106;
 
     private static final TrangPhucService I = new TrangPhucService();
 

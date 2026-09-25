@@ -2050,13 +2050,13 @@ namespace Game3
     		guiMoRuong(1, id, n);
     	}
 
-    	/// <summary>Goi 113: xin danh sach trang phuc ky nang.</summary>
+    	/// <summary>Goi 106: xin danh sach trang phuc ky nang.</summary>
     	public void trangPhucXin()
     	{
     		guiTrangPhuc(0, 0, 0);
     	}
 
-    	/// <summary>Goi 113: bat trang phuc <paramref name="mauId"/> cho chieu (0 = hinh goc).</summary>
+    	/// <summary>Goi 106: bat trang phuc <paramref name="mauId"/> cho chieu (0 = hinh goc).</summary>
     	public void trangPhucChon(int skillTpl, int mauId)
     	{
     		guiTrangPhuc(1, skillTpl, mauId);
@@ -2067,7 +2067,7 @@ namespace Game3
     		Message message = null;
     		try
     		{
-    			message = new Message((sbyte)113);
+    			message = new Message((sbyte)106);
     			message.writer().writeByte(viec);
     			if (viec == 1)
     			{
