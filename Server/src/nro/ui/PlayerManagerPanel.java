@@ -324,9 +324,19 @@ public class PlayerManagerPanel extends JPanel {
 
         add(buildToolbar(), BorderLayout.NORTH);
 
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                buildPlayerList(), buildDetail());
+        JComponent trai = buildPlayerList();
+        JComponent phai = buildDetail();
+        // Keo duoc ca hai phia: JSplitPane khong cho thanh chia di qua kich thuoc
+        // toi thieu cua hai ben, ma o chi tiet (nhieu o nhap, the con) bao toi
+        // thieu rat lon nen thanh chia dung im. Dat toi thieu nho cho ca hai.
+        trai.setMinimumSize(new java.awt.Dimension(220, 0));
+        phai.setMinimumSize(new java.awt.Dimension(320, 0));
+        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, trai, phai);
         split.setDividerLocation(560);
+        split.setContinuousLayout(true);
+        split.setOneTouchExpandable(true);
+        split.setDividerSize(8);
+        split.setResizeWeight(0.35);
         split.setBorder(null);
         add(split, BorderLayout.CENTER);
         add(lblStatus, BorderLayout.SOUTH);
@@ -437,7 +447,9 @@ public class PlayerManagerPanel extends JPanel {
         p.setOpaque(false);
         p.add(ServerGuiUtils.cuon(playerTable), BorderLayout.CENTER);
 
-        JPanel act = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        // WrapLayout: hep thi xuong hang. FlowLayout thuong bao cao dung mot
+        // hang nen cac nut cuoi (Dat nhiem vu, Lich su, Luu DB...) bi cat mat.
+        JPanel act = new JPanel(new WrapLayout(FlowLayout.LEFT, 6, 4));
         act.setOpaque(false);
         act.add(button("Gửi thông báo", ACCENT, e -> doNotify()));
         act.add(button("Đổi tên", ACCENT, e -> doDoiTen()));
@@ -564,7 +576,7 @@ public class PlayerManagerPanel extends JPanel {
         row = readOnly(grid, c, row, "Tổng nạp (cách 2)", vTongNap2);
         row = readOnly(grid, c, row, "Coin", vCoin);
 
-        JPanel act = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        JPanel act = new JPanel(new WrapLayout(FlowLayout.LEFT, 6, 6));
         act.setOpaque(false);
         act.add(editButton("Áp dụng ngay", OK_GREEN, e -> applyStats()));
         act.add(editButton("Hồi đầy HP/KI", ACCENT, e -> doFullHeal()));
@@ -657,7 +669,7 @@ public class PlayerManagerPanel extends JPanel {
         grid.add(ghiChu, c);
         c.gridwidth = 1;
 
-        JPanel act = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        JPanel act = new JPanel(new WrapLayout(FlowLayout.LEFT, 6, 6));
         act.setOpaque(false);
         act.add(editButton("Áp dụng ngay", OK_GREEN, e -> applyDetuStats()));
         act.add(editButton("Hồi đầy HP/KI", ACCENT, e -> doDetuFullHeal()));
@@ -901,7 +913,7 @@ public class PlayerManagerPanel extends JPanel {
             }
         });
 
-        JPanel act = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        JPanel act = new JPanel(new WrapLayout(FlowLayout.LEFT, 6, 6));
         act.setOpaque(false);
         act.add(editButton("Thêm / Đặt item", OK_GREEN, e -> itemDialog(slot, table, false)));
         act.add(editButton("Xoá item", WARN_RED, e -> deleteItem(slot, table)));
@@ -2181,7 +2193,7 @@ public class PlayerManagerPanel extends JPanel {
         JPanel optWrap = new JPanel(new BorderLayout(0, 4));
         optWrap.setBorder(javax.swing.BorderFactory.createTitledBorder("Chỉ số (option)"));
         optWrap.add(ServerGuiUtils.cuon(tOpt), BorderLayout.CENTER);
-        JPanel optBtn = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
+        JPanel optBtn = new JPanel(new WrapLayout(FlowLayout.LEFT, 4, 2));
         optBtn.add(button("Thêm", OK_GREEN, e -> mOpt.addRow(new Object[]{"0", "0"})));
         optBtn.add(OptionPicker.nutThemTacDung(tOpt));
         optBtn.add(button("Xoá", WARN_RED, e -> {
@@ -2769,7 +2781,7 @@ public class PlayerManagerPanel extends JPanel {
         logWrap.setBorder(titled("Lịch sử nạp tiền (chuyển khoản, admin nạp tay, thẻ cào)"));
         logWrap.add(ServerGuiUtils.cuon(logTable), BorderLayout.CENTER);
 
-        JPanel logBtns = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        JPanel logBtns = new JPanel(new WrapLayout(FlowLayout.LEFT, 6, 4));
         logBtns.setOpaque(false);
         logBtns.add(button("Tải lại lịch sử", GREY, e -> loadHistory()));
         logWrap.add(logBtns, BorderLayout.SOUTH);
@@ -2829,7 +2841,7 @@ public class PlayerManagerPanel extends JPanel {
         g.gridx = 0;
         g.gridy = 2;
         g.gridwidth = 4;
-        JPanel btn = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        JPanel btn = new JPanel(new WrapLayout(FlowLayout.LEFT, 6, 0));
         btn.setOpaque(false);
         btn.add(button("Sửa quyền", ACCENT, e -> doEditQuyen()));
         btn.add(button("Sửa tiền", ACCENT, e -> doEditTien()));
@@ -3246,7 +3258,7 @@ public class PlayerManagerPanel extends JPanel {
         sc.setPreferredSize(new java.awt.Dimension(520, 320));
 
         JTextField fBuoc = new JTextField("0", 6);
-        JPanel duoi = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        JPanel duoi = new JPanel(new WrapLayout(FlowLayout.LEFT, 6, 6));
         duoi.add(new JLabel("Bước nhỏ (0 là bước đầu):"));
         duoi.add(fBuoc);
 
@@ -3669,7 +3681,7 @@ public class PlayerManagerPanel extends JPanel {
             }.execute();
         };
 
-        JPanel loc = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
+        JPanel loc = new JPanel(new WrapLayout(FlowLayout.LEFT, 6, 6));
         loc.add(new JLabel("Vật phẩm:"));
         loc.add(fVatPham);
         loc.add(new JLabel("Phương thức:"));
@@ -3697,7 +3709,7 @@ public class PlayerManagerPanel extends JPanel {
         cbNgay.addActionListener(e -> nap.run());
         cbGioiHan.addActionListener(e -> nap.run());
 
-        JPanel duoi = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        JPanel duoi = new JPanel(new WrapLayout(FlowLayout.LEFT, 8, 4));
         duoi.add(lblTong);
 
         JPanel noi = new JPanel(new BorderLayout(0, 4));
