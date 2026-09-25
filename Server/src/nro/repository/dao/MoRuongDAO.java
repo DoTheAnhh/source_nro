@@ -391,6 +391,7 @@ public class MoRuongDAO {
             doiQuaV3();
             giamGiaX10V1();
             taoRuongCaoCapV1();
+            tiLeCaoCapV2();
         } catch (Exception ex) {
             Logger.logException(MoRuongDAO.class, ex, "Không dựng được phiếu quay rương");
         }
@@ -466,6 +467,48 @@ public class MoRuongDAO {
     /** Id vật phẩm phiếu quay rương cao cấp trên máy này, hoặc -1. */
     public static int idPhieuCaoCap() {
         return soCauHinhRuong(K_PHIEU_CAO_CAP);
+    }
+
+    /**
+     * Rương Cao Cấp đợt hai — một lần: Trứng Berus lên đỏ; ba món đỏ (Trứng
+     * Berus, Capsule kích hoạt tự chọn, Trang phục Địa Bộc Thiên Tinh) mỗi món
+     * 0,5%; hai món vàng (Capsule 1 món kích hoạt, Rương Thú Cưng Cao Cấp) mỗi
+     * món 2%. Các món còn lại chia phần dư, giữ tỉ lệ giữa chúng.
+     */
+    private static void tiLeCaoCapV2() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT gia_tri FROM mo_ruong_cau_hinh WHERE khoa = 'ruong_cao_cap_v2'");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            dong(rs);
+        }
+        int id = idTheoTenRuong(TEN_CAO_CAP);
+        int berus = TrungDeTuDAO.itemCuaLoai(nro.core.consts.ConstDetu.BILL);
+        int rtCaoCap = ThuCungDAO.idRuongCaoCap();
+        int trangPhuc = -1;
+        for (TrangPhucDAO.Mau m : TrangPhucDAO.tatCa()) {
+            if (m.skillTpl == 10 && "Địa Bộc Thiên Tinh".equals(m.ten)) {
+                trangPhuc = m.itemId;
+            }
+        }
+        if (id <= 0 || berus <= 0 || rtCaoCap <= 0 || trangPhuc <= 0) {
+            return;
+        }
+        ConnectDB.executeUpdate("UPDATE mo_ruong_qua SET hiem = ? WHERE ruong_id = ? AND item_id = ?",
+                HIEM_DO, id, berus);
+        java.util.Map<Integer, Integer> coDinh = new java.util.LinkedHashMap<>();
+        coDinh.put(1559, 2000);        // vang 2%
+        coDinh.put(rtCaoCap, 2000);    // vang 2%
+        coDinh.put(berus, 500);        // do 0,5%
+        coDinh.put(1655, 500);         // do 0,5%
+        coDinh.put(trangPhuc, 500);    // do 0,5%
+        datTiLeCoDinh(id, coDinh);
+        ConnectDB.executeUpdate("INSERT IGNORE INTO mo_ruong_cau_hinh (khoa, gia_tri) VALUES ('ruong_cao_cap_v2', '1')");
+        lucDoc = 0;
+        Logger.success("Mở rương: Rương Cao Cấp — 3 món đỏ 0,5%, 2 món vàng 2%\n");
     }
 
     /** Tên rương thứ ba. */
