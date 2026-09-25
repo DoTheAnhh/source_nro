@@ -232,11 +232,11 @@ public final class ThemIcon {
         if (id < 0 || id > ID_TOI_DA) {
             return "id phải từ 0 đến " + ID_TOI_DA + ".";
         }
-        // Tran 200 chu khong 64: khung hoat anh hieu ung (vd trang phuc ky nang)
+        // Tran 256 chu khong 64: khung hoat anh hieu ung (vd trang phuc ky nang)
         // lon hon icon vat pham nhieu. Client doc anh >= 256 qua imgNew, khong
         // vuong gi.
-        if (rong < 8 || rong > 200 || cao < 8 || cao > 200) {
-            return "Khung phải từ 8 đến 200 mỗi chiều.";
+        if (rong < 8 || rong > 256 || cao < 8 || cao > 256) {
+            return "Khung phải từ 8 đến 256 mỗi chiều.";
         }
         try {
             BufferedImage anh = ImageIO.read(nguon);

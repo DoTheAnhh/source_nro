@@ -549,11 +549,15 @@ namespace Game4.God
         //  Vẽ chiêu cho nhân vật (gọi từ Char / PlayerDart)
         // ------------------------------------------------------------------
         /// <summary>Mỗi khung tụ bao lâu, mỗi khung lặp bao lâu (ms).</summary>
-        private const long MS_NAP = 380L;
-        private const long MS_BAY = 150L;
+        /// <remarks>
+        /// Tụ chạy MỘT MẠCH (8 khung ~0,8 giây) rồi lặp hai khung cuối — chạy chậm
+        /// từng khung trông như trình chiếu ảnh, giật.
+        /// </remarks>
+        private const long MS_NAP = 100L;
+        private const long MS_BAY = 110L;
 
-        /// <summary>Khung chạm địch hiện bao lâu (ms).</summary>
-        private const long MS_TRUNG = 550L;
+        /// <summary>Khung chạm địch giữ bao lâu (ms) — dư chấn.</summary>
+        private const long MS_TRUNG = 300L;
 
         /// <summary>
         /// Khung lúc TỤ ở thời điểm hiện tại: chạy hết dãy tụ một lượt, rồi lặp
@@ -610,9 +614,14 @@ namespace Game4.God
                 return false;
             }
             // Khung cham dich: hien mot lat tai cho qua cau trung.
-            if (c.tpTrung >= 0 && mSystem.currentTimeMillis() - c.tpTrungLuc < MS_TRUNG)
+            long daQua = mSystem.currentTimeMillis() - c.tpTrungLuc;
+            if (c.tpTrung >= 0 && daQua < MS_TRUNG)
             {
-                SmallImage.drawSmallImage(g, c.tpTrung, c.tpTrungX, c.tpTrungY, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+                // Du chan: rung trai phai vai diem, nho dan ve 0 het 0,3 giay.
+                int bien = (int) (4 * (MS_TRUNG - daQua) / MS_TRUNG);
+                int lech = (GameCanvas.gameTick % 2 == 0) ? bien : -bien;
+                SmallImage.drawSmallImage(g, c.tpTrung, c.tpTrungX + lech, c.tpTrungY + lech / 2, 0,
+                        mGraphics.VCENTER | mGraphics.HCENTER);
             }
             if (c.tpBay == null || !c.isFlyAndCharge)
             {

@@ -77,7 +77,8 @@ public final class TrangPhucDAO {
             // Bo khung moi (10 khung, nguoi dung gui lai): doi dong Dia Boc Thien Tinh
             // dang tro bo cu. Chi sua khi con dung bo cu, chay lai bao lan cung vay.
             ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET icon = ?, khung_nap = ?, khung_bay = ?"
-                    + " WHERE skill_tpl = 10 AND khung_nap = '25259,25260,25261,25262,25263,25264'",
+                    + " WHERE skill_tpl = 10 AND khung_nap IN ('25259,25260,25261,25262,25263,25264',"
+                    + " '25267,25268,25269,25270,25271,25272,25273,25274')",
                     ICON_DBTT, KHUNG_NAP_DBTT, KHUNG_BAY_DBTT);
         } catch (Exception ex) {
             Logger.logException(TrangPhucDAO.class, ex, "Không tạo được bảng trang phục");
@@ -85,12 +86,12 @@ public final class TrangPhucDAO {
     }
 
     /**
-     * Địa Bộc Thiên Tinh (icon 25267–25276): 8 khung tụ cầu, rồi khung ném và
+     * Địa Bộc Thiên Tinh (icon 25277–25286, căn theo tâm quả cầu): 8 khung tụ cầu, rồi khung ném và
      * khung chạm địch. Client hiểu {@code khung_bay} là [khung bay, khung chạm].
      */
-    private static final int ICON_DBTT = 25274;
-    private static final String KHUNG_NAP_DBTT = "25267,25268,25269,25270,25271,25272,25273,25274";
-    private static final String KHUNG_BAY_DBTT = "25275,25276";
+    private static final int ICON_DBTT = 25284;
+    private static final String KHUNG_NAP_DBTT = "25277,25278,25279,25280,25281,25282,25283,25284";
+    private static final String KHUNG_BAY_DBTT = "25285,25286";
 
     /** Trang phục đầu tiên: Địa Bộc Thiên Tinh cho Quả cầu kênh khi. */
     private static void gieoNeuTrong() throws Exception {
