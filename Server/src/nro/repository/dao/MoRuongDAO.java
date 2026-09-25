@@ -382,8 +382,56 @@ public class MoRuongDAO {
             damBaoBang();
             datPhieuV1();
             doiTenTrungCapV1();
+            batGopChong();
         } catch (Exception ex) {
             Logger.logException(MoRuongDAO.class, ex, "Không dựng được phiếu quay rương");
+        }
+    }
+
+    /** Id các món rương / hộp / phiếu (xếp chồng được) — để gộp ô cũ lúc nạp nhân vật. */
+    private static volatile java.util.Set<Integer> monGopChong = java.util.Collections.emptySet();
+
+    public static boolean laMonGopChong(int id) {
+        return monGopChong.contains(id);
+    }
+
+    /** Điều kiện tên của nhóm rương / hộp / phiếu (vật phẩm linh tinh, kiểu 27). */
+    private static final String DK_GOP_CHONG = "TYPE = 27 AND (NAME LIKE 'Rương%' OR NAME LIKE 'Hộp%'"
+            + " OR NAME LIKE 'Hòm%' OR NAME LIKE 'Phiếu%')";
+
+    /**
+     * Cho mọi rương / hộp / phiếu xếp chồng — mỗi lần khởi động (rẻ, và bắt
+     * luôn món mới thêm sau). Các hàm mở đều trừ đúng một cái nên xếp chồng
+     * không đổi cách mở. Cập nhật cả bản trong bộ nhớ, và nhớ danh sách id để
+     * gộp ô cũ trong túi lúc nạp nhân vật.
+     */
+    private static void batGopChong() throws Exception {
+        int doi = ConnectDB.executeUpdate("UPDATE item_template SET is_up_to_up = 1 WHERE is_up_to_up = 0 AND "
+                + DK_GOP_CHONG);
+        java.util.Set<Integer> ids = new java.util.HashSet<>();
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM item_template WHERE " + DK_GOP_CHONG);
+            while (rs.next()) {
+                ids.add(rs.getInt("id"));
+            }
+        } finally {
+            dong(rs);
+        }
+        monGopChong = ids;
+        boolean coDoi = false;
+        List<nro.entity.template.ItemTemplate> ds = nro.server.Manager.ITEM_TEMPLATES;
+        if (ds != null) {
+            for (int id : ids) {
+                if (id >= 0 && id < ds.size() && ds.get(id) != null && !ds.get(id).isUpToUp) {
+                    ds.get(id).isUpToUp = true;
+                    coDoi = true;
+                }
+            }
+        }
+        if (coDoi || doi > 0) {
+            nro.ui.LamMoi.bao(nro.ui.LamMoi.VAT_PHAM);
+            Logger.success("Rương / hộp / phiếu: bật xếp chồng (" + ids.size() + " món)\n");
         }
     }
 

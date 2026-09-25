@@ -1142,6 +1142,8 @@ public class GodGK {
                 player.inventory.itemsBag.add(item);
             }
             dataArray.clear();
+            // Ruong / hop / phieu vua chuyen sang xep chong: gop cac o trung co tu truoc.
+            nro.service.inventory.InventoryService.gI().gopChongTrongTui(player);
 
             //data box
             dataArray = docCot(rs, "items_box");

@@ -375,11 +375,8 @@ namespace Game3.God
         //  Bố cục (tính theo vùng thân màn Sự kiện truyền vào)
         // ------------------------------------------------------------------
         private int bx, by, bw, bh;
-        private const int RONG_DS = 120;
+        private const int RONG_DS = 128;
         private const int CAO_MUC = 40;
-
-        /// <summary>Thẻ phiếu ở đáy cột trái.</summary>
-        private const int CAO_THE_PHIEU = 46;
 
         private int xP()
         {
@@ -393,7 +390,7 @@ namespace Game3.God
 
         private int oCua()
         {
-            return 50;
+            return 56;
         }
 
         /// <summary>Cửa sổ dải quà: x, y, rộng, cao.</summary>
@@ -408,7 +405,7 @@ namespace Game3.God
             int[] c = cuaSo();
             int y = c[1] + c[3] + 10;
             int w = (rP() - 12) / 3;
-            return new int[] { xP() + i * (w + 6), y, w, 26 };
+            return new int[] { xP() + i * (w + 6), y, w, 28 };
         }
 
         // ------------------------------------------------------------------
@@ -462,7 +459,7 @@ namespace Game3.God
             for (int i = 0; i < ds.Count; i++)
             {
                 int yy = by + 4 + i * (CAO_MUC + 4);
-                if (yy + CAO_MUC > by + bh - CAO_THE_PHIEU - 8)
+                if (yy + CAO_MUC > by + bh - 4)
                 {
                     break;
                 }
@@ -492,16 +489,15 @@ namespace Game3.God
                 int xc = bx + 7 + oI + 5;
                 if (c)
                 {
-                    mFont.tahoma_7b_white.drawString(g, catBot(r.ten, 14), xc, yy + 5, mFont.LEFT,
+                    mFont.tahoma_7b_white.drawString(g, catBot(r.ten, 18), xc, yy + 5, mFont.LEFT,
                             mFont.tahoma_7b_dark);
                 }
                 else
                 {
-                    mFont.tahoma_7b_dark.drawString(g, catBot(r.ten, 14), xc, yy + 5, mFont.LEFT);
+                    mFont.tahoma_7b_dark.drawString(g, catBot(r.ten, 18), xc, yy + 5, mFont.LEFT);
                 }
                 veSoPhieu(g, r, xc, yy + 21, c);
             }
-            veThePhieu(g, ds[chon]);
         }
 
         /// <summary>Chip "icon phiếu + số đang có" dưới tên rương.</summary>
@@ -526,36 +522,6 @@ namespace Game3.God
             {
                 mFont.tahoma_7b_dark.drawString(g, so, xs, y + 2, mFont.LEFT);
             }
-        }
-
-        /// <summary>Thẻ vàng ở đáy cột trái: phiếu của rương đang chọn, icon to.</summary>
-        private static void veThePhieuNen(mGraphics g, int x, int y, int w, int h)
-        {
-            g.setColor(rgb(0x9A, 0x4A, 0x10), 1f);
-            g.fillRect(x, y, w, h, BO_GOC);
-            g.veDaiDoc(x + 1, y + 1, w - 2, h - 2, BO_GOC - 1, rgb(0xFF, 0xE7, 0xA6), rgb(0xF2, 0xB0, 0x48));
-            g.setColor(0xFFFFFF, 0.35f);
-            g.fillRect(x + 4, y + 2, w - 8, 4, 2);
-        }
-
-        private void veThePhieu(mGraphics g, Ruong r)
-        {
-            int x = bx + 3;
-            int w = RONG_DS - 6;
-            int h = CAO_THE_PHIEU;
-            int y = by + bh - h - 4;
-            veThePhieuNen(g, x, y, w, h);
-            int o = h - 10;
-            g.setColor(0xFFFFFF, 0.5f);
-            g.fillRect(x + 5, y + 5, o, o, 7);
-            if (r.iconPhieu >= 0)
-            {
-                SmallImage.veIconVuaO(g, r.iconPhieu, x + 5 + o / 2, y + 5 + o / 2, o - 4);
-            }
-            int xc = x + o + 11;
-            mFont.tahoma_7b_dark.drawString(g, r.iconPhieu >= 0 ? "Phiếu quay" : "Điểm rương", xc, y + 8,
-                    mFont.LEFT);
-            mFont.tahoma_7b_white.drawString(g, "x" + r.diem, xc, y + 23, mFont.LEFT, mFont.tahoma_7b_dark);
         }
 
         private void veBenPhai(mGraphics g)
@@ -584,25 +550,68 @@ namespace Game3.God
             veNutMo(g, n10, "MỞ x10", r.giaX10, r.iconPhieu, r.diem >= r.giaX10 && !ban);
             veNutXem(g, nx);
 
-            // Hang "quy hiem nhat" duoi nut: nhin la biet rương nay dang gia gi.
-            int yH = nx[1] + nx[3] + 10;
-            if (yH + 34 < by + bh)
+            // The qua lap phan con lai: nhin la biet ruong nay co gi, ti le bao nhieu.
+            int yQ = nx[1] + nx[3] + 10;
+            veTheQua(g, r, x, yQ, w, by + bh - yQ - 2);
+        }
+
+        private readonly List<Mon> quaXep = new List<Mon>();
+
+        private static int hiemGon(int h)
+        {
+            return h < 0 ? 0 : (h > 3 ? 3 : h);
+        }
+
+        /// <summary>
+        /// Thẻ "Quà trong rương": dải tiêu đề cam, lưới quà xếp từ hiếm nhất
+        /// xuống, tỉ lệ ngay dưới mỗi ô. Hết chỗ thì dừng — đủ cả ở "Xem quà".
+        /// </summary>
+        private void veTheQua(mGraphics g, Ruong r, int x, int y, int w, int h)
+        {
+            if (h < 60)
             {
-                mFont.tahoma_7b_dark.drawString(g, "Quà hiếm nhất:", x, yH, mFont.LEFT);
-                int ix = x;
-                int dem = 0;
-                for (int hi = 3; hi >= 0 && dem < 6; hi--)
+                return;
+            }
+            g.setColor(MAU_VIEN, 0.8f);
+            g.fillRect(x, y, w, h, BO_GOC);
+            g.veDaiDoc(x + 1, y + 1, w - 2, h - 2, BO_GOC - 1, rgb(0xFF, 0xF8, 0xEC), rgb(0xF8, 0xE6, 0xCA));
+            g.veDaiDoc(x + 1, y + 1, w - 2, 19, BO_GOC - 1, rgb(0xFB, 0xB0, 0x5C), rgb(0xE0, 0x74, 0x1E));
+            mFont.tahoma_7b_white.drawString(g, "QUÀ TRONG RƯƠNG", x + 9, y + 5, mFont.LEFT, mFont.tahoma_7b_dark);
+            mFont.tahoma_7b_white.drawString(g, r.qua.Count + " món", x + w - 9, y + 5, mFont.RIGHT,
+                    mFont.tahoma_7b_dark);
+
+            quaXep.Clear();
+            for (int hi = 3; hi >= 0; hi--)
+            {
+                foreach (Mon m in r.qua)
                 {
-                    foreach (Mon m in r.qua)
+                    if (hiemGon(m.hiem) == hi)
                     {
-                        if (m.hiem != hi || dem >= 6)
-                        {
-                            continue;
-                        }
-                        veOMon(g, m, ix, yH + 12, 30, false);
-                        ix += 34;
-                        dem++;
+                        quaXep.Add(m);
                     }
+                }
+            }
+            const int o = 36;
+            const int khe = 8;
+            const int caoO = o + 15;
+            int soCot = Math.max(1, (w - 16 + khe) / (o + khe));
+            int soHang = Math.max(1, (h - 30) / caoO);
+            int rongLuoi = soCot * (o + khe) - khe;
+            int x0 = x + (w - rongLuoi) / 2;
+            int y0 = y + 27;
+            for (int i = 0; i < quaXep.Count && i < soCot * soHang; i++)
+            {
+                Mon m = quaXep[i];
+                int cx = x0 + (i % soCot) * (o + khe);
+                int cy = y0 + (i / soCot) * caoO;
+                veOMon(g, m, cx, cy, o, false);
+                if (hiemGon(m.hiem) >= 3)
+                {
+                    mFont.tahoma_7b_red.drawString(g, m.tiLe, cx + o / 2, cy + o + 2, mFont.CENTER);
+                }
+                else
+                {
+                    mFont.tahoma_7b_dark.drawString(g, m.tiLe, cx + o / 2, cy + o + 2, mFont.CENTER);
                 }
             }
         }
@@ -969,7 +978,7 @@ namespace Game3.God
             for (int i = 0; i < ds.Count; i++)
             {
                 int yy = by + 4 + i * (CAO_MUC + 4);
-                if (yy + CAO_MUC > by + bh - CAO_THE_PHIEU - 8)
+                if (yy + CAO_MUC > by + bh - 4)
                 {
                     break;
                 }

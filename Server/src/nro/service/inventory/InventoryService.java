@@ -22,6 +22,7 @@ import nro.service.Service;
 import nro.core.consts.ConstPlayer;
 import nro.repository.ConnectDB;
 import nro.repository.dao.LichSuVatPhamDAO;
+import nro.repository.dao.MoRuongDAO;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
@@ -2135,6 +2136,37 @@ public class InventoryService {
     /**
      * Kiểm tra có option 30 (Khóa)
      */
+    /**
+     * Gộp các ô trùng trong túi của rương / hộp / phiếu (xem
+     * {@link MoRuongDAO#laMonGopChong}) — gọi lúc nạp nhân vật. Những món này
+     * trước không xếp chồng nên túi cũ còn mỗi cái một ô; nay dồn về ô đầu.
+     * Đồ khoá và không khoá không gộp lẫn; một chồng tối đa 9.999 như thường.
+     */
+    public void gopChongTrongTui(Player pl) {
+        try {
+            List<Item> tui = pl.inventory.itemsBag;
+            for (int i = 0; i < tui.size(); i++) {
+                Item a = tui.get(i);
+                if (a == null || !a.isNotNullItem() || a.template == null || !a.template.isUpToUp
+                        || !MoRuongDAO.laMonGopChong(a.template.id)) {
+                    continue;
+                }
+                for (int j = i + 1; j < tui.size(); j++) {
+                    Item b = tui.get(j);
+                    if (b == null || !b.isNotNullItem() || b.template == null || b.template.id != a.template.id
+                            || hasOptionTemplateId(a, 30) != hasOptionTemplateId(b, 30)
+                            || a.quantity + b.quantity > 9999) {
+                        continue;
+                    }
+                    a.quantity += b.quantity;
+                    tui.set(j, ItemService.gI().createItemNull());
+                }
+            }
+        } catch (Exception ex) {
+            Logger.logException(InventoryService.class, ex, "Không gộp được chồng trong túi");
+        }
+    }
+
     private boolean hasOptionTemplateId(Item item, int optionTemplateId) {
         if (item == null || item.itemOptions == null) {
             return false;
