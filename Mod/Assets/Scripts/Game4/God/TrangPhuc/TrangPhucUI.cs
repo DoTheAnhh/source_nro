@@ -1558,6 +1558,9 @@ namespace Game4.God
         /// <summary>Kunai bay từ chỗ đi tới chỗ đến bao lâu (ms) — nhanh như dịch chuyển.</summary>
         private const long MS_KUNAI = 230L;
 
+        /// <summary>Mũi kunai cách tâm ảnh (tâm chuôi) bấy nhiêu điểm theo hướng mũi (212 px ảnh gốc × 0,25).</summary>
+        private const float MUI_KUNAI = 53f;
+
         /// <summary>Mỗi khung sét của kunai / mỗi khung chớp (ms).</summary>
         private const long MS_SET_KUNAI = 70L;
         private const long MS_CHOP = 55L;
@@ -1580,7 +1583,13 @@ namespace Game4.God
             long bayGio = mSystem.currentTimeMillis();
             int x0 = c.cx;
             int y0 = c.cy - c.ch / 2;
-            int y1 = y - c.ch / 2;
+            // Diem den = TAM nguoi dich (muc tieu dang chon); khong biet thi lay diem dat chan.
+            IMapObject mt = c.mobFocus != null ? (IMapObject) c.mobFocus : c.charFocus;
+            if (mt != null)
+            {
+                x = mt.getX();
+            }
+            int y1 = mt != null ? mt.getY() - mt.getH() / 2 : y - c.ch / 2;
             if (chop.Length > 0)
             {
                 themNo(chop, x0, y0, MS_CHOP, bayGio, 1f);
@@ -1623,10 +1632,15 @@ namespace Game4.God
                         dsKunai.RemoveAt(i);
                         continue;
                     }
-                    int x = k.x0 + (int) ((k.x1 - k.x0) * p);
-                    int y = k.y0 + (int) ((k.y1 - k.y0) * p);
-                    // Mui kunai trong anh huong PHAI (goc 0): xoay theo huong bay.
-                    float goc = (float) (System.Math.Atan2(k.y1 - k.y0, k.x1 - k.x0) * 57.29578);
+                    // MUI kunai truot dung tren duong thang cho cu -> dich, cham dung tam
+                    // dich; anh can tam o CHUOI nen lui anh lai MUI_KUNAI theo huong bay.
+                    double rad = System.Math.Atan2(k.y1 - k.y0, k.x1 - k.x0);
+                    float mx = k.x0 + (k.x1 - k.x0) * p;
+                    float my = k.y0 + (k.y1 - k.y0) * p;
+                    int x = (int) (mx - System.Math.Cos(rad) * MUI_KUNAI);
+                    int y = (int) (my - System.Math.Sin(rad) * MUI_KUNAI);
+                    // Mui kunai trong anh huong PHAI (goc 0): xoay dung goc duong bay.
+                    float goc = (float) (rad * 57.29578);
                     long t = ms - k.batDau;
                     int n = k.khung.Length;
                     int a = (int) ((t / MS_SET_KUNAI) % n);
