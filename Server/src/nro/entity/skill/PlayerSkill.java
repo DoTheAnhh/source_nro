@@ -67,6 +67,9 @@ public class PlayerSkill {
     public int timePrepareTuSat = 3000;
     public long lastTimePrepareLaze;
 
+    /** Luc nhan lenh "ban" Makankosappo chua co muc tieu (0 = chua); cho goi danh co muc tieu toi. */
+    public long lazeChoLuc;
+
     public byte getIndexSkillSelect() {
         switch (skillSelect.template.id) {
             case Skill.DRAGON:

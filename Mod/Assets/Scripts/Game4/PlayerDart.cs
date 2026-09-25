@@ -155,7 +155,7 @@ namespace Game4
     	{
     		// Trang phuc ky nang: chup trang thai TRUOC (ghiChamDich danh dau lan tu xong),
     		// roi ghi khung cham dich.
-    		bool coTrangPhuc = God.TrangPhucUI.conHieuLuc(charBelong);
+    		bool coTrangPhuc = God.TrangPhucUI.chanGoc(charBelong);
     		God.TrangPhucUI.ghiChamDich(charBelong, x, y, tpLucGan);
     		if (!charBelong.isUseSkillAfterCharge && x >= GameScr.cmx && x <= GameScr.cmx + GameCanvas.w)
     		{

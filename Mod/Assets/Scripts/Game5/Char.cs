@@ -948,6 +948,12 @@ namespace Game5
     	/// <summary>Hết hiệu lực lúc này (0 = theo hạn thường) — Tự phát nổ giữ thêm một lát sau khi nổ.</summary>
     	public long tpHetLuc;
 
+    	/// <summary>Sau khi nổ vẫn chặn hình gốc tới lúc này (máy chủ phát lại đòn đánh làm game vẽ lại chiêu gốc).</summary>
+    	public long tpChanDen;
+
+    	/// <summary>Gồng Makankosappo xong lúc này, đang chờ game tạo quả cầu bay (0 = không chờ).</summary>
+    	public long tpChoDart;
+
     	/// <summary>Khung chạm địch đang hiện (-1 = không) và chỗ, lúc bắt đầu.</summary>
     	public int tpTrung = -1;
 
@@ -3296,7 +3302,7 @@ namespace Game5
     		}
     		// Trang phuc ky nang dang bat: bo hieu ung goc cua tu the ra chieu (qua cau
     		// xanh...), chi con khung cua trang phuc.
-    		if (God.TrangPhucUI.conHieuLuc(this))
+    		if (God.TrangPhucUI.chanGoc(this))
     		{
     			eff0 = (eff1 = (eff2 = null));
     		}

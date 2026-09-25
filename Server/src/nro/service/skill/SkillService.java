@@ -810,10 +810,19 @@ public class SkillService {
                         && startMakenko - player.playerSkill.lastTimePrepareLaze > 15_000L) {
                     player.playerSkill.prepareLaze = false;
                 }
+                // Da "ban" khong muc tieu ma qua 2,5 giay khong co goi danh nao toi
+                // (ban truot / mat muc tieu) thi lan bam nay la NAP MOI — ban cu giu
+                // co nap toi 15 giay nen bam lai trong luc do chieu khong ra gi.
+                if (player.playerSkill.prepareLaze && player.playerSkill.lazeChoLuc > 0
+                        && startMakenko - player.playerSkill.lazeChoLuc > 2_500L) {
+                    player.playerSkill.prepareLaze = false;
+                    player.playerSkill.lazeChoLuc = 0;
+                }
                 if (!player.playerSkill.prepareLaze) {
                     //bắt đầu nạp laze
                     player.playerSkill.prepareLaze = true;
                     player.playerSkill.lastTimePrepareLaze = System.currentTimeMillis();
+                    player.playerSkill.lazeChoLuc = 0;
                     // Trang phuc ky nang: bao ca khu hinh Makankosappo TRUOC goi nap.
                     nro.service.TrangPhucService.gI().baoTruocKhiTu(player, Skill.MAKANKOSAPPO);
                     sendPlayerPrepareSkill(player,
@@ -829,9 +838,13 @@ public class SkillService {
                     // NAP LAN MOI (nguoi khac thay gong lai) thay vi gay sat thuong.
                     // Nay: chua co muc tieu thi GIU co nap, cho goi danh co muc tieu.
                     if (plTarget == null && mobTarget == null) {
+                        if (player.playerSkill.lazeChoLuc == 0) {
+                            player.playerSkill.lazeChoLuc = startMakenko;
+                        }
                         break;
                     }
                     player.playerSkill.prepareLaze = false;
+                    player.playerSkill.lazeChoLuc = 0;
                     if (plTarget != null) {
                         playerAttackPlayer(player, plTarget, false);
                     }

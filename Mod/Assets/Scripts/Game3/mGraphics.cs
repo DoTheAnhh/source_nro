@@ -1353,6 +1353,12 @@ namespace Game3
     		}
     		float pw = w * zoomLevel;
     		float ph = h * zoomLevel;
+    		// Anh hieu ung xoay / phong: loc min (Bilinear). Loc diem (Point) cua game
+    		// lam anh xoay rang cua va nhap nhay — nhin giat.
+    		if (image.texture.filterMode != FilterMode.Bilinear)
+    		{
+    			image.texture.filterMode = FilterMode.Bilinear;
+    		}
     		Vector2 tam = new Vector2(px - cx, py - cy);
     		Matrix4x4 maTranCu = GUI.matrix;
     		GUIUtility.RotateAroundPivot(gocDo, tam);

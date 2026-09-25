@@ -701,7 +701,7 @@ namespace Game3.God
         /// </summary>
         public static bool veKhiBay(mGraphics g, Char chu, int x, int y)
         {
-            if (!conHieuLuc(chu))
+            if (!chanGoc(chu))
             {
                 return false;
             }
@@ -909,6 +909,19 @@ namespace Game3.God
                     && bayGio - c.tpLuc < HAN_HIEU_LUC && (c.tpHetLuc == 0 || bayGio < c.tpHetLuc);
         }
 
+        /// <summary>Còn phải chặn hình gốc: đang có trang phục, hoặc vừa nổ xong chưa quá 2,5 giây.</summary>
+        public static bool chanGoc(Char c)
+        {
+            return conHieuLuc(c) || (c != null && mSystem.currentTimeMillis() < c.tpChanDen);
+        }
+
+        /// <summary>Đánh dấu lần tụ đã nổ, vẫn chặn hình gốc thêm một lát.</summary>
+        private static void ketThuc(Char c)
+        {
+            c.tpXong = true;
+            c.tpChanDen = mSystem.currentTimeMillis() + 2500L;
+        }
+
         /// <summary>Đang mang trang phục Quả cầu kênh khi.</summary>
         public static bool laQCKK(Char c)
         {
@@ -960,6 +973,7 @@ namespace Game3.God
             veCauBu(g);
             veNoTuNo(g);
             veXoayMo(g);
+            veRasenBu(g);
             veMotNguoi(g, Char.myCharz());
             for (int i = 0; i < GameScr.vCharInMap.size(); i++)
             {
@@ -996,6 +1010,15 @@ namespace Game3.God
         /// </summary>
         public static void nemNeuChuaNem(Char c)
         {
+            if (laRasen(c))
+            {
+                // Gong xong: cho game tao qua cau bay; khong co thi veRasen nem bu.
+                if (c.isStandAndCharge && mSystem.currentTimeMillis() - c.tpLuc >= thoiGianGong(c) - 400L)
+                {
+                    c.tpChoDart = mSystem.currentTimeMillis();
+                }
+                return;
+            }
             if (laTuNo(c))
             {
                 noTuSat(c);
@@ -1189,54 +1212,156 @@ namespace Game3.God
             return conHieuLuc(c) && c.tpSkill == 11;
         }
 
-        /// <summary>Nạp trên tay (lớn dần suốt ~60% thời gian gồng rồi lặp hai khung cuối) và bay.</summary>
+        /// <summary>Góc quay (độ) sau <paramref name="ms"/> ms với <paramref name="vong"/> vòng/giây.</summary>
+        private static float gocQuay(long ms, float vong)
+        {
+            long chuKy = (long) (1000f / vong);
+            return (float) (ms % chuKy) * 360f / chuKy;
+        }
+
+        /// <summary>
+        /// Nạp: shuriken cầm ở TAY SAU (phía ngược hướng mặt), lớn dần suốt ~60%
+        /// thời gian gồng rồi lặp hai khung cuối — luôn quay quanh tâm. Bay: vệt
+        /// gió nằm theo hướng bay (không quay) + shuriken quay tít ở đầu.
+        /// </summary>
         private static void veRasen(mGraphics g, Char c)
         {
             if (!laRasen(c))
             {
                 return;
             }
-            // Dang bay: xoay theo huong bay, lap cac khung co vet.
+            long ms = mSystem.currentTimeMillis();
+            short[] nap = c.tpNap;
+            int n = nap == null ? 0 : nap.Length;
+            if (c.tpChoDart > 0)
+            {
+                if (c.dart != null)
+                {
+                    c.tpChoDart = 0;
+                }
+                else if (ms - c.tpChoDart > 350L)
+                {
+                    c.tpChoDart = 0;
+                    nemBuRasen(c);
+                    return;
+                }
+            }
             if (c.dart != null && c.dart.isActive)
             {
                 short[] bay = tach(c.tpBay, 0);
+                float huong = (float) (System.Math.Atan2(c.dart.vy, c.dart.vx) * 57.29578);
                 if (bay.Length > 0)
                 {
-                    float goc = (float) (System.Math.Atan2(c.dart.vy, c.dart.vx) * 57.29578);
-                    long ms = mSystem.currentTimeMillis();
-                    long buoc = ms / MS_BAY;
-                    int a = (int) (buoc % bay.Length);
-                    int b = (int) ((buoc + 1) % bay.Length);
-                    float t = (float) (ms % MS_BAY) / MS_BAY;
-                    SmallImage.veIconXoay(g, bay[a], c.dart.x, c.dart.y, RASEN_BAY, goc);
-                    if (a != b && t > 0.02f)
-                    {
-                        SmallImage.veIconXoay(g, bay[b], c.dart.x, c.dart.y, RASEN_BAY, goc, t);
-                    }
+                    // Vet gio: khung bay cuoi (vet dai), mo, nam theo huong bay.
+                    SmallImage.veIconXoay(g, bay[bay.Length - 1], c.dart.x, c.dart.y, RASEN_BAY, huong, 0.55f);
+                }
+                if (n > 0)
+                {
+                    SmallImage.veIconXoay(g, nap[n - 1], c.dart.x, c.dart.y, RASEN_BAY, gocQuay(ms, 2.5f));
                 }
                 return;
             }
-            if (!c.isStandAndCharge || c.tpNap == null || c.tpNap.Length == 0)
+            if (!c.isStandAndCharge || n == 0)
             {
                 return;
             }
-            short[] nap = c.tpNap;
-            int n = nap.Length;
-            long troi = mSystem.currentTimeMillis() - c.tpLuc;
+            long troi = ms - c.tpLuc;
             long lon = System.Math.Max(300L, thoiGianGong(c) * 6 / 10);
-            int x = c.cx + (c.cdir >= 0 ? 1 : -1) * 22;
-            int y = c.cy - c.ch / 2 - 4;
+            int x = c.cx - (c.cdir >= 0 ? 1 : -1) * 18;
+            int y = c.cy - c.ch / 2 - 2;
+            float goc = gocQuay(ms, 2f);
+            int a;
+            int b;
+            float t;
             if (troi < lon || n < 2)
             {
-                float f = System.Math.Min(n - 1, (float) troi / lon * (n - 1));
-                int a = (int) f;
-                veHoa(g, nap[a], nap[System.Math.Min(n - 1, a + 1)], f - a, x, y, RASEN_TAY);
+                float fx = System.Math.Min(n - 1, (float) troi / lon * (n - 1));
+                a = (int) fx;
+                b = System.Math.Min(n - 1, a + 1);
+                t = fx - a;
+            }
+            else
+            {
+                // Da thanh hinh: mot khung quay deu, khong doi khung nua.
+                a = n - 1;
+                b = n - 1;
+                t = 0f;
+            }
+            SmallImage.veIconXoay(g, nap[a], x, y, RASEN_TAY, goc);
+            if (b != a && t > 0.02f)
+            {
+                SmallImage.veIconXoay(g, nap[b], x, y, RASEN_TAY, goc, t);
+            }
+        }
+
+        public class RasenBu
+        {
+            public short[] bay;
+            public short cau;
+            public int x0, y0, x1, y1;
+            public long batDau;
+        }
+
+        private static readonly List<RasenBu> dsRasenBu = new List<RasenBu>();
+
+        /// <summary>Gồng xong mà game không tạo quả cầu (mất mục tiêu): tự ném shuriken tới mục tiêu cuối / trước mặt.</summary>
+        private static void nemBuRasen(Char c)
+        {
+            IMapObject mt = c.mobFocus != null ? (IMapObject) c.mobFocus : c.charFocus;
+            RasenBu b = new RasenBu();
+            b.bay = c.tpBay;
+            b.cau = c.tpNap[c.tpNap.Length - 1];
+            b.x0 = c.cx - (c.cdir >= 0 ? 1 : -1) * 18;
+            b.y0 = c.cy - c.ch / 2 - 2;
+            if (mt != null)
+            {
+                b.x1 = mt.getX();
+                b.y1 = mt.getY() - mt.getH() / 2;
+            }
+            else
+            {
+                b.x1 = c.cx + (c.cdir >= 0 ? 1 : -1) * 140;
+                b.y1 = b.y0;
+            }
+            b.batDau = mSystem.currentTimeMillis();
+            ketThuc(c);
+            c.tpChanDen = b.batDau + 3000L;
+            lock (dsRasenBu)
+            {
+                dsRasenBu.Add(b);
+            }
+        }
+
+        private static void veRasenBu(mGraphics g)
+        {
+            if (dsRasenBu.Count == 0)
+            {
                 return;
             }
-            long sau = troi - lon;
-            long buoc2 = sau / MS_BAY;
-            veHoa(g, nap[n - 2 + (int) (buoc2 % 2)], nap[n - 2 + (int) ((buoc2 + 1) % 2)],
-                    (float) (sau % MS_BAY) / MS_BAY, x, y, RASEN_TAY);
+            long ms = mSystem.currentTimeMillis();
+            lock (dsRasenBu)
+            {
+                for (int i = dsRasenBu.Count - 1; i >= 0; i--)
+                {
+                    RasenBu b = dsRasenBu[i];
+                    float p = (float) (ms - b.batDau) / 360f;
+                    if (p >= 1f)
+                    {
+                        dsRasenBu.RemoveAt(i);
+                        noRasenTai(b.bay, b.x1, b.y1);
+                        continue;
+                    }
+                    int x = b.x0 + (int) ((b.x1 - b.x0) * p);
+                    int y = b.y0 + (int) ((b.y1 - b.y0) * p);
+                    short[] bay = tach(b.bay, 0);
+                    float huong = (float) (System.Math.Atan2(b.y1 - b.y0, b.x1 - b.x0) * 57.29578);
+                    if (bay.Length > 0)
+                    {
+                        SmallImage.veIconXoay(g, bay[bay.Length - 1], x, y, RASEN_BAY, huong, 0.55f);
+                    }
+                    SmallImage.veIconXoay(g, b.cau, x, y, RASEN_BAY, gocQuay(ms, 2.5f));
+                }
+            }
         }
 
         public class XoayMo
@@ -1251,14 +1376,24 @@ namespace Game3.God
         /// <summary>Trúng địch: chuỗi nổ lớn, rồi xoáy dư âm to nhất 3 giây mờ dần; kết thúc lần nạp.</summary>
         private static void noRasen(Char chu, int x, int y)
         {
-            chu.tpXong = true;
+            ketThuc(chu);
+            noRasenTai(chu.tpBay, x, y);
+        }
+
+        /// <summary>Chuỗi nổ (quay) rồi xoáy dư âm tại (x, y), theo dãy khung bay <paramref name="bayDu"/>.</summary>
+        private static void noRasenTai(short[] bayDu, int x, int y)
+        {
             long bayGio = mSystem.currentTimeMillis();
-            short[] no = tach(chu.tpBay, 1);
+            short[] no = tach(bayDu, 1);
             if (no.Length > 0)
             {
                 themNo(no, x, y, MS_NO, bayGio, RASEN_NO);
+                lock (dsNo)
+                {
+                    dsNo[dsNo.Count - 1].quay = 1.5f;
+                }
             }
-            short[] xoay = tach(chu.tpBay, 2);
+            short[] xoay = tach(bayDu, 2);
             if (xoay.Length > 0)
             {
                 XoayMo m = new XoayMo();
@@ -1296,15 +1431,12 @@ namespace Game3.God
                         continue;
                     }
                     float mo = t < MS_XOAY_RO ? 1f : (float) (MS_XOAY - t) / (MS_XOAY - MS_XOAY_RO);
-                    int n = m.khung.Length;
-                    long buoc = t / MS_GONG;
-                    int a = (int) (buoc % n);
-                    int b = (int) ((buoc + 1) % n);
-                    float h = (float) (t % MS_GONG) / MS_GONG;
-                    SmallImage.veIconXoay(g, m.khung[a], m.x, m.y, RASEN_XOAY, 0f, mo);
-                    if (a != b && h > 0.02f)
+                    // Mot khung quay deu (khong doi khung = khong giat) + mot lop mo quay
+                    // nguoc chieu cho xoay co chieu sau.
+                    SmallImage.veIconXoay(g, m.khung[0], m.x, m.y, RASEN_XOAY, gocQuay(t, 1f), mo);
+                    if (m.khung.Length > 1)
                     {
-                        SmallImage.veIconXoay(g, m.khung[b], m.x, m.y, RASEN_XOAY, 0f, mo * h);
+                        SmallImage.veIconXoay(g, m.khung[1], m.x, m.y, RASEN_XOAY * 0.9f, -gocQuay(t, 0.6f), mo * 0.45f);
                     }
                 }
             }
@@ -1349,6 +1481,8 @@ namespace Game3.God
             public long ms;
             public long batDau;
             public float tiLe = TU_NO_TO;
+            /// <summary>Vòng/giây quay quanh tâm (0 = không quay).</summary>
+            public float quay;
         }
 
         private static readonly List<NoLon> dsNo = new List<NoLon>();
@@ -1450,6 +1584,7 @@ namespace Game3.God
             }
             // Giu tat hieu ung no goc them 1,5 giay (tu the no ve ngay sau day).
             c.tpHetLuc = bayGio + 1500L;
+            c.tpChanDen = bayGio + 2500L;
         }
 
         private static void themNo(short[] khung, int x, int tamY, long ms, long batDau)
@@ -1493,14 +1628,19 @@ namespace Game3.God
                         continue;
                     }
                     int k2 = System.Math.Min(no.khung.Length - 1, k + 1);
-                    veHoa(g, no.khung[k], no.khung[k2], f - k, no.x, no.tamY, no.tiLe);
+                    float gq = no.quay == 0f ? 0f : gocQuay(bayGio - no.batDau, no.quay);
+                    SmallImage.veIconXoay(g, no.khung[k], no.x, no.tamY, no.tiLe, gq);
+                    if (no.khung[k2] != no.khung[k] && f - k > 0.02f)
+                    {
+                        SmallImage.veIconXoay(g, no.khung[k2], no.x, no.tamY, no.tiLe, gq, f - k);
+                    }
                 }
             }
         }
 
         private static void ghiNo(Char chu, short[] bay, int x, int y, int dat)
         {
-            chu.tpXong = true;
+            ketThuc(chu);
             if (bay.Length < 2)
             {
                 return;
