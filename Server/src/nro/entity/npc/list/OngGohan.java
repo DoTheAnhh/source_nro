@@ -174,6 +174,14 @@ public class OngGohan extends Npc {
                 handleSkipQuestMenu(player, select);
                 break;
 
+            case ConstNpc.DOI_TV_CHON_MOC:
+                nro.service.DoiThoiVangService.gI().chonMoc(this, player, select, ConstNpc.DOI_TV_XAC_NHAN);
+                break;
+
+            case ConstNpc.DOI_TV_XAC_NHAN:
+                nro.service.DoiThoiVangService.gI().xacNhan(player, select);
+                break;
+
             case ConstNpc.CONFIRM_THOIVANG:
                 Nhanthoivang(player, select);
                 break;
@@ -725,7 +733,7 @@ public class OngGohan extends Npc {
                     Service.gI().sendThongBao(player, "Chức năng đổi Thỏi Vàng đang tạm đóng.");
                     return;
                 }
-                Input.gI().createFormDoiThoiVang(player);
+                nro.service.DoiThoiVangService.gI().moMenu(this, player, ConstNpc.DOI_TV_CHON_MOC);
                 break;
             }
 
@@ -898,14 +906,9 @@ public class OngGohan extends Npc {
     }
 
     private void openSupportMenu(Player player) {
-        // Tỉ lệ hiện ngay trên nút để người chơi biết trước khi bấm.
-        long moi1k = nro.repository.dao.ConfigDAO.num(
-                nro.repository.dao.ConfigDAO.DOI_TV_MOI_1K);
-        // Ti le de trong loi thoai chu khong de tren nut: nut ba dong se cao hon
-        // cac nut khac va lam vo hang menu cua client.
         this.createOtherMenu(player, ConstNpc.ONG_GIA_MENU_1,
                 "|7|Chức Năng Hỗ Trợ\n|2|Xin Mời Quý Khách Lựa Chọn!"
-                + "\n|6|Đổi VND sang Thỏi Vàng: 1.000 VND = " + moi1k + " TV",
+                + "\n|6|Đổi VND sang Thỏi Vàng: mốc càng cao càng được thêm",
                 "Nhận Ngọc Xanh", "Nhận Thỏi Vàng", "Đổi VND\nsang TV",
                 "MTV FREE", "Nhập GiftCode", "Đóng");
     }

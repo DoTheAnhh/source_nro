@@ -635,6 +635,10 @@ public class ConstNpc {
     public static final int MENU_CALL_BOT = 10029;
     public static final int MENU_CALL_BOTVIP = 10031;
     public static final int CONFIRM_THOIVANG = 10032;
+    /** Ông Gôhan: chọn mốc đổi VNĐ lấy Thỏi Vàng. */
+    public static final int DOI_TV_CHON_MOC = 10033;
+    /** Ông Gôhan: xác nhận mốc đổi Thỏi Vàng. */
+    public static final int DOI_TV_XAC_NHAN = 10034;
     public static final int CAN_CUOC_CONG_DAN = 2030;
 
     public static final int KHAM_DA_TRANG_BI = 2008;

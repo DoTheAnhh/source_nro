@@ -50,6 +50,8 @@ public class ConfigDAO {
     public static final String DOI_TV_MIN = "doi_tv_min";
     /** Bật/tắt chức năng đổi VND sang Thỏi Vàng. */
     public static final String DOI_TV_BAT = "doi_tv_bat";
+    /** Các mốc đổi VND lấy Thỏi Vàng, dạng "vnd:thoiVang,…" (xem DoiThoiVangService). */
+    public static final String DOI_TV_MOC = "doi_tv_moc";
     /** Giá vé tuần, đơn vị VND. */
     public static final String VE_TUAN_GIA = "ve_tuan_gia";
     /** Số ngày hiệu lực của vé tuần. */
@@ -506,8 +508,9 @@ public class ConfigDAO {
         NOTES.put(THOI_VANG_GIA_VANG, "Một Thỏi Vàng đổi ra bao nhiêu vàng — dùng cho CẢ hai đường: bấm Sử dụng trong hành trang, và bán ở cửa hàng");
         NOTES.put(BUA_VV_GIA_VANG, "Giá vàng của gói Full bùa vĩnh viễn ở Bà Hạt Mít (0 = cho không)");
         NOTES.put(BOSS_GIAY_HOI_SINH, "Giây chờ hồi sinh dùng chung cho MỌI boss (3600 = 1 tiếng, 0 = tắt, mỗi boss giữ số gốc). Boss nào khai riêng seconds_rest ở tab Boss thì vẫn theo số riêng.");
-        NOTES.put(DOI_TV_MOI_1K, "Số Thỏi Vàng nhận được cho mỗi 1.000 VND");
-        NOTES.put(DOI_TV_MIN, "Số VND tối thiểu mỗi lần đổi");
+        NOTES.put(DOI_TV_MOI_1K, "(Không còn dùng — đổi Thỏi Vàng giờ theo mốc doi_tv_moc)");
+        NOTES.put(DOI_TV_MIN, "(Không còn dùng — đổi Thỏi Vàng giờ theo mốc doi_tv_moc)");
+        NOTES.put(DOI_TV_MOC, "Mốc đổi VND → Thỏi Vàng, dạng vnd:tv cách nhau dấu phẩy. Mốc cao nên được thêm, nhưng giữ thưởng dưới +30% để không lạm phát");
         NOTES.put(DOI_TV_BAT, "Bật chức năng đổi VND sang Thỏi Vàng (1 = bật, 0 = tắt)");
         NOTES.put(VE_TUAN_GIA, "Giá vé tuần (VND)");
         NOTES.put(VE_TUAN_NGAY, "Số ngày hiệu lực của vé tuần");
@@ -596,6 +599,9 @@ public class ConfigDAO {
 
     static {
         DEFAULTS_CHUOI.put(MAT_KHAU_ADMIN, "190823");
+        // Goc 5 TV / 1.000d, thuong tang dan theo moc, tran +30%.
+        DEFAULTS_CHUOI.put(DOI_TV_MOC,
+                "10000:50,20000:105,50000:280,100000:580,200000:1200,500000:3100,1000000:6500");
         DEFAULTS_CHUOI.put(LOI_CHAO,
                 "Chúc anh em chơi game vui vẻ !!");
         DEFAULTS_CHUOI.put(SKH_MAP, "");

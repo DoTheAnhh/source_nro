@@ -1252,8 +1252,8 @@
     <Compile Include="Assets\Scripts\Game3\Sound.cs" />
     <Compile Include="Assets\Scripts\Game2\God\TroChoi\DapSaibaman.cs" />
     <Compile Include="Assets\Scripts\Game2\God\Player\ThongTinDeTu.cs" />
-    <Compile Include="Assets\Scripts\Game4\Assets\src\g\PetFollow.cs" />
     <Compile Include="Assets\Scripts\Game3\God\SuKien\MoRuongUI.cs" />
+    <Compile Include="Assets\Scripts\Game4\Assets\src\g\PetFollow.cs" />
     <Compile Include="Assets\Scripts\Game1\Math.cs" />
     <Compile Include="Assets\Scripts\Game6\ServerScr.cs" />
     <Compile Include="Assets\Scripts\Game3\GameCanvas.cs" />
