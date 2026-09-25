@@ -3281,7 +3281,7 @@ namespace Game1
     		}
     		// Trang phuc ky nang dang bat: bo hieu ung goc cua tu the ra chieu (qua cau
     		// xanh...), chi con khung cua trang phuc.
-    		if (tpBay != null && (isUseSkillAfterCharge || isFlyAndCharge))
+    		if (God.TrangPhucUI.conHieuLuc(this))
     		{
     			eff0 = (eff1 = (eff2 = null));
     		}
@@ -5362,9 +5362,6 @@ namespace Game1
     
     	public void stopUseChargeSkill()
     	{
-    		// Het chieu: bo hinh trang phuc, lan tu sau may chu gui lai.
-    		tpNap = null;
-    		tpBay = null;
     		isFlyAndCharge = false;
     		isStandAndCharge = false;
     		isUseSkillAfterCharge = false;

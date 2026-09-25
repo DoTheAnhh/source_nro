@@ -623,8 +623,19 @@ namespace Game2.God
                 SmallImage.drawSmallImage(g, c.tpTrung, c.tpTrungX + lech, c.tpTrungY + lech / 2, 0,
                         mGraphics.VCENTER | mGraphics.HCENTER);
             }
-            if (c.tpBay == null || !c.isFlyAndCharge)
+            if (!conHieuLuc(c))
             {
+                return false;
+            }
+            // Tu xong, dang vung tay nem (qua cau chua roi tay): lap khung nem/cham.
+            if (!c.isFlyAndCharge)
+            {
+                if (c.isUseSkillAfterCharge && c.dart == null)
+                {
+                    int kn = c.tpBay[(int) ((mSystem.currentTimeMillis() / MS_BAY) % c.tpBay.Length)];
+                    SmallImage.drawSmallImage(g, kn, c.cx, c.cy - c.ch - 50, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+                    return true;
+                }
                 return false;
             }
             int k = khungTheoGio(c.tpNap, c.tpBay, c.tpLuc);
@@ -641,20 +652,35 @@ namespace Game2.God
         /// </summary>
         public static bool veKhiBay(mGraphics g, Char chu, int x, int y)
         {
-            if (chu == null || chu.tpBay == null || !chu.isUseSkillAfterCharge)
+            if (!conHieuLuc(chu))
             {
                 return false;
             }
-            // Khung dau cua day bay la luc nem; khung thu hai (neu co) de danh cho luc cham.
-            int k = chu.tpBay[0];
+            // Tu luc nem toi luc cham: lap cac khung bay (9 <-> 10).
+            int k = chu.tpBay[(int) ((mSystem.currentTimeMillis() / MS_BAY) % chu.tpBay.Length)];
             SmallImage.drawSmallImage(g, k, x, y, 0, mGraphics.VCENTER | mGraphics.HCENTER);
             return true;
+        }
+
+        /// <summary>Trang phục chiêu còn hiệu lực bao lâu kể từ lúc tụ (ms).</summary>
+        /// <remarks>
+        /// Chống dính: ném trượt (không có mục tiêu) thì không có quả cầu bay, khung
+        /// không được bỏ ở cuối đường bay — nếu không có hạn, nó sẽ che hiệu ứng
+        /// của chiêu khác dùng sau đó. Tụ tối đa ~10 giây cộng lúc bay là đủ.
+        /// </remarks>
+        private const long HAN_HIEU_LUC = 15000L;
+
+        /// <summary>Nhân vật đang mang khung trang phục chiêu còn hạn.</summary>
+        public static bool conHieuLuc(Char c)
+        {
+            return c != null && c.tpBay != null && c.tpBay.Length > 0
+                    && mSystem.currentTimeMillis() - c.tpLuc < HAN_HIEU_LUC;
         }
 
         /// <summary>Quả cầu vừa trúng: ghi khung chạm (khung thứ hai của dãy bay) để vẽ một lát.</summary>
         public static void ghiChamDich(Char chu, int x, int y)
         {
-            if (chu == null || chu.tpBay == null || chu.tpBay.Length < 2)
+            if (!conHieuLuc(chu) || chu.tpBay.Length < 2)
             {
                 return;
             }

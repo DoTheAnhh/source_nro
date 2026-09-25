@@ -172,7 +172,7 @@ namespace Game1
     				num = ((!charBelong.me) ? charBelong.skillTemplateId : Char.myCharz().myskill.skillId);
     				if (num < 77 || num > 83)
     				{
-    					if (charBelong.tpBay == null)
+    					if (!God.TrangPhucUI.conHieuLuc(charBelong))
     					{
     					    GameScr.gI().activeSuperPower(x, y);
     					}
@@ -180,7 +180,7 @@ namespace Game1
     			}
     			else
     			{
-    				if (charBelong.tpBay == null)
+    				if (!God.TrangPhucUI.conHieuLuc(charBelong))
     				{
     				    GameScr.gI().activeSuperPower(x, y);
     				}
@@ -191,6 +191,11 @@ namespace Game1
     		charBelong.skillPaint = null;
     		charBelong.skillPaintRandomPaint = null;
     		charBelong.stopUseChargeSkill();
+    		// Trang phuc: cau da cham dich, bo khung. Lan tu sau may chu gui lai.
+    		// (Khong bo trong stopUseChargeSkill: setSkillPaint co luc goi ham do
+    		// ngay luc nem, bo som la hinh goc hien lai.)
+    		charBelong.tpNap = null;
+    		charBelong.tpBay = null;
     	}
     
     	public void paint(mGraphics g)
