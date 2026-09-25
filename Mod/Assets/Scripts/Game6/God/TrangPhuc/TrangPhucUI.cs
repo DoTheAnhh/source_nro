@@ -676,7 +676,7 @@ namespace Game6.God
                 if (c.isUseSkillAfterCharge && c.dart == null)
                 {
                     int kn = c.tpBay[(int) ((mSystem.currentTimeMillis() / MS_BAY) % System.Math.Min(2, c.tpBay.Length))];
-                    SmallImage.drawSmallImage(g, kn, c.cx, c.cy - c.ch - 50, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+                    SmallImage.veIconXoay(g, kn, c.cx, c.cy - c.ch - CAO_TAM, TO_CAU, 0f);
                     return true;
                 }
                 return false;
@@ -684,11 +684,11 @@ namespace Game6.God
             int k = khungTheoGio(c.tpNap, c.tpBay, c.tpLuc);
             float to = coLucTu(c);
             // Mot tam co dinh du to hay be: phong quanh chinh tam qua cau.
-            int tamY = c.cy - c.ch - 50;
+            int tamY = c.cy - c.ch - CAO_TAM;
             veDaBayVao(g, c, c.cx, tamY);
             if (k >= 0)
             {
-                SmallImage.veIconXoay(g, k, c.cx, tamY, to, 0f);
+                SmallImage.veIconXoay(g, k, c.cx, tamY, to * TO_CAU, 0f);
             }
             return true;
         }
@@ -802,6 +802,12 @@ namespace Game6.God
             }
         }
 
+        /// <summary>Phóng cả quả cầu (tụ, ném, bay, nổ) — người dùng muốn to hơn 30%.</summary>
+        private const float TO_CAU = 1.3f;
+
+        /// <summary>Tâm quả cầu cao hơn đỉnh đầu nhân vật chừng này điểm.</summary>
+        private const int CAO_TAM = 60;
+
         /// <summary>Cỡ nhỏ nhất lúc mới bắt đầu tụ (phần của cỡ đầy đủ).</summary>
         private const float CO_NHO_NHAT = 0.25f;
 
@@ -911,7 +917,7 @@ namespace Game6.God
             if (conHieuLuc(c) && c.dart != null && c.dart.isActive)
             {
                 int k = c.tpBay[(int) ((bayGio / MS_BAY) % System.Math.Min(2, c.tpBay.Length))];
-                SmallImage.drawSmallImage(g, k, c.dart.x, c.dart.y, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+                SmallImage.veIconXoay(g, k, c.dart.x, c.dart.y, TO_CAU, 0f);
             }
             // Khung cham dich: giu mot lat tai cho qua cau trung, rung du chan.
             long daQua = bayGio - c.tpTrungLuc;
@@ -919,8 +925,7 @@ namespace Game6.God
             {
                 int bien = (int) (4 * (MS_TRUNG - daQua) / MS_TRUNG);
                 int lech = (GameCanvas.gameTick % 2 == 0) ? bien : -bien;
-                SmallImage.drawSmallImage(g, c.tpTrung, c.tpTrungX + lech, c.tpTrungY + lech / 2, 0,
-                        mGraphics.VCENTER | mGraphics.HCENTER);
+                SmallImage.veIconXoay(g, c.tpTrung, c.tpTrungX + lech, c.tpTrungY + lech / 2, TO_CAU, 0f);
             }
         }
 
