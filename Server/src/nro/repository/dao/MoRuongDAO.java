@@ -352,10 +352,13 @@ public class MoRuongDAO {
     /** Khoá cấu hình giữ id vật phẩm của hai phiếu (id mỗi máy một khác). */
     public static final String K_PHIEU_THUONG = "phieu_thuong";
     public static final String K_PHIEU_SU_KIEN = "phieu_su_kien";
+    public static final String K_PHIEU_CAO_CAP = "phieu_cao_cap";
 
     /** Ảnh hai phiếu — tệp nằm sẵn trong data/icon. */
     private static final int ICON_PHIEU_THUONG = 25252;
     private static final int ICON_PHIEU_SU_KIEN = 25253;
+    /** Phiếu cao cấp: phiếu trung cấp đổi sang tông tím hồng. */
+    private static final int ICON_PHIEU_CAO_CAP = 25287;
 
     /** Kiểu vật phẩm linh tinh, cùng kiểu với rương thú cưng. */
     private static final int KIEU_PHIEU = 27;
@@ -379,12 +382,15 @@ public class MoRuongDAO {
                     "Dùng để mở Rương Thường ở tab Mở rương (màn Sự kiện)");
             damBaoMotPhieu(K_PHIEU_SU_KIEN, "Phiếu quay rương trung cấp", ICON_PHIEU_SU_KIEN,
                     "Dùng để mở Rương Trung Cấp ở tab Mở rương (màn Sự kiện)");
+            damBaoMotPhieu(K_PHIEU_CAO_CAP, "Phiếu quay rương cao cấp", ICON_PHIEU_CAO_CAP,
+                    "Dùng để mở Rương Cao Cấp ở tab Mở rương (màn Sự kiện)");
             damBaoBang();
             datPhieuV1();
             doiTenTrungCapV1();
             batGopChong();
             doiQuaV3();
             giamGiaX10V1();
+            taoRuongCaoCapV1();
         } catch (Exception ex) {
             Logger.logException(MoRuongDAO.class, ex, "Không dựng được phiếu quay rương");
         }
@@ -455,6 +461,73 @@ public class MoRuongDAO {
         ConnectDB.executeUpdate("INSERT IGNORE INTO mo_ruong_cau_hinh (khoa, gia_tri) VALUES ('gia_x10_9_v1', '1')");
         lucDoc = 0;
         Logger.success("Mở rương: x10 giờ tốn 9 phiếu\n");
+    }
+
+    /** Id vật phẩm phiếu quay rương cao cấp trên máy này, hoặc -1. */
+    public static int idPhieuCaoCap() {
+        return soCauHinhRuong(K_PHIEU_CAO_CAP);
+    }
+
+    /** Tên rương thứ ba. */
+    public static final String TEN_CAO_CAP = "Rương Cao Cấp";
+
+    /**
+     * Rương thứ ba — <b>Rương Cao Cấp</b>, mở bằng phiếu cao cấp (x1 = 1, x10 =
+     * 9) — một lần. Quà nặng hơn hai rương kia; hai món đỏ là Capsule kích
+     * hoạt tự chọn (1%) và vật phẩm mở khoá trang phục Địa Bộc Thiên Tinh
+     * (0,5%). Id trứng / rương thú cưng / vật phẩm trang phục tra theo máy;
+     * thiếu thì không ghi cờ, lần sau làm lại.
+     */
+    private static void taoRuongCaoCapV1() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT gia_tri FROM mo_ruong_cau_hinh WHERE khoa = 'ruong_cao_cap_v1'");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            dong(rs);
+        }
+        int phieu = idPhieuCaoCap();
+        int berus = TrungDeTuDAO.itemCuaLoai(nro.core.consts.ConstDetu.BILL);
+        int rtCaoCap = ThuCungDAO.idRuongCaoCap();
+        int trangPhuc = -1;
+        for (TrangPhucDAO.Mau m : TrangPhucDAO.tatCa()) {
+            if (m.skillTpl == 10 && "Địa Bộc Thiên Tinh".equals(m.ten)) {
+                trangPhuc = m.itemId;
+            }
+        }
+        if (phieu <= 0 || berus <= 0 || rtCaoCap <= 0 || trangPhuc <= 0) {
+            Logger.warning("Mở rương: chưa đủ id để dựng Rương Cao Cấp, để lần khởi động sau\n");
+            return;
+        }
+        int id = idTheoTenRuong(TEN_CAO_CAP);
+        if (id <= 0) {
+            id = themRuong(TEN_CAO_CAP, "Rương cao cấp nhất — capsule kích hoạt, trứng Berus, trang phục kỹ năng.",
+                    1560, 1, 9, 3);
+        }
+        ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET item_phieu = ?, gia_x1 = 1, gia_x10 = 9,"
+                + " ten_diem = 'Phiếu quay rương cao cấp' WHERE id = ?", phieu, id);
+        ConnectDB.executeUpdate("DELETE FROM mo_ruong_qua WHERE ruong_id = ?", id);
+        themQua(id, 457, 10, 3500, 0, "");        // Thoi vang x10
+        themQua(id, 1964, 2, 2500, 1, "");        // Hop sao pha le x2
+        themQua(id, 1153, 2, 2000, 1, "");        // Giap Xen bo hung 2 x2
+        themQua(id, 15, 1, 1200, 2, "");          // Ngoc Rong 2 sao
+        themQua(id, 1559, 1, 1, 3, "");           // Capsule 1 mon kich hoat
+        themQua(id, rtCaoCap, 1, 1, 3, "");       // Ruong thu cung cao cap
+        themQua(id, berus, 1, 1, 3, "");          // Trung Berus
+        themQua(id, 1655, 1, 1, HIEM_DO, "");     // Capsule kich hoat tu chon
+        themQua(id, trangPhuc, 1, 1, HIEM_DO, "");// Trang phuc: Dia Boc Thien Tinh
+        java.util.Map<Integer, Integer> coDinh = new java.util.LinkedHashMap<>();
+        coDinh.put(1559, 3000);        // 3%
+        coDinh.put(rtCaoCap, 3000);    // 3%
+        coDinh.put(berus, 1500);       // 1,5%
+        coDinh.put(1655, 1000);        // 1%
+        coDinh.put(trangPhuc, 500);    // 0,5%
+        datTiLeCoDinh(id, coDinh);
+        ConnectDB.executeUpdate("INSERT IGNORE INTO mo_ruong_cau_hinh (khoa, gia_tri) VALUES ('ruong_cao_cap_v1', '1')");
+        lucDoc = 0;
+        Logger.success("Mở rương: dựng Rương Cao Cấp (trang phục Địa Bộc Thiên Tinh 0,5%)\n");
     }
 
     /** Độ hiếm Thần thoại (đỏ) — trên Huyền thoại. */
@@ -943,7 +1016,7 @@ public class MoRuongDAO {
             throws Exception {
         ConnectDB.executeUpdate("INSERT INTO mo_ruong_qua (ruong_id, item_id, so_luong, trong_so, hiem, chi_so)"
                 + " VALUES (?, ?, ?, ?, ?, ?)", ruongId, itemId, Math.max(1, soLuong), Math.max(0, trongSo),
-                Math.max(0, Math.min(3, hiem)), chiSo == null ? "" : chiSo.trim());
+                Math.max(0, Math.min(HIEM_DO, hiem)), chiSo == null ? "" : chiSo.trim());
         lucDoc = 0;
     }
 
@@ -951,7 +1024,7 @@ public class MoRuongDAO {
         try {
             ConnectDB.executeUpdate("UPDATE mo_ruong_qua SET so_luong = ?, trong_so = ?, hiem = ?, chi_so = ?"
                     + " WHERE id = ?", Math.max(1, q.soLuong), Math.max(0, q.trongSo),
-                    Math.max(0, Math.min(3, q.hiem)), q.chiSo == null ? "" : q.chiSo.trim(), q.id);
+                    Math.max(0, Math.min(HIEM_DO, q.hiem)), q.chiSo == null ? "" : q.chiSo.trim(), q.id);
             lucDoc = 0;
         } catch (Exception ex) {
             Logger.logException(MoRuongDAO.class, ex, "Không lưu được quà rương");

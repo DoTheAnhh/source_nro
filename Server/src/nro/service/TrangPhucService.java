@@ -23,7 +23,7 @@ import nro.server.Manager;
  * máy chủ → client
  *   byte 0, byte nChieu, { short skillTpl, UTF tenChieu, short iconChieu,
  *            short dangDung, byte nMau, { short id, UTF ten, UTF moTa, short icon,
- *            byte nNap, short[nNap], byte nBay, short[nBay] } }
+ *            byte nNap, short[nNap], byte nBay, short[nBay], byte daCo } }
  *   byte 2, int charId, short skillTpl, byte nNap, short[nNap], byte nBay, short[nBay]
  *            — gửi cả khu ngay trước lúc một người tụ chiêu; nNap = nBay = 0
  *            là dùng hình gốc.
@@ -67,6 +67,10 @@ public final class TrangPhucService {
                 Service.gI().sendThongBao(pl, "Trang phục này hiện không dùng được.");
                 return;
             }
+            if (!TrangPhucDAO.coSoHuu(pl.id, mauId)) {
+                Service.gI().sendThongBao(pl, "Bạn chưa có trang phục " + m.ten + " — mở được từ Rương Cao Cấp.");
+                return;
+            }
             TrangPhucDAO.chon(pl.id, skillTpl, mauId);
             Service.gI().sendThongBao(pl, "Đã bật trang phục " + m.ten + ".");
         } else {
@@ -74,6 +78,33 @@ public final class TrangPhucService {
             Service.gI().sendThongBao(pl, "Đã về hình gốc.");
         }
         guiDanhSach(pl);
+    }
+
+    /**
+     * Dùng vật phẩm "Trang phục: …" — mở khoá trang phục đó vĩnh viễn. Đã có
+     * rồi thì báo và giữ vật phẩm. Trả true nếu đây là vật phẩm trang phục
+     * (đã xử lý), false để UseItem đi tiếp đường thường.
+     */
+    public boolean dungVatPham(Player pl, nro.entity.item.Item item) {
+        if (pl == null || item == null || !item.isNotNullItem()) {
+            return false;
+        }
+        TrangPhucDAO.Mau m = TrangPhucDAO.mauTheoVatPham(item.template.id);
+        if (m == null) {
+            return false;
+        }
+        if (TrangPhucDAO.coSoHuu(pl.id, m.id)) {
+            Service.gI().sendThongBao(pl, "Bạn đã có trang phục " + m.ten + " rồi.");
+            return true;
+        }
+        if (TrangPhucDAO.themSoHuu(pl.id, m.id)) {
+            nro.service.inventory.InventoryService.gI().subQuantityItemsBag(pl, item, 1);
+            nro.service.inventory.InventoryService.gI().sendItemBag(pl);
+            Service.gI().sendThongBao(pl, "Đã mở khoá trang phục " + m.ten
+                    + "! Vào Túi → Chức năng → Hệ thống → Trang phục để bật.");
+            guiDanhSach(pl);
+        }
+        return true;
     }
 
     private static SkillTemplate timChieu(int tpl) {
@@ -114,6 +145,7 @@ public final class TrangPhucService {
                     msg.writer().writeShort(m.icon);
                     ghiKhung(msg, m.khungNap);
                     ghiKhung(msg, m.khungBay);
+                    msg.writer().writeByte(TrangPhucDAO.coSoHuu(pl.id, m.id) ? 1 : 0);
                 }
             }
             pl.sendMessage(msg);

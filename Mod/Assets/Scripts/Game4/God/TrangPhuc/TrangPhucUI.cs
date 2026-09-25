@@ -36,6 +36,8 @@ namespace Game4.God
             public int icon;
             public short[] nap;
             public short[] bay;
+            /// <summary>Đã sở hữu chưa — chưa có thì ô xám mờ, có ổ khoá, không bật được.</summary>
+            public bool daCo;
         }
 
         public class Chieu
@@ -171,6 +173,7 @@ namespace Game4.God
                     x.icon = msg.reader().readShort();
                     x.nap = docKhung(msg);
                     x.bay = docKhung(msg);
+                    x.daCo = msg.reader().readByte() == 1;
                     c.ds.Add(x);
                 }
                 dsChieu.Add(c);
@@ -390,9 +393,17 @@ namespace Game4.God
                 veKhung(g, o[0], o[1], o[2], o[3], 7, xem ? rgb(0xF5, 0xA6, 0x23) : rgb(0x5A, 0x4A, 0x3A),
                         rgb(0x3A, 0x33, 0x2E), NEN_XEM);
                 int icon = i == 0 ? c.icon : c.ds[i - 1].icon;
+                bool khoa = i > 0 && !c.ds[i - 1].daCo;
                 if (icon >= 0)
                 {
                     SmallImage.veIconVuaO(g, icon, o[0] + o[2] / 2, o[1] + o[3] / 2, o[2] - 8);
+                }
+                if (khoa)
+                {
+                    // Chua co: phu xam mo len ca o, o khoa giua icon.
+                    g.setColor(rgb(0x6A, 0x6A, 0x6A), 0.72f);
+                    g.fillRect(o[0] + 1, o[1] + 1, o[2] - 2, o[3] - 2, 6);
+                    veOKhoa(g, o[0] + o[2] / 2, o[1] + o[3] / 2);
                 }
                 if (dung)
                 {
@@ -408,8 +419,36 @@ namespace Game4.God
                 {
                     ten = ten.Substring(0, 9) + "…";
                 }
-                mFont.tahoma_7.drawString(g, ten, o[0] + o[2] / 2, o[1] + o[3] + 1, mFont.CENTER);
+                if (khoa)
+                {
+                    mFont.tahoma_7_grey.drawString(g, ten, o[0] + o[2] / 2, o[1] + o[3] + 1, mFont.CENTER);
+                }
+                else
+                {
+                    mFont.tahoma_7.drawString(g, ten, o[0] + o[2] / 2, o[1] + o[3] + 1, mFont.CENTER);
+                }
             }
+        }
+
+        /// <summary>Ổ khoá vẽ tay (thân vàng, quai xám) — tâm tại (x, y).</summary>
+        private static void veOKhoa(mGraphics g, int x, int y)
+        {
+            // Bong do.
+            g.setColor(0x000000, 0.45f);
+            g.fillRect(x - 9, y - 3, 20, 16, 4);
+            // Quai: hinh chu U nguoc.
+            g.setColor(rgb(0xE8, 0xE8, 0xE8), 1f);
+            g.fillRect(x - 6, y - 11, 3, 10, 1);
+            g.fillRect(x + 3, y - 11, 3, 10, 1);
+            g.fillRect(x - 6, y - 12, 12, 3, 2);
+            // Than khoa.
+            g.setColor(rgb(0x8A, 0x5A, 0x0A), 1f);
+            g.fillRect(x - 9, y - 4, 18, 15, 3);
+            g.veDaiDoc(x - 8, y - 3, 16, 13, 2, rgb(0xFF, 0xD8, 0x5A), rgb(0xE0, 0x9A, 0x18));
+            // Lo khoa.
+            g.setColor(rgb(0x4A, 0x2A, 0x05), 1f);
+            g.fillRect(x - 1, y, 3, 3, 1);
+            g.fillRect(x, y + 2, 1, 4);
         }
 
         private void veXemTruoc(mGraphics g)
@@ -450,11 +489,22 @@ namespace Game4.God
             {
                 mFont.tahoma_7_white.drawString(g, dong[i], xc, k[1] + 30 + i * 12, mFont.LEFT);
             }
-            mFont.tahoma_7_grey.drawString(g, "Chỉ đổi hình, không đổi sức mạnh.", xc, k[1] + k[3] - 50, mFont.LEFT);
+            if (m == null || m.daCo)
+            {
+                mFont.tahoma_7_grey.drawString(g, "Chỉ đổi hình, không đổi sức mạnh.", xc, k[1] + k[3] - 50, mFont.LEFT);
+            }
 
             int[] n = nutBat();
             bool dangDung = oChon == c.dangDung;
-            if (dangDung)
+            if (m != null && !m.daCo)
+            {
+                veKhung(g, n[0], n[1], n[2], n[3], 8, rgb(0x5A, 0x4A, 0x3A), rgb(0x9A, 0x9A, 0x9A), rgb(0x6E, 0x6E, 0x6E));
+                mFont.tahoma_7b_white.drawString(g, "CHƯA SỞ HỮU", n[0] + n[2] / 2, n[1] + 7, mFont.CENTER,
+                        mFont.tahoma_7b_dark);
+                mFont.tahoma_7b_yellow.drawString(g, "Mở từ Rương Cao Cấp", n[0] + n[2] / 2, n[1] - 14, mFont.CENTER,
+                        mFont.tahoma_7b_dark);
+            }
+            else if (dangDung)
             {
                 veKhung(g, n[0], n[1], n[2], n[3], 8, rgb(0x5A, 0x4A, 0x3A), rgb(0xB8, 0xA8, 0x90), rgb(0x8A, 0x7A, 0x66));
                 mFont.tahoma_7b_white.drawString(g, "ĐANG DÙNG", n[0] + n[2] / 2, n[1] + 7, mFont.CENTER,
@@ -526,7 +576,9 @@ namespace Game4.God
                 }
             }
             int[] n = nutBat();
-            if (oChon != c.dangDung && cham(n[0], n[1], n[2], n[3]))
+            Mau mChon = timMau(c, oChon);
+            bool duocBat = oChon == 0 || (mChon != null && mChon.daCo);
+            if (oChon != c.dangDung && duocBat && cham(n[0], n[1], n[2], n[3]))
             {
                 Service.gI().trangPhucChon(c.tpl, oChon);
                 return true;

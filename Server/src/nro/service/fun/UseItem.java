@@ -391,6 +391,10 @@ public class UseItem {
             if (nro.service.ThuCungService.gI().moRuong(pl, item)) {
                 return;
             }
+            // Vat pham "Trang phuc: ...": bam Su dung la mo khoa trang phuc.
+            if (nro.service.TrangPhucService.gI().dungVatPham(pl, item)) {
+                return;
+            }
             if (item.template.id == 570) {
                 if (!Util.isAfterMidnight(pl.lastTimeRewardWoodChest)) {
                     Service.gI().sendThongBao(pl, "Hãy chờ đến ngày mai");

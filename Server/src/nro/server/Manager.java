@@ -331,6 +331,8 @@ public final class Manager {
     nro.repository.dao.ThuCungDAO.damBaoVatPhamRuong();
     // Hai phieu quay ruong (mo ruong trong man Su kien) — cung ly do phai SAU
     // loadDatabase.
+    // Vat pham mo khoa trang phuc TRUOC ruong: Ruong Cao Cap can id cua no.
+    nro.repository.dao.TrangPhucDAO.damBaoVatPham();
     nro.repository.dao.MoRuongDAO.damBaoVatPhamPhieu();
     // Nam mon thuc an thu cung (thay cho dau than).
     nro.repository.dao.ThuCungDAO.damBaoThucAn();
