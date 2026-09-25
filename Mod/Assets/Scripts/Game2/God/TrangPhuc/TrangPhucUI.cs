@@ -1566,34 +1566,88 @@ namespace Game2.God
         private const long MS_CHOP = 55L;
 
         /// <summary>
-        /// Gọi từ gói đặt vị trí (123): nhân vật vừa dùng Dịch chuyển tức thời mà có
-        /// skin thì phát kunai bay + chớp ở chỗ đi và chỗ đến, trả true để bỏ chớp
-        /// gốc. Gói 123 còn dùng cho dịch chuyển khác, nên chỉ nhận khi gói trang
-        /// phục của chiêu này vừa tới (còn hiệu lực).
+        /// Gọi từ setSkillPaint của Dịch chuyển tức thời (128–134), TRƯỚC khi nhân vật
+        /// nhảy tới mục tiêu: lúc này chỗ đứng còn là chỗ cũ, mục tiêu đang chọn là
+        /// kẻ địch. Của chính mình thì client tự nhảy ngay, gói 123 tới sau — nên
+        /// phải phóng kunai ở đây mới đúng chỗ cũ. Trả true = đã phóng, bỏ chớp gốc.
+        /// </summary>
+        public static bool batDauDichChuyen(Char c)
+        {
+            if (c == null)
+            {
+                return false;
+            }
+            long bayGio = mSystem.currentTimeMillis();
+            c.tpDiX = c.cx;
+            c.tpDiY = c.cy - c.ch / 2;
+            c.tpDiLuc = bayGio;
+            if (vuaPhatKunai(c))
+            {
+                return true;
+            }
+            if (c.me && !(c.tpSkill == 20 && conHieuLuc(c) && bayGio - c.tpLuc <= 1500L))
+            {
+                ganTruoc(c, 20);
+            }
+            if (c.tpSkill != 20 || !conHieuLuc(c) || bayGio - c.tpLuc > 1500L)
+            {
+                return false;
+            }
+            IMapObject mt = c.mobFocus != null ? (IMapObject) c.mobFocus : c.charFocus;
+            if (mt == null)
+            {
+                // Chua biet ke dich: de goi 123 phong (co diem den that).
+                return false;
+            }
+            phatKunai(c, c.tpDiX, c.tpDiY, mt.getX(), mt.getY() - mt.getH() / 2);
+            return true;
+        }
+
+        /// <summary>Vừa phóng kunai Phi Lôi Thần (dưới 1,5 giây) — bỏ chớp dịch chuyển gốc.</summary>
+        public static bool vuaPhatKunai(Char c)
+        {
+            return c != null && c.tpKunaiLuc > 0 && mSystem.currentTimeMillis() - c.tpKunaiLuc < 1500L;
+        }
+
+        /// <summary>
+        /// Gọi từ gói đặt vị trí (123). Kunai đã phóng lúc bắt đầu chiêu thì chỉ bỏ
+        /// chớp gốc; chưa phóng (gói trang phục tới sau hoạt ảnh) thì phóng từ chỗ cũ
+        /// đã ghi tới tâm kẻ địch. Gói 123 còn dùng cho dịch chuyển khác, nên chỉ
+        /// nhận khi gói trang phục của chiêu này vừa tới (còn hiệu lực).
         /// </summary>
         public static bool dichChuyen(Char c, int x, int y)
         {
+            if (vuaPhatKunai(c))
+            {
+                return true;
+            }
             if (c == null || c.tpSkill != 20 || !conHieuLuc(c)
                     || mSystem.currentTimeMillis() - c.tpLuc > 1500L)
             {
                 return false;
             }
+            long bayGio = mSystem.currentTimeMillis();
+            // Cho cu: da ghi luc bat dau chieu (neu vua ghi), khong thi van la cho dang dung.
+            bool coCu = c.tpDiLuc > 0 && bayGio - c.tpDiLuc < 1500L;
+            int x0 = coCu ? c.tpDiX : c.cx;
+            int y0 = coCu ? c.tpDiY : c.cy - c.ch / 2;
+            // Diem den = TAM ke dich (muc tieu dang chon); khong biet thi lay diem dat chan.
+            IMapObject mt = c.mobFocus != null ? (IMapObject) c.mobFocus : c.charFocus;
+            int x1 = mt != null ? mt.getX() : x;
+            int y1 = mt != null ? mt.getY() - mt.getH() / 2 : y - c.ch / 2;
+            phatKunai(c, x0, y0, x1, y1);
+            return true;
+        }
+
+        private static void phatKunai(Char c, int x0, int y0, int x1, int y1)
+        {
             short[] kunai = tach(c.tpBay, 0);
             short[] chop = tach(c.tpBay, 1);
             long bayGio = mSystem.currentTimeMillis();
-            int x0 = c.cx;
-            int y0 = c.cy - c.ch / 2;
-            // Diem den = TAM nguoi dich (muc tieu dang chon); khong biet thi lay diem dat chan.
-            IMapObject mt = c.mobFocus != null ? (IMapObject) c.mobFocus : c.charFocus;
-            if (mt != null)
-            {
-                x = mt.getX();
-            }
-            int y1 = mt != null ? mt.getY() - mt.getH() / 2 : y - c.ch / 2;
             if (chop.Length > 0)
             {
                 themNo(chop, x0, y0, MS_CHOP, bayGio, 1f);
-                themNo(chop, x, y1, MS_CHOP, bayGio + MS_KUNAI, 1f);
+                themNo(chop, x1, y1, MS_CHOP, bayGio + MS_KUNAI, 1f);
             }
             if (kunai.Length > 0)
             {
@@ -1601,7 +1655,7 @@ namespace Game2.God
                 k.khung = kunai;
                 k.x0 = x0;
                 k.y0 = y0;
-                k.x1 = x;
+                k.x1 = x1;
                 k.y1 = y1;
                 k.batDau = bayGio;
                 lock (dsKunai)
@@ -1609,8 +1663,8 @@ namespace Game2.God
                     dsKunai.Add(k);
                 }
             }
+            c.tpKunaiLuc = bayGio;
             ketThuc(c);
-            return true;
         }
 
         /// <summary>Kunai bay: mũi xoay đúng hướng bay, sét hoà dần giữa các khung.</summary>

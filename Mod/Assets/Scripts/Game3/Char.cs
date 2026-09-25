@@ -957,6 +957,16 @@ namespace Game3
     	/// <summary>Chiêu nào đang dùng skin (bit 1 &lt;&lt; mã chiêu) — nhớ lâu, không theo từng lần ném.</summary>
     	public int tpCoSkin;
 
+    	/// <summary>Phi Lôi Thần: chỗ đứng (tâm thân) ngay trước khi dịch chuyển, và lúc ghi.</summary>
+    	public int tpDiX;
+
+    	public int tpDiY;
+
+    	public long tpDiLuc;
+
+    	/// <summary>Lúc phóng kunai Phi Lôi Thần gần nhất — chặn phóng trùng và chặn chớp gốc.</summary>
+    	public long tpKunaiLuc;
+
     	/// <summary>Lúc thấy isCreateDark kẹt (không gồng, không quả cầu, không tư thế) — chốt an toàn mở khoá đổi chiêu.</summary>
     	public long tpLucKet;
 
@@ -2073,11 +2083,17 @@ namespace Game3
     					}
     					currentMovePoint = null;
     					telePortSkill = false;
-    					ServerEffect.addServerEffect(173, cx, cy, 1);
+    					if (!God.TrangPhucUI.vuaPhatKunai(this))
+    					{
+    						ServerEffect.addServerEffect(173, cx, cy, 1);
+    					}
     				}
     				else
     				{
-    					ServerEffect.addServerEffect(60, cx, cy, 1);
+    					if (!God.TrangPhucUI.vuaPhatKunai(this))
+    					{
+    						ServerEffect.addServerEffect(60, cx, cy, 1);
+    					}
     				}
     				if ((TileMap.tileTypeAtPixel(cx, cy) & 2) == 2)
     				{
@@ -5334,6 +5350,8 @@ namespace Game3
     		if (skillPaint.id >= 128 && skillPaint.id <= 134)
     		{
     			skillPaint = GameScr.sks[skillPaint.id - 65];
+    			// Trang phuc Phi Loi Than: kunai bay tu cho CU (truoc khi nhay toi muc tieu).
+    			bool tpKunai = God.TrangPhucUI.batDauDichChuyen(this);
     			if (charFocus != null)
     			{
     				cx = charFocus.cx;
@@ -5346,7 +5364,10 @@ namespace Game3
     				cy = mobFocus.y;
     				currentMovePoint = null;
     			}
-    			ServerEffect.addServerEffect(60, cx, cy, 1);
+    			if (!tpKunai)
+    			{
+    				ServerEffect.addServerEffect(60, cx, cy, 1);
+    			}
     			telePortSkill = true;
     			lucTelePortSkill = mSystem.currentTimeMillis();
     		}

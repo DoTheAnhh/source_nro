@@ -36,7 +36,12 @@ namespace Game5
             if (skillPaint.id >= 128 && skillPaint.id <= 134)
             {
                 skillPaint = GameScr.sks[skillPaint.id - 65];
-                ServerEffect.addServerEffect(60, cx, cy, 1);
+                // Trang phuc Phi Loi Than: kunai bay tu cho CU (truoc khi nhay toi muc tieu).
+                bool tpKunai = God.TrangPhucUI.batDauDichChuyen(this);
+                if (!tpKunai)
+                {
+                	ServerEffect.addServerEffect(60, cx, cy, 1);
+                }
                 telePortSkill = true;
                 lucTelePortSkill = mSystem.currentTimeMillis();
             }
