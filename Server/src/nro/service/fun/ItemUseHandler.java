@@ -431,184 +431,85 @@ public class ItemUseHandler {
     }
 
     public void useHopQuaKichHoat5Sao(Player pl, Item item) {
-        short[][] setByGender = {
-            {0, 6, 21, 27, 12},
-            {1, 7, 22, 28, 12},
-            {2, 8, 23, 29, 12}
-        };
-        short[] setItems = setByGender[pl.gender];
-        List<ItemOption> setOptions = new ArrayList<>();
-        if (Util.isTrue(70, 100)) {
-            int[] opsrand = ItemService.gI().randOptionItemKichHoat(pl.gender);
-            setOptions.add(new ItemOption(opsrand[0], 0));
-            setOptions.add(new ItemOption(opsrand[1], 0));
-            setOptions.add(new ItemOption(30, 0));
-            setOptions.add(new ItemOption(107, 5));
-        } else {
-            int[] opsrand = ItemService.gI().randOptionItemKichHoatNew(pl.gender);
-            for (int op : opsrand) {
-                setOptions.add(new ItemOption(op, 0));
-            }
-            setOptions.add(new ItemOption(30, 0));
-            setOptions.add(new ItemOption(107, 5));
-        }
-        if (InventoryService.gI().getCountEmptyBag(pl) < setItems.length) {
-            Service.gI().sendThongBao(pl, "Hành trang phải còn ít nhất " + setItems.length + " ô trống.");
-            return;
-        }
-        List<Item> itemsReceived = new ArrayList<>();
-        for (short tempId : setItems) {
-            Item it = ItemService.gI().createNewItem(tempId);
-            List<ItemOption> ops = ItemService.gI().getListOptionItemShop(tempId);
-            if (!ops.isEmpty()) {
-                it.itemOptions.addAll(ops);
-            }
-            for (ItemOption op : setOptions) {
-                it.itemOptions.add(new ItemOption(op.optionTemplate.id, op.param));
-            }
-            InventoryService.gI().addItemBag(pl, it);
-            itemsReceived.add(it);
-        }
-        short[] icon = {item.template.iconID, itemsReceived.get(0).template.iconID};
-        CombineService.gI().sendEffectOpenItem(pl, icon[0], icon[1]);
-        InventoryService.gI().subQuantityItemsBag(pl, item, 1);
-        InventoryService.gI().sendItemBag(pl);
-        new Thread(() -> {
-            Functions.sleep(2000);
-            Service.gI().sendThongBao(pl, "Bạn nhận được Set Kích Hoạt 5 Sao!");
-        }).start();
+        moHopSetKichHoat(pl, item, 5);
     }
 
     public void useHopQuaKichHoat3Sao(Player pl, Item item) {
-        short[][] setByGender = {
-            {0, 6, 21, 27, 12},
-            {1, 7, 22, 28, 12},
-            {2, 8, 23, 29, 12}
-        };
-        short[] setItems = setByGender[pl.gender];
-        List<ItemOption> setOptions = new ArrayList<>();
-        if (Util.isTrue(70, 100)) {
-            int[] opsrand = ItemService.gI().randOptionItemKichHoat(pl.gender);
-            setOptions.add(new ItemOption(opsrand[0], 0));
-            setOptions.add(new ItemOption(opsrand[1], 0));
-            setOptions.add(new ItemOption(30, 0));
-            setOptions.add(new ItemOption(107, 3));
-        } else {
-            int[] opsrand = ItemService.gI().randOptionItemKichHoatNew(pl.gender);
-            for (int op : opsrand) {
-                setOptions.add(new ItemOption(op, 0));
-            }
-            setOptions.add(new ItemOption(30, 0));
-            setOptions.add(new ItemOption(107, 3));
-        }
-        if (InventoryService.gI().getCountEmptyBag(pl) < setItems.length) {
-            Service.gI().sendThongBao(pl, "Hành trang phải còn ít nhất " + setItems.length + " ô trống.");
-            return;
-        }
-        List<Item> itemsReceived = new ArrayList<>();
-        for (short tempId : setItems) {
-            Item it = ItemService.gI().createNewItem(tempId);
-            List<ItemOption> ops = ItemService.gI().getListOptionItemShop(tempId);
-            if (!ops.isEmpty()) {
-                it.itemOptions.addAll(ops);
-            }
-            for (ItemOption op : setOptions) {
-                it.itemOptions.add(new ItemOption(op.optionTemplate.id, op.param));
-            }
-            InventoryService.gI().addItemBag(pl, it);
-            itemsReceived.add(it);
-        }
-        short[] icon = {item.template.iconID, itemsReceived.get(0).template.iconID};
-        CombineService.gI().sendEffectOpenItem(pl, icon[0], icon[1]);
-        InventoryService.gI().subQuantityItemsBag(pl, item, 1);
-        InventoryService.gI().sendItemBag(pl);
-        new Thread(() -> {
-            Functions.sleep(2000);
-            Service.gI().sendThongBao(pl, "Bạn nhận được Set Kích Hoạt 3 Sao!");
-        }).start();
+        moHopSetKichHoat(pl, item, 3);
     }
 
     public void useHopQuaKichHoat(Player pl, Item item) {
-        short[][] setByGender = {
-            {0, 6, 21, 27, 12},
-            {1, 7, 22, 28, 12},
-            {2, 8, 23, 29, 12}
-        };
-        short[] setItems = setByGender[pl.gender];
-        List<ItemOption> setOptions = new ArrayList<>();
-        if (Util.isTrue(70, 100)) {
-            int[] opsrand = ItemService.gI().randOptionItemKichHoat(pl.gender);
-            setOptions.add(new ItemOption(opsrand[0], 0));
-            setOptions.add(new ItemOption(opsrand[1], 0));
-            setOptions.add(new ItemOption(30, 0));
-        } else {
-            int[] opsrand = ItemService.gI().randOptionItemKichHoatNew(pl.gender);
-            for (int op : opsrand) {
-                setOptions.add(new ItemOption(op, 0));
-            }
-            setOptions.add(new ItemOption(30, 0));
-        }
-        if (InventoryService.gI().getCountEmptyBag(pl) < setItems.length) {
-            Service.gI().sendThongBao(pl, "Hành trang phải còn ít nhất " + setItems.length + " ô trống.");
+        moHopSetKichHoat(pl, item, 0);
+    }
+
+    /**
+     * Hộp quà set kích hoạt: đủ 5 món (áo, quần, găng, giày, rađa) cùng một
+     * bậc, cùng một set. Bậc bốc theo panel tỉ lệ set kích hoạt, set bốc trong
+     * các set đang bật của hệ — xem {@link DoKichHoat}.
+     *
+     * @param sao số sao pha lê gắn sẵn (0 = không)
+     */
+    private void moHopSetKichHoat(Player pl, Item item, int sao) {
+        if (InventoryService.gI().getCountEmptyBag(pl) < DoKichHoat.SO_O) {
+            Service.gI().sendThongBao(pl, "Hành trang phải còn ít nhất " + DoKichHoat.SO_O + " ô trống.");
             return;
         }
-        List<Item> itemsReceived = new ArrayList<>();
-        for (short tempId : setItems) {
-            Item it = ItemService.gI().createNewItem(tempId);
-            List<ItemOption> ops = ItemService.gI().getListOptionItemShop(tempId);
-            if (!ops.isEmpty()) {
-                it.itemOptions.addAll(ops);
-            }
-            for (ItemOption op : setOptions) {
-                it.itemOptions.add(new ItemOption(op.optionTemplate.id, op.param));
-            }
-            InventoryService.gI().addItemBag(pl, it);
-            itemsReceived.add(it);
+        int[] opSet = DoKichHoat.optionSet(pl.gender);
+        if (opSet == null) {
+            DoKichHoat.baoThieuSet(pl);
+            return;
         }
-        short[] icon = {item.template.iconID, itemsReceived.get(0).template.iconID};
-        CombineService.gI().sendEffectOpenItem(pl, icon[0], icon[1]);
+        int bac = DoKichHoat.bocBac();
+        List<Item> nhan = new ArrayList<>();
+        for (int o = 0; o < DoKichHoat.SO_O; o++) {
+            short id = DoKichHoat.mauDo(pl.gender, o, bac);
+            if (id < 0) {
+                continue;
+            }
+            nhan.add(sao > 0 ? DoKichHoat.tao(id, opSet, new int[]{107, sao}) : DoKichHoat.tao(id, opSet));
+        }
+        if (nhan.isEmpty()) {
+            Service.gI().sendThongBao(pl, "Không bốc được mẫu đồ — báo quản trị.");
+            return;
+        }
+        for (Item it : nhan) {
+            InventoryService.gI().addItemBag(pl, it);
+        }
+        CombineService.gI().sendEffectOpenItem(pl, item.template.iconID, nhan.get(0).template.iconID);
         InventoryService.gI().subQuantityItemsBag(pl, item, 1);
         InventoryService.gI().sendItemBag(pl);
+        String ten = "Bạn nhận được Set Kích Hoạt" + (sao > 0 ? " " + sao + " Sao" : "") + " (bậc " + (bac + 1) + ")!";
         new Thread(() -> {
             Functions.sleep(2000);
-            Service.gI().sendThongBao(pl, "Bạn nhận được Set Kích Hoạt!");
+            Service.gI().sendThongBao(pl, ten);
         }).start();
     }
 
+    /** Capsule 1 món kích hoạt: ô ngẫu nhiên, bậc và set theo panel. */
     public void useCapsuleKichHoat(Player pl, Item item) {
-        short tempId = (short) ItemService.gI().randTempItemKichHoat_VIP(pl.gender);
-        Item itemReceived = ItemService.gI().createNewItem(tempId);
-        List<ItemOption> ops = ItemService.gI().getListOptionItemShop(tempId);
-        if (!ops.isEmpty()) {
-            itemReceived.itemOptions.addAll(ops);
-        }
-        if (Util.isTrue(70, 100)) {
-            int[] opsrand = ItemService.gI().randOptionItemKichHoat(pl.gender);
-            itemReceived.itemOptions.add(new ItemOption(opsrand[0], 0));
-            itemReceived.itemOptions.add(new ItemOption(opsrand[1], 0));
-            itemReceived.itemOptions.add(new ItemOption(30, 0));
-            itemReceived.itemOptions.add(new ItemOption(213, 1));
-        } else {
-            int[] opsrand = ItemService.gI().randOptionItemKichHoatNew(pl.gender);
-            for (int op : opsrand) {
-                itemReceived.itemOptions.add(new ItemOption(op, 0));
-            }
-            itemReceived.itemOptions.add(new ItemOption(30, 0));
-            itemReceived.itemOptions.add(new ItemOption(213, 1));
-        }
-        short[] icon = {item.template.iconID, itemReceived.template.iconID};
-        if (InventoryService.gI().getCountEmptyBag(pl) > 0) {
-            InventoryService.gI().addItemBag(pl, itemReceived);
-            InventoryService.gI().subQuantityItemsBag(pl, item, 1);
-            InventoryService.gI().sendItemBag(pl);
-            CombineService.gI().sendEffectOpenItem(pl, icon[0], icon[1]);
-            new Thread(() -> {
-                Functions.sleep(2000);
-                Service.gI().sendThongBao(pl, "Bạn nhận được " + itemReceived.template.name);
-            }).start();
-        } else {
+        if (InventoryService.gI().getCountEmptyBag(pl) <= 0) {
             Service.gI().sendThongBao(pl, "Hành trang đã đầy, cần ít nhất 1 ô trống.");
+            return;
         }
+        int[] opSet = DoKichHoat.optionSet(pl.gender);
+        if (opSet == null) {
+            DoKichHoat.baoThieuSet(pl);
+            return;
+        }
+        short id = DoKichHoat.mauDo(pl.gender, Util.nextInt(DoKichHoat.SO_O), DoKichHoat.bocBac());
+        if (id < 0) {
+            Service.gI().sendThongBao(pl, "Không bốc được mẫu đồ — báo quản trị.");
+            return;
+        }
+        Item itemReceived = DoKichHoat.tao(id, opSet, new int[]{213, 1});
+        InventoryService.gI().addItemBag(pl, itemReceived);
+        InventoryService.gI().subQuantityItemsBag(pl, item, 1);
+        InventoryService.gI().sendItemBag(pl);
+        CombineService.gI().sendEffectOpenItem(pl, item.template.iconID, itemReceived.template.iconID);
+        new Thread(() -> {
+            Functions.sleep(2000);
+            Service.gI().sendThongBao(pl, "Bạn nhận được " + itemReceived.template.name);
+        }).start();
     }
 
     public void useVeRiengTu(Player pl) {
