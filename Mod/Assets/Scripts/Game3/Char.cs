@@ -938,6 +938,15 @@ namespace Game3
     	public short[] tpBay;
 
     	public long tpLuc;
+
+    	/// <summary>Khung chạm địch đang hiện (-1 = không) và chỗ, lúc bắt đầu.</summary>
+    	public int tpTrung = -1;
+
+    	public int tpTrungX;
+
+    	public int tpTrungY;
+
+    	public long tpTrungLuc;
     
     	public SkillPaint skillPaint;
     

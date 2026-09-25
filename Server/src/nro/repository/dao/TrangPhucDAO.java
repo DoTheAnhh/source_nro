@@ -74,12 +74,25 @@ public final class TrangPhucDAO {
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
             daTao = true;
             gieoNeuTrong();
+            // Bo khung moi (10 khung, nguoi dung gui lai): doi dong Dia Boc Thien Tinh
+            // dang tro bo cu. Chi sua khi con dung bo cu, chay lai bao lan cung vay.
+            ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET icon = ?, khung_nap = ?, khung_bay = ?"
+                    + " WHERE skill_tpl = 10 AND khung_nap = '25259,25260,25261,25262,25263,25264'",
+                    ICON_DBTT, KHUNG_NAP_DBTT, KHUNG_BAY_DBTT);
         } catch (Exception ex) {
             Logger.logException(TrangPhucDAO.class, ex, "Không tạo được bảng trang phục");
         }
     }
 
-    /** Trang phục đầu tiên: Địa Bộc Thiên Tinh cho Quả cầu kênh khi (icon 25259–25266). */
+    /**
+     * Địa Bộc Thiên Tinh (icon 25267–25276): 8 khung tụ cầu, rồi khung ném và
+     * khung chạm địch. Client hiểu {@code khung_bay} là [khung bay, khung chạm].
+     */
+    private static final int ICON_DBTT = 25274;
+    private static final String KHUNG_NAP_DBTT = "25267,25268,25269,25270,25271,25272,25273,25274";
+    private static final String KHUNG_BAY_DBTT = "25275,25276";
+
+    /** Trang phục đầu tiên: Địa Bộc Thiên Tinh cho Quả cầu kênh khi. */
     private static void gieoNeuTrong() throws Exception {
         CrisResultSet rs = null;
         try {
@@ -95,7 +108,7 @@ public final class TrangPhucDAO {
         ConnectDB.executeUpdate("INSERT INTO trang_phuc_mau (skill_tpl, ten, mo_ta, icon, khung_nap, khung_bay, thu_tu)"
                 + " VALUES (?,?,?,?,?,?,1)", 10, "Địa Bộc Thiên Tinh",
                 "Hút đá khắp nơi nén thành một khối cầu rực lửa rồi giáng xuống kẻ địch.",
-                25266, "25259,25260,25261,25262,25263,25264", "25265,25266");
+                ICON_DBTT, KHUNG_NAP_DBTT, KHUNG_BAY_DBTT);
         Logger.success("Trang phục: gieo Địa Bộc Thiên Tinh cho Quả cầu kênh khi\n");
     }
 

@@ -429,7 +429,7 @@ namespace Game2.God
             g.fillRect(k[0] + 8, k[1] + 8, oXem, k[3] - 16, 8);
             if (m != null)
             {
-                int khung = khungTheoGio(m.nap, m.bay, lucChonO);
+                int khung = khungXemTruoc(m.nap, m.bay, lucChonO);
                 if (khung >= 0)
                 {
                     SmallImage.veIconVuaO(g, khung, tamX, tamY, oXem);
@@ -549,27 +549,54 @@ namespace Game2.God
         //  Vẽ chiêu cho nhân vật (gọi từ Char / PlayerDart)
         // ------------------------------------------------------------------
         /// <summary>Mỗi khung tụ bao lâu, mỗi khung lặp bao lâu (ms).</summary>
-        private const long MS_NAP = 190L;
-        private const long MS_BAY = 110L;
+        private const long MS_NAP = 380L;
+        private const long MS_BAY = 150L;
+
+        /// <summary>Khung chạm địch hiện bao lâu (ms).</summary>
+        private const long MS_TRUNG = 550L;
 
         /// <summary>
-        /// Khung hình ở thời điểm hiện tại: chạy hết dãy tụ một lượt, rồi lặp
-        /// dãy bay mãi. -1 nếu không có khung nào.
+        /// Khung lúc TỤ ở thời điểm hiện tại: chạy hết dãy tụ một lượt, rồi lặp
+        /// hai khung tụ cuối cho tới khi ném. -1 nếu không có khung nào.
         /// </summary>
         public static int khungTheoGio(short[] nap, short[] bay, long batDau)
         {
             long troi = mSystem.currentTimeMillis() - batDau;
             int soNap = nap == null ? 0 : nap.Length;
+            if (soNap == 0)
+            {
+                return bay != null && bay.Length > 0 ? bay[0] : -1;
+            }
             if (troi < soNap * MS_NAP)
             {
                 return nap[(int) (troi / MS_NAP)];
             }
-            if (bay != null && bay.Length > 0)
+            if (soNap < 2)
             {
-                long sau = troi - soNap * MS_NAP;
-                return bay[(int) ((sau / MS_BAY) % bay.Length)];
+                return nap[0];
             }
-            return soNap > 0 ? nap[soNap - 1] : -1;
+            long sau = troi - soNap * MS_NAP;
+            return nap[soNap - 2 + (int) ((sau / MS_BAY) % 2)];
+        }
+
+        /// <summary>Xem trước trong menu: tụ → ném → chạm, rồi lặp lại từ đầu.</summary>
+        public static int khungXemTruoc(short[] nap, short[] bay, long batDau)
+        {
+            int soNap = nap == null ? 0 : nap.Length;
+            int soBay = bay == null ? 0 : bay.Length;
+            int tong = soNap + soBay;
+            if (tong == 0)
+            {
+                return -1;
+            }
+            const long MOI = 220L;
+            int i = (int) (((mSystem.currentTimeMillis() - batDau) / MOI) % (tong + 3));
+            if (i >= tong)
+            {
+                // Nghi mot nhip tren khung cham truoc khi quay lai tu dau.
+                i = tong - 1;
+            }
+            return i < soNap ? nap[i] : bay[i - soNap];
         }
 
         /// <summary>
@@ -578,7 +605,16 @@ namespace Game2.God
         /// </summary>
         public static bool veKhiTu(mGraphics g, Char c)
         {
-            if (c == null || c.tpBay == null || !c.isFlyAndCharge)
+            if (c == null)
+            {
+                return false;
+            }
+            // Khung cham dich: hien mot lat tai cho qua cau trung.
+            if (c.tpTrung >= 0 && mSystem.currentTimeMillis() - c.tpTrungLuc < MS_TRUNG)
+            {
+                SmallImage.drawSmallImage(g, c.tpTrung, c.tpTrungX, c.tpTrungY, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+            }
+            if (c.tpBay == null || !c.isFlyAndCharge)
             {
                 return false;
             }
@@ -600,10 +636,23 @@ namespace Game2.God
             {
                 return false;
             }
-            short[] bay = chu.tpBay;
-            int k = bay[(int) ((mSystem.currentTimeMillis() / MS_BAY) % bay.Length)];
+            // Khung dau cua day bay la luc nem; khung thu hai (neu co) de danh cho luc cham.
+            int k = chu.tpBay[0];
             SmallImage.drawSmallImage(g, k, x, y, 0, mGraphics.VCENTER | mGraphics.HCENTER);
             return true;
+        }
+
+        /// <summary>Quả cầu vừa trúng: ghi khung chạm (khung thứ hai của dãy bay) để vẽ một lát.</summary>
+        public static void ghiChamDich(Char chu, int x, int y)
+        {
+            if (chu == null || chu.tpBay == null || chu.tpBay.Length < 2)
+            {
+                return;
+            }
+            chu.tpTrung = chu.tpBay[1];
+            chu.tpTrungX = x;
+            chu.tpTrungY = y;
+            chu.tpTrungLuc = mSystem.currentTimeMillis();
         }
     }
 }

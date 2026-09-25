@@ -149,6 +149,8 @@ namespace Game3
     
     	private void endMe()
     	{
+    		// Trang phuc ky nang: ghi khung cham dich truoc khi stopUseChargeSkill xoa khung.
+    		God.TrangPhucUI.ghiChamDich(charBelong, x, y);
     		if (!charBelong.isUseSkillAfterCharge && x >= GameScr.cmx && x <= GameScr.cmx + GameCanvas.w)
     		{
     			SoundMn.gI().explode_1();
