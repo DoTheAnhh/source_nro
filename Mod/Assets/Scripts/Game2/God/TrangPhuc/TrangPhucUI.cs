@@ -692,7 +692,8 @@ namespace Game2.God
             }
             int k = khungTheoGio(c.tpNap, c.tpBay, c.tpLuc);
             float to = coLucTu(c);
-            int tamY = c.cy - c.ch - (int) (12 + 38 * to);
+            // Mot tam co dinh du to hay be: phong quanh chinh tam qua cau.
+            int tamY = c.cy - c.ch - 50;
             veDaBayVao(g, c, c.cx, tamY);
             if (k >= 0)
             {
