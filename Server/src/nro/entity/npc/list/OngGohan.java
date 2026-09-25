@@ -67,7 +67,8 @@ public class OngGohan extends Npc {
             menu.add("Điểm Danh Hàng Ngày");
         }
         menu.add("Chức Năng");
-        menu.add("Hướng Dẫn Tân Thủ");
+        // Dung vao cho cua o "Huong Dan Tan Thu" (da bo), nen so o khong doi.
+        menu.add("Bỏ qua\nnhiệm vụ");
         menu.add("Nhận\nĐệ tử");
         menu.add(nhanHopThe);
         if (coAuraRieng(player)) {
@@ -242,6 +243,13 @@ public class OngGohan extends Npc {
         clearExpiredVe(player);
         boolean hasDaily = DailyGiftService.checkDailyGift(player, ConstDailyGift.DIEM_DANH_HANG_NGAY);
 
+        // O "Bo qua nhiem vu" nam dung cho o "Huong Dan Tan Thu" cu (da bo),
+        // nen cac o khac giu nguyen so.
+        if (select == (hasDaily ? 2 : 1)) {
+            moMenuBoQuaNhiemVu(player);
+            return;
+        }
+
         if (hasDaily) {
             switch (select) {
                 case 0:
@@ -273,10 +281,6 @@ public class OngGohan extends Npc {
                     openSupportMenu(player);
                     break;
 
-                case 2:
-                    openTutorialMenu(player);
-                    break;
-
                 case 3:
                     this.createOtherMenu(player, ConstNpc.NHAN_DE_TU,
                             "Con có muốn nhận đệ tử thường không?",
@@ -297,10 +301,6 @@ public class OngGohan extends Npc {
             switch (select) {
                 case 0:
                     openSupportMenu(player);
-                    break;
-
-                case 1:
-                    openTutorialMenu(player);
                     break;
 
                 case 2:
@@ -695,6 +695,11 @@ public class OngGohan extends Npc {
     }
 
     private void handleSupportMenu(Player player, int select) {
+        // Menu nay con 5 o + Dong. Doi mat khau, Skip nhiem vu (da ra menu
+        // chinh), Thong tin, Chi so chi tiet da bo — o thu 5 gio la Dong.
+        if (select >= 5) {
+            return;
+        }
         switch (select) {
             case 0: {
                 if (player.inventory.gem >= 2_000_000) {
@@ -743,11 +748,7 @@ public class OngGohan extends Npc {
                 break;
 
             case 6:
-                this.createOtherMenu(player, ConstNpc.ONG_GIA_MENU_3,
-                        "|0|Menu Skip Nhiệm Vụ\n\n|2|Mời Quý Khách Lựa Chọn!\n",
-                        "Skip Nhiệm Vụ Heo Rừng", "Skip Nhiệm Vụ Bulon", "Skip Nhiệm Vụ\n Thách đấu",
-                        "Skip Nhiệm Vụ Đại Hội Võ Thuật", "Skip Nhiệm Vụ Trung Uý Trắng",
-                        "Skip Nhiệm Vụ\nMabu", "Đóng");
+                moMenuBoQuaNhiemVu(player);
                 break;
 
             case 7:
@@ -887,6 +888,15 @@ public class OngGohan extends Npc {
         }
     }
 
+    /** Menu bỏ qua nhiệm vụ — nay mở thẳng từ menu chính. */
+    private void moMenuBoQuaNhiemVu(Player player) {
+        this.createOtherMenu(player, ConstNpc.ONG_GIA_MENU_3,
+                "|0|Bỏ Qua Nhiệm Vụ\n\n|2|Mời Quý Khách Lựa Chọn!\n",
+                "Skip Nhiệm Vụ Heo Rừng", "Skip Nhiệm Vụ Bulon", "Skip Nhiệm Vụ\n Thách đấu",
+                "Skip Nhiệm Vụ Đại Hội Võ Thuật", "Skip Nhiệm Vụ Trung Uý Trắng",
+                "Skip Nhiệm Vụ\nMabu", "Đóng");
+    }
+
     private void openSupportMenu(Player player) {
         // Tỉ lệ hiện ngay trên nút để người chơi biết trước khi bấm.
         long moi1k = nro.repository.dao.ConfigDAO.num(
@@ -897,8 +907,7 @@ public class OngGohan extends Npc {
                 "|7|Chức Năng Hỗ Trợ\n|2|Xin Mời Quý Khách Lựa Chọn!"
                 + "\n|6|Đổi VND sang Thỏi Vàng: 1.000 VND = " + moi1k + " TV",
                 "Nhận Ngọc Xanh", "Nhận Thỏi Vàng", "Đổi VND\nsang TV",
-                "MTV FREE", "Nhập GiftCode", "Đổi \nMật Khẩu", "Skip Nhiệm Vụ", "Thông tin",
-                "Chỉ số\nchi tiết", "Đóng");
+                "MTV FREE", "Nhập GiftCode", "Đóng");
     }
 
     private void openTutorialMenu(Player player) {
