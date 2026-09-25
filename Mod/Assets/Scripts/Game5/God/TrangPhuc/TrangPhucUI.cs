@@ -720,7 +720,7 @@ namespace Game5.God
         // ------------------------------------------------------------------
         /// <summary>Mười hai cục đá cắt từ frame 1 và 2 của Địa Bộc Thiên Tinh.</summary>
         private static readonly short[] ICON_DA = {
-            25289, 25290, 25291, 25292, 25293, 25294, 25295, 25296, 25297, 25298, 25299, 25300
+            25301, 25302, 25303, 25304, 25305, 25306, 25307, 25308, 25309, 25310, 25311, 25312
         };
 
         /// <summary>Cứ chừng này ms sinh một cục đá.</summary>
@@ -741,7 +741,7 @@ namespace Game5.God
         }
 
         /// <summary>
-        /// Đá từ bốn phía xoáy ốc vào tâm quả cầu, nhanh dần như bị hút, lặn vào
+        /// Đá từ xa bốn phía bay thẳng về tâm quả cầu, nhanh dần như bị hút, lặn vào
         /// sau quả cầu. Chỉ chạy lúc đang tụ và trang phục có khung đá.
         /// </summary>
         private static void veDaBayVao(mGraphics g, Char c, int tamX, int tamY)
@@ -764,7 +764,7 @@ namespace Game5.God
                 }
                 Da d = new Da();
                 d.icon = ICON_DA[ngauNhien.Next(ICON_DA.Length)];
-                d.r0 = 110f + (float) ngauNhien.NextDouble() * 90f;
+                d.r0 = 160f + (float) ngauNhien.NextDouble() * 100f;
                 d.a0 = (float) (ngauNhien.NextDouble() * System.Math.PI * 2);
                 d.chieu = ngauNhien.Next(2) == 0 ? 1f : -1f;
                 d.batDau = bayGio;
@@ -784,10 +784,10 @@ namespace Game5.God
                     c.tpDa.RemoveAt(i);
                     continue;
                 }
-                // Nhanh dan (bi hut) va xoay xoan oc vao tam.
+                // Tu xa bay THANG ve tam, nhanh dan (bi hut).
                 float e = p * p;
                 float r = d.r0 * (1f - e);
-                float a = d.a0 + d.chieu * e * 1.6f;
+                float a = d.a0;
                 int x = tamX + (int) (r * System.Math.Cos(a));
                 int y = tamY + (int) (r * System.Math.Sin(a) * 0.8f);
                 SmallImage.drawSmallImage(g, d.icon, x, y, 0, mGraphics.VCENTER | mGraphics.HCENTER);
