@@ -915,6 +915,10 @@ public class SkillService {
                 }
                 timeChoangDCTT = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
                         player, Skill.DICH_CHUYEN_TUC_THOI, timeChoangDCTT);
+                if (plTarget != null || mobTarget != null) {
+                    // Trang phuc ky nang: bao ca khu hinh Dich chuyen TRUOC goi dat vi tri.
+                    nro.service.TrangPhucService.gI().baoTruocKhiTu(player, Skill.DICH_CHUYEN_TUC_THOI);
+                }
                 if (plTarget != null) {
                     if (player.isBoss) {
                         Service.gI().chat(player, "Dịch chuyển tức thời");

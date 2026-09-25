@@ -557,7 +557,11 @@ namespace Game3.Assets.src.f
 					}
 					if (@char != null)
 					{
-						ServerEffect.addServerEffect((b4 != 0) ? 173 : 60, @char, 1);
+						// Trang phuc Phi Loi Than: kunai bay + chop xanh thay chop dich chuyen goc.
+						if (!God.TrangPhucUI.dichChuyen(@char, xPos, yPos))
+						{
+							ServerEffect.addServerEffect((b4 != 0) ? 173 : 60, @char, 1);
+						}
 						@char.setPos(xPos, yPos, b4);
 					}
 					break;

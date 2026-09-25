@@ -964,6 +964,10 @@ namespace Game1.God
                     return true;
                 }
             }
+            if ((c.tpCoSkin & (1 << 20)) != 0 && ((id >= 63 && id <= 69) || (id >= 128 && id <= 134)))
+            {
+                return true;
+            }
             if ((c.tpCoSkin & (1 << 10)) != 0 && id >= 70 && id <= 76)
             {
                 return true;
@@ -1030,6 +1034,7 @@ namespace Game1.God
             veNoTuNo(g);
             veXoayMo(g);
             veRasenBu(g);
+            veKunaiBay(g);
             veMotNguoi(g, Char.myCharz());
             for (int i = 0; i < GameScr.vCharInMap.size(); i++)
             {
@@ -1509,6 +1514,104 @@ namespace Game1.God
             }
         }
 
+        // ------------------------------------------------------------------
+        //  Dịch chuyển tức thời → Phi Lôi Thần: kunai bay + chớp xanh
+        // ------------------------------------------------------------------
+        public class KunaiBay
+        {
+            public short[] khung;
+            public int x0, y0, x1, y1;
+            public long batDau;
+        }
+
+        private static readonly List<KunaiBay> dsKunai = new List<KunaiBay>();
+
+        /// <summary>Kunai bay từ chỗ đi tới chỗ đến bao lâu (ms) — nhanh như dịch chuyển.</summary>
+        private const long MS_KUNAI = 160L;
+
+        /// <summary>Mỗi khung sét của kunai / mỗi khung chớp (ms).</summary>
+        private const long MS_SET_KUNAI = 70L;
+        private const long MS_CHOP = 55L;
+
+        /// <summary>
+        /// Gọi từ gói đặt vị trí (123): nhân vật vừa dùng Dịch chuyển tức thời mà có
+        /// skin thì phát kunai bay + chớp ở chỗ đi và chỗ đến, trả true để bỏ chớp
+        /// gốc. Gói 123 còn dùng cho dịch chuyển khác, nên chỉ nhận khi gói trang
+        /// phục của chiêu này vừa tới (còn hiệu lực).
+        /// </summary>
+        public static bool dichChuyen(Char c, int x, int y)
+        {
+            if (c == null || c.tpSkill != 20 || !conHieuLuc(c)
+                    || mSystem.currentTimeMillis() - c.tpLuc > 1500L)
+            {
+                return false;
+            }
+            short[] kunai = tach(c.tpBay, 0);
+            short[] chop = tach(c.tpBay, 1);
+            long bayGio = mSystem.currentTimeMillis();
+            int x0 = c.cx;
+            int y0 = c.cy - c.ch / 2;
+            int y1 = y - c.ch / 2;
+            if (chop.Length > 0)
+            {
+                themNo(chop, x0, y0, MS_CHOP, bayGio, 1f);
+                themNo(chop, x, y1, MS_CHOP, bayGio + MS_KUNAI, 1f);
+            }
+            if (kunai.Length > 0)
+            {
+                KunaiBay k = new KunaiBay();
+                k.khung = kunai;
+                k.x0 = x0;
+                k.y0 = y0;
+                k.x1 = x;
+                k.y1 = y1;
+                k.batDau = bayGio;
+                lock (dsKunai)
+                {
+                    dsKunai.Add(k);
+                }
+            }
+            ketThuc(c);
+            return true;
+        }
+
+        /// <summary>Kunai bay: mũi xoay đúng hướng bay, sét hoà dần giữa các khung.</summary>
+        private static void veKunaiBay(mGraphics g)
+        {
+            if (dsKunai.Count == 0)
+            {
+                return;
+            }
+            long ms = mSystem.currentTimeMillis();
+            lock (dsKunai)
+            {
+                for (int i = dsKunai.Count - 1; i >= 0; i--)
+                {
+                    KunaiBay k = dsKunai[i];
+                    float p = (float) (ms - k.batDau) / MS_KUNAI;
+                    if (p >= 1f)
+                    {
+                        dsKunai.RemoveAt(i);
+                        continue;
+                    }
+                    int x = k.x0 + (int) ((k.x1 - k.x0) * p);
+                    int y = k.y0 + (int) ((k.y1 - k.y0) * p);
+                    // Mui kunai trong anh huong PHAI (goc 0): xoay theo huong bay.
+                    float goc = (float) (System.Math.Atan2(k.y1 - k.y0, k.x1 - k.x0) * 57.29578);
+                    long t = ms - k.batDau;
+                    int n = k.khung.Length;
+                    int a = (int) ((t / MS_SET_KUNAI) % n);
+                    int b = (a + 1) % n;
+                    float h = (float) (t % MS_SET_KUNAI) / MS_SET_KUNAI;
+                    SmallImage.veIconXoay(g, k.khung[a], x, y, 1f, goc);
+                    if (b != a && h > 0.02f)
+                    {
+                        SmallImage.veIconXoay(g, k.khung[b], x, y, 1f, goc, h);
+                    }
+                }
+            }
+        }
+
         public class XoayMo
         {
             public short[] khung;
@@ -1769,6 +1872,10 @@ namespace Game1.God
                 {
                     NoLon no = dsNo[i];
                     float f = (float) (bayGio - no.batDau) / no.ms;
+                    if (f < 0f)
+                    {
+                        continue;
+                    }
                     int k = (int) f;
                     if (k >= no.khung.Length)
                     {

@@ -92,6 +92,7 @@ public final class TrangPhucDAO {
             gieoNeuTrong();
             gieoThanLaThienChinh();
             gieoRasenshuriken();
+            gieoPhiLoiThan();
             // Them du am vu no (khung thu ba cua day bay).
             ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_bay = ? WHERE skill_tpl = 10"
                     + " AND khung_bay = '25285,25286'", KHUNG_BAY_DBTT);
@@ -138,6 +139,31 @@ public final class TrangPhucDAO {
      */
     private static final String NAP_RASEN = "25337,25338,25339,25340,25341";
     private static final String BAY_RASEN = "25343,25346,25347,-1,25345,25348,25349,-1,25342,25345,25344";
+
+    /**
+     * Phi Lôi Thần cho Dịch chuyển tức thời (skill 20): không có khung nạp;
+     * khung bay = [kunai bay 4 khung (mũi hướng phải) | chớp xanh 8 khung ở chỗ
+     * đi và chỗ đến]. Icon 25361–25373.
+     */
+    private static void gieoPhiLoiThan() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM trang_phuc_mau WHERE skill_tpl = 20 AND ten = ?", "Phi Lôi Thần");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            if (rs != null) {
+                rs.dispose();
+            }
+        }
+        ConnectDB.executeUpdate("INSERT INTO trang_phuc_mau (skill_tpl, ten, mo_ta, icon, khung_nap, khung_bay, thu_tu, icon_vp)"
+                + " VALUES (?,?,?,?,?,?,1,?)", 20, "Phi Lôi Thần",
+                "Phóng kunai ấn chú, chớp mắt đã đứng sau lưng kẻ địch trong ánh sét xanh.",
+                25362, "", "25361,25362,25363,25364,-1,25365,25366,25367,25368,25369,25370,25371,25372", 25373);
+        lucDoc = 0;
+        Logger.success("Trang phục: gieo Phi Lôi Thần cho Dịch chuyển tức thời\n");
+    }
 
     private static void gieoRasenshuriken() throws Exception {
         // Ba loai xoay khac nhau (tay: shuriken tron, nem: co vet, dich: vong gio + gai) — doi dong da gieo.
