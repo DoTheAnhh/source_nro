@@ -691,6 +691,7 @@ namespace Game4.God
                 return false;
             }
             int k = khungTheoGio(c.tpNap, c.tpBay, c.tpLuc);
+            veDaBayVao(g, c, c.cx, c.cy - c.ch - 50);
             if (k >= 0)
             {
                 SmallImage.drawSmallImage(g, k, c.cx, c.cy - c.ch - 50, 0, mGraphics.VCENTER | mGraphics.HCENTER);
@@ -712,6 +713,85 @@ namespace Game4.God
             int k = chu.tpBay[(int) ((mSystem.currentTimeMillis() / MS_BAY) % chu.tpBay.Length)];
             SmallImage.drawSmallImage(g, k, x, y, 0, mGraphics.VCENTER | mGraphics.HCENTER);
             return true;
+        }
+
+        // ------------------------------------------------------------------
+        //  Đá bay vào lúc tụ (thay đạn trắng gốc của quái)
+        // ------------------------------------------------------------------
+        /// <summary>Mười hai cục đá cắt từ frame 1 và 2 của Địa Bộc Thiên Tinh.</summary>
+        private static readonly short[] ICON_DA = {
+            25289, 25290, 25291, 25292, 25293, 25294, 25295, 25296, 25297, 25298, 25299, 25300
+        };
+
+        /// <summary>Cứ chừng này ms sinh một cục đá.</summary>
+        private const long MS_SINH_DA = 50L;
+
+        private static readonly System.Random ngauNhien = new System.Random();
+
+        public class Da
+        {
+            public short icon;
+            /// <summary>Bán kính, góc xuất phát quanh tâm quả cầu.</summary>
+            public float r0;
+            public float a0;
+            /// <summary>Chiều xoáy: +1 / -1.</summary>
+            public float chieu;
+            public long batDau;
+            public long thoiGian;
+        }
+
+        /// <summary>
+        /// Đá từ bốn phía xoáy ốc vào tâm quả cầu, nhanh dần như bị hút, lặn vào
+        /// sau quả cầu. Chỉ chạy lúc đang tụ và trang phục có khung đá.
+        /// </summary>
+        private static void veDaBayVao(mGraphics g, Char c, int tamX, int tamY)
+        {
+            long bayGio = mSystem.currentTimeMillis();
+            if (c.tpDa == null)
+            {
+                c.tpDa = new List<Da>();
+                c.tpDaLuc = bayGio;
+            }
+            // Sinh bu theo gio (khung hinh rot van du so da).
+            int sinh = 0;
+            while (bayGio - c.tpDaLuc >= MS_SINH_DA && sinh < 4)
+            {
+                c.tpDaLuc += MS_SINH_DA;
+                sinh++;
+                if (c.tpDa.Count >= 45)
+                {
+                    continue;
+                }
+                Da d = new Da();
+                d.icon = ICON_DA[ngauNhien.Next(ICON_DA.Length)];
+                d.r0 = 110f + (float) ngauNhien.NextDouble() * 90f;
+                d.a0 = (float) (ngauNhien.NextDouble() * System.Math.PI * 2);
+                d.chieu = ngauNhien.Next(2) == 0 ? 1f : -1f;
+                d.batDau = bayGio;
+                d.thoiGian = 520L + ngauNhien.Next(320);
+                c.tpDa.Add(d);
+            }
+            if (bayGio - c.tpDaLuc > 500L)
+            {
+                c.tpDaLuc = bayGio;
+            }
+            for (int i = c.tpDa.Count - 1; i >= 0; i--)
+            {
+                Da d = c.tpDa[i];
+                float p = (float) (bayGio - d.batDau) / d.thoiGian;
+                if (p >= 1f)
+                {
+                    c.tpDa.RemoveAt(i);
+                    continue;
+                }
+                // Nhanh dan (bi hut) va xoay xoan oc vao tam.
+                float e = p * p;
+                float r = d.r0 * (1f - e);
+                float a = d.a0 + d.chieu * e * 1.6f;
+                int x = tamX + (int) (r * System.Math.Cos(a));
+                int y = tamY + (int) (r * System.Math.Sin(a) * 0.8f);
+                SmallImage.drawSmallImage(g, d.icon, x, y, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+            }
         }
 
         /// <summary>Trang phục chiêu còn hiệu lực bao lâu kể từ lúc tụ (ms).</summary>

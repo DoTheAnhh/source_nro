@@ -601,7 +601,7 @@ namespace Game1
     					Char char2 = new Char();
     					char2.cx = @char.cx;
     					char2.cy = @char.cy - @char.ch;
-    					if (@char.cgender == 0)
+    					if (@char.cgender == 0 && !God.TrangPhucUI.conHieuLuc(@char))
     					{
     						MonsterDart.addMonsterDart(x + dir * w, y, checkIsBoss(), -100, -100, char2, 25);
     					}
@@ -612,7 +612,7 @@ namespace Game1
     				Char char3 = new Char();
     				char3.cx = Char.myCharz().cx;
     				char3.cy = Char.myCharz().cy - Char.myCharz().ch;
-    				if (Char.myCharz().cgender == 0)
+    				if (Char.myCharz().cgender == 0 && !God.TrangPhucUI.conHieuLuc(Char.myCharz()))
     				{
     					MonsterDart.addMonsterDart(x + dir * w, y, checkIsBoss(), -100, -100, char3, 25);
     				}

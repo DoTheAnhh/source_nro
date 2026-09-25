@@ -947,6 +947,11 @@ namespace Game3
     	public int tpTrungY;
 
     	public long tpTrungLuc;
+
+    	/// <summary>Đá đang bay vào quả cầu trang phục lúc tụ (thay đạn trắng gốc).</summary>
+    	public System.Collections.Generic.List<God.TrangPhucUI.Da> tpDa;
+
+    	public long tpDaLuc;
     
     	public SkillPaint skillPaint;
     
