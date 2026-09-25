@@ -531,14 +531,7 @@ namespace Game2.God
             int x = xP();
             int w = rP();
 
-            // Ten + mo ta.
-            g.setColor(MAU_VIEN, 0.8f);
-            g.fillRect(x, by, w, 34, BO_GOC);
-            g.veDaiDoc(x + 1, by + 1, w - 2, 32, BO_GOC - 1, rgb(0xFF, 0xF8, 0xEC), rgb(0xF8, 0xE2, 0xC2));
-            g.setColor(MAU_CAM, 1f);
-            g.fillRect(x + 1, by + 6, 3, 22, 1);
-            mFont.tahoma_7b_red.drawString(g, r.ten, x + 8, by + 4, mFont.LEFT);
-            mFont.tahoma_7.drawString(g, catBot(r.moTa, 70), x + 8, by + 18, mFont.LEFT);
+            veDauRuong(g, r, x, by, w);
 
             veCuaSo(g, r);
 
@@ -622,6 +615,73 @@ namespace Game2.God
         /// thì xanh lá, thở sáng; thiếu thì nền kem nhưng chữ vẫn nâu đậm — không
         /// để chữ chìm.
         /// </summary>
+        /// <summary>Mô tả ngắn: chỉ phần trước dấu "—" (phần sau bỏ hẳn).</summary>
+        private static string moTaNgan(string moTa)
+        {
+            if (string.IsNullOrEmpty(moTa))
+            {
+                return string.Empty;
+            }
+            int i = moTa.IndexOf('—');
+            if (i < 0)
+            {
+                i = moTa.IndexOf(" - ");
+            }
+            return (i >= 0 ? moTa.Substring(0, i) : moTa).Trim();
+        }
+
+        /// <summary>
+        /// Dải đầu rương: thẻ kem viền nâu; ô icon rương bên trái; tên rương chữ
+        /// trắng viền trên dải cam; dòng phụ ngắn; chip phiếu đang có góc phải.
+        /// </summary>
+        private void veDauRuong(mGraphics g, Ruong r, int x, int y, int w)
+        {
+            const int H = 34;
+            g.setColor(0x000000, 0.18f);
+            g.fillRect(x + 1, y + 2, w, H, BO_GOC + 1);
+            g.setColor(rgb(0x9A, 0x4A, 0x10), 1f);
+            g.fillRect(x, y, w, H, BO_GOC + 1);
+            g.veDaiDoc(x + 1, y + 1, w - 2, H - 2, BO_GOC, rgb(0xFF, 0xF8, 0xEC), rgb(0xF6, 0xDF, 0xBC));
+            g.setColor(0xFFFFFF, 0.5f);
+            g.fillRect(x + 4, y + 2, w - 8, 3, 2);
+
+            // O icon ruong.
+            int o = H - 8;
+            g.setColor(rgb(0x9A, 0x4A, 0x10), 1f);
+            g.fillRect(x + 4, y + 4, o, o, 6);
+            g.veDaiDoc(x + 5, y + 5, o - 2, o - 2, 5, rgb(0xFB, 0xB0, 0x5C), rgb(0xE0, 0x74, 0x1E));
+            if (r.icon >= 0)
+            {
+                SmallImage.veIconVuaO(g, r.icon, x + 4 + o / 2, y + 4 + o / 2, o - 4);
+            }
+
+            // Chip phieu goc phai.
+            string so = "x" + r.diem;
+            int wChip = mFont.tahoma_7b_white.getWidth(so) + (r.iconPhieu >= 0 ? 26 : 12);
+            int xChip = x + w - wChip - 6;
+            int yChip = y + (H - 18) / 2;
+            g.setColor(rgb(0x5A, 0x2A, 0x08), 0.85f);
+            g.fillRect(xChip, yChip, wChip, 18, 9);
+            int xSo = xChip + 6;
+            if (r.iconPhieu >= 0)
+            {
+                SmallImage.veIconVuaO(g, r.iconPhieu, xChip + 11, yChip + 9, 16);
+                xSo = xChip + 21;
+            }
+            mFont.tahoma_7b_yellow.drawString(g, so, xSo, yChip + 4, mFont.LEFT, mFont.tahoma_7b_dark);
+
+            // Ten tren dai cam + dong phu.
+            int xt = x + o + 12;
+            int wTen = mFont.tahoma_7b_white.getWidth(r.ten) + 16;
+            g.veDaiDoc(xt - 4, y + 4, wTen, 14, 7, rgb(0xFB, 0xB0, 0x5C), rgb(0xE0, 0x74, 0x1E));
+            mFont.tahoma_7b_white.drawString(g, r.ten, xt + 4, y + 5, mFont.LEFT, mFont.tahoma_7b_dark);
+            string phu = moTaNgan(r.moTa);
+            if (phu.Length > 0)
+            {
+                mFont.tahoma_7b_dark.drawString(g, catBot(phu, 40), xt, y + 20, mFont.LEFT);
+            }
+        }
+
         private void veNutMo(mGraphics g, int[] n, string chu, int gia, int iconPhieu, bool duoc)
         {
             if (duoc)
