@@ -2189,7 +2189,7 @@ namespace Game1
     					if (GameCanvas.gameTick % 4 == 0)
     					{
     					}
-    					if (GameCanvas.gameTick % 2 == 0)
+    					if (GameCanvas.gameTick % 2 == 0 && !God.TrangPhucUI.conHieuLuc(this))
     					{
     						if (cdir == 1)
     						{

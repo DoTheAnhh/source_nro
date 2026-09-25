@@ -804,15 +804,33 @@ public class SkillService {
                 break;
             case Skill.MAKANKOSAPPO:
                 long startMakenko = System.currentTimeMillis();
+                // Nap qua lau (gui "ban" ma khong bao gio co muc tieu toi) thi coi
+                // nhu lan nap cu da hong, cho nap lai tu dau — khong ket mai.
+                if (player.playerSkill.prepareLaze
+                        && startMakenko - player.playerSkill.lastTimePrepareLaze > 15_000L) {
+                    player.playerSkill.prepareLaze = false;
+                }
                 if (!player.playerSkill.prepareLaze) {
                     //bắt đầu nạp laze
                     player.playerSkill.prepareLaze = true;
                     player.playerSkill.lastTimePrepareLaze = System.currentTimeMillis();
+                    // Trang phuc ky nang: bao ca khu hinh Makankosappo TRUOC goi nap.
+                    nro.service.TrangPhucService.gI().baoTruocKhiTu(player, Skill.MAKANKOSAPPO);
                     sendPlayerPrepareSkill(player,
                             nro.repository.dao.SetBonusDAO.thoiGianVanChieu(
                                     player, Skill.MAKANKOSAPPO, 3000));
                 } else {
                     //bắn laze
+                    //
+                    // Client gui HAI goi luc ban: gong xong gui skill_not_focus(4)
+                    // KHONG kem muc tieu, roi qua cau bay toi moi gui goi danh CO
+                    // muc tieu. Ban cu ban luon o goi dau: khong muc tieu nen khong
+                    // tru mau ai, lai ha co nap — goi danh toi sau thanh ra BAT DAU
+                    // NAP LAN MOI (nguoi khac thay gong lai) thay vi gay sat thuong.
+                    // Nay: chua co muc tieu thi GIU co nap, cho goi danh co muc tieu.
+                    if (plTarget == null && mobTarget == null) {
+                        break;
+                    }
                     player.playerSkill.prepareLaze = false;
                     if (plTarget != null) {
                         playerAttackPlayer(player, plTarget, false);

@@ -91,6 +91,7 @@ public final class TrangPhucDAO {
             daTao = true;
             gieoNeuTrong();
             gieoThanLaThienChinh();
+            gieoRasenshuriken();
             // Them du am vu no (khung thu ba cua day bay).
             ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_bay = ? WHERE skill_tpl = 10"
                     + " AND khung_bay = '25285,25286'", KHUNG_BAY_DBTT);
@@ -128,10 +129,43 @@ public final class TrangPhucDAO {
      * phần sau -1 là lớp giữa thân (ảnh 2, căn theo lõi sáng).
      * Gồng: khói 1–5 | đá dồn 10–12. Nổ: nổ/khói tan 6–9 + hố nứt 10 | đá bung 1–9.
      */
-    private static final String NAP_TLTC = "25314,25315,25316,25317,25318,-1,25334,25335,25336";
-    private static final String BAY_TLTC = "25319,25320,25321,25322,25323,-1,25325,25326,25327,25328,25329,25330,25331,25332,25333";
+    private static final String NAP_TLTC = "25351,25352,25353,25354,25355,-1,25334,25335,25336";
+    private static final String BAY_TLTC = "25356,25357,25358,25359,25360,-1,25325,25326,25327,25328,25329,25330,25331,25332,25333";
+
+    /**
+     * Rasenshuriken cho Makankosappo (skill 11), icon 25337–25349, căn theo lõi sáng.
+     * Nạp: lớn dần 1–5 rồi xoay 6/8. Bay: [bay có vệt | nổ | xoáy dư âm 3 giây].
+     */
+    private static final String NAP_RASEN = "25337,25338,25339,25340,25341";
+    private static final String BAY_RASEN = "25343,25346,25347,-1,25345,25348,25349,-1,25342,25345,25344";
+
+    private static void gieoRasenshuriken() throws Exception {
+        // Ba loai xoay khac nhau (tay: shuriken tron, nem: co vet, dich: vong gio + gai) — doi dong da gieo.
+        ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_nap = ?, khung_bay = ? WHERE skill_tpl = 11"
+                + " AND khung_nap = '25337,25338,25339,25340,25341,25342,25344'", NAP_RASEN, BAY_RASEN);
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM trang_phuc_mau WHERE skill_tpl = 11 AND ten = ?", "Rasenshuriken");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            if (rs != null) {
+                rs.dispose();
+            }
+        }
+        ConnectDB.executeUpdate("INSERT INTO trang_phuc_mau (skill_tpl, ten, mo_ta, icon, khung_nap, khung_bay, thu_tu, icon_vp)"
+                + " VALUES (?,?,?,?,?,?,1,?)", 11, "Rasenshuriken",
+                "Nén gió thành phi tiêu xoáy — trúng địch nổ tung, để lại cơn lốc xoáy.",
+                25341, NAP_RASEN, BAY_RASEN, 25350);
+        lucDoc = 0;
+        Logger.success("Trang phục: gieo Rasenshuriken cho Makankosappo\n");
+    }
 
     private static void gieoThanLaThienChinh() throws Exception {
+        // Lop mat dat can lai theo day khoi chinh (bo 25351–25360) — doi cho dong dang tro bo cu.
+        ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_nap = ?, khung_bay = ? WHERE skill_tpl = 14"
+                + " AND khung_nap LIKE '25314,%'", NAP_TLTC, BAY_TLTC);
         // Them lop giua than (anh 2) cho dong da gieo truoc — mot lan.
         ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_nap = ?, khung_bay = ? WHERE skill_tpl = 14"
                 + " AND khung_nap = '25314,25315,25316,25317,25318'", NAP_TLTC, BAY_TLTC);

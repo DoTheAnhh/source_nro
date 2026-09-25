@@ -959,6 +959,7 @@ namespace Game3.God
         {
             veCauBu(g);
             veNoTuNo(g);
+            veXoayMo(g);
             veMotNguoi(g, Char.myCharz());
             for (int i = 0; i < GameScr.vCharInMap.size(); i++)
             {
@@ -1076,6 +1077,7 @@ namespace Game3.God
             long bayGio = mSystem.currentTimeMillis();
             // Qua cau dang bay: lap khung nem / cham (9 <-> 10).
             veGongTuNo(g, c);
+            veRasen(g, c);
             if (laQCKK(c) && c.dart != null && c.dart.isActive)
             {
                 veVongBay(g, c.tpBay, c.dart.x, c.dart.y, TO_CAU);
@@ -1126,6 +1128,11 @@ namespace Game3.God
             {
                 return;
             }
+            if (chu.tpSkill == 11)
+            {
+                noRasen(chu, x, y);
+                return;
+            }
             IMapObject mt = chu.mobFocus != null ? (IMapObject) chu.mobFocus : chu.charFocus;
             ghiNo(chu, chu.tpBay, x, y, mt != null ? mt.getY() : y + 25);
         }
@@ -1144,20 +1151,168 @@ namespace Game3.God
             {
                 return new short[0];
             }
-            int cat = System.Array.IndexOf(a, (short) -1);
-            if (cat < 0)
+            // Doan thu `phan` giua cac dau -1 (0 = doan dau).
+            int tu = 0;
+            int dem = 0;
+            for (int i = 0; i <= a.Length; i++)
             {
-                return phan == 0 ? a : new short[0];
+                if (i == a.Length || a[i] == -1)
+                {
+                    if (dem == phan)
+                    {
+                        short[] ra = new short[i - tu];
+                        System.Array.Copy(a, tu, ra, 0, ra.Length);
+                        return ra;
+                    }
+                    dem++;
+                    tu = i + 1;
+                }
             }
-            int tu = phan == 0 ? 0 : cat + 1;
-            int den = phan == 0 ? cat : a.Length;
-            short[] ra = new short[den - tu];
-            System.Array.Copy(a, tu, ra, 0, ra.Length);
-            return ra;
+            return new short[0];
+        }
+
+        // ------------------------------------------------------------------
+        //  Makankosappo → Rasenshuriken: ba loại xoáy
+        //    trên tay (nạp) · ném đi (bay, xoay theo hướng) · ở địch (nổ + xoáy dư âm, to nhất)
+        // ------------------------------------------------------------------
+        private const float RASEN_TAY = 1f;
+        private const float RASEN_BAY = 1.1f;
+        private const float RASEN_NO = 1.6f;
+        private const float RASEN_XOAY = 1.8f;
+
+        /// <summary>Xoáy dư âm ở địch: giữ rõ bao lâu, rồi mờ tới hết bao lâu (ms).</summary>
+        private const long MS_XOAY_RO = 1500L;
+        private const long MS_XOAY = 3000L;
+
+        public static bool laRasen(Char c)
+        {
+            return conHieuLuc(c) && c.tpSkill == 11;
+        }
+
+        /// <summary>Nạp trên tay (lớn dần suốt ~60% thời gian gồng rồi lặp hai khung cuối) và bay.</summary>
+        private static void veRasen(mGraphics g, Char c)
+        {
+            if (!laRasen(c))
+            {
+                return;
+            }
+            // Dang bay: xoay theo huong bay, lap cac khung co vet.
+            if (c.dart != null && c.dart.isActive)
+            {
+                short[] bay = tach(c.tpBay, 0);
+                if (bay.Length > 0)
+                {
+                    float goc = (float) (System.Math.Atan2(c.dart.vy, c.dart.vx) * 57.29578);
+                    long ms = mSystem.currentTimeMillis();
+                    long buoc = ms / MS_BAY;
+                    int a = (int) (buoc % bay.Length);
+                    int b = (int) ((buoc + 1) % bay.Length);
+                    float t = (float) (ms % MS_BAY) / MS_BAY;
+                    SmallImage.veIconXoay(g, bay[a], c.dart.x, c.dart.y, RASEN_BAY, goc);
+                    if (a != b && t > 0.02f)
+                    {
+                        SmallImage.veIconXoay(g, bay[b], c.dart.x, c.dart.y, RASEN_BAY, goc, t);
+                    }
+                }
+                return;
+            }
+            if (!c.isStandAndCharge || c.tpNap == null || c.tpNap.Length == 0)
+            {
+                return;
+            }
+            short[] nap = c.tpNap;
+            int n = nap.Length;
+            long troi = mSystem.currentTimeMillis() - c.tpLuc;
+            long lon = System.Math.Max(300L, thoiGianGong(c) * 6 / 10);
+            int x = c.cx + (c.cdir >= 0 ? 1 : -1) * 22;
+            int y = c.cy - c.ch / 2 - 4;
+            if (troi < lon || n < 2)
+            {
+                float f = System.Math.Min(n - 1, (float) troi / lon * (n - 1));
+                int a = (int) f;
+                veHoa(g, nap[a], nap[System.Math.Min(n - 1, a + 1)], f - a, x, y, RASEN_TAY);
+                return;
+            }
+            long sau = troi - lon;
+            long buoc2 = sau / MS_BAY;
+            veHoa(g, nap[n - 2 + (int) (buoc2 % 2)], nap[n - 2 + (int) ((buoc2 + 1) % 2)],
+                    (float) (sau % MS_BAY) / MS_BAY, x, y, RASEN_TAY);
+        }
+
+        public class XoayMo
+        {
+            public short[] khung;
+            public int x, y;
+            public long batDau;
+        }
+
+        private static readonly List<XoayMo> dsXoay = new List<XoayMo>();
+
+        /// <summary>Trúng địch: chuỗi nổ lớn, rồi xoáy dư âm to nhất 3 giây mờ dần; kết thúc lần nạp.</summary>
+        private static void noRasen(Char chu, int x, int y)
+        {
+            chu.tpXong = true;
+            long bayGio = mSystem.currentTimeMillis();
+            short[] no = tach(chu.tpBay, 1);
+            if (no.Length > 0)
+            {
+                themNo(no, x, y, MS_NO, bayGio, RASEN_NO);
+            }
+            short[] xoay = tach(chu.tpBay, 2);
+            if (xoay.Length > 0)
+            {
+                XoayMo m = new XoayMo();
+                m.khung = xoay;
+                m.x = x;
+                m.y = y;
+                m.batDau = bayGio + no.Length * MS_NO;
+                lock (dsXoay)
+                {
+                    dsXoay.Add(m);
+                }
+            }
+        }
+
+        private static void veXoayMo(mGraphics g)
+        {
+            if (dsXoay.Count == 0)
+            {
+                return;
+            }
+            long bayGio = mSystem.currentTimeMillis();
+            lock (dsXoay)
+            {
+                for (int i = dsXoay.Count - 1; i >= 0; i--)
+                {
+                    XoayMo m = dsXoay[i];
+                    long t = bayGio - m.batDau;
+                    if (t >= MS_XOAY)
+                    {
+                        dsXoay.RemoveAt(i);
+                        continue;
+                    }
+                    if (t < 0)
+                    {
+                        continue;
+                    }
+                    float mo = t < MS_XOAY_RO ? 1f : (float) (MS_XOAY - t) / (MS_XOAY - MS_XOAY_RO);
+                    int n = m.khung.Length;
+                    long buoc = t / MS_GONG;
+                    int a = (int) (buoc % n);
+                    int b = (int) ((buoc + 1) % n);
+                    float h = (float) (t % MS_GONG) / MS_GONG;
+                    SmallImage.veIconXoay(g, m.khung[a], m.x, m.y, RASEN_XOAY, 0f, mo);
+                    if (a != b && h > 0.02f)
+                    {
+                        SmallImage.veIconXoay(g, m.khung[b], m.x, m.y, RASEN_XOAY, 0f, mo * h);
+                    }
+                }
+            }
         }
 
         /// <summary>Khung Tự phát nổ căn đáy: tâm ảnh cao hơn chân chừng này điểm.</summary>
-        private const int TU_NO_TAM = 36;
+        /// <remarks>Khung căn theo ĐÁY KHỐI KHÓI CHÍNH (không theo mảnh vụn thấp nhất) nên mọi khung chạm đất như nhau.</remarks>
+        private const int TU_NO_TAM = 43;
 
         /// <summary>Phóng mọi khung Tự phát nổ (người dùng muốn to hơn 50%).</summary>
         private const float TU_NO_TO = 1.5f;
@@ -1193,6 +1348,7 @@ namespace Game3.God
             public int x, tamY;
             public long ms;
             public long batDau;
+            public float tiLe = TU_NO_TO;
         }
 
         private static readonly List<NoLon> dsNo = new List<NoLon>();
@@ -1298,11 +1454,17 @@ namespace Game3.God
 
         private static void themNo(short[] khung, int x, int tamY, long ms, long batDau)
         {
+            themNo(khung, x, tamY, ms, batDau, TU_NO_TO);
+        }
+
+        private static void themNo(short[] khung, int x, int tamY, long ms, long batDau, float tiLe)
+        {
             NoLon no = new NoLon();
             no.khung = khung;
             no.x = x;
             no.tamY = tamY;
             no.ms = ms;
+            no.tiLe = tiLe;
             no.batDau = batDau;
             lock (dsNo)
             {
@@ -1331,7 +1493,7 @@ namespace Game3.God
                         continue;
                     }
                     int k2 = System.Math.Min(no.khung.Length - 1, k + 1);
-                    veHoa(g, no.khung[k], no.khung[k2], f - k, no.x, no.tamY, TU_NO_TO);
+                    veHoa(g, no.khung[k], no.khung[k2], f - k, no.x, no.tamY, no.tiLe);
                 }
             }
         }

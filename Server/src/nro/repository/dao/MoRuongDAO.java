@@ -392,6 +392,7 @@ public class MoRuongDAO {
             giamGiaX10V1();
             taoRuongCaoCapV1();
             tiLeCaoCapV2();
+            baTrangPhucV3();
         } catch (Exception ex) {
             Logger.logException(MoRuongDAO.class, ex, "Không dựng được phiếu quay rương");
         }
@@ -475,6 +476,51 @@ public class MoRuongDAO {
      * 0,5%; hai món vàng (Capsule 1 món kích hoạt, Rương Thú Cưng Cao Cấp) mỗi
      * món 2%. Các món còn lại chia phần dư, giữ tỉ lệ giữa chúng.
      */
+    /**
+     * Rương Cao Cấp đợt ba — một lần: thêm Thần La Thiên Chinh và Rasenshuriken
+     * cạnh Địa Bộc Thiên Tinh; cả ba trang phục đỏ, mỗi món 0,5%. Các món cố
+     * định cũ giữ nguyên tỉ lệ. Thiếu id (máy chưa dựng xong) thì lần sau làm lại.
+     */
+    private static void baTrangPhucV3() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT gia_tri FROM mo_ruong_cau_hinh WHERE khoa = 'ruong_cao_cap_v3'");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            dong(rs);
+        }
+        int id = idTheoTenRuong(TEN_CAO_CAP);
+        int berus = TrungDeTuDAO.itemCuaLoai(nro.core.consts.ConstDetu.BILL);
+        int rtCaoCap = ThuCungDAO.idRuongCaoCap();
+        java.util.Map<String, Integer> tp = new java.util.HashMap<>();
+        for (TrangPhucDAO.Mau m : TrangPhucDAO.tatCa()) {
+            tp.put(m.ten, m.itemId);
+        }
+        Integer dbtt = tp.get("Địa Bộc Thiên Tinh");
+        Integer tltc = tp.get("Thần La Thiên Chinh");
+        Integer rasen = tp.get("Rasenshuriken");
+        if (id <= 0 || berus <= 0 || rtCaoCap <= 0 || dbtt == null || dbtt <= 0 || tltc == null || tltc <= 0
+                || rasen == null || rasen <= 0) {
+            return;
+        }
+        themMonDo(id, tltc);
+        themMonDo(id, rasen);
+        java.util.Map<Integer, Integer> coDinh = new java.util.LinkedHashMap<>();
+        coDinh.put(1559, 2000);
+        coDinh.put(rtCaoCap, 2000);
+        coDinh.put(berus, 500);
+        coDinh.put(1655, 500);
+        coDinh.put(dbtt, 500);
+        coDinh.put(tltc, 500);
+        coDinh.put(rasen, 500);
+        datTiLeCoDinh(id, coDinh);
+        ConnectDB.executeUpdate("INSERT IGNORE INTO mo_ruong_cau_hinh (khoa, gia_tri) VALUES ('ruong_cao_cap_v3', '1')");
+        lucDoc = 0;
+        Logger.success("Mở rương: Rương Cao Cấp thêm Thần La Thiên Chinh, Rasenshuriken (0,5%)\n");
+    }
+
     private static void tiLeCaoCapV2() throws Exception {
         CrisResultSet rs = null;
         try {
