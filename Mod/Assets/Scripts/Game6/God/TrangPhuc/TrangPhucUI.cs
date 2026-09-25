@@ -932,6 +932,8 @@ namespace Game6.God
             public int dat;
             /// <summary>Tâm ảnh lệch so với mặt đất (dương = thấp xuống).</summary>
             public int dy = -LECH_DAT;
+            /// <summary>Phóng ảnh dư âm.</summary>
+            public float tiLe = 1f;
             public long batDau;
         }
 
@@ -1112,7 +1114,7 @@ namespace Game6.God
                         continue;
                     }
                     float mo = t < MS_DU_AM - MS_DU_AM_MO ? 1f : (float) (MS_DU_AM - t) / MS_DU_AM_MO;
-                    SmallImage.veIconXoay(g, d.icon, d.x, d.dat + d.dy, 1f, 0f, mo);
+                    SmallImage.veIconXoay(g, d.icon, d.x, d.dat + d.dy, d.tiLe, 0f, mo);
                 }
             }
         }
@@ -1156,6 +1158,12 @@ namespace Game6.God
 
         /// <summary>Khung Tự phát nổ căn đáy: tâm ảnh cao hơn chân chừng này điểm.</summary>
         private const int TU_NO_TAM = 36;
+
+        /// <summary>Phóng mọi khung Tự phát nổ (người dùng muốn to hơn 50%).</summary>
+        private const float TU_NO_TO = 1.5f;
+
+        /// <summary>Tâm lớp mặt đất sau khi phóng: căn đáy nên tâm nâng theo cỡ, đáy vẫn ở mặt đất.</summary>
+        private static readonly int TAM_TO = (int) (TU_NO_TAM * TU_NO_TO);
 
         /// <summary>Lớp giữa thân thấp hơn giữa người chừng này điểm.</summary>
         private const int GIUA_THAP = 8;
@@ -1215,7 +1223,7 @@ namespace Game6.God
                 float f = p * (dat.Length - 1);
                 int a = System.Math.Min(dat.Length - 1, (int) f);
                 int b = System.Math.Min(dat.Length - 1, a + 1);
-                veHoa(g, dat[a], dat[b], f - a, c.cx, c.cy - TU_NO_TAM, 1f);
+                veHoa(g, dat[a], dat[b], f - a, c.cx, c.cy - TAM_TO, TU_NO_TO);
             }
             short[] giua = tach(c.tpNap, 1);
             if (giua.Length > 0)
@@ -1227,7 +1235,7 @@ namespace Game6.God
                 int jb = (ja + 1) % chu;
                 int a = ja >= giua.Length ? chu - ja : ja;
                 int b = jb >= giua.Length ? chu - jb : jb;
-                veHoa(g, giua[a], giua[b], pha - (int) pha, c.cx, c.cy - c.ch / 2 + GIUA_THAP, 0.55f + 0.45f * p);
+                veHoa(g, giua[a], giua[b], pha - (int) pha, c.cx, c.cy - c.ch / 2 + GIUA_THAP, (0.55f + 0.45f * p) * TU_NO_TO);
             }
         }
 
@@ -1263,7 +1271,7 @@ namespace Game6.God
             }
             if (day.Count > 0)
             {
-                themNo(day.ToArray(), c.cx, c.cy - TU_NO_TAM, MS_NO, bayGio);
+                themNo(day.ToArray(), c.cx, c.cy - TAM_TO, MS_NO, bayGio);
             }
             short[] bung = tach(c.tpBay, 1);
             if (bung.Length > 0)
@@ -1276,7 +1284,8 @@ namespace Game6.God
                 d.icon = dat[dat.Length - 1];
                 d.x = c.cx;
                 d.dat = c.cy;
-                d.dy = -TU_NO_TAM;
+                d.dy = -TAM_TO;
+                d.tiLe = TU_NO_TO;
                 d.batDau = bayGio + day.Count * MS_NO;
                 lock (dsDuAm)
                 {
@@ -1322,7 +1331,7 @@ namespace Game6.God
                         continue;
                     }
                     int k2 = System.Math.Min(no.khung.Length - 1, k + 1);
-                    veHoa(g, no.khung[k], no.khung[k2], f - k, no.x, no.tamY, 1f);
+                    veHoa(g, no.khung[k], no.khung[k2], f - k, no.x, no.tamY, TU_NO_TO);
                 }
             }
         }
