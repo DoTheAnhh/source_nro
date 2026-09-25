@@ -6,7 +6,7 @@ namespace Game1.God
     /// <summary>
     /// Màn <b>Trang phục kỹ năng</b> — mở từ thẻ Hệ thống của túi, ngay trên
     /// "Sổ sưu tầm". Chọn chiêu bên trái, chọn ô trang phục bên phải, bấm
-    /// <b>Bật</b> mới đổi hình; ô "Hình gốc" là quay về như cũ.
+    /// <b>Bật</b> mới đổi hình; ô đầu (tên kỹ năng) là quay về hình gốc.
     /// </summary>
     /// <remarks>
     /// <para>Chỉ đổi hình, không đổi sức mạnh. Mới có Quả cầu kênh khi.</para>
@@ -356,7 +356,7 @@ namespace Game1.God
                     mFont.tahoma_7b_dark.drawString(g, ten, o[0] + 32, o[1] + 5, mFont.LEFT);
                 }
                 Mau dung = timMau(dsChieu[i], dsChieu[i].dangDung);
-                string phu = dung != null ? dung.ten : "Hình gốc";
+                string phu = dung != null ? dung.ten : string.Empty;
                 if (phu.Length > 16)
                 {
                     phu = phu.Substring(0, 15) + "…";
@@ -417,7 +417,7 @@ namespace Game1.God
                     g.fillRect(o[0] + o[2] - 12, o[1] - 2, 14, 12, 6);
                     mFont.tahoma_7b_white.drawString(g, "✓", o[0] + o[2] - 5, o[1] - 2, mFont.CENTER);
                 }
-                string ten = i == 0 ? "Hình gốc" : c.ds[i - 1].ten;
+                string ten = i == 0 ? c.ten : c.ds[i - 1].ten;
                 if (ten.Length > 10)
                 {
                     ten = ten.Substring(0, 9) + "…";
@@ -483,9 +483,9 @@ namespace Game1.God
             }
 
             int xc = k[0] + 16 + oXem;
-            mFont.tahoma_7b_yellow.drawString(g, m != null ? m.ten : "Hình gốc", xc, k[1] + 12, mFont.LEFT,
+            mFont.tahoma_7b_yellow.drawString(g, m != null ? m.ten : c.ten, xc, k[1] + 12, mFont.LEFT,
                     mFont.tahoma_7b_dark);
-            string moTa = m != null ? m.moTa : "Quả cầu nguyên bản của game.";
+            string moTa = m != null ? m.moTa : string.Empty;
             int rongChu = k[0] + k[2] - 10 - xc;
             string[] dong = mFont.tahoma_7_white.splitFontArray(moTa, Math.max(60, rongChu));
             for (int i = 0; i < dong.Length && i < 4; i++)
@@ -519,7 +519,7 @@ namespace Game1.God
                 g.setColor(0x9CFF8A, 0.2f + 0.25f * tho);
                 g.fillRect(n[0] - 3, n[1] - 3, n[2] + 6, n[3] + 6, 10);
                 veKhung(g, n[0], n[1], n[2], n[3], 8, rgb(0x17, 0x62, 0x2A), rgb(0x72, 0xDE, 0x80), rgb(0x2A, 0x94, 0x40));
-                mFont.tahoma_7b_white.drawString(g, oChon == 0 ? "DÙNG HÌNH GỐC" : "BẬT", n[0] + n[2] / 2, n[1] + 7,
+                mFont.tahoma_7b_white.drawString(g, oChon == 0 ? "SỬ DỤNG" : "BẬT", n[0] + n[2] / 2, n[1] + 7,
                         mFont.CENTER, mFont.tahoma_7b_dark);
             }
         }
