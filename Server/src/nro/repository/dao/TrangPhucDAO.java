@@ -102,6 +102,7 @@ public final class TrangPhucDAO {
             gieoGatling();
             gieoTroiHon();
             gieoGokaMekkyaku();
+            gieoTrieuHoiCoc();
             // Them du am vu no (khung thu ba cua day bay).
             ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_bay = ? WHERE skill_tpl = 10"
                     + " AND khung_bay = '25285,25286'", KHUNG_BAY_DBTT);
@@ -169,6 +170,38 @@ public final class TrangPhucDAO {
             + "25428,25429,25430,25431,25432,25433,25434,25435,25436,-1,"
             + "25437,25438,25439,25440,25441,25442,25443,25444,25445,-1,"
             + "25446,25447,25448,-1,25424,25426";
+
+    /**
+     * Triệu hồi chi thuật: Cóc cho Đẻ trứng (skill 12, Namếc): quả trứng hoá cóc chiến binh.
+     * Khung bay = [khói triệu hồi 12 | cóc đứng thở 12 | cóc ra đòn 8 | lưỡi 12 | va chạm 6]
+     * — 5 đoạn (Vạn Kiếm 7 đoạn, client phân biệt theo số đoạn). Icon 25711–25761.
+     */
+    private static void gieoTrieuHoiCoc() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM trang_phuc_mau WHERE skill_tpl = 12 AND ten = ?", "Triệu hồi chi thuật: Cóc");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            if (rs != null) {
+                rs.dispose();
+            }
+        }
+        StringBuilder bay = new StringBuilder();
+        for (int id = 25711; id <= 25760; id++) {
+            if (id == 25723 || id == 25735 || id == 25743 || id == 25755) {
+                bay.append(",-1");
+            }
+            bay.append(bay.length() > 0 ? "," : "").append(id);
+        }
+        ConnectDB.executeUpdate("INSERT INTO trang_phuc_mau (skill_tpl, ten, mo_ta, icon, khung_nap, khung_bay, thu_tu, icon_vp)"
+                + " VALUES (?,?,?,?,?,?,1,?)", 12, "Triệu hồi chi thuật: Cóc",
+                "Kết ấn triệu hồi Cóc chiến binh từ làn khói; mỗi đòn đánh, cóc phóng lưỡi quất thẳng vào kẻ địch.",
+                25761, "", bay.toString(), 25761);
+        lucDoc = 0;
+        Logger.success("Trang phục: gieo Triệu hồi chi thuật: Cóc cho Đẻ trứng\n");
+    }
 
     private static void gieoVanKiemQuyTong() throws Exception {
         CrisResultSet rs = null;

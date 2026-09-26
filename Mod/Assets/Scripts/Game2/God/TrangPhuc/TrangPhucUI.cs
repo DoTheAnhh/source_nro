@@ -1373,6 +1373,7 @@ namespace Game2.God
             veGatling(g);
             veTroiHon(g);
             veGoka(g);
+            veCocDanh(g);
             veMotNguoi(g, Char.myCharz());
             for (int i = 0; i < GameScr.vCharInMap.size(); i++)
             {
@@ -1943,6 +1944,12 @@ namespace Game2.God
         /// <summary>Quả trứng có skin vừa đánh <paramref name="dich"/>: một luồng kiếm rời xoáy lao tới.</summary>
         public static void vanKiemDanh(Mob m, IMapObject dich)
         {
+            if (dich != null && laCoc(m.tpVK))
+            {
+                // Skin Coc: coc phong luoi thay dong kiem.
+                cocDanh(m, dich);
+                return;
+            }
             if (dich == null || tach(m.tpVK, 1).Length == 0)
             {
                 return;
@@ -2079,6 +2086,10 @@ namespace Game2.God
         /// </summary>
         public static bool veVanKiem(mGraphics g, Mob m)
         {
+            if (laCoc(m.tpVK))
+            {
+                return veCoc(g, m);
+            }
             short[] cho = tach(m.tpVK, 0);
             short[] chet = tach(m.tpVK, 6);
             if (cho.Length < 12)
@@ -4267,6 +4278,350 @@ namespace Game2.God
                     }
                 }
             }
+        }
+
+        // ------------------------------------------------------------------
+        //  Đẻ trứng (Namếc) → Triệu hồi chi thuật: Cóc. Quả trứng hoá cóc chiến binh: nở ra từ
+        //  vòng ấn + khói triệu hồi, đứng thở; mỗi đòn đánh thì cóc khom người, há miệng phóng
+        //  lưỡi quất thẳng vào địch (đúng góc), va chạm nổ ở địch, lưỡi rút về; chết thì biến
+        //  mất trong khói. Khung: [khói 12 | cóc đứng 12 | cóc ra đòn 8 | lưỡi 12 | va chạm 6].
+        // ------------------------------------------------------------------
+        private const long CO_SINH = 120L;
+        private const long CO_THO = 150L;
+        private const long CO_GONG = 75L;
+        private const long CO_VUON = 210L;
+        private const long CO_QUAT = 140L;
+        private const long CO_RUT = 200L;
+        private const long CO_VE = 95L;
+        private const long CO_NO = 65L;
+        private const long CO_CHET = 110L;
+
+        /// <summary>Ảnh (đơn vị): cóc 120×58 chân cách đáy 1,5; khói 97×79 đáy vòng ấn cách đáy 5,3; lưỡi 160×17.</summary>
+        private const float CO_CHAN = 1.5f;
+        private const float CO_KHOI_CHAN = 5.3f;
+        private const float CO_LUOI_DAY = 17f;
+
+        /// <summary>Miệng cóc so với chân (đơn vị, mặt quay phải).</summary>
+        private const float CO_MIENG_X = 22f;
+        private const float CO_MIENG_Y = -24f;
+
+        /// <summary>Đầu lưỡi của từng khung lưỡi (phần 440 bề rộng ảnh).</summary>
+        private static readonly float[] CO_MAT_LUOI = { 60f, 61f, 157f, 158f, 237f, 246f, 330f, 346f, 388f, 393f, 400f, 400f };
+
+        /// <summary>Khung lưỡi dùng lúc vươn (thẳng, dài dần) rồi cú quất cuộn đầu.</summary>
+        private static readonly int[] CO_VUON_KHUNG = { 0, 1, 2, 3, 4, 5, 6, 7, 9 };
+
+        public class CocDanh
+        {
+            public Mob m;
+            public IMapObject dich;
+            public long batDau;
+            public bool daNo;
+            public long lucNo;
+            public int nx;
+            public int ny;
+        }
+
+        private static readonly List<CocDanh> dsCocDanh = new List<CocDanh>();
+
+        /// <summary>Khung của skin Cóc (5 đoạn) — khác Vạn Kiếm (7 đoạn).</summary>
+        private static bool laCoc(short[] bay)
+        {
+            return bay != null && tach(bay, 4).Length >= 6 && tach(bay, 5).Length == 0;
+        }
+
+        private static long tongDon()
+        {
+            return CO_GONG * 4 + CO_VUON + CO_QUAT + CO_RUT + CO_VE * 2;
+        }
+
+        /// <summary>Cóc có skin vừa đánh <paramref name="dich"/>: khom người, phóng lưỡi.</summary>
+        private static void cocDanh(Mob m, IMapObject dich)
+        {
+            long ms = mSystem.currentTimeMillis();
+            lock (dsCocDanh)
+            {
+                // Mot con coc mot don: don cu dang do thi don moi noi tiep (bo don cu).
+                dsCocDanh.RemoveAll(d => d.m == m);
+                CocDanh c = new CocDanh();
+                c.m = m;
+                c.dich = dich;
+                c.batDau = ms;
+                dsCocDanh.Add(c);
+            }
+        }
+
+        private static CocDanh timCocDanh(Mob m)
+        {
+            foreach (CocDanh d in dsCocDanh)
+            {
+                if (d.m == m)
+                {
+                    return d;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>Vẽ ảnh chân ở (x, yChan), quay theo huong (1 phải, -1 trái — lật ngang).</summary>
+        private static void veChan(mGraphics g, short id, float x, float yChan, float chan, int huong, float tiLe, float mo)
+        {
+            if (mo <= 0.01f)
+            {
+                return;
+            }
+            var s = (SmallImage.imgNew != null && id >= 0 && id < SmallImage.imgNew.Length) ? SmallImage.imgNew[id] : null;
+            if (s == null || s.img == null || mGraphics.getImageWidth(s.img) <= 1)
+            {
+                SmallImage.veIconXoay(g, id, (int) x, (int) yChan, tiLe, 0f, mo);
+                return;
+            }
+            float w = mGraphics.getImageWidth(s.img) * tiLe;
+            float h = mGraphics.getImageHeight(s.img) * tiLe;
+            float cy = yChan - h / 2f + chan * tiLe;
+            if (huong == 1)
+            {
+                g.veAnhXoay(s.img, x, cy, w, h, 0f, mo);
+            }
+            else
+            {
+                // Lat ngang = xoay 180 + lat doc.
+                g.veAnhXoayLat(s.img, x, cy, w, h, 180f, mo, true);
+            }
+        }
+
+        private static void hoaChan(mGraphics g, short a, short b, float h, float x, float yChan, float chan, int huong, float tiLe, float mo)
+        {
+            h = emVao(h);
+            veChan(g, a, x, yChan, chan, huong, tiLe, mo * (a != b ? System.Math.Min(1f, 2f * (1f - h)) : 1f));
+            if (a != b && h > 0.01f)
+            {
+                veChan(g, b, x, yChan, chan, huong, tiLe, mo * System.Math.Min(1f, 2f * h));
+            }
+        }
+
+        /// <summary>Hướng cóc: theo địch đang đánh, không thì theo hướng quả trứng.</summary>
+        private static int huongCoc(Mob m, CocDanh d)
+        {
+            if (d != null && d.dich != null)
+            {
+                return d.dich.getX() >= m.x ? 1 : -1;
+            }
+            return m.dir == -1 ? -1 : 1;
+        }
+
+        /// <summary>Vẽ cóc (thay quả trứng). Trả false = đừng vẽ thêm (đang chết).</summary>
+        private static bool veCoc(mGraphics g, Mob m)
+        {
+            short[] khoi = tach(m.tpVK, 0);
+            short[] tho = tach(m.tpVK, 1);
+            short[] don = tach(m.tpVK, 2);
+            if (khoi.Length < 12 || tho.Length < 12 || don.Length < 8)
+            {
+                return true;
+            }
+            long ms = mSystem.currentTimeMillis();
+            float x = m.x;
+            float y = m.y;
+            CocDanh d;
+            lock (dsCocDanh)
+            {
+                d = timCocDanh(m);
+            }
+            int huong = huongCoc(m, d);
+            if (m.tpVKChet > 0)
+            {
+                // Bien mat trong khoi: coc mo dan khi khoi day nhat.
+                long t = ms - m.tpVKChet;
+                long tong = CO_CHET * 5;
+                if (t >= tong + 150)
+                {
+                    return false;
+                }
+                float moCoc = 1f - System.Math.Min(1f, t / 280f);
+                veChan(g, tho[0], x, y, CO_CHAN, huong, 1f, moCoc);
+                int a = (int) System.Math.Min(4, t / CO_CHET);
+                int b = System.Math.Min(4, a + 1);
+                float h = (float) (t % CO_CHET) / CO_CHET;
+                float cuoi = t < tong ? 1f : 1f - (float) (t - tong) / 150f;
+                // Bo khoi 1 (khung 2..6) chinh, bo 2 (khung 9..12) phu.
+                hoaChan(g, khoi[6 + System.Math.Min(5, 3 + a / 2)], khoi[6 + System.Math.Min(5, 3 + b / 2)], h, x, y, CO_KHOI_CHAN, 1, 0.95f, 0.5f * cuoi);
+                hoaChan(g, khoi[1 + a], khoi[1 + b], h, x, y, CO_KHOI_CHAN, 1, 1f, cuoi);
+                return false;
+            }
+            long ts = ms - m.tpVKSinh;
+            long tongSinh = CO_SINH * 6;
+            // Coc: hien dan duoi lan khoi (tu 280 ms toi 560 ms).
+            float moCo = ts >= tongSinh ? 1f : System.Math.Max(0f, System.Math.Min(1f, (ts - 280f) / 280f));
+            long td = d != null ? ms - d.batDau : long.MaxValue;
+            if (d != null && td < tongDon())
+            {
+                // Ra don: khom (0..3), ha mieng (4..5) suot luc luoi ra, ve dang (6..7).
+                long tGong = CO_GONG * 4;
+                long tLuoi = CO_VUON + CO_QUAT + CO_RUT;
+                int a;
+                int b;
+                float h;
+                if (td < tGong)
+                {
+                    a = (int) (td / CO_GONG);
+                    b = a + 1;
+                    h = (float) (td % CO_GONG) / CO_GONG;
+                }
+                else if (td < tGong + tLuoi)
+                {
+                    long tl = td - tGong;
+                    a = tl < CO_VUON ? 4 : 5;
+                    b = 5;
+                    h = tl < CO_VUON ? (float) tl / CO_VUON : 0f;
+                }
+                else
+                {
+                    long tv = td - tGong - tLuoi;
+                    a = (int) System.Math.Min(7, 5 + tv / CO_VE);
+                    b = System.Math.Min(7, a + 1);
+                    h = (float) (tv % CO_VE) / CO_VE;
+                }
+                hoaChan(g, don[a], don[b], h, x, y, CO_CHAN, huong, 1f, moCo);
+            }
+            else
+            {
+                // Dung tho: vong tron 12 khung.
+                int n = tho.Length;
+                int a = (int) ((ms / CO_THO) % n);
+                int b = (a + 1) % n;
+                float h = (float) (ms % CO_THO) / CO_THO;
+                if (d != null && td < tongDon() + CO_THO)
+                {
+                    // Noi mem tu khung ve dang cuoi sang vong tho.
+                    float q = (float) (td - tongDon()) / CO_THO;
+                    veChan(g, don[7], x, y, CO_CHAN, huong, 1f, moCo * (1f - q));
+                }
+                hoaChan(g, tho[a], tho[b], h, x, y, CO_CHAN, huong, 1f, moCo);
+            }
+            if (ts < tongSinh + 200)
+            {
+                // Khoi trieu hoi: bo 1 (khung 1..6) chinh, bo 2 (khung 7..12) phu nho hon.
+                int a = (int) System.Math.Min(5, ts / CO_SINH);
+                int b = System.Math.Min(5, a + 1);
+                float h = (float) (ts % CO_SINH) / CO_SINH;
+                float cuoi = ts < tongSinh ? 1f : 1f - (float) (ts - tongSinh) / 200f;
+                hoaChan(g, khoi[6 + a], khoi[6 + b], h, x, y, CO_KHOI_CHAN, 1, 0.9f, 0.55f * cuoi);
+                hoaChan(g, khoi[a], khoi[b], h, x, y, CO_KHOI_CHAN, 1, 1f, cuoi);
+            }
+            return true;
+        }
+
+        /// <summary>Lưỡi + va chạm của mọi con cóc — lớp toàn cục (đè lên nhân vật).</summary>
+        private static void veCocDanh(mGraphics g)
+        {
+            if (dsCocDanh.Count == 0)
+            {
+                return;
+            }
+            long ms = mSystem.currentTimeMillis();
+            lock (dsCocDanh)
+            {
+                for (int i = dsCocDanh.Count - 1; i >= 0; i--)
+                {
+                    CocDanh d = dsCocDanh[i];
+                    Mob m = d.m;
+                    long td = ms - d.batDau;
+                    if (m == null || m.tpVK == null || td > tongDon() + CO_NO * 6 + CO_THO * 2)
+                    {
+                        dsCocDanh.RemoveAt(i);
+                        continue;
+                    }
+                    short[] luoi = tach(m.tpVK, 3);
+                    short[] no = tach(m.tpVK, 4);
+                    if (luoi.Length < 12)
+                    {
+                        continue;
+                    }
+                    int huong = huongCoc(m, d);
+                    float ox = m.x + huong * CO_MIENG_X;
+                    float oy = m.y + CO_MIENG_Y;
+                    float ex = d.dich != null ? d.dich.getX() : m.x + huong * 80;
+                    float ey = d.dich != null ? d.dich.getY() - d.dich.getH() / 2f : oy;
+                    if (d.daNo)
+                    {
+                        ex = d.nx;
+                        ey = d.ny;
+                    }
+                    float dx = ex - ox;
+                    float dy = ey - oy;
+                    float dai = System.Math.Max(10f, (float) System.Math.Sqrt(dx * dx + dy * dy));
+                    float goc = (float) (System.Math.Atan2(dy, dx) * 57.29578);
+                    bool lat = dx < 0;
+                    long tl = td - CO_GONG * 4;
+                    if (m.tpVKChet == 0 && tl >= 0 && tl < CO_VUON + CO_QUAT + CO_RUT)
+                    {
+                        if (tl < CO_VUON)
+                        {
+                            // Vuon: dau luoi truot em toi dich; chon hai khung kep dau luoi, keo cho khop.
+                            float L = dai * emRa((float) tl / CO_VUON);
+                            veLuoi(g, luoi, L, dai, ox, oy, goc, lat);
+                        }
+                        else if (tl < CO_VUON + CO_QUAT)
+                        {
+                            if (!d.daNo)
+                            {
+                                d.daNo = true;
+                                d.lucNo = ms;
+                                d.nx = (int) ex;
+                                d.ny = (int) ey;
+                            }
+                            // Quat: dau luoi cuon dap (10, 11) roi luot song (9, 12).
+                            float q = (float) (tl - CO_VUON) / CO_QUAT;
+                            int a = q < 0.5f ? 9 : 10;
+                            int b = q < 0.5f ? 10 : 11;
+                            float h = q < 0.5f ? q * 2f : (q - 0.5f) * 2f;
+                            hoaKeo(g, luoi[a], luoi[b], h, ox, oy, goc,
+                                    dai * 440f / CO_MAT_LUOI[a], dai * 440f / CO_MAT_LUOI[b], CO_LUOI_DAY, lat, 1f);
+                        }
+                        else
+                        {
+                            // Rut ve: ngan dan em, luoi thang lai.
+                            float q = (float) (tl - CO_VUON - CO_QUAT) / CO_RUT;
+                            float L = dai * (1f - emVao(q));
+                            veLuoi(g, luoi, L, dai, ox, oy, goc, lat);
+                        }
+                    }
+                    if (d.daNo && no.Length >= 6)
+                    {
+                        long tn = ms - d.lucNo;
+                        if (tn < CO_NO * 6)
+                        {
+                            int a = (int) (tn / CO_NO);
+                            int b = System.Math.Min(5, a + 1);
+                            float h = (float) (tn % CO_NO) / CO_NO;
+                            hoaTam(g, no[a], no[b], h, d.nx, d.ny, 0.8f, 0f, 1f);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>Vẽ lưỡi dài L (đầu lưỡi đúng L) theo góc, chọn hai khung vươn kẹp L.</summary>
+        private static void veLuoi(mGraphics g, short[] luoi, float L, float dai, float ox, float oy, float goc, bool lat)
+        {
+            if (L < 3f)
+            {
+                return;
+            }
+            float p = L / dai * CO_MAT_LUOI[9];
+            int i = 0;
+            while (i + 1 < CO_VUON_KHUNG.Length && CO_MAT_LUOI[CO_VUON_KHUNG[i + 1]] <= p)
+            {
+                i++;
+            }
+            int j = System.Math.Min(CO_VUON_KHUNG.Length - 1, i + 1);
+            int ka = CO_VUON_KHUNG[i];
+            int kb = CO_VUON_KHUNG[j];
+            float fa = CO_MAT_LUOI[ka];
+            float fb = CO_MAT_LUOI[kb];
+            float h = ka == kb || fb <= fa ? 0f : System.Math.Max(0f, System.Math.Min(1f, (p - fa) / (fb - fa)));
+            hoaKeo(g, luoi[ka], luoi[kb], h, ox, oy, goc, L * 440f / fa, L * 440f / fb, CO_LUOI_DAY, lat, 1f);
         }
 
         // ------------------------------------------------------------------
