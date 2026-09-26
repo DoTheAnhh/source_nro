@@ -51,6 +51,177 @@ public class QuyLaoKame extends Npc {
     /** Vật phẩm trả cho một lần làm mới hồi chiêu. */
     private static final short ID_THOI_VANG = 457;
 
+    /** Nhãn mục đổi hành tinh. */
+    private static final String NHAN_DOI_HANH_TINH = "Đổi\nhành tinh";
+
+    /** Giá đổi hành tinh (Thỏi Vàng). */
+    private static final int GIA_DOI_HANH_TINH = 500;
+
+    /** Menu chọn hành tinh mới; menu xác nhận = MENU_XAC_NHAN_HT + hành tinh mới (0/1/2). */
+    private static final int MENU_CHON_HT = 9101;
+    private static final int MENU_XAC_NHAN_HT = 9110;
+
+    private static final String[] TEN_HANH_TINH = {"Trái Đất", "Namếc", "Xayda"};
+
+    /**
+     * Chín kỹ năng của từng hành tinh, CÙNG THỨ TỰ (như lúc tạo nhân vật) — kỹ năng thứ i
+     * đổi sang kỹ năng thứ i của hành tinh mới, giữ nguyên cấp.
+     */
+    private static final int[][] KY_NANG_HT = {
+        {0, 1, 6, 9, 10, 20, 22, 19, 24},
+        {2, 3, 7, 11, 12, 17, 18, 19, 26},
+        {4, 5, 8, 13, 14, 21, 23, 19, 25}};
+
+    /** Ba kiểu tóc mặc định của từng hành tinh (như màn tạo nhân vật). */
+    private static final int[][] TOC_HT = {{64, 30, 31}, {9, 29, 32}, {6, 27, 28}};
+
+    private static int viTri(int[] a, int v) {
+        for (int i = 0; i < a.length; i++) {
+            if (a[i] == v) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static long demThoiVang(Player player) {
+        long co = 0;
+        for (Item it : player.inventory.itemsBag) {
+            if (it != null && it.isNotNullItem() && it.template.id == ID_THOI_VANG) {
+                co += it.quantity;
+            }
+        }
+        return co;
+    }
+
+    private static boolean conMacDo(Player player) {
+        for (Item it : player.inventory.itemsBody) {
+            if (it != null && it.isNotNullItem()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Mở chọn hành tinh: phải tháo hết trang bị trước. */
+    private void moDoiHanhTinh(Player player) {
+        if (conMacDo(player)) {
+            Service.gI().sendThongBao(player, "Con hãy tháo hết trang bị đang mặc ra trước rồi mới đổi hành tinh.");
+            return;
+        }
+        String[] chon = new String[3];
+        int k = 0;
+        for (int g = 0; g < 3; g++) {
+            if (g != player.gender) {
+                chon[k++] = TEN_HANH_TINH[g];
+            }
+        }
+        chon[2] = "Thôi";
+        createOtherMenu(player, MENU_CHON_HT,
+                "Con muốn chuyển sang hành tinh nào?\nGiá " + GIA_DOI_HANH_TINH + " Thỏi Vàng.\n"
+                + "Giữ nguyên sức mạnh, tiềm năng, chỉ số, đệ tử, thú cưng, hành trang, rương đồ, sổ sưu tầm, skin; "
+                + "kỹ năng đổi sang kỹ năng tương ứng (giữ cấp); nội tại về chưa có.", chon);
+    }
+
+    /**
+     * Đổi hành tinh. Giữ nguyên mọi thứ khác (đệ tử, thú cưng, hành trang, rương, sổ sưu tầm,
+     * skin kỹ năng, sức mạnh, tiềm năng, chỉ số gốc); đổi: hành tinh, tóc (kiểu tương ứng),
+     * chín kỹ năng (sang kỹ năng cùng vị trí của hành tinh mới, giữ cấp), ô kỹ năng ngoài màn
+     * hình; nội tại về chưa có. Lưu rồi cho đăng nhập lại để client nạp đúng hành tinh mới.
+     */
+    private void doiHanhTinh(Player player, int moi) {
+        int cu = player.gender;
+        if (moi < 0 || moi > 2 || moi == cu || cu < 0 || cu > 2) {
+            return;
+        }
+        if (conMacDo(player)) {
+            Service.gI().sendThongBao(player, "Con hãy tháo hết trang bị đang mặc ra trước rồi mới đổi hành tinh.");
+            return;
+        }
+        if (demThoiVang(player) < GIA_DOI_HANH_TINH) {
+            Service.gI().sendThongBao(player, "Cần " + GIA_DOI_HANH_TINH + " Thỏi Vàng để đổi hành tinh.");
+            return;
+        }
+        int can = GIA_DOI_HANH_TINH;
+        for (Item it : new ArrayList<>(player.inventory.itemsBag)) {
+            if (can <= 0) {
+                break;
+            }
+            if (it != null && it.isNotNullItem() && it.template.id == ID_THOI_VANG) {
+                int bot = Math.min(can, it.quantity);
+                InventoryService.gI().subQuantityItemsBag(player, it, bot);
+                can -= bot;
+            }
+        }
+        InventoryService.gI().sendItemBag(player);
+
+        // Ky nang: vi tri thu i -> ky nang thu i cua hanh tinh moi, giu cap.
+        java.util.List<nro.entity.skill.Skill> dsMoi = new ArrayList<>();
+        int chonCu = -1;
+        for (int i = 0; i < player.playerSkill.skills.size(); i++) {
+            nro.entity.skill.Skill sk = player.playerSkill.skills.get(i);
+            if (sk == player.playerSkill.skillSelect) {
+                chonCu = i;
+            }
+            int vt = sk == null || sk.template == null ? -1 : viTri(KY_NANG_HT[cu], sk.template.id);
+            if (vt < 0) {
+                dsMoi.add(sk);
+                continue;
+            }
+            int tplMoi = KY_NANG_HT[moi][vt];
+            nro.entity.skill.Skill s2 = sk.point > 0 ? SkillUtil.createSkill(tplMoi, sk.point) : null;
+            if (s2 == null) {
+                s2 = SkillUtil.createSkillLevel0(tplMoi);
+            }
+            s2.currLevel = sk.currLevel;
+            s2.lastTimeUseThisSkill = 0;
+            dsMoi.add(s2);
+        }
+        player.playerSkill.skills.clear();
+        player.playerSkill.skills.addAll(dsMoi);
+        if (!dsMoi.isEmpty()) {
+            player.playerSkill.skillSelect = dsMoi.get(chonCu >= 0 && chonCu < dsMoi.size() ? chonCu : 0);
+        }
+        // O ky nang ngoai man hinh: doi theo.
+        byte[] oTat = player.playerSkill.skillShortCut;
+        for (int i = 0; i < oTat.length; i++) {
+            int vt = viTri(KY_NANG_HT[cu], oTat[i]);
+            if (vt >= 0) {
+                oTat[i] = (byte) KY_NANG_HT[moi][vt];
+            }
+        }
+        // Noi tai ve chua co.
+        nro.entity.intrinsic.Intrinsic khong = nro.service.intrinsic.IntrinsicService.gI().getIntrinsicById(0);
+        if (khong != null) {
+            khong.param1 = 0;
+            khong.param2 = 0;
+            player.playerIntrinsic.intrinsic = khong;
+        }
+        player.effectSkill.isIntrinsic = false;
+        // Toc: kieu cung vi tri cua hanh tinh moi.
+        int vtToc = viTri(TOC_HT[cu], player.head);
+        player.head = (short) TOC_HT[moi][vtToc >= 0 ? vtToc : 0];
+        player.gender = (byte) moi;
+        Service.gI().addBoughtSkillAttack(player);
+        try {
+            nro.repository.ConnectDB.executeUpdate("UPDATE player SET gender = ?, head = ? WHERE id = ?",
+                    moi, player.head, player.id);
+        } catch (Exception ex) {
+            Logger.logException(QuyLaoKame.class, ex, "Không lưu được hành tinh mới");
+        }
+        Logger.info("DOI_HANH_TINH", player.name + " " + TEN_HANH_TINH[cu] + " -> " + TEN_HANH_TINH[moi]);
+        Service.gI().sendThongBao(player, "Đã chuyển sang hành tinh " + TEN_HANH_TINH[moi]
+                + ". Con sẽ được đăng nhập lại để hoàn tất.");
+        final Player nguoi = player;
+        new Thread(() -> {
+            try {
+                Thread.sleep(1500);
+            } catch (InterruptedException ignored) {
+            }
+            nro.server.Client.gI().kickSession(nguoi.getSession());
+        }, "doi-hanh-tinh").start();
+    }
+
     /**
      * Dựng danh sách mục của menu gốc.
      *
@@ -79,6 +250,7 @@ public class QuyLaoKame extends Npc {
         // Mục này vẫn còn trong menu con "Nói chuyện", nhưng ở đó nó nằm hai lớp
         // sâu, cạnh "Nhiệm vụ" và "Học kỹ năng" — chủ bang gần như không tìm ra.
         menu.add(NHAN_RESET_HOI_CHIEU);
+        menu.add(NHAN_DOI_HANH_TINH);
         if (player.clan != null && player.clan.isLeader(player)) {
             menu.add(NHAN_GIAI_TAN);
         }
@@ -140,6 +312,32 @@ public class QuyLaoKame extends Npc {
         Item ThoiVang = ItemService.gI().createNewItem((short) 457);
         if (canOpenNpc(player)) {
             switch (player.iDMark.getIndexMenu()) {
+                case MENU_CHON_HT: {
+                    // Hai hanh tinh con lai, theo thu tu 0-1-2 bo hanh tinh hien tai.
+                    int k = 0;
+                    for (int g = 0; g < 3; g++) {
+                        if (g == player.gender) {
+                            continue;
+                        }
+                        if (k == select) {
+                            createOtherMenu(player, MENU_XAC_NHAN_HT + g,
+                                    "Xác nhận đổi sang hành tinh " + TEN_HANH_TINH[g] + " với giá " + GIA_DOI_HANH_TINH
+                                    + " Thỏi Vàng?\n(Nội tại sẽ về chưa có, kỹ năng đổi sang kỹ năng tương ứng giữ nguyên cấp)",
+                                    "Đồng ý", "Từ chối");
+                            break;
+                        }
+                        k++;
+                    }
+                    break;
+                }
+                case MENU_XAC_NHAN_HT:
+                case MENU_XAC_NHAN_HT + 1:
+                case MENU_XAC_NHAN_HT + 2: {
+                    if (select == 0) {
+                        doiHanhTinh(player, player.iDMark.getIndexMenu() - MENU_XAC_NHAN_HT);
+                    }
+                    break;
+                }
                 case ConstNpc.BASE_MENU: {
                     // Mục giải tán đối chiếu theo NHÃN, không theo chỉ số.
                     //
@@ -149,6 +347,11 @@ public class QuyLaoKame extends Npc {
                     if (select >= 0 && select < menuGoc.size()
                             && NHAN_RESET_HOI_CHIEU.equals(menuGoc.get(select))) {
                         lamMoiHoiChieu(player);
+                        break;
+                    }
+                    if (select >= 0 && select < menuGoc.size()
+                            && NHAN_DOI_HANH_TINH.equals(menuGoc.get(select))) {
+                        moDoiHanhTinh(player);
                         break;
                     }
                     if (select >= 0 && select < menuGoc.size()
