@@ -152,6 +152,9 @@ namespace Game1
     	public long tpVKDanh;
 
     	public long tpVKChet;
+
+    	/// <summary>Lúc kiếm bay về tới chủ sau cú đánh (0 = chưa) — bắt đầu chụm lại.</summary>
+    	public long tpVKVe;
     
     	public static MyVector lastMob = new MyVector();
     
@@ -957,7 +960,7 @@ namespace Game1
     		if (tpVK != null)
     		{
     			p3 = 0;
-    			God.TrangPhucUI.vanKiemDanh(this, cx, cy - cFocus.ch / 2);
+    			God.TrangPhucUI.vanKiemDanh(this, cFocus);
     			return;
     		}
     		if (Res.abs(cx - x) < w * 2 && Res.abs(cy - y) < h * 2)
@@ -1609,7 +1612,7 @@ namespace Game1
     		{
     			// Van Kiem Quy Tong: dong kiem bay toi dich, xoay dung yen canh chu (khong nhay, khong ban dan).
     			p3 = 0;
-    			God.TrangPhucUI.vanKiemDanh(this, num, num2 - mobToAttack.h / 2);
+    			God.TrangPhucUI.vanKiemDanh(this, mobToAttack);
     			return;
     		}
     		if (Res.abs(num - x) < w * 2 && Res.abs(num2 - y) < h * 2)
