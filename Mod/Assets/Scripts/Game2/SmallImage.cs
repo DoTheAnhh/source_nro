@@ -102,18 +102,8 @@ namespace Game2
     	public static void createImage(int id)
     	{
     		Res.outz("is request =" + id + " zoom=" + mGraphics.zoomLevel);
-    		if (mGraphics.zoomLevel == 1)
-    		{
-    			Image image = GameCanvas.loadImage("/SmallImage/Small" + id + ".png");
-    			if (image != null)
-    			{
-    				imgNew[id] = new Small(image, id);
-    				return;
-    			}
-    			imgNew[id] = new Small(imgEmpty, id);
-    			vt_images_watingDowload.addElement(imgNew[id]);
-    			return;
-    		}
+    		// Moi muc phong (ca x1) deu doc bo nho dem RMS — truoc day x1 khong luu nen lan nao
+    		// dang nhap cung tai lai tu dau, skin dung lan dau thieu hinh.
     		Image image2 = GameCanvas.loadImage("/SmallImage/Small" + id + ".png");
     		if (image2 != null)
     		{
@@ -182,6 +172,16 @@ namespace Game2
     			if (s == null)
     			{
     				createImage(id);
+    			}
+    			else
+    			{
+    				// Dang can ve ma con xep hang cho tai: dua len dau hang.
+    				int vt = vt_images_watingDowload.indexOf(s);
+    				if (vt > 0)
+    				{
+    					vt_images_watingDowload.removeElementAt(vt);
+    					vt_images_watingDowload.insertElementAt(s, 0);
+    				}
     			}
     			// Anh dang tai: khong ve gi (ve tam anh rong / sai co nhin nhu loi hinh).
     			return;

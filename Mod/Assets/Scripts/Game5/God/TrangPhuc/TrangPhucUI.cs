@@ -2858,10 +2858,10 @@ namespace Game5.God
         /// <summary>Cỡ riêng lớp khói mặt đất: to hơn lớp giữa thân 30%.</summary>
         private const float DAT_TO = TU_NO_TO * 1.3f;
 
-        private static readonly int TAM_TO = (int) (TU_NO_TAM * DAT_TO) - 10;
+        private static readonly int TAM_TO = (int) (TU_NO_TAM * DAT_TO) - 15;
 
         /// <summary>Lớp giữa thân thấp hơn giữa người chừng này điểm.</summary>
-        private const int GIUA_THAP = 18;
+        private const int GIUA_THAP = 13;
 
         /// <summary>
         /// Vẽ khung <paramref name="a"/> đục hoàn toàn rồi phủ <paramref name="b"/> lên với

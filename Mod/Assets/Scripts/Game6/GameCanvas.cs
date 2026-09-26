@@ -655,7 +655,8 @@ namespace Game6
     					ServerListScreen.waitToLogin = false;
     				}
     			}
-    			if (SmallImage.vt_images_watingDowload.size() > 0)
+    			// Xin toi da 3 anh moi khung (truoc la 1) — tai truoc anh skin cho nhanh.
+    			for (int xin = 0; xin < 3 && SmallImage.vt_images_watingDowload.size() > 0; xin++)
     			{
     				Small small = (Small)SmallImage.vt_images_watingDowload.elementAt(0);
     				Service.gI().requestIcon(small.id);

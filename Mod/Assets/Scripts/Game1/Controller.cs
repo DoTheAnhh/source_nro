@@ -2872,7 +2872,7 @@ namespace Game1
                                 array17 = null;
                                 SmallImage.imgNew[num168].img = Image.createRGBImage(new int[1], 1, 1, true);
                             }
-                            if (array17 != null && mGraphics.zoomLevel > 1)
+                            if (array17 != null && mGraphics.zoomLevel >= 1)
                             {
                                 Rms.saveRMS(mGraphics.zoomLevel + "Small" + num168, array17);
                             }
