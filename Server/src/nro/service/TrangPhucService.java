@@ -217,6 +217,33 @@ public final class TrangPhucService {
         }
     }
 
+    /**
+     * Người có skin của chiêu này vừa dùng chiêu: cả khu nghe tiếng của skin
+     * (một lần). Gói: byte 5, int charId, short skillTpl.
+     */
+    public void amThanh(Player pl, int skillTpl) {
+        if (pl == null || !pl.isPl() || pl.zone == null) {
+            return;
+        }
+        Message msg = null;
+        try {
+            if (TrangPhucDAO.dangDung(pl.id, skillTpl) == null) {
+                return;
+            }
+            msg = new Message(GOI);
+            msg.writer().writeByte(5);
+            msg.writer().writeInt((int) pl.id);
+            msg.writer().writeShort(skillTpl);
+            Service.gI().sendMessAllPlayerInMap(pl, msg);
+        } catch (Exception ex) {
+            Logger.logException(TrangPhucService.class, ex, "Không báo được tiếng trang phục");
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
+    }
+
     /** Hết thôi miên (tỉnh sớm hay hết giờ): tắt ảo cảnh. Gói: byte 4. */
     public void hetThoiMien(Player nan) {
         if (nan == null || !nan.isPl()) {

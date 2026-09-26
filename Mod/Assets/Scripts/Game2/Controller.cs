@@ -2544,13 +2544,18 @@ namespace Game2
                                     Char.myCharz().seconds = msg.reader().readShort();
                                     Res.outz("second = " + Char.myCharz().seconds);
                                     Char.myCharz().last = mSystem.currentTimeMillis();
+                                    God.TrangPhucUI.amTuNo(Char.myCharz(), Char.myCharz().seconds);
                                 }
                                 else if (GameScr.findCharInMap(num135) != null)
                                 {
                                     GameScr.findCharInMap(num135).useChargeSkill(true);
                                     GameScr.findCharInMap(num135).seconds = msg.reader().readShort();
                                     GameScr.findCharInMap(num135).last = mSystem.currentTimeMillis();
-                                    SoundMn.gI().gong();
+                                    // Skin Tu phat no: tieng Shinra Tensei thay tieng gong goc.
+                                    if (!God.TrangPhucUI.amTuNo(GameScr.findCharInMap(num135), GameScr.findCharInMap(num135).seconds))
+                                    {
+                                        SoundMn.gI().gong();
+                                    }
                                 }
                             }
                             if (b51 == 8 && num135 != Char.myCharz().charID && GameScr.findCharInMap(num135) != null)

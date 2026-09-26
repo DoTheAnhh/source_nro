@@ -137,6 +137,16 @@ namespace Game4.God
                         tmHet = bayGio + ms;
                     }
                 }
+                else if (loai == 5)
+                {
+                    // Nguoi co skin vua dung chieu: ca khu nghe tieng cua skin.
+                    msg.reader().readInt();
+                    int tpl = msg.reader().readShort();
+                    if (tpl == 22)
+                    {
+                        henAm("sharingan", mSystem.currentTimeMillis(), 0, AM_SHARINGAN);
+                    }
+                }
                 else if (loai == 4)
                 {
                     // Tinh (het thoi mien som): tat ao canh, mo dan.
@@ -1085,6 +1095,7 @@ namespace Game4.God
         /// </remarks>
         public static void veToanCuc(mGraphics g)
         {
+            xuLyAm();
             veCauBu(g);
             veNoTuNo(g);
             veXoayMo(g);
@@ -1592,7 +1603,10 @@ namespace Game4.God
         private const long VK_MO_CHET = 250L;
 
         /// <summary>Kiếm quấn quanh địch bao lâu (ms); cú đánh mới tới cùng địch thì quấn thêm.</summary>
-        private const long VK_QUAN = 800L;
+        private const long VK_QUAN = 400L;
+
+        /// <summary>Mỗi quả trứng nhiều nhất bấy nhiêu đợt kiếm cùng lúc (đấm nhanh quá thì bỏ đợt cũ nhất).</summary>
+        private const int VK_TOI_DA = 6;
 
         /// <summary>Bay bay: chu kỳ (ms) và biên độ nhấp nhô dọc / lắc ngang.</summary>
         private const long VK_CHU_KY_Y = 2000L;
@@ -1671,9 +1685,25 @@ namespace Game4.God
             k.batDau = ms;
             lock (dsKiem)
             {
+                int dem = 0;
+                int cuNhat = -1;
+                for (int i = 0; i < dsKiem.Count; i++)
+                {
+                    if (dsKiem[i].nguon == m)
+                    {
+                        dem++;
+                        if (cuNhat < 0)
+                        {
+                            cuNhat = i;
+                        }
+                    }
+                }
+                if (dem >= VK_TOI_DA && cuNhat >= 0)
+                {
+                    dsKiem.RemoveAt(cuNhat);
+                }
                 dsKiem.Add(k);
             }
-            m.tpVKDanh = ms;
         }
 
         /// <summary>Kiếm của quả trứng này còn rời chủ không (đang bay / ở địch / đang bay về).</summary>
@@ -1802,11 +1832,7 @@ namespace Game4.God
                 }
                 return false;
             }
-            if (conVang(m))
-            {
-                // Kiem dang roi chu — ve o lop toan cuc.
-                return true;
-            }
+            // Moi don dam tung mot dot kiem rieng tu xoay (ve o lop toan cuc) — xoay sau lung chu luon hien.
             // Chum kiem: luc no (cham, to dan tu nho) va luc kiem bay ve (nhanh hon, tu khung 2).
             bool sauDanh = m.tpVKVe > 0;
             long msChum = sauDanh ? VK_CHUM_VE : VK_TU;
@@ -1901,22 +1927,7 @@ namespace Game4.God
                         }
                         k.denLuc = k.batDau + tBay;
                         k.gocDen = (float) (System.Math.Atan2(ty - k.y0, tx - k.x0) * 57.29578);
-                        // Cung dich dang co kiem quan: nhap vao, quan them — khong chong them xoay.
-                        KiemBay cu = null;
-                        foreach (KiemBay c in dsKiem)
-                        {
-                            if (c != k && c.nguon == m && c.dich == k.dich && c.denLuc > 0 && ms < c.quanHet)
-                            {
-                                cu = c;
-                                break;
-                            }
-                        }
-                        if (cu != null)
-                        {
-                            cu.quanHet = System.Math.Max(cu.quanHet, ms + VK_QUAN);
-                            dsKiem.RemoveAt(i);
-                            continue;
-                        }
+                        // Moi dot kiem rieng: khong nhap vao dot cu.
                         k.quanHet = k.denLuc + tChum + VK_QUAN;
                     }
                     long td = ms - k.denLuc;
@@ -1938,8 +1949,6 @@ namespace Game4.God
                     }
                     long tk = ms - k.quanHet;
                     long tKet = ket.Length > 0 ? VK_KET * ket.Length : VK_KET * 4;
-                    long tVe = VK_VE_KHUNG * System.Math.Max(1, ve.Length);
-                    long veTu = VK_KET * 2;
                     if (tk < tKet && ket.Length == 0)
                     {
                         // Khong co khung ket thuc: xoay quan mo dan.
@@ -1951,36 +1960,196 @@ namespace Game4.God
                         float mo = tk > tKet - VK_KET ? 1f - (float) (tk - (tKet - VK_KET)) / VK_KET : 1f;
                         veChuoi(g, ket, 0, ket.Length, tk, VK_KET, tx, ty, 1f, gocQuan, mo, -1);
                     }
-                    if (!k.daVe && tk >= veTu)
-                    {
-                        long tv = tk - veTu;
-                        float cx = m.x;
-                        float cy = m.y - VK_CAO;
-                        if (tv < tVe && ve.Length > 0)
-                        {
-                            // 5. Mot luong kiem bay ve sau lung chu.
-                            float u = (float) tv / tVe;
-                            float e = u * u;
-                            float ax = tx + (cx - tx) * e;
-                            float ay = ty + (cy - ty) * e;
-                            float gocVe = (float) (System.Math.Atan2(cy - ty, cx - tx) * 57.29578);
-                            veChuoi(g, ve, 0, ve.Length, tv, VK_VE_KHUNG, ax, ay, 1f, gocVe, 1f, -1);
-                        }
-                        else
-                        {
-                            k.daVe = true;
-                            if (!conVang(m))
-                            {
-                                m.tpVKVe = ms;
-                            }
-                        }
-                    }
-                    if (k.daVe && tk >= tKet)
+                    // Dot kiem loe tan roi mo het o dich (khong bay ve).
+                    if (tk >= tKet)
                     {
                         dsKiem.RemoveAt(i);
                     }
                 }
             }
+        }
+
+        // ------------------------------------------------------------------
+        //  Âm thanh skin (Resources/res/tp/*.mp3): hẹn giờ ở bất kỳ luồng nào, phát ở
+        //  luồng vẽ (Unity chỉ cho đụng AudioSource ở luồng chính).
+        // ------------------------------------------------------------------
+        private class AmCho
+        {
+            public string ten;
+            public long luc;
+            public long dinhLuc;
+            public float am;
+        }
+
+        private static readonly List<AmCho> dsAm = new List<AmCho>();
+        private static readonly Dictionary<string, UnityEngine.AudioClip> amClip = new Dictionary<string, UnityEngine.AudioClip>();
+        private static readonly Dictionary<string, float> amDinh = new Dictionary<string, float>();
+        private static readonly List<UnityEngine.AudioSource> amNguon = new List<UnityEngine.AudioSource>();
+
+        /// <summary>Âm lượng: Sharingan nhỏ vừa đủ nghe; Shinra Tensei to hơn chút.</summary>
+        private const float AM_SHARINGAN = 0.3f;
+        private const float AM_SHINRA = 0.45f;
+
+        /// <summary>
+        /// Hẹn phát tiếng <paramref name="ten"/>: <paramref name="dinhLuc"/> = 0 thì phát từ đầu lúc
+        /// <paramref name="luc"/>; khác 0 thì canh để chỗ TO NHẤT của tiếng rơi đúng lúc đó
+        /// (phần trước nó nghe trong lúc vận chiêu, phần sau là dư âm).
+        /// </summary>
+        private static void henAm(string ten, long luc, long dinhLuc, float am)
+        {
+            AmCho a = new AmCho();
+            a.ten = ten;
+            a.luc = luc;
+            a.dinhLuc = dinhLuc;
+            a.am = am;
+            lock (dsAm)
+            {
+                dsAm.Add(a);
+            }
+        }
+
+        private static UnityEngine.AudioClip layClip(string ten)
+        {
+            UnityEngine.AudioClip c;
+            if (!amClip.TryGetValue(ten, out c))
+            {
+                c = UnityEngine.Resources.Load("res/tp/" + ten, typeof(UnityEngine.AudioClip)) as UnityEngine.AudioClip;
+                amClip[ten] = c;
+            }
+            return c;
+        }
+
+        /// <summary>Chỗ to nhất của tiếng (giây): cửa sổ 50 ms có năng lượng lớn nhất.</summary>
+        private static float dinhAm(string ten, UnityEngine.AudioClip c)
+        {
+            float d;
+            if (amDinh.TryGetValue(ten, out d))
+            {
+                return d;
+            }
+            d = c.length * 0.5f;
+            try
+            {
+                if (c.loadState != UnityEngine.AudioDataLoadState.Loaded)
+                {
+                    c.LoadAudioData();
+                    return d;
+                }
+                int kenh = System.Math.Max(1, c.channels);
+                float[] a = new float[c.samples * kenh];
+                if (c.GetData(a, 0))
+                {
+                    int cua = System.Math.Max(1, (int) (c.frequency * 0.05f)) * kenh;
+                    double tot = -1;
+                    int vt = 0;
+                    for (int i = 0; i + cua <= a.Length; i += cua)
+                    {
+                        double e = 0;
+                        for (int j = i; j < i + cua; j++)
+                        {
+                            e += a[j] * a[j];
+                        }
+                        if (e > tot)
+                        {
+                            tot = e;
+                            vt = i;
+                        }
+                    }
+                    d = (float) (vt / kenh) / c.frequency + 0.025f;
+                }
+            }
+            catch (System.Exception)
+            {
+            }
+            amDinh[ten] = d;
+            return d;
+        }
+
+        private static void xuLyAm()
+        {
+            if (dsAm.Count == 0)
+            {
+                return;
+            }
+            long ms = mSystem.currentTimeMillis();
+            lock (dsAm)
+            {
+                for (int i = dsAm.Count - 1; i >= 0; i--)
+                {
+                    AmCho a = dsAm[i];
+                    UnityEngine.AudioClip clip = layClip(a.ten);
+                    if (clip == null || ms - System.Math.Max(a.luc, a.dinhLuc) > 15000L)
+                    {
+                        dsAm.RemoveAt(i);
+                        continue;
+                    }
+                    long batDau = a.dinhLuc > 0 ? a.dinhLuc - (long) (dinhAm(a.ten, clip) * 1000f) : a.luc;
+                    if (ms < batDau)
+                    {
+                        continue;
+                    }
+                    dsAm.RemoveAt(i);
+                    float lech = (ms - batDau) / 1000f;
+                    if (!GameCanvas.isPlaySound || lech >= clip.length - 0.05f)
+                    {
+                        continue;
+                    }
+                    phatAm(clip, lech, a.am);
+                }
+            }
+        }
+
+        private static void phatAm(UnityEngine.AudioClip clip, float lech, float am)
+        {
+            try
+            {
+                UnityEngine.AudioSource src = null;
+                foreach (UnityEngine.AudioSource s in amNguon)
+                {
+                    if (s != null && !s.isPlaying)
+                    {
+                        src = s;
+                        break;
+                    }
+                }
+                if (src == null)
+                {
+                    if (amNguon.Count >= 4 && amNguon[0] != null)
+                    {
+                        src = amNguon[0];
+                    }
+                    else
+                    {
+                        UnityEngine.GameObject go = new UnityEngine.GameObject("TrangPhucAm");
+                        UnityEngine.Object.DontDestroyOnLoad(go);
+                        src = go.AddComponent<UnityEngine.AudioSource>();
+                        src.playOnAwake = false;
+                        amNguon.Add(src);
+                    }
+                }
+                src.clip = clip;
+                src.volume = am;
+                src.time = System.Math.Max(0f, System.Math.Min(lech, clip.length - 0.05f));
+                src.Play();
+            }
+            catch (System.Exception)
+            {
+            }
+        }
+
+        /// <summary>
+        /// Tự phát nổ bắt đầu gồng (gói -45/7, <paramref name="msGong"/> = số ms tới lúc nổ): có skin
+        /// Thần La Thiên Chinh thì hẹn tiếng Shinra Tensei — chỗ to nhất rơi đúng lúc nổ. Trả true =
+        /// đã thay tiếng gồng gốc.
+        /// </summary>
+        public static bool amTuNo(Char c, int msGong)
+        {
+            if (c == null || msGong <= 0 || !(c.tpSkill == 14 && conHieuLuc(c)))
+            {
+                return false;
+            }
+            henAm("shinra", 0, mSystem.currentTimeMillis() + msGong, AM_SHINRA);
+            return true;
         }
 
         // ------------------------------------------------------------------

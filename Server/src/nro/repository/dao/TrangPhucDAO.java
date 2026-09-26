@@ -198,11 +198,27 @@ public final class TrangPhucDAO {
      * bay = 31 khung ảo cảnh (bầy quạ → mắt Sharingan) — kẻ bị thôi miên thấy phủ
      * kín màn hình, lặp tới khi tỉnh. Icon 25449–25480.
      */
+    /** 31 khung ảo cảnh Tsukuyomi (bản nét, 256x144): icon 25481–25511. */
+    private static String khungTsukuyomi() {
+        StringBuilder bay = new StringBuilder();
+        for (int id = 25481; id <= 25511; id++) {
+            bay.append(bay.length() > 0 ? "," : "").append(id);
+        }
+        return bay.toString();
+    }
+
     private static void gieoTsukuyomi() throws Exception {
         CrisResultSet rs = null;
         try {
             rs = ConnectDB.executeQuery("SELECT id FROM trang_phuc_mau WHERE skill_tpl = 22 AND ten = ?", "Tsukuyomi");
             if (rs.next()) {
+                // Bo khung net hon (256x144) — thay bo cu mot lan.
+                int n = ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_bay = ? WHERE skill_tpl = 22 AND ten = ?"
+                        + " AND khung_bay NOT LIKE '25481,%'", khungTsukuyomi(), "Tsukuyomi");
+                if (n > 0) {
+                    lucDoc = 0;
+                    Logger.success("Trang phục: Tsukuyomi dùng khung nét hơn\n");
+                }
                 return;
             }
         } finally {
@@ -210,14 +226,10 @@ public final class TrangPhucDAO {
                 rs.dispose();
             }
         }
-        StringBuilder bay = new StringBuilder();
-        for (int id = 25449; id <= 25479; id++) {
-            bay.append(bay.length() > 0 ? "," : "").append(id);
-        }
         ConnectDB.executeUpdate("INSERT INTO trang_phuc_mau (skill_tpl, ten, mo_ta, icon, khung_nap, khung_bay, thu_tu, icon_vp)"
                 + " VALUES (?,?,?,?,?,?,1,?)", 22, "Tsukuyomi",
                 "Kẻ trúng thôi miên bị kéo vào ảo cảnh Nguyệt Độc: bầy quạ và con mắt Sharingan phủ kín tầm nhìn tới khi tỉnh lại.",
-                25480, "", bay.toString(), 25480);
+                25480, "", khungTsukuyomi(), 25480);
         lucDoc = 0;
         Logger.success("Trang phục: gieo Tsukuyomi cho Thôi miên\n");
     }

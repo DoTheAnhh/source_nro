@@ -974,6 +974,8 @@ public class SkillService {
             case Skill.THOI_MIEN:
                 long startTM = System.currentTimeMillis();
                 EffectSkillService.gI().sendEffectUseSkill(player, Skill.THOI_MIEN);
+                // Skin Tsukuyomi: ca khu nghe tieng Sharingan (mot lan luc dung chieu).
+                nro.service.TrangPhucService.gI().amThanh(player, Skill.THOI_MIEN);
                 int timeSleep = SkillUtil.getTimeThoiMien(player.playerSkill.skillSelect.point);
                 timeSleep = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
                         player, Skill.THOI_MIEN, timeSleep);
