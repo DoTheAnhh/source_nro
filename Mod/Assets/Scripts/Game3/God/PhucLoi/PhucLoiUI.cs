@@ -1426,12 +1426,18 @@ namespace Game3.God
                 }
                 return;
             }
-            int chuKy = w + 30;
-            long tong = 1000L + chuKy * 1000L / 30;
-            long p = mSystem.currentTimeMillis() % tong;
-            int lech = p < 1000L ? 0 : (int) ((p - 1000L) * 30 / 1000L);
+            // Chay qua lai: dung 1 giay, truot sang trai toi het chu, dung, truot ve — khong noi vong.
+            const long DUNG = 1000L;
+            const int TOC = 30;
+            int du = w - rong;
+            long tDi = System.Math.Max(1L, du * 1000L / TOC);
+            long chuKyPP = 2 * (DUNG + tDi);
+            long p = mSystem.currentTimeMillis() % chuKyPP;
+            int lech = p < DUNG ? 0 : p < DUNG + tDi ? (int) ((p - DUNG) * TOC / 1000L)
+                    : p < 2 * DUNG + tDi ? du : du - (int) ((p - 2 * DUNG - tDi) * TOC / 1000L);
+            int chuKy = 0;
             g.setClip(x, y - 2, rong, 16);
-            for (int k = 0; k < 2; k++)
+            for (int k = 0; k < 1; k++)
             {
                 if (bong != null)
                 {

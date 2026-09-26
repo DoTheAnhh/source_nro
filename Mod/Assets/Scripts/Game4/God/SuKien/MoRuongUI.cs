@@ -101,6 +101,28 @@ namespace Game4.God
         /// <summary>Danh sách rương bên trái: mục đầu đang hiện (nhiều rương thì cuộn).</summary>
         private int cuonDs;
 
+        /// <summary>Cuộn mượt danh sách rương theo điểm ảnh: đang ở / đang trượt tới.</summary>
+        private float cuonDsPx;
+        private float cuonDsDich;
+        private int tongKeoDs;
+
+        private float toiDaDsPx()
+        {
+            return Math.max(0, 4 + ds.Count * (CAO_MUC + 4) - bh);
+        }
+
+        private void kepDsPx()
+        {
+            float td = toiDaDsPx();
+            cuonDsDich = System.Math.Max(0f, System.Math.Min(td, cuonDsDich));
+            cuonDsPx = System.Math.Max(0f, System.Math.Min(td, cuonDsPx));
+        }
+
+        private int yMucDs(int i)
+        {
+            return by + 4 + i * (CAO_MUC + 4) - (int) System.Math.Round(cuonDsPx);
+        }
+
         private int yKeoDs;
 
         private int soHienDs()
@@ -206,17 +228,19 @@ namespace Game4.God
                 return;
             }
             int trai = giua ? x - rong / 2 : x;
-            const int KHOANG = 30;
+            // Chay qua lai: dung 1 giay, truot sang trai toi het chu, dung, truot ve — khong noi vong.
             const long DUNG = 1000L;
             const int TOC = 30;
-            int chuKy = w + KHOANG;
-            long tong = DUNG + chuKy * 1000L / TOC;
-            long p = mSystem.currentTimeMillis() % tong;
-            int lech = p < DUNG ? 0 : (int) ((p - DUNG) * TOC / 1000L);
+            int du = w - rong;
+            long tDi = System.Math.Max(1L, du * 1000L / TOC);
+            long chuKyPP = 2 * (DUNG + tDi);
+            long p = mSystem.currentTimeMillis() % chuKyPP;
+            int lech = p < DUNG ? 0 : p < DUNG + tDi ? (int) ((p - DUNG) * TOC / 1000L)
+                    : p < 2 * DUNG + tDi ? du : du - (int) ((p - 2 * DUNG - tDi) * TOC / 1000L);
             g.setClip(trai, y - 2, rong, 16);
-            for (int k = 0; k < 2; k++)
+            for (int k = 0; k < 1; k++)
             {
-                int xx = trai - lech + k * chuKy;
+                int xx = trai - lech;
                 if (bong != null)
                 {
                     f.drawString(g, s, xx, y, mFont.LEFT, bong);
@@ -536,24 +560,30 @@ namespace Game4.God
         {
             g.setColor(MAU_THE_MO, 0.55f);
             g.fillRect(bx, by, RONG_DS_W, bh, 6);
-            kepCuonDs();
+            cuonDsPx += (cuonDsDich - cuonDsPx) * 0.35f;
+            if (System.Math.Abs(cuonDsDich - cuonDsPx) < 0.5f)
+            {
+                cuonDsPx = cuonDsDich;
+            }
+            kepDsPx();
             int soHien = soHienDs();
-            if (ds.Count > soHien)
+            if (toiDaDsPx() > 0)
             {
                 // Thanh cuon mong ben phai danh sach.
-                int cao = Math.max(16, (bh - 8) * soHien / ds.Count);
-                int yThanh = by + 4 + (bh - 8 - cao) * cuonDs / Math.max(1, ds.Count - soHien);
+                int cao = Math.max(16, (bh - 8) * soHien / Math.max(1, ds.Count));
+                int yThanh = by + 4 + (int) ((bh - 8 - cao) * cuonDsPx / System.Math.Max(1f, toiDaDsPx()));
                 g.setColor(MAU_VIEN, 0.18f);
                 g.fillRect(bx + RONG_DS_W - 4, by + 4, 3, bh - 8, 1);
                 g.setColor(MAU_CAM, 0.9f);
                 g.fillRect(bx + RONG_DS_W - 4, yThanh, 3, cao, 1);
             }
-            for (int i = cuonDs; i < ds.Count; i++)
+            g.setClip(bx, by + 2, RONG_DS_W - 5, bh - 4);
+            for (int i = 0; i < ds.Count; i++)
             {
-                int yy = by + 4 + (i - cuonDs) * (CAO_MUC + 4);
-                if (yy + CAO_MUC > by + bh - 4)
+                int yy = yMucDs(i);
+                if (yy + CAO_MUC < by || yy > by + bh)
                 {
-                    break;
+                    continue;
                 }
                 bool c = i == chon;
                 Ruong r = ds[i];
@@ -589,8 +619,11 @@ namespace Game4.God
                 {
                     veChuChay(g, mFont.tahoma_7b_dark, null, tenGon(r.ten), xc, yy + 5, rongTen, false);
                 }
+                // Chu chay tra vung cat ve toan man: dat lai vung cat danh sach.
+                g.setClip(bx, by + 2, RONG_DS_W - 5, bh - 4);
                 veSoPhieu(g, r, xc, yy + 21, c);
             }
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
         }
 
         /// <summary>Chip "icon phiếu + số đang có" dưới tên rương.</summary>
@@ -1100,25 +1133,27 @@ namespace Game4.God
                     yKeoXT = GameCanvas.py;
                 }
             }
-            if (!hienXemTruoc && !hienKetQua && !dangQuay && coDuLieu && ds.Count > soHienDs())
+            if (!hienXemTruoc && !hienKetQua && !dangQuay && coDuLieu && toiDaDsPx() > 0)
             {
                 bool trenDs = GameCanvas.px >= bx && GameCanvas.px <= bx + RONG_DS_W && GameCanvas.py >= by && GameCanvas.py <= by + bh;
                 if (trenDs && GameCanvas.pXYScrollMouse != 0)
                 {
-                    cuonDs += GameCanvas.pXYScrollMouse > 0 ? -1 : 1;
-                    kepCuonDs();
+                    cuonDsDich += GameCanvas.pXYScrollMouse > 0 ? -(CAO_MUC + 4) : (CAO_MUC + 4);
+                    kepDsPx();
                 }
                 if (GameCanvas.isPointerDown && trenDs)
                 {
-                    int buoc = (GameCanvas.py - yKeoDs) / (CAO_MUC + 4);
-                    if (buoc != 0)
+                    int dy = GameCanvas.py - yKeoDs;
+                    if (dy != 0)
                     {
-                        cuonDs -= buoc;
-                        yKeoDs += buoc * (CAO_MUC + 4);
-                        kepCuonDs();
+                        cuonDsDich -= dy;
+                        kepDsPx();
+                        cuonDsPx = cuonDsDich;
+                        tongKeoDs += System.Math.Abs(dy);
+                        yKeoDs = GameCanvas.py;
                     }
                 }
-                else
+                else if (!GameCanvas.isPointerDown)
                 {
                     yKeoDs = GameCanvas.py;
                 }
@@ -1162,12 +1197,14 @@ namespace Game4.God
             {
                 return true;
             }
-            for (int i = cuonDs; i < ds.Count; i++)
+            bool vuaKeoDs = tongKeoDs > 6;
+            tongKeoDs = 0;
+            for (int i = 0; i < ds.Count && !vuaKeoDs; i++)
             {
-                int yy = by + 4 + (i - cuonDs) * (CAO_MUC + 4);
-                if (yy + CAO_MUC > by + bh - 4)
+                int yy = yMucDs(i);
+                if (yy < by || yy + CAO_MUC > by + bh)
                 {
-                    break;
+                    continue;
                 }
                 if (cham(bx + 3, yy, RONG_DS_W - 6, CAO_MUC))
                 {
