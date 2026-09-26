@@ -2081,6 +2081,11 @@ namespace Game4.God
             {
                 return false;
             }
+            if (tatTiengGoc(c))
+            {
+                // Moi chieu dang dung skin: bo tieng dam/ret goc cua hoat anh.
+                return true;
+            }
             if (c.me && c.myskill != null && c.myskill.template != null && c.myskill.template.id == 22 && skinDangBat(22))
             {
                 return true;
@@ -2122,7 +2127,14 @@ namespace Game4.God
             return c;
         }
 
-        /// <summary>Chỗ to nhất của tiếng (giây): cửa sổ 50 ms có năng lượng lớn nhất.</summary>
+        /// <summary>Chỗ cắt của tiếng (giây, cắt trước tiếng nổ thứ hai); không có thì = độ dài.</summary>
+        private static readonly Dictionary<string, float> amCat = new Dictionary<string, float>();
+
+        /// <summary>
+        /// Phân tích tiếng: năng lượng từng cửa sổ 50 ms; hai đỉnh to nhất cách nhau từ 0,4 giây là hai
+        /// tiếng nổ. Trả về tiếng nổ ĐẦU (giây) để canh trúng lúc nổ, và ghi chỗ cắt ở quãng lặng nhất
+        /// giữa hai tiếng nổ (bỏ tiếng nổ sau). Chỉ có một đỉnh thì lấy đỉnh đó, không cắt.
+        /// </summary>
         private static float dinhAm(string ten, UnityEngine.AudioClip c)
         {
             float d;
@@ -2131,6 +2143,7 @@ namespace Game4.God
                 return d;
             }
             d = c.length * 0.5f;
+            float cat = c.length;
             try
             {
                 if (c.loadState != UnityEngine.AudioDataLoadState.Loaded)
@@ -2143,28 +2156,67 @@ namespace Game4.God
                 if (c.GetData(a, 0))
                 {
                     int cua = System.Math.Max(1, (int) (c.frequency * 0.05f)) * kenh;
-                    double tot = -1;
-                    int vt = 0;
-                    for (int i = 0; i + cua <= a.Length; i += cua)
+                    int n = a.Length / cua;
+                    double[] e = new double[n];
+                    for (int k = 0; k < n; k++)
                     {
-                        double e = 0;
-                        for (int j = i; j < i + cua; j++)
+                        double s = 0;
+                        for (int j = k * cua; j < (k + 1) * cua; j++)
                         {
-                            e += a[j] * a[j];
+                            s += a[j] * a[j];
                         }
-                        if (e > tot)
+                        e[k] = s;
+                    }
+                    // Lam min 3 cua so cho khoi bat nham gai nhon.
+                    double[] m = new double[n];
+                    for (int k = 0; k < n; k++)
+                    {
+                        m[k] = (e[System.Math.Max(0, k - 1)] + e[k] + e[System.Math.Min(n - 1, k + 1)]) / 3.0;
+                    }
+                    int k1 = 0;
+                    for (int k = 1; k < n; k++)
+                    {
+                        if (m[k] > m[k1])
                         {
-                            tot = e;
-                            vt = i;
+                            k1 = k;
                         }
                     }
-                    d = (float) (vt / kenh) / c.frequency + 0.025f;
+                    int k2 = -1;
+                    for (int k = 0; k < n; k++)
+                    {
+                        if (System.Math.Abs(k - k1) >= 8 && m[k] >= m[k1] * 0.35 && (k2 < 0 || m[k] > m[k2]))
+                        {
+                            k2 = k;
+                        }
+                    }
+                    int dau = k2 >= 0 ? System.Math.Min(k1, k2) : k1;
+                    // Dau tieng no dau: lui ve cho nang luong bat dau vot len (con > 30% dinh).
+                    int batDauNo = dau;
+                    while (batDauNo > 0 && m[batDauNo - 1] > m[dau] * 0.3)
+                    {
+                        batDauNo--;
+                    }
+                    d = (batDauNo * cua / kenh) / (float) c.frequency;
+                    if (k2 >= 0)
+                    {
+                        int sau = System.Math.Max(k1, k2);
+                        int lang = dau + 2;
+                        for (int k = dau + 2; k < sau; k++)
+                        {
+                            if (m[k] < m[lang])
+                            {
+                                lang = k;
+                            }
+                        }
+                        cat = (lang * cua / kenh) / (float) c.frequency;
+                    }
                 }
             }
             catch (System.Exception)
             {
             }
             amDinh[ten] = d;
+            amCat[ten] = cat;
             return d;
         }
 
@@ -2205,6 +2257,11 @@ namespace Game4.God
                         continue;
                     }
                     long batDau = a.dinhLuc > 0 ? a.dinhLuc - (long) (dinhAm(a.ten, clip) * 1000f) : a.luc;
+                    if (a.dinhLuc > 0 && batDau < a.luc)
+                    {
+                        // Tieng dai hon thoi gian gong: phat tu DAU ngay luc bat dau gong, khong cat mat doan dau.
+                        batDau = a.luc;
+                    }
                     if (a.sauTen != null)
                     {
                         UnityEngine.AudioClip truoc = layClip(a.sauTen);
@@ -2226,6 +2283,16 @@ namespace Game4.God
                         continue;
                     }
                     UnityEngine.AudioSource src = phatAm(clip, a.hetLuc > 0 ? lech % clip.length : lech, a.am);
+                    float cat;
+                    if (src != null && a.dinhLuc > 0 && amCat.TryGetValue(a.ten, out cat) && cat < clip.length - 0.05f && cat > lech)
+                    {
+                        // Cat bo tieng no thu hai: mo dan roi tat o quang lang giua hai tieng no.
+                        AmDangPhat c2 = new AmDangPhat();
+                        c2.src = src;
+                        c2.hetLuc = ms + (long) ((cat - lech) * 1000f) + 150L;
+                        c2.am = a.am;
+                        dsDangPhat.Add(c2);
+                    }
                     if (src != null && a.hetLuc > 0)
                     {
                         src.loop = (a.hetLuc - ms) / 1000f > clip.length - src.time;
@@ -2298,7 +2365,8 @@ namespace Game4.God
             {
                 return false;
             }
-            henAm("shinra", 0, mSystem.currentTimeMillis() + msGong, AM_SHINRA);
+            long bayGio = mSystem.currentTimeMillis();
+            henAm("shinra", bayGio, bayGio + msGong, AM_SHINRA);
             return true;
         }
 
