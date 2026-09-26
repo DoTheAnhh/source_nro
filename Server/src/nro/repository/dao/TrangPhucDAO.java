@@ -101,6 +101,7 @@ public final class TrangPhucDAO {
             gieoSayCheese();
             gieoGatling();
             gieoTroiHon();
+            gieoGokaMekkyaku();
             // Them du am vu no (khung thu ba cua day bay).
             ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_bay = ? WHERE skill_tpl = 10"
                     + " AND khung_bay = '25285,25286'", KHUNG_BAY_DBTT);
@@ -303,6 +304,37 @@ public final class TrangPhucDAO {
      * Trói Hồn cho Ma phong ba (skill 26, Namếc): khung bay = [tử thần 16 | tay ma 12 | xích bay
      * 16 | xích quấn 12 | ấn chú 12 | màn hình nạn nhân 9]. Icon 25582–25659.
      */
+    /**
+     * Katon: Gōka Mekkyaku cho Super Kamejoko (skill 24, Trái Đất): khung bay = [tụ lửa 12 |
+     * phóng 12 | giữ lửa 14 | tắt dần 12]. Icon 25660–25710.
+     */
+    private static void gieoGokaMekkyaku() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM trang_phuc_mau WHERE skill_tpl = 24 AND ten = ?", "Katon: Gōka Mekkyaku");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            if (rs != null) {
+                rs.dispose();
+            }
+        }
+        StringBuilder bay = new StringBuilder();
+        for (int id = 25660; id <= 25709; id++) {
+            if (id == 25672 || id == 25684 || id == 25698) {
+                bay.append(",-1");
+            }
+            bay.append(bay.length() > 0 ? "," : "").append(id);
+        }
+        ConnectDB.executeUpdate("INSERT INTO trang_phuc_mau (skill_tpl, ten, mo_ta, icon, khung_nap, khung_bay, thu_tu, icon_vp)"
+                + " VALUES (?,?,?,?,?,?,1,?)", 24, "Katon: Gōka Mekkyaku",
+                "Hào Hoả Diệt Thức của Madara: tụ cầu lửa trước miệng rồi thổi ra biển lửa cuồn cuộn thiêu rụi kẻ địch.",
+                25710, "", bay.toString(), 25710);
+        lucDoc = 0;
+        Logger.success("Trang phục: gieo Katon: Gōka Mekkyaku cho Super Kamejoko\n");
+    }
+
     private static void gieoTroiHon() throws Exception {
         CrisResultSet rs = null;
         try {

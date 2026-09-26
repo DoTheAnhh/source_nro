@@ -8316,8 +8316,12 @@ namespace Game1
     		switch (idskillPaint)
     		{
     		case 24:
-    			GameScr.addEffectEnd_Target(18, 0, typePaint, clone(), null, 3, timeGong, 0);
-    			GameScr.addEffectEnd_Target(21, 0, typePaint, clone(), null, 1, timeGong, 0);
+    			// Skin Katon: Goka Mekkyaku: cau lua tu truoc mieng thay hieu ung gong goc.
+    			if (!God.TrangPhucUI.gokaGong(this, timeGong))
+    			{
+    				GameScr.addEffectEnd_Target(18, 0, typePaint, clone(), null, 3, timeGong, 0);
+    				GameScr.addEffectEnd_Target(21, 0, typePaint, clone(), null, 1, timeGong, 0);
+    			}
     			break;
     		case 25:
     			// Skin Gomu Gomu Gatling: tay cuon lo xo thay hieu ung gong goc.
@@ -8396,6 +8400,12 @@ namespace Game1
     				fr_end = new byte[1] { 12 };
     			}
     		}
+    		if (idskillPaint == 24 && God.TrangPhucUI.laGoka(this))
+    		{
+    			// Goka Mekkyaku: khom nguoi tu lua, dung thu the thoi lua.
+    			fr_start = new byte[1] { (byte)God.TrangPhucUI.GK_DANG_TU };
+    			fr_atk = new byte[1] { (byte)God.TrangPhucUI.GK_DANG_THOI };
+    		}
     	}
     
     	public void SetSkillPaint_STT(int stt, short idskillPaint, Point targetDame, short timeDame, short rangeDame, sbyte typePaint, Point[] listObj, sbyte typeItem)
@@ -8412,8 +8422,12 @@ namespace Game1
     		{
     			if (this.idskillPaint == 24)
     			{
-    				GameScr.addEffectEnd_Target(18, 1, typePaint, this, null, 3, timeDame, 0);
-    				GameScr.addEffectEnd_Target(24, 0, typePaint, this, this.targetDame, 1, timeDame, rangeDame);
+    				// Skin Katon: Goka Mekkyaku: thoi luong lua tu mieng thay luong chuong goc.
+    				if (!God.TrangPhucUI.gokaBan(this, this.targetDame, timeDame))
+    				{
+    					GameScr.addEffectEnd_Target(18, 1, typePaint, this, null, 3, timeDame, 0);
+    					GameScr.addEffectEnd_Target(24, 0, typePaint, this, this.targetDame, 1, timeDame, rangeDame);
+    				}
     			}
     			if (this.idskillPaint == 25)
     			{

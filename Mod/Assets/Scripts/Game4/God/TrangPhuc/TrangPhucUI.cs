@@ -1372,6 +1372,7 @@ namespace Game4.God
             veMayAnh(g);
             veGatling(g);
             veTroiHon(g);
+            veGoka(g);
             veMotNguoi(g, Char.myCharz());
             for (int i = 0; i < GameScr.vCharInMap.size(); i++)
             {
@@ -2495,7 +2496,7 @@ namespace Game4.God
             {
                 // Nap truoc ba tieng skin (lan dau phat khoi khung, va kip phan tich cho cat tieng no).
                 amDaNap = true;
-                foreach (string ten in new string[] { "shinra", "sharingan", "qua" })
+                foreach (string ten in new string[] { "shinra", "sharingan", "qua", "goka" })
                 {
                     UnityEngine.AudioClip c = layClip(ten);
                     if (c != null)
@@ -3912,6 +3913,263 @@ namespace Game4.God
             float ih = mGraphics.getImageHeight(s.img);
             float tiLe = System.Math.Max(w / iw, h / ih) * 1.02f;
             SmallImage.veIconXoay(g, id, w / 2, h / 2, tiLe, 0f, mo);
+        }
+
+        // ------------------------------------------------------------------
+        //  Super Kamejoko (Trái Đất) → Katon: Gōka Mekkyaku: gồng thì khom người (dáng 24), cầu
+        //  lửa tụ trước miệng; phóng thì đứng thủ thế (dáng 19), thổi luồng lửa từ miệng dài
+        //  ĐÚNG tới điểm cuối của Kamejoko gốc, giữ lửa cuồn cuộn suốt lúc gây sát thương rồi tắt
+        //  dần. Cả khu nghe voice Madara. Khung: [tụ 12 | phóng 12 | giữ 14 | tắt 12].
+        // ------------------------------------------------------------------
+        private const long GK_TU = 120L;
+        private const long GK_TU_LAP = 110L;
+        private const long GK_PHONG = 40L;
+        private const long GK_GIU = 75L;
+        private const long GK_TAT = 60L;
+        private const float AM_GOKA = 0.55f;
+
+        /// <summary>Ảnh luồng lửa (đơn vị): rộng 200 × cao 227, mặt lửa ở 400/432 bề rộng, gốc ở mép trái-giữa.</summary>
+        private const float GK_MAT = 400f / 432f;
+        private const float GK_CAO = 227f / 200f;
+
+        /// <summary>Dáng nhân vật: khom người tụ lửa / đứng thủ thế thổi lửa.</summary>
+        public const int GK_DANG_TU = 24;
+        public const int GK_DANG_THOI = 19;
+
+        public class Goka
+        {
+            public Char c;
+            public short[] tu;
+            public short[] phong;
+            public short[] giu;
+            public short[] tat;
+            public bool dangGong;
+            public long batDau;
+            public long het;
+            public int tx;
+        }
+
+        private static readonly List<Goka> dsGoka = new List<Goka>();
+
+        private static Goka timGoka(Char c)
+        {
+            foreach (Goka k in dsGoka)
+            {
+                if (k.c == c)
+                {
+                    return k;
+                }
+            }
+            return null;
+        }
+
+        private static bool coSkinGoka(Char c)
+        {
+            return c != null && c.tpSkill == 24 && conHieuLuc(c) && tach(c.tpBay, 3).Length > 0;
+        }
+
+        /// <summary>Nhân vật đang dùng Super Kamejoko có skin Gōka Mekkyaku (để đổi dáng).</summary>
+        public static bool laGoka(Char c)
+        {
+            lock (dsGoka)
+            {
+                return timGoka(c) != null;
+            }
+        }
+
+        private static Goka taoGoka(Char c)
+        {
+            Goka k = timGoka(c);
+            if (k == null)
+            {
+                k = new Goka();
+                k.c = c;
+                dsGoka.Add(k);
+            }
+            k.tu = tach(c.tpBay, 0);
+            k.phong = tach(c.tpBay, 1);
+            k.giu = tach(c.tpBay, 2);
+            k.tat = tach(c.tpBay, 3);
+            return k;
+        }
+
+        /// <summary>Bắt đầu gồng Super Kamejoko: có skin thì tụ cầu lửa trước miệng + voice (trả true = bỏ hiệu ứng gốc).</summary>
+        public static bool gokaGong(Char c, int timeGong)
+        {
+            if (!coSkinGoka(c))
+            {
+                return false;
+            }
+            long bayGio = mSystem.currentTimeMillis();
+            lock (dsGoka)
+            {
+                Goka k = taoGoka(c);
+                k.dangGong = true;
+                k.batDau = bayGio;
+                k.het = bayGio + System.Math.Max(500, timeGong) + 4000L;
+            }
+            taiTruoc(c.tpBay);
+            // Voice Madara: ca khu nghe, tat vua het luot lua (gong + phong + tat dan).
+            AmCho a = new AmCho();
+            a.ten = "goka";
+            a.luc = bayGio;
+            a.hetLuc = bayGio + System.Math.Max(500, timeGong) + 2000L + GK_TAT * 12 + 200L;
+            a.am = AM_GOKA;
+            lock (dsAm)
+            {
+                dsAm.Add(a);
+            }
+            return true;
+        }
+
+        /// <summary>Phóng Super Kamejoko: có skin thì thổi luồng lửa từ miệng tới đúng điểm cuối Kamejoko.</summary>
+        public static bool gokaBan(Char c, Point dich, int timeDame)
+        {
+            if (!coSkinGoka(c))
+            {
+                return false;
+            }
+            lock (dsGoka)
+            {
+                Goka k = taoGoka(c);
+                k.dangGong = false;
+                k.batDau = mSystem.currentTimeMillis();
+                k.het = k.batDau + System.Math.Max(600, timeDame);
+                k.tx = dich != null ? dich.x : c.cx + c.cdir * 200;
+            }
+            taiTruoc(c.tpBay);
+            return true;
+        }
+
+        /// <summary>Miệng nhân vật ở dáng <paramref name="cf"/> — theo đúng ảnh đầu đang mặc.</summary>
+        private static void mieng(Char c, int cf, out float mx, out float my)
+        {
+            mx = c.cx + c.cdir * 9;
+            my = c.cy - 17;
+            try
+            {
+                Part ph = GameScr.parts[c.head];
+                int[] ci = Char.CharInfo[cf][0];
+                PartImage pi = ph.pi[ci[0]];
+                float w = 24f;
+                float h = 20f;
+                var s = (SmallImage.imgNew != null && pi.id >= 0 && pi.id < SmallImage.imgNew.Length) ? SmallImage.imgNew[pi.id] : null;
+                if (s != null && s.img != null && mGraphics.getImageWidth(s.img) > 1)
+                {
+                    w = mGraphics.getImageWidth(s.img);
+                    h = mGraphics.getImageHeight(s.img);
+                }
+                float lech = ci[1] + pi.dx;
+                float tren = c.cy - ci[2] + pi.dy;
+                mx = c.cdir == 1 ? c.cx + lech + w * 0.8f : c.cx - lech - w * 0.8f;
+                my = tren + h * 0.78f;
+            }
+            catch (System.Exception)
+            {
+            }
+        }
+
+        /// <summary>Hoà hai khung kéo dài (không lõm độ đục giữa hai khung — lửa đặc không bị nhấp nháy).</summary>
+        private static void veHoaLua(mGraphics g, short[] k, int a, int b, float h,
+                float ox, float oy, float goc, float dai, float day, bool lat, float mo)
+        {
+            veKeoNeo(g, k[a], ox, oy, goc, dai, day, lat, mo * (b != a ? System.Math.Min(1f, 2f * (1f - h)) : 1f));
+            if (b != a && h > 0.01f)
+            {
+                veKeoNeo(g, k[b], ox, oy, goc, dai, day, lat, mo * System.Math.Min(1f, 2f * h));
+            }
+        }
+
+        private static void veGoka(mGraphics g)
+        {
+            if (dsGoka.Count == 0)
+            {
+                return;
+            }
+            long ms = mSystem.currentTimeMillis();
+            lock (dsGoka)
+            {
+                for (int i = dsGoka.Count - 1; i >= 0; i--)
+                {
+                    Goka k = dsGoka[i];
+                    Char c = k.c;
+                    long t = ms - k.batDau;
+                    float mx;
+                    float my;
+                    if (k.dangGong)
+                    {
+                        if (ms > k.het || k.tu.Length < 12)
+                        {
+                            dsGoka.RemoveAt(i);
+                            continue;
+                        }
+                        mieng(c, GK_DANG_TU, out mx, out my);
+                        int fx = (int) (mx + c.cdir * 10);
+                        int fy = (int) my;
+                        float mo = System.Math.Min(1f, t / 150f);
+                        long tHien = GK_TU * 9;
+                        if (t < tHien)
+                        {
+                            veHoaTamTL(g, k.tu, 0, 10, t, GK_TU, false, fx, fy, 1f, mo);
+                        }
+                        else
+                        {
+                            veHoaTamTL(g, k.tu, 8, 12, t - tHien, GK_TU_LAP, true, fx, fy, 1f, mo);
+                        }
+                        continue;
+                    }
+                    long D = k.het - k.batDau;
+                    long tPhong = GK_PHONG * 11;
+                    long tTat = GK_TAT * 11;
+                    if (t >= D + tTat || k.phong.Length < 12 || k.giu.Length < 2 || k.tat.Length < 12)
+                    {
+                        dsGoka.RemoveAt(i);
+                        continue;
+                    }
+                    mieng(c, GK_DANG_THOI, out mx, out my);
+                    int huong = k.tx >= c.cx ? 1 : -1;
+                    float dai = System.Math.Max(60f, System.Math.Abs(k.tx - mx));
+                    // Mat lua cham dung diem cuoi Kamejoko; lua cao vua phai du luong dai.
+                    float w = dai / GK_MAT;
+                    float ky = System.Math.Max(0.35f, System.Math.Min(1f, 150f / dai));
+                    float h = w * GK_CAO * ky;
+                    float goc = huong == 1 ? 0f : 180f;
+                    bool lat = huong == -1;
+                    // Cau lua tan vao luong lua.
+                    if (t < 200L && k.tu.Length >= 12)
+                    {
+                        SmallImage.veIconXoay(g, k.tu[11], (int) (mx + huong * 10), (int) my, 1f - 0.5f * t / 200f, 0f, 1f - t / 200f);
+                    }
+                    int a;
+                    int b;
+                    float hh;
+                    if (t < tPhong)
+                    {
+                        khungHoa(0, 12, t, GK_PHONG, false, out a, out b, out hh);
+                        veHoaLua(g, k.phong, a, b, hh, mx, my, goc, w, h, lat, 1f);
+                    }
+                    else if (t < D)
+                    {
+                        // Giu lua: vong tron qua ca 14 khung (khong qua lai) cho lua chay mot chieu.
+                        long tg = t - tPhong;
+                        int n = k.giu.Length;
+                        a = (int) ((tg / GK_GIU) % n);
+                        b = (a + 1) % n;
+                        hh = (float) (tg % GK_GIU) / GK_GIU;
+                        if (tg < GK_GIU)
+                        {
+                            // Noi tu khung phong cuoi sang khung giu dau.
+                            veKeoNeo(g, k.phong[11], mx, my, goc, w, h, lat, 1f - hh);
+                        }
+                        veHoaLua(g, k.giu, a, b, hh, mx, my, goc, w, h, lat, 1f);
+                    }
+                    else
+                    {
+                        khungHoa(0, 12, t - D, GK_TAT, false, out a, out b, out hh);
+                        veHoaLua(g, k.tat, a, b, hh, mx, my, goc, w, h, lat, 1f);
+                    }
+                }
+            }
         }
 
         // ------------------------------------------------------------------
