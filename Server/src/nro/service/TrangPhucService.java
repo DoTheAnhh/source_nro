@@ -159,7 +159,7 @@ public final class TrangPhucService {
     }
 
     private static void ghiKhung(Message msg, short[] k) throws java.io.IOException {
-        int n = Math.min(k.length, 40);
+        int n = Math.min(k.length, 255);
         msg.writer().writeByte(n);
         for (int i = 0; i < n; i++) {
             msg.writer().writeShort(k[i]);
