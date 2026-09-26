@@ -158,6 +158,54 @@ namespace Game2.God
             }
         }
 
+        /// <summary>
+        /// Chữ vừa chỗ thì vẽ thường; dài hơn khung <paramref name="rong"/> thì chạy từ phải sang
+        /// trái trong khung (đứng yên 1 giây ở đầu, rồi chạy 30 điểm/giây, nối vòng liền).
+        /// <paramref name="giua"/> = căn giữa khi vừa chỗ (x là tâm).
+        /// </summary>
+        private static void veChuChay(mGraphics g, mFont f, mFont bong, string s, int x, int y, int rong, bool giua)
+        {
+            if (s == null)
+            {
+                return;
+            }
+            int w = f.getWidth(s);
+            if (w <= rong)
+            {
+                if (bong != null)
+                {
+                    f.drawString(g, s, x, y, giua ? mFont.CENTER : mFont.LEFT, bong);
+                }
+                else
+                {
+                    f.drawString(g, s, x, y, giua ? mFont.CENTER : mFont.LEFT);
+                }
+                return;
+            }
+            int trai = giua ? x - rong / 2 : x;
+            const int KHOANG = 30;
+            const long DUNG = 1000L;
+            const int TOC = 30;
+            int chuKy = w + KHOANG;
+            long tong = DUNG + chuKy * 1000L / TOC;
+            long p = mSystem.currentTimeMillis() % tong;
+            int lech = p < DUNG ? 0 : (int) ((p - DUNG) * TOC / 1000L);
+            g.setClip(trai, y - 2, rong, 16);
+            for (int k = 0; k < 2; k++)
+            {
+                int xx = trai - lech + k * chuKy;
+                if (bong != null)
+                {
+                    f.drawString(g, s, xx, y, mFont.LEFT, bong);
+                }
+                else
+                {
+                    f.drawString(g, s, xx, y, mFont.LEFT);
+                }
+            }
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+        }
+
         private static string catBot(string s, int toiDa)
         {
             if (s == null)
@@ -902,8 +950,8 @@ namespace Game2.God
                 int cx = xDau + (i % cot) * (o + 10);
                 int cy = y + 28 + (i / cot) * (o + 24);
                 veOMon(g, m, cx, cy, o, m.hiem >= 2);
-                mFont.tahoma_7b_white.drawString(g, catBot(m.ten, mot ? 26 : 9), cx + o / 2, cy + o + 3,
-                        mFont.CENTER, mFont.tahoma_7b_dark);
+                veChuChay(g, mFont.tahoma_7b_white, mFont.tahoma_7b_dark, m.ten, cx + o / 2, cy + o + 3,
+                        mot ? w - 20 : o + 8, true);
             }
             if (mot && ketQua.Count == 1)
             {
@@ -945,8 +993,9 @@ namespace Game2.God
                 g.setColor(mauHiem(m.hiem), 1f);
                 g.fillRect(x + 6, yy, 4, caoDong - 2, 2);
                 veOMon(g, m, x + 14, yy + 1, 24, false);
-                mFont.tahoma_7b_dark.drawString(g, catBot(m.ten, 22) + " x" + m.soLuong, x + 44, yy + 3,
-                        mFont.LEFT);
+                // Ten day du; dai qua cho trong (toi cot ti le) thi chay chu.
+                int rongTen = w - 12 - mFont.tahoma_7b_red.getWidth(m.tiLe) - 10 - 44;
+                veChuChay(g, mFont.tahoma_7b_dark, null, m.ten + " x" + m.soLuong, x + 44, yy + 3, rongTen, false);
                 mFont.tahoma_7.drawString(g, TEN_HIEM[m.hiem < 0 ? 0 : (m.hiem > 4 ? 4 : m.hiem)], x + 44,
                         yy + 14, mFont.LEFT);
                 mFont.tahoma_7b_red.drawString(g, m.tiLe, x + w - 12, yy + 8, mFont.RIGHT);
