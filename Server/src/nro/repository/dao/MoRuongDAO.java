@@ -396,6 +396,7 @@ public class MoRuongDAO {
             phiLoiThanV4();
             vanKiemV5();
             tsukuyomiV6();
+            ruongSkin();
         } catch (Exception ex) {
             Logger.logException(MoRuongDAO.class, ex, "Không dựng được phiếu quay rương");
         }
@@ -487,6 +488,77 @@ public class MoRuongDAO {
     /** Rương Cao Cấp đợt bốn — một lần: thêm Phi Lôi Thần 0,5% đỏ; các món cố định cũ giữ nguyên tỉ lệ. */
     /** Rương Cao Cấp đợt năm — một lần: thêm Vạn Kiếm Quy Tông 0,5% đỏ; các món cố định cũ giữ nguyên tỉ lệ. */
     /** Rương Cao Cấp đợt sáu — một lần: thêm Tsukuyomi 0,5% đỏ; các món cố định cũ giữ nguyên tỉ lệ. */
+    /** Tiền tố tên rương riêng của từng skin. */
+    public static final String TIEN_TO_RUONG_SKIN = "Rương Skin ";
+
+    /**
+     * Mỗi skin kỹ năng một rương gacha riêng (skin 0,5%), chạy MỖI lần khởi động: skin nào
+     * chưa có rương thì dựng — thêm skin mới là tự có rương. Cùng phiếu và giá với Rương Cao
+     * Cấp; quà phụ như Rương Cao Cấp. Một lần (ruong_skin_v1): bỏ skin khỏi Rương Cao Cấp.
+     */
+    private static void ruongSkin() throws Exception {
+        int phieu = idPhieuCaoCap();
+        if (phieu <= 0) {
+            return;
+        }
+        int thuTu = 10;
+        for (TrangPhucDAO.Mau m : TrangPhucDAO.tatCa()) {
+            thuTu++;
+            if (m.itemId <= 0) {
+                continue;
+            }
+            String ten = TIEN_TO_RUONG_SKIN + m.ten;
+            if (idTheoTenRuong(ten) > 0) {
+                continue;
+            }
+            int id = themRuong(ten, "Rương riêng của skin " + m.ten + " — skin 0,5%.", m.itemId, 1, 9, thuTu);
+            ConnectDB.executeUpdate("UPDATE mo_ruong_loai SET item_phieu = ?, gia_x1 = 1, gia_x10 = 9,"
+                    + " ten_diem = 'Phiếu quay rương cao cấp' WHERE id = ?", phieu, id);
+            ConnectDB.executeUpdate("DELETE FROM mo_ruong_qua WHERE ruong_id = ?", id);
+            themQua(id, 457, 10, 3500, 0, "");        // Thoi vang x10
+            themQua(id, 1964, 2, 2500, 1, "");        // Hop sao pha le x2
+            themQua(id, 1153, 2, 2000, 1, "");        // Giap Xen bo hung 2 x2
+            themQua(id, 15, 1, 1200, 2, "");          // Ngoc Rong 2 sao
+            themQua(id, 1559, 1, 1, 3, "");           // Capsule 1 mon kich hoat
+            themQua(id, m.itemId, 1, 1, HIEM_DO, ""); // Skin
+            java.util.Map<Integer, Integer> coDinh = new java.util.LinkedHashMap<>();
+            coDinh.put(1559, 2000);      // 2%
+            coDinh.put(m.itemId, 500);   // 0,5%
+            datTiLeCoDinh(id, coDinh);
+            lucDoc = 0;
+            Logger.success("Mở rương: dựng " + ten + " (skin 0,5%)\n");
+        }
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT gia_tri FROM mo_ruong_cau_hinh WHERE khoa = 'ruong_skin_v1'");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            dong(rs);
+        }
+        int idCC = idTheoTenRuong(TEN_CAO_CAP);
+        int berus = TrungDeTuDAO.itemCuaLoai(nro.core.consts.ConstDetu.BILL);
+        int rtCaoCap = ThuCungDAO.idRuongCaoCap();
+        if (idCC <= 0 || berus <= 0 || rtCaoCap <= 0) {
+            return;
+        }
+        for (TrangPhucDAO.Mau m : TrangPhucDAO.tatCa()) {
+            if (m.itemId > 0) {
+                ConnectDB.executeUpdate("DELETE FROM mo_ruong_qua WHERE ruong_id = ? AND item_id = ?", idCC, m.itemId);
+            }
+        }
+        java.util.Map<Integer, Integer> coDinh = new java.util.LinkedHashMap<>();
+        coDinh.put(1559, 2000);
+        coDinh.put(rtCaoCap, 2000);
+        coDinh.put(berus, 500);
+        coDinh.put(1655, 500);
+        datTiLeCoDinh(idCC, coDinh);
+        ConnectDB.executeUpdate("INSERT IGNORE INTO mo_ruong_cau_hinh (khoa, gia_tri) VALUES ('ruong_skin_v1', '1')");
+        lucDoc = 0;
+        Logger.success("Mở rương: tách skin khỏi Rương Cao Cấp (mỗi skin một rương riêng)\n");
+    }
+
     private static void tsukuyomiV6() throws Exception {
         CrisResultSet rs = null;
         try {

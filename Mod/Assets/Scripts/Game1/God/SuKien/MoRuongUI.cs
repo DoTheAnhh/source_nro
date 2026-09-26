@@ -98,6 +98,29 @@ namespace Game1.God
         private bool hienXemTruoc;
         private int cuonXemTruoc;
 
+        /// <summary>Danh sách rương bên trái: mục đầu đang hiện (nhiều rương thì cuộn).</summary>
+        private int cuonDs;
+
+        private int yKeoDs;
+
+        private int soHienDs()
+        {
+            return Math.max(1, (bh - 8) / (CAO_MUC + 4));
+        }
+
+        private void kepCuonDs()
+        {
+            int toiDa = Math.max(0, ds.Count - soHienDs());
+            if (cuonDs > toiDa)
+            {
+                cuonDs = toiDa;
+            }
+            if (cuonDs < 0)
+            {
+                cuonDs = 0;
+            }
+        }
+
         private readonly System.Random rd = new System.Random();
 
         // ------------------------------------------------------------------
@@ -505,9 +528,21 @@ namespace Game1.God
         {
             g.setColor(MAU_THE_MO, 0.55f);
             g.fillRect(bx, by, RONG_DS, bh, 6);
-            for (int i = 0; i < ds.Count; i++)
+            kepCuonDs();
+            int soHien = soHienDs();
+            if (ds.Count > soHien)
             {
-                int yy = by + 4 + i * (CAO_MUC + 4);
+                // Thanh cuon mong ben phai danh sach.
+                int cao = Math.max(16, (bh - 8) * soHien / ds.Count);
+                int yThanh = by + 4 + (bh - 8 - cao) * cuonDs / Math.max(1, ds.Count - soHien);
+                g.setColor(MAU_VIEN, 0.18f);
+                g.fillRect(bx + RONG_DS - 4, by + 4, 3, bh - 8, 1);
+                g.setColor(MAU_CAM, 0.9f);
+                g.fillRect(bx + RONG_DS - 4, yThanh, 3, cao, 1);
+            }
+            for (int i = cuonDs; i < ds.Count; i++)
+            {
+                int yy = by + 4 + (i - cuonDs) * (CAO_MUC + 4);
                 if (yy + CAO_MUC > by + bh - 4)
                 {
                     break;
@@ -536,14 +571,15 @@ namespace Game1.God
                     SmallImage.veIconVuaO(g, r.icon, bx + 7 + oI / 2, yy + CAO_MUC / 2, oI - 4);
                 }
                 int xc = bx + 7 + oI + 5;
+                // Ten day du; dai qua thi chay chu.
+                int rongTen = bx + RONG_DS - 8 - xc;
                 if (c)
                 {
-                    mFont.tahoma_7b_white.drawString(g, catBot(r.ten, 18), xc, yy + 5, mFont.LEFT,
-                            mFont.tahoma_7b_dark);
+                    veChuChay(g, mFont.tahoma_7b_white, mFont.tahoma_7b_dark, r.ten, xc, yy + 5, rongTen, false);
                 }
                 else
                 {
-                    mFont.tahoma_7b_dark.drawString(g, catBot(r.ten, 18), xc, yy + 5, mFont.LEFT);
+                    veChuChay(g, mFont.tahoma_7b_dark, null, r.ten, xc, yy + 5, rongTen, false);
                 }
                 veSoPhieu(g, r, xc, yy + 21, c);
             }
@@ -1046,6 +1082,29 @@ namespace Game1.God
                     yKeoXT = GameCanvas.py;
                 }
             }
+            if (!hienXemTruoc && !hienKetQua && !dangQuay && coDuLieu && ds.Count > soHienDs())
+            {
+                bool trenDs = GameCanvas.px >= bx && GameCanvas.px <= bx + RONG_DS && GameCanvas.py >= by && GameCanvas.py <= by + bh;
+                if (trenDs && GameCanvas.pXYScrollMouse != 0)
+                {
+                    cuonDs += GameCanvas.pXYScrollMouse > 0 ? -1 : 1;
+                    kepCuonDs();
+                }
+                if (GameCanvas.isPointerDown && trenDs)
+                {
+                    int buoc = (GameCanvas.py - yKeoDs) / (CAO_MUC + 4);
+                    if (buoc != 0)
+                    {
+                        cuonDs -= buoc;
+                        yKeoDs += buoc * (CAO_MUC + 4);
+                        kepCuonDs();
+                    }
+                }
+                else
+                {
+                    yKeoDs = GameCanvas.py;
+                }
+            }
             if (!GameCanvas.isPointerJustRelease)
             {
                 return true;
@@ -1085,9 +1144,9 @@ namespace Game1.God
             {
                 return true;
             }
-            for (int i = 0; i < ds.Count; i++)
+            for (int i = cuonDs; i < ds.Count; i++)
             {
-                int yy = by + 4 + i * (CAO_MUC + 4);
+                int yy = by + 4 + (i - cuonDs) * (CAO_MUC + 4);
                 if (yy + CAO_MUC > by + bh - 4)
                 {
                     break;
