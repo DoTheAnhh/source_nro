@@ -2031,7 +2031,49 @@ public class ShopService {
      * @param player người chơi
      * @param itemTempId id template vật phẩm
      */
+    /**
+     * Sách tuyệt kỹ (chiêu thứ 9): học thẳng cấp 1 — cần đúng hành tinh, đủ sức mạnh của
+     * sách và đủ tiềm năng bằng yêu cầu cấp 1 của chiêu; tiềm năng bị trừ.
+     */
+    private void hocTuyetKy(Player pl, ItemShop is, byte chieu) {
+        if (is.temp.gender != pl.gender && is.temp.gender <= 2) {
+            Service.gI().sendThongBao(pl, "Đây không phải tuyệt kỹ của hành tinh con");
+            return;
+        }
+        nro.entity.skill.Skill cu = SkillUtil.getSkillbyId(pl, chieu);
+        if (cu != null && cu.point > 0) {
+            Service.gI().sendThongBao(pl, "Bạn đã học tuyệt kỹ này rồi");
+            return;
+        }
+        if (pl.nPoint.power < is.temp.strRequire) {
+            Service.gI().sendThongBao(pl, "Sức mạnh của bạn không đủ");
+            return;
+        }
+        long can = 0;
+        nro.entity.template.SkillTemplate tpl = SkillUtil.findSkillTemplate(chieu);
+        if (tpl != null && tpl.skillss != null && !tpl.skillss.isEmpty()) {
+            can = tpl.skillss.get(0).powRequire;
+        }
+        if (pl.nPoint.tiemNang < can) {
+            Service.gI().sendThongBao(pl, "Cần " + Util.formatNumber(can, FormatStyle.VIETNAMESE)
+                    + " điểm tiềm năng để học tuyệt kỹ này");
+            return;
+        }
+        pl.nPoint.subTiemNang(can);
+        nro.service.skill.SkillService.gI().learSkillSpecial(pl, chieu);
+        Service.gI().point(pl);
+        Service.gI().sendThongBao(pl, "Học thành công " + (tpl != null ? tpl.name : is.temp.name) + "!");
+    }
+
     private void learnKyNang(Player pl, ItemShop is) {
+        // Sach tuyet ky (chieu thu 9): hoc thang, khong theo sach tung cap.
+        byte tuyetKy = is.temp.id == 1341 ? nro.entity.skill.Skill.SUPER_KAME
+                : is.temp.id == 1342 ? nro.entity.skill.Skill.MA_PHONG_BA
+                : is.temp.id == 1343 ? nro.entity.skill.Skill.LIEN_HOAN_CHUONG : -1;
+        if (tuyetKy >= 0) {
+            hocTuyetKy(pl, is, tuyetKy);
+            return;
+        }
         if (pl.nPoint.power < is.temp.strRequire) {
             Service.gI().sendThongBao(pl, "Sức mạnh của bạn không đủ");
             return;

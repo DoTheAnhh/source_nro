@@ -316,6 +316,8 @@ public final class Manager {
     // Bang de tu (va doi hinh de Bill sang Berus Nhi) ngay luc khoi dong, de
     // dong log hien ra luc boot thay vi luc ai do goi de lan dau.
     nro.repository.dao.DeTuDAO.damBaoBang();
+    // Sach tuyet ky vao cua hang Hoc ky nang: truoc loadDatabase de cua hang nap kip.
+    nro.repository.dao.SachHocTuyetKyDAO.damBao();
 
     this.loadDatabase();
 
