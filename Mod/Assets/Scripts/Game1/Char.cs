@@ -8402,7 +8402,7 @@ namespace Game1
     		}
     		if (idskillPaint == 24 && God.TrangPhucUI.laGoka(this))
     		{
-    			// Goka Mekkyaku: khom nguoi tu lua, dung thu the thoi lua.
+    			// Goka Mekkyaku: dung thu the tu lua, khom nguoi tay o mieng thoi lua.
     			fr_start = new byte[1] { (byte)God.TrangPhucUI.GK_DANG_TU };
     			fr_atk = new byte[1] { (byte)God.TrangPhucUI.GK_DANG_THOI };
     		}

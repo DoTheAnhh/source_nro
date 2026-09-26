@@ -3921,20 +3921,20 @@ namespace Game6.God
         //  ĐÚNG tới điểm cuối của Kamejoko gốc, giữ lửa cuồn cuộn suốt lúc gây sát thương rồi tắt
         //  dần. Cả khu nghe voice Madara. Khung: [tụ 12 | phóng 12 | giữ 14 | tắt 12].
         // ------------------------------------------------------------------
-        private const long GK_TU = 120L;
-        private const long GK_TU_LAP = 110L;
-        private const long GK_PHONG = 40L;
-        private const long GK_GIU = 75L;
-        private const long GK_TAT = 60L;
+        private const long GK_TU = 190L;
+        private const long GK_TU_LAP = 260L;
+        private const long GK_PHONG = 520L;
+        private const long GK_GIU = 115L;
+        private const long GK_TAT = 120L;
         private const float AM_GOKA = 0.55f;
 
         /// <summary>Ảnh luồng lửa (đơn vị): rộng 200 × cao 227, mặt lửa ở 400/432 bề rộng, gốc ở mép trái-giữa.</summary>
         private const float GK_MAT = 400f / 432f;
         private const float GK_CAO = 227f / 200f;
 
-        /// <summary>Dáng nhân vật: khom người tụ lửa / đứng thủ thế thổi lửa.</summary>
-        public const int GK_DANG_TU = 24;
-        public const int GK_DANG_THOI = 19;
+        /// <summary>Dáng nhân vật: đứng thủ thế tụ lửa / khom người tay ở miệng thổi lửa.</summary>
+        public const int GK_DANG_TU = 19;
+        public const int GK_DANG_THOI = 24;
 
         public class Goka
         {
@@ -4013,7 +4013,7 @@ namespace Game6.God
             AmCho a = new AmCho();
             a.ten = "goka";
             a.luc = bayGio;
-            a.hetLuc = bayGio + System.Math.Max(500, timeGong) + 2000L + GK_TAT * 12 + 200L;
+            a.hetLuc = bayGio + System.Math.Max(500, timeGong) + 2000L + GK_TAT * 6 + 200L;
             a.am = AM_GOKA;
             lock (dsAm)
             {
@@ -4080,6 +4080,77 @@ namespace Game6.God
             }
         }
 
+        /// <summary>Luồng lửa vẽ dài hơn tầm Kamejoko gốc 30% (chỉ hình — vùng sát thương máy chủ giữ nguyên).</summary>
+        private const float GK_DAI_THEM = 1.3f;
+
+        /// <summary>Mặt lửa của từng khung phóng (phần 400) — xếp xen: chẵn = bộ 1, lẻ = bộ 2.</summary>
+        private static readonly float[] GK_MAT_PHONG = { 107f, 157f, 197f, 217f, 265f, 302f, 317f, 331f, 350f, 363f, 400f, 400f };
+
+        /// <summary>Độ đục lớp phụ (bộ ảnh thứ hai chồng mờ phía sau lớp chính) — lửa dày, không nhảy nét.</summary>
+        private const float GK_LOP_PHU = 0.5f;
+
+        private static float emVao(float x)
+        {
+            x = System.Math.Max(0f, System.Math.Min(1f, x));
+            return x * x * (3f - 2f * x);
+        }
+
+        /// <summary>Khung thứ i của một bộ trong dãy xếp xen (bo 0 = chẵn, 1 = lẻ).</summary>
+        private static short khungXen(short[] k, int bo, int i)
+        {
+            int j = System.Math.Max(0, System.Math.Min(k.Length / 2 - 1, i)) * 2 + bo;
+            return k[System.Math.Min(k.Length - 1, j)];
+        }
+
+        /// <summary>Hoà hai khung (a → b, h 0..1) kéo dài, không lõm độ đục ở giữa.</summary>
+        private static void hoaKeo(mGraphics g, short a, short b, float h, float ox, float oy, float goc,
+                float wa, float wb, float day, bool lat, float mo)
+        {
+            h = emVao(h);
+            veKeoNeo(g, a, ox, oy, goc, wa, day, lat, mo * (a != b ? System.Math.Min(1f, 2f * (1f - h)) : 1f));
+            if (a != b && h > 0.01f)
+            {
+                veKeoNeo(g, b, ox, oy, goc, wb, day, lat, mo * System.Math.Min(1f, 2f * h));
+            }
+        }
+
+        private static void hoaTam(mGraphics g, short a, short b, float h, int x, int y, float tiLe, float goc, float mo)
+        {
+            h = emVao(h);
+            SmallImage.veIconXoay(g, a, x, y, tiLe, goc, mo * (a != b ? System.Math.Min(1f, 2f * (1f - h)) : 1f));
+            if (a != b && h > 0.01f)
+            {
+                SmallImage.veIconXoay(g, b, x, y, tiLe, goc, mo * System.Math.Min(1f, 2f * h));
+            }
+        }
+
+        /// <summary>Vị trí trong vòng lặp tròn n khung, mỗi khung ms: khung a → b, h.</summary>
+        private static void vong(long t, int n, long ms, out int a, out int b, out float h)
+        {
+            a = (int) ((t / ms) % n);
+            b = (a + 1) % n;
+            h = (float) (t % ms) / ms;
+        }
+
+        /// <summary>Luồng lửa phóng: mặt lửa trượt liên tục tới L; chọn hai khung kẹp L của một bộ, kéo cho khớp.</summary>
+        private static void vePhong(mGraphics g, short[] k, int bo, float L, float dai, float ox, float oy,
+                float goc, float day, bool lat, float mo)
+        {
+            float p = L / dai * 400f;
+            int n = k.Length / 2;
+            int i = 0;
+            while (i + 1 < n && GK_MAT_PHONG[(i + 1) * 2 + bo] <= p)
+            {
+                i++;
+            }
+            int j = System.Math.Min(n - 1, i + 1);
+            float fa = GK_MAT_PHONG[i * 2 + bo] / 400f;
+            float fb = GK_MAT_PHONG[j * 2 + bo] / 400f;
+            float h = j == i || fb <= fa ? 0f : System.Math.Max(0f, System.Math.Min(1f, (p / 400f - fa) / (fb - fa)));
+            hoaKeo(g, khungXen(k, bo, i), khungXen(k, bo, j), h, ox, oy, goc,
+                    L / (fa * GK_MAT), L / (fb * GK_MAT), day, lat, mo);
+        }
+
         private static void veGoka(mGraphics g)
         {
             if (dsGoka.Count == 0)
@@ -4096,6 +4167,9 @@ namespace Game6.God
                     long t = ms - k.batDau;
                     float mx;
                     float my;
+                    int a;
+                    int b;
+                    float h;
                     if (k.dangGong)
                     {
                         if (ms > k.het || k.tu.Length < 12)
@@ -4106,67 +4180,90 @@ namespace Game6.God
                         mieng(c, GK_DANG_TU, out mx, out my);
                         int fx = (int) (mx + c.cdir * 10);
                         int fy = (int) my;
-                        float mo = System.Math.Min(1f, t / 150f);
-                        long tHien = GK_TU * 9;
-                        if (t < tHien)
+                        float mo = System.Math.Min(1f, t / 200f);
+                        // Nhip tho cua cau lua + xoay cham: song dong ma khong can them khung.
+                        float nhip = 1f + 0.05f * (float) System.Math.Sin(t * 2.0 * System.Math.PI / 520.0);
+                        float xoay = (t / 1000f) * 40f * c.cdir;
+                        long tLon = GK_TU * 5;
+                        if (t < tLon)
                         {
-                            veHoaTamTL(g, k.tu, 0, 10, t, GK_TU, false, fx, fy, 1f, mo);
+                            a = (int) (t / GK_TU);
+                            b = System.Math.Min(5, a + 1);
+                            h = (float) (t % GK_TU) / GK_TU;
                         }
                         else
                         {
-                            veHoaTamTL(g, k.tu, 8, 12, t - tHien, GK_TU_LAP, true, fx, fy, 1f, mo);
+                            // Giu o khung 5 <-> 6 qua lai cham.
+                            long p = ((t - tLon) / GK_TU_LAP) % 2;
+                            a = p == 0 ? 5 : 4;
+                            b = p == 0 ? 4 : 5;
+                            h = (float) ((t - tLon) % GK_TU_LAP) / GK_TU_LAP;
                         }
+                        // Lop phu (bo 2) sau, to hon, xoay nguoc; lop chinh (bo 1) truoc.
+                        hoaTam(g, khungXen(k.tu, 1, a), khungXen(k.tu, 1, b), h, fx, fy, 1.12f * nhip, -xoay, mo * GK_LOP_PHU);
+                        hoaTam(g, khungXen(k.tu, 0, a), khungXen(k.tu, 0, b), h, fx, fy, nhip, xoay * 0.5f, mo);
                         continue;
                     }
                     long D = k.het - k.batDau;
-                    long tPhong = GK_PHONG * 11;
-                    long tTat = GK_TAT * 11;
-                    if (t >= D + tTat || k.phong.Length < 12 || k.giu.Length < 2 || k.tat.Length < 12)
+                    long tTat = GK_TAT * 6;
+                    if (t >= D + tTat || k.phong.Length < 12 || k.giu.Length < 14 || k.tat.Length < 12)
                     {
                         dsGoka.RemoveAt(i);
                         continue;
                     }
                     mieng(c, GK_DANG_THOI, out mx, out my);
                     int huong = k.tx >= c.cx ? 1 : -1;
-                    float dai = System.Math.Max(60f, System.Math.Abs(k.tx - mx));
-                    // Mat lua cham dung diem cuoi Kamejoko; lua cao vua phai du luong dai.
+                    float dai = System.Math.Max(60f, System.Math.Abs(k.tx - mx)) * GK_DAI_THEM;
                     float w = dai / GK_MAT;
-                    float ky = System.Math.Max(0.35f, System.Math.Min(1f, 150f / dai));
-                    float h = w * GK_CAO * ky;
+                    float ky = System.Math.Max(0.35f, System.Math.Min(1f, 170f / dai));
+                    float day = w * GK_CAO * ky;
                     float goc = huong == 1 ? 0f : 180f;
                     bool lat = huong == -1;
                     // Cau lua tan vao luong lua.
-                    if (t < 200L && k.tu.Length >= 12)
+                    if (t < 250L)
                     {
-                        SmallImage.veIconXoay(g, k.tu[11], (int) (mx + huong * 10), (int) my, 1f - 0.5f * t / 200f, 0f, 1f - t / 200f);
+                        float q = t / 250f;
+                        SmallImage.veIconXoay(g, khungXen(k.tu, 0, 5), (int) (mx + huong * 10), (int) my, 1f - 0.5f * q, 0f, 1f - q);
                     }
-                    int a;
-                    int b;
-                    float hh;
-                    if (t < tPhong)
+                    // Lua nhun theo nhip (day hon / mong hon mot chut) cho song dong.
+                    float nhun = 1f + 0.04f * (float) System.Math.Sin(t * 2.0 * System.Math.PI / 420.0);
+                    if (t < GK_PHONG)
                     {
-                        khungHoa(0, 12, t, GK_PHONG, false, out a, out b, out hh);
-                        veHoaLua(g, k.phong, a, b, hh, mx, my, goc, w, h, lat, 1f);
+                        // Mat lua truot em tu mieng toi dich.
+                        float L = System.Math.Max(4f, dai * emRa((float) t / GK_PHONG));
+                        vePhong(g, k.phong, 1, L * 1.02f, dai, mx, my, goc, day * nhun * 1.04f, lat, GK_LOP_PHU);
+                        vePhong(g, k.phong, 0, L, dai, mx, my, goc, day * nhun, lat, 1f);
                     }
                     else if (t < D)
                     {
-                        // Giu lua: vong tron qua ca 14 khung (khong qua lai) cho lua chay mot chieu.
-                        long tg = t - tPhong;
-                        int n = k.giu.Length;
-                        a = (int) ((tg / GK_GIU) % n);
-                        b = (a + 1) % n;
-                        hh = (float) (tg % GK_GIU) / GK_GIU;
-                        if (tg < GK_GIU)
+                        long tg = t - GK_PHONG;
+                        float vao = System.Math.Min(1f, tg / 220f);
+                        if (vao < 1f)
                         {
-                            // Noi tu khung phong cuoi sang khung giu dau.
-                            veKeoNeo(g, k.phong[11], mx, my, goc, w, h, lat, 1f - hh);
+                            // Noi mem tu khung phong cuoi sang vong giu.
+                            veKeoNeo(g, khungXen(k.phong, 0, 5), mx, my, goc, w, day * nhun, lat, 1f - emVao(vao));
                         }
-                        veHoaLua(g, k.giu, a, b, hh, mx, my, goc, w, h, lat, 1f);
+                        // Lop phu: bo 2 (6 khung) lap chu ky khac lop chinh -> lua bien hoa tu nhien.
+                        vong(tg, 6, GK_GIU + 30, out a, out b, out h);
+                        hoaKeo(g, k.giu[8 + a], k.giu[8 + b], h, mx, my, goc, w * 1.02f, w * 1.02f, day * nhun * 1.04f, lat, GK_LOP_PHU * vao);
+                        vong(tg, 8, GK_GIU, out a, out b, out h);
+                        hoaKeo(g, k.giu[a], k.giu[b], h, mx, my, goc, w, w, day * nhun, lat, vao);
                     }
                     else
                     {
-                        khungHoa(0, 12, t - D, GK_TAT, false, out a, out b, out hh);
-                        veHoaLua(g, k.tat, a, b, hh, mx, my, goc, w, h, lat, 1f);
+                        long tt = t - D;
+                        a = (int) System.Math.Min(5, tt / GK_TAT);
+                        b = System.Math.Min(5, a + 1);
+                        h = (float) (tt % GK_TAT) / GK_TAT;
+                        float cuoi = 1f - System.Math.Max(0f, (float) (tt - GK_TAT * 5) / GK_TAT);
+                        if (tt < 160L)
+                        {
+                            // Noi tu vong giu sang tat dan.
+                            vong(D - GK_PHONG, 8, GK_GIU, out int ga, out int gb, out float gh);
+                            veKeoNeo(g, k.giu[ga], mx, my, goc, w, day, lat, 1f - tt / 160f);
+                        }
+                        hoaKeo(g, khungXen(k.tat, 1, a), khungXen(k.tat, 1, b), h, mx, my, goc, w * 1.02f, w * 1.02f, day * 1.04f, lat, GK_LOP_PHU * cuoi);
+                        hoaKeo(g, khungXen(k.tat, 0, a), khungXen(k.tat, 0, b), h, mx, my, goc, w, w, day, lat, cuoi);
                     }
                 }
             }
