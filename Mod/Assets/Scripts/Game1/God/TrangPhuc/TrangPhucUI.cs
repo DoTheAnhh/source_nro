@@ -376,6 +376,13 @@ namespace Game1.God
         /// <summary>Dòng đầu đang hiện của danh sách chiêu (cuộn dọc).</summary>
         private int cuonTrai;
 
+        /// <summary>Cuộn mượt theo điểm ảnh: đang ở / đang trượt tới.</summary>
+        private float cuonPx;
+        private float cuonDich;
+
+        /// <summary>Quãng đã kéo trong lần chạm này — kéo quá tay thì thả ra không tính là bấm.</summary>
+        private int tongKeoTrai;
+
         private int yKeoTrai;
 
         private static readonly string[] NHAN_LOC = { "Tất cả", "TĐ", "NM", "XD" };
@@ -426,6 +433,18 @@ namespace Game1.God
             return System.Math.Max(1, (caoVungDs() + 4) / (CAO_CHIEU + 4));
         }
 
+        private float toiDaPx(int soDong)
+        {
+            return System.Math.Max(0, soDong * (CAO_CHIEU + 4) - 4 - caoVungDs());
+        }
+
+        private void kepPx(int soDong)
+        {
+            float td = toiDaPx(soDong);
+            cuonDich = System.Math.Max(0f, System.Math.Min(td, cuonDich));
+            cuonPx = System.Math.Max(0f, System.Math.Min(td, cuonPx));
+        }
+
         private void kepCuonTrai(int soDong)
         {
             int toiDa = System.Math.Max(0, soDong - soDongHien());
@@ -451,7 +470,7 @@ namespace Game1.God
 
         private int[] oChieu(int k)
         {
-            return new int[] { x0 + 8, yDauDs() + (k - cuonTrai) * (CAO_CHIEU + 4), RONG_TRAI - 8, CAO_CHIEU };
+            return new int[] { x0 + 8, yDauDs() + k * (CAO_CHIEU + 4) - (int) System.Math.Round(cuonPx), RONG_TRAI - 8, CAO_CHIEU };
         }
 
         private int xPhai()
@@ -532,6 +551,7 @@ namespace Game1.God
                 return;
             }
             veCotTrai(g);
+            traVungCat(g);
             veHangMau(g);
             veXemTruoc(g);
         }
@@ -556,13 +576,20 @@ namespace Game1.God
                 }
             }
             List<int> hien = dsHien();
-            kepCuonTrai(hien.Count);
+            // Truot mem toi dich (lan chuot); dang keo thi cuonPx da bam theo tay.
+            cuonPx += (cuonDich - cuonPx) * 0.35f;
+            if (System.Math.Abs(cuonDich - cuonPx) < 0.5f)
+            {
+                cuonPx = cuonDich;
+            }
+            kepPx(hien.Count);
             if (hien.Count > soDongHien())
             {
                 // Thanh cuon mong ben phai cot.
                 int caoVung = caoVungDs();
                 int caoThanh = System.Math.Max(14, caoVung * soDongHien() / hien.Count);
-                int yThanh = yDauDs() + (caoVung - caoThanh) * cuonTrai / System.Math.Max(1, hien.Count - soDongHien());
+                float tdPx = System.Math.Max(1f, toiDaPx(hien.Count));
+                int yThanh = yDauDs() + (int) ((caoVung - caoThanh) * cuonPx / tdPx);
                 g.setColor(0x000000, 0.12f);
                 g.fillRect(x0 + RONG_TRAI - 1, yDauDs(), 3, caoVung, 1);
                 g.setColor(CAM_DUOI, 0.9f);
@@ -572,10 +599,15 @@ namespace Game1.God
             {
                 mFont.tahoma_7.drawString(g, "Chưa có skin", x0 + 4 + RONG_TRAI / 2, yDauDs() + 10, mFont.CENTER);
             }
-            for (int k = cuonTrai; k < hien.Count && k - cuonTrai < soDongHien(); k++)
+            g.setClip(x0 + 4, yDauDs() - 2, RONG_TRAI, caoVungDs() + 4);
+            for (int k = 0; k < hien.Count; k++)
             {
                 int i = hien[k];
                 int[] o = oChieu(k);
+                if (o[1] + o[3] < yDauDs() - 2 || o[1] > yDauDs() + caoVungDs() + 2)
+                {
+                    continue;
+                }
                 bool c = i == chieuChon;
                 if (c)
                 {
@@ -617,6 +649,11 @@ namespace Game1.God
                     mFont.tahoma_7.drawString(g, phu, o[0] + 32, o[1] + 18, mFont.LEFT);
                 }
             }
+        }
+
+        private void traVungCat(mGraphics g)
+        {
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
         }
 
         private void veHangMau(mGraphics g)
@@ -789,20 +826,22 @@ namespace Game1.God
                         && GameCanvas.py >= yDauDs() && GameCanvas.py <= y0 + cao;
                 if (trenCot && GameCanvas.pXYScrollMouse != 0)
                 {
-                    cuonTrai += GameCanvas.pXYScrollMouse > 0 ? -1 : 1;
-                    kepCuonTrai(soDong);
+                    cuonDich += GameCanvas.pXYScrollMouse > 0 ? -(CAO_CHIEU + 4) : (CAO_CHIEU + 4);
+                    kepPx(soDong);
                 }
                 if (GameCanvas.isPointerDown && trenCot)
                 {
-                    int buoc = (GameCanvas.py - yKeoTrai) / (CAO_CHIEU + 4);
-                    if (buoc != 0)
+                    int dy = GameCanvas.py - yKeoTrai;
+                    if (dy != 0)
                     {
-                        cuonTrai -= buoc;
-                        yKeoTrai += buoc * (CAO_CHIEU + 4);
-                        kepCuonTrai(soDong);
+                        cuonDich -= dy;
+                        kepPx(soDong);
+                        cuonPx = cuonDich;
+                        tongKeoTrai += System.Math.Abs(dy);
+                        yKeoTrai = GameCanvas.py;
                     }
                 }
-                else
+                else if (!GameCanvas.isPointerDown)
                 {
                     yKeoTrai = GameCanvas.py;
                 }
@@ -836,6 +875,7 @@ namespace Game1.God
                 {
                     locHT = l - 1;
                     cuonTrai = 0;
+                    cuonPx = cuonDich = 0f;
                     List<int> hl = dsHien();
                     if (hl.Count > 0 && !hl.Contains(chieuChon))
                     {
@@ -847,9 +887,15 @@ namespace Game1.God
                 }
             }
             List<int> hienC = dsHien();
-            for (int k = cuonTrai; k < hienC.Count && k - cuonTrai < soDongHien(); k++)
+            bool vuaKeo = tongKeoTrai > 6;
+            tongKeoTrai = 0;
+            for (int k = 0; k < hienC.Count && !vuaKeo; k++)
             {
                 int[] o = oChieu(k);
+                if (o[1] < yDauDs() - 2 || o[1] + o[3] > yDauDs() + caoVungDs() + 2)
+                {
+                    continue;
+                }
                 if (cham(o[0], o[1], o[2], o[3]))
                 {
                     int i = hienC[k];
@@ -3227,7 +3273,7 @@ namespace Game1.God
                             continue;
                         }
                         // Tay cuon lo xo canh nguoi, nhun theo nhip.
-                        float nhun = 0.85f + 0.08f * (float) System.Math.Sin(t * 2.0 * System.Math.PI / 380.0);
+                        float nhun = (0.85f + 0.08f * (float) System.Math.Sin(t * 2.0 * System.Math.PI / 380.0)) * 0.7f;
                         veNeoGoc(g, ga.tay[0], hx, hy, c.cdir == 1 ? 0f : 180f, nhun, 1f);
                         continue;
                     }
