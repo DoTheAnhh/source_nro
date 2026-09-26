@@ -335,6 +335,10 @@ public class SkillService {
                 case Skill.LIEN_HOAN_CHUONG:
                 case Skill.MA_PHONG_BA: {
                     player.newSkill.setSkillSpecial(dir, dx, dy, x, y);
+                    if (skillId == Skill.LIEN_HOAN_CHUONG) {
+                        // Skin Gomu Gomu Gatling: bao ca khu TRUOC goi gong.
+                        nro.service.TrangPhucService.gI().baoTruocKhiTu(player, Skill.LIEN_HOAN_CHUONG);
+                    }
                     newSkillNotFocus(player, status);
                     AchievementService.gI().checkDoneTask(player, ConstAchievement.TUYET_KY_THANH_THAO);
                     break;

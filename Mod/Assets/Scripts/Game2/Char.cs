@@ -8321,8 +8321,12 @@ namespace Game2
     			GameScr.addEffectEnd_Target(21, 0, typePaint, clone(), null, 1, timeGong, 0);
     			break;
     		case 25:
-    			GameScr.addEffectEnd_Target(19, 0, typePaint, clone(), null, 3, timeGong, 0);
-    			GameScr.addEffectEnd_Target(22, 0, typePaint, clone(), null, 1, timeGong, 0);
+    			// Skin Gomu Gomu Gatling: tay cuon lo xo thay hieu ung gong goc.
+    			if (!God.TrangPhucUI.gatlingGong(this, timeGong))
+    			{
+    				GameScr.addEffectEnd_Target(19, 0, typePaint, clone(), null, 3, timeGong, 0);
+    				GameScr.addEffectEnd_Target(22, 0, typePaint, clone(), null, 1, timeGong, 0);
+    			}
     			break;
     		case 26:
     			GameScr.addEffectEnd_Target(20, 0, typePaint, clone(), null, 3, timeGong, 0);
@@ -8410,8 +8414,12 @@ namespace Game2
     			}
     			if (this.idskillPaint == 25)
     			{
-    				GameScr.addEffectEnd_Target(19, 0, typePaint, this, null, 3, timeDame, 0);
-    				GameScr.addEffectEnd_Target(25, 0, typePaint, this, this.targetDame, 1, timeDame, rangeDame);
+    				// Skin Gomu Gomu Gatling: mua nam dam thay luong chuong goc.
+    				if (!God.TrangPhucUI.gatlingBan(this, this.targetDame, timeDame, listObj))
+    				{
+    					GameScr.addEffectEnd_Target(19, 0, typePaint, this, null, 3, timeDame, 0);
+    					GameScr.addEffectEnd_Target(25, 0, typePaint, this, this.targetDame, 1, timeDame, rangeDame);
+    				}
     			}
     			if (this.idskillPaint == 26)
     			{

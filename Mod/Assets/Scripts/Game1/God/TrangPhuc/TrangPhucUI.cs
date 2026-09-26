@@ -1157,6 +1157,7 @@ namespace Game1.God
             veKunaiBay(g);
             veKiemBay(g);
             veMayAnh(g);
+            veGatling(g);
             veMotNguoi(g, Char.myCharz());
             for (int i = 0; i < GameScr.vCharInMap.size(); i++)
             {
@@ -2167,7 +2168,7 @@ namespace Game1.God
             UnityEngine.AudioClip c;
             if (!amClip.TryGetValue(ten, out c))
             {
-                c = ten == "tach" ? taoTiengTach()
+                c = ten == "tach" ? taoTiengTach() : ten == "bup" ? taoTiengBup()
                         : UnityEngine.Resources.Load("res/tp/" + ten, typeof(UnityEngine.AudioClip)) as UnityEngine.AudioClip;
                 amClip[ten] = c;
             }
@@ -2841,6 +2842,332 @@ namespace Game1.God
                 d[i] = (float) System.Math.Max(-1, System.Math.Min(1, v));
             }
             UnityEngine.AudioClip c = UnityEngine.AudioClip.Create("tach", n, 1, SR, false);
+            c.SetData(d, 0);
+            return c;
+        }
+
+        // ------------------------------------------------------------------
+        //  Liên hoàn chưởng (Xayda) → Gomu Gomu Gatling: gồng thì tay cuộn lò xo cạnh
+        //  người; phóng thì tay vươn ra → mưa nắm đấm quay theo hướng địch, dài tới
+        //  địch, suốt thời gian gây sát thương → tay bật về. Mỗi mục tiêu nổ va chạm
+        //  dồn dập kèm tiếng "bụp". Khung: [tay vươn/bật 8 | mưa đấm 16 | va chạm 12].
+        // ------------------------------------------------------------------
+        private const long GA_TAY = 60L;
+        private const long GA_DAY = 45L;
+        private const long GA_DAM = 55L;
+        private const long GA_THU = 70L;
+        private const long GA_NO = 50L;
+        private const long GA_NO_TAN = 80L;
+        private const long GA_BUP = 115L;
+        private const float AM_BUP = 0.5f;
+
+        /// <summary>Bề dài ảnh mưa đấm (đơn vị) — để phóng cho nắm đấm vừa chạm địch.</summary>
+        private const float GA_DAI_ANH = 150f;
+
+        public class Gatling
+        {
+            public Char c;
+            public short[] tay;
+            public short[] dam;
+            public short[] no;
+            public bool dangGong;
+            public long batDau;
+            public long het;
+            public int tx;
+            public int ty;
+            public List<IMapObject> dich = new List<IMapObject>();
+            public long lanBup;
+        }
+
+        private static readonly List<Gatling> dsGatling = new List<Gatling>();
+
+        private static Gatling timGatling(Char c)
+        {
+            foreach (Gatling g in dsGatling)
+            {
+                if (g.c == c)
+                {
+                    return g;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>Bắt đầu gồng Liên hoàn chưởng: có skin thì hiện tay cuộn lò xo (trả true = bỏ hiệu ứng gốc).</summary>
+        public static bool gatlingGong(Char c, int timeGong)
+        {
+            if (c == null || c.tpSkill != 25 || !conHieuLuc(c))
+            {
+                return false;
+            }
+            lock (dsGatling)
+            {
+                Gatling g = timGatling(c);
+                if (g == null)
+                {
+                    g = new Gatling();
+                    g.c = c;
+                    dsGatling.Add(g);
+                }
+                g.tay = tach(c.tpBay, 0);
+                g.dam = tach(c.tpBay, 1);
+                g.no = tach(c.tpBay, 2);
+                g.dangGong = true;
+                g.batDau = mSystem.currentTimeMillis();
+                g.het = g.batDau + System.Math.Max(500, timeGong) + 4000L;
+                g.dich.Clear();
+            }
+            taiTruoc(c.tpBay);
+            return true;
+        }
+
+        /// <summary>Phóng Liên hoàn chưởng: có skin thì tung Gatling tới (tx, ty) trong timeDame ms.</summary>
+        public static bool gatlingBan(Char c, Point dich, int timeDame, Point[] ds)
+        {
+            if (c == null || c.tpSkill != 25 || !conHieuLuc(c))
+            {
+                return false;
+            }
+            lock (dsGatling)
+            {
+                Gatling g = timGatling(c);
+                if (g == null)
+                {
+                    g = new Gatling();
+                    g.c = c;
+                    g.tay = tach(c.tpBay, 0);
+                    g.dam = tach(c.tpBay, 1);
+                    g.no = tach(c.tpBay, 2);
+                    dsGatling.Add(g);
+                }
+                g.dangGong = false;
+                g.batDau = mSystem.currentTimeMillis();
+                g.het = g.batDau + System.Math.Max(400, timeDame);
+                g.tx = dich != null ? dich.x : c.cx + c.cdir * 120;
+                g.ty = dich != null ? dich.y : c.cy;
+                g.dich.Clear();
+                if (ds != null)
+                {
+                    foreach (Point p in ds)
+                    {
+                        if (p == null)
+                        {
+                            continue;
+                        }
+                        IMapObject o = p.type == 0 ? (IMapObject) GameScr.findMobInMap(p.id)
+                                : (p.id == Char.myCharz().charID ? Char.myCharz() : GameScr.findCharInMap(p.id));
+                        if (o != null)
+                        {
+                            g.dich.Add(o);
+                        }
+                    }
+                }
+                g.lanBup = 0;
+            }
+            return true;
+        }
+
+        /// <summary>Khung hai ảnh để hoà: chạy một lượt (lap = false) hoặc lặp qua lại (lap = true).</summary>
+        private static void khungHoa(int tu, int den, long t, long msKhung, bool lap, out int a, out int b, out float h)
+        {
+            int n = System.Math.Max(1, den - tu);
+            if (!lap)
+            {
+                int i = (int) System.Math.Min(n - 1, t / msKhung);
+                h = t >= msKhung * n ? 0f : (float) (t - i * msKhung) / msKhung;
+                a = tu + i;
+                b = i + 1 < n ? a + 1 : a;
+                return;
+            }
+            if (n == 1)
+            {
+                a = b = tu;
+                h = 0f;
+                return;
+            }
+            int chuKy = 2 * (n - 1);
+            int pos = (int) ((t / msKhung) % chuKy);
+            h = (float) (t % msKhung) / msKhung;
+            int ia = pos < n ? pos : chuKy - pos;
+            int pb = (pos + 1) % chuKy;
+            a = tu + ia;
+            b = tu + (pb < n ? pb : chuKy - pb);
+        }
+
+        /// <summary>Vẽ ảnh sao cho mép TRÁI-giữa (gốc tay) nằm đúng (hx, hy), xoay theo góc.</summary>
+        private static void veNeoGoc(mGraphics g, short id, float hx, float hy, float goc, float tiLe, float mo)
+        {
+            if (mo <= 0.01f)
+            {
+                return;
+            }
+            var s = (SmallImage.imgNew != null && id >= 0 && id < SmallImage.imgNew.Length) ? SmallImage.imgNew[id] : null;
+            if (s == null || s.img == null || mGraphics.getImageWidth(s.img) <= 1)
+            {
+                SmallImage.veIconXoay(g, id, (int) hx, (int) hy, tiLe, goc, mo);
+                return;
+            }
+            float nua = mGraphics.getImageWidth(s.img) * tiLe / 2f;
+            double rad = goc / 57.29578;
+            SmallImage.veIconXoay(g, id, (int) System.Math.Round(hx + System.Math.Cos(rad) * nua),
+                    (int) System.Math.Round(hy + System.Math.Sin(rad) * nua), tiLe, goc, mo);
+        }
+
+        private static void veHoaNeo(mGraphics g, short[] k, int tu, int den, long t, long ms, bool lap,
+                float hx, float hy, float goc, float tiLe, float mo)
+        {
+            if (k == null || den > k.Length || den <= tu)
+            {
+                return;
+            }
+            int a;
+            int b;
+            float h;
+            khungHoa(tu, den, t, ms, lap, out a, out b, out h);
+            veNeoGoc(g, k[a], hx, hy, goc, tiLe, mo * (b != a ? System.Math.Min(1f, 2f * (1f - h)) : 1f));
+            if (b != a && h > 0.01f)
+            {
+                veNeoGoc(g, k[b], hx, hy, goc, tiLe, mo * System.Math.Min(1f, 2f * h));
+            }
+        }
+
+        private static void veHoaTam(mGraphics g, short[] k, int tu, int den, long t, long ms, bool lap,
+                int x, int y, float mo)
+        {
+            if (k == null || den > k.Length || den <= tu)
+            {
+                return;
+            }
+            int a;
+            int b;
+            float h;
+            khungHoa(tu, den, t, ms, lap, out a, out b, out h);
+            SmallImage.veIconXoay(g, k[a], x, y, 1f, 0f, mo * (b != a ? System.Math.Min(1f, 2f * (1f - h)) : 1f));
+            if (b != a && h > 0.01f)
+            {
+                SmallImage.veIconXoay(g, k[b], x, y, 1f, 0f, mo * System.Math.Min(1f, 2f * h));
+            }
+        }
+
+        private static void veGatling(mGraphics g)
+        {
+            if (dsGatling.Count == 0)
+            {
+                return;
+            }
+            long ms = mSystem.currentTimeMillis();
+            lock (dsGatling)
+            {
+                for (int i = dsGatling.Count - 1; i >= 0; i--)
+                {
+                    Gatling ga = dsGatling[i];
+                    Char c = ga.c;
+                    long t = ms - ga.batDau;
+                    float hx = c.cx + c.cdir * 10;
+                    float hy = c.cy - c.ch / 2 + 2;
+                    if (ga.dangGong)
+                    {
+                        if (ms > ga.het || ga.tay.Length == 0)
+                        {
+                            dsGatling.RemoveAt(i);
+                            continue;
+                        }
+                        // Tay cuon lo xo canh nguoi, nhun theo nhip.
+                        float nhun = 0.85f + 0.08f * (float) System.Math.Sin(t * 2.0 * System.Math.PI / 380.0);
+                        veNeoGoc(g, ga.tay[0], hx, hy, c.cdir == 1 ? 0f : 180f, nhun, 1f);
+                        continue;
+                    }
+                    long D = ga.het - ga.batDau;
+                    long tOut = GA_TAY * 3;
+                    long tRet = GA_THU * 5;
+                    if (t >= D + tRet)
+                    {
+                        dsGatling.RemoveAt(i);
+                        continue;
+                    }
+                    float ex = ga.tx;
+                    float ey = ga.ty - 18;
+                    float dx = ex - hx;
+                    float dy = ey - hy;
+                    float goc = (float) (System.Math.Atan2(dy, dx) * 57.29578);
+                    float dai = (float) System.Math.Sqrt(dx * dx + dy * dy);
+                    float tiLe = System.Math.Max(0.55f, System.Math.Min(1.6f, dai / GA_DAI_ANH * 1.05f));
+                    if (t < tOut)
+                    {
+                        // Tay vuon ra.
+                        veHoaNeo(g, ga.tay, 1, System.Math.Min(4, ga.tay.Length), t, GA_TAY, false, hx, hy, goc, 1f, 1f);
+                    }
+                    else if (t < D)
+                    {
+                        long tb = t - tOut;
+                        long tDay = GA_DAY * 4;
+                        if (tb < tDay)
+                        {
+                            veHoaNeo(g, ga.dam, 0, System.Math.Min(4, ga.dam.Length), tb, GA_DAY, false, hx, hy, goc, tiLe, 1f);
+                        }
+                        else
+                        {
+                            veHoaNeo(g, ga.dam, 4, System.Math.Min(11, ga.dam.Length), tb - tDay, GA_DAM, true, hx, hy, goc, tiLe, 1f);
+                        }
+                        // Va cham don dap o tung muc tieu (hoac cuoi luong).
+                        if (ga.no.Length >= 8)
+                        {
+                            if (ga.dich.Count == 0)
+                            {
+                                veHoaTam(g, ga.no, 3, 8, tb, GA_NO, true, (int) ex, (int) ey, 1f);
+                            }
+                            foreach (IMapObject o in ga.dich)
+                            {
+                                veHoaTam(g, ga.no, 3, 8, tb, GA_NO, true, o.getX(), o.getY() - o.getH() / 2, 1f);
+                            }
+                        }
+                        if (ms - ga.lanBup >= GA_BUP)
+                        {
+                            ga.lanBup = ms;
+                            henAm("bup", ms, 0, AM_BUP);
+                        }
+                    }
+                    else
+                    {
+                        // Tay bat ve nhu day thun; va cham tan dan.
+                        long tr = t - D;
+                        veHoaNeo(g, ga.dam, 11, System.Math.Min(16, ga.dam.Length), tr, GA_THU, false, hx, hy, goc, tiLe,
+                                1f - (float) tr / (tRet + 60));
+                        if (ga.no.Length >= 12)
+                        {
+                            if (ga.dich.Count == 0)
+                            {
+                                veHoaTam(g, ga.no, 8, 12, tr, GA_NO_TAN, false, (int) ex, (int) ey, 1f);
+                            }
+                            foreach (IMapObject o in ga.dich)
+                            {
+                                veHoaTam(g, ga.no, 8, 12, tr, GA_NO_TAN, false, o.getX(), o.getY() - o.getH() / 2, 1f);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>Tiếng "bụp" đấm tổng hợp: thịch trầm ngắn + tiếng xé gió.</summary>
+        private static UnityEngine.AudioClip taoTiengBup()
+        {
+            const int SR = 44100;
+            int n = (int) (0.09f * SR);
+            float[] d = new float[n];
+            System.Random r = new System.Random(3);
+            double pha = 0;
+            for (int i = 0; i < n; i++)
+            {
+                double t = (double) i / SR;
+                double f = 170 - 1100 * t;
+                pha += 2 * System.Math.PI * System.Math.Max(55, f) / SR;
+                double e = System.Math.Exp(-t * 38.0);
+                double on = (r.NextDouble() * 2 - 1) * System.Math.Exp(-t * 120.0);
+                double v = 0.9 * System.Math.Sin(pha) * e + 0.35 * on;
+                d[i] = (float) System.Math.Max(-1, System.Math.Min(1, v));
+            }
+            UnityEngine.AudioClip c = UnityEngine.AudioClip.Create("bup", n, 1, SR, false);
             c.SetData(d, 0);
             return c;
         }

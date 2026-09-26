@@ -99,6 +99,7 @@ public final class TrangPhucDAO {
             gieoVanKiemQuyTong();
             gieoTsukuyomi();
             gieoSayCheese();
+            gieoGatling();
             // Them du am vu no (khung thu ba cua day bay).
             ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_bay = ? WHERE skill_tpl = 10"
                     + " AND khung_bay = '25285,25286'", KHUNG_BAY_DBTT);
@@ -264,6 +265,37 @@ public final class TrangPhucDAO {
                 25544, "", bay.toString(), 25544);
         lucDoc = 0;
         Logger.success("Trang phục: gieo Say Cheese cho Thái dương hạ san\n");
+    }
+
+    /**
+     * Gomu Gomu Gatling cho Liên hoàn chưởng (skill 25, Xayda): khung bay = [cánh tay vươn /
+     * bật về 8 | mưa nắm đấm 16 | va chạm ở địch 12]. Icon 25545–25581.
+     */
+    private static void gieoGatling() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM trang_phuc_mau WHERE skill_tpl = 25 AND ten = ?", "Gomu Gomu Gatling");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            if (rs != null) {
+                rs.dispose();
+            }
+        }
+        StringBuilder bay = new StringBuilder();
+        for (int id = 25545; id <= 25580; id++) {
+            if (id == 25553 || id == 25569) {
+                bay.append(",-1");
+            }
+            bay.append(bay.length() > 0 ? "," : "").append(id);
+        }
+        ConnectDB.executeUpdate("INSERT INTO trang_phuc_mau (skill_tpl, ten, mo_ta, icon, khung_nap, khung_bay, thu_tu, icon_vp)"
+                + " VALUES (?,?,?,?,?,?,1,?)", 25, "Gomu Gomu Gatling",
+                "Cánh tay cao su vươn dài, tung cơn mưa nắm đấm dồn dập vào kẻ địch.",
+                25581, "", bay.toString(), 25581);
+        lucDoc = 0;
+        Logger.success("Trang phục: gieo Gomu Gomu Gatling cho Liên hoàn chưởng\n");
     }
 
     private static void gieoPhiLoiThan() throws Exception {
