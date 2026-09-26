@@ -543,6 +543,7 @@ public class EffectSkillService {
     public void removeThoiMien(Player player) {
         player.effectSkill.isThoiMien = false;
         sendEffectPlayer(player, player, TURN_OFF_EFFECT, SLEEP_EFFECT);
+        nro.service.TrangPhucService.gI().hetThoiMien(player);
     }
     
     //**************************************************************************

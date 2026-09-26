@@ -5634,6 +5634,9 @@ namespace Game4
     		GameCanvas.debug("PA16", 1);
     		paintArrowPointToNPC(g);
     		GameCanvas.debug("PA17", 1);
+    		// Trang phuc Thoi mien (Tsukuyomi): ao canh phu kin man hinh, duoi thanh mau / o ky nang.
+    		resetTranslate(g);
+    		God.TrangPhucUI.veThoiMien(g);
     		if (!isPaintOther && isPaintRada == 1 && !GameCanvas.panel.isShow)
     		{
     			paintInfoBar(g);

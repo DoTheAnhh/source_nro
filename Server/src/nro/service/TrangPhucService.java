@@ -187,6 +187,55 @@ public final class TrangPhucService {
         }
     }
 
+    /**
+     * Thôi miên trúng {@code nan}: người thi triển có skin Tsukuyomi thì báo riêng
+     * cho nạn nhân — client họ phủ ảo cảnh kín màn hình trong {@code ms} mili giây.
+     * Gói: byte 3, short skillTpl, int ms, byte n, short[n].
+     */
+    public void thoiMien(Player tu, Player nan, int ms) {
+        if (tu == null || nan == null || !nan.isPl() || ms <= 0) {
+            return;
+        }
+        Message msg = null;
+        try {
+            TrangPhucDAO.Mau m = TrangPhucDAO.dangDung(tu.id, nro.entity.skill.Skill.THOI_MIEN);
+            if (m == null || m.khungBay == null || m.khungBay.length == 0) {
+                return;
+            }
+            msg = new Message(GOI);
+            msg.writer().writeByte(3);
+            msg.writer().writeShort(nro.entity.skill.Skill.THOI_MIEN);
+            msg.writer().writeInt(ms);
+            ghiKhung(msg, m.khungBay);
+            nan.sendMessage(msg);
+        } catch (Exception ex) {
+            Logger.logException(TrangPhucService.class, ex, "Không báo được ảo cảnh thôi miên");
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
+    }
+
+    /** Hết thôi miên (tỉnh sớm hay hết giờ): tắt ảo cảnh. Gói: byte 4. */
+    public void hetThoiMien(Player nan) {
+        if (nan == null || !nan.isPl()) {
+            return;
+        }
+        Message msg = null;
+        try {
+            msg = new Message(GOI);
+            msg.writer().writeByte(4);
+            nan.sendMessage(msg);
+        } catch (Exception ex) {
+            Logger.logException(TrangPhucService.class, ex, "Không tắt được ảo cảnh thôi miên");
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
+    }
+
     private void bao(Player pl, int skillTpl, Player nhan, boolean truMinh) {
         if (pl == null || !pl.isPl() || pl.zone == null) {
             return;

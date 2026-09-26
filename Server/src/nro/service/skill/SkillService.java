@@ -988,6 +988,7 @@ public class SkillService {
                         timeSleep = reducedTime;
                     }
                     EffectSkillService.gI().setThoiMien(plTarget, System.currentTimeMillis(), timeSleep);
+                    nro.service.TrangPhucService.gI().thoiMien(player, plTarget, timeSleep);
                     if (plTarget instanceof nro.entity.player.TestDame) {
                         ((nro.entity.player.TestDame) plTarget).baoChoang(
                                 timeSleep, "Thôi miên");
@@ -1003,6 +1004,7 @@ public class SkillService {
                     if (mt.player != null) {
                         EffectSkillService.gI().setThoiMien(mt.player,
                                 System.currentTimeMillis(), timeSleep);
+                        nro.service.TrangPhucService.gI().thoiMien(player, mt.player, timeSleep);
                         EffectSkillService.gI().sendEffectPlayer(player, mt.player,
                                 EffectSkillService.TURN_ON_EFFECT,
                                 EffectSkillService.SLEEP_EFFECT);

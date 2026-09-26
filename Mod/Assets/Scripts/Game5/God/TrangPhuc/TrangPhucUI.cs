@@ -119,6 +119,32 @@ namespace Game5.God
                 {
                     docDanhSach(msg);
                 }
+                else if (loai == 3)
+                {
+                    // Bi thoi mien boi nguoi co skin Tsukuyomi: ao canh phu kin man hinh.
+                    msg.reader().readShort();
+                    int ms = msg.reader().readInt();
+                    short[] khung = docKhung(msg);
+                    if (khung.Length > 0)
+                    {
+                        taiTruoc(khung);
+                        long bayGio = mSystem.currentTimeMillis();
+                        if (tmKhung == null || bayGio >= tmHet)
+                        {
+                            tmBatDau = bayGio;
+                        }
+                        tmKhung = khung;
+                        tmHet = bayGio + ms;
+                    }
+                }
+                else if (loai == 4)
+                {
+                    // Tinh (het thoi mien som): tat ao canh, mo dan.
+                    if (tmKhung != null)
+                    {
+                        tmHet = System.Math.Min(tmHet, mSystem.currentTimeMillis());
+                    }
+                }
                 else if (loai == 2)
                 {
                     int charId = msg.reader().readInt();
@@ -1955,6 +1981,64 @@ namespace Game5.God
                     }
                 }
             }
+        }
+
+        // ------------------------------------------------------------------
+        //  Thôi miên → Tsukuyomi: kẻ bị thôi miên thấy ảo cảnh (bầy quạ → mắt
+        //  Sharingan) phủ kín màn hình, lặp tới khi tỉnh.
+        // ------------------------------------------------------------------
+        private static short[] tmKhung;
+        private static long tmBatDau;
+        private static long tmHet;
+
+        /// <summary>Mỗi khung ảo cảnh (ms), hiện dần / tắt dần (ms).</summary>
+        private const long TM_KHUNG = 90L;
+        private const long TM_HIEN = 250L;
+        private const long TM_TAT = 350L;
+
+        /// <summary>Vẽ ảo cảnh phủ kín màn hình (gọi từ GameScr.paint, toạ độ màn hình).</summary>
+        public static void veThoiMien(mGraphics g)
+        {
+            short[] k = tmKhung;
+            if (k == null || k.Length == 0)
+            {
+                return;
+            }
+            long ms = mSystem.currentTimeMillis();
+            if (ms >= tmHet + TM_TAT)
+            {
+                tmKhung = null;
+                return;
+            }
+            float mo = System.Math.Min(1f, (float) (ms - tmBatDau) / TM_HIEN);
+            if (ms > tmHet)
+            {
+                mo = System.Math.Min(mo, 1f - (float) (ms - tmHet) / TM_TAT);
+            }
+            if (mo <= 0.01f)
+            {
+                return;
+            }
+            int w = GameCanvas.w;
+            int h = GameCanvas.h;
+            if (mo >= 0.99f)
+            {
+                // Nen den lot duoi (anh chua tai kip van kin man hinh).
+                g.setColor(0);
+                g.fillRect(0, 0, w, h);
+            }
+            short id = k[(int) (((ms - tmBatDau) / TM_KHUNG) % k.Length)];
+            var s = (SmallImage.imgNew != null && id >= 0 && id < SmallImage.imgNew.Length) ? SmallImage.imgNew[id] : null;
+            if (s == null || s.img == null || mGraphics.getImageWidth(s.img) <= 1)
+            {
+                SmallImage.veIconXoay(g, id, w / 2, h / 2, 1f, 0f, mo);
+                return;
+            }
+            float iw = mGraphics.getImageWidth(s.img);
+            float ih = mGraphics.getImageHeight(s.img);
+            // Phu kin: phong theo canh can nhieu hon, cat bot canh kia.
+            float tiLe = System.Math.Max(w / iw, h / ih) * 1.02f;
+            SmallImage.veIconXoay(g, id, w / 2, h / 2, tiLe, 0f, mo);
         }
 
         // ------------------------------------------------------------------

@@ -97,6 +97,7 @@ public final class TrangPhucDAO {
             gieoRasenshuriken();
             gieoPhiLoiThan();
             gieoVanKiemQuyTong();
+            gieoTsukuyomi();
             // Them du am vu no (khung thu ba cua day bay).
             ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_bay = ? WHERE skill_tpl = 10"
                     + " AND khung_bay = '25285,25286'", KHUNG_BAY_DBTT);
@@ -190,6 +191,35 @@ public final class TrangPhucDAO {
                 25406, "", VAN_KIEM_KHUNG, 25398);
         lucDoc = 0;
         Logger.success("Trang phục: gieo Vạn Kiếm Quy Tông cho Đẻ trứng\n");
+    }
+
+    /**
+     * Tsukuyomi cho Thôi miên (skill 22, Trái Đất): không có khung nạp; khung
+     * bay = 31 khung ảo cảnh (bầy quạ → mắt Sharingan) — kẻ bị thôi miên thấy phủ
+     * kín màn hình, lặp tới khi tỉnh. Icon 25449–25480.
+     */
+    private static void gieoTsukuyomi() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM trang_phuc_mau WHERE skill_tpl = 22 AND ten = ?", "Tsukuyomi");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            if (rs != null) {
+                rs.dispose();
+            }
+        }
+        StringBuilder bay = new StringBuilder();
+        for (int id = 25449; id <= 25479; id++) {
+            bay.append(bay.length() > 0 ? "," : "").append(id);
+        }
+        ConnectDB.executeUpdate("INSERT INTO trang_phuc_mau (skill_tpl, ten, mo_ta, icon, khung_nap, khung_bay, thu_tu, icon_vp)"
+                + " VALUES (?,?,?,?,?,?,1,?)", 22, "Tsukuyomi",
+                "Kẻ trúng thôi miên bị kéo vào ảo cảnh Nguyệt Độc: bầy quạ và con mắt Sharingan phủ kín tầm nhìn tới khi tỉnh lại.",
+                25480, "", bay.toString(), 25480);
+        lucDoc = 0;
+        Logger.success("Trang phục: gieo Tsukuyomi cho Thôi miên\n");
     }
 
     private static void gieoPhiLoiThan() throws Exception {
