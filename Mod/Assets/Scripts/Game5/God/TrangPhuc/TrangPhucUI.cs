@@ -2015,6 +2015,9 @@ namespace Game5.God
 
             /// <summary>Cắt bỏ tiếng nổ thứ hai trong tiếng (xem dinhAm).</summary>
             public bool catNoSau;
+
+            /// <summary>Canh tiếng nổ đầu trúng <see cref="dinhLuc"/>, voice không mất đầu (phát nhanh hơn chút nếu cần).</summary>
+            public bool khop;
         }
 
         /// <summary>Tiếng đang lặp chờ tắt đúng giờ (mờ dần 300 ms cuối).</summary>
@@ -2023,7 +2026,16 @@ namespace Game5.God
             public UnityEngine.AudioSource src;
             public long hetLuc;
             public float am;
+
+            /// <summary>Lúc trả tốc độ phát về bình thường (0 = không đổi).</summary>
+            public long pitchVe;
         }
+
+        /// <summary>Chỗ bắt đầu có tiếng trong file (giây) — bỏ khoảng lặng đầu.</summary>
+        private static readonly Dictionary<string, float> amDau = new Dictionary<string, float>();
+
+        /// <summary>Phát nhanh nhất bấy nhiêu lần (giọng gần như không đổi); còn dài thì cắt bớt đoạn đầu.</summary>
+        private const float AM_NHANH_TOI_DA = 1.15f;
 
         private static readonly List<AmDangPhat> dsDangPhat = new List<AmDangPhat>();
 
@@ -2203,6 +2215,12 @@ namespace Game5.God
                         batDauNo--;
                     }
                     d = (batDauNo * cua / kenh) / (float) c.frequency;
+                    int coTieng = 0;
+                    while (coTieng < dau && m[coTieng] < m[k1] * 0.03)
+                    {
+                        coTieng++;
+                    }
+                    amDau[ten] = (coTieng * cua / kenh) / (float) c.frequency;
                     if (k2 >= 0)
                     {
                         int sau = System.Math.Max(k1, k2);
@@ -2262,6 +2280,11 @@ namespace Game5.God
                     dsDangPhat.RemoveAt(i);
                     continue;
                 }
+                if (d.pitchVe > 0 && ms >= d.pitchVe)
+                {
+                    d.src.pitch = 1f;
+                    d.pitchVe = 0;
+                }
                 long con = d.hetLuc - ms;
                 if (con <= 0)
                 {
@@ -2285,6 +2308,14 @@ namespace Game5.God
                     if (clip == null || ms - System.Math.Max(a.luc, a.dinhLuc) > 15000L)
                     {
                         dsAm.RemoveAt(i);
+                        continue;
+                    }
+                    if (a.khop)
+                    {
+                        if (xuLyKhop(a, clip, ms))
+                        {
+                            dsAm.RemoveAt(i);
+                        }
                         continue;
                     }
                     long batDau = a.dinhLuc > 0 ? a.dinhLuc - (long) (dinhAm(a.ten, clip) * 1000f) : a.luc;
@@ -2377,6 +2408,7 @@ namespace Game5.God
                     }
                 }
                 src.loop = false;
+                src.pitch = 1f;
                 src.clip = clip;
                 src.volume = am;
                 src.time = System.Math.Max(0f, System.Math.Min(lech, clip.length - 0.05f));
@@ -2400,42 +2432,99 @@ namespace Game5.God
             {
                 return false;
             }
-            batDauShinra(c);
-            return true;
-        }
-
-        /// <summary>Lúc vừa phát voice Shinra của từng người — gói gồng tới sau thì không phát lại.</summary>
-        private static readonly Dictionary<int, long> shinraLuc = new Dictionary<int, long>();
-
-        /// <summary>
-        /// Voice Shinra Tensei phát TỪ ĐẦU ngay lúc bắt đầu vận chiêu (của mình: lúc bấm chiêu, không
-        /// chờ máy chủ), bỏ tiếng nổ thứ hai trong voice.
-        /// </summary>
-        public static void batDauShinra(Char c)
-        {
-            if (c == null)
-            {
-                return;
-            }
             long bayGio = mSystem.currentTimeMillis();
             lock (shinraLuc)
             {
                 long truoc;
                 if (shinraLuc.TryGetValue(c.charID, out truoc) && bayGio - truoc < 3000L)
                 {
-                    return;
+                    return true;
                 }
                 shinraLuc[c.charID] = bayGio;
             }
             AmCho a = new AmCho();
             a.ten = "shinra";
             a.luc = bayGio;
+            a.dinhLuc = bayGio + (msGong > 0 ? msGong : 3000);
             a.am = AM_SHINRA;
             a.catNoSau = true;
+            a.khop = true;
             lock (dsAm)
             {
                 dsAm.Add(a);
             }
+            return true;
+        }
+
+        /// <summary>Lúc vừa hẹn voice Shinra của từng người — không hẹn trùng.</summary>
+        private static readonly Dictionary<int, long> shinraLuc = new Dictionary<int, long>();
+
+        /// <summary>
+        /// Voice Shinra Tensei: bỏ khoảng lặng đầu; phần voice trước tiếng nổ đầu vừa khít thời gian
+        /// gồng thì phát bình thường, dài hơn thì phát nhanh hơn chút (tối đa 1,3 lần) — tiếng nổ đầu
+        /// rơi ĐÚNG lúc nổ gây sát thương, tới đó trả tốc độ thường; tiếng nổ thứ hai bị cắt.
+        /// Trả true = đã xong (phát rồi hoặc bỏ).
+        /// </summary>
+        private static bool xuLyKhop(AmCho a, UnityEngine.AudioClip clip, long ms)
+        {
+            if (clip.loadState != UnityEngine.AudioDataLoadState.Loaded)
+            {
+                clip.LoadAudioData();
+                return ms > a.dinhLuc;
+            }
+            float no = dinhAm(a.ten, clip);
+            float dau;
+            if (!amDau.TryGetValue(a.ten, out dau))
+            {
+                dau = 0f;
+            }
+            float gong = (a.dinhLuc - a.luc) / 1000f;
+            float can = System.Math.Max(0.01f, no - dau);
+            float pitch = 1f;
+            float tu = dau;
+            long batDau;
+            if (can <= gong)
+            {
+                batDau = a.dinhLuc - (long) (can * 1000f);
+            }
+            else
+            {
+                pitch = System.Math.Min(AM_NHANH_TOI_DA, can / System.Math.Max(0.1f, gong));
+                tu = System.Math.Max(dau, no - gong * pitch);
+                batDau = a.luc;
+            }
+            if (ms < batDau)
+            {
+                return false;
+            }
+            float lech = tu + (ms - batDau) / 1000f * pitch;
+            if (!GameCanvas.isPlaySound || lech >= clip.length - 0.05f)
+            {
+                return true;
+            }
+            UnityEngine.AudioSource src = phatAm(clip, lech, a.am);
+            if (src == null)
+            {
+                return true;
+            }
+            src.pitch = pitch;
+            float cat;
+            if (!amCat.TryGetValue(a.ten, out cat))
+            {
+                cat = clip.length;
+            }
+            AmDangPhat d = new AmDangPhat();
+            d.src = src;
+            d.am = a.am;
+            // Toi tieng no dau thi tra toc do thuong.
+            d.pitchVe = lech < no ? ms + (long) ((no - lech) / pitch * 1000f) : 0;
+            long toiNo = lech < no ? (long) ((no - lech) / pitch * 1000f) : 0;
+            float tuNo = System.Math.Max(no, lech);
+            d.hetLuc = cat < clip.length - 0.05f && cat > tuNo
+                    ? ms + toiNo + (long) ((cat - tuNo) * 1000f) + 150L
+                    : ms + 30000L;
+            dsDangPhat.Add(d);
+            return true;
         }
 
         // ------------------------------------------------------------------
@@ -2751,10 +2840,10 @@ namespace Game5.God
         /// <summary>Cỡ riêng lớp khói mặt đất: to hơn lớp giữa thân 30%.</summary>
         private const float DAT_TO = TU_NO_TO * 1.3f;
 
-        private static readonly int TAM_TO = (int) (TU_NO_TAM * DAT_TO);
+        private static readonly int TAM_TO = (int) (TU_NO_TAM * DAT_TO) - 5;
 
         /// <summary>Lớp giữa thân thấp hơn giữa người chừng này điểm.</summary>
-        private const int GIUA_THAP = 8;
+        private const int GIUA_THAP = 13;
 
         /// <summary>
         /// Vẽ khung <paramref name="a"/> đục hoàn toàn rồi phủ <paramref name="b"/> lên với

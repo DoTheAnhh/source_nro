@@ -5327,11 +5327,6 @@ namespace Game1
     				{
     					SoundMn.gI().gong();
     				}
-    				else
-    				{
-    					// Skin Than La Thien Chinh: voice Shinra Tensei ngay luc bam chieu thay tieng gong.
-    					God.TrangPhucUI.batDauShinra(this);
-    				}
     				Service.gI().skill_not_focus(7);
     				useChargeSkill(true);
     			}
