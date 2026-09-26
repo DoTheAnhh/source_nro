@@ -198,6 +198,9 @@ public class MobEffectSkill {
     }
 
     public boolean isBinh;
+
+    /** Bị trói bởi skin Trói Hồn: không đổi hình thành bình. */
+    public boolean troiHon;
     private long lastTimeBinh;
     private int timeBinh;
     private Player playerUseMafuba;
@@ -206,6 +209,7 @@ public class MobEffectSkill {
 
     public void removeBinh() {
         this.isBinh = false;
+        this.troiHon = false;
         Service.gI().Send_Body_Mob(mob, 0, -1);
     }
 
@@ -216,7 +220,9 @@ public class MobEffectSkill {
         this.isBinh = true;
         this.typeBinh = typeBinh;
         this.playerUseMafuba = plAtt;
-        Service.gI().Send_Body_Mob(mob, 1, typeBinh == 0 ? 11175 : 11166);
+        if (!troiHon) {
+            Service.gI().Send_Body_Mob(mob, 1, typeBinh == 0 ? 11175 : 11166);
+        }
     }
 
 }

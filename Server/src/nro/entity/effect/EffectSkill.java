@@ -43,6 +43,9 @@ public class EffectSkill {
     
     //Bình
     public boolean isBinh;
+
+    /** Bị trói bởi người có skin Trói Hồn: vẫn khống chế như bình nhưng không đổi hình thành bình. */
+    public boolean binhTroiHon;
     public int typeBinh;
     public long lastTimeUpBinh;
     public int timeBinh;

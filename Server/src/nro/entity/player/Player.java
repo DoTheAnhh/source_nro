@@ -2140,7 +2140,7 @@ public class Player implements Runnable {
     }
 
                     public short getHead() {
-                        if (effectSkill != null && effectSkill.isBinh) {
+                        if (effectSkill != null && effectSkill.isBinh && !effectSkill.binhTroiHon) {
                             return idOutfitMafuba[effectSkill.typeBinh][0];
                         }
                         if (effectSkill != null && effectSkill.isStone) {
@@ -2216,7 +2216,7 @@ public class Player implements Runnable {
                     }
 
                     public short getBody() {
-                        if (effectSkill != null && effectSkill.isBinh) {
+                        if (effectSkill != null && effectSkill.isBinh && !effectSkill.binhTroiHon) {
                             return idOutfitMafuba[effectSkill.typeBinh][1];
                         }
                         if (effectSkill != null && effectSkill.isStone) {
@@ -2326,7 +2326,7 @@ public class Player implements Runnable {
                     }
 
                     public short getLeg() {
-                        if (effectSkill != null && effectSkill.isBinh) {
+                        if (effectSkill != null && effectSkill.isBinh && !effectSkill.binhTroiHon) {
                             return idOutfitMafuba[effectSkill.typeBinh][2];
                         }
                         if (effectSkill != null && effectSkill.isStone) {

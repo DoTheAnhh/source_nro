@@ -100,6 +100,7 @@ public final class TrangPhucDAO {
             gieoTsukuyomi();
             gieoSayCheese();
             gieoGatling();
+            gieoTroiHon();
             // Them du am vu no (khung thu ba cua day bay).
             ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_bay = ? WHERE skill_tpl = 10"
                     + " AND khung_bay = '25285,25286'", KHUNG_BAY_DBTT);
@@ -296,6 +297,37 @@ public final class TrangPhucDAO {
                 25581, "", bay.toString(), 25581);
         lucDoc = 0;
         Logger.success("Trang phục: gieo Gomu Gomu Gatling cho Liên hoàn chưởng\n");
+    }
+
+    /**
+     * Trói Hồn cho Ma phong ba (skill 26, Namếc): khung bay = [tử thần 16 | tay ma 12 | xích bay
+     * 16 | xích quấn 12 | ấn chú 12 | màn hình nạn nhân 9]. Icon 25582–25659.
+     */
+    private static void gieoTroiHon() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM trang_phuc_mau WHERE skill_tpl = 26 AND ten = ?", "Trói Hồn");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            if (rs != null) {
+                rs.dispose();
+            }
+        }
+        StringBuilder bay = new StringBuilder();
+        for (int id = 25582; id <= 25658; id++) {
+            if (id == 25598 || id == 25610 || id == 25626 || id == 25638 || id == 25650) {
+                bay.append(",-1");
+            }
+            bay.append(bay.length() > 0 ? "," : "").append(id);
+        }
+        ConnectDB.executeUpdate("INSERT INTO trang_phuc_mau (skill_tpl, ten, mo_ta, icon, khung_nap, khung_bay, thu_tu, icon_vp)"
+                + " VALUES (?,?,?,?,?,?,1,?)", 26, "Trói Hồn",
+                "Tử thần hiện sau lưng, phóng tay ma cùng xích hồn trói chặt kẻ địch trong vòng ấn chú.",
+                25659, "", bay.toString(), 25659);
+        lucDoc = 0;
+        Logger.success("Trang phục: gieo Trói Hồn cho Ma phong ba\n");
     }
 
     private static void gieoPhiLoiThan() throws Exception {

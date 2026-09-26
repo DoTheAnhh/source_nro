@@ -232,6 +232,7 @@ public class EffectSkillService {
     public void BinhDown(Player player) {
         if (player.effectSkill != null) {
             player.effectSkill.isBinh = false;
+            player.effectSkill.binhTroiHon = false;
             Service.gI().Send_Caitrang(player);
         }
     }
@@ -247,10 +248,21 @@ public class EffectSkillService {
     public void finishUseMafuba(Player player) {
         if (player.effectSkill != null && player.newSkill != null && player.location != null) {
             player.effectSkill.isUseMafuba = false;
+            // Skin Tro i Hon: khong bien thanh binh, ca khu ve xich quan; nan nhan thay man hinh tro i.
+            boolean troiHon = player.isPl() && nro.repository.dao.TrangPhucDAO.dangDung(player.id,
+                    nro.entity.skill.Skill.MA_PHONG_BA) != null;
             for (Player playerMap : player.newSkill.playersTaget) {
                 try {
                     if (player.location != null && playerMap.location != null) {
-                        EffectSkillService.gI().setIsBinh(player, playerMap, 11000 * (player.newSkill.typeItem == 0 ? 1 : 2));
+                        int thoiGian = 11000 * (player.newSkill.typeItem == 0 ? 1 : 2);
+                        if (playerMap.effectSkill != null) {
+                            playerMap.effectSkill.binhTroiHon = troiHon;
+                        }
+                        EffectSkillService.gI().setIsBinh(player, playerMap, thoiGian);
+                        if (troiHon) {
+                            nro.service.TrangPhucService.gI().troiHon(player, 1, playerMap.id, thoiGian);
+                            nro.service.TrangPhucService.gI().phuManHinh(player, playerMap, nro.entity.skill.Skill.MA_PHONG_BA, thoiGian);
+                        }
                         int x = player.location.x + ((player.newSkill.dir == -1) ? (-75) : 75);
                         int y = player.location.y;
                         if (player.zone != null && !MapService.gI().isMapBlackBallWar(player.zone.map.mapId)) {
@@ -262,7 +274,12 @@ public class EffectSkillService {
                 }
             }
             for (Mob mobMap : player.newSkill.mobsTaget) {
-                mobMap.effectSkill.setBinh(player, System.currentTimeMillis(), 11000 * (player.effectSkill.typeBinh == 0 ? 1 : 2));
+                int thoiGian = 11000 * (player.effectSkill.typeBinh == 0 ? 1 : 2);
+                mobMap.effectSkill.troiHon = troiHon;
+                mobMap.effectSkill.setBinh(player, System.currentTimeMillis(), thoiGian);
+                if (troiHon) {
+                    nro.service.TrangPhucService.gI().troiHon(player, 0, mobMap.id, thoiGian);
+                }
             }
         }
     }    

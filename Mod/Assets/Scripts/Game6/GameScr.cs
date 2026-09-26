@@ -5647,6 +5647,7 @@ namespace Game6
     		// Trang phuc Thoi mien (Tsukuyomi): ao canh phu kin man hinh, duoi thanh mau / o ky nang.
     		resetTranslate(g);
     		God.TrangPhucUI.veThoiMien(g);
+    		God.TrangPhucUI.veManTroi(g);
     		if (!isPaintOther && isPaintRada == 1 && !GameCanvas.panel.isShow)
     		{
     			paintInfoBar(g);

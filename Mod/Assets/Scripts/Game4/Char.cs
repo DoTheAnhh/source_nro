@@ -8329,8 +8329,12 @@ namespace Game4
     			}
     			break;
     		case 26:
-    			GameScr.addEffectEnd_Target(20, 0, typePaint, clone(), null, 3, timeGong, 0);
-    			GameScr.addEffectEnd_Target(23, 0, typePaint, clone(), null, 1, timeGong, 0);
+    			// Skin Troi Hon: tu than hien sau lung thay hieu ung gong goc.
+    			if (!God.TrangPhucUI.troiHonGong(this, timeGong))
+    			{
+    				GameScr.addEffectEnd_Target(20, 0, typePaint, clone(), null, 3, timeGong, 0);
+    				GameScr.addEffectEnd_Target(23, 0, typePaint, clone(), null, 1, timeGong, 0);
+    			}
     			break;
     		}
     		if (this.typeFrame == 1)
@@ -8423,8 +8427,12 @@ namespace Game4
     			}
     			if (this.idskillPaint == 26)
     			{
-    				GameScr.addEffectEnd_Target(20, 0, typePaint, this, null, 3, timeDame, 0);
-    				GameScr.addEffectEnd(26, typeItem, typePaint, targetDame.x, targetDame.y, 1, 0, timeDame, listObj);
+    				// Skin Troi Hon: phong tay ma + xich toi dich thay cai binh hut.
+    				if (!God.TrangPhucUI.troiHonBan(this, this.targetDame, timeDame, listObj))
+    				{
+    					GameScr.addEffectEnd_Target(20, 0, typePaint, this, null, 3, timeDame, 0);
+    					GameScr.addEffectEnd(26, typeItem, typePaint, targetDame.x, targetDame.y, 1, 0, timeDame, listObj);
+    				}
     			}
     		}
     	}

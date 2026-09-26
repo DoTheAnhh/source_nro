@@ -254,6 +254,38 @@ public final class TrangPhucService {
         }
     }
 
+    /**
+     * Skin Trói Hồn: mục tiêu ({@code loai} 1 người / 0 quái, {@code id}) bị trói {@code ms} mili
+     * giây — cả khu vẽ xích quấn quanh nó (thay cái bình). Gói: byte 6, byte loai, int id, int ms,
+     * int tuId, byte n, short[n] (khung skin của người dùng chiêu).
+     */
+    public void troiHon(Player tu, int loai, long id, int ms) {
+        if (tu == null || tu.zone == null) {
+            return;
+        }
+        Message msg = null;
+        try {
+            TrangPhucDAO.Mau m = TrangPhucDAO.dangDung(tu.id, nro.entity.skill.Skill.MA_PHONG_BA);
+            if (m == null) {
+                return;
+            }
+            msg = new Message(GOI);
+            msg.writer().writeByte(6);
+            msg.writer().writeByte(loai);
+            msg.writer().writeInt((int) id);
+            msg.writer().writeInt(ms);
+            msg.writer().writeInt((int) tu.id);
+            ghiKhung(msg, m.khungBay);
+            Service.gI().sendMessAllPlayerInMap(tu, msg);
+        } catch (Exception ex) {
+            Logger.logException(TrangPhucService.class, ex, "Không báo được trói hồn");
+        } finally {
+            if (msg != null) {
+                msg.cleanup();
+            }
+        }
+    }
+
     /** Hết thôi miên (tỉnh sớm hay hết giờ): tắt ảo cảnh. Gói: byte 4. */
     public void hetThoiMien(Player nan) {
         if (nan == null || !nan.isPl()) {

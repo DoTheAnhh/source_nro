@@ -142,7 +142,12 @@ namespace Game1.God
                     int tpl3 = msg.reader().readShort();
                     int ms = msg.reader().readInt();
                     short[] khung = docKhung(msg);
-                    if (tpl3 == 6)
+                    if (tpl3 == 26)
+                    {
+                        // Trui Hon: man hinh bi trui (xich quan), trong suot.
+                        batDauManTroi(khung, ms);
+                    }
+                    else if (tpl3 == 6)
                     {
                         // Say Cheese: polaroid chup chinh minh phu man hinh.
                         batDauPolaroid(khung, ms);
@@ -195,6 +200,15 @@ namespace Game1.God
                             }
                         }
                     }
+                }
+                else if (loai == 6)
+                {
+                    // Skin Trui Hon: muc tieu bi trui — ca khu ve xich quan thay cai binh.
+                    int loai6 = msg.reader().readByte();
+                    int id6 = msg.reader().readInt();
+                    int ms6 = msg.reader().readInt();
+                    int tu6 = msg.reader().readInt();
+                    nhanTroi(loai6, id6, ms6, tu6, docKhung(msg));
                 }
                 else if (loai == 4)
                 {
@@ -1357,6 +1371,7 @@ namespace Game1.God
             veKiemBay(g);
             veMayAnh(g);
             veGatling(g);
+            veTroiHon(g);
             veMotNguoi(g, Char.myCharz());
             for (int i = 0; i < GameScr.vCharInMap.size(); i++)
             {
@@ -3373,6 +3388,493 @@ namespace Game1.God
             UnityEngine.AudioClip c = UnityEngine.AudioClip.Create("bup", n, 1, SR, false);
             c.SetData(d, 0);
             return c;
+        }
+
+        // ------------------------------------------------------------------
+        //  Ma phong ba (Namếc) → Trói Hồn: gồng thì tử thần hiện sau lưng; phóng thì
+        //  tử thần giơ tay, từ tay người dùng chiêu phóng CẢ tay ma LẪN xích hồn tới
+        //  từng mục tiêu, dưới chân địch mở vòng ấn chú, xích quấn quanh người. Hết
+        //  lúc hút (máy chủ báo byte 6) thì thay cái bình bằng xích quấn tới hết giờ
+        //  bị trói — cả khu cùng thấy. Nạn nhân thấy màn hình bị trói (byte 3, tpl 26).
+        //  Khung: [tử thần 16 | tay ma 12 | xích bay 16 | xích quấn 12 | ấn chú 12 | màn hình 9].
+        // ------------------------------------------------------------------
+        private const long TH_TU = 75L;
+        private const long TH_TAY = 55L;
+        private const long TH_LAP = 110L;
+        private const long TH_THU = 60L;
+        private const long TH_QUAN = 90L;
+        private const long TH_AN = 85L;
+
+        /// <summary>Bề dài ảnh tay ma / xích bay (đơn vị) — phóng cho vừa chạm địch.</summary>
+        private const float TH_DAI_TAY = 150f;
+
+        /// <summary>Tâm vòng dưới chân lệch khỏi tâm ảnh (đơn vị): xích quấn 90×90, ấn chú 100×100.</summary>
+        private const float TH_LECH_QUAN = 0.26f * 90f;
+        private const float TH_LECH_AN = 0.21f * 100f;
+
+        public class TroiHon
+        {
+            public Char c;
+            public short[] bay;
+            public bool dangGong;
+            public long batDau;
+            public long het;
+            public int tx;
+            public int ty;
+            public List<IMapObject> dich = new List<IMapObject>();
+        }
+
+        /// <summary>Một mục tiêu đang bị trói (thay cái bình): loai 1 người / 0 quái.</summary>
+        public class BiTroi
+        {
+            public int loai;
+            public int id;
+            public short[] bay;
+            public long batDau;
+            public long het;
+        }
+
+        private static readonly List<TroiHon> dsTroiHon = new List<TroiHon>();
+        private static readonly List<BiTroi> dsBiTroi = new List<BiTroi>();
+
+        private static TroiHon timTroiHon(Char c)
+        {
+            foreach (TroiHon t in dsTroiHon)
+            {
+                if (t.c == c)
+                {
+                    return t;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>Bắt đầu gồng Ma phong ba: có skin thì tử thần hiện sau lưng (trả true = bỏ hiệu ứng gốc).</summary>
+        public static bool troiHonGong(Char c, int timeGong)
+        {
+            if (c == null || c.tpSkill != 26 || !conHieuLuc(c) || tach(c.tpBay, 5).Length == 0)
+            {
+                return false;
+            }
+            lock (dsTroiHon)
+            {
+                TroiHon t = timTroiHon(c);
+                if (t == null)
+                {
+                    t = new TroiHon();
+                    t.c = c;
+                    dsTroiHon.Add(t);
+                }
+                t.bay = c.tpBay;
+                t.dangGong = true;
+                t.batDau = mSystem.currentTimeMillis();
+                t.het = t.batDau + System.Math.Max(500, timeGong) + 4000L;
+                t.dich.Clear();
+            }
+            taiTruoc(c.tpBay);
+            return true;
+        }
+
+        /// <summary>Phóng Ma phong ba: có skin thì phóng tay ma + xích tới các mục tiêu (bỏ cái bình hút).</summary>
+        public static bool troiHonBan(Char c, Point dich, int timeDame, Point[] ds)
+        {
+            if (c == null || c.tpSkill != 26 || !conHieuLuc(c) || tach(c.tpBay, 5).Length == 0)
+            {
+                return false;
+            }
+            lock (dsTroiHon)
+            {
+                TroiHon t = timTroiHon(c);
+                if (t == null)
+                {
+                    t = new TroiHon();
+                    t.c = c;
+                    t.bay = c.tpBay;
+                    dsTroiHon.Add(t);
+                }
+                t.dangGong = false;
+                t.batDau = mSystem.currentTimeMillis();
+                // May chu hut sau 4 giay ke tu luc phong; giu xich toi luc do.
+                t.het = t.batDau + System.Math.Max(3600, System.Math.Min(4200, timeDame));
+                t.tx = dich != null ? dich.x : c.cx + c.cdir * 120;
+                t.ty = dich != null ? dich.y : c.cy;
+                t.dich.Clear();
+                if (ds != null)
+                {
+                    foreach (Point p in ds)
+                    {
+                        if (p == null || t.dich.Count >= 8)
+                        {
+                            continue;
+                        }
+                        IMapObject o = p.type == 0 ? (IMapObject) GameScr.findMobInMap(p.id)
+                                : (p.id == Char.myCharz().charID ? Char.myCharz() : GameScr.findCharInMap(p.id));
+                        if (o != null)
+                        {
+                            t.dich.Add(o);
+                        }
+                    }
+                }
+            }
+            taiTruoc(c.tpBay);
+            return true;
+        }
+
+        /// <summary>Máy chủ báo mục tiêu bị trói (byte 6): xích quấn quanh nó tới hết giờ, thay cái bình.</summary>
+        private static void nhanTroi(int loai, int id, int ms, int tuId, short[] bay)
+        {
+            if (bay.Length == 0)
+            {
+                return;
+            }
+            taiTruoc(bay);
+            long bayGio = mSystem.currentTimeMillis();
+            lock (dsBiTroi)
+            {
+                BiTroi b = null;
+                foreach (BiTroi x in dsBiTroi)
+                {
+                    if (x.loai == loai && x.id == id)
+                    {
+                        b = x;
+                    }
+                }
+                if (b == null)
+                {
+                    b = new BiTroi();
+                    b.loai = loai;
+                    b.id = id;
+                    b.batDau = bayGio;
+                    dsBiTroi.Add(b);
+                }
+                b.bay = bay;
+                b.het = bayGio + ms;
+            }
+            // Luot phong da xong: tay ma + xich thu ve.
+            Char chu = Char.myCharz().charID == tuId ? Char.myCharz() : GameScr.findCharInMap(tuId);
+            if (chu != null)
+            {
+                lock (dsTroiHon)
+                {
+                    TroiHon t = timTroiHon(chu);
+                    if (t != null && !t.dangGong && bayGio < t.het)
+                    {
+                        t.het = bayGio;
+                    }
+                }
+            }
+        }
+
+        private static IMapObject timDich(int loai, int id)
+        {
+            if (loai == 0)
+            {
+                return GameScr.findMobInMap(id);
+            }
+            return id == Char.myCharz().charID ? Char.myCharz() : GameScr.findCharInMap(id);
+        }
+
+        /// <summary>Vẽ ảnh hoà hai khung, tâm ở (x, y), tỉ lệ tuỳ chọn.</summary>
+        private static void veHoaTamTL(mGraphics g, short[] k, int tu, int den, long t, long ms, bool lap,
+                int x, int y, float tiLe, float mo)
+        {
+            if (k == null || den > k.Length || den <= tu || mo <= 0.01f)
+            {
+                return;
+            }
+            int a;
+            int b;
+            float h;
+            khungHoa(tu, den, t, ms, lap, out a, out b, out h);
+            SmallImage.veIconXoay(g, k[a], x, y, tiLe, 0f, mo * (b != a ? System.Math.Min(1f, 2f * (1f - h)) : 1f));
+            if (b != a && h > 0.01f)
+            {
+                SmallImage.veIconXoay(g, k[b], x, y, tiLe, 0f, mo * System.Math.Min(1f, 2f * h));
+            }
+        }
+
+        /// <summary>
+        /// Vòng ấn chú dưới chân + xích quấn quanh người tại chân (fx, fy). t tính từ lúc
+        /// xích chạm; tTan &gt;= 0 là đang tan (ms từ lúc tan).
+        /// </summary>
+        private static void veXichQuan(mGraphics g, short[] q, short[] a, int fx, int fy, float tiLe, long t, long tTan)
+        {
+            if (tTan >= 0)
+            {
+                float mo = 1f - (float) tTan / (TH_QUAN * 4);
+                if (a.Length >= 12)
+                {
+                    veHoaTamTL(g, a, 10, 12, tTan, TH_AN, false, fx, (int) (fy - TH_LECH_AN * tiLe), tiLe, mo * 0.85f);
+                }
+                if (q.Length >= 12)
+                {
+                    veHoaTamTL(g, q, 9, 12, tTan, TH_QUAN, false, fx, (int) (fy - TH_LECH_QUAN * tiLe), tiLe, mo);
+                }
+                return;
+            }
+            if (a.Length >= 12)
+            {
+                long tA = TH_AN * 4;
+                if (t < tA)
+                {
+                    veHoaTamTL(g, a, 0, 4, t, TH_AN, false, fx, (int) (fy - TH_LECH_AN * tiLe), tiLe, 0.9f);
+                }
+                else
+                {
+                    veHoaTamTL(g, a, 4, 10, t - tA, TH_AN, true, fx, (int) (fy - TH_LECH_AN * tiLe), tiLe, 0.85f);
+                }
+            }
+            if (q.Length >= 9)
+            {
+                long tQ = TH_QUAN * 3;
+                if (t < tQ)
+                {
+                    veHoaTamTL(g, q, 0, 3, t, TH_QUAN, false, fx, (int) (fy - TH_LECH_QUAN * tiLe), tiLe, 1f);
+                }
+                else
+                {
+                    veHoaTamTL(g, q, 3, 9, t - tQ, TH_QUAN, true, fx, (int) (fy - TH_LECH_QUAN * tiLe), tiLe, 1f);
+                }
+            }
+        }
+
+        private static void veTroiHon(mGraphics g)
+        {
+            if (dsTroiHon.Count == 0 && dsBiTroi.Count == 0)
+            {
+                return;
+            }
+            long ms = mSystem.currentTimeMillis();
+            lock (dsBiTroi)
+            {
+                for (int i = dsBiTroi.Count - 1; i >= 0; i--)
+                {
+                    BiTroi b = dsBiTroi[i];
+                    long tTan = ms - b.het;
+                    if (tTan > TH_QUAN * 4)
+                    {
+                        dsBiTroi.RemoveAt(i);
+                        continue;
+                    }
+                    IMapObject o = timDich(b.loai, b.id);
+                    if (o == null)
+                    {
+                        continue;
+                    }
+                    // Da quan san tu luc phong: bo qua doan mo dau, vao thang vong lap.
+                    veXichQuan(g, tach(b.bay, 3), tach(b.bay, 4), o.getX(), o.getY(), 1f,
+                            ms - b.batDau + TH_QUAN * 3 + TH_AN * 4, tTan >= 0 ? tTan : -1);
+                }
+            }
+            lock (dsTroiHon)
+            {
+                for (int i = dsTroiHon.Count - 1; i >= 0; i--)
+                {
+                    TroiHon th = dsTroiHon[i];
+                    Char c = th.c;
+                    long t = ms - th.batDau;
+                    short[] tu = tach(th.bay, 0);
+                    short[] tay = tach(th.bay, 1);
+                    short[] xich = tach(th.bay, 2);
+                    // Tu than lo lung sau lung, nhinh len tren dau.
+                    int gx = c.cx - c.cdir * 26;
+                    int gy = c.cy - c.ch / 2 - 22;
+                    if (th.dangGong)
+                    {
+                        if (ms > th.het || tu.Length < 11)
+                        {
+                            dsTroiHon.RemoveAt(i);
+                            continue;
+                        }
+                        float moG = System.Math.Min(1f, t / 250f) * 0.9f;
+                        long tHien = TH_TU * 8;
+                        if (t < tHien)
+                        {
+                            veHoaTamTL(g, tu, 0, 8, t, TH_TU, false, gx, gy, 1f, moG);
+                        }
+                        else
+                        {
+                            veHoaTamTL(g, tu, 8, 11, t - tHien, TH_LAP, true, gx, gy, 1f, moG);
+                        }
+                        continue;
+                    }
+                    long D = th.het - th.batDau;
+                    long tOut = TH_TAY * 6;
+                    long tRet = TH_THU * 7;
+                    if (t >= D + tRet)
+                    {
+                        dsTroiHon.RemoveAt(i);
+                        continue;
+                    }
+                    // Tu than: gio tay khi phong, tan dan luc thu.
+                    if (tu.Length >= 16)
+                    {
+                        float moT = 0.9f * (t < D ? 1f : 1f - (float) (t - D) / tRet);
+                        if (t < TH_TU * 3)
+                        {
+                            veHoaTamTL(g, tu, 10, 13, t, TH_TU, false, gx, gy, 1f, moT);
+                        }
+                        else if (t < D)
+                        {
+                            veHoaTamTL(g, tu, 12, 14, t - TH_TU * 3, TH_LAP, true, gx, gy, 1f, moT);
+                        }
+                        else
+                        {
+                            veHoaTamTL(g, tu, 13, 16, t - D, TH_THU * 2, false, gx, gy, 1f, moT);
+                        }
+                    }
+                    // Tu tay nguoi dung chieu phong ca tay ma lan xich toi tung muc tieu.
+                    float hx = c.cx + c.cdir * 6;
+                    float hy = c.cy - c.ch / 2 + 2;
+                    List<int[]> dichs = new List<int[]>();
+                    foreach (IMapObject o in th.dich)
+                    {
+                        dichs.Add(new int[] { o.getX(), o.getY(), o.getH() });
+                    }
+                    if (dichs.Count == 0)
+                    {
+                        dichs.Add(new int[] { th.tx, th.ty, 40 });
+                    }
+                    foreach (int[] d in dichs)
+                    {
+                        float ex = d[0];
+                        float ey = d[1] - d[2] / 2f;
+                        float dx = ex - hx;
+                        float dy = ey - hy;
+                        float goc = (float) (System.Math.Atan2(dy, dx) * 57.29578);
+                        float dai = (float) System.Math.Sqrt(dx * dx + dy * dy);
+                        float tiLe = System.Math.Max(0.45f, System.Math.Min(2.2f, dai / TH_DAI_TAY));
+                        // Xich lech xuong mot chut duoi tay ma de thay ro ca hai.
+                        float xy = hy + 5;
+                        float gocX = (float) (System.Math.Atan2(ey + 4 - xy, dx) * 57.29578);
+                        float daiX = (float) System.Math.Sqrt(dx * dx + (ey + 4 - xy) * (ey + 4 - xy));
+                        float tlX = System.Math.Max(0.45f, System.Math.Min(2.2f, daiX / TH_DAI_TAY));
+                        if (t < tOut)
+                        {
+                            // Phong ra: anh keo dai dan tu 0 toi du dai.
+                            float k = System.Math.Max(0.15f, (float) t / tOut);
+                            if (xich.Length >= 5)
+                            {
+                                veHoaNeo(g, xich, 0, 5, t, TH_TAY, false, hx, xy, gocX, tlX * k, 1f);
+                            }
+                            if (tay.Length >= 6)
+                            {
+                                veHoaNeo(g, tay, 0, 6, t, TH_TAY, false, hx, hy, goc, tiLe * k, 1f);
+                            }
+                        }
+                        else if (t < D)
+                        {
+                            long tb = t - tOut;
+                            if (xich.Length >= 9)
+                            {
+                                veHoaNeo(g, xich, 5, 9, tb, TH_LAP, true, hx, xy, gocX, tlX, 1f);
+                            }
+                            if (tay.Length >= 9)
+                            {
+                                veHoaNeo(g, tay, 6, 9, tb, TH_LAP, true, hx, hy, goc, tiLe, 1f);
+                            }
+                            veXichQuan(g, tach(th.bay, 3), tach(th.bay, 4), d[0], d[1], 1f, tb, -1);
+                        }
+                        else
+                        {
+                            // Thu ve: tay ma + xich rut lai; xich quan giu nguyen (goi byte 6 ve tiep).
+                            long tr = t - D;
+                            float k = System.Math.Max(0.1f, 1f - (float) tr / tRet);
+                            if (xich.Length >= 16)
+                            {
+                                veHoaNeo(g, xich, 9, 16, tr, TH_THU, false, hx, xy, gocX, tlX * k, k);
+                            }
+                            if (tay.Length >= 12)
+                            {
+                                veHoaNeo(g, tay, 9, 12, tr, TH_THU * 2, false, hx, hy, goc, tiLe * k, k);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Nan nhan: man hinh bi trui (xich quan khung man hinh), trong suot de van thay tran dau.
+        private static short[] mtKhung;
+        private static long mtBatDau;
+        private static long mtHet;
+        private const long MT_KHUNG = 95L;
+        private const long MT_TAT = 400L;
+        private const float MT_MO = 0.6f;
+
+        private static void batDauManTroi(short[] bay, int ms)
+        {
+            short[] m = tach(bay, 5);
+            if (m.Length == 0)
+            {
+                return;
+            }
+            taiTruoc(m);
+            long bayGio = mSystem.currentTimeMillis();
+            if (mtKhung == null || bayGio >= mtHet)
+            {
+                mtBatDau = bayGio;
+            }
+            mtKhung = m;
+            mtHet = bayGio + ms;
+        }
+
+        /// <summary>Vẽ màn hình bị trói của nạn nhân (gọi từ GameScr.paint, toạ độ màn hình).</summary>
+        public static void veManTroi(mGraphics g)
+        {
+            short[] k = mtKhung;
+            if (k == null || k.Length == 0)
+            {
+                return;
+            }
+            long ms = mSystem.currentTimeMillis();
+            if (ms >= mtHet + MT_TAT)
+            {
+                mtKhung = null;
+                return;
+            }
+            long t = ms - mtBatDau;
+            int w = GameCanvas.w;
+            int h = GameCanvas.h;
+            short id;
+            int nMo = System.Math.Min(6, k.Length);
+            if (ms > mtHet && k.Length >= 9)
+            {
+                id = k[(int) System.Math.Min(8, 7 + (ms - mtHet) / (MT_TAT / 2))];
+            }
+            else if (t < MT_KHUNG * nMo)
+            {
+                id = k[(int) (t / MT_KHUNG)];
+            }
+            else
+            {
+                // Lap qua lai 4..6.
+                int lo = System.Math.Min(4, k.Length - 1);
+                int hi = System.Math.Min(6, k.Length - 1);
+                int n = hi - lo + 1;
+                int chuKy = System.Math.Max(1, 2 * (n - 1));
+                int p = (int) (((t - MT_KHUNG * nMo) / (MT_KHUNG * 2)) % chuKy);
+                id = k[lo + (p < n ? p : chuKy - p)];
+            }
+            float mo = MT_MO * System.Math.Min(1f, t / 200f);
+            if (ms > mtHet)
+            {
+                mo *= 1f - (float) (ms - mtHet) / MT_TAT;
+            }
+            if (mo <= 0.01f)
+            {
+                return;
+            }
+            var s = (SmallImage.imgNew != null && id >= 0 && id < SmallImage.imgNew.Length) ? SmallImage.imgNew[id] : null;
+            if (s == null || s.img == null || mGraphics.getImageWidth(s.img) <= 1)
+            {
+                SmallImage.veIconXoay(g, id, w / 2, h / 2, 1f, 0f, mo);
+                return;
+            }
+            float iw = mGraphics.getImageWidth(s.img);
+            float ih = mGraphics.getImageHeight(s.img);
+            float tiLe = System.Math.Max(w / iw, h / ih) * 1.02f;
+            SmallImage.veIconXoay(g, id, w / 2, h / 2, tiLe, 0f, mo);
         }
 
         // ------------------------------------------------------------------
