@@ -88,6 +88,9 @@ public final class TrangPhucDAO {
                     + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
             ConnectDB.executeUpdate("ALTER TABLE trang_phuc_mau ADD COLUMN IF NOT EXISTS item_id INT(11) NOT NULL DEFAULT -1");
             ConnectDB.executeUpdate("ALTER TABLE trang_phuc_mau ADD COLUMN IF NOT EXISTS icon_vp INT(11) NOT NULL DEFAULT -1");
+            // Van Kiem Quy Tong 50 khung: day khung dai hon 255 ky tu.
+            ConnectDB.executeUpdate("ALTER TABLE trang_phuc_mau MODIFY khung_nap VARCHAR(1024) NOT NULL DEFAULT ''");
+            ConnectDB.executeUpdate("ALTER TABLE trang_phuc_mau MODIFY khung_bay VARCHAR(1024) NOT NULL DEFAULT ''");
             daTao = true;
             gieoNeuTrong();
             gieoThanLaThienChinh();
@@ -151,11 +154,29 @@ public final class TrangPhucDAO {
      * khung bay = [xoáy kiếm 12 khung (6 khung tụ kiếm + 6 khung xoáy) | dòng
      * kiếm tấn công 10 khung (hướng phải) | thu kiếm 2 khung]. Icon 25374–25398.
      */
+    /**
+     * Khung Vạn Kiếm Quy Tông, bảy đoạn: [xoáy bên chủ 12 | bay tới 9 | chụm vào địch 8 |
+     * quấn quanh địch 9 | kết thúc ở địch 9 | bay về 3 | chết 2].
+     */
+    private static final String VAN_KIEM_KHUNG = "25399,25400,25401,25402,25403,25404,25405,25406,25407,25408,25409,25410,-1,"
+            + "25411,25412,25413,25414,25415,25416,25417,25418,25419,-1,"
+            + "25420,25421,25422,25423,25424,25425,25426,25427,-1,"
+            + "25428,25429,25430,25431,25432,25433,25434,25435,25436,-1,"
+            + "25437,25438,25439,25440,25441,25442,25443,25444,25445,-1,"
+            + "25446,25447,25448,-1,25424,25426";
+
     private static void gieoVanKiemQuyTong() throws Exception {
         CrisResultSet rs = null;
         try {
             rs = ConnectDB.executeQuery("SELECT id FROM trang_phuc_mau WHERE skill_tpl = 12 AND ten = ?", "Vạn Kiếm Quy Tông");
             if (rs.next()) {
+                // Bo khung v2 (50 khung, 7 doan) — thay bo cu mot lan.
+                int n = ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_bay = ?, icon = ? WHERE skill_tpl = 12 AND ten = ?"
+                        + " AND khung_bay NOT LIKE '25399,%'", VAN_KIEM_KHUNG, 25406, "Vạn Kiếm Quy Tông");
+                if (n > 0) {
+                    lucDoc = 0;
+                    Logger.success("Trang phục: Vạn Kiếm Quy Tông dùng bộ khung mới (50 khung)\n");
+                }
                 return;
             }
         } finally {
@@ -166,8 +187,7 @@ public final class TrangPhucDAO {
         ConnectDB.executeUpdate("INSERT INTO trang_phuc_mau (skill_tpl, ten, mo_ta, icon, khung_nap, khung_bay, thu_tu, icon_vp)"
                 + " VALUES (?,?,?,?,?,?,1,?)", 12, "Vạn Kiếm Quy Tông",
                 "Vạn thanh kiếm xoáy quanh chủ nhân; xuất chiêu là hoá thành dòng kiếm lao thẳng vào kẻ địch.",
-                25382, "", "25374,25375,25376,25377,25378,25379,25380,25381,25382,25383,25384,25385,-1,"
-                + "25386,25387,25388,25389,25390,25391,25392,25393,25394,25395,-1,25396,25397", 25398);
+                25406, "", VAN_KIEM_KHUNG, 25398);
         lucDoc = 0;
         Logger.success("Trang phục: gieo Vạn Kiếm Quy Tông cho Đẻ trứng\n");
     }
