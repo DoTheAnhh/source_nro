@@ -3063,6 +3063,9 @@ namespace Game2.God
         /// <summary>Bề dài ảnh mưa đấm (đơn vị) — để phóng cho nắm đấm vừa chạm địch.</summary>
         private const float GA_DAI_ANH = 150f;
 
+        /// <summary>Khung sau lúc gồng (tay vươn, mưa đấm, va chạm) to hơn khung gồng.</summary>
+        private const float GA_TO = 1.35f;
+
         public class Gatling
         {
             public Char c;
@@ -3241,10 +3244,10 @@ namespace Game2.God
             int b;
             float h;
             khungHoa(tu, den, t, ms, lap, out a, out b, out h);
-            SmallImage.veIconXoay(g, k[a], x, y, 1f, 0f, mo * (b != a ? System.Math.Min(1f, 2f * (1f - h)) : 1f));
+            SmallImage.veIconXoay(g, k[a], x, y, GA_TO, 0f, mo * (b != a ? System.Math.Min(1f, 2f * (1f - h)) : 1f));
             if (b != a && h > 0.01f)
             {
-                SmallImage.veIconXoay(g, k[b], x, y, 1f, 0f, mo * System.Math.Min(1f, 2f * h));
+                SmallImage.veIconXoay(g, k[b], x, y, GA_TO, 0f, mo * System.Math.Min(1f, 2f * h));
             }
         }
 
@@ -3264,7 +3267,7 @@ namespace Game2.God
                     long t = ms - ga.batDau;
                     // Goc tay sat vao nguoi (ong tay ao de len tay nhan vat, khong ho khoang trong).
                     float hx = c.cx + c.cdir * 2;
-                    float hy = c.cy - c.ch / 2 + 2;
+                    float hy = c.cy - c.ch / 2 + 5;
                     if (ga.dangGong)
                     {
                         if (ms > ga.het || ga.tay.Length == 0)
@@ -3291,11 +3294,11 @@ namespace Game2.God
                     float dy = ey - hy;
                     float goc = (float) (System.Math.Atan2(dy, dx) * 57.29578);
                     float dai = (float) System.Math.Sqrt(dx * dx + dy * dy);
-                    float tiLe = System.Math.Max(0.55f, System.Math.Min(1.6f, dai / GA_DAI_ANH * 1.05f));
+                    float tiLe = System.Math.Max(0.55f * GA_TO, System.Math.Min(1.6f * GA_TO, dai / GA_DAI_ANH * 1.05f));
                     if (t < tOut)
                     {
                         // Tay vuon ra.
-                        veHoaNeo(g, ga.tay, 1, System.Math.Min(4, ga.tay.Length), t, GA_TAY, false, hx, hy, goc, 1f, 1f);
+                        veHoaNeo(g, ga.tay, 1, System.Math.Min(4, ga.tay.Length), t, GA_TAY, false, hx, hy, goc, GA_TO, 1f);
                     }
                     else if (t < D)
                     {
