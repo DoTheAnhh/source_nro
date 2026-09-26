@@ -62,7 +62,7 @@ public class SkillService {
      * báo gồng 2000ms nhưng cho nổ ở 1500ms, nên quả nổ rơi vào lúc hiệu ứng
      * còn đang chạy dở và nhìn như không có aura gồng.</p>
      */
-    private static final int GIAY_GONG_TU_SAT = 3000;
+    private static final int GIAY_GONG_TU_SAT = 3300;
 
     /**
      * Hẹn giờ cho quả nổ tự sát.

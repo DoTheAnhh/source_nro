@@ -2445,7 +2445,7 @@ namespace Game6.God
             AmCho a = new AmCho();
             a.ten = "shinra";
             a.luc = bayGio;
-            a.dinhLuc = bayGio + (msGong > 0 ? msGong : 3000);
+            a.dinhLuc = bayGio + (msGong > 0 ? msGong : 3300);
             a.am = AM_SHINRA;
             a.catNoSau = true;
             a.khop = true;
@@ -2880,7 +2880,7 @@ namespace Game6.God
         /// <summary>Thời gian gồng (ms): của mình / người khác đều do gói gồng gửi về.</summary>
         private static long thoiGianGong(Char c)
         {
-            return (c.seconds > 0 && c.seconds < 50000) ? c.seconds : 3000L;
+            return (c.seconds > 0 && c.seconds < 50000) ? c.seconds : 3300L;
         }
 
         /// <summary>
