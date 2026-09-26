@@ -3216,7 +3216,8 @@ namespace Game2.God
                     Gatling ga = dsGatling[i];
                     Char c = ga.c;
                     long t = ms - ga.batDau;
-                    float hx = c.cx + c.cdir * 10;
+                    // Goc tay sat vao nguoi (ong tay ao de len tay nhan vat, khong ho khoang trong).
+                    float hx = c.cx + c.cdir * 2;
                     float hy = c.cy - c.ch / 2 + 2;
                     if (ga.dangGong)
                     {
