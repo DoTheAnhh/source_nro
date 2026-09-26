@@ -2033,7 +2033,7 @@ public class ShopService {
      */
     /**
      * Sách tuyệt kỹ (chiêu thứ 9): học thẳng cấp 1 — cần đúng hành tinh, đủ sức mạnh của
-     * sách và đủ tiềm năng bằng yêu cầu cấp 1 của chiêu; tiềm năng bị trừ.
+     * sách và 3000 Thỏi Vàng hoặc 9999 Bí kiếp tuyệt kỹ (không tốn tiềm năng).
      */
     private void hocTuyetKy(Player pl, ItemShop is, byte chieu) {
         if (is.temp.gender != pl.gender && is.temp.gender <= 2) {
@@ -2049,20 +2049,69 @@ public class ShopService {
             Service.gI().sendThongBao(pl, "Sức mạnh của bạn không đủ");
             return;
         }
-        long can = 0;
+        // Gia: chon 3000 Thoi Vang HOAC 9999 Bi kiep tuyet ky (khong ton tiem nang).
         nro.entity.template.SkillTemplate tpl = SkillUtil.findSkillTemplate(chieu);
-        if (tpl != null && tpl.skillss != null && !tpl.skillss.isEmpty()) {
-            can = tpl.skillss.get(0).powRequire;
-        }
-        if (pl.nPoint.tiemNang < can) {
-            Service.gI().sendThongBao(pl, "Cần " + Util.formatNumber(can, FormatStyle.VIETNAMESE)
-                    + " điểm tiềm năng để học tuyệt kỹ này");
+        String ten = tpl != null ? tpl.name : is.temp.name;
+        tuyetKyCho.put(pl.id, chieu);
+        NpcService.gI().createMenuConMeo(pl, MENU_TRA_TUYET_KY, NpcService.gI().getAvatar(13 + pl.gender),
+                "Học tuyệt kỹ " + ten + " cấp 1.\nCon muốn trả bằng gì?\n(Đang có " + demTrongTui(pl, THOI_VANG)
+                + " Thỏi Vàng, " + demTrongTui(pl, BI_KIEP) + " Bí kiếp tuyệt kỹ)",
+                "3000\nThỏi Vàng", "9999\nBí kiếp", "Thôi");
+    }
+
+    /** Menu chọn cách trả khi học sách tuyệt kỹ (xử lý ở NpcFactory, menu con mèo). */
+    public static final int MENU_TRA_TUYET_KY = 21229;
+
+    private static final short THOI_VANG = 457;
+    private static final short BI_KIEP = 1229;
+
+    /** Người chơi → tuyệt kỹ đang chờ chọn cách trả. */
+    private static final java.util.Map<Long, Byte> tuyetKyCho = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** Chọn cách trả: 0 = 3000 Thỏi Vàng, 1 = 9999 Bí kiếp tuyệt kỹ, khác = thôi. */
+    public void hocTuyetKyTra(Player pl, int select) {
+        Byte chieu = tuyetKyCho.remove(pl.id);
+        if (chieu == null || (select != 0 && select != 1)) {
             return;
         }
-        pl.nPoint.subTiemNang(can);
+        nro.entity.skill.Skill cu = SkillUtil.getSkillbyId(pl, chieu);
+        if (cu != null && cu.point > 0) {
+            Service.gI().sendThongBao(pl, "Bạn đã học tuyệt kỹ này rồi");
+            return;
+        }
+        short tra = select == 0 ? THOI_VANG : BI_KIEP;
+        int gia = select == 0 ? 3000 : 9999;
+        long co = demTrongTui(pl, tra);
+        if (co < gia) {
+            Service.gI().sendThongBao(pl, "Cần " + gia + (select == 0 ? " Thỏi Vàng" : " Bí kiếp tuyệt kỹ")
+                    + " (đang có " + co + ").");
+            return;
+        }
+        int con = gia;
+        for (Item it : new ArrayList<>(pl.inventory.itemsBag)) {
+            if (con <= 0) {
+                break;
+            }
+            if (it != null && it.isNotNullItem() && it.template.id == tra) {
+                int lay = Math.min(con, it.quantity);
+                InventoryService.gI().subQuantityItemsBag(pl, it, lay);
+                con -= lay;
+            }
+        }
+        InventoryService.gI().sendItemBag(pl);
         nro.service.skill.SkillService.gI().learSkillSpecial(pl, chieu);
-        Service.gI().point(pl);
-        Service.gI().sendThongBao(pl, "Học thành công " + (tpl != null ? tpl.name : is.temp.name) + "!");
+        nro.entity.template.SkillTemplate tpl = SkillUtil.findSkillTemplate(chieu);
+        Service.gI().sendThongBao(pl, "Học thành công " + (tpl != null ? tpl.name : "tuyệt kỹ") + "!");
+    }
+
+    private static long demTrongTui(Player pl, short id) {
+        long n = 0;
+        for (Item it : pl.inventory.itemsBag) {
+            if (it != null && it.isNotNullItem() && it.template.id == id) {
+                n += it.quantity;
+            }
+        }
+        return n;
     }
 
     private void learnKyNang(Player pl, ItemShop is) {

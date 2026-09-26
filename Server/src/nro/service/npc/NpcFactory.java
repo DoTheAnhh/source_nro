@@ -3366,6 +3366,9 @@ public class NpcFactory {
                                 break;
                         }
                         break;
+                    case nro.service.shop.ShopService.MENU_TRA_TUYET_KY:
+                        nro.service.shop.ShopService.gI().hocTuyetKyTra(player, select);
+                        break;
                     case ConstNpc.HOC_SKILL_3: {
                         switch (select) {
                             case 0: {
