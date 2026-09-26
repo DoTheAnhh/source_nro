@@ -91,6 +91,23 @@ namespace Game5.God
         /// Xin trước lúc mở túi, để bấm "Trang phục" là có ngay, không phải chờ.
         /// Đã có dữ liệu thì xin lại nhiều nhất mỗi 30 giây.
         /// </summary>
+        private static int idDaXin = -1;
+
+        /// <summary>
+        /// Vừa vào game (hoặc đổi nhân vật): xin ngay danh sách trang phục — ảnh mọi khung
+        /// được tải trước và skin của mình có sẵn, lần dùng chiêu đầu tiên đã đúng hình, đúng tiếng.
+        /// </summary>
+        private static void xinKhiVao()
+        {
+            Char toi = Char.myCharz();
+            if (toi == null || toi.charID == idDaXin || SmallImage.imgNew == null)
+            {
+                return;
+            }
+            idDaXin = toi.charID;
+            getInstance().xin();
+        }
+
         public void xinTruoc()
         {
             if (!coDuLieu || mSystem.currentTimeMillis() - lucXin > 30000L)
@@ -1122,6 +1139,7 @@ namespace Game5.God
         /// </remarks>
         public static void veToanCuc(mGraphics g)
         {
+            xinKhiVao();
             xuLyAm();
             veCauBu(g);
             veNoTuNo(g);
@@ -2840,10 +2858,10 @@ namespace Game5.God
         /// <summary>Cỡ riêng lớp khói mặt đất: to hơn lớp giữa thân 30%.</summary>
         private const float DAT_TO = TU_NO_TO * 1.3f;
 
-        private static readonly int TAM_TO = (int) (TU_NO_TAM * DAT_TO) - 5;
+        private static readonly int TAM_TO = (int) (TU_NO_TAM * DAT_TO) - 10;
 
         /// <summary>Lớp giữa thân thấp hơn giữa người chừng này điểm.</summary>
-        private const int GIUA_THAP = 13;
+        private const int GIUA_THAP = 18;
 
         /// <summary>
         /// Vẽ khung <paramref name="a"/> đục hoàn toàn rồi phủ <paramref name="b"/> lên với

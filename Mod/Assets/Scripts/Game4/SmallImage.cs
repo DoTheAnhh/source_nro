@@ -183,7 +183,7 @@ namespace Game4
     			{
     				createImage(id);
     			}
-    			drawSmallImage(g, id, xGiua, yGiua, 0, mGraphics.VCENTER | mGraphics.HCENTER);
+    			// Anh dang tai: khong ve gi (ve tam anh rong / sai co nhin nhu loi hinh).
     			return;
     		}
     		g.veAnhXoay(s.img, xGiua, yGiua, mGraphics.getImageWidth(s.img) * tiLe,
