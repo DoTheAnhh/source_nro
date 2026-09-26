@@ -187,6 +187,24 @@ public class MoRuongService {
 
     private void phat(Player pl, MoRuongDAO.Qua q) {
         try {
+            // Skin ky nang: mo khoa thang, KHONG bo vat pham vao hanh trang. Da co roi thi hoan 1 phieu.
+            nro.repository.dao.TrangPhucDAO.Mau skin = nro.repository.dao.TrangPhucDAO.mauTheoVatPham(q.itemId);
+            if (skin != null) {
+                if (nro.repository.dao.TrangPhucDAO.themSoHuu(pl.id, skin.id)) {
+                    Service.gI().sendThongBao(pl, "Đã mở khoá skin " + skin.ten + "! Vào Trang phục kỹ năng để bật.");
+                } else {
+                    int phieu = MoRuongDAO.idPhieuCaoCap();
+                    Item hoan = phieu > 0 ? ItemService.gI().createNewItem((short) phieu, 1) : null;
+                    if (hoan != null) {
+                        hoan.quantity = 1;
+                        InventoryService.gI().addItemBag(pl, hoan);
+                        InventoryService.gI().sendItemBag(pl);
+                    }
+                    Service.gI().sendThongBao(pl, "Bạn đã có skin " + skin.ten + " — hoàn lại 1 phiếu quay.");
+                }
+                nro.service.TrangPhucService.gI().guiDanhSach(pl);
+                return;
+            }
             Item it = ItemService.gI().createNewItem((short) q.itemId, q.soLuong);
             if (it == null || it.template == null) {
                 return;

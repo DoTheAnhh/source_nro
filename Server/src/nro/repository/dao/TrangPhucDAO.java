@@ -98,6 +98,7 @@ public final class TrangPhucDAO {
             gieoPhiLoiThan();
             gieoVanKiemQuyTong();
             gieoTsukuyomi();
+            gieoSayCheese();
             // Them du am vu no (khung thu ba cua day bay).
             ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_bay = ? WHERE skill_tpl = 10"
                     + " AND khung_bay = '25285,25286'", KHUNG_BAY_DBTT);
@@ -232,6 +233,37 @@ public final class TrangPhucDAO {
                 25480, "", khungTsukuyomi(), 25480);
         lucDoc = 0;
         Logger.success("Trang phục: gieo Tsukuyomi cho Thôi miên\n");
+    }
+
+    /**
+     * Say Cheese cho Thái dương hạ san (skill 6, Trái Đất): khung bay = [máy ảnh hiện trên
+     * đầu và bấm 15 | chùm flash 12 | polaroid phủ màn hình nạn nhân 5]. Icon 25512–25544.
+     */
+    private static void gieoSayCheese() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM trang_phuc_mau WHERE skill_tpl = 6 AND ten = ?", "Say Cheese");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            if (rs != null) {
+                rs.dispose();
+            }
+        }
+        StringBuilder bay = new StringBuilder();
+        for (int id = 25512; id <= 25543; id++) {
+            if (id == 25527 || id == 25539) {
+                bay.append(",-1");
+            }
+            bay.append(bay.length() > 0 ? "," : "").append(id);
+        }
+        ConnectDB.executeUpdate("INSERT INTO trang_phuc_mau (skill_tpl, ten, mo_ta, icon, khung_nap, khung_bay, thu_tu, icon_vp)"
+                + " VALUES (?,?,?,?,?,?,1,?)", 6, "Say Cheese",
+                "Tách! Máy ảnh bật đèn flash — kẻ trúng chiêu chỉ còn thấy tấm ảnh polaroid của chính mình.",
+                25544, "", bay.toString(), 25544);
+        lucDoc = 0;
+        Logger.success("Trang phục: gieo Say Cheese cho Thái dương hạ san\n");
     }
 
     private static void gieoPhiLoiThan() throws Exception {

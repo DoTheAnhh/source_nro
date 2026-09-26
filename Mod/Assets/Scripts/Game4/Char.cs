@@ -5288,8 +5288,12 @@ namespace Game4
     			if (myskill.template.id == 6)
     			{
     				Service.gI().skill_not_focus(0);
-    				GameScr.gI().isUseFreez = true;
-    				SoundMn.gI().thaiduonghasan();
+    				// Skin Say Cheese: may anh + flash thay man chop trang va tieng goc.
+    				if (!God.TrangPhucUI.chupAnhCuaToi(this))
+    				{
+    					GameScr.gI().isUseFreez = true;
+    					SoundMn.gI().thaiduonghasan();
+    				}
     			}
     			if (myskill.template.id == 8)
     			{

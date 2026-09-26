@@ -5319,6 +5319,16 @@ namespace Game1
     		GameCanvas.debug("PA1", 1);
     		// !activeRongThan la luc dang AN rong: khong de mot hop thoai
     		// dang mo chan canh chop lai, khong thi rong treo mai.
+    		// Skin Say Cheese: bi choang thi thay polaroid chup chinh minh thay man trang goc.
+    		if (isFreez && God.TrangPhucUI.dangChupAnh())
+    		{
+    			resetTranslate(g);
+    			God.TrangPhucUI.veChupAnh(g);
+    			paintInfoBar(g);
+    			resetTranslate(g);
+    			paintSelectedSkill(g);
+    			return;
+    		}
     		if (isFreez || (isUseFreez && (ChatPopup.currChatPopup == null || !activeRongThan)))
     		{
     			dem++;

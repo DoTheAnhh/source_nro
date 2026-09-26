@@ -1319,6 +1319,34 @@ namespace Game3
     	/// <paramref name="yGiua"/>), cỡ <paramref name="w"/> × <paramref name="h"/>
     	/// (toạ độ logic, chưa nhân zoom). Góc tính bằng độ, chiều kim đồng hồ.
     	/// </summary>
+    	/// <summary>Phóng mọi thứ vẽ sau đó <paramref name="tiLe"/> lần quanh (xGiua, yGiua), kèm độ đục; trả ma trận cũ cho <see cref="ketThucPhong"/>.</summary>
+    	public Matrix4x4 batDauPhong(float xGiua, float yGiua, float tiLe, float mo)
+    	{
+    		Matrix4x4 cu = GUI.matrix;
+    		float px = xGiua * zoomLevel;
+    		float py = yGiua * zoomLevel;
+    		if (isTranslate)
+    		{
+    			px += translateX;
+    			py += translateY;
+    		}
+    		GUIUtility.ScaleAroundPivot(new Vector2(tiLe, tiLe), new Vector2(px, py));
+    		mauTruocPhong = GUI.color;
+    		if (mo < 1f)
+    		{
+    			GUI.color = new Color(mauTruocPhong.r, mauTruocPhong.g, mauTruocPhong.b, mauTruocPhong.a * Mathf.Clamp01(mo));
+    		}
+    		return cu;
+    	}
+
+    	private Color mauTruocPhong = Color.white;
+
+    	public void ketThucPhong(Matrix4x4 cu)
+    	{
+    		GUI.matrix = cu;
+    		GUI.color = mauTruocPhong;
+    	}
+
     	public void veAnhXoay(Image image, float xGiua, float yGiua, float w, float h, float gocDo)
     	{
     		veAnhXoay(image, xGiua, yGiua, w, h, gocDo, 1f);

@@ -193,18 +193,26 @@ public final class TrangPhucService {
      * Gói: byte 3, short skillTpl, int ms, byte n, short[n].
      */
     public void thoiMien(Player tu, Player nan, int ms) {
+        phuManHinh(tu, nan, nro.entity.skill.Skill.THOI_MIEN, ms);
+    }
+
+    /**
+     * Chiêu có skin phủ màn hình nạn nhân (Tsukuyomi, Say Cheese…): báo riêng nạn nhân khung
+     * của skin và thời gian. Gói: byte 3, short skillTpl, int ms, byte n, short[n].
+     */
+    public void phuManHinh(Player tu, Player nan, int skillTpl, int ms) {
         if (tu == null || nan == null || !nan.isPl() || ms <= 0) {
             return;
         }
         Message msg = null;
         try {
-            TrangPhucDAO.Mau m = TrangPhucDAO.dangDung(tu.id, nro.entity.skill.Skill.THOI_MIEN);
+            TrangPhucDAO.Mau m = TrangPhucDAO.dangDung(tu.id, skillTpl);
             if (m == null || m.khungBay == null || m.khungBay.length == 0) {
                 return;
             }
             msg = new Message(GOI);
             msg.writer().writeByte(3);
-            msg.writer().writeShort(nro.entity.skill.Skill.THOI_MIEN);
+            msg.writer().writeShort(skillTpl);
             msg.writer().writeInt(ms);
             ghiKhung(msg, m.khungBay);
             nan.sendMessage(msg);

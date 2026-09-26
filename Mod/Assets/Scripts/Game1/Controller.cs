@@ -2371,6 +2371,7 @@ namespace Game1
                                         @char.setSkillPaint(GameScr.sks[num136], 1);
                                         @char.delayFall = 20;
                                     }
+                                    God.TrangPhucUI.chupAnhBatDau(@char);
                                 }
                                 else
                                 {

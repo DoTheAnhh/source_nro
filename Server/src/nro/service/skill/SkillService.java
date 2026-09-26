@@ -1172,6 +1172,11 @@ public class SkillService {
                         }
                     }
                 }
+                // Skin Say Cheese: ca khu thay may anh; tung nan nhan thay polaroid phu man hinh.
+                nro.service.TrangPhucService.gI().baoTruocKhiTu(player, Skill.THAI_DUONG_HA_SAN);
+                for (Player nan : players) {
+                    nro.service.TrangPhucService.gI().phuManHinh(player, nan, Skill.THAI_DUONG_HA_SAN, timeStun);
+                }
                 EffectSkillService.gI().sendEffectBlindThaiDuongHaSan(player, players, mobs, timeStun);
                 affterUseSkill(player, player.playerSkill.skillSelect.template.id);
                 break;

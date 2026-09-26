@@ -139,10 +139,15 @@ namespace Game1.God
                 else if (loai == 3)
                 {
                     // Bi thoi mien boi nguoi co skin Tsukuyomi: ao canh phu kin man hinh.
-                    msg.reader().readShort();
+                    int tpl3 = msg.reader().readShort();
                     int ms = msg.reader().readInt();
                     short[] khung = docKhung(msg);
-                    if (khung.Length > 0)
+                    if (tpl3 == 6)
+                    {
+                        // Say Cheese: polaroid chup chinh minh phu man hinh.
+                        batDauPolaroid(khung, ms);
+                    }
+                    else if (khung.Length > 0)
                     {
                         taiTruoc(khung);
                         long bayGio = mSystem.currentTimeMillis();
@@ -1073,6 +1078,10 @@ namespace Game1.God
                     return true;
                 }
             }
+            if ((c.tpCoSkin & (1 << 6)) != 0 && id >= 42 && id <= 48)
+            {
+                return true;
+            }
             if ((c.tpCoSkin & (1 << 20)) != 0 && ((id >= 63 && id <= 69) || (id >= 128 && id <= 134)))
             {
                 return true;
@@ -1147,6 +1156,7 @@ namespace Game1.God
             veRasenBu(g);
             veKunaiBay(g);
             veKiemBay(g);
+            veMayAnh(g);
             veMotNguoi(g, Char.myCharz());
             for (int i = 0; i < GameScr.vCharInMap.size(); i++)
             {
@@ -2157,7 +2167,8 @@ namespace Game1.God
             UnityEngine.AudioClip c;
             if (!amClip.TryGetValue(ten, out c))
             {
-                c = UnityEngine.Resources.Load("res/tp/" + ten, typeof(UnityEngine.AudioClip)) as UnityEngine.AudioClip;
+                c = ten == "tach" ? taoTiengTach()
+                        : UnityEngine.Resources.Load("res/tp/" + ten, typeof(UnityEngine.AudioClip)) as UnityEngine.AudioClip;
                 amClip[ten] = c;
             }
             return c;
@@ -2543,6 +2554,295 @@ namespace Game1.God
                     : ms + 30000L;
             dsDangPhat.Add(d);
             return true;
+        }
+
+        // ------------------------------------------------------------------
+        //  Thái dương hạ san → Say Cheese: người dùng chiêu hiện máy ảnh trên đầu,
+        //  bấm "tách" + chùm flash; nạn nhân thấy màn hình trắng rồi tấm polaroid
+        //  chụp CHÍNH MÌNH hiện dần, rung nhẹ, mờ đi đúng lúc hết choáng.
+        //  Khung: [máy ảnh 15 | flash 12 | polaroid 5].
+        // ------------------------------------------------------------------
+        private const long CA_MAY = 65L;
+        private const long CA_FLASH = 40L;
+        private const int CA_KHUNG_BAM = 6;
+        private const int CA_CAO = 34;
+        private const float AM_TACH = 0.55f;
+
+        public class MayAnh
+        {
+            public Char c;
+            public short[] may;
+            public short[] flash;
+            public long batDau;
+        }
+
+        private static readonly List<MayAnh> dsMayAnh = new List<MayAnh>();
+
+        /// <summary>Người (không phải mình) vừa dùng Thái dương hạ san có skin: hiện máy ảnh.</summary>
+        public static bool chupAnhBatDau(Char c)
+        {
+            if (c == null || c.tpSkill != 6 || !conHieuLuc(c))
+            {
+                return false;
+            }
+            themMayAnh(c, c.tpBay);
+            return true;
+        }
+
+        /// <summary>Chính mình dùng Thái dương hạ san: có skin thì hiện máy ảnh ngay (không chờ máy chủ).</summary>
+        public static bool chupAnhCuaToi(Char c)
+        {
+            if (c == null || !skinDangBat(6))
+            {
+                return false;
+            }
+            ganTruoc(c, 6);
+            if (c.tpSkill != 6 || c.tpBay == null)
+            {
+                return false;
+            }
+            themMayAnh(c, c.tpBay);
+            return true;
+        }
+
+        private static void themMayAnh(Char c, short[] bay)
+        {
+            short[] may = tach(bay, 0);
+            if (may.Length == 0)
+            {
+                return;
+            }
+            long bayGio = mSystem.currentTimeMillis();
+            lock (dsMayAnh)
+            {
+                foreach (MayAnh cu in dsMayAnh)
+                {
+                    if (cu.c == c && bayGio - cu.batDau < 600L)
+                    {
+                        return;
+                    }
+                }
+                MayAnh m = new MayAnh();
+                m.c = c;
+                m.may = may;
+                m.flash = tach(bay, 1);
+                m.batDau = bayGio;
+                dsMayAnh.Add(m);
+            }
+            taiTruoc(bay);
+            henAm("tach", bayGio + CA_MAY * CA_KHUNG_BAM, 0, AM_TACH);
+        }
+
+        private static void veMayAnh(mGraphics g)
+        {
+            if (dsMayAnh.Count == 0)
+            {
+                return;
+            }
+            long ms = mSystem.currentTimeMillis();
+            lock (dsMayAnh)
+            {
+                for (int i = dsMayAnh.Count - 1; i >= 0; i--)
+                {
+                    MayAnh m = dsMayAnh[i];
+                    long t = ms - m.batDau;
+                    long tMay = CA_MAY * m.may.Length;
+                    long tBam = CA_MAY * CA_KHUNG_BAM;
+                    long tFlash = CA_FLASH * m.flash.Length;
+                    if (t >= System.Math.Max(tMay, tBam + tFlash))
+                    {
+                        dsMayAnh.RemoveAt(i);
+                        continue;
+                    }
+                    float x = m.c.cx;
+                    float y = m.c.cy - m.c.ch - CA_CAO;
+                    if (t < tMay)
+                    {
+                        // Nhun nhe len xuong cho song dong.
+                        float nhun = (float) System.Math.Sin(t * 2.0 * System.Math.PI / 420.0) * 1.5f;
+                        veChuoi(g, m.may, 0, m.may.Length, t, CA_MAY, x, y + nhun, 1f, 0f, 1f, -1);
+                    }
+                    if (t >= tBam && m.flash.Length > 0 && t < tBam + tFlash)
+                    {
+                        veChuoi(g, m.flash, 0, m.flash.Length, t - tBam, CA_FLASH, x, y, 1f, 0f, 1f, -1);
+                    }
+                }
+            }
+        }
+
+        // --- Nạn nhân: polaroid phủ màn hình ---
+        private static short[] caKhung;
+        private static long caBatDau;
+        private static long caHet;
+
+        /// <summary>Ô ảnh (xanh) trong từng khung polaroid: x0, y0, x1, y1 theo tỉ lệ cạnh ảnh, gốc ở tâm ảnh.</summary>
+        private static readonly float[][] CA_O_ANH = {
+            new float[] {-0.326f, -0.314f, 0.342f, 0.222f},
+            new float[] {-0.354f, -0.348f, 0.378f, 0.248f},
+            new float[] {-0.358f, -0.346f, 0.378f, 0.246f},
+            new float[] {-0.360f, -0.354f, 0.364f, 0.226f},
+            new float[] {-0.354f, -0.336f, 0.386f, 0.236f}};
+
+        private const long CA_TRANG = 260L;
+        private const long CA_HIEN = 420L;
+        private const long CA_LAC = 280L;
+        private const long CA_MO = 450L;
+
+        private static void batDauPolaroid(short[] bay, int ms)
+        {
+            short[] p = tach(bay, 2);
+            if (p.Length == 0)
+            {
+                return;
+            }
+            taiTruoc(p);
+            long bayGio = mSystem.currentTimeMillis();
+            caKhung = p;
+            caBatDau = bayGio;
+            caHet = bayGio + ms;
+        }
+
+        /// <summary>Đang có polaroid phủ màn hình (gọi từ GameScr khi bị choáng).</summary>
+        public static bool dangChupAnh()
+        {
+            return caKhung != null && mSystem.currentTimeMillis() < caHet;
+        }
+
+        /// <summary>Vẽ màn hình trắng + polaroid chụp chính mình (toạ độ màn hình).</summary>
+        public static void veChupAnh(mGraphics g)
+        {
+            short[] k = caKhung;
+            if (k == null)
+            {
+                return;
+            }
+            long ms = mSystem.currentTimeMillis();
+            int W = GameCanvas.w;
+            int H = GameCanvas.h;
+            g.setColor(0xFFFFFF);
+            g.fillRect(0, 0, W, H);
+            long t = ms - caBatDau;
+            long con = caHet - ms;
+            if (t < CA_TRANG)
+            {
+                return;
+            }
+            // Tien do hien (0..1) va do mo khi sap het choang.
+            float p = System.Math.Min(1f, (float) (t - CA_TRANG) / CA_HIEN);
+            float em = 1f - (1f - p) * (1f - p) * (1f - p);
+            float mo = System.Math.Min(1f, p * 1.6f);
+            if (con < CA_MO)
+            {
+                mo *= System.Math.Max(0f, (float) con / CA_MO);
+            }
+            if (mo <= 0.01f)
+            {
+                return;
+            }
+            // Khung: dang hien thi khung 1 -> 2; sau do lac qua lai 2..5 (rung nhe).
+            int a;
+            int b;
+            float h;
+            if (p < 1f)
+            {
+                a = 0;
+                b = System.Math.Min(1, k.Length - 1);
+                h = p;
+            }
+            else
+            {
+                int n = System.Math.Max(1, k.Length - 1);
+                long tl = t - CA_TRANG - CA_HIEN;
+                int chuKy = System.Math.Max(1, 2 * (n - 1));
+                int pos = n > 1 ? (int) ((tl / CA_LAC) % chuKy) : 0;
+                h = (float) (tl % CA_LAC) / CA_LAC;
+                int ia = pos < n ? pos : chuKy - pos;
+                int pb = (pos + 1) % chuKy;
+                int ib = pb < n ? pb : chuKy - pb;
+                a = System.Math.Min(k.Length - 1, 1 + ia);
+                b = System.Math.Min(k.Length - 1, 1 + ib);
+            }
+            var s = (SmallImage.imgNew != null && k[a] >= 0 && k[a] < SmallImage.imgNew.Length) ? SmallImage.imgNew[k[a]] : null;
+            if (s == null || s.img == null || mGraphics.getImageWidth(s.img) <= 1)
+            {
+                SmallImage.veIconXoay(g, k[a], W / 2, H / 2, 1f, 0f, mo);
+                return;
+            }
+            float iw = mGraphics.getImageWidth(s.img);
+            float ih = mGraphics.getImageHeight(s.img);
+            float tiLe = H * 0.68f / ih * (0.55f + 0.45f * em);
+            // Rung nhe: lech va nghieng rat it.
+            float rung = p < 1f ? 0f : (float) System.Math.Sin(t * 2.0 * System.Math.PI / 900.0);
+            float cx = W / 2f + rung * 1.5f;
+            float cy = H / 2f - 6f + (float) System.Math.Cos(t * 2.0 * System.Math.PI / 1300.0) * 1.2f;
+            float[] o = CA_O_ANH[System.Math.Min(a, CA_O_ANH.Length - 1)];
+            float ow = iw * tiLe;
+            float oh = ih * tiLe;
+            int hx0 = (int) (cx + o[0] * ow) + 2;
+            int hy0 = (int) (cy + o[1] * oh) + 2;
+            int hx1 = (int) (cx + o[2] * ow) - 2;
+            int hy1 = (int) (cy + o[3] * oh) - 2;
+            // Nen anh: troi xanh nhat tren, hong nhat duoi.
+            int caoO = System.Math.Max(1, hy1 - hy0);
+            for (int d = 0; d < 6; d++)
+            {
+                float u = d / 5f;
+                int r = (int) (0xBF + (0xFF - 0xBF) * u);
+                int gg = (int) (0xE4 + (0xD9 - 0xE4) * u);
+                int bb = (int) (0xFF + (0xE8 - 0xFF) * u);
+                g.setColor((r << 16) | (gg << 8) | bb, mo);
+                int y0 = hy0 + caoO * d / 6;
+                int y1 = hy0 + caoO * (d + 1) / 6;
+                g.fillRect(hx0, y0, hx1 - hx0, y1 - y0 + 1);
+            }
+            // Chinh minh trong anh: phong to cho vua o anh.
+            Char toi = Char.myCharz();
+            if (toi != null && mo > 0.05f)
+            {
+                float phong = System.Math.Max(1f, caoO * 0.78f / 52f);
+                int chanX = (hx0 + hx1) / 2;
+                int chanY = hy1 - (int) (caoO * 0.08f);
+                UnityEngine.Matrix4x4 cu = g.batDauPhong(chanX, chanY, phong, mo);
+                try
+                {
+                    toi.paintCharBody(g, chanX, chanY, 1, 0, true);
+                }
+                catch (System.Exception)
+                {
+                }
+                g.ketThucPhong(cu);
+            }
+            // Khung polaroid de len (o anh trong suot), hoa dan giua hai khung.
+            float moA = b != a ? System.Math.Min(1f, 2f * (1f - h)) : 1f;
+            float moB = System.Math.Min(1f, 2f * h);
+            SmallImage.veIconXoay(g, k[a], (int) cx, (int) cy, tiLe, 0f, mo * moA);
+            if (b != a && h > 0.01f)
+            {
+                SmallImage.veIconXoay(g, k[b], (int) cx, (int) cy, tiLe, 0f, mo * moB);
+            }
+        }
+
+        /// <summary>Tiếng "tách" máy ảnh tổng hợp bằng mã (hai tiếng lách cách ngắn), khỏi cần tệp.</summary>
+        private static UnityEngine.AudioClip taoTiengTach()
+        {
+            const int SR = 44100;
+            int n = (int) (0.18f * SR);
+            float[] d = new float[n];
+            System.Random r = new System.Random(7);
+            for (int i = 0; i < n; i++)
+            {
+                double t = (double) i / SR;
+                double e1 = System.Math.Exp(-t * 95.0);
+                double t2 = t - 0.055;
+                double e2 = t2 > 0 ? System.Math.Exp(-t2 * 70.0) : 0;
+                double on = r.NextDouble() * 2 - 1;
+                double v = on * (0.85 * e1 + 0.55 * e2) + 0.35 * System.Math.Sin(2 * System.Math.PI * 2400 * t) * e1
+                        + 0.25 * System.Math.Sin(2 * System.Math.PI * 1500 * t) * e2;
+                d[i] = (float) System.Math.Max(-1, System.Math.Min(1, v));
+            }
+            UnityEngine.AudioClip c = UnityEngine.AudioClip.Create("tach", n, 1, SR, false);
+            c.SetData(d, 0);
+            return c;
         }
 
         // ------------------------------------------------------------------
