@@ -198,7 +198,8 @@ namespace Game2.God
         }
 
         private const int CAO_TIEU_DE = 22;
-        private const int RONG_TRAI = 132;
+        /// <summary>Bề ngang cột trái: theo tỉ lệ, màn hẹp thì co lại.</summary>
+        private int RONG_TRAI_W => Math.max(92, Math.min(132, rong * 26 / 100));
         private const int CAO_MUC = 26;
         private const int CAO_THE = 46;
         private const int LE = 6;
@@ -372,8 +373,9 @@ namespace Game2.God
             // 0,68 bề ngang khả dụng: hẹp hơn thì cột trái phải cắt bớt tên mục,
             // rộng hơn thì mỗi thẻ mốc dài ngoằng mà nội dung thì ít.
             int rongToiDa = GameCanvas.w - 20;
-            rong = Math.max(280, rongToiDa * 68 / 100);
-            cao = Math.max(150, GameCanvas.h - 30);
+            // Man hep (cua so nho): dung gan het be ngang, khong thi cot phai chat cung.
+            rong = GameCanvas.w < 640 ? GameCanvas.w - 12 : Math.max(280, rongToiDa * 68 / 100);
+            cao = Math.max(150, GameCanvas.h - (GameCanvas.h < 360 ? 16 : 30));
             x0 = (GameCanvas.w - rong) / 2;
             y0 = (GameCanvas.h - cao) / 2;
 
@@ -381,7 +383,7 @@ namespace Game2.God
             yThan = y0 + CAO_TIEU_DE + LE;
             caoThan = cao - CAO_TIEU_DE - LE * 2;
 
-            xPhai = xTrai + RONG_TRAI + LE;
+            xPhai = xTrai + RONG_TRAI_W + LE;
             rongPhai = x0 + rong - LE - xPhai;
             yThe = yThan + 22;
             caoVungThe = caoThan - 22;
@@ -444,7 +446,7 @@ namespace Game2.God
         private void veCotTrai(mGraphics g)
         {
             g.setColor(MAU_THE_MO, 0.55f);
-            g.fillRect(xTrai, yThan, RONG_TRAI, caoThan, 6);
+            g.fillRect(xTrai, yThan, RONG_TRAI_W, caoThan, 6);
             int lech = coThe() ? 1 : 0;
             for (int i = 0; i < soMuc(); i++)
             {
@@ -459,20 +461,20 @@ namespace Game2.God
                 {
                     // Dong the thang: nen vang dam, chu trang — la thu duy nhat
                     // tren bang ban bang tien, phai nhin ra ngay.
-                    veKhungBo(g, xTrai + 3, yy, RONG_TRAI - 6, CAO_MUC,
+                    veKhungBo(g, xTrai + 3, yy, RONG_TRAI_W - 6, CAO_MUC,
                             chon ? MAU_THE_CAO : MAU_THE_VANG, 1f, MAU_VIEN, 0.9f, 1);
                     mFont.tahoma_7b_white.drawString(g, "NRO PASS",
-                            xTrai + RONG_TRAI / 2, yy + CAO_MUC / 2 - 5, mFont.CENTER);
+                            xTrai + RONG_TRAI_W / 2, yy + CAO_MUC / 2 - 5, mFont.CENTER);
                     if (soOPassNhanDuoc() > 0)
                     {
                         // Cham do: con qua hom nay chua nhan.
                         g.setColor(0xE53935, 1f);
-                        g.fillRect(xTrai + RONG_TRAI - 14, yy + 3, 7, 7, 4);
+                        g.fillRect(xTrai + RONG_TRAI_W - 14, yy + 3, 7, 7, 4);
                     }
                     continue;
                 }
                 g.setColor(chon ? MAU_CHON : MAU_THE, chon ? 1f : 0.95f);
-                g.fillRect(xTrai + 3, yy, RONG_TRAI - 6, CAO_MUC, 6);
+                g.fillRect(xTrai + 3, yy, RONG_TRAI_W - 6, CAO_MUC, 6);
                 if (chon)
                 {
                     // Vach nhan mau sang ben trai: nhin luot la biet dang o muc nao,
@@ -481,7 +483,7 @@ namespace Game2.God
                     g.fillRect(xTrai + 3, yy, 3, CAO_MUC);
                 }
                 mFont.tahoma_7b_dark.drawString(g, catBot(nhom[i - lech].ten, 20),
-                        xTrai + RONG_TRAI / 2, yy + CAO_MUC / 2 - 5, mFont.CENTER);
+                        xTrai + RONG_TRAI_W / 2, yy + CAO_MUC / 2 - 5, mFont.CENTER);
             }
         }
 
@@ -681,6 +683,11 @@ namespace Game2.God
         /// <summary>Nút "Nhận nhanh" trong dải đầu màn pass.</summary>
         private int[] oNutNhanNhanhPass()
         {
+            // Da co nut Nhan nhanh o thanh tieu de: bo nut thu hai trong dau pass cho gon.
+            if (true)
+            {
+                return new int[] { -9999, -9999, 0, 0 };
+            }
             int w = mFont.tahoma_7b_white.getWidth("NHẬN NHANH") + 22;
             int xTen = xPhai + 10 + Math.max(mFont.tahoma_7b_white.getWidth("NRO PASS"),
                     mFont.tahoma_7b_white.getWidth(pass == null ? string.Empty : pass.moTaMua)) + 14;
@@ -755,6 +762,7 @@ namespace Game2.God
 
             mFont.tahoma_7b_white.drawString(g, "NRO PASS", xPhai + 10, y + 7, mFont.LEFT, mFont.tahoma_7b_dark);
             mFont.tahoma_7b_white.drawString(g, p.moTaMua, xPhai + 10, y + 22, mFont.LEFT, mFont.tahoma_7b_dark);
+            if (false)
             {
                 // Nut luon hien; co o cho nhan thi tho sang.
                 int[] nn = oNutNhanNhanhPass();
@@ -783,9 +791,18 @@ namespace Game2.God
             bool kich = capDat >= p.soCap;
             long moiCap = p.diemMoiCap < 1 ? 1 : p.diemMoiCap;
             long trong = kich ? moiCap : p.diem % moiCap;
-            int rThanh = Math.min(150, rongPhai / 3);
+            int wTrai = Math.max(mFont.tahoma_7b_white.getWidth("NRO PASS"), mFont.tahoma_7b_white.getWidth(p.moTaMua));
+            int rThanh = Math.min(150, xH - 10 - (xPhai + 10 + wTrai + 12));
+            if (rThanh < 36)
+            {
+                rThanh = 36;
+            }
             int xThanh = xH - rThanh - 10;
             string chu = kich ? "Đã đạt cấp tối đa" : ("Cấp " + (capDat + 1) + ": " + trong + "/" + moiCap + " điểm");
+            if (mFont.tahoma_7b_white.getWidth(chu) > rThanh)
+            {
+                chu = kich ? "Tối đa" : (trong + "/" + moiCap);
+            }
             mFont.tahoma_7b_white.drawString(g, chu, xThanh + rThanh, y + 7, mFont.RIGHT, mFont.tahoma_7b_dark);
             g.setColor(rgb(0x5A, 0x22, 0x04), 0.55f);
             g.fillRect(xThanh, y + 24, rThanh, 9, 5);
@@ -923,11 +940,19 @@ namespace Game2.God
                     rgb(0xFF, 0xFA, 0xF0), rgb(0xF4, 0xE4, 0xCA), 1);
             mFont.tahoma_7b_red.drawString(g, "CÁCH NHẬN ĐIỂM", xPhai + 8, yD + 4, mFont.LEFT);
             string[] dong = mFont.tahoma_7.splitFontArray(p.nguonDiem ?? string.Empty, wTrai - 16);
-            for (int i = 0; i < dong.Length && i < 2; i++)
+            if (dong.Length <= 2)
             {
-                mFont.tahoma_7.drawString(g, dong[i], xPhai + 8, yD + 16 + i * 11, mFont.LEFT);
+                for (int i = 0; i < dong.Length; i++)
+                {
+                    mFont.tahoma_7.drawString(g, dong[i], xPhai + 8, yD + 16 + i * 11, mFont.LEFT);
+                }
             }
-            mFont.tahoma_7b_dark.drawString(g, catBot(p.soDu, 64), xPhai + 8, yD + CAO_DAY_PASS - 13, mFont.LEFT);
+            else
+            {
+                // Dai qua hai dong: mot dong chu chay.
+                veChuChay(g, mFont.tahoma_7, null, p.nguonDiem, xPhai + 8, yD + 20, wTrai - 16);
+            }
+            veChuChay(g, mFont.tahoma_7b_dark, null, p.soDu ?? string.Empty, xPhai + 8, yD + CAO_DAY_PASS - 13, wTrai - 16);
 
             // The phai: Cao cap.
             int xCC = xPhai + rongPhai - wCC;
@@ -937,7 +962,14 @@ namespace Game2.God
             g.fillRect(xCC + 3, yD + 2, wCC - 6, 10, 6);
             string uuDai = string.IsNullOrEmpty(p.uuDaiCaoCap) ? "Mở khoá toàn bộ hàng Cao cấp" : p.uuDaiCaoCap;
             string[] dUD = mFont.tahoma_7b_dark.splitFontArray(uuDai, wCC - 16);
-            mFont.tahoma_7b_dark.drawString(g, dUD.Length > 0 ? dUD[0] : uuDai, xCC + wCC / 2, yD + 6, mFont.CENTER);
+            if (dUD.Length <= 1)
+            {
+                mFont.tahoma_7b_dark.drawString(g, uuDai, xCC + wCC / 2, yD + 6, mFont.CENTER);
+            }
+            else
+            {
+                veChuChay(g, mFont.tahoma_7b_dark, null, uuDai, xCC + 8, yD + 6, wCC - 16);
+            }
 
             int[] nut = oNutMoKhoa();
             if (p.caoCap)
@@ -963,7 +995,16 @@ namespace Game2.God
                     veKhungDoc(g, nut[0], nut[1], nut[2], nut[3], 8, rgb(0x7A, 0x2E, 0x06),
                             rgb(0xFF, 0x9E, 0x40), rgb(0xD8, 0x50, 0x0E), 1);
                 }
-                mFont.tahoma_7b_white.drawString(g, cho ? "Bấm lần nữa để mua" : ("MỞ KHOÁ · " + p.giaCaoCap),
+                string chuNut = cho ? "Bấm lần nữa để mua" : ("MỞ KHOÁ · " + p.giaCaoCap);
+                if (mFont.tahoma_7b_white.getWidth(chuNut) > nut[2] - 8)
+                {
+                    chuNut = cho ? "Bấm lần nữa" : p.giaCaoCap;
+                }
+                if (mFont.tahoma_7b_white.getWidth(chuNut) > nut[2] - 8)
+                {
+                    chuNut = cho ? "Xác nhận" : "MỞ KHOÁ";
+                }
+                mFont.tahoma_7b_white.drawString(g, chuNut,
                         nut[0] + nut[2] / 2, nut[1] + 5, mFont.CENTER, mFont.tahoma_7b_dark);
             }
         }
@@ -1365,6 +1406,45 @@ namespace Game2.God
                     mFont.CENTER);
         }
 
+        /// <summary>Chữ vừa chỗ thì vẽ thường; dài hơn thì chạy từ phải sang trái trong khung.</summary>
+        private static void veChuChay(mGraphics g, mFont f, mFont bong, string s, int x, int y, int rong)
+        {
+            if (string.IsNullOrEmpty(s) || rong <= 4)
+            {
+                return;
+            }
+            int w = f.getWidth(s);
+            if (w <= rong)
+            {
+                if (bong != null)
+                {
+                    f.drawString(g, s, x, y, mFont.LEFT, bong);
+                }
+                else
+                {
+                    f.drawString(g, s, x, y, mFont.LEFT);
+                }
+                return;
+            }
+            int chuKy = w + 30;
+            long tong = 1000L + chuKy * 1000L / 30;
+            long p = mSystem.currentTimeMillis() % tong;
+            int lech = p < 1000L ? 0 : (int) ((p - 1000L) * 30 / 1000L);
+            g.setClip(x, y - 2, rong, 16);
+            for (int k = 0; k < 2; k++)
+            {
+                if (bong != null)
+                {
+                    f.drawString(g, s, x - lech + k * chuKy, y, mFont.LEFT, bong);
+                }
+                else
+                {
+                    f.drawString(g, s, x - lech + k * chuKy, y, mFont.LEFT);
+                }
+            }
+            g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
+        }
+
         private static string catBot(string s, int toiDa)
         {
             if (s == null)
@@ -1573,7 +1653,7 @@ namespace Game2.God
                 {
                     break;
                 }
-                if (cham(xTrai + 3, yy, RONG_TRAI - 6, CAO_MUC))
+                if (cham(xTrai + 3, yy, RONG_TRAI_W - 6, CAO_MUC))
                 {
                     if (coThe() && i == 0)
                     {

@@ -229,6 +229,13 @@ namespace Game5.God
             g.setClip(0, 0, GameCanvas.w, GameCanvas.h);
         }
 
+        /// <summary>Tên hiển thị gọn: rương skin chỉ hiện tên skin.</summary>
+        private static string tenGon(string ten)
+        {
+            const string TIEN_TO = "Rương Skin ";
+            return ten != null && ten.StartsWith(TIEN_TO) ? "Skin " + ten.Substring(TIEN_TO.Length) : ten;
+        }
+
         private static string catBot(string s, int toiDa)
         {
             if (s == null)
@@ -447,22 +454,23 @@ namespace Game5.God
         //  Bố cục (tính theo vùng thân màn Sự kiện truyền vào)
         // ------------------------------------------------------------------
         private int bx, by, bw, bh;
-        private const int RONG_DS = 128;
+        /// <summary>Bề ngang cột danh sách rương: theo tỉ lệ, màn hẹp thì co lại.</summary>
+        private int RONG_DS_W => Math.max(96, Math.min(128, bw * 30 / 100));
         private const int CAO_MUC = 40;
 
         private int xP()
         {
-            return bx + RONG_DS + 6;
+            return bx + RONG_DS_W + 6;
         }
 
         private int rP()
         {
-            return bw - RONG_DS - 6;
+            return bw - RONG_DS_W - 6;
         }
 
         private int oCua()
         {
-            return 56;
+            return bh < 300 ? 44 : 56;
         }
 
         /// <summary>Cửa sổ dải quà: x, y, rộng, cao.</summary>
@@ -527,7 +535,7 @@ namespace Game5.God
         private void veDanhSach(mGraphics g)
         {
             g.setColor(MAU_THE_MO, 0.55f);
-            g.fillRect(bx, by, RONG_DS, bh, 6);
+            g.fillRect(bx, by, RONG_DS_W, bh, 6);
             kepCuonDs();
             int soHien = soHienDs();
             if (ds.Count > soHien)
@@ -536,9 +544,9 @@ namespace Game5.God
                 int cao = Math.max(16, (bh - 8) * soHien / ds.Count);
                 int yThanh = by + 4 + (bh - 8 - cao) * cuonDs / Math.max(1, ds.Count - soHien);
                 g.setColor(MAU_VIEN, 0.18f);
-                g.fillRect(bx + RONG_DS - 4, by + 4, 3, bh - 8, 1);
+                g.fillRect(bx + RONG_DS_W - 4, by + 4, 3, bh - 8, 1);
                 g.setColor(MAU_CAM, 0.9f);
-                g.fillRect(bx + RONG_DS - 4, yThanh, 3, cao, 1);
+                g.fillRect(bx + RONG_DS_W - 4, yThanh, 3, cao, 1);
             }
             for (int i = cuonDs; i < ds.Count; i++)
             {
@@ -552,15 +560,15 @@ namespace Game5.God
                 if (c)
                 {
                     g.setColor(rgb(0x9A, 0x4A, 0x10), 1f);
-                    g.fillRect(bx + 3, yy, RONG_DS - 6, CAO_MUC, BO_GOC);
-                    g.veDaiDoc(bx + 4, yy + 1, RONG_DS - 8, CAO_MUC - 2, BO_GOC - 1,
+                    g.fillRect(bx + 3, yy, RONG_DS_W - 6, CAO_MUC, BO_GOC);
+                    g.veDaiDoc(bx + 4, yy + 1, RONG_DS_W - 8, CAO_MUC - 2, BO_GOC - 1,
                             rgb(0xFB, 0xB0, 0x5C), rgb(0xE0, 0x74, 0x1E));
                     g.setColor(0xFFFFFF, 0.22f);
-                    g.fillRect(bx + 7, yy + 2, RONG_DS - 14, 4, 2);
+                    g.fillRect(bx + 7, yy + 2, RONG_DS_W - 14, 4, 2);
                 }
                 else
                 {
-                    veKhungBo(g, bx + 3, yy, RONG_DS - 6, CAO_MUC, MAU_THE, 1f, MAU_VIEN, 0.5f, 1);
+                    veKhungBo(g, bx + 3, yy, RONG_DS_W - 6, CAO_MUC, MAU_THE, 1f, MAU_VIEN, 0.5f, 1);
                 }
                 // O icon ruong: nen nhat de hinh noi len.
                 int oI = CAO_MUC - 8;
@@ -572,14 +580,14 @@ namespace Game5.God
                 }
                 int xc = bx + 7 + oI + 5;
                 // Ten day du; dai qua thi chay chu.
-                int rongTen = bx + RONG_DS - 8 - xc;
+                int rongTen = bx + RONG_DS_W - 8 - xc;
                 if (c)
                 {
-                    veChuChay(g, mFont.tahoma_7b_white, mFont.tahoma_7b_dark, r.ten, xc, yy + 5, rongTen, false);
+                    veChuChay(g, mFont.tahoma_7b_white, mFont.tahoma_7b_dark, tenGon(r.ten), xc, yy + 5, rongTen, false);
                 }
                 else
                 {
-                    veChuChay(g, mFont.tahoma_7b_dark, null, r.ten, xc, yy + 5, rongTen, false);
+                    veChuChay(g, mFont.tahoma_7b_dark, null, tenGon(r.ten), xc, yy + 5, rongTen, false);
                 }
                 veSoPhieu(g, r, xc, yy + 21, c);
             }
@@ -669,9 +677,10 @@ namespace Game5.God
                     }
                 }
             }
-            const int o = 36;
-            const int khe = 8;
-            const int caoO = o + 15;
+            // O co lai cho vua chieu cao (man thap van thay tron mot hang + ti le).
+            int o = Math.max(24, Math.min(36, h - 30 - 15));
+            int khe = o >= 32 ? 8 : 6;
+            int caoO = o + 15;
             int soCot = Math.max(1, (w - 16 + khe) / (o + khe));
             int soHang = Math.max(1, (h - 30) / caoO);
             int rongLuoi = soCot * (o + khe) - khe;
@@ -756,13 +765,16 @@ namespace Game5.God
 
             // Ten tren dai cam + dong phu.
             int xt = x + o + 12;
-            int wTen = mFont.tahoma_7b_white.getWidth(r.ten) + 16;
+            // Ten: dai cam vua chu, dai qua cho (toi chip phieu) thi chu chay.
+            string tenHien = tenGon(r.ten);
+            int rongToiDa = xChip - 8 - xt;
+            int wTen = Math.min(rongToiDa, mFont.tahoma_7b_white.getWidth(tenHien) + 16);
             g.veDaiDoc(xt - 4, y + 4, wTen, 14, 7, rgb(0xFB, 0xB0, 0x5C), rgb(0xE0, 0x74, 0x1E));
-            mFont.tahoma_7b_white.drawString(g, r.ten, xt + 4, y + 5, mFont.LEFT, mFont.tahoma_7b_dark);
+            veChuChay(g, mFont.tahoma_7b_white, mFont.tahoma_7b_dark, tenHien, xt + 4, y + 5, wTen - 10, false);
             string phu = moTaNgan(r.moTa);
             if (phu.Length > 0)
             {
-                mFont.tahoma_7b_dark.drawString(g, catBot(phu, 40), xt, y + 20, mFont.LEFT);
+                veChuChay(g, mFont.tahoma_7b_dark, null, phu, xt, y + 20, rongToiDa, false);
             }
         }
 
@@ -791,6 +803,12 @@ namespace Game5.God
             int wIcon = iconPhieu >= 0 ? 18 : 0;
             int wChip = wIcon + mFont.tahoma_7b_dark.getWidth(so) + 10;
             int tong = wChu + 8 + wChip;
+            if (tong > n[2] - 8 && chu.StartsWith("MỞ "))
+            {
+                chu = chu.Substring(3);
+                wChu = mFont.tahoma_7b_dark.getWidth(chu);
+                tong = wChu + 6 + wChip;
+            }
             int x0 = n[0] + (n[2] - tong) / 2;
             int yc = n[1] + n[3] / 2 - 5;
             if (duoc)
@@ -1010,7 +1028,7 @@ namespace Game5.God
             veKhungBo(g, x, y, w, h, MAU_THE, 1f, MAU_VIEN, 1f, 2);
             g.setColor(MAU_CAM, 1f);
             g.fillRect(x + 2, y + 2, w - 4, 20, BO_GOC - 1);
-            mFont.tahoma_7b_white.drawString(g, "QUÀ TRONG " + r.ten.ToUpper(), x + w / 2, y + 6,
+            mFont.tahoma_7b_white.drawString(g, "QUÀ TRONG " + tenGon(r.ten).ToUpper(), x + w / 2, y + 6,
                     mFont.CENTER, mFont.tahoma_7b_dark);
 
             const int caoDong = 28;
@@ -1084,7 +1102,7 @@ namespace Game5.God
             }
             if (!hienXemTruoc && !hienKetQua && !dangQuay && coDuLieu && ds.Count > soHienDs())
             {
-                bool trenDs = GameCanvas.px >= bx && GameCanvas.px <= bx + RONG_DS && GameCanvas.py >= by && GameCanvas.py <= by + bh;
+                bool trenDs = GameCanvas.px >= bx && GameCanvas.px <= bx + RONG_DS_W && GameCanvas.py >= by && GameCanvas.py <= by + bh;
                 if (trenDs && GameCanvas.pXYScrollMouse != 0)
                 {
                     cuonDs += GameCanvas.pXYScrollMouse > 0 ? -1 : 1;
@@ -1151,7 +1169,7 @@ namespace Game5.God
                 {
                     break;
                 }
-                if (cham(bx + 3, yy, RONG_DS - 6, CAO_MUC))
+                if (cham(bx + 3, yy, RONG_DS_W - 6, CAO_MUC))
                 {
                     if (chon != i)
                     {
