@@ -370,9 +370,88 @@ namespace Game2.God
             return new int[] { x0 + rong - 28, y0 + 4, 22, 18 };
         }
 
-        private int[] oChieu(int i)
+        /// <summary>Lọc chiêu theo hành tinh: -1 tất cả, 0 Trái Đất, 1 Namếc, 2 Xayda.</summary>
+        private int locHT = -1;
+
+        /// <summary>Dòng đầu đang hiện của danh sách chiêu (cuộn dọc).</summary>
+        private int cuonTrai;
+
+        private int yKeoTrai;
+
+        private static readonly string[] NHAN_LOC = { "Tất cả", "TĐ", "NM", "XD" };
+
+        /// <summary>Hành tinh của chiêu: 0 Trái Đất, 1 Namếc, 2 Xayda, 3 chung.</summary>
+        private static int hanhTinhCua(int tpl)
         {
-            return new int[] { x0 + 8, y0 + CAO_DAU + 8 + i * (CAO_CHIEU + 4), RONG_TRAI - 8, CAO_CHIEU };
+            switch (tpl)
+            {
+                case 0: case 1: case 6: case 9: case 10: case 20: case 22: case 24:
+                    return 0;
+                case 2: case 3: case 7: case 11: case 12: case 17: case 18: case 26:
+                    return 1;
+                case 4: case 5: case 8: case 13: case 14: case 21: case 23: case 25:
+                    return 2;
+                default:
+                    return 3;
+            }
+        }
+
+        /// <summary>Chỉ số (trong dsChieu) của các chiêu đang hiện theo bộ lọc.</summary>
+        private List<int> dsHien()
+        {
+            List<int> kq = new List<int>();
+            for (int i = 0; i < dsChieu.Count; i++)
+            {
+                int ht = hanhTinhCua(dsChieu[i].tpl);
+                if (locHT < 0 || ht == locHT || ht == 3)
+                {
+                    kq.Add(i);
+                }
+            }
+            return kq;
+        }
+
+        private int yDauDs()
+        {
+            return y0 + CAO_DAU + 8 + 22;
+        }
+
+        private int caoVungDs()
+        {
+            return y0 + cao - 8 - yDauDs();
+        }
+
+        private int soDongHien()
+        {
+            return System.Math.Max(1, (caoVungDs() + 4) / (CAO_CHIEU + 4));
+        }
+
+        private void kepCuonTrai(int soDong)
+        {
+            int toiDa = System.Math.Max(0, soDong - soDongHien());
+            if (cuonTrai > toiDa)
+            {
+                cuonTrai = toiDa;
+            }
+            if (cuonTrai < 0)
+            {
+                cuonTrai = 0;
+            }
+        }
+
+        /// <summary>Nút lọc thứ <paramref name="i"/> (0 = Tất cả).</summary>
+        private int[] oLoc(int i)
+        {
+            int w0 = RONG_TRAI - 8;
+            int wTatCa = 36;
+            int wCon = (w0 - wTatCa - 6) / 3;
+            int x = x0 + 8 + (i == 0 ? 0 : wTatCa + 2 + (i - 1) * (wCon + 2));
+            return new int[] { x, y0 + CAO_DAU + 7, i == 0 ? wTatCa : wCon, 17 };
+        }
+
+        private int[] oChieu(int k)
+        {
+            return new int[] { x0 + 8, yDauDs() + (k - cuonTrai) * (CAO_CHIEU + 4), RONG_TRAI - 8, CAO_CHIEU };
         }
 
         private int xPhai()
@@ -461,13 +540,42 @@ namespace Game2.God
         {
             g.setColor(0xFFFFFF, 0.35f);
             g.fillRect(x0 + 4, y0 + CAO_DAU + 4, RONG_TRAI, cao - CAO_DAU - 12, 8);
-            for (int i = 0; i < dsChieu.Count; i++)
+            for (int l = 0; l < NHAN_LOC.Length; l++)
             {
-                int[] o = oChieu(i);
-                if (o[1] + o[3] > y0 + cao - 8)
+                int[] nl = oLoc(l);
+                bool dang = locHT == l - 1;
+                if (dang)
                 {
-                    break;
+                    veKhung(g, nl[0], nl[1], nl[2], nl[3], 6, VIEN, CAM_TREN, CAM_DUOI);
+                    mFont.tahoma_7b_white.drawString(g, NHAN_LOC[l], nl[0] + nl[2] / 2, nl[1] + 3, mFont.CENTER, mFont.tahoma_7b_dark);
                 }
+                else
+                {
+                    veKhung(g, nl[0], nl[1], nl[2], nl[3], 6, rgb(0xD8, 0xB8, 0x8C), KEM_TREN, KEM_DUOI);
+                    mFont.tahoma_7b_dark.drawString(g, NHAN_LOC[l], nl[0] + nl[2] / 2, nl[1] + 3, mFont.CENTER);
+                }
+            }
+            List<int> hien = dsHien();
+            kepCuonTrai(hien.Count);
+            if (hien.Count > soDongHien())
+            {
+                // Thanh cuon mong ben phai cot.
+                int caoVung = caoVungDs();
+                int caoThanh = System.Math.Max(14, caoVung * soDongHien() / hien.Count);
+                int yThanh = yDauDs() + (caoVung - caoThanh) * cuonTrai / System.Math.Max(1, hien.Count - soDongHien());
+                g.setColor(0x000000, 0.12f);
+                g.fillRect(x0 + RONG_TRAI - 1, yDauDs(), 3, caoVung, 1);
+                g.setColor(CAM_DUOI, 0.9f);
+                g.fillRect(x0 + RONG_TRAI - 1, yThanh, 3, caoThanh, 1);
+            }
+            if (hien.Count == 0)
+            {
+                mFont.tahoma_7.drawString(g, "Chưa có skin", x0 + 4 + RONG_TRAI / 2, yDauDs() + 10, mFont.CENTER);
+            }
+            for (int k = cuonTrai; k < hien.Count && k - cuonTrai < soDongHien(); k++)
+            {
+                int i = hien[k];
+                int[] o = oChieu(k);
                 bool c = i == chieuChon;
                 if (c)
                 {
@@ -674,6 +782,31 @@ namespace Game2.God
                 return false;
             }
             tinhBoCuc();
+            if (coDuLieu && dsChieu.Count > 0)
+            {
+                int soDong = dsHien().Count;
+                bool trenCot = GameCanvas.px >= x0 && GameCanvas.px <= x0 + RONG_TRAI + 6
+                        && GameCanvas.py >= yDauDs() && GameCanvas.py <= y0 + cao;
+                if (trenCot && GameCanvas.pXYScrollMouse != 0)
+                {
+                    cuonTrai += GameCanvas.pXYScrollMouse > 0 ? -1 : 1;
+                    kepCuonTrai(soDong);
+                }
+                if (GameCanvas.isPointerDown && trenCot)
+                {
+                    int buoc = (GameCanvas.py - yKeoTrai) / (CAO_CHIEU + 4);
+                    if (buoc != 0)
+                    {
+                        cuonTrai -= buoc;
+                        yKeoTrai += buoc * (CAO_CHIEU + 4);
+                        kepCuonTrai(soDong);
+                    }
+                }
+                else
+                {
+                    yKeoTrai = GameCanvas.py;
+                }
+            }
             if (!GameCanvas.isPointerJustRelease)
             {
                 return true;
@@ -695,11 +828,31 @@ namespace Game2.God
             {
                 return true;
             }
-            for (int i = 0; i < dsChieu.Count; i++)
+            // Nut loc hanh tinh.
+            for (int l = 0; l < NHAN_LOC.Length; l++)
             {
-                int[] o = oChieu(i);
+                int[] nl = oLoc(l);
+                if (cham(nl[0], nl[1], nl[2], nl[3]))
+                {
+                    locHT = l - 1;
+                    cuonTrai = 0;
+                    List<int> hl = dsHien();
+                    if (hl.Count > 0 && !hl.Contains(chieuChon))
+                    {
+                        chieuChon = hl[0];
+                        oChon = dsChieu[chieuChon].dangDung;
+                        lucChonO = mSystem.currentTimeMillis();
+                    }
+                    return true;
+                }
+            }
+            List<int> hienC = dsHien();
+            for (int k = cuonTrai; k < hienC.Count && k - cuonTrai < soDongHien(); k++)
+            {
+                int[] o = oChieu(k);
                 if (cham(o[0], o[1], o[2], o[3]))
                 {
+                    int i = hienC[k];
                     chieuChon = i;
                     oChon = dsChieu[i].dangDung;
                     lucChonO = mSystem.currentTimeMillis();
