@@ -269,7 +269,7 @@ public final class BossDataDAO {
             rs.dispose();
         }
         if (!la.isEmpty()) {
-            Logger.error("boss_data có " + la.size() + " dòng không khớp mẫu nào"
+            Logger.warn("BOSS_DATA", "boss_data có " + la.size() + " dòng không khớp mẫu nào"
                     + " trong mã: " + String.join(", ", la) + "\n");
         }
         return n;

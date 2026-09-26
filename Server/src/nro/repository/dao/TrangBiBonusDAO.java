@@ -128,7 +128,8 @@ public final class TrangBiBonusDAO {
     /** Đổi mã cũ trùng nghĩa sang mã chung (xem {@code SetBonusDAO.gopLoaiTrung}). */
     private static void gopMaTrung() {
         try {
-            ConnectDB.executeUpdate("UPDATE trang_bi_bonus SET loai = 'skill_pct', tham_so = ?"
+            // IGNORE: da co dong skill_pct cua De trung thi dong cu trung khoa — bo qua (ma cu van doc duoc).
+            ConnectDB.executeUpdate("UPDATE IGNORE trang_bi_bonus SET loai = 'skill_pct', tham_so = ?"
                     + " WHERE loai = 'detrung_dame_pct'", (int) Skill.DE_TRUNG);
         } catch (Exception ex) {
             Logger.logException(TrangBiBonusDAO.class, ex, "Không gộp được mã Đẻ Trứng");

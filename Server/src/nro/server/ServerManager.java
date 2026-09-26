@@ -327,6 +327,8 @@ public class ServerManager {
     }
 
     public static void main(String[] args) {
+        // Cai bo loc ma mau (neu -Dnro.khongmau=true) truoc moi dong in.
+        nro.core.log.Logger.caiDat();
         try {
             System.setOut(new PrintStream(System.out, true, "UTF-8"));
         } catch (UnsupportedEncodingException e) {

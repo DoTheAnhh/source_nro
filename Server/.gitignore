@@ -89,3 +89,6 @@
 # =====================================================================
 /out/
 /AWN_Version.jar
+
+# Cong cu build nhanh cua run.bat: .class dich tai cho tren tung may (JDK co the khac).
+/tools/*.class

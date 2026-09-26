@@ -64,15 +64,93 @@ public class Logger {
             "CONNECT", "LOGIN", "SAVE", "AUTO_SAVE", "BOT", "THREAD", "SCHEDULE", "BXH",
             "SERVER_INFO", "IP", "CHONG_DDOS", "DUP_LOGIN", "CLIENT"));
 
+    /**
+     * Tag ồn lúc khởi động (vị trí ngọc Namếc, boss, vòng lặp game, cấu hình, minigame,
+     * dữ liệu boss) — ẩn cả khi vàng; chỉ lỗi đỏ mới hiện.
+     */
+    private static final java.util.Set<String> TAG_LUON_AN = new java.util.HashSet<>(java.util.Arrays.asList(
+            "NAMEK", "BOSS", "GAME", "CONFIG", "MINIGAME", "BOSS_DATA", "EVENT_INFO", "DDOS_INFO"));
+
+    /** Có in mã màu ANSI không ({@code -Dnro.khongmau=true}: cửa sổ cmd không hiểu mã màu). */
+    private static final boolean MAU = !Boolean.getBoolean("nro.khongmau");
+
+    static {
+        if (!MAU) {
+            // Loc bo MOI ma mau (ke ca cho khac tu in System.out co mau), in UTF-8.
+            try {
+                System.setOut(new BoMau(new java.io.FileOutputStream(java.io.FileDescriptor.out)));
+                System.setErr(new BoMau(new java.io.FileOutputStream(java.io.FileDescriptor.err)));
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    /** Gọi sớm trong main để bộ lọc mã màu được cài trước mọi dòng in. */
+    public static void caiDat() {
+    }
+
+    /** PrintStream UTF-8 bỏ chuỗi ESC [ … chữ (mã màu ANSI). */
+    private static final class BoMau extends java.io.PrintStream {
+
+        private int trangThai;
+
+        BoMau(java.io.OutputStream o) throws java.io.UnsupportedEncodingException {
+            super(new java.io.BufferedOutputStream(o, 8192), true, "UTF-8");
+        }
+
+        @Override
+        public synchronized void write(int b) {
+            if (trangThai == 0) {
+                if (b == 0x1B) {
+                    trangThai = 1;
+                    return;
+                }
+                super.write(b);
+            } else if (trangThai == 1) {
+                trangThai = b == '[' ? 2 : 0;
+            } else if (b >= 0x40 && b <= 0x7E) {
+                trangThai = 0;
+            }
+        }
+
+        @Override
+        public synchronized void write(byte[] buf, int off, int len) {
+            for (int i = off; i < off + len; i++) {
+                write(buf[i] & 0xFF);
+            }
+            flush();
+        }
+    }
+
     private static boolean an(String color, String tag) {
         if (DAY_DU || tag == null) {
             return false;
         }
-        // Loi / canh bao khong bao gio an.
-        if (color != null && (color.contains(YELLOW) || color.contains(RED))) {
+        // Loi (do) khong bao gio an.
+        if (color != null && color.contains(RED)) {
+            return false;
+        }
+        if (TAG_LUON_AN.contains(tag)) {
+            return true;
+        }
+        // Canh bao (vang) khong an.
+        if (color != null && color.contains(YELLOW)) {
             return false;
         }
         return TAG_AN.contains(tag);
+    }
+
+    /** Tiêu đề: gọn thì một dòng "> tiêu đề", đầy đủ thì có hai dòng kẻ. */
+    private static void tieuDe(String color, String vien, String text) {
+        synchronized (LOCK) {
+            if (DAY_DU) {
+                System.out.println(color + vien + RESET);
+            }
+            System.out.println(color + "> " + text + RESET);
+            if (DAY_DU) {
+                System.out.println(color + vien + RESET);
+            }
+        }
     }
 
     private static void print(String color, String tag, String text, boolean newLine) {
@@ -238,11 +316,7 @@ public class Logger {
     // =====================================================
 
     public static void eventTitle(String title) {
-        synchronized (LOCK) {
-            System.out.println(PURPLE + BOLD + "════════════════════════════════════════════════════════════" + RESET);
-            System.out.println(PURPLE + BOLD + "▶ EVENT | " + title + RESET);
-            System.out.println(PURPLE + BOLD + "════════════════════════════════════════════════════════════" + RESET);
-        }
+        tieuDe(PURPLE + BOLD, "════════════════════════════════════════════════════════════", "EVENT | " + title);
     }
 
     public static void event(String text) {
@@ -266,11 +340,7 @@ public class Logger {
     // =====================================================
 
     public static void antiDdosTitle(String title) {
-        synchronized (LOCK) {
-            System.out.println(BLUE + BOLD + "════════════════════════════════════════════════════════════" + RESET);
-            System.out.println(BLUE + BOLD + "▶ ANTI_DDOS | " + title + RESET);
-            System.out.println(BLUE + BOLD + "════════════════════════════════════════════════════════════" + RESET);
-        }
+        tieuDe(BLUE + BOLD, "════════════════════════════════════════════════════════════", "ANTI_DDOS | " + title);
     }
 
     public static void antiDdos(String text) {
@@ -310,25 +380,20 @@ public class Logger {
     // =====================================================
 
     public static void line() {
+        if (!DAY_DU) {
+            return;
+        }
         synchronized (LOCK) {
             System.out.println(GREEN + "────────────────────────────────────────────────────────────" + RESET);
         }
     }
 
     public static void title(String title) {
-        synchronized (LOCK) {
-            System.out.println(GREEN + "────────────────────────────────────────────────────────────" + RESET);
-            System.out.println(GREEN + BOLD + "▶ " + title + RESET);
-            System.out.println(GREEN + "────────────────────────────────────────────────────────────" + RESET);
-        }
+        tieuDe(GREEN + BOLD, "────────────────────────────────────────────────────────────", title);
     }
 
     public static void section(String title) {
-        synchronized (LOCK) {
-            System.out.println(GREEN + BOLD + "════════════════════════════════════════════════════════════" + RESET);
-            System.out.println(GREEN + BOLD + "▶ " + title + RESET);
-            System.out.println(GREEN + BOLD + "════════════════════════════════════════════════════════════" + RESET);
-        }
+        tieuDe(GREEN + BOLD, "════════════════════════════════════════════════════════════", title);
     }
 
     // =====================================================
@@ -348,6 +413,19 @@ public class Logger {
             ex.printStackTrace(pw);
             String exceptionDetails = sw.toString();
 
+            if (!DAY_DU) {
+                // Gon: mot dong loi + toi da 4 dong goi trong ma nro.
+                err("EXCEPTION", clazz.getSimpleName() + "." + methodName + ": " + ex.getClass().getSimpleName()
+                        + " - " + ex.getMessage());
+                int dem = 0;
+                for (String line : exceptionDetails.split("\n")) {
+                    if (line.trim().startsWith("at nro.") && dem < 4) {
+                        err("STACK", line.trim());
+                        dem++;
+                    }
+                }
+                return;
+            }
             err("EXCEPTION", "Class: " + clazz.getName());
             err("EXCEPTION", "Method: " + methodName);
             err("EXCEPTION", "Message: " + ex.getMessage());

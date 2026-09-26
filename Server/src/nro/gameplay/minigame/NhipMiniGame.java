@@ -60,7 +60,7 @@ public final class NhipMiniGame {
         Thread t = new Thread(this::vongLap, "Nhip mini game");
         t.setDaemon(true);
         t.start();
-        Logger.success("[MINIGAME] Da bat nhip cho " + danhSach.size()
+        Logger.info("MINIGAME", "Da bat nhip cho " + danhSach.size()
                 + " tro choi theo phien.\n");
     }
 
