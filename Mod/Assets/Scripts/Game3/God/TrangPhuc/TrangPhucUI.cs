@@ -3412,6 +3412,9 @@ namespace Game3.God
         private const float TH_LECH_QUAN = 0.26f * 90f;
         private const float TH_LECH_AN = 0.21f * 100f;
 
+        /// <summary>Vòng ấn chú thu nhỏ cho vừa khít vòng đáy của xích quấn (73/88 đơn vị) — thành viền của nó.</summary>
+        private const float TH_AN_TL = 0.83f;
+
         public class TroiHon
         {
             public Char c;
@@ -3608,7 +3611,7 @@ namespace Game3.God
                 float mo = 1f - (float) tTan / (TH_QUAN * 4);
                 if (a.Length >= 12)
                 {
-                    veHoaTamTL(g, a, 10, 12, tTan, TH_AN, false, fx, (int) (fy - TH_LECH_AN * tiLe), tiLe, mo * 0.85f);
+                    veHoaTamTL(g, a, 10, 12, tTan, TH_AN, false, fx, (int) (fy - TH_LECH_AN * tiLe * TH_AN_TL), tiLe * TH_AN_TL, mo * 0.85f);
                 }
                 if (q.Length >= 12)
                 {
@@ -3621,11 +3624,11 @@ namespace Game3.God
                 long tA = TH_AN * 4;
                 if (t < tA)
                 {
-                    veHoaTamTL(g, a, 0, 4, t, TH_AN, false, fx, (int) (fy - TH_LECH_AN * tiLe), tiLe, 0.9f);
+                    veHoaTamTL(g, a, 0, 4, t, TH_AN, false, fx, (int) (fy - TH_LECH_AN * tiLe * TH_AN_TL), tiLe * TH_AN_TL, 0.9f);
                 }
                 else
                 {
-                    veHoaTamTL(g, a, 4, 10, t - tA, TH_AN, true, fx, (int) (fy - TH_LECH_AN * tiLe), tiLe, 0.85f);
+                    veHoaTamTL(g, a, 4, 10, t - tA, TH_AN, true, fx, (int) (fy - TH_LECH_AN * tiLe * TH_AN_TL), tiLe * TH_AN_TL, 0.85f);
                 }
             }
             if (q.Length >= 9)
