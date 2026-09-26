@@ -1836,7 +1836,20 @@ namespace Game6.God
                     short[] quan = tach(m.tpVK, 3);
                     short[] ket = tach(m.tpVK, 4);
                     short[] ve = tach(m.tpVK, 5);
-                    if (bay.Length == 0 || chum.Length == 0 || quan.Length == 0 || ket.Length == 0)
+                    // Bo khung cu (may chu chua cap nhat: 3 doan) — thieu doan nao bo qua doan do,
+                    // quan lay 6 khung xoay cua trung.
+                    short[] choK = tach(m.tpVK, 0);
+                    if (quan.Length == 0 && choK.Length >= 12)
+                    {
+                        quan = new short[6];
+                        System.Array.Copy(choK, 6, quan, 0, 6);
+                    }
+                    if (chum.Length > 0 && chum.Length < 4)
+                    {
+                        // Doan 2 cua bo cu la 2 khung thu kiem, khong phai khung chum.
+                        chum = new short[0];
+                    }
+                    if (bay.Length == 0 || quan.Length == 0)
                     {
                         dsKiem.RemoveAt(i);
                         continue;
@@ -1845,6 +1858,7 @@ namespace Game6.God
                     float ty = dichY(k);
                     long tBay = VK_BAY * bay.Length;
                     long tChum = VK_CHUM * chum.Length;
+                    // Bo cu: dong kiem 10 khung bay cham hon mot chut cho du dai.
                     if (k.denLuc == 0)
                     {
                         long t = ms - k.batDau;
@@ -1856,7 +1870,7 @@ namespace Game6.God
                             float ax = k.x0 + (tx - k.x0) * e;
                             float ay = k.y0 + (ty - k.y0) * e;
                             float gocBay = (float) (System.Math.Atan2(ty - k.y0, tx - k.x0) * 57.29578);
-                            veChuoi(g, bay, 0, bay.Length, t, VK_BAY, ax, ay, 1f, gocBay, 1f, chum[0]);
+                            veChuoi(g, bay, 0, bay.Length, t, VK_BAY, ax, ay, 1f, gocBay, 1f, chum.Length > 0 ? chum[0] : quan[0]);
                             continue;
                         }
                         k.denLuc = k.batDau + tBay;
@@ -1897,10 +1911,15 @@ namespace Game6.God
                         continue;
                     }
                     long tk = ms - k.quanHet;
-                    long tKet = VK_KET * ket.Length;
+                    long tKet = ket.Length > 0 ? VK_KET * ket.Length : VK_KET * 4;
                     long tVe = VK_VE_KHUNG * System.Math.Max(1, ve.Length);
                     long veTu = VK_KET * 2;
-                    if (tk < tKet)
+                    if (tk < tKet && ket.Length == 0)
+                    {
+                        // Khong co khung ket thuc: xoay quan mo dan.
+                        veLap(g, quan, 0, quan.Length, tk + VK_QUAN, VK_QUAN_KHUNG, tx, ty, 1f, gocQuan, 1f - (float) tk / tKet);
+                    }
+                    else if (tk < tKet)
                     {
                         // 4. Ket thuc o dich: loe sang roi tan thanh bui.
                         float mo = tk > tKet - VK_KET ? 1f - (float) (tk - (tKet - VK_KET)) / VK_KET : 1f;
