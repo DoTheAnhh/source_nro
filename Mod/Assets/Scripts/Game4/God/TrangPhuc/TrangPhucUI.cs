@@ -3398,9 +3398,9 @@ namespace Game4.God
         //  bị trói — cả khu cùng thấy. Nạn nhân thấy màn hình bị trói (byte 3, tpl 26).
         //  Khung: [tử thần 16 | tay ma 12 | xích bay 16 | xích quấn 12 | ấn chú 12 | màn hình 9].
         // ------------------------------------------------------------------
-        private const long TH_TU = 75L;
+        private const long TH_TU = 90L;
         private const long TH_TAY = 55L;
-        private const long TH_LAP = 110L;
+        private const long TH_LAP = 150L;
         private const long TH_THU = 60L;
         private const long TH_QUAN = 90L;
         private const long TH_AN = 85L;
@@ -3418,6 +3418,7 @@ namespace Game4.God
             public short[] bay;
             public bool dangGong;
             public long batDau;
+            public long batDauGong;
             public long het;
             public int tx;
             public int ty;
@@ -3468,6 +3469,7 @@ namespace Game4.God
                 t.bay = c.tpBay;
                 t.dangGong = true;
                 t.batDau = mSystem.currentTimeMillis();
+                t.batDauGong = t.batDau;
                 t.het = t.batDau + System.Math.Max(500, timeGong) + 4000L;
                 t.dich.Clear();
             }
@@ -3491,6 +3493,8 @@ namespace Game4.God
                     t.c = c;
                     t.bay = c.tpBay;
                     dsTroiHon.Add(t);
+                    // Khong thay luc gong (vao ban do tre): bo doan tu than hien ra.
+                    t.batDauGong = mSystem.currentTimeMillis() - TH_TU * 8;
                 }
                 t.dangGong = false;
                 t.batDau = mSystem.currentTimeMillis();
@@ -3503,7 +3507,7 @@ namespace Game4.God
                 {
                     foreach (Point p in ds)
                     {
-                        if (p == null || t.dich.Count >= 8)
+                        if (p == null || t.dich.Count >= 1)
                         {
                             continue;
                         }
@@ -3638,6 +3642,58 @@ namespace Game4.God
             }
         }
 
+        /// <summary>Độ dày tay ma / xích (đơn vị) — chỉ kéo dài theo chiều phóng, không phình to.</summary>
+        private const float TH_DAY_TAY = 50f;
+        private const float TH_DAY_XICH = 28f;
+
+        /// <summary>Thời gian vươn ra / rút về (ms), tay ma mềm dần theo hàm êm.</summary>
+        private const long TH_VUON = 380L;
+        private const long TH_RUT = 420L;
+
+        /// <summary>Vẽ ảnh kéo từ (ox, oy) dài <paramref name="dai"/>, dày <paramref name="day"/>, theo góc; lat = lật dọc (địch bên trái vẫn đứng thẳng).</summary>
+        private static void veKeoNeo(mGraphics g, short id, float ox, float oy, float goc, float dai, float day, bool lat, float mo)
+        {
+            if (mo <= 0.01f || dai < 2f)
+            {
+                return;
+            }
+            var s = (SmallImage.imgNew != null && id >= 0 && id < SmallImage.imgNew.Length) ? SmallImage.imgNew[id] : null;
+            if (s == null || s.img == null || mGraphics.getImageWidth(s.img) <= 1)
+            {
+                // Chua tai: xin tai (ham nay khong ve gi khi anh dang tai).
+                SmallImage.veIconXoay(g, id, (int) ox, (int) oy, 1f, goc, mo);
+                return;
+            }
+            double rad = goc / 57.29578;
+            g.veAnhXoayLat(s.img, (float) (ox + System.Math.Cos(rad) * dai / 2), (float) (oy + System.Math.Sin(rad) * dai / 2),
+                    dai, day, goc, mo, lat);
+        }
+
+        private static void veHoaKeo(mGraphics g, short[] k, int tu, int den, long t, long ms, bool lap,
+                float ox, float oy, float goc, float dai, float day, bool lat, float mo)
+        {
+            if (k == null || den > k.Length || den <= tu)
+            {
+                return;
+            }
+            int a;
+            int b;
+            float h;
+            khungHoa(tu, den, t, ms, lap, out a, out b, out h);
+            // Hoa muot: anh cu mo dan dung luc anh moi hien dan (khong nhay khung).
+            veKeoNeo(g, k[a], ox, oy, goc, dai, day, lat, mo * (b != a ? 1f - h : 1f));
+            if (b != a && h > 0.01f)
+            {
+                veKeoNeo(g, k[b], ox, oy, goc, dai, day, lat, mo * h);
+            }
+        }
+
+        private static float emRa(float x)
+        {
+            x = System.Math.Max(0f, System.Math.Min(1f, x));
+            return 1f - (1f - x) * (1f - x) * (1f - x);
+        }
+
         private static void veTroiHon(mGraphics g)
         {
             if (dsTroiHon.Count == 0 && dsBiTroi.Count == 0)
@@ -3672,123 +3728,101 @@ namespace Game4.God
                 {
                     TroiHon th = dsTroiHon[i];
                     Char c = th.c;
-                    long t = ms - th.batDau;
                     short[] tu = tach(th.bay, 0);
                     short[] tay = tach(th.bay, 1);
                     short[] xich = tach(th.bay, 2);
-                    // Tu than lo lung sau lung, nhinh len tren dau.
-                    int gx = c.cx - c.cdir * 26;
-                    int gy = c.cy - c.ch / 2 - 22;
-                    if (th.dangGong)
-                    {
-                        if (ms > th.het || tu.Length < 11)
-                        {
-                            dsTroiHon.RemoveAt(i);
-                            continue;
-                        }
-                        float moG = System.Math.Min(1f, t / 250f) * 0.9f;
-                        long tHien = TH_TU * 8;
-                        if (t < tHien)
-                        {
-                            veHoaTamTL(g, tu, 0, 8, t, TH_TU, false, gx, gy, 1f, moG);
-                        }
-                        else
-                        {
-                            veHoaTamTL(g, tu, 8, 11, t - tHien, TH_LAP, true, gx, gy, 1f, moG);
-                        }
-                        continue;
-                    }
+                    long tg = ms - th.batDauGong;
+                    long t = ms - th.batDau;
                     long D = th.het - th.batDau;
-                    long tOut = TH_TAY * 6;
-                    long tRet = TH_THU * 7;
-                    if (t >= D + tRet)
+                    if ((th.dangGong && ms > th.het) || (!th.dangGong && t >= D + TH_RUT) || tu.Length < 16)
                     {
                         dsTroiHon.RemoveAt(i);
                         continue;
                     }
-                    // Tu than: gio tay khi phong, tan dan luc thu.
-                    if (tu.Length >= 16)
+                    // Muc tieu duy nhat: dich dau tien (khong co thi diem nham).
+                    float ex = th.tx;
+                    float ey = th.ty - 20;
+                    int fx = th.tx;
+                    int fy = th.ty;
+                    if (th.dich.Count > 0)
                     {
-                        float moT = 0.9f * (t < D ? 1f : 1f - (float) (t - D) / tRet);
-                        if (t < TH_TU * 3)
+                        IMapObject o = th.dich[0];
+                        fx = o.getX();
+                        fy = o.getY();
+                        ex = fx;
+                        ey = fy - o.getH() / 2f;
+                    }
+                    int huong = th.dangGong ? c.cdir : (ex >= c.cx ? 1 : -1);
+                    // Tu than om sat sau lung nguoi dung chieu, mot khoi voi nguoi.
+                    int gx = c.cx - huong * 10;
+                    int gy = c.cy - c.ch / 2 - 20;
+                    float moG = 0.88f * System.Math.Min(1f, tg / 300f);
+                    if (!th.dangGong && t > D)
+                    {
+                        moG *= 1f - (float) (t - D) / TH_RUT;
+                    }
+                    long tHien = TH_TU * 8;
+                    if (tg < tHien)
+                    {
+                        veHoaTamTL(g, tu, 0, 8, tg, TH_TU, false, gx, gy, 1f, moG);
+                    }
+                    else if (th.dangGong)
+                    {
+                        veHoaTamTL(g, tu, 8, 11, tg - tHien, TH_LAP, true, gx, gy, 1f, moG);
+                    }
+                    else if (t < D)
+                    {
+                        // Gio tay phong xich roi giu tu the.
+                        long tGio = TH_TU * 3;
+                        if (t < tGio)
                         {
-                            veHoaTamTL(g, tu, 10, 13, t, TH_TU, false, gx, gy, 1f, moT);
-                        }
-                        else if (t < D)
-                        {
-                            veHoaTamTL(g, tu, 12, 14, t - TH_TU * 3, TH_LAP, true, gx, gy, 1f, moT);
+                            veHoaTamTL(g, tu, 10, 13, t, TH_TU, false, gx, gy, 1f, moG);
                         }
                         else
                         {
-                            veHoaTamTL(g, tu, 13, 16, t - D, TH_THU * 2, false, gx, gy, 1f, moT);
+                            veHoaTamTL(g, tu, 12, 15, t - tGio, TH_LAP, true, gx, gy, 1f, moG);
                         }
                     }
-                    // Tu tay nguoi dung chieu phong ca tay ma lan xich toi tung muc tieu.
-                    float hx = c.cx + c.cdir * 6;
-                    float hy = c.cy - c.ch / 2 + 2;
-                    List<int[]> dichs = new List<int[]>();
-                    foreach (IMapObject o in th.dich)
+                    else
                     {
-                        dichs.Add(new int[] { o.getX(), o.getY(), o.getH() });
+                        veHoaTamTL(g, tu, 13, 16, t - D, TH_RUT / 3, false, gx, gy, 1f, moG);
                     }
-                    if (dichs.Count == 0)
+                    if (th.dangGong)
                     {
-                        dichs.Add(new int[] { th.tx, th.ty, 40 });
+                        continue;
                     }
-                    foreach (int[] d in dichs)
+                    // Tay ma + xich phong thang tu than toi dich — dung goc du dich o ben nao.
+                    float ox = gx + huong * 16;
+                    float oy = gy + 12;
+                    float dx = ex - ox;
+                    float dy = ey - oy;
+                    float dai = (float) System.Math.Sqrt(dx * dx + dy * dy);
+                    float goc = (float) (System.Math.Atan2(dy, dx) * 57.29578);
+                    bool lat = dx < 0;
+                    float oyX = oy + 6;
+                    float dyX = ey + 4 - oyX;
+                    float daiX = (float) System.Math.Sqrt(dx * dx + dyX * dyX);
+                    float gocX = (float) (System.Math.Atan2(dyX, dx) * 57.29578);
+                    if (t < TH_VUON)
                     {
-                        float ex = d[0];
-                        float ey = d[1] - d[2] / 2f;
-                        float dx = ex - hx;
-                        float dy = ey - hy;
-                        float goc = (float) (System.Math.Atan2(dy, dx) * 57.29578);
-                        float dai = (float) System.Math.Sqrt(dx * dx + dy * dy);
-                        float tiLe = System.Math.Max(0.45f, System.Math.Min(2.2f, dai / TH_DAI_TAY));
-                        // Xich lech xuong mot chut duoi tay ma de thay ro ca hai.
-                        float xy = hy + 5;
-                        float gocX = (float) (System.Math.Atan2(ey + 4 - xy, dx) * 57.29578);
-                        float daiX = (float) System.Math.Sqrt(dx * dx + (ey + 4 - xy) * (ey + 4 - xy));
-                        float tlX = System.Math.Max(0.45f, System.Math.Min(2.2f, daiX / TH_DAI_TAY));
-                        if (t < tOut)
-                        {
-                            // Phong ra: anh keo dai dan tu 0 toi du dai.
-                            float k = System.Math.Max(0.15f, (float) t / tOut);
-                            if (xich.Length >= 5)
-                            {
-                                veHoaNeo(g, xich, 0, 5, t, TH_TAY, false, hx, xy, gocX, tlX * k, 1f);
-                            }
-                            if (tay.Length >= 6)
-                            {
-                                veHoaNeo(g, tay, 0, 6, t, TH_TAY, false, hx, hy, goc, tiLe * k, 1f);
-                            }
-                        }
-                        else if (t < D)
-                        {
-                            long tb = t - tOut;
-                            if (xich.Length >= 9)
-                            {
-                                veHoaNeo(g, xich, 5, 9, tb, TH_LAP, true, hx, xy, gocX, tlX, 1f);
-                            }
-                            if (tay.Length >= 9)
-                            {
-                                veHoaNeo(g, tay, 6, 9, tb, TH_LAP, true, hx, hy, goc, tiLe, 1f);
-                            }
-                            veXichQuan(g, tach(th.bay, 3), tach(th.bay, 4), d[0], d[1], 1f, tb, -1);
-                        }
-                        else
-                        {
-                            // Thu ve: tay ma + xich rut lai; xich quan giu nguyen (goi byte 6 ve tiep).
-                            long tr = t - D;
-                            float k = System.Math.Max(0.1f, 1f - (float) tr / tRet);
-                            if (xich.Length >= 16)
-                            {
-                                veHoaNeo(g, xich, 9, 16, tr, TH_THU, false, hx, xy, gocX, tlX * k, k);
-                            }
-                            if (tay.Length >= 12)
-                            {
-                                veHoaNeo(g, tay, 9, 12, tr, TH_THU * 2, false, hx, hy, goc, tiLe * k, k);
-                            }
-                        }
+                        float k = emRa((float) t / TH_VUON);
+                        veHoaKeo(g, xich, 0, 5, t, TH_VUON / 5, false, ox, oyX, gocX, daiX * k, TH_DAY_XICH, lat, 1f);
+                        veHoaKeo(g, tay, 0, 6, t, TH_VUON / 6, false, ox, oy, goc, dai * k, TH_DAY_TAY, lat, 1f);
+                    }
+                    else if (t < D)
+                    {
+                        long tb = t - TH_VUON;
+                        veHoaKeo(g, xich, 5, 9, tb, TH_LAP, true, ox, oyX, gocX, daiX, TH_DAY_XICH, lat, 1f);
+                        veHoaKeo(g, tay, 6, 9, tb, TH_LAP, true, ox, oy, goc, dai, TH_DAY_TAY, lat, 1f);
+                        veXichQuan(g, tach(th.bay, 3), tach(th.bay, 4), fx, fy, 1f, tb, -1);
+                    }
+                    else
+                    {
+                        // Rut ve em: ngan dan va mo dan (xich quan o dich do goi byte 6 ve tiep).
+                        long tr = t - D;
+                        float k = 1f - emRa((float) tr / TH_RUT);
+                        veHoaKeo(g, xich, 9, 16, tr, TH_RUT / 7, false, ox, oyX, gocX, daiX * k, TH_DAY_XICH, lat, k);
+                        veHoaKeo(g, tay, 9, 12, tr, TH_RUT / 3, false, ox, oy, goc, dai * k, TH_DAY_TAY, lat, k);
                     }
                 }
             }

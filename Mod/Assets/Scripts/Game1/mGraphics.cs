@@ -1403,6 +1403,61 @@ namespace Game1
     		}
     	}
 
+    	/// <summary>Như <see cref="veAnhXoay(Image, float, float, float, float, float, float)"/>, kèm lật dọc ảnh.</summary>
+    	public void veAnhXoayLat(Image image, float xGiua, float yGiua, float w, float h, float gocDo, float mo, bool latDoc)
+    	{
+    		if (!latDoc)
+    		{
+    			veAnhXoay(image, xGiua, yGiua, w, h, gocDo, mo);
+    			return;
+    		}
+    		if (image == null || image.texture == null || w <= 0f || h <= 0f)
+    		{
+    			return;
+    		}
+    		float px = xGiua * zoomLevel;
+    		float py = yGiua * zoomLevel;
+    		if (isTranslate)
+    		{
+    			px += translateX;
+    			py += translateY;
+    		}
+    		int cx = 0;
+    		int cy = 0;
+    		if (isClip)
+    		{
+    			cx = clipX;
+    			cy = clipY;
+    			if (isTranslate)
+    			{
+    				cx += clipTX;
+    				cy += clipTY;
+    			}
+    			GUI.BeginGroup(new Rect(cx, cy, clipW, clipH));
+    		}
+    		float pw = w * zoomLevel;
+    		float ph = h * zoomLevel;
+    		if (image.texture.filterMode != FilterMode.Bilinear)
+    		{
+    			image.texture.filterMode = FilterMode.Bilinear;
+    		}
+    		Vector2 tam = new Vector2(px - cx, py - cy);
+    		Matrix4x4 maTranCu = GUI.matrix;
+    		GUIUtility.RotateAroundPivot(gocDo, tam);
+    		Color mauCu = GUI.color;
+    		if (mo < 1f)
+    		{
+    			GUI.color = new Color(mauCu.r, mauCu.g, mauCu.b, mauCu.a * Mathf.Clamp01(mo));
+    		}
+    		GUI.DrawTextureWithTexCoords(new Rect(tam.x - pw / 2f, tam.y - ph / 2f, pw, ph), image.texture, new Rect(0f, 1f, 1f, -1f), true);
+    		GUI.color = mauCu;
+    		GUI.matrix = maTranCu;
+    		if (isClip)
+    		{
+    			GUI.EndGroup();
+    		}
+    	}
+
     	public void veAnhVuaO(Image image, int x, int y, int w, int h)
     	{
     		if (image == null || image.texture == null || w <= 0 || h <= 0)

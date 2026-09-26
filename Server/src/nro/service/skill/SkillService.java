@@ -311,6 +311,42 @@ public class SkillService {
         }
     }
 
+    /**
+     * Ma phong ba chỉ trói MỘT mục tiêu: kẻ gần điểm người chơi nhắm nhất (không nhắm ai
+     * thì kẻ gần người dùng chiêu nhất), người hay quái đều được.
+     */
+    private void chiMotMucTieu(Player player) {
+        NewSkill ns = player.newSkill;
+        boolean coNham = ns.xNham != ns._xPlayer || ns.yNham != ns._yPlayer;
+        int ax = coNham ? ns.xNham : player.location.x;
+        int ay = coNham ? ns.yNham : player.location.y;
+        Player chonP = null;
+        Mob chonM = null;
+        int gan = Integer.MAX_VALUE;
+        for (Player p : ns.playersTaget) {
+            int d = Util.getDistance(ax, ay, p.location.x, p.location.y);
+            if (d < gan) {
+                gan = d;
+                chonP = p;
+            }
+        }
+        for (Mob m : ns.mobsTaget) {
+            int d = Util.getDistance(ax, ay, m.location.x, m.location.y);
+            if (d < gan) {
+                gan = d;
+                chonP = null;
+                chonM = m;
+            }
+        }
+        ns.playersTaget.clear();
+        ns.mobsTaget.clear();
+        if (chonP != null) {
+            ns.playersTaget.add(chonP);
+        } else if (chonM != null) {
+            ns.mobsTaget.add(chonM);
+        }
+    }
+
     public boolean isUseSkill9(int idSkill) {
         return idSkill == Skill.SUPER_KAME || idSkill == Skill.LIEN_HOAN_CHUONG || idSkill == Skill.MA_PHONG_BA;
     }
@@ -399,6 +435,7 @@ public class SkillService {
                             }
                         }
                     }
+                    chiMotMucTieu(player);
                     newSkillNotFocus(player, 21);
                     EffectSkillService.gI().startUseMafuba(player, 4000);
                 }

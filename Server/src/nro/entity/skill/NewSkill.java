@@ -35,6 +35,11 @@ public class NewSkill {
 
     public short _yObjTaget;
 
+    /** Điểm người chơi nhắm lúc tung chiêu (mục tiêu đang chọn) — Ma phong ba chỉ trói kẻ gần điểm này nhất. */
+    public short xNham;
+
+    public short yNham;
+
     public List<Player> playersTaget;
 
     public List<Mob> mobsTaget;
@@ -73,6 +78,8 @@ public class NewSkill {
         this.dir = dir;
         this._xPlayer = _xPlayer;
         this._yPlayer = _yPlayer;
+        this.xNham = _xObjTaget;
+        this.yNham = _yObjTaget;
 
         int length = _xObjTaget - _xPlayer;
         int dx = dir * (skillSelect.point * 100 + 100);
