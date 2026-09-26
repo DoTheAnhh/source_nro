@@ -3267,7 +3267,7 @@ namespace Game1.God
                     long t = ms - ga.batDau;
                     // Goc tay sat vao nguoi (ong tay ao de len tay nhan vat, khong ho khoang trong).
                     float hx = c.cx + c.cdir * 2;
-                    float hy = c.cy - c.ch / 2 + 5;
+                    float hy = c.cy - c.ch / 2 + 7;
                     if (ga.dangGong)
                     {
                         if (ms > ga.het || ga.tay.Length == 0)
