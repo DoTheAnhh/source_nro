@@ -386,11 +386,24 @@ public class ShopService {
                     msg.writer().writeByte(tab.itemShops.size());
                     for (ItemShop itemShop : tab.itemShops) {
                         msg.writer().writeShort(itemShop.temp.id);
-                        String[] subName = itemShop.temp.name.split("");
-                        byte level = Byte.parseByte(subName[subName.length - 1]);
-
-                        var skillTemplateId = SkillUtil.getTempSkillSkillByItemID(itemShop.temp.id);
-                        var costPotential = SkillUtil.findSkillTemplate(skillTemplateId).skillss.stream().filter(s -> s.point == level).findFirst().map(s -> (long) s.powRequire).orElse(0L);
+                        // Sach tuyet ky (ten khong co so cap o cuoi): gia hien 0 — tra bang thoi vang / bi kiep
+                        // luc mua. Sach khac ten sai dang thi coi la cap 1, KHONG de ca cua hang hong.
+                        long costPotential = 0;
+                        if (tuyetKyCuaSach(itemShop.temp.id) < 0) {
+                            byte level = 1;
+                            try {
+                                String[] subName = itemShop.temp.name.split("");
+                                level = Byte.parseByte(subName[subName.length - 1]);
+                            } catch (NumberFormatException sai) {
+                                level = 1;
+                            }
+                            final byte capSach = level;
+                            var skillTemplate = SkillUtil.findSkillTemplate(SkillUtil.getTempSkillSkillByItemID(itemShop.temp.id));
+                            if (skillTemplate != null) {
+                                costPotential = skillTemplate.skillss.stream().filter(s -> s.point == capSach).findFirst()
+                                        .map(s -> (long) s.powRequire).orElse(0L);
+                            }
+                        }
                         msg.writer().writeLong(costPotential);
 
                         msg.writer().writeByte(itemShop.options.size());
@@ -2101,7 +2114,14 @@ public class ShopService {
         InventoryService.gI().sendItemBag(pl);
         nro.service.skill.SkillService.gI().learSkillSpecial(pl, chieu);
         nro.entity.template.SkillTemplate tpl = SkillUtil.findSkillTemplate(chieu);
-        Service.gI().sendThongBao(pl, "Học thành công " + (tpl != null ? tpl.name : "tuyệt kỹ") + "!");
+        Service.gI().sendThongBao(pl, "Học thành công " + (tpl != null ? tpl.name : "tuyệt kỹ") + " cấp 1!");
+    }
+
+    /** Sách tuyệt kỹ → chiêu thứ 9 tương ứng; không phải thì -1. */
+    public static byte tuyetKyCuaSach(int id) {
+        return id == 1341 ? nro.entity.skill.Skill.SUPER_KAME
+                : id == 1342 ? nro.entity.skill.Skill.MA_PHONG_BA
+                : id == 1343 ? nro.entity.skill.Skill.LIEN_HOAN_CHUONG : (byte) -1;
     }
 
     private static long demTrongTui(Player pl, short id) {
@@ -2116,9 +2136,7 @@ public class ShopService {
 
     private void learnKyNang(Player pl, ItemShop is) {
         // Sach tuyet ky (chieu thu 9): hoc thang, khong theo sach tung cap.
-        byte tuyetKy = is.temp.id == 1341 ? nro.entity.skill.Skill.SUPER_KAME
-                : is.temp.id == 1342 ? nro.entity.skill.Skill.MA_PHONG_BA
-                : is.temp.id == 1343 ? nro.entity.skill.Skill.LIEN_HOAN_CHUONG : -1;
+        byte tuyetKy = tuyetKyCuaSach(is.temp.id);
         if (tuyetKy >= 0) {
             hocTuyetKy(pl, is, tuyetKy);
             return;

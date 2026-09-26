@@ -421,6 +421,9 @@ public class UseItem {
                     case 7:
                         learnSkill(pl, item);
                         break;
+                    case 37:
+                        hocSachTuyetKy(pl, item);
+                        break;
                     case 33:
                         UseCard(pl, item);
                         break;
@@ -2011,6 +2014,29 @@ public class UseItem {
         // của bản đồ CŨ, rồi tới nơi mới trần đổi và thanh máu lại thiếu.
         PlayerService.gI().hoiDayHpMp(pl);
         Service.gI().hideWaitDialog(pl);
+    }
+
+    /** Dùng sách tuyệt kỹ (1341 / 1342 / 1343): đúng hành tinh, chưa học thì học cấp 1 và mất sách. */
+    private void hocSachTuyetKy(Player pl, Item item) {
+        byte chieu = nro.service.shop.ShopService.tuyetKyCuaSach(item.template.id);
+        if (chieu < 0) {
+            Service.gI().sendThongBao(pl, "Vật phẩm này chưa dùng được");
+            return;
+        }
+        if (item.template.gender <= 2 && item.template.gender != pl.gender) {
+            Service.gI().sendThongBao(pl, "Đây không phải tuyệt kỹ của hành tinh con");
+            return;
+        }
+        nro.entity.skill.Skill cu = SkillUtil.getSkillbyId(pl, chieu);
+        if (cu != null && cu.point > 0) {
+            Service.gI().sendThongBao(pl, "Bạn đã học tuyệt kỹ này rồi");
+            return;
+        }
+        InventoryService.gI().subQuantityItemsBag(pl, item, 1);
+        InventoryService.gI().sendItemBag(pl);
+        nro.service.skill.SkillService.gI().learSkillSpecial(pl, chieu);
+        nro.entity.template.SkillTemplate tpl = SkillUtil.findSkillTemplate(chieu);
+        Service.gI().sendThongBao(pl, "Học thành công " + (tpl != null ? tpl.name : item.template.name) + " cấp 1!");
     }
 
     public void eatPea(Player player) {
