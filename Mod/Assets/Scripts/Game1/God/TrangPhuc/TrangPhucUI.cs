@@ -2012,6 +2012,9 @@ namespace Game1.God
 
             /// <summary>Tắt lúc này (0 = phát hết); tiếng ngắn hơn thì lặp cho đủ.</summary>
             public long hetLuc;
+
+            /// <summary>Cắt bỏ tiếng nổ thứ hai trong tiếng (xem dinhAm).</summary>
+            public bool catNoSau;
         }
 
         /// <summary>Tiếng đang lặp chờ tắt đúng giờ (mờ dần 300 ms cuối).</summary>
@@ -2023,6 +2026,9 @@ namespace Game1.God
         }
 
         private static readonly List<AmDangPhat> dsDangPhat = new List<AmDangPhat>();
+
+        private static bool amDaNap;
+        private static bool amDaPhanTich;
 
         /// <summary>Tiếng quạ theo sau tiếng Sharingan.</summary>
         private const float AM_QUA = 0.3f;
@@ -2223,6 +2229,31 @@ namespace Game1.God
         private static void xuLyAm()
         {
             long ms = mSystem.currentTimeMillis();
+            if (!amDaNap)
+            {
+                // Nap truoc ba tieng skin (lan dau phat khoi khung, va kip phan tich cho cat tieng no).
+                amDaNap = true;
+                foreach (string ten in new string[] { "shinra", "sharingan", "qua" })
+                {
+                    UnityEngine.AudioClip c = layClip(ten);
+                    if (c != null)
+                    {
+                        c.LoadAudioData();
+                    }
+                }
+            }
+            else if (!amDaPhanTich)
+            {
+                UnityEngine.AudioClip c = layClip("shinra");
+                if (c == null || c.loadState == UnityEngine.AudioDataLoadState.Loaded)
+                {
+                    amDaPhanTich = true;
+                    if (c != null)
+                    {
+                        dinhAm("shinra", c);
+                    }
+                }
+            }
             for (int i = dsDangPhat.Count - 1; i >= 0; i--)
             {
                 AmDangPhat d = dsDangPhat[i];
@@ -2284,7 +2315,11 @@ namespace Game1.God
                     }
                     UnityEngine.AudioSource src = phatAm(clip, a.hetLuc > 0 ? lech % clip.length : lech, a.am);
                     float cat;
-                    if (src != null && a.dinhLuc > 0 && amCat.TryGetValue(a.ten, out cat) && cat < clip.length - 0.05f && cat > lech)
+                    if (a.catNoSau)
+                    {
+                        dinhAm(a.ten, clip);
+                    }
+                    if (src != null && (a.dinhLuc > 0 || a.catNoSau) && amCat.TryGetValue(a.ten, out cat) && cat < clip.length - 0.05f && cat > lech)
                     {
                         // Cat bo tieng no thu hai: mo dan roi tat o quang lang giua hai tieng no.
                         AmDangPhat c2 = new AmDangPhat();
@@ -2361,13 +2396,46 @@ namespace Game1.God
         /// </summary>
         public static bool amTuNo(Char c, int msGong)
         {
-            if (c == null || msGong <= 0 || !(c.tpSkill == 14 && conHieuLuc(c)))
+            if (c == null || !(c.tpSkill == 14 && conHieuLuc(c)))
             {
                 return false;
             }
-            long bayGio = mSystem.currentTimeMillis();
-            henAm("shinra", bayGio, bayGio + msGong, AM_SHINRA);
+            batDauShinra(c);
             return true;
+        }
+
+        /// <summary>Lúc vừa phát voice Shinra của từng người — gói gồng tới sau thì không phát lại.</summary>
+        private static readonly Dictionary<int, long> shinraLuc = new Dictionary<int, long>();
+
+        /// <summary>
+        /// Voice Shinra Tensei phát TỪ ĐẦU ngay lúc bắt đầu vận chiêu (của mình: lúc bấm chiêu, không
+        /// chờ máy chủ), bỏ tiếng nổ thứ hai trong voice.
+        /// </summary>
+        public static void batDauShinra(Char c)
+        {
+            if (c == null)
+            {
+                return;
+            }
+            long bayGio = mSystem.currentTimeMillis();
+            lock (shinraLuc)
+            {
+                long truoc;
+                if (shinraLuc.TryGetValue(c.charID, out truoc) && bayGio - truoc < 3000L)
+                {
+                    return;
+                }
+                shinraLuc[c.charID] = bayGio;
+            }
+            AmCho a = new AmCho();
+            a.ten = "shinra";
+            a.luc = bayGio;
+            a.am = AM_SHINRA;
+            a.catNoSau = true;
+            lock (dsAm)
+            {
+                dsAm.Add(a);
+            }
         }
 
         // ------------------------------------------------------------------
