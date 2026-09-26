@@ -367,7 +367,6 @@ namespace Game3
                                 int num61 = msg.reader().readInt();
                                 short templateId = msg.reader().readShort();
                                 int num62 = msg.readInt3Byte();
-                                SoundMn.gI().explode_1();
                                 if (num61 == Char.myCharz().charID)
                                 {
                                     Char.myCharz().mobMe = new Mob(num61, false, false, false, false, false, templateId, 1, num62, 0, num62, (short)(Char.myCharz().cx + ((Char.myCharz().cdir != 1) ? (-40) : 40)), (short)Char.myCharz().cy, 4, 0);
@@ -379,6 +378,10 @@ namespace Game3
                                     }
                                     Char.myCharz().tMobMeBorn = 30;
                                     GameScr.vMob.addElement(Char.myCharz().mobMe);
+                                    if (Char.myCharz().mobMe.tpVK == null)
+                                    {
+                                        SoundMn.gI().explode_1();
+                                    }
                                 }
                                 else
                                 {
@@ -390,6 +393,10 @@ namespace Game3
                                         God.TrangPhucUI.ganTrung(@char, mob4);
                                         @char.mobMe = mob4;
                                         GameScr.vMob.addElement(@char.mobMe);
+                                        if (mob4.tpVK == null)
+                                        {
+                                            SoundMn.gI().explode_1();
+                                        }
                                     }
                                     else
                                     {

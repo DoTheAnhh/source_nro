@@ -973,12 +973,14 @@ public class SkillService {
                 break;
             case Skill.THOI_MIEN:
                 long startTM = System.currentTimeMillis();
-                EffectSkillService.gI().sendEffectUseSkill(player, Skill.THOI_MIEN);
-                // Skin Tsukuyomi: ca khu nghe tieng Sharingan (mot lan luc dung chieu).
-                nro.service.TrangPhucService.gI().amThanh(player, Skill.THOI_MIEN);
+                // Skin Tsukuyomi: ca khu nghe tieng Sharingan (mot lan luc dung chieu) — gui TRUOC goi
+                // dung chieu de client kip tat tieng dam goc cua chieu.
                 int timeSleep = SkillUtil.getTimeThoiMien(player.playerSkill.skillSelect.point);
                 timeSleep = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
                         player, Skill.THOI_MIEN, timeSleep);
+                // Kem thoi gian thoi mien: tieng qua sau tieng Sharingan keo dai vua het chieu.
+                nro.service.TrangPhucService.gI().amThanh(player, Skill.THOI_MIEN, timeSleep);
+                EffectSkillService.gI().sendEffectUseSkill(player, Skill.THOI_MIEN);
                 if (plTarget != null) {
                     if (plTarget.nPoint != null && plTarget.nPoint.tlFixStun > 0 && plTarget.effectSkill != null && plTarget.effectSkill.isShielding) {
                         int fix = Math.min(plTarget.nPoint.tlFixStun, 100);

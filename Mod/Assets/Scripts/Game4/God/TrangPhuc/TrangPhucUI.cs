@@ -140,11 +140,38 @@ namespace Game4.God
                 else if (loai == 5)
                 {
                     // Nguoi co skin vua dung chieu: ca khu nghe tieng cua skin.
-                    msg.reader().readInt();
+                    int charId5 = msg.reader().readInt();
                     int tpl = msg.reader().readShort();
+                    int msChieu = 0;
+                    try
+                    {
+                        msChieu = msg.reader().readInt();
+                    }
+                    catch (System.Exception)
+                    {
+                    }
                     if (tpl == 22)
                     {
-                        henAm("sharingan", mSystem.currentTimeMillis(), 0, AM_SHARINGAN);
+                        long bayGio = mSystem.currentTimeMillis();
+                        lock (chanDanh)
+                        {
+                            chanDanh[charId5] = bayGio + 1500L;
+                        }
+                        henAm("sharingan", bayGio, 0, AM_SHARINGAN);
+                        if (msChieu > 0)
+                        {
+                            // Sau tieng Sharingan la tieng qua, keo (lap/cat) vua het thoi gian thoi mien.
+                            AmCho q = new AmCho();
+                            q.ten = "qua";
+                            q.luc = bayGio;
+                            q.sauTen = "sharingan";
+                            q.hetLuc = bayGio + msChieu;
+                            q.am = AM_QUA;
+                            lock (dsAm)
+                            {
+                                dsAm.Add(q);
+                            }
+                        }
                     }
                 }
                 else if (loai == 4)
@@ -1979,7 +2006,26 @@ namespace Game4.God
             public long luc;
             public long dinhLuc;
             public float am;
+
+            /// <summary>Phát ngay sau khi tiếng này (tính từ <see cref="luc"/>) hết.</summary>
+            public string sauTen;
+
+            /// <summary>Tắt lúc này (0 = phát hết); tiếng ngắn hơn thì lặp cho đủ.</summary>
+            public long hetLuc;
         }
+
+        /// <summary>Tiếng đang lặp chờ tắt đúng giờ (mờ dần 300 ms cuối).</summary>
+        private class AmDangPhat
+        {
+            public UnityEngine.AudioSource src;
+            public long hetLuc;
+            public float am;
+        }
+
+        private static readonly List<AmDangPhat> dsDangPhat = new List<AmDangPhat>();
+
+        /// <summary>Tiếng quạ theo sau tiếng Sharingan.</summary>
+        private const float AM_QUA = 0.3f;
 
         private static readonly List<AmCho> dsAm = new List<AmCho>();
         private static readonly Dictionary<string, UnityEngine.AudioClip> amClip = new Dictionary<string, UnityEngine.AudioClip>();
@@ -1987,7 +2033,7 @@ namespace Game4.God
         private static readonly List<UnityEngine.AudioSource> amNguon = new List<UnityEngine.AudioSource>();
 
         /// <summary>Âm lượng: Sharingan nhỏ vừa đủ nghe; Shinra Tensei to hơn chút.</summary>
-        private const float AM_SHARINGAN = 0.3f;
+        private const float AM_SHARINGAN = 0.39f;
         private const float AM_SHINRA = 0.45f;
 
         /// <summary>
@@ -2006,6 +2052,63 @@ namespace Game4.God
             {
                 dsAm.Add(a);
             }
+        }
+
+        /// <summary>Người vừa dùng Thôi miên có skin (charId → hết lúc): tắt tiếng đấm/chưởng gốc của chiêu.</summary>
+        private static readonly Dictionary<int, long> chanDanh = new Dictionary<int, long>();
+
+        /// <summary>
+        /// Nhân vật này đang dùng chiêu có skin — bỏ mọi tiếng mặc định của chiêu gốc (gồng, chưởng,
+        /// nổ…). Của chính mình thì xét luôn skin đang bật (client vẽ chiêu trước khi máy chủ trả lời).
+        /// </summary>
+        public static bool tatTiengGoc(Char c)
+        {
+            if (c == null)
+            {
+                return false;
+            }
+            if (chanGoc(c))
+            {
+                return true;
+            }
+            return c.me && c.myskill != null && c.myskill.template != null && skinDangBat(c.myskill.template.id);
+        }
+
+        /// <summary>Có nên bỏ tiếng đấm gốc của nhân vật này không (đang dùng Thôi miên có skin Tsukuyomi).</summary>
+        public static bool chanTiengDanh(Char c)
+        {
+            if (c == null)
+            {
+                return false;
+            }
+            if (c.me && c.myskill != null && c.myskill.template != null && c.myskill.template.id == 22 && skinDangBat(22))
+            {
+                return true;
+            }
+            long het;
+            lock (chanDanh)
+            {
+                return chanDanh.TryGetValue(c.charID, out het) && mSystem.currentTimeMillis() < het;
+            }
+        }
+
+        /// <summary>Chính mình đang bật (và có) skin của chiêu này.</summary>
+        private static bool skinDangBat(int tpl)
+        {
+            TrangPhucUI ui = getInstance();
+            if (!ui.coDuLieu)
+            {
+                return false;
+            }
+            foreach (Chieu ch in ui.dsChieu)
+            {
+                if (ch.tpl == tpl)
+                {
+                    Mau m = timMau(ch, ch.dangDung);
+                    return m != null && m.daCo;
+                }
+            }
+            return false;
         }
 
         private static UnityEngine.AudioClip layClip(string ten)
@@ -2067,11 +2170,29 @@ namespace Game4.God
 
         private static void xuLyAm()
         {
+            long ms = mSystem.currentTimeMillis();
+            for (int i = dsDangPhat.Count - 1; i >= 0; i--)
+            {
+                AmDangPhat d = dsDangPhat[i];
+                if (d.src == null || !d.src.isPlaying)
+                {
+                    dsDangPhat.RemoveAt(i);
+                    continue;
+                }
+                long con = d.hetLuc - ms;
+                if (con <= 0)
+                {
+                    d.src.Stop();
+                    d.src.loop = false;
+                    dsDangPhat.RemoveAt(i);
+                    continue;
+                }
+                d.src.volume = con < 300L ? d.am * con / 300f : d.am;
+            }
             if (dsAm.Count == 0)
             {
                 return;
             }
-            long ms = mSystem.currentTimeMillis();
             lock (dsAm)
             {
                 for (int i = dsAm.Count - 1; i >= 0; i--)
@@ -2084,22 +2205,41 @@ namespace Game4.God
                         continue;
                     }
                     long batDau = a.dinhLuc > 0 ? a.dinhLuc - (long) (dinhAm(a.ten, clip) * 1000f) : a.luc;
+                    if (a.sauTen != null)
+                    {
+                        UnityEngine.AudioClip truoc = layClip(a.sauTen);
+                        batDau = a.luc + (truoc != null ? (long) (truoc.length * 1000f) : 0L);
+                    }
+                    if (a.hetLuc > 0 && ms >= a.hetLuc)
+                    {
+                        dsAm.RemoveAt(i);
+                        continue;
+                    }
                     if (ms < batDau)
                     {
                         continue;
                     }
                     dsAm.RemoveAt(i);
                     float lech = (ms - batDau) / 1000f;
-                    if (!GameCanvas.isPlaySound || lech >= clip.length - 0.05f)
+                    if (!GameCanvas.isPlaySound || (a.hetLuc == 0 && lech >= clip.length - 0.05f))
                     {
                         continue;
                     }
-                    phatAm(clip, lech, a.am);
+                    UnityEngine.AudioSource src = phatAm(clip, a.hetLuc > 0 ? lech % clip.length : lech, a.am);
+                    if (src != null && a.hetLuc > 0)
+                    {
+                        src.loop = (a.hetLuc - ms) / 1000f > clip.length - src.time;
+                        AmDangPhat d = new AmDangPhat();
+                        d.src = src;
+                        d.hetLuc = a.hetLuc;
+                        d.am = a.am;
+                        dsDangPhat.Add(d);
+                    }
                 }
             }
         }
 
-        private static void phatAm(UnityEngine.AudioClip clip, float lech, float am)
+        private static UnityEngine.AudioSource phatAm(UnityEngine.AudioClip clip, float lech, float am)
         {
             try
             {
@@ -2127,14 +2267,24 @@ namespace Game4.God
                         amNguon.Add(src);
                     }
                 }
+                foreach (AmDangPhat d in dsDangPhat)
+                {
+                    if (d.src == src)
+                    {
+                        d.hetLuc = 0;
+                    }
+                }
+                src.loop = false;
                 src.clip = clip;
                 src.volume = am;
                 src.time = System.Math.Max(0f, System.Math.Min(lech, clip.length - 0.05f));
                 src.Play();
+                return src;
             }
             catch (System.Exception)
             {
             }
+            return null;
         }
 
         /// <summary>

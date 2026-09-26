@@ -157,7 +157,7 @@ namespace Game3
     		// roi ghi khung cham dich.
     		bool coTrangPhuc = God.TrangPhucUI.chanGoc(charBelong);
     		God.TrangPhucUI.ghiChamDich(charBelong, x, y, tpLucGan);
-    		if (!charBelong.isUseSkillAfterCharge && x >= GameScr.cmx && x <= GameScr.cmx + GameCanvas.w)
+    		if (!coTrangPhuc && !charBelong.isUseSkillAfterCharge && x >= GameScr.cmx && x <= GameScr.cmx + GameCanvas.w)
     		{
     			SoundMn.gI().explode_1();
     		}

@@ -219,9 +219,10 @@ public final class TrangPhucService {
 
     /**
      * Người có skin của chiêu này vừa dùng chiêu: cả khu nghe tiếng của skin
-     * (một lần). Gói: byte 5, int charId, short skillTpl.
+     * (một lần). Gói: byte 5, int charId, short skillTpl, int ms (thời gian chiêu, để tiếng
+     * theo sau kéo vừa hết chiêu).
      */
-    public void amThanh(Player pl, int skillTpl) {
+    public void amThanh(Player pl, int skillTpl, int ms) {
         if (pl == null || !pl.isPl() || pl.zone == null) {
             return;
         }
@@ -234,6 +235,7 @@ public final class TrangPhucService {
             msg.writer().writeByte(5);
             msg.writer().writeInt((int) pl.id);
             msg.writer().writeShort(skillTpl);
+            msg.writer().writeInt(ms);
             Service.gI().sendMessAllPlayerInMap(pl, msg);
         } catch (Exception ex) {
             Logger.logException(TrangPhucService.class, ex, "Không báo được tiếng trang phục");

@@ -1869,7 +1869,7 @@ namespace Game5
     		{
     			SoundMn.gI().charFly();
     		}
-    		if (skillPaint != null && skillInfoPaint() != null && indexSkill < skillInfoPaint().Length && isPunchKickSkill() && (me || (!me && cx >= GameScr.cmx && cx <= GameScr.cmx + GameCanvas.w)) && GameCanvas.gameTick % 5 == 0)
+    		if (skillPaint != null && skillInfoPaint() != null && indexSkill < skillInfoPaint().Length && isPunchKickSkill() && (me || (!me && cx >= GameScr.cmx && cx <= GameScr.cmx + GameCanvas.w)) && GameCanvas.gameTick % 5 == 0 && !God.TrangPhucUI.chanTiengDanh(this))
     		{
     			if (cf == 9 || cf == 10 || cf == 11)
     			{
@@ -2296,7 +2296,7 @@ namespace Game5
     						}
     						skillId = skillTemplateId;
     					}
-    					if (cgender == 2 && statusMe != 14 && statusMe != 5 && (skillId < 77 || skillId > 83))
+    					if (cgender == 2 && statusMe != 14 && statusMe != 5 && (skillId < 77 || skillId > 83) && !God.TrangPhucUI.tatTiengGoc(this))
     					{
     						GameScr.gI().activeSuperPower(cx, cy);
     					}
@@ -3368,7 +3368,7 @@ namespace Game5
     						}
     					}
     					dart = new PlayerDart(this, arrowId - 100, skillPaintRandomPaint, cx + (array2[num].adx - 10) * cdir, cy + array2[num].ady + num2);
-    					if (myskill != null)
+    					if (myskill != null && !God.TrangPhucUI.tatTiengGoc(this))
     					{
     						if (myskill.template.id == 1)
     						{
@@ -5324,7 +5324,10 @@ namespace Game5
     			}
     			if (myskill.template.id == 14)
     			{
-    				SoundMn.gI().gong();
+    				if (!God.TrangPhucUI.tatTiengGoc(this))
+    				{
+    					SoundMn.gI().gong();
+    				}
     				Service.gI().skill_not_focus(7);
     				useChargeSkill(true);
     			}
@@ -5460,11 +5463,17 @@ namespace Game5
     			}
     			if (cgender == 1)
     			{
-    				SoundMn.gI().gongName();
+    				if (!God.TrangPhucUI.tatTiengGoc(this))
+    				{
+    					SoundMn.gI().gongName();
+    				}
     			}
     			if (TileMap.mapID == 170 && cgender != 1)
     			{
-    				SoundMn.gI().gongName();
+    				if (!God.TrangPhucUI.tatTiengGoc(this))
+    				{
+    					SoundMn.gI().gongName();
+    				}
     			}
     			isStandAndCharge = true;
     		}
