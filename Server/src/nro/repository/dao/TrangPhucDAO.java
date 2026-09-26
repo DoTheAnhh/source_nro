@@ -93,6 +93,7 @@ public final class TrangPhucDAO {
             gieoThanLaThienChinh();
             gieoRasenshuriken();
             gieoPhiLoiThan();
+            gieoVanKiemQuyTong();
             // Them du am vu no (khung thu ba cua day bay).
             ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_bay = ? WHERE skill_tpl = 10"
                     + " AND khung_bay = '25285,25286'", KHUNG_BAY_DBTT);
@@ -145,6 +146,32 @@ public final class TrangPhucDAO {
      * khung bay = [kunai bay 4 khung (mũi hướng phải) | chớp xanh 8 khung ở chỗ
      * đi và chỗ đến]. Icon 25361–25373.
      */
+    /**
+     * Vạn Kiếm Quy Tông cho Đẻ trứng (skill 12, Namếc): không có khung nạp;
+     * khung bay = [xoáy kiếm 12 khung (6 khung tụ kiếm + 6 khung xoáy) | dòng
+     * kiếm tấn công 10 khung (hướng phải) | thu kiếm 2 khung]. Icon 25374–25398.
+     */
+    private static void gieoVanKiemQuyTong() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM trang_phuc_mau WHERE skill_tpl = 12 AND ten = ?", "Vạn Kiếm Quy Tông");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            if (rs != null) {
+                rs.dispose();
+            }
+        }
+        ConnectDB.executeUpdate("INSERT INTO trang_phuc_mau (skill_tpl, ten, mo_ta, icon, khung_nap, khung_bay, thu_tu, icon_vp)"
+                + " VALUES (?,?,?,?,?,?,1,?)", 12, "Vạn Kiếm Quy Tông",
+                "Vạn thanh kiếm xoáy quanh chủ nhân; xuất chiêu là hoá thành dòng kiếm lao thẳng vào kẻ địch.",
+                25382, "", "25374,25375,25376,25377,25378,25379,25380,25381,25382,25383,25384,25385,-1,"
+                + "25386,25387,25388,25389,25390,25391,25392,25393,25394,25395,-1,25396,25397", 25398);
+        lucDoc = 0;
+        Logger.success("Trang phục: gieo Vạn Kiếm Quy Tông cho Đẻ trứng\n");
+    }
+
     private static void gieoPhiLoiThan() throws Exception {
         CrisResultSet rs = null;
         try {

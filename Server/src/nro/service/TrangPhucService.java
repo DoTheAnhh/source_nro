@@ -172,6 +172,22 @@ public final class TrangPhucService {
      * gửi gì (luôn hình gốc).
      */
     public void baoTruocKhiTu(Player pl, int skillTpl) {
+        bao(pl, skillTpl, null, false);
+    }
+
+    /** Chỉ báo cho người khác trong bản đồ (người này vào bản đồ, mang theo trứng đang nở). */
+    public void baoNguoiKhac(Player pl, int skillTpl) {
+        bao(pl, skillTpl, null, true);
+    }
+
+    /** Chỉ báo cho một người (người ấy vừa vào bản đồ, thấy trứng của {@code pl}). */
+    public void baoCho(Player nhan, Player pl, int skillTpl) {
+        if (nhan != null) {
+            bao(pl, skillTpl, nhan, false);
+        }
+    }
+
+    private void bao(Player pl, int skillTpl, Player nhan, boolean truMinh) {
         if (pl == null || !pl.isPl() || pl.zone == null) {
             return;
         }
@@ -184,7 +200,13 @@ public final class TrangPhucService {
             msg.writer().writeShort(skillTpl);
             ghiKhung(msg, m != null ? m.khungNap : new short[0]);
             ghiKhung(msg, m != null ? m.khungBay : new short[0]);
-            Service.gI().sendMessAllPlayerInMap(pl, msg);
+            if (nhan != null) {
+                nhan.sendMessage(msg);
+            } else if (truMinh) {
+                Service.gI().sendMessAnotherNotMeInMap(pl, msg);
+            } else {
+                Service.gI().sendMessAllPlayerInMap(pl, msg);
+            }
         } catch (Exception ex) {
             Logger.logException(TrangPhucService.class, ex, "Không báo được trang phục chiêu");
         } finally {

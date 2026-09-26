@@ -1353,6 +1353,7 @@ public class ChangeMapService {
             }
 
             if (player.DeTrung != null) {
+                nro.service.TrangPhucService.gI().baoNguoiKhac(player, nro.entity.skill.Skill.DE_TRUNG);
                 msg = new Message(-95);
                 msg.writer().writeByte(0);//type
                 msg.writer().writeInt((int) player.id);
@@ -1483,6 +1484,7 @@ public class ChangeMapService {
                         }
                     }
                     if (pl.DeTrung != null) {
+                        nro.service.TrangPhucService.gI().baoCho(player, pl, nro.entity.skill.Skill.DE_TRUNG);
                         msg = new Message(-95);
                         msg.writer().writeByte(0);//type
                         msg.writer().writeInt((int) pl.id);

@@ -1064,6 +1064,7 @@ namespace Game6.God
             veXoayMo(g);
             veRasenBu(g);
             veKunaiBay(g);
+            veKiemBay(g);
             veMotNguoi(g, Char.myCharz());
             for (int i = 0; i < GameScr.vCharInMap.size(); i++)
             {
@@ -1539,6 +1540,217 @@ namespace Game6.God
                         SmallImage.veIconXoay(g, bay[bay.Length - 1], x, y, RASEN_BAY, huong, 0.55f);
                     }
                     SmallImage.veIconXoay(g, b.cau, x, y, RASEN_BAY, gocQuay(ms, 2.5f));
+                }
+            }
+        }
+
+        // ------------------------------------------------------------------
+        //  Đẻ trứng → Vạn Kiếm Quy Tông: xoáy kiếm thay quả trứng
+        //    tụ kiếm (6 khung) → xoáy (6 khung lặp qua lại, cả khối quay) · tấn công:
+        //    dòng kiếm bay tới địch (10 khung) → thu kiếm (2 khung) → xoáy lại · chết:
+        //    thu kiếm rồi mờ dần
+        // ------------------------------------------------------------------
+        private const long VK_TU = 70L;
+        private const long VK_XOAY = 120L;
+        private const long VK_DANH = 55L;
+        private const long VK_THU = 90L;
+        private const long VK_HIEN = 150L;
+        private const long VK_MO_CHET = 250L;
+        private const float VK_TL_XOAY = 0.75f;
+        private const float VK_TL_DANH = 0.85f;
+        private const float VK_TL_THU = 0.9f;
+
+        /// <summary>Xoáy quay bao nhiêu vòng/giây (theo chiều kim đồng hồ, như mũi kiếm trong ảnh).</summary>
+        private const float VK_VONG = 0.4f;
+
+        /// <summary>Tâm xoáy cao hơn chân quả trứng bấy nhiêu.</summary>
+        private const int VK_CAO = 14;
+
+        public class KiemBay
+        {
+            public short[] khung;
+            public int x0, y0, x1, y1;
+            public long batDau;
+        }
+
+        private static readonly List<KiemBay> dsKiem = new List<KiemBay>();
+
+        /// <summary>
+        /// Gọi khi quả trứng (mobMe) vừa nở: chủ có trang phục Đẻ trứng thì gắn khung
+        /// cho quả trứng — nó giữ suốt đời, không theo thời hạn gói trang phục.
+        /// </summary>
+        public static void ganTrung(Char chu, Mob mob)
+        {
+            if (chu == null || mob == null)
+            {
+                return;
+            }
+            if (chu.me && !(chu.tpSkill == 12 && conHieuLuc(chu)))
+            {
+                ganTruoc(chu, 12);
+            }
+            if (chu.tpSkill != 12 || !conHieuLuc(chu) || tach(chu.tpBay, 0).Length < 12)
+            {
+                mob.tpVK = null;
+                return;
+            }
+            mob.tpVK = chu.tpBay;
+            mob.tpVKSinh = mSystem.currentTimeMillis();
+            mob.tpVKDanh = 0;
+            mob.tpVKChet = 0;
+            taiTruoc(chu.tpBay);
+            // Khong chan hinh goc cua chu (ketThuc): chi danh dau da dung goi nay.
+            chu.tpXong = true;
+        }
+
+        /// <summary>Quả trứng có skin vừa đánh: tung dòng kiếm từ xoáy tới (tx, ty).</summary>
+        public static void vanKiemDanh(Mob m, int tx, int ty)
+        {
+            short[] danh = tach(m.tpVK, 1);
+            if (danh.Length == 0)
+            {
+                return;
+            }
+            long bayGio = mSystem.currentTimeMillis();
+            KiemBay k = new KiemBay();
+            k.khung = danh;
+            k.x0 = m.x;
+            k.y0 = m.y - VK_CAO;
+            k.x1 = tx;
+            k.y1 = ty;
+            k.batDau = bayGio;
+            lock (dsKiem)
+            {
+                dsKiem.Add(k);
+            }
+            m.tpVKDanh = bayGio;
+        }
+
+        /// <summary>Chạy khung tu..den-1 một lượt, hoà dần sang khung kế (khung cuối hoà sang khung den nếu có).</summary>
+        private static void veChuoi(mGraphics g, short[] k, int tu, int den, long t, long msKhung,
+                int x, int y, float tiLe, float goc, float mo)
+        {
+            int n = den - tu;
+            if (n <= 0 || mo <= 0.01f)
+            {
+                return;
+            }
+            int i = (int) System.Math.Min(n - 1, t / msKhung);
+            float h = t >= msKhung * n ? 0f : (float) (t % msKhung) / msKhung;
+            int a = tu + i;
+            int b = System.Math.Min(k.Length - 1, a + 1);
+            SmallImage.veIconXoay(g, k[a], x, y, tiLe, goc, mo);
+            if (b != a && h > 0.02f)
+            {
+                SmallImage.veIconXoay(g, k[b], x, y, tiLe, goc, mo * h);
+            }
+        }
+
+        /// <summary>
+        /// Vẽ quả trứng có skin (gọi từ Mob.paint). Trả false = đừng vẽ gì thêm
+        /// (đang chết), true = vẽ tiếp thanh máu như thường.
+        /// </summary>
+        public static bool veVanKiem(mGraphics g, Mob m)
+        {
+            short[] cho = tach(m.tpVK, 0);
+            short[] thu = tach(m.tpVK, 2);
+            if (cho.Length < 12)
+            {
+                return true;
+            }
+            long ms = mSystem.currentTimeMillis();
+            int x = m.x;
+            int y = m.y - VK_CAO;
+            float goc = gocQuay(ms, VK_VONG);
+            if (m.tpVKChet > 0)
+            {
+                long t = ms - m.tpVKChet;
+                if (thu.Length >= 2 && t < VK_THU * 2 + VK_MO_CHET)
+                {
+                    float mo = t < VK_THU * 2 ? 1f : 1f - (float) (t - VK_THU * 2) / VK_MO_CHET;
+                    veChuoi(g, thu, 0, 2, t, VK_THU, x, y, VK_TL_THU, 0f, mo);
+                }
+                return false;
+            }
+            long danhTong = VK_DANH * tach(m.tpVK, 1).Length;
+            long tDanh = m.tpVKDanh > 0 ? ms - m.tpVKDanh : long.MaxValue;
+            if (tDanh < danhTong)
+            {
+                // Xoay da hoa thanh dong kiem (ve o lop toan cuc).
+                return true;
+            }
+            float moXoay = 1f;
+            if (tDanh < danhTong + VK_THU * 2 + VK_HIEN)
+            {
+                // Kiem bay ve: thu kiem, xoay hien lai dan.
+                long t = tDanh - danhTong;
+                if (thu.Length >= 2)
+                {
+                    float moThu = t < VK_THU * 2 ? 1f : 1f - (float) (t - VK_THU * 2) / VK_HIEN;
+                    veChuoi(g, thu, 0, 2, t, VK_THU, x, y, VK_TL_THU, 0f, moThu);
+                }
+                moXoay = t < VK_THU ? 0f : System.Math.Min(1f, (float) (t - VK_THU) / (VK_THU + VK_HIEN));
+            }
+            long tSinh = ms - m.tpVKSinh;
+            if (tSinh < VK_TU * 6)
+            {
+                veChuoi(g, cho, 0, 6, tSinh, VK_TU, x, y, VK_TL_XOAY, goc, moXoay);
+                return true;
+            }
+            // Xoay: 6 khung lap qua lai (7..12..7) hoa dan — sang/toi nhu tho.
+            long tl = tSinh - VK_TU * 6;
+            int pos = (int) ((tl / VK_XOAY) % 10);
+            float h = (float) (tl % VK_XOAY) / VK_XOAY;
+            int a = pos <= 5 ? pos : 10 - pos;
+            int pb = (pos + 1) % 10;
+            int b = pb <= 5 ? pb : 10 - pb;
+            if (moXoay > 0.01f)
+            {
+                SmallImage.veIconXoay(g, cho[6 + a], x, y, VK_TL_XOAY, goc, moXoay);
+                if (h > 0.02f)
+                {
+                    SmallImage.veIconXoay(g, cho[6 + b], x, y, VK_TL_XOAY, goc, moXoay * h);
+                }
+            }
+            return true;
+        }
+
+        /// <summary>Dòng kiếm: bay nhanh lúc đầu rồi chậm lại ở địch, mũi hướng theo đường bay.</summary>
+        private static void veKiemBay(mGraphics g)
+        {
+            if (dsKiem.Count == 0)
+            {
+                return;
+            }
+            long ms = mSystem.currentTimeMillis();
+            lock (dsKiem)
+            {
+                for (int i = dsKiem.Count - 1; i >= 0; i--)
+                {
+                    KiemBay k = dsKiem[i];
+                    int n = k.khung.Length;
+                    long t = ms - k.batDau;
+                    if (n == 0 || t >= VK_DANH * n)
+                    {
+                        dsKiem.RemoveAt(i);
+                        continue;
+                    }
+                    float u = n > 1 ? System.Math.Min(1f, (float) t / (VK_DANH * (n - 1))) : 1f;
+                    float e = 1f - (1f - u) * (1f - u);
+                    float dx = k.x1 - k.x0;
+                    float dy = k.y1 - k.y0;
+                    int x = k.x0 + (int) (dx * e);
+                    int y = k.y0 + (int) (dy * e);
+                    float goc = (float) (System.Math.Atan2(dy, dx) * 57.29578);
+                    int a = (int) (t / VK_DANH);
+                    int b = System.Math.Min(n - 1, a + 1);
+                    float h = (float) (t % VK_DANH) / VK_DANH;
+                    float mo = a == n - 1 ? 1f - h : 1f;
+                    SmallImage.veIconXoay(g, k.khung[a], x, y, VK_TL_DANH, goc, mo);
+                    if (b != a && h > 0.02f)
+                    {
+                        SmallImage.veIconXoay(g, k.khung[b], x, y, VK_TL_DANH, goc, h);
+                    }
                 }
             }
         }

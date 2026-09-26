@@ -142,6 +142,16 @@ namespace Game1
     	public bool isBoss;
     
     	public bool isMobMe;
+
+    	/// <summary>Trang phục Đẻ trứng (Vạn Kiếm Quy Tông): khung [xoáy | dòng kiếm | thu kiếm]; null = quả trứng gốc.</summary>
+    	public short[] tpVK;
+
+    	/// <summary>Lúc trứng nở / lúc tung dòng kiếm gần nhất / lúc chết (0 = chưa).</summary>
+    	public long tpVKSinh;
+
+    	public long tpVKDanh;
+
+    	public long tpVKChet;
     
     	public static MyVector lastMob = new MyVector();
     
@@ -944,6 +954,12 @@ namespace Game1
     		dir = ((cFocus.cx > x) ? 1 : (-1));
     		int cx = cFocus.cx;
     		int cy = cFocus.cy;
+    		if (tpVK != null)
+    		{
+    			p3 = 0;
+    			God.TrangPhucUI.vanKiemDanh(this, cx, cy - cFocus.ch / 2);
+    			return;
+    		}
     		if (Res.abs(cx - x) < w * 2 && Res.abs(cy - y) < h * 2)
     		{
     			p3 = 0;
@@ -1495,24 +1511,35 @@ namespace Game1
     			}
     			return;
     		}
-    		if (isShadown && status != 0)
+    		// Trang phuc De trung: ve xoay kiem Van Kiem Quy Tong thay qua trung.
+    		if (tpVK != null)
     		{
-    			paintShadow(g);
-    		}
-    		if (!isPaint() || (status == 1 && p3 > 0 && GameCanvas.gameTick % 3 == 0))
-    		{
-    			return;
-    		}
-    		g.translate(0, GameCanvas.transY);
-    		if (!changBody)
-    		{
-    			arrMobTemplate[templateId].data.paintFrame(g, frame, x, y + fy, (dir != 1) ? 1 : 0, 2);
+    			if (!God.TrangPhucUI.veVanKiem(g, this))
+    			{
+    				return;
+    			}
     		}
     		else
     		{
-    			SmallImage.drawSmallImage(g, smallBody, x, y + fy - 9, (dir != 1) ? 2 : 0, mGraphics.BOTTOM | mGraphics.HCENTER);
+    			if (isShadown && status != 0)
+    			{
+    				paintShadow(g);
+    			}
+    			if (!isPaint() || (status == 1 && p3 > 0 && GameCanvas.gameTick % 3 == 0))
+    			{
+    				return;
+    			}
+    			g.translate(0, GameCanvas.transY);
+    			if (!changBody)
+    			{
+    				arrMobTemplate[templateId].data.paintFrame(g, frame, x, y + fy, (dir != 1) ? 1 : 0, 2);
+    			}
+    			else
+    			{
+    				SmallImage.drawSmallImage(g, smallBody, x, y + fy - 9, (dir != 1) ? 2 : 0, mGraphics.BOTTOM | mGraphics.HCENTER);
+    			}
+    			g.translate(0, -GameCanvas.transY);
     		}
-    		g.translate(0, -GameCanvas.transY);
     		if (Char.myCharz().mobFocus == null || !Char.myCharz().mobFocus.Equals(this) || status == 1 || hp <= 0 || imgHPtem == null)
     		{
     			return;
@@ -1552,6 +1579,10 @@ namespace Game1
     
     	public void startDie()
     	{
+    		if (tpVK != null && tpVKChet == 0)
+    		{
+    			tpVKChet = mSystem.currentTimeMillis();
+    		}
     		hp = 0;
     		injureThenDie = true;
     		hp = 0;
@@ -1574,6 +1605,13 @@ namespace Game1
     		dir = ((mobToAttack.x > x) ? 1 : (-1));
     		int num = mobToAttack.x;
     		int num2 = mobToAttack.y;
+    		if (tpVK != null)
+    		{
+    			// Van Kiem Quy Tong: dong kiem bay toi dich, xoay dung yen canh chu (khong nhay, khong ban dan).
+    			p3 = 0;
+    			God.TrangPhucUI.vanKiemDanh(this, num, num2 - mobToAttack.h / 2);
+    			return;
+    		}
     		if (Res.abs(num - x) < w * 2 && Res.abs(num2 - y) < h * 2)
     		{
     			if (x < num)

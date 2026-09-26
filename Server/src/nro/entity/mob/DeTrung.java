@@ -151,6 +151,8 @@ public final class DeTrung extends Mob {
     public void spawn() {
         Message msg;
         try {
+            // Trang phuc ky nang (Van Kiem Quy Tong): bao khung TRUOC goi no trung.
+            nro.service.TrangPhucService.gI().baoTruocKhiTu(player, nro.entity.skill.Skill.DE_TRUNG);
             msg = new Message(-95);
             msg.writer().writeByte(0);//type
             msg.writer().writeInt((int) player.id);

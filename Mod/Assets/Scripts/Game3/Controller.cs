@@ -372,7 +372,11 @@ namespace Game3
                                 {
                                     Char.myCharz().mobMe = new Mob(num61, false, false, false, false, false, templateId, 1, num62, 0, num62, (short)(Char.myCharz().cx + ((Char.myCharz().cdir != 1) ? (-40) : 40)), (short)Char.myCharz().cy, 4, 0);
                                     Char.myCharz().mobMe.isMobMe = true;
-                                    EffecMn.addEff(new Effect(18, Char.myCharz().mobMe.x, Char.myCharz().mobMe.y, 2, 10, -1));
+                                    God.TrangPhucUI.ganTrung(Char.myCharz(), Char.myCharz().mobMe);
+                                    if (Char.myCharz().mobMe.tpVK == null)
+                                    {
+                                        EffecMn.addEff(new Effect(18, Char.myCharz().mobMe.x, Char.myCharz().mobMe.y, 2, 10, -1));
+                                    }
                                     Char.myCharz().tMobMeBorn = 30;
                                     GameScr.vMob.addElement(Char.myCharz().mobMe);
                                 }
@@ -383,6 +387,7 @@ namespace Game3
                                     {
                                         Mob mob4 = new Mob(num61, false, false, false, false, false, templateId, 1, num62, 0, num62, (short)@char.cx, (short)@char.cy, 4, 0);
                                         mob4.isMobMe = true;
+                                        God.TrangPhucUI.ganTrung(@char, mob4);
                                         @char.mobMe = mob4;
                                         GameScr.vMob.addElement(@char.mobMe);
                                     }

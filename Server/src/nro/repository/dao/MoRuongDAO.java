@@ -394,6 +394,7 @@ public class MoRuongDAO {
             tiLeCaoCapV2();
             baTrangPhucV3();
             phiLoiThanV4();
+            vanKiemV5();
         } catch (Exception ex) {
             Logger.logException(MoRuongDAO.class, ex, "Không dựng được phiếu quay rương");
         }
@@ -483,6 +484,49 @@ public class MoRuongDAO {
      * định cũ giữ nguyên tỉ lệ. Thiếu id (máy chưa dựng xong) thì lần sau làm lại.
      */
     /** Rương Cao Cấp đợt bốn — một lần: thêm Phi Lôi Thần 0,5% đỏ; các món cố định cũ giữ nguyên tỉ lệ. */
+    /** Rương Cao Cấp đợt năm — một lần: thêm Vạn Kiếm Quy Tông 0,5% đỏ; các món cố định cũ giữ nguyên tỉ lệ. */
+    private static void vanKiemV5() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT gia_tri FROM mo_ruong_cau_hinh WHERE khoa = 'ruong_cao_cap_v5'");
+            if (rs.next()) {
+                return;
+            }
+        } finally {
+            dong(rs);
+        }
+        int id = idTheoTenRuong(TEN_CAO_CAP);
+        int berus = TrungDeTuDAO.itemCuaLoai(nro.core.consts.ConstDetu.BILL);
+        int rtCaoCap = ThuCungDAO.idRuongCaoCap();
+        java.util.Map<String, Integer> tp = new java.util.HashMap<>();
+        for (TrangPhucDAO.Mau m : TrangPhucDAO.tatCa()) {
+            tp.put(m.ten, m.itemId);
+        }
+        Integer[] skin = {tp.get("Địa Bộc Thiên Tinh"), tp.get("Thần La Thiên Chinh"), tp.get("Rasenshuriken"),
+            tp.get("Phi Lôi Thần"), tp.get("Vạn Kiếm Quy Tông")};
+        if (id <= 0 || berus <= 0 || rtCaoCap <= 0) {
+            return;
+        }
+        for (Integer s : skin) {
+            if (s == null || s <= 0) {
+                return;
+            }
+        }
+        themMonDo(id, skin[4]);
+        java.util.Map<Integer, Integer> coDinh = new java.util.LinkedHashMap<>();
+        coDinh.put(1559, 2000);
+        coDinh.put(rtCaoCap, 2000);
+        coDinh.put(berus, 500);
+        coDinh.put(1655, 500);
+        for (Integer s : skin) {
+            coDinh.put(s, 500);
+        }
+        datTiLeCoDinh(id, coDinh);
+        ConnectDB.executeUpdate("INSERT IGNORE INTO mo_ruong_cau_hinh (khoa, gia_tri) VALUES ('ruong_cao_cap_v5', '1')");
+        lucDoc = 0;
+        Logger.success("Mở rương: Rương Cao Cấp thêm Vạn Kiếm Quy Tông (0,5%)\n");
+    }
+
     private static void phiLoiThanV4() throws Exception {
         CrisResultSet rs = null;
         try {
