@@ -4296,7 +4296,7 @@ namespace Game3.God
         private const long CO_NO = 65L;
         private const long CO_CHET = 110L;
 
-        /// <summary>Ảnh (đơn vị): cóc 183×58 chân cách đáy 3 (mọi khung cóc đã căn chung một chỗ); khói 97×79 đáy vòng ấn cách đáy 5,3; lưỡi 160×17.</summary>
+        /// <summary>Ảnh (đơn vị): cóc 208×58 chân cách đáy 3 (mọi khung cóc đã căn chung một chỗ); khói 97×79 đáy vòng ấn cách đáy 5,3; lưỡi 160×17.</summary>
         private const float CO_CHAN = 3f;
         private const float CO_KHOI_CHAN = 5.3f;
         private const float CO_LUOI_DAY = 17f;
@@ -4305,7 +4305,7 @@ namespace Game3.God
         private const float CO_LUI_GOC = 7f;
 
         /// <summary>Miệng cóc so với chân (đơn vị, mặt quay phải).</summary>
-        private const float CO_MIENG_X = 22f;
+        private const float CO_MIENG_X = 20f;
         private const float CO_MIENG_Y = -22.5f;
 
         /// <summary>Đầu lưỡi của từng khung lưỡi (phần 440 bề rộng ảnh).</summary>
