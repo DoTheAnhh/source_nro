@@ -4296,8 +4296,8 @@ namespace Game5.God
         private const long CO_NO = 65L;
         private const long CO_CHET = 110L;
 
-        /// <summary>Ảnh (đơn vị): cóc 120×58 chân cách đáy 1,5; khói 97×79 đáy vòng ấn cách đáy 5,3; lưỡi 160×17.</summary>
-        private const float CO_CHAN = 1.5f;
+        /// <summary>Ảnh (đơn vị): cóc 183×58 chân cách đáy 3 (mọi khung cóc đã căn chung một chỗ); khói 97×79 đáy vòng ấn cách đáy 5,3; lưỡi 160×17.</summary>
+        private const float CO_CHAN = 3f;
         private const float CO_KHOI_CHAN = 5.3f;
         private const float CO_LUOI_DAY = 17f;
 
@@ -4306,7 +4306,7 @@ namespace Game5.God
 
         /// <summary>Miệng cóc so với chân (đơn vị, mặt quay phải).</summary>
         private const float CO_MIENG_X = 22f;
-        private const float CO_MIENG_Y = -24f;
+        private const float CO_MIENG_Y = -22.5f;
 
         /// <summary>Đầu lưỡi của từng khung lưỡi (phần 440 bề rộng ảnh).</summary>
         private static readonly float[] CO_MAT_LUOI = { 60f, 61f, 157f, 158f, 237f, 246f, 330f, 346f, 388f, 393f, 400f, 400f };
@@ -4330,7 +4330,7 @@ namespace Game5.God
         /// <summary>Khung của skin Cóc (5 đoạn) — khác Vạn Kiếm (7 đoạn).</summary>
         private static bool laCoc(short[] bay)
         {
-            return bay != null && tach(bay, 4).Length >= 6 && tach(bay, 5).Length == 0;
+            return bay != null && tach(bay, 4).Length >= 6 && tach(bay, 6).Length == 0;
         }
 
         private static long tongDon()
@@ -4395,7 +4395,6 @@ namespace Game5.God
 
         private static void hoaChan(mGraphics g, short a, short b, float h, float x, float yChan, float chan, int huong, float tiLe, float mo)
         {
-            h = emVao(h);
             veChan(g, a, x, yChan, chan, huong, tiLe, mo * (a != b ? System.Math.Min(1f, 2f * (1f - h)) : 1f));
             if (a != b && h > 0.01f)
             {
@@ -4403,29 +4402,147 @@ namespace Game5.God
             }
         }
 
-        /// <summary>Mặt đất ngay dưới quả trứng (trứng bay lơ lửng — cóc phải ngồi trên đất).</summary>
-        private static float datCoc(Mob m)
+        /// <summary>Mặt đất (đỉnh ô đất) ngay dưới điểm (x, y0); không thấy thì trả y0.</summary>
+        private static float datAt(int x, int y0)
         {
-            int x = m.x;
-            for (int y = m.y; y < m.y + 260; y += 2)
+            for (int y = y0; y < y0 + 320; y += 2)
             {
                 if (TileMap.tileTypeAt(x, y, TileMap.T_TOP))
                 {
                     return y / TileMap.size * TileMap.size;
                 }
             }
-            return m.y;
+            return y0;
         }
 
-        /// <summary>Hướng cóc: theo địch đang đánh, không thì theo hướng quả trứng.</summary>
+        /// <summary>Trạng thái vị trí của từng con cóc: cao độ đang vẽ (trượt êm), đang nhảy / bay.</summary>
+        private class CocViTri
+        {
+            public float y;
+            public int xCu;
+            public long lucDi;
+            public long lucBatDauDi;
+            public int huongDi = 1;
+            public bool bay;
+        }
+
+        private static readonly Dictionary<Mob, CocViTri> viTriCoc = new Dictionary<Mob, CocViTri>();
+
+        /// <summary>Chủ của quả trứng.</summary>
+        private static Char chuCoc(Mob m)
+        {
+            if (Char.myCharz().mobMe == m)
+            {
+                return Char.myCharz();
+            }
+            for (int i = 0; i < GameScr.vCharInMap.size(); i++)
+            {
+                Char c = GameScr.vCharInMap.elementAt(i) as Char;
+                if (c != null && c.mobMe == m)
+                {
+                    return c;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Cập nhật vị trí cóc: chủ bay thì cóc bay cùng độ cao với chủ, chủ đứng đất thì cóc ngồi
+        /// trên đất ngay dưới nó — cao độ trượt êm, không nhảy bụp. Ghi nhận lúc đang di chuyển.
+        /// </summary>
+        private static CocViTri capNhatCoc(Mob m, long ms)
+        {
+            CocViTri v;
+            lock (viTriCoc)
+            {
+                if (!viTriCoc.TryGetValue(m, out v))
+                {
+                    if (viTriCoc.Count > 32)
+                    {
+                        viTriCoc.Clear();
+                    }
+                    v = new CocViTri();
+                    v.y = datAt(m.x, m.y);
+                    v.xCu = m.x;
+                    viTriCoc[m] = v;
+                }
+            }
+            if (m.x != v.xCu)
+            {
+                if (ms - v.lucDi > 220)
+                {
+                    v.lucBatDauDi = ms;
+                }
+                v.huongDi = m.x > v.xCu ? 1 : -1;
+                v.xCu = m.x;
+                v.lucDi = ms;
+            }
+            Char chu = chuCoc(m);
+            float dich;
+            v.bay = false;
+            if (chu != null)
+            {
+                float datChu = datAt(chu.cx, chu.cy);
+                if (datChu - chu.cy > 10)
+                {
+                    dich = chu.cy;
+                    v.bay = true;
+                }
+                else
+                {
+                    dich = datAt(m.x, System.Math.Min(m.y, chu.cy) - 4);
+                }
+            }
+            else
+            {
+                dich = datAt(m.x, m.y);
+            }
+            float lech = dich - v.y;
+            v.y = System.Math.Abs(lech) > 220f ? dich : v.y + lech * 0.18f;
+            return v;
+        }
+
+        private static bool dangDi(CocViTri v, long ms)
+        {
+            return ms - v.lucDi < 220;
+        }
+
+        /// <summary>Cao độ chân cóc (đã trượt êm) — cho lưỡi phóng đúng từ miệng.</summary>
+        private static float datCoc(Mob m)
+        {
+            lock (viTriCoc)
+            {
+                CocViTri v;
+                if (viTriCoc.TryGetValue(m, out v))
+                {
+                    return v.y;
+                }
+            }
+            return datAt(m.x, m.y);
+        }
+
+        /// <summary>Hướng cóc: theo địch đang đánh, đang đi thì theo hướng đi, không thì theo quả trứng.</summary>
         private static int huongCoc(Mob m, CocDanh d)
         {
             if (d != null && d.dich != null)
             {
                 return d.dich.getX() >= m.x ? 1 : -1;
             }
+            lock (viTriCoc)
+            {
+                CocViTri v;
+                if (viTriCoc.TryGetValue(m, out v) && mSystem.currentTimeMillis() - v.lucDi < 600)
+                {
+                    return v.huongDi;
+                }
+            }
             return m.dir == -1 ? -1 : 1;
         }
+
+        /// <summary>Vòng nhảy (chỉ số trong đoạn nhảy): khom → bật → vươn giữa không → đáp → khom.</summary>
+        private static readonly int[] CO_VONG_NHAY = { 5, 6, 7, 12, 8, 13, 10, 9, 11 };
+        private const long CO_NHAY = 78L;
+        private const float CO_NHAY_CAO = 16f;
 
         /// <summary>Vẽ cóc (thay quả trứng). Trả false = đừng vẽ thêm (đang chết).</summary>
         private static bool veCoc(mGraphics g, Mob m)
@@ -4433,13 +4550,15 @@ namespace Game5.God
             short[] khoi = tach(m.tpVK, 0);
             short[] tho = tach(m.tpVK, 1);
             short[] don = tach(m.tpVK, 2);
+            short[] nhay = tach(m.tpVK, 5);
             if (khoi.Length < 12 || tho.Length < 12 || don.Length < 8)
             {
                 return true;
             }
             long ms = mSystem.currentTimeMillis();
+            CocViTri v = capNhatCoc(m, ms);
             float x = m.x;
-            float y = datCoc(m);
+            float y = v.y;
             CocDanh d;
             lock (dsCocDanh)
             {
@@ -4461,14 +4580,12 @@ namespace Game5.God
                 int b = System.Math.Min(4, a + 1);
                 float h = (float) (t % CO_CHET) / CO_CHET;
                 float cuoi = t < tong ? 1f : 1f - (float) (t - tong) / 150f;
-                // Bo khoi 1 (khung 2..6) chinh, bo 2 (khung 9..12) phu.
                 hoaChan(g, khoi[6 + System.Math.Min(5, 3 + a / 2)], khoi[6 + System.Math.Min(5, 3 + b / 2)], h, x, y, CO_KHOI_CHAN, 1, 0.95f, 0.5f * cuoi);
                 hoaChan(g, khoi[1 + a], khoi[1 + b], h, x, y, CO_KHOI_CHAN, 1, 1f, cuoi);
                 return false;
             }
             long ts = ms - m.tpVKSinh;
             long tongSinh = CO_SINH * 6;
-            // Coc: hien dan duoi lan khoi (tu 280 ms toi 560 ms).
             float moCo = ts >= tongSinh ? 1f : System.Math.Max(0f, System.Math.Min(1f, (ts - 280f) / 280f));
             long td = d != null ? ms - d.batDau : long.MaxValue;
             if (d != null && td < tongDon())
@@ -4501,24 +4618,60 @@ namespace Game5.God
                 }
                 hoaChan(g, don[a], don[b], h, x, y, CO_CHAN, huong, 1f, moCo);
             }
+            else if (dangDi(v, ms) && nhay.Length >= 14 && ts >= tongSinh)
+            {
+                int n = CO_VONG_NHAY.Length;
+                long chuKy = CO_NHAY * n;
+                long tn = ms - v.lucBatDauDi;
+                int a;
+                int b;
+                float h;
+                float cao = 0f;
+                if (v.bay)
+                {
+                    // Giua khong: luot giua ba khung vuon minh (qua lai), nhap nho nhe.
+                    int[] vuon = { 8, 13, 10 };
+                    int chu = 4;
+                    int p = (int) ((tn / (CO_NHAY + 30)) % chu);
+                    int pb = (p + 1) % chu;
+                    a = vuon[p < 3 ? p : 1];
+                    b = vuon[pb < 3 ? pb : 1];
+                    h = (float) (tn % (CO_NHAY + 30)) / (CO_NHAY + 30);
+                    cao = 3f * (float) System.Math.Sin(ms * 2.0 * System.Math.PI / 900.0);
+                }
+                else
+                {
+                    int i = (int) ((tn / CO_NHAY) % n);
+                    a = CO_VONG_NHAY[i];
+                    b = CO_VONG_NHAY[(i + 1) % n];
+                    h = (float) (tn % CO_NHAY) / CO_NHAY;
+                    // Vong bay: bat tu khung 3, dinh o giua khong, dap o khung 7.
+                    float pha = (float) (tn % chuKy) / chuKy;
+                    float q = (pha - 0.28f) / 0.5f;
+                    if (q > 0f && q < 1f)
+                    {
+                        cao = CO_NHAY_CAO * (float) System.Math.Sin(q * System.Math.PI);
+                    }
+                }
+                hoaChan(g, nhay[a], nhay[b], h, x, y - cao, CO_CHAN, huong, 1f, moCo);
+            }
             else
             {
-                // Dung tho: vong tron 12 khung.
+                // Dung tho: vong tron 12 khung (bay thi nhap nho nhe).
+                float nhap = v.bay ? 3f * (float) System.Math.Sin(ms * 2.0 * System.Math.PI / 900.0) : 0f;
                 int n = tho.Length;
                 int a = (int) ((ms / CO_THO) % n);
                 int b = (a + 1) % n;
                 float h = (float) (ms % CO_THO) / CO_THO;
                 if (d != null && td < tongDon() + CO_THO)
                 {
-                    // Noi mem tu khung ve dang cuoi sang vong tho.
                     float q = (float) (td - tongDon()) / CO_THO;
-                    veChan(g, don[7], x, y, CO_CHAN, huong, 1f, moCo * (1f - q));
+                    veChan(g, don[7], x, y - nhap, CO_CHAN, huong, 1f, moCo * (1f - q));
                 }
-                hoaChan(g, tho[a], tho[b], h, x, y, CO_CHAN, huong, 1f, moCo);
+                hoaChan(g, tho[a], tho[b], h, x, y - nhap, CO_CHAN, huong, 1f, moCo);
             }
             if (ts < tongSinh + 200)
             {
-                // Khoi trieu hoi: bo 1 (khung 1..6) chinh, bo 2 (khung 7..12) phu nho hon.
                 int a = (int) System.Math.Min(5, ts / CO_SINH);
                 int b = System.Math.Min(5, a + 1);
                 float h = (float) (ts % CO_SINH) / CO_SINH;

@@ -176,18 +176,8 @@ public final class TrangPhucDAO {
      * Khung bay = [khói triệu hồi 12 | cóc đứng thở 12 | cóc ra đòn 8 | lưỡi 12 | va chạm 6]
      * — 5 đoạn (Vạn Kiếm 7 đoạn, client phân biệt theo số đoạn). Icon 25711–25761.
      */
-    private static void gieoTrieuHoiCoc() throws Exception {
-        CrisResultSet rs = null;
-        try {
-            rs = ConnectDB.executeQuery("SELECT id FROM trang_phuc_mau WHERE skill_tpl = 12 AND ten = ?", "Triệu hồi chi thuật: Cóc");
-            if (rs.next()) {
-                return;
-            }
-        } finally {
-            if (rs != null) {
-                rs.dispose();
-            }
-        }
+    /** Khung Cóc: [khói 12 | đứng thở 12 | ra đòn 8 | lưỡi 12 | va chạm 6 | nhảy 14]. */
+    private static String khungCoc() {
         StringBuilder bay = new StringBuilder();
         for (int id = 25711; id <= 25760; id++) {
             if (id == 25723 || id == 25735 || id == 25743 || id == 25755) {
@@ -195,10 +185,36 @@ public final class TrangPhucDAO {
             }
             bay.append(bay.length() > 0 ? "," : "").append(id);
         }
+        bay.append(",-1");
+        for (int id = 25762; id <= 25775; id++) {
+            bay.append(",").append(id);
+        }
+        return bay.toString();
+    }
+
+    private static void gieoTrieuHoiCoc() throws Exception {
+        CrisResultSet rs = null;
+        try {
+            rs = ConnectDB.executeQuery("SELECT id FROM trang_phuc_mau WHERE skill_tpl = 12 AND ten = ?", "Triệu hồi chi thuật: Cóc");
+            if (rs.next()) {
+                // Them doan khung nhay (v2) — cap nhat mot lan.
+                int n = ConnectDB.executeUpdate("UPDATE trang_phuc_mau SET khung_bay = ? WHERE skill_tpl = 12 AND ten = ?"
+                        + " AND khung_bay NOT LIKE '%25762%'", khungCoc(), "Triệu hồi chi thuật: Cóc");
+                if (n > 0) {
+                    lucDoc = 0;
+                    Logger.success("Trang phục: Cóc thêm khung nhảy\n");
+                }
+                return;
+            }
+        } finally {
+            if (rs != null) {
+                rs.dispose();
+            }
+        }
         ConnectDB.executeUpdate("INSERT INTO trang_phuc_mau (skill_tpl, ten, mo_ta, icon, khung_nap, khung_bay, thu_tu, icon_vp)"
                 + " VALUES (?,?,?,?,?,?,1,?)", 12, "Triệu hồi chi thuật: Cóc",
                 "Kết ấn triệu hồi Cóc chiến binh từ làn khói; mỗi đòn đánh, cóc phóng lưỡi quất thẳng vào kẻ địch.",
-                25761, "", bay.toString(), 25761);
+                25761, "", khungCoc(), 25761);
         lucDoc = 0;
         Logger.success("Trang phục: gieo Triệu hồi chi thuật: Cóc cho Đẻ trứng\n");
     }
