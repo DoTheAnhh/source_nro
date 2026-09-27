@@ -1174,6 +1174,21 @@ namespace Game5.God
 
         public bool Chat(string text)
         {
+            if (text == "speed" || text.StartsWith("speed "))
+            {
+                // speed 1..5: 1 cham nhat (x0.5), 3 binh thuong (x1), 5 nhanh nhat (x2).
+                string[] ps = text.Split(' ');
+                int muc;
+                if (ps.Length < 2 || !int.TryParse(ps[1].Trim(), out muc) || muc < 1 || muc > 5)
+                {
+                    GameScr.info1.addInfo("Gõ speed 1 (chậm) đến speed 5 (nhanh), speed 3 là bình thường", 0);
+                    return true;
+                }
+                float[] heSo = { 0.5f, 0.75f, 1f, 1.5f, 2f };
+                doiTocDo("tocdo " + heSo[muc - 1].ToString(System.Globalization.CultureInfo.InvariantCulture));
+                GameScr.info1.addInfo("Tốc độ game: mức " + muc + "/5", 0);
+                return true;
+            }
             if (text == "tocdo" || text.StartsWith("tocdo "))
             {
                 doiTocDo(text);

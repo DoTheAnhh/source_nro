@@ -4287,8 +4287,8 @@ namespace Game2.God
         //  mất trong khói. Khung: [khói 12 | cóc đứng 12 | cóc ra đòn 8 | lưỡi 12 | va chạm 6].
         // ------------------------------------------------------------------
         private const long CO_SINH = 120L;
-        private const long CO_THO = 150L;
-        private const long CO_GONG = 75L;
+        private const long CO_THO = 165L;
+        private const long CO_GONG = 85L;
         private const long CO_VUON = 210L;
         private const long CO_QUAT = 140L;
         private const long CO_RUT = 200L;
@@ -4300,6 +4300,9 @@ namespace Game2.God
         private const float CO_CHAN = 1.5f;
         private const float CO_KHOI_CHAN = 5.3f;
         private const float CO_LUOI_DAY = 17f;
+
+        /// <summary>Gốc lưỡi lùi vào trong miệng (đơn vị) — phần gốc ảnh đã mờ dần, lẩn vào miệng.</summary>
+        private const float CO_LUI_GOC = 7f;
 
         /// <summary>Miệng cóc so với chân (đơn vị, mặt quay phải).</summary>
         private const float CO_MIENG_X = 22f;
@@ -4400,6 +4403,20 @@ namespace Game2.God
             }
         }
 
+        /// <summary>Mặt đất ngay dưới quả trứng (trứng bay lơ lửng — cóc phải ngồi trên đất).</summary>
+        private static float datCoc(Mob m)
+        {
+            int x = m.x;
+            for (int y = m.y; y < m.y + 260; y += 2)
+            {
+                if (TileMap.tileTypeAt(x, y, TileMap.T_TOP))
+                {
+                    return y / TileMap.size * TileMap.size;
+                }
+            }
+            return m.y;
+        }
+
         /// <summary>Hướng cóc: theo địch đang đánh, không thì theo hướng quả trứng.</summary>
         private static int huongCoc(Mob m, CocDanh d)
         {
@@ -4422,7 +4439,7 @@ namespace Game2.God
             }
             long ms = mSystem.currentTimeMillis();
             float x = m.x;
-            float y = m.y;
+            float y = datCoc(m);
             CocDanh d;
             lock (dsCocDanh)
             {
@@ -4540,7 +4557,7 @@ namespace Game2.God
                     }
                     int huong = huongCoc(m, d);
                     float ox = m.x + huong * CO_MIENG_X;
-                    float oy = m.y + CO_MIENG_Y;
+                    float oy = datCoc(m) + CO_MIENG_Y;
                     float ex = d.dich != null ? d.dich.getX() : m.x + huong * 80;
                     float ey = d.dich != null ? d.dich.getY() - d.dich.getH() / 2f : oy;
                     if (d.daNo)
@@ -4553,6 +4570,9 @@ namespace Game2.God
                     float dai = System.Math.Max(10f, (float) System.Math.Sqrt(dx * dx + dy * dy));
                     float goc = (float) (System.Math.Atan2(dy, dx) * 57.29578);
                     bool lat = dx < 0;
+                    ox -= dx / dai * CO_LUI_GOC;
+                    oy -= dy / dai * CO_LUI_GOC;
+                    dai += CO_LUI_GOC;
                     long tl = td - CO_GONG * 4;
                     if (m.tpVKChet == 0 && tl >= 0 && tl < CO_VUON + CO_QUAT + CO_RUT)
                     {
@@ -4573,9 +4593,9 @@ namespace Game2.God
                             }
                             // Quat: dau luoi cuon dap (10, 11) roi luot song (9, 12).
                             float q = (float) (tl - CO_VUON) / CO_QUAT;
-                            int a = q < 0.5f ? 9 : 10;
-                            int b = q < 0.5f ? 10 : 11;
-                            float h = q < 0.5f ? q * 2f : (q - 0.5f) * 2f;
+                            int a = q < 0.45f ? 9 : 10;
+                            int b = q < 0.45f ? 10 : 11;
+                            float h = q < 0.45f ? q / 0.45f : (q - 0.45f) / 0.55f;
                             hoaKeo(g, luoi[a], luoi[b], h, ox, oy, goc,
                                     dai * 440f / CO_MAT_LUOI[a], dai * 440f / CO_MAT_LUOI[b], CO_LUOI_DAY, lat, 1f);
                         }
@@ -4602,26 +4622,19 @@ namespace Game2.God
             }
         }
 
-        /// <summary>Vẽ lưỡi dài L (đầu lưỡi đúng L) theo góc, chọn hai khung vươn kẹp L.</summary>
+        /// <summary>
+        /// Vẽ lưỡi dài L (đầu lưỡi đúng L) theo góc: chỉ hai khung lưỡi thẳng (7, 8) kéo liên tục,
+        /// hoà qua lại chậm cho lưỡi rung nhẹ — không đổi dáng uốn giữa chừng nên không đứt đoạn.
+        /// </summary>
         private static void veLuoi(mGraphics g, short[] luoi, float L, float dai, float ox, float oy, float goc, bool lat)
         {
             if (L < 3f)
             {
                 return;
             }
-            float p = L / dai * CO_MAT_LUOI[9];
-            int i = 0;
-            while (i + 1 < CO_VUON_KHUNG.Length && CO_MAT_LUOI[CO_VUON_KHUNG[i + 1]] <= p)
-            {
-                i++;
-            }
-            int j = System.Math.Min(CO_VUON_KHUNG.Length - 1, i + 1);
-            int ka = CO_VUON_KHUNG[i];
-            int kb = CO_VUON_KHUNG[j];
-            float fa = CO_MAT_LUOI[ka];
-            float fb = CO_MAT_LUOI[kb];
-            float h = ka == kb || fb <= fa ? 0f : System.Math.Max(0f, System.Math.Min(1f, (p - fa) / (fb - fa)));
-            hoaKeo(g, luoi[ka], luoi[kb], h, ox, oy, goc, L * 440f / fa, L * 440f / fb, CO_LUOI_DAY, lat, 1f);
+            long ms = mSystem.currentTimeMillis();
+            float h = 0.5f + 0.5f * (float) System.Math.Sin(ms * 2.0 * System.Math.PI / 260.0);
+            hoaKeo(g, luoi[6], luoi[7], h, ox, oy, goc, L * 440f / CO_MAT_LUOI[6], L * 440f / CO_MAT_LUOI[7], CO_LUOI_DAY, lat, 1f);
         }
 
         // ------------------------------------------------------------------

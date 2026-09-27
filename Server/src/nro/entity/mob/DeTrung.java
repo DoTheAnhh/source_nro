@@ -59,7 +59,20 @@ public final class DeTrung extends Mob {
         if (player != null && timeSurviveGoc > 0) {
             this.timeSurvive = nro.repository.dao.SetBonusDAO.thoiGianSauBonus(
                     player, nro.entity.skill.Skill.DE_TRUNG, timeSurviveGoc);
+            baoThoiGian();
         }
+    }
+
+    /** Icon chiêu Đẻ trứng — hiện thời gian sống còn lại của trứng trong ô thời gian (client ghi phút'giây). */
+    private static final int ICON_TG = 722;
+
+    /** Báo chủ thời gian sống còn lại của trứng (giây). */
+    private void baoThoiGian() {
+        if (player == null || !player.isPl()) {
+            return;
+        }
+        long con = timeSurvive - (System.currentTimeMillis() - lastTimeSpawn);
+        nro.service.item.ItemTimeService.gI().sendItemTime(player, ICON_TG, (int) Math.max(0, con / 1000));
     }
 
     @Override
@@ -160,6 +173,7 @@ public final class DeTrung extends Mob {
             msg.writeCris(Util.CrisGH(this.point.hp), Manager.readInt);// hp mob
             Service.gI().sendMessAllPlayerInMap(this.zone, msg);
             msg.cleanup();
+            baoThoiGian();
         } catch (Exception e) {
 
         }
@@ -187,6 +201,9 @@ public final class DeTrung extends Mob {
 
     public void mobMeDie() {
         Message msg;
+        if (player != null && player.isPl()) {
+            nro.service.item.ItemTimeService.gI().removeItemTime(player, ICON_TG);
+        }
         try {
             msg = new Message(-95);
             msg.writer().writeByte(6);//type

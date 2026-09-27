@@ -140,6 +140,14 @@ namespace Game6
     		SmallImage.drawSmallImage(g, idIcon, x, y, 0, 3);
     		string empty = string.Empty;
     		empty = minute + "'";
+    		if (idIcon == 722)
+    		{
+    			// Thoi gian con lai cua De trung: phut'giay (vd 5'1).
+    			int con = System.Math.Max(0, coutTime);
+    			empty = con >= 60 ? con / 60 + "'" + con % 60 : con + "s";
+    			mFont.tahoma_7b_white.drawString(g, empty, x, y + 15, 2, mFont.tahoma_7b_dark);
+    			return;
+    		}
     		if (minute == 0)
     		{
     			empty = second + "s";
